@@ -1,0 +1,41 @@
+// Establish version and status
+ext.githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral() // maven { url 'http://jcenter.bintray.com' }
+    }
+    apply from: file('gradle/buildscript.gradle'), to: buildscript 
+}
+
+allprojects {
+    repositories { 
+        mavenCentral() // maven { url: 'http://jcenter.bintray.com' }
+    }
+}
+
+apply from: file('gradle/convention.gradle')
+apply from: file('gradle/maven.gradle')
+apply from: file('gradle/check.gradle')
+apply from: file('gradle/license.gradle')
+apply from: file('gradle/release.gradle')
+
+subprojects {
+    group = "com.netflix.${githubProjectName}" // TEMPLATE: Set to organization of project
+}
+
+project(':feign-core') {
+    apply plugin: 'java'
+
+    dependencies {
+        compile     'com.google.guava:guava:14.0.1'
+        compile     'com.squareup.dagger:dagger:1.0.1'
+        compile     'javax.ws.rs:jsr311-api:1.1.1'
+        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        testCompile 'com.google.code.gson:gson:2.2.4'
+        testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+        testCompile 'org.testng:testng:6.8.1'
+        testCompile 'com.google.mockwebserver:mockwebserver:20130505'
+   }
+}
