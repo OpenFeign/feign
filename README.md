@@ -65,6 +65,16 @@ CloudDNS cloudDNS =  Feign.create().newInstance(new CloudIdentityTarget<CloudDNS
 ```
 
 You can find [several examples](https://github.com/Netflix/feign/tree/master/feign-core/src/test/java/feign/examples) in the test tree.  Do take time to look at them, as seeing is believing!
+
+### Integrations
+Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+### Ribbon
+[RibbonModule](https://github.com/Netflix/feign/tree/master/feign-ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
+
+Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
+```java
+MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonModule());
+```
 ### Advanced usage and Dagger
 #### Dagger
 Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
