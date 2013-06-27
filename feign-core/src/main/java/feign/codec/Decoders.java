@@ -43,7 +43,8 @@ public class Decoders {
     final Pattern patternForMatcher = compile(checkNotNull(pattern, "pattern"), DOTALL);
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
-      @Override public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
+      @Override
+      public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
         Matcher matcher = patternForMatcher.matcher(CharStreams.toString(reader));
         if (matcher.find()) {
           return applyFirstGroup.apply(matcher.group(1));
@@ -88,7 +89,8 @@ public class Decoders {
     final Pattern patternForMatcher = compile(checkNotNull(pattern, "pattern"), DOTALL);
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
-      @Override public List<T> decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
+      @Override
+      public List<T> decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
         Matcher matcher = patternForMatcher.matcher(CharStreams.toString(reader));
         ImmutableList.Builder<T> builder = ImmutableList.<T>builder();
         while (matcher.find()) {

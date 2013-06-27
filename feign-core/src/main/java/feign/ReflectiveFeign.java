@@ -66,7 +66,8 @@ public class ReflectiveFeign extends Feign {
       this.methodToHandler = checkNotNull(methodToHandler, "methodToHandler for %s", target);
     }
 
-    @Override protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override
+    protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
       return methodToHandler.get(method).invoke(args);
     }
 
@@ -97,7 +98,8 @@ public class ReflectiveFeign extends Feign {
       return in;
     }
 
-    @Provides Function<Target, Map<String, MethodHandler>> targetToHandlersByName(ParseHandlersByName parseHandlersByName) {
+    @Provides
+    Function<Target, Map<String, MethodHandler>> targetToHandlersByName(ParseHandlersByName parseHandlersByName) {
       return parseHandlersByName;
     }
   }
@@ -208,7 +210,8 @@ public class ReflectiveFeign extends Feign {
       this.formEncoder = formEncoder;
     }
 
-    @Override protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
+    @Override
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
       formEncoder.encodeForm(Maps.filterKeys(variables, Predicates.in(metadata.formParams())), mutable);
       return super.resolve(argv, mutable, variables);
     }
@@ -222,7 +225,8 @@ public class ReflectiveFeign extends Feign {
       this.bodyEncoder = bodyEncoder;
     }
 
-    @Override protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
+    @Override
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       bodyEncoder.encodeBody(body, mutable);

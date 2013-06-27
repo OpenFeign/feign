@@ -35,7 +35,8 @@ public abstract class SAXDecoder extends Decoder {
     this.factory = checkNotNull(factory, "factory");
   }
 
-  @Override public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws IOException, SAXException,
+  @Override
+  public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws IOException, SAXException,
       ParserConfigurationException {
     ContentHandlerWithResult handler = typeToNewHandler(type);
     checkState(handler != null, "%s returned null for type %s", this, type);

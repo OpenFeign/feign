@@ -39,7 +39,8 @@ public abstract class Wire {
       }
     }
 
-    @Override Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
+    @Override
+    Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
       if (logger.isLoggable(Level.FINE)) {
         return super.wireAndRebufferResponse(target, response);
       }
@@ -77,7 +78,8 @@ public abstract class Wire {
     @Override void wireRequest(Target<?> target, Request request) {
     }
 
-    @Override Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
+    @Override
+    Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
       return response;
     }
 

@@ -79,7 +79,8 @@ public class ContractTest {
   }
 
   static interface WithURIParam {
-    @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
+    @GET @Path("/{1}/{2}")
+    Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
   }
 
   @Test public void methodCanHaveUriParam() throws Exception {
@@ -97,7 +98,11 @@ public class ContractTest {
   }
 
   static interface FormParams {
-    @POST @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D") void login(@FormParam("customer_name") String customer, @FormParam("user_name") String user);
+    @POST
+    @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
+    void login(
+        @FormParam("customer_name") String customer,
+        @FormParam("user_name") String user, @FormParam("password") String password);
   }
 
   @Test public void formParamsParseIntoIndexToName() throws Exception {
