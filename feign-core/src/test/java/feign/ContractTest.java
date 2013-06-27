@@ -129,7 +129,10 @@ public class ContractTest {
     @Body(
         "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
             + " \"{password}\"%7D")
-    void login(@FormParam("customer_name") String customer, @FormParam("user_name") String user);
+    void login(
+        @FormParam("customer_name") String customer,
+        @FormParam("user_name") String user,
+        @FormParam("password") String password);
   }
 
   @Test

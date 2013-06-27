@@ -28,6 +28,10 @@ subprojects {
 project(':feign-core') {
     apply plugin: 'java'
 
+    test {
+        useTestNG()
+    }
+
     dependencies {
         compile     'com.google.guava:guava:14.0.1'
         compile     'com.squareup.dagger:dagger:1.0.1'
@@ -37,5 +41,5 @@ project(':feign-core') {
         testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
         testCompile 'org.testng:testng:6.8.1'
         testCompile 'com.google.mockwebserver:mockwebserver:20130505'
-   }
+    }
 }
