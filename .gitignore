@@ -39,12 +39,16 @@ Thumbs.db
 # Gradle Files #
 ################
 .gradle
+local.properties
 
 # Build output directies
 /target
-*/target
-/build
+**/test-output
+**/target
+**/bin
+build
 */build
+.m2
 
 # IntelliJ specific files/directories
 out
