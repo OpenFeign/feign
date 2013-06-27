@@ -33,7 +33,8 @@ public class FeignTest {
   static interface TestInterface {
     @POST String post();
 
-    @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
+    @GET @Path("/{1}/{2}")
+    Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
 
     @dagger.Module(overrides = true, library = true)
     static class Module {

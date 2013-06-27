@@ -32,7 +32,8 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 public class GitHubExample {
 
   interface GitHub {
-    @GET @Path("/repos/{owner}/{repo}/contributors") List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+    @GET @Path("/repos/{owner}/{repo}/contributors") List<Contributor> contributors(
+        @PathParam("owner") String owner, @PathParam("repo") String repo);
   }
 
   static class Contributor {
