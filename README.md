@@ -1,4 +1,4 @@
-# Feign makes writing java http clients easier
+# Feign makes writing java http clients easier.
 Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [jclouds](https://github.com/jclouds/jclouds), and [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
 
 ### Why Feign and not X?
