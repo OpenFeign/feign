@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign;
 
 import com.google.common.base.Objects;
@@ -13,7 +28,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.net.HttpHeaders;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -24,9 +38,6 @@ import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import feign.codec.BodyEncoder;
-import feign.codec.FormEncoder;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Objects.equal;
@@ -165,8 +176,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Expands a {@code template}, such as {@code <username> username}
-   * </username>}, using the {@code variables} supplied. Any unresolved
+   * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any unresolved
    * parameters will remain.
    * <p/>
    * Note that if you'd like curly braces literally in the {@code template},
@@ -400,9 +410,9 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * replaces the {@link HttpHeaders#CONTENT_LENGTH} header.
+   * replaces the {@link com.google.common.net.HttpHeaders#CONTENT_LENGTH} header.
    * <p/>
-   * Usually populated by {@link BodyEncoder} or {@link FormEncoder}
+   * Usually populated by {@link feign.codec.BodyEncoder} or {@link feign.codec.FormEncoder}
    *
    * @see Request#body()
    */

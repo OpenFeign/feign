@@ -1,9 +1,23 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
@@ -57,7 +71,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
   }
 
   @Override
-  public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+  public Socket createSocket(String host, int port) throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(host, port));
   }
 
@@ -66,8 +80,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
   }
 
   @Override
-  public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException,
-      UnknownHostException {
+  public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(host, port, localHost, localPort));
   }
 
@@ -82,11 +95,9 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
   }
 
   public void checkClientTrusted(X509Certificate[] certs, String authType) {
-    return;
   }
 
   public void checkServerTrusted(X509Certificate[] certs, String authType) {
-    return;
   }
 
   private final static String[] ENABLED_CIPHER_SUITES = {"SSL_DH_anon_WITH_RC4_128_MD5"};

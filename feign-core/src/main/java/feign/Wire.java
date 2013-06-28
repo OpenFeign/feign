@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign;
 
 import com.google.common.io.Closer;
@@ -12,13 +27,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-/**
- * Writes http headers and body. Plumb to your favorite log impl.
- */
+/*  Writes http headers and body. Plumb to your favorite log impl. */
 public abstract class Wire {
-  /**
-   * logs to the category {@link Wire} at {@link Level#FINE}
-   */
+  /*  logs to the category {@link Wire} at {@link Level#FINE}. */
   public static class ErrorWire extends Wire {
     final Logger logger = Logger.getLogger(Wire.class.getName());
 
@@ -27,9 +38,7 @@ public abstract class Wire {
     }
   }
 
-  /**
-   * logs to the category {@link Wire} at {@link Level#FINE}, if loggable.
-   */
+  /* logs to the category {@link Wire} at {@link Level#FINE}, if loggable. */
   public static class LoggingWire extends Wire {
     final Logger logger = Logger.getLogger(Wire.class.getName());
 
@@ -39,8 +48,7 @@ public abstract class Wire {
       }
     }
 
-    @Override
-    Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
+    @Override Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
       if (logger.isLoggable(Level.FINE)) {
         return super.wireAndRebufferResponse(target, response);
       }
@@ -51,9 +59,7 @@ public abstract class Wire {
       logger.fine(String.format(format, args));
     }
 
-    /**
-     * helper that configures jul to sanely log messages.
-     */
+    /* helper that configures jul to sanely log messages. */
     public LoggingWire appendToFile(String logfile) {
       final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
       logger.setLevel(Level.FINE);
@@ -62,8 +68,8 @@ public abstract class Wire {
         handler.setFormatter(new SimpleFormatter() {
           @Override
           public String format(LogRecord record) {
-            String timestamp = sdf.format(new java.util.Date(record.getMillis()));
-            return String.format("%s %s%n", timestamp, record.getMessage());
+            String timestamp = sdf.format(new java.util.Date(record.getMillis())); // NOPMD
+            return String.format("%s %s%n", timestamp, record.getMessage()); // NOPMD
           }
         });
         logger.addHandler(handler);
@@ -78,8 +84,7 @@ public abstract class Wire {
     @Override void wireRequest(Target<?> target, Request request) {
     }
 
-    @Override
-    Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
+    @Override Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
       return response;
     }
 

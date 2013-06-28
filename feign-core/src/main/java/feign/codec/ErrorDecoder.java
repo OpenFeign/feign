@@ -1,9 +1,23 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign.codec;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Ticker;
-import com.google.common.net.HttpHeaders;
 import com.google.common.reflect.TypeToken;
 
 import java.text.DateFormat;
@@ -36,9 +50,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  *     &#064;Override
  *     public Object decode(String methodKey, Response response, TypeToken&lt;?&gt; type) throws Throwable {
- *         if (response.status() == 404)
- *             throw new IllegalArgumentException(&quot;zone not found&quot;);
- *         return ErrorDecoder.DEFAULT.decode(request, response, type);
+ *    if (response.status() == 404)
+ *        throw new IllegalArgumentException(&quot;zone not found&quot;);
+ *    return ErrorDecoder.DEFAULT.decode(request, response, type);
  *     }
  *
  * }
@@ -55,13 +69,13 @@ public interface ErrorDecoder {
    *
    * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request.  ex. {@code IAM#getUser()}
    * @param response  HTTP response where {@link Response#status() status} >=
-   *                  {@code 300}.
+   *             {@code 300}.
    * @param type      Target object type.
    * @return instance of {@code type}
    * @throws Throwable IOException, if there was a network error reading the
-   *                   response or an application-specific exception decoded by the
-   *                   implementation. If the throwable is retryable, it should be
-   *                   wrapped, or a subtype of {@link RetryableException}
+   *              response or an application-specific exception decoded by the
+   *              implementation. If the throwable is retryable, it should be
+   *              wrapped, or a subtype of {@link RetryableException}
    */
   public Object decode(String methodKey, Response response, TypeToken<?> type) throws Throwable;
 
@@ -80,12 +94,12 @@ public interface ErrorDecoder {
   };
 
   /**
-   * Decodes a {@link HttpHeaders#RETRY_AFTER} header into an absolute date,
+   * Decodes a {@link com.google.common.net.HttpHeaders#RETRY_AFTER} header into an absolute date,
    * if possible.
    *
    * @see <a
-   *      href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After
-   *      format</a>
+   * href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After
+   * format</a>
    */
   static class RetryAfterDecoder implements Function<String, Optional<Date>> {
     static final DateFormat RFC822_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", US);
@@ -106,8 +120,8 @@ public interface ErrorDecoder {
      * retried.
      *
      * @param retryAfter String in <a
-     *                   href="https://tools.ietf.org/html/rfc2616#section-14.37"
-     *                   >Retry-After format</a>
+     *              href="https://tools.ietf.org/html/rfc2616#section-14.37"
+     *              >Retry-After format</a>
      */
     @Override
     public Optional<Date> apply(String retryAfter) {
