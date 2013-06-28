@@ -4,14 +4,16 @@ ext.githubProjectName = rootProject.name // Change if github project name is not
 buildscript {
     repositories {
         mavenLocal()
-        mavenCentral() // maven { url 'http://jcenter.bintray.com' }
+        mavenCentral()
     }
     apply from: file('gradle/buildscript.gradle'), to: buildscript 
 }
 
 allprojects {
     repositories { 
-        mavenCentral() // maven { url: 'http://jcenter.bintray.com' }
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
     }
 }
 
@@ -39,6 +41,22 @@ project(':feign-core') {
         provided    'com.squareup.dagger:dagger-compiler:1.0.1'
         testCompile 'com.google.code.gson:gson:2.2.4'
         testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+        testCompile 'org.testng:testng:6.8.1'
+        testCompile 'com.google.mockwebserver:mockwebserver:20130505'
+    }
+}
+
+project(':feign-ribbon') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        compile     'com.netflix.ribbon:ribbon-core:0.2.0'
+        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
         testCompile 'org.testng:testng:6.8.1'
         testCompile 'com.google.mockwebserver:mockwebserver:20130505'
     }
