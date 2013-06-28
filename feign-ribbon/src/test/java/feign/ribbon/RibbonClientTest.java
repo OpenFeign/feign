@@ -68,6 +68,7 @@ public class RibbonClientTest {
   }
 
   static String hostAndPort(URL url) {
-    return url.getHost() + ":" + url.getPort();
+    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
+    return "localhost:" + url.getPort();
   }
 }
