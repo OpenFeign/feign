@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign.codec;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -11,7 +26,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Ticker;
-import com.google.common.net.HttpHeaders;
 import com.google.common.reflect.TypeToken;
 import feign.FeignException;
 import feign.Response;
@@ -35,9 +49,9 @@ import java.util.Date;
  *
  *     &#064;Override
  *     public Object decode(String methodKey, Response response, TypeToken&lt;?&gt; type) throws Throwable {
- *         if (response.status() == 404)
- *             throw new IllegalArgumentException(&quot;zone not found&quot;);
- *         return ErrorDecoder.DEFAULT.decode(request, response, type);
+ *    if (response.status() == 404)
+ *        throw new IllegalArgumentException(&quot;zone not found&quot;);
+ *    return ErrorDecoder.DEFAULT.decode(request, response, type);
  *     }
  *
  * }
@@ -80,7 +94,8 @@ public interface ErrorDecoder {
       };
 
   /**
-   * Decodes a {@link HttpHeaders#RETRY_AFTER} header into an absolute date, if possible.
+   * Decodes a {@link com.google.common.net.HttpHeaders#RETRY_AFTER} header into an absolute date,
+   * if possible.
    *
    * @see <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */

@@ -15,7 +15,8 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 
 ```java
 interface GitHub {
-  @GET @Path("/repos/{owner}/{repo}/contributors") List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+  @GET @Path("/repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
 }
 
 static class Contributor {

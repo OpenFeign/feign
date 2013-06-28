@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign;
 
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
@@ -26,10 +41,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import org.testng.annotations.Test;
 
+/**
+ * Tests interfaces defined per {@link Contract} are interpreted into expected {@link
+ * RequestTemplate template} instances.
+ */
 @Test
 public class ContractTest {
 
-  static interface Methods {
+  interface Methods {
     @POST
     void post();
 
@@ -59,7 +78,7 @@ public class ContractTest {
         DELETE);
   }
 
-  static interface WithQueryParamsInPath {
+  interface WithQueryParamsInPath {
     @GET
     @Path("/?Action=GetUser&Version=2010-05-08")
     Response get();
@@ -74,7 +93,7 @@ public class ContractTest {
     assertEquals(md.template().queries().get("Version"), ImmutableSet.of("2010-05-08"));
   }
 
-  static interface BodyWithoutParameters {
+  interface BodyWithoutParameters {
     @POST
     @Produces(APPLICATION_XML)
     @Body("<v01:getAccountsListOfUser/>")
@@ -98,7 +117,7 @@ public class ContractTest {
     assertEquals(md.template().headers().get(CONTENT_TYPE), ImmutableSet.of(APPLICATION_XML));
   }
 
-  static interface WithURIParam {
+  interface WithURIParam {
     @GET
     @Path("/{1}/{2}")
     Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
@@ -124,7 +143,7 @@ public class ContractTest {
     assertEquals(md.indexToName().get(2), ImmutableSet.of("2"));
   }
 
-  static interface FormParams {
+  interface FormParams {
     @POST
     @Body(
         "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
@@ -152,7 +171,7 @@ public class ContractTest {
     assertEquals(md.indexToName().get(2), ImmutableSet.of("password"));
   }
 
-  static interface HeaderParams {
+  interface HeaderParams {
     @POST
     void logout(@HeaderParam("Auth-Token") String token);
   }

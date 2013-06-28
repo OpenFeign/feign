@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package feign.codec;
 
 import com.google.common.io.Closer;
@@ -19,12 +34,12 @@ import java.io.Reader;
  *     private final Gson gson;
  *
  *     public GsonDecoder(Gson gson) {
- *         this.gson = gson;
+ *    this.gson = gson;
  *     }
  *
  *     &#064;Override
  *     public Object decode(String methodKey, Reader reader, TypeToken&lt;?&gt; type) {
- *         return gson.fromJson(reader, type.getType());
+ *    return gson.fromJson(reader, type.getType());
  *     }
  * }
  * </pre>
