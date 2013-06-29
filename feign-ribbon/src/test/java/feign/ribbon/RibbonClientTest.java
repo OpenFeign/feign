@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 
 @Test
 public class RibbonClientTest {
-  static interface TestInterface {
+  interface TestInterface {
     @POST
     void post();
   }

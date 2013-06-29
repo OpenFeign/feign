@@ -17,25 +17,22 @@ package feign;
 
 import static java.lang.String.format;
 
-import com.google.common.reflect.TypeToken;
-import feign.codec.Decoder;
 import feign.codec.ToStringDecoder;
 import java.io.IOException;
 
-/** Origin exception type for all HttpApis. */
+/** Origin exception type for all Http Apis. */
 public class FeignException extends RuntimeException {
   static FeignException errorReading(Request request, Response response, IOException cause) {
     return new FeignException(
         format("%s %s %s", cause.getMessage(), request.method(), request.url(), 0), cause);
   }
 
-  private static final Decoder toString = new ToStringDecoder();
-  private static final TypeToken<String> stringToken = TypeToken.of(String.class);
+  private static final ToStringDecoder toString = new ToStringDecoder();
 
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
     try {
-      Object body = toString.decode(methodKey, response, stringToken);
+      Object body = toString.decode(methodKey, response, String.class);
       if (body != null) {
         response =
             Response.create(

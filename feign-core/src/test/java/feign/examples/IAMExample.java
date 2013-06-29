@@ -15,12 +15,12 @@
  */
 package feign.examples;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.hash.Hashing.sha256;
 import static com.google.common.io.BaseEncoding.base16;
-import static com.google.common.net.HttpHeaders.HOST;
+import static feign.Util.HOST;
+import static feign.Util.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -115,7 +115,7 @@ public class IAMExample {
     @Override
     public Request apply(RequestTemplate input) {
       input.header(HOST, URI.create(input.url()).getHost());
-      Multimap<String, String> sortedLowercaseHeaders = TreeMultimap.create();
+      TreeMultimap<String, String> sortedLowercaseHeaders = TreeMultimap.create();
       for (String key : input.headers().keySet()) {
         sortedLowercaseHeaders.putAll(
             trimToLowercase.apply(key), transform(input.headers().get(key), trimToLowercase));
@@ -191,9 +191,14 @@ public class IAMExample {
       canonicalRequest.append(Joiner.on(',').join(sortedLowercaseHeaders.keySet())).append('\n');
 
       // HexEncode(Hash(Payload))
-      if (input.body().isPresent()) {
+      if (input.body() != null) {
         canonicalRequest.append(
-            base16().lowerCase().encode(sha256().hashString(input.body().or(""), UTF_8).asBytes()));
+            base16()
+                .lowerCase()
+                .encode(
+                    sha256()
+                        .hashString(input.body() != null ? input.body() : "", UTF_8)
+                        .asBytes()));
       } else {
         canonicalRequest.append(EMPTY_STRING_HASH);
       }

@@ -15,17 +15,18 @@
  */
 package feign;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.net.HttpHeaders.ACCEPT;
-import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static feign.Util.ACCEPT;
+import static feign.Util.CONTENT_TYPE;
+import static feign.Util.checkState;
+import static feign.Util.join;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.TypeToken;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
@@ -38,18 +39,18 @@ import javax.ws.rs.QueryParam;
 /** Defines what annotations and values are valid on interfaces. */
 public final class Contract {
 
-  public static ImmutableSet<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
-    ImmutableSet.Builder<MethodMetadata> builder = ImmutableSet.builder();
+  public static Set<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+    Set<MethodMetadata> metadata = new LinkedHashSet<MethodMetadata>();
     for (Method method : declaring.getDeclaredMethods()) {
       if (method.getDeclaringClass() == Object.class) continue;
-      builder.add(parseAndValidatateMetadata(method));
+      metadata.add(parseAndValidatateMetadata(method));
     }
-    return builder.build();
+    return metadata;
   }
 
   public static MethodMetadata parseAndValidatateMetadata(Method method) {
     MethodMetadata data = new MethodMetadata();
-    data.returnType(TypeToken.of(method.getGenericReturnType()));
+    data.returnType(method.getGenericReturnType());
     data.configKey(Feign.configKey(method));
 
     for (Annotation methodAnnotation : method.getAnnotations()) {
@@ -73,10 +74,9 @@ public final class Contract {
       } else if (annotationType == Path.class) {
         data.template().append(Path.class.cast(methodAnnotation).value());
       } else if (annotationType == Produces.class) {
-        data.template()
-            .header(CONTENT_TYPE, Joiner.on(',').join(((Produces) methodAnnotation).value()));
+        data.template().header(CONTENT_TYPE, join(',', ((Produces) methodAnnotation).value()));
       } else if (annotationType == Consumes.class) {
-        data.template().header(ACCEPT, Joiner.on(',').join(((Consumes) methodAnnotation).value()));
+        data.template().header(ACCEPT, join(',', ((Consumes) methodAnnotation).value()));
       }
     }
     checkState(
@@ -96,34 +96,25 @@ public final class Contract {
         for (Annotation parameterAnnotation : parameterAnnotations) {
           Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
           if (annotationType == PathParam.class) {
-            data.indexToName().put(i, PathParam.class.cast(parameterAnnotation).value());
+            indexName(data, i, PathParam.class.cast(parameterAnnotation).value());
             hasHttpAnnotation = true;
           } else if (annotationType == QueryParam.class) {
             String name = QueryParam.class.cast(parameterAnnotation).value();
-            data.template()
-                .query(
-                    name,
-                    ImmutableList.<String>builder()
-                        .addAll(data.template().queries().get(name))
-                        .add(String.format("{%s}", name))
-                        .build());
-            data.indexToName().put(i, name);
+            Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+            data.template().query(name, query);
+            indexName(data, i, name);
             hasHttpAnnotation = true;
           } else if (annotationType == HeaderParam.class) {
             String name = HeaderParam.class.cast(parameterAnnotation).value();
-            data.template()
-                .header(
-                    name,
-                    ImmutableList.<String>builder()
-                        .addAll(data.template().headers().get(name))
-                        .add(String.format("{%s}", name))
-                        .build());
-            data.indexToName().put(i, name);
+            Collection<String> header =
+                addTemplatedParam(data.template().headers().get(name), name);
+            data.template().header(name, header);
+            indexName(data, i, name);
             hasHttpAnnotation = true;
           } else if (annotationType == FormParam.class) {
             String form = FormParam.class.cast(parameterAnnotation).value();
             data.formParams().add(form);
-            data.indexToName().put(i, form);
+            indexName(data, i, form);
             hasHttpAnnotation = true;
           }
         }
@@ -140,5 +131,19 @@ public final class Contract {
       }
     }
     return data;
+  }
+
+  private static Collection<String> addTemplatedParam(
+      Collection<String> possiblyNull, String name) {
+    if (possiblyNull == null) possiblyNull = new ArrayList<String>();
+    possiblyNull.add(String.format("{%s}", name));
+    return possiblyNull;
+  }
+
+  private static void indexName(MethodMetadata data, int i, String name) {
+    Collection<String> names =
+        data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
+    names.add(name);
+    data.indexToName().put(i, names);
   }
 }

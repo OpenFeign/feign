@@ -15,12 +15,12 @@
  */
 package feign.codec;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static feign.Util.checkNotNull;
+import static feign.Util.checkState;
 
-import com.google.common.reflect.TypeToken;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.ContentHandler;
@@ -48,7 +48,7 @@ public abstract class SAXDecoder extends Decoder {
   }
 
   @Override
-  public Object decode(String methodKey, Reader reader, TypeToken<?> type)
+  public Object decode(String methodKey, Reader reader, Type type)
       throws IOException, SAXException, ParserConfigurationException {
     ContentHandlerWithResult handler = typeToNewHandler(type);
     checkState(handler != null, "%s returned null for type %s", this, type);
@@ -59,5 +59,5 @@ public abstract class SAXDecoder extends Decoder {
     return handler.getResult();
   }
 
-  protected abstract ContentHandlerWithResult typeToNewHandler(TypeToken<?> type);
+  protected abstract ContentHandlerWithResult typeToNewHandler(Type type);
 }

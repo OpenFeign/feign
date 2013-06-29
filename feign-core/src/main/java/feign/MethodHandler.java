@@ -15,23 +15,27 @@
  */
 package feign;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.net.HttpHeaders.LOCATION;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
+import static feign.Util.LOCATION;
+import static feign.Util.checkNotNull;
+import static feign.Util.firstOrNull;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.reflect.TypeToken;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 final class MethodHandler {
+
+  /** Those using guava will implement as {@code Function<Object[], RequestTemplate>}. */
+  static interface BuildTemplateFromArgs {
+    public RequestTemplate apply(Object[] argv);
+  }
 
   static class Factory {
 
@@ -49,7 +53,7 @@ final class MethodHandler {
     public MethodHandler create(
         Target<?> target,
         MethodMetadata md,
-        Function<Object[], RequestTemplate> buildTemplateFromArgs,
+        BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
         Decoder decoder,
         ErrorDecoder errorDecoder) {
@@ -64,7 +68,7 @@ final class MethodHandler {
   private final Provider<Retryer> retryer;
   private final Wire wire;
 
-  private final Function<Object[], RequestTemplate> buildTemplateFromArgs;
+  private final BuildTemplateFromArgs buildTemplateFromArgs;
   private final Options options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
@@ -77,7 +81,7 @@ final class MethodHandler {
       Provider<Retryer> retryer,
       Wire wire,
       MethodMetadata metadata,
-      Function<Object[], RequestTemplate> buildTemplateFromArgs,
+      BuildTemplateFromArgs buildTemplateFromArgs,
       Options options,
       Decoder decoder,
       ErrorDecoder errorDecoder) {
@@ -105,8 +109,8 @@ final class MethodHandler {
     }
   }
 
-  public Object executeAndDecode(
-      String configKey, RequestTemplate template, TypeToken<?> returnType) throws Throwable {
+  public Object executeAndDecode(String configKey, RequestTemplate template, Type returnType)
+      throws Throwable {
     // create the request from a mutable copy of the input template.
     Request request = target.apply(new RequestTemplate(template));
     wire.wireRequest(target, request);
@@ -114,12 +118,12 @@ final class MethodHandler {
     try {
       response = wire.wireAndRebufferResponse(target, response);
       if (response.status() >= 200 && response.status() < 300) {
-        if (returnType.getRawType().equals(Response.class)) {
+        if (returnType.equals(Response.class)) {
           return response;
-        } else if (returnType.getRawType() == URI.class && !response.body().isPresent()) {
-          ImmutableList<String> location = response.headers().get(LOCATION);
-          if (!location.isEmpty()) return URI.create(location.get(0));
-        } else if (returnType.getRawType() == void.class) {
+        } else if (returnType == URI.class && response.body() == null) {
+          String location = firstOrNull(response.headers(), LOCATION);
+          if (location != null) return URI.create(location);
+        } else if (returnType == void.class) {
           return null;
         }
         return decoder.decode(configKey, response, returnType);
@@ -135,9 +139,9 @@ final class MethodHandler {
   }
 
   private void ensureBodyClosed(Response response) {
-    if (response.body().isPresent()) {
+    if (response.body() != null) {
       try {
-        response.body().get().close();
+        response.body().close();
       } catch (IOException ignored) { // NOPMD
       }
     }

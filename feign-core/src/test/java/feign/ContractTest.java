@@ -15,8 +15,8 @@
  */
 package feign;
 
-import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static feign.Contract.parseAndValidatateMetadata;
+import static feign.Util.CONTENT_TYPE;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.POST;
@@ -80,17 +80,63 @@ public class ContractTest {
 
   interface WithQueryParamsInPath {
     @GET
+    @Path("/")
+    Response none();
+
+    @GET
+    @Path("/?Action=GetUser")
+    Response one();
+
+    @GET
     @Path("/?Action=GetUser&Version=2010-05-08")
-    Response get();
+    Response two();
+
+    @GET
+    @Path("/?Action=GetUser&Version=2010-05-08&limit=1")
+    Response three();
+
+    @GET
+    @Path("/?flag&Action=GetUser&Version=2010-05-08")
+    Response empty();
   }
 
   @Test
   public void queryParamsInPathExtract() throws Exception {
-    MethodMetadata md =
-        parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("get"));
-    assertEquals(md.template().url(), "/");
-    assertEquals(md.template().queries().get("Action"), ImmutableSet.of("GetUser"));
-    assertEquals(md.template().queries().get("Version"), ImmutableSet.of("2010-05-08"));
+    {
+      MethodMetadata md =
+          parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none"));
+      assertEquals(md.template().url(), "/");
+      assertTrue(md.template().queries().isEmpty());
+    }
+    {
+      MethodMetadata md =
+          parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one"));
+      assertEquals(md.template().url(), "/");
+      assertEquals(md.template().queries().get("Action"), ImmutableSet.of("GetUser"));
+    }
+    {
+      MethodMetadata md =
+          parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two"));
+      assertEquals(md.template().url(), "/");
+      assertEquals(md.template().queries().get("Action"), ImmutableSet.of("GetUser"));
+      assertEquals(md.template().queries().get("Version"), ImmutableSet.of("2010-05-08"));
+    }
+    {
+      MethodMetadata md =
+          parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three"));
+      assertEquals(md.template().url(), "/");
+      assertEquals(md.template().queries().get("Action"), ImmutableSet.of("GetUser"));
+      assertEquals(md.template().queries().get("Version"), ImmutableSet.of("2010-05-08"));
+      assertEquals(md.template().queries().get("limit"), ImmutableSet.of("1"));
+    }
+    {
+      MethodMetadata md =
+          parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty"));
+      assertEquals(md.template().url(), "/");
+      assertTrue(md.template().queries().containsKey("flag"));
+      assertEquals(md.template().queries().get("Action"), ImmutableSet.of("GetUser"));
+      assertEquals(md.template().queries().get("Version"), ImmutableSet.of("2010-05-08"));
+    }
   }
 
   interface BodyWithoutParameters {
@@ -104,8 +150,8 @@ public class ContractTest {
   public void bodyWithoutParameters() throws Exception {
     MethodMetadata md =
         parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().body().get(), "<v01:getAccountsListOfUser/>");
-    assertFalse(md.template().bodyTemplate().isPresent());
+    assertEquals(md.template().body(), "<v01:getAccountsListOfUser/>");
+    assertFalse(md.template().bodyTemplate() != null);
     assertTrue(md.formParams().isEmpty());
     assertTrue(md.indexToName().isEmpty());
   }
@@ -160,9 +206,9 @@ public class ContractTest {
         parseAndValidatateMetadata(
             FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
 
-    assertFalse(md.template().body().isPresent());
+    assertFalse(md.template().body() != null);
     assertEquals(
-        md.template().bodyTemplate().get(),
+        md.template().bodyTemplate(),
         "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
             + " \"{password}\"%7D");
     assertEquals(md.formParams(), ImmutableList.of("customer_name", "user_name", "password"));

@@ -18,7 +18,6 @@ package feign;
 import static org.testng.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
@@ -29,6 +28,7 @@ import feign.codec.ErrorDecoder;
 import feign.codec.ToStringDecoder;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -86,7 +86,7 @@ public class FeignTest {
             new ErrorDecoder() {
 
               @Override
-              public Object decode(String methodKey, Response response, TypeToken<?> type)
+              public Object decode(String methodKey, Response response, Type type)
                   throws Throwable {
                 if (response.status() == 404) throw new IllegalArgumentException("zone not found");
                 return ErrorDecoder.DEFAULT.decode(methodKey, response, type);
@@ -148,8 +148,7 @@ public class FeignTest {
               new Decoder() {
 
                 @Override
-                public Object decode(String methodKey, Reader reader, TypeToken<?> type)
-                    throws Throwable {
+                public Object decode(String methodKey, Reader reader, Type type) throws Throwable {
                   throw new IOException("error reading response");
                 }
               });

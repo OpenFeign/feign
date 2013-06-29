@@ -15,11 +15,12 @@
  */
 package feign;
 
-import com.google.common.io.Closer;
+import static feign.Util.valuesOrEmpty;
+
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.text.SimpleDateFormat;
-import java.util.Map.Entry;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -109,42 +110,44 @@ public abstract class Wire {
 
   void wireRequest(Target<?> target, Request request) {
     log(target, ">> %s %s HTTP/1.1", request.method(), request.url());
-
-    for (Entry<String, String> header : request.headers().entries()) {
-      log(target, ">> %s: %s", header.getKey(), header.getValue());
+    for (String field : request.headers().keySet()) {
+      for (String value : valuesOrEmpty(request.headers(), field)) {
+        log(target, ">> %s: %s", field, value);
+      }
     }
 
-    if (request.body().isPresent()) {
+    if (request.body() != null) {
       log(target, ">> "); // CRLF
-      log(target, ">> %s", request.body().get());
+      log(target, ">> %s", request.body());
     }
   }
 
   Response wireAndRebufferResponse(Target<?> target, Response response) throws IOException {
     log(target, "<< HTTP/1.1 %s %s", response.status(), response.reason());
-
-    for (Entry<String, String> header : response.headers().entries()) {
-      log(target, "<< %s: %s", header.getKey(), header.getValue());
+    for (String field : response.headers().keySet()) {
+      for (String value : valuesOrEmpty(response.headers(), field)) {
+        log(target, "<< %s: %s", field, value);
+      }
     }
 
-    if (response.body().isPresent()) {
+    if (response.body() != null) {
       log(target, "<< "); // CRLF
-      Closer closer = Closer.create();
+      Reader body = response.body().asReader();
       try {
-        StringBuilder body = new StringBuilder();
-        BufferedReader reader =
-            new BufferedReader(closer.register(response.body().get().asReader()));
+        StringBuilder buffered = new StringBuilder();
+        BufferedReader reader = new BufferedReader(body);
         String line;
         while ((line = reader.readLine()) != null) {
-          body.append(line);
+          buffered.append(line);
           log(target, "<< %s", line);
         }
         return Response.create(
-            response.status(), response.reason(), response.headers(), body.toString());
-      } catch (Throwable e) {
-        throw closer.rethrow(e);
+            response.status(), response.reason(), response.headers(), buffered.toString());
       } finally {
-        closer.close();
+        try {
+          body.close();
+        } catch (IOException suppressed) { // NOPMD
+        }
       }
     }
     return response;

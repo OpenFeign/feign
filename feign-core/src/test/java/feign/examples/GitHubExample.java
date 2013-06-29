@@ -22,7 +22,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import dagger.Module;
 import dagger.Provides;
@@ -30,6 +29,7 @@ import feign.Feign;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -76,8 +76,8 @@ public class GitHubExample {
           Gson gson = new Gson();
 
           @Override
-          public Object decode(String methodKey, Reader reader, TypeToken<?> type) {
-            return gson.fromJson(reader, type.getType());
+          public Object decode(String methodKey, Reader reader, Type type) {
+            return gson.fromJson(reader, type);
           }
         };
   }
@@ -97,9 +97,9 @@ public class GitHubExample {
               new ObjectMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES).setVisibility(FIELD, ANY);
 
           @Override
-          public Object decode(String methodKey, Reader reader, final TypeToken<?> type)
+          public Object decode(String methodKey, Reader reader, final Type type)
               throws JsonProcessingException, IOException {
-            return mapper.readValue(reader, mapper.constructType(type.getType()));
+            return mapper.readValue(reader, mapper.constructType(type));
           }
         };
   }

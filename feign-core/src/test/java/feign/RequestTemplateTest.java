@@ -83,7 +83,7 @@ public class RequestTemplateTest {
 
     assertEquals(
         template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}"));
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}").asMap());
     assertEquals(
         template.toString(),
         "" //
@@ -92,7 +92,7 @@ public class RequestTemplateTest {
     template.resolve(ImmutableMap.of("region", "eu-west-1"));
     assertEquals(
         template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1"));
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1").asMap());
 
     assertEquals(
         template.toString(),
