@@ -68,13 +68,13 @@ public class RequestTemplateTest {
         .append("/?Action=DescribeRegions").query("RegionName.1", "{region}");
 
     assertEquals(template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}"));
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}").asMap());
     assertEquals(template.toString(), ""//
         + "GET /?Action=DescribeRegions&RegionName.1={region} HTTP/1.1\n");
 
     template.resolve(ImmutableMap.of("region", "eu-west-1"));
     assertEquals(template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1"));
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1").asMap());
 
     assertEquals(template.toString(), ""//
         + "GET /?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n");

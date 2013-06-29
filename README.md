@@ -47,8 +47,8 @@ static class GsonModule {
   final Decoder gsonDecoder = new Decoder() {
     Gson gson = new Gson();
 
-    @Override public Object decode(String methodKey, Reader reader, TypeToken<?> type) {
-      return gson.fromJson(reader, type.getType());
+    @Override public Object decode(String methodKey, Reader reader, Type type) {
+      return gson.fromJson(reader, type);
     }
   };
 }

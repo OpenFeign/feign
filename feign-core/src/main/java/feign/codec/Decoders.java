@@ -15,18 +15,14 @@
  */
 package feign.codec;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.CharStreams;
-import com.google.common.reflect.TypeToken;
-
 import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.DOTALL;
 import static java.util.regex.Pattern.compile;
@@ -43,6 +39,17 @@ import static java.util.regex.Pattern.compile;
  * facilitate these use cases.
  */
 public class Decoders {
+  /**
+   * guava users will implement this with {@code ApplyFirstGroup<String, T>}.
+   *
+   * @param <T> intended result type
+   */
+  public interface ApplyFirstGroup<T> {
+    /**
+     * create a new instance from the non-null {@code firstGroup} specified.
+     */
+    T apply(String firstGroup);
+  }
 
   /**
    * The first match group is applied to {@code applyGroups} and result
@@ -54,13 +61,13 @@ public class Decoders {
    * decodeFirstDirPoolID = transformFirstGroup(&quot;&lt;DirPoolID[&circ;&gt;]*&gt;([&circ;&lt;]+)&lt;/DirPoolID&gt;&quot;, ToLong.INSTANCE);
    * </pre>
    */
-  public static <T> Decoder transformFirstGroup(String pattern, final Function<String, T> applyFirstGroup) {
+  public static <T> Decoder transformFirstGroup(String pattern, final ApplyFirstGroup<T> applyFirstGroup) {
     final Pattern patternForMatcher = compile(checkNotNull(pattern, "pattern"), DOTALL);
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
-        Matcher matcher = patternForMatcher.matcher(CharStreams.toString(reader));
+      public Object decode(String methodKey, Reader reader, Type type) throws Throwable {
+        Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
         if (matcher.find()) {
           return applyFirstGroup.apply(matcher.group(1));
         }
@@ -74,7 +81,7 @@ public class Decoders {
   }
 
   /**
-   * shortcut for {@link Decoders#transformFirstGroup(String, Function)} when
+   * shortcut for {@link Decoders#transformFirstGroup(String, ApplyFirstGroup)} when
    * {@code String} is the type you are decoding into.
    * <p/>
    * <p/>
@@ -85,7 +92,7 @@ public class Decoders {
    * </pre>
    */
   public static Decoder firstGroup(String pattern) {
-    return transformFirstGroup(pattern, Functions.<String>identity());
+    return transformFirstGroup(pattern, IDENTITY);
   }
 
   /**
@@ -100,18 +107,18 @@ public class Decoders {
    * decodeListOfZones = transformEachFirstGroup(&quot;/REST/Zone/([&circ;/]+)/&quot;, ToZone.INSTANCE);
    * </pre>
    */
-  public static <T> Decoder transformEachFirstGroup(String pattern, final Function<String, T> applyFirstGroup) {
+  public static <T> Decoder transformEachFirstGroup(String pattern, final ApplyFirstGroup<T> applyFirstGroup) {
     final Pattern patternForMatcher = compile(checkNotNull(pattern, "pattern"), DOTALL);
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public List<T> decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
-        Matcher matcher = patternForMatcher.matcher(CharStreams.toString(reader));
-        ImmutableList.Builder<T> builder = ImmutableList.<T>builder();
+      public List<T> decode(String methodKey, Reader reader, Type type) throws Throwable {
+        Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
+        List<T> result = new ArrayList<T>();
         while (matcher.find()) {
-          builder.add(applyFirstGroup.apply(matcher.group(1)));
+          result.add(applyFirstGroup.apply(matcher.group(1)));
         }
-        return builder.build();
+        return result;
       }
 
       @Override public String toString() {
@@ -122,7 +129,7 @@ public class Decoders {
   }
 
   /**
-   * shortcut for {@link Decoders#transformEachFirstGroup(String, Function)}
+   * shortcut for {@link Decoders#transformEachFirstGroup(String, ApplyFirstGroup)}
    * when {@code List<String>} is the type you are decoding into.
    * <p/>
    * Ex. to pull a list zones names, which are http paths starting with
@@ -133,6 +140,18 @@ public class Decoders {
    * </pre>
    */
   public static Decoder eachFirstGroup(String pattern) {
-    return transformEachFirstGroup(pattern, Functions.<String>identity());
+    return transformEachFirstGroup(pattern, IDENTITY);
   }
+
+  private static String toString(Reader reader) throws Throwable {
+    return TO_STRING.decode(null, reader, null).toString();
+  }
+
+  private static final Decoder TO_STRING = new ToStringDecoder();
+
+  private static final ApplyFirstGroup<String> IDENTITY = new ApplyFirstGroup<String>() {
+    @Override public String apply(String firstGroup) {
+      return firstGroup;
+    }
+  };
 }

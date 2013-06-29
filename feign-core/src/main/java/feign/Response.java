@@ -15,20 +15,19 @@
  */
 package feign;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableListMultimap;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Map.Entry;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.base.Objects.equal;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static feign.Util.UTF_8;
+import static feign.Util.checkNotNull;
+import static feign.Util.checkState;
+import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable response to an http invocation which only returns string
@@ -37,24 +36,26 @@ import static com.google.common.base.Preconditions.checkState;
 public final class Response {
   private final int status;
   private final String reason;
-  private final ImmutableListMultimap<String, String> headers;
-  private final Optional<Body> body;
+  private final Map<String, Collection<String>> headers;
+  private final Body body;
 
-  public static Response create(int status, String reason, ImmutableListMultimap<String, String> headers,
+  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 Reader chars, Integer length) {
-    return new Response(status, reason, headers, Optional.fromNullable(ReaderBody.orNull(chars, length)));
+    return new Response(status, reason, headers, ReaderBody.orNull(chars, length));
   }
 
-  public static Response create(int status, String reason, ImmutableListMultimap<String, String> headers, String chars) {
-    return new Response(status, reason, headers, Optional.fromNullable(StringBody.orNull(chars)));
+  public static Response create(int status, String reason, Map<String, Collection<String>> headers, String chars) {
+    return new Response(status, reason, headers, StringBody.orNull(chars));
   }
 
-  private Response(int status, String reason, ImmutableListMultimap<String, String> headers, Optional<Body> body) {
+  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
     checkState(status >= 200, "Invalid status code: %s", status);
     this.status = status;
     this.reason = checkNotNull(reason, "reason");
-    this.headers = checkNotNull(headers, "headers");
-    this.body = checkNotNull(body, "body");
+    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
+    copyOf.putAll(checkNotNull(headers, "headers"));
+    this.headers = Collections.unmodifiableMap(copyOf);
+    this.body = body; //nullable
   }
 
   /**
@@ -70,24 +71,27 @@ public final class Response {
     return reason;
   }
 
-  public ImmutableListMultimap<String, String> headers() {
+  public Map<String, Collection<String>> headers() {
     return headers;
   }
 
-  public Optional<Body> body() {
+  /**
+   * if present, the response had a body
+   */
+  public Body body() {
     return body;
   }
 
   public interface Body extends Closeable {
 
     /**
-     * length in bytes, if known.
+     * length in bytes, if known. Null if not.
      * <p/>
      * <h4>Note</h4> This is an integer as most implementations cannot do
      * bodies > 2GB. Moreover, the scope of this interface doesn't include
      * large bodies.
      */
-    Optional<Integer> length();
+    Integer length();
 
     /**
      * True if {@link #asReader()} can be called more than once.
@@ -104,18 +108,18 @@ public final class Response {
     private static Body orNull(Reader chars, Integer length) {
       if (chars == null)
         return null;
-      return new ReaderBody(chars, Optional.fromNullable(length));
+      return new ReaderBody(chars, length);
     }
 
     private final Reader chars;
-    private final Optional<Integer> length;
+    private final Integer length;
 
-    private ReaderBody(Reader chars, Optional<Integer> length) {
+    private ReaderBody(Reader chars, Integer length) {
       this.chars = chars;
       this.length = length;
     }
 
-    @Override public Optional<Integer> length() {
+    @Override public Integer length() {
       return length;
     }
 
@@ -145,11 +149,11 @@ public final class Response {
       this.chars = chars;
     }
 
-    private volatile Optional<Integer> length;
+    private volatile Integer length;
 
-    @Override public Optional<Integer> length() {
+    @Override public Integer length() {
       if (length == null) {
-        length = Optional.of(chars.getBytes(UTF_8).length);
+        length = chars.getBytes(UTF_8).length;
       }
       return length;
     }
@@ -170,28 +174,16 @@ public final class Response {
     }
   }
 
-  @Override public int hashCode() {
-    return Objects.hashCode(status, reason, headers, body);
-  }
-
-  @Override public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (Response.class != obj.getClass())
-      return false;
-    Response that = Response.class.cast(obj);
-    return equal(this.status, that.status) && equal(this.reason, that.reason) && equal(this.headers, that.headers)
-        && equal(this.body, that.body);
-  }
-
   @Override public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
-    for (Entry<String, String> header : headers.entries()) {
-      builder.append(header.getKey()).append(": ").append(header.getValue()).append('\n');
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
     }
-    if (body.isPresent()) {
-      builder.append('\n').append(body.get());
+    if (body != null) {
+      builder.append('\n').append(body);
     }
     return builder.toString();
   }

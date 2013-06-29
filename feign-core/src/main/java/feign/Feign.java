@@ -15,11 +15,10 @@
  */
 package feign;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -67,23 +66,16 @@ public abstract class Feign {
    * {@link Target targeted} http apis.
    */
   public static Feign create(Object... modules) {
-    Object[] modulesForGraph = ImmutableList.builder() //
-        .add(new Defaults()) //
-        .add(new ReflectiveFeign.Module()) //
-        .add(Optional.fromNullable(modules).or(new Object[]{})).build().toArray();
-    return ObjectGraph.create(modulesForGraph).get(Feign.class);
+    return ObjectGraph.create(modulesForGraph(modules).toArray()).get(Feign.class);
   }
+
 
   /**
    * Returns an {@link ObjectGraph Dagger ObjectGraph} that can inject a
    * {@link ReflectiveFeign reflective} Feign.
    */
   public static ObjectGraph createObjectGraph(Object... modules) {
-    Object[] modulesForGraph = ImmutableList.builder() //
-        .add(new Defaults()) //
-        .add(new ReflectiveFeign.Module()) //
-        .add(Optional.fromNullable(modules).or(new Object[]{})).build().toArray();
-    return ObjectGraph.create(modulesForGraph);
+    return ObjectGraph.create(modulesForGraph(modules).toArray());
   }
 
   @dagger.Module(complete = false, injects = Feign.class, library = true)
@@ -106,23 +98,23 @@ public abstract class Feign {
     }
 
     @Provides Map<String, Options> noOptions() {
-      return ImmutableMap.of();
+      return Collections.emptyMap();
     }
 
     @Provides Map<String, BodyEncoder> noBodyEncoders() {
-      return ImmutableMap.of();
+      return Collections.emptyMap();
     }
 
     @Provides Map<String, FormEncoder> noFormEncoders() {
-      return ImmutableMap.of();
+      return Collections.emptyMap();
     }
 
     @Provides Map<String, Decoder> noDecoders() {
-      return ImmutableMap.of();
+      return Collections.emptyMap();
     }
 
     @Provides Map<String, ErrorDecoder> noErrorDecoders() {
-      return ImmutableMap.of();
+      return Collections.emptyMap();
     }
   }
 
@@ -155,6 +147,16 @@ public abstract class Feign {
     if (method.getParameterTypes().length > 0)
       builder.deleteCharAt(builder.length() - 1);
     return builder.append(')').toString();
+  }
+
+  private static List<Object> modulesForGraph(Object... modules) {
+    List<Object> modulesForGraph = new ArrayList<Object>(3);
+    modulesForGraph.add(new Defaults());
+    modulesForGraph.add(new ReflectiveFeign.Module());
+    if (modules != null)
+      for (Object module : modules)
+        modulesForGraph.add(module);
+    return modulesForGraph;
   }
 
   Feign() {

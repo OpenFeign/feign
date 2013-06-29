@@ -32,7 +32,7 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class LoadBalancingTargetTest {
-  static interface TestInterface {
+  interface TestInterface {
     @POST void post();
   }
 

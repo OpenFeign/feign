@@ -15,25 +15,25 @@
  */
 package feign;
 
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.SetMultimap;
-import com.google.common.reflect.TypeToken;
-
 import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class MethodMetadata implements Serializable {
   MethodMetadata() {
   }
 
   private String configKey;
-  private transient TypeToken<?> returnType;
+  private transient Type returnType;
   private Integer urlIndex;
   private Integer bodyIndex;
   private RequestTemplate template = new RequestTemplate();
-  private List<String> formParams = Lists.newArrayList();
-  private SetMultimap<Integer, String> indexToName = LinkedHashMultimap.create();
+  private List<String> formParams = new ArrayList<String>();
+  private Map<Integer, Collection<String>> indexToName = new LinkedHashMap<Integer, Collection<String>>();
 
   /**
    * @see Feign#configKey(java.lang.reflect.Method)
@@ -47,11 +47,11 @@ public final class MethodMetadata implements Serializable {
     return this;
   }
 
-  public TypeToken<?> returnType() {
+  public Type returnType() {
     return returnType;
   }
 
-  MethodMetadata returnType(TypeToken<?> returnType) {
+  MethodMetadata returnType(Type returnType) {
     this.returnType = returnType;
     return this;
   }
@@ -82,7 +82,7 @@ public final class MethodMetadata implements Serializable {
     return formParams;
   }
 
-  public SetMultimap<Integer, String> indexToName() {
+  public Map<Integer, Collection<String>> indexToName() {
     return indexToName;
   }
 

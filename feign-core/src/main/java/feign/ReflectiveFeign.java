@@ -15,17 +15,11 @@
  */
 package feign;
 
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Maps;
-import com.google.common.reflect.AbstractInvocationHandler;
-import com.google.common.reflect.Reflection;
-
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -41,17 +35,17 @@ import feign.codec.ErrorDecoder;
 import feign.codec.FormEncoder;
 import feign.codec.ToStringDecoder;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static feign.Contract.parseAndValidatateMetadata;
+import static feign.Util.checkArgument;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 
 @SuppressWarnings("rawtypes")
 public class ReflectiveFeign extends Feign {
 
-  private final Function<Target, Map<String, MethodHandler>> targetToHandlersByName;
+  private final ParseHandlersByName targetToHandlersByName;
 
-  @Inject ReflectiveFeign(Function<Target, Map<String, MethodHandler>> targetToHandlersByName) {
+  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName) {
     this.targetToHandlersByName = targetToHandlersByName;
   }
 
@@ -61,28 +55,27 @@ public class ReflectiveFeign extends Feign {
    */
   @Override public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
-    Builder<Method, MethodHandler> methodToHandler = ImmutableMap.builder();
+    Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
     for (Method method : target.type().getDeclaredMethods()) {
       if (method.getDeclaringClass() == Object.class)
         continue;
       methodToHandler.put(method, nameToHandler.get(Feign.configKey(method)));
     }
-    FeignInvocationHandler handler = new FeignInvocationHandler(target, methodToHandler.build());
-    return Reflection.newProxy(target.type(), handler);
+    FeignInvocationHandler handler = new FeignInvocationHandler(target, methodToHandler);
+    return (T) Proxy.newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
   }
 
-  static class FeignInvocationHandler extends AbstractInvocationHandler {
+  static class FeignInvocationHandler implements InvocationHandler {
 
     private final Target target;
     private final Map<Method, MethodHandler> methodToHandler;
 
-    FeignInvocationHandler(Target target, ImmutableMap<Method, MethodHandler> methodToHandler) {
+    FeignInvocationHandler(Target target, Map<Method, MethodHandler> methodToHandler) {
       this.target = checkNotNull(target, "target");
       this.methodToHandler = checkNotNull(methodToHandler, "methodToHandler for %s", target);
     }
 
-    @Override
-    protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       return methodToHandler.get(method).invoke(args);
     }
 
@@ -100,7 +93,7 @@ public class ReflectiveFeign extends Feign {
     }
 
     @Override public String toString() {
-      return Objects.toStringHelper("").add("name", target.name()).add("url", target.url()).toString();
+      return "target(" + target + ")";
     }
   }
 
@@ -112,11 +105,6 @@ public class ReflectiveFeign extends Feign {
     @Provides Feign provideFeign(ReflectiveFeign in) {
       return in;
     }
-
-    @Provides
-    Function<Target, Map<String, MethodHandler>> targetToHandlersByName(ParseHandlersByName parseHandlersByName) {
-      return parseHandlersByName;
-    }
   }
 
   private static IllegalStateException noConfig(String configKey, Class<?> type) {
@@ -124,7 +112,7 @@ public class ReflectiveFeign extends Feign {
         type.getSimpleName()));
   }
 
-  static final class ParseHandlersByName implements Function<Target, Map<String, MethodHandler>> {
+  static final class ParseHandlersByName {
     private final Map<String, Options> options;
     private final Map<String, BodyEncoder> bodyEncoders;
     private final Map<String, FormEncoder> formEncoders;
@@ -143,9 +131,9 @@ public class ReflectiveFeign extends Feign {
       this.errorDecoders = errorDecoders;
     }
 
-    @Override public Map<String, MethodHandler> apply(Target key) {
+    public Map<String, MethodHandler> apply(Target key) {
       Set<MethodMetadata> metadata = parseAndValidatateMetadata(key.type());
-      ImmutableMap.Builder<String, MethodHandler> builder = ImmutableMap.builder();
+      Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
         Options options = forMethodOrClass(this.options, md.configKey());
         if (options == null) {
@@ -153,7 +141,7 @@ public class ReflectiveFeign extends Feign {
         }
         Decoder decoder = forMethodOrClass(decoders, md.configKey());
         if (decoder == null
-            && (md.returnType().getRawType() == void.class || md.returnType().getRawType() == Response.class)) {
+            && (md.returnType() == void.class || md.returnType() == Response.class)) {
           decoder = new ToStringDecoder();
         }
         if (decoder == null) {
@@ -163,37 +151,36 @@ public class ReflectiveFeign extends Feign {
         if (errorDecoder == null) {
           errorDecoder = ErrorDecoder.DEFAULT;
         }
-        Function<Object[], RequestTemplate> buildTemplateFromArgs;
-        if (!md.formParams().isEmpty() && !md.template().bodyTemplate().isPresent()) {
+        BuildTemplateByResolvingArgs BuildTemplateByResolvingArgs;
+        if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
           FormEncoder formEncoder = forMethodOrClass(formEncoders, md.configKey());
           if (formEncoder == null) {
             throw noConfig(md.configKey(), FormEncoder.class);
           }
-          buildTemplateFromArgs = new BuildFormEncodedTemplateFromArgs(md, formEncoder);
+          BuildTemplateByResolvingArgs = new BuildFormEncodedTemplateFromArgs(md, formEncoder);
         } else if (md.bodyIndex() != null) {
           BodyEncoder bodyEncoder = forMethodOrClass(bodyEncoders, md.configKey());
           if (bodyEncoder == null) {
             throw noConfig(md.configKey(), BodyEncoder.class);
           }
-          buildTemplateFromArgs = new BuildBodyEncodedTemplateFromArgs(md, bodyEncoder);
+          BuildTemplateByResolvingArgs = new BuildBodyEncodedTemplateFromArgs(md, bodyEncoder);
         } else {
-          buildTemplateFromArgs = new BuildTemplateFromArgs(md);
+          BuildTemplateByResolvingArgs = new BuildTemplateByResolvingArgs(md);
         }
-        builder.put(md.configKey(),
-            factory.create(key, md, buildTemplateFromArgs, options, decoder, errorDecoder));
+        result.put(md.configKey(),
+            factory.create(key, md, BuildTemplateByResolvingArgs, options, decoder, errorDecoder));
       }
-      return builder.build();
+      return result;
     }
   }
 
-  private static class BuildTemplateFromArgs implements Function<Object[], RequestTemplate> {
+  private static class BuildTemplateByResolvingArgs implements MethodHandler.BuildTemplateFromArgs {
     protected final MethodMetadata metadata;
 
-    private BuildTemplateFromArgs(MethodMetadata metadata) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
     }
 
-    @Override
     public RequestTemplate apply(Object[] argv) {
       RequestTemplate mutable = new RequestTemplate(metadata.template());
       if (metadata.urlIndex() != null) {
@@ -201,23 +188,23 @@ public class ReflectiveFeign extends Feign {
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
         mutable.insert(0, String.valueOf(argv[urlIndex]));
       }
-      ImmutableMap.Builder<String, Object> varBuilder = ImmutableMap.builder();
-      for (Entry<Integer, Collection<String>> entry : metadata.indexToName().asMap().entrySet()) {
+      Map<String, Object> varBuilder = new LinkedHashMap<String, Object>();
+      for (Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
         Object value = argv[entry.getKey()];
         if (value != null) { // Null values are skipped.
           for (String name : entry.getValue())
             varBuilder.put(name, value);
         }
       }
-      return resolve(argv, mutable, varBuilder.build());
+      return resolve(argv, mutable, varBuilder);
     }
 
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
       return mutable.resolve(variables);
     }
   }
 
-  private static class BuildFormEncodedTemplateFromArgs extends BuildTemplateFromArgs {
+  private static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final FormEncoder formEncoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, FormEncoder formEncoder) {
@@ -226,13 +213,18 @@ public class ReflectiveFeign extends Feign {
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
-      formEncoder.encodeForm(Maps.filterKeys(variables, Predicates.in(metadata.formParams())), mutable);
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+      Map<String, Object> formVariables = new LinkedHashMap<String, Object>();
+      for (Entry<String, Object> entry : variables.entrySet()) {
+        if (metadata.formParams().contains(entry.getKey()))
+          formVariables.put(entry.getKey(), entry.getValue());
+      }
+      formEncoder.encodeForm(formVariables, mutable);
       return super.resolve(argv, mutable, variables);
     }
   }
 
-  private static class BuildBodyEncodedTemplateFromArgs extends BuildTemplateFromArgs {
+  private static class BuildBodyEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final BodyEncoder bodyEncoder;
 
     private BuildBodyEncodedTemplateFromArgs(MethodMetadata metadata, BodyEncoder bodyEncoder) {
@@ -241,7 +233,7 @@ public class ReflectiveFeign extends Feign {
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, ImmutableMap<String, Object> variables) {
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       bodyEncoder.encodeBody(body, mutable);
