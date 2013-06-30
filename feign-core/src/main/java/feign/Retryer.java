@@ -37,18 +37,26 @@ public interface Retryer {
   void continueOrPropagate(RetryableException e);
 
   public static class Default implements Retryer {
-    private final int maxAttempts = 5;
-    private final long period = MILLISECONDS.toNanos(50);
-    private final long maxPeriod = SECONDS.toNanos(1);
+
+    private final int maxAttempts;
+    private final long period;
+    private final long maxPeriod;
+
+    public Default() {
+      this(MILLISECONDS.toNanos(100), SECONDS.toNanos(1), 5);
+    }
+
+    public Default(long period, long maxPeriod, int maxAttempts) {
+      this.period = period;
+      this.maxPeriod = maxPeriod;
+      this.maxAttempts = maxAttempts;
+      this.attempt = 1;
+    }
 
     // visible for testing;
     Ticker ticker = Ticker.systemTicker();
     int attempt;
     long sleptForNanos;
-
-    public Default() {
-      this.attempt = 1;
-    }
 
     public void continueOrPropagate(RetryableException e) {
       if (attempt++ >= maxAttempts)

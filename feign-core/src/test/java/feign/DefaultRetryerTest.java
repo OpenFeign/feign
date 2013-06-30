@@ -37,19 +37,19 @@ public class DefaultRetryerTest {
 
     retryer.continueOrPropagate(e);
     assertEquals(retryer.attempt, 2);
-    assertEquals(retryer.sleptForNanos, 75000000);
+    assertEquals(retryer.sleptForNanos, 150000000);
 
     retryer.continueOrPropagate(e);
     assertEquals(retryer.attempt, 3);
-    assertEquals(retryer.sleptForNanos, 187500000);
+    assertEquals(retryer.sleptForNanos, 375000000);
 
     retryer.continueOrPropagate(e);
     assertEquals(retryer.attempt, 4);
-    assertEquals(retryer.sleptForNanos, 356250000);
+    assertEquals(retryer.sleptForNanos, 712500000);
 
     retryer.continueOrPropagate(e);
     assertEquals(retryer.attempt, 5);
-    assertEquals(retryer.sleptForNanos, 609375000);
+    assertEquals(retryer.sleptForNanos, 1218750000);
 
     retryer.continueOrPropagate(e);
     // fail
