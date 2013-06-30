@@ -16,7 +16,6 @@
 package feign;
 
 import static feign.RequestTemplate.expand;
-import static javax.ws.rs.HttpMethod.GET;
 import static org.testng.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
@@ -51,7 +50,7 @@ public class RequestTemplateTest {
   @Test
   public void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
 
-    RequestTemplate template = new RequestTemplate().method(GET).append("{zoneId}");
+    RequestTemplate template = new RequestTemplate().method("GET").append("{zoneId}");
 
     assertEquals(
         template.toString(),
@@ -77,7 +76,7 @@ public class RequestTemplateTest {
   public void resolveTemplateWithBaseAndParameterizedQuery() {
     RequestTemplate template =
         new RequestTemplate()
-            .method(GET)
+            .method("GET")
             .append("/?Action=DescribeRegions")
             .query("RegionName.1", "{region}");
 
@@ -106,5 +105,74 @@ public class RequestTemplateTest {
         "" //
             + "GET https://iam.amazonaws.com/?Action=DescribeRegions&RegionName.1=eu-west-1"
             + " HTTP/1.1\n");
+  }
+
+  @Test
+  public void resolveTemplateWithMixedRequestLineParams() throws Exception {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method("GET") //
+            .append("/domains/{domainId}/records") //
+            .query("name", "{name}") //
+            .query("type", "{type}");
+
+    template =
+        template.resolve(
+            ImmutableMap.<String, Object>builder() //
+                .put("domainId", 1001) //
+                .put("name", "denominator.io") //
+                .put("type", "CNAME") //
+                .build());
+
+    assertEquals(
+        template.toString(),
+        "" //
+            + "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+
+    template.insert(0, "https://dns.api.rackspacecloud.com/v1.0/1234");
+
+    assertEquals(
+        template.request().toString(),
+        "" //
+            + "GET https://dns.api.rackspacecloud.com/v1.0/1234" //
+            + "/domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+  }
+
+  @Test
+  public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method("POST")
+            .bodyTemplate(
+                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
+                    + "\"password\": \"{password}\"%7D");
+
+    template =
+        template.resolve(
+            ImmutableMap.<String, Object>builder() //
+                .put("customer_name", "netflix") //
+                .put("user_name", "denominator") //
+                .put("password", "password") //
+                .build());
+
+    assertEquals(
+        template.toString(),
+        "" //
+            + "POST  HTTP/1.1\n" //
+            + "Content-Length: 80\n" //
+            + "\n" //
+            + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
+            + " \"password\"}");
+
+    template.insert(0, "https://api2.dynect.net/REST");
+
+    assertEquals(
+        template.request().toString(),
+        "" //
+            + "POST https://api2.dynect.net/REST HTTP/1.1\n" //
+            + "Content-Length: 80\n" //
+            + "\n" //
+            + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
+            + " \"password\"}");
   }
 }

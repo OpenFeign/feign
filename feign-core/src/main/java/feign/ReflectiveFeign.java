@@ -15,7 +15,6 @@
  */
 package feign;
 
-import static feign.Contract.parseAndValidatateMetadata;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static java.lang.String.format;
@@ -33,9 +32,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import javax.inject.Inject;
 
 @SuppressWarnings("rawtypes")
@@ -119,6 +118,7 @@ public class ReflectiveFeign extends Feign {
   }
 
   static final class ParseHandlersByName {
+    private final Contract contract;
     private final Map<String, Options> options;
     private final Map<String, BodyEncoder> bodyEncoders;
     private final Map<String, FormEncoder> formEncoders;
@@ -128,12 +128,14 @@ public class ReflectiveFeign extends Feign {
 
     @Inject
     ParseHandlersByName(
+        Contract contract,
         Map<String, Options> options,
         Map<String, BodyEncoder> bodyEncoders,
         Map<String, FormEncoder> formEncoders,
         Map<String, Decoder> decoders,
         Map<String, ErrorDecoder> errorDecoders,
         Factory factory) {
+      this.contract = contract;
       this.options = options;
       this.bodyEncoders = bodyEncoders;
       this.formEncoders = formEncoders;
@@ -143,7 +145,7 @@ public class ReflectiveFeign extends Feign {
     }
 
     public Map<String, MethodHandler> apply(Target key) {
-      Set<MethodMetadata> metadata = parseAndValidatateMetadata(key.type());
+      List<MethodMetadata> metadata = contract.parseAndValidatateMetadata(key.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
         Options options = forMethodOrClass(this.options, md.configKey());
@@ -162,25 +164,24 @@ public class ReflectiveFeign extends Feign {
         if (errorDecoder == null) {
           errorDecoder = ErrorDecoder.DEFAULT;
         }
-        BuildTemplateByResolvingArgs BuildTemplateByResolvingArgs;
+        BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
           FormEncoder formEncoder = forMethodOrClass(formEncoders, md.configKey());
           if (formEncoder == null) {
             throw noConfig(md.configKey(), FormEncoder.class);
           }
-          BuildTemplateByResolvingArgs = new BuildFormEncodedTemplateFromArgs(md, formEncoder);
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, formEncoder);
         } else if (md.bodyIndex() != null) {
           BodyEncoder bodyEncoder = forMethodOrClass(bodyEncoders, md.configKey());
           if (bodyEncoder == null) {
             throw noConfig(md.configKey(), BodyEncoder.class);
           }
-          BuildTemplateByResolvingArgs = new BuildBodyEncodedTemplateFromArgs(md, bodyEncoder);
+          buildTemplate = new BuildBodyEncodedTemplateFromArgs(md, bodyEncoder);
         } else {
-          BuildTemplateByResolvingArgs = new BuildTemplateByResolvingArgs(md);
+          buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
         result.put(
-            md.configKey(),
-            factory.create(key, md, BuildTemplateByResolvingArgs, options, decoder, errorDecoder));
+            md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
       }
       return result;
     }

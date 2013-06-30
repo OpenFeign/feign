@@ -21,15 +21,15 @@ import static org.testng.Assert.assertEquals;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import feign.Feign;
+import feign.RequestLine;
 import java.io.IOException;
 import java.net.URL;
-import javax.ws.rs.POST;
 import org.testng.annotations.Test;
 
 @Test
 public class LoadBalancingTargetTest {
   interface TestInterface {
-    @POST
+    @RequestLine("POST /")
     void post();
   }
 

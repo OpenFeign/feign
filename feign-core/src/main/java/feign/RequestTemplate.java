@@ -21,13 +21,9 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 import static feign.Util.toArray;
 import static feign.Util.valuesOrEmpty;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -35,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -50,30 +47,6 @@ import java.util.Map.Entry;
  * this object is mutable, so needs to be guarded with the copy constructor.
  */
 public final class RequestTemplate implements Serializable {
-
-  /**
-   * A templatized form for a PUT or POST command. Values of {@link javax.ws.rs.PathParam}, {@link
-   * javax.ws.rs.QueryParam}, {@link javax.ws.rs.HeaderParam}, and {@link javax.ws.rs.FormParam} can
-   * be used are passed to the template.
-   *
-   * <p>ex.
-   *
-   * <p>
-   *
-   * <pre>
-   * &#064;Body(&quot;&lt;v01:getResourceRecordsOfZone&gt;&lt;zoneName&gt;{zoneName}&lt;/zoneName&gt;&lt;rrType&gt;0&lt;/rrType&gt;&lt;/v01:getResourceRecordsOfZone&gt;&quot;)
-   * List&lt;Record&gt; listByZone(@PayloadParam(&quot;zoneName&quot;) String zoneName);
-   * </pre>
-   *
-   * <p>Note that if you'd like curly braces literally in the body, urlencode them first.
-   *
-   * @see RequestTemplate#expand(String, Map)
-   */
-  @Target(METHOD)
-  @Retention(RUNTIME)
-  public @interface Body {
-    String value();
-  }
 
   private String method;
   /* final to encourage mutable use vs replacing the object. */
@@ -373,8 +346,13 @@ public final class RequestTemplate implements Serializable {
    */
   public RequestTemplate header(String configKey, String... values) {
     checkNotNull(configKey, "header configKey");
-    if (values == null || (values.length == 1 && values[0] == null)) headers.remove(configKey);
-    else this.headers.put(configKey, Arrays.asList(values));
+    if (values == null || (values.length == 1 && values[0] == null)) {
+      headers.remove(configKey);
+    } else {
+      List<String> headers = new ArrayList<String>();
+      headers.addAll(Arrays.asList(values));
+      this.headers.put(configKey, headers);
+    }
     return this;
   }
 
