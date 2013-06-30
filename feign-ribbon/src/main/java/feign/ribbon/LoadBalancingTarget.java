@@ -26,8 +26,8 @@ import feign.RequestTemplate;
 import feign.Target;
 
 import static com.google.common.base.Objects.equal;
-import static feign.Util.checkNotNull;
 import static com.netflix.client.ClientFactory.getNamedLoadBalancer;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 
 /**

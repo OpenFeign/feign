@@ -23,9 +23,8 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.ws.rs.POST;
-
 import feign.Feign;
+import feign.RequestLine;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.testng.Assert.assertEquals;
@@ -33,7 +32,7 @@ import static org.testng.Assert.assertEquals;
 @Test
 public class RibbonClientTest {
   interface TestInterface {
-    @POST void post();
+    @RequestLine("POST /") void post();
   }
 
   @Test

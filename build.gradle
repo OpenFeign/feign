@@ -36,11 +36,30 @@ project(':feign-core') {
 
     dependencies {
         compile     'com.squareup.dagger:dagger:1.0.1'
-        compile     'javax.ws.rs:jsr311-api:1.1.1'
         provided    'com.squareup.dagger:dagger-compiler:1.0.1'
         testCompile 'com.google.guava:guava:14.0.1'
         testCompile 'com.google.code.gson:gson:2.2.4'
         testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+        testCompile 'org.testng:testng:6.8.1'
+        testCompile 'com.google.mockwebserver:mockwebserver:20130505'
+    }
+}
+
+project(':feign-jaxrs') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        compile     'javax.ws.rs:jsr311-api:1.1.1'
+        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        // for example classes
+        testCompile project(':feign-core').sourceSets.test.output
+        testCompile 'com.google.guava:guava:14.0.1'
+        testCompile 'com.google.code.gson:gson:2.2.4'
         testCompile 'org.testng:testng:6.8.1'
         testCompile 'com.google.mockwebserver:mockwebserver:20130505'
     }

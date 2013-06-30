@@ -24,7 +24,7 @@ public interface FormEncoder {
   /**
    * FormParam encoding
    * <p/>
-   * If any parameters are annotated with {@link javax.ws.rs.FormParam}, they will be
+   * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
    * collected and passed as {code formParams}
    * <p/>
    * <pre>

@@ -1,2 +1,2 @@
 rootProject.name='feign'
-include 'feign-core', 'feign-ribbon', 'examples:feign-example-cli'
+include 'feign-core', 'feign-jaxrs', 'feign-ribbon', 'examples:feign-example-cli'
