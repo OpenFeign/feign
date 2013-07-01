@@ -24,9 +24,9 @@ import feign.Response;
 /**
  * Decodes an HTTP response into a given type. Invoked when
  * {@link Response#status()} is in the 2xx range.
- * <p/>
+ * <br>
  * Ex.
- * <p/>
+ * <br>
  * <pre>
  * public class GsonDecoder extends Decoder {
  *   private final Gson gson;
@@ -41,9 +41,9 @@ import feign.Response;
  *   }
  * }
  * </pre>
- * <p/>
- * <h4>Error handling</h4>
- * <p/>
+ * <br>
+ * <br><br><b>Error handling</b><br>
+ * <br>
  * Responses where {@link Response#status()} is not in the 2xx range are
  * classified as errors, addressed by the {@link ErrorDecoder}. That said,
  * certain RPC apis return errors defined in the {@link Response#body()} even on

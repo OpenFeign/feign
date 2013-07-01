@@ -23,10 +23,10 @@ public interface FormEncoder {
 
   /**
    * FormParam encoding
-   * <p/>
+   * <br>
    * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
    * collected and passed as {code formParams}
-   * <p/>
+   * <br>
    * <pre>
    * &#064;POST
    * &#064;Path(&quot;/&quot;)

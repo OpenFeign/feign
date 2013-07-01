@@ -29,9 +29,9 @@ import static java.util.regex.Pattern.compile;
 
 /**
  * Static utility methods pertaining to {@code Decoder} instances.
- * <p/>
- * <h4>Pattern Decoders</h4>
- * <p/>
+ * <br>
+ * <br><br><b>Pattern Decoders</b><br>
+ * <br>
  * Pattern decoders typically require less initialization, dependencies, and
  * code than reflective decoders, but not can be awkward to those unfamiliar
  * with regex. Typical use of pattern decoders is to grab a single field from an
@@ -54,9 +54,9 @@ public class Decoders {
   /**
    * The first match group is applied to {@code applyGroups} and result
    * returned. If no matches are found, the response is null;
-   * <p/>
+   * <br>
    * Ex. to pull the first interesting element from an xml response:
-   * <p/>
+   * <br>
    * <pre>
    * decodeFirstDirPoolID = transformFirstGroup(&quot;&lt;DirPoolID[&circ;&gt;]*&gt;([&circ;&lt;]+)&lt;/DirPoolID&gt;&quot;, ToLong.INSTANCE);
    * </pre>
@@ -83,10 +83,10 @@ public class Decoders {
   /**
    * shortcut for {@link Decoders#transformFirstGroup(String, ApplyFirstGroup)} when
    * {@code String} is the type you are decoding into.
-   * <p/>
-   * <p/>
+   * <br>
+   * <br>
    * Ex. to pull the first interesting element from an xml response:
-   * <p/>
+   * <br>
    * <pre>
    * decodeFirstDirPoolID = firstGroup(&quot;&lt;DirPoolID[&circ;&gt;]*&gt;([&circ;&lt;]+)&lt;/DirPoolID&gt;&quot;);
    * </pre>
@@ -99,10 +99,10 @@ public class Decoders {
    * On the each find the first match group is applied to
    * {@code applyFirstGroup} and added to the list returned. If no matches are
    * found, the response is an empty list;
-   * <p/>
+   * <br>
    * Ex. to pull a list zones constructed from http paths starting with
    * {@code /Rest/Zone/}:
-   * <p/>
+   * <br>
    * <pre>
    * decodeListOfZones = transformEachFirstGroup(&quot;/REST/Zone/([&circ;/]+)/&quot;, ToZone.INSTANCE);
    * </pre>
@@ -131,10 +131,10 @@ public class Decoders {
   /**
    * shortcut for {@link Decoders#transformEachFirstGroup(String, ApplyFirstGroup)}
    * when {@code List<String>} is the type you are decoding into.
-   * <p/>
+   * <br>
    * Ex. to pull a list zones names, which are http paths starting with
    * {@code /Rest/Zone/}:
-   * <p/>
+   * <br>
    * <pre>
    * decodeListOfZonesNames = eachFirstGroup(&quot;/REST/Zone/([&circ;/]+)/&quot;);
    * </pre>

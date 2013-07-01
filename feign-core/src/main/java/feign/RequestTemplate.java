@@ -37,9 +37,9 @@ import static feign.Util.valuesOrEmpty;
 
 /**
  * Builds a request to an http target. Not thread safe.
- * <p/>
- * <h4>relationship to JAXRS 2.0</h4>
- * <p/>
+ * <br>
+ * <br><br><b>relationship to JAXRS 2.0</b><br>
+ * <br>
  * A combination of {@code javax.ws.rs.client.WebTarget} and
  * {@code javax.ws.rs.client.Invocation.Builder}, ensuring you can modify any
  * part of the request. However, this object is mutable, so needs to be guarded
@@ -74,10 +74,10 @@ public final class RequestTemplate implements Serializable {
   /**
    * Targets a template to this target, adding the {@link #url() base url} and
    * any authentication headers.
-   * <p/>
-   * <p/>
+   * <br>
+   * <br>
    * For example:
-   * <p/>
+   * <br>
    * <pre>
    * public Request apply(RequestTemplate input) {
    *     input.insert(0, url());
@@ -85,9 +85,9 @@ public final class RequestTemplate implements Serializable {
    *     return input.asRequest();
    * }
    * </pre>
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * This call is similar to
    * {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues, true)}
    * , except that the template values apply to any part of the request, not
@@ -151,7 +151,7 @@ public final class RequestTemplate implements Serializable {
   /**
    * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any unresolved
    * parameters will remain.
-   * <p/>
+   * <br>
    * Note that if you'd like curly braces literally in the {@code template},
    * urlencode them first.
    *
@@ -227,16 +227,16 @@ public final class RequestTemplate implements Serializable {
   /**
    * Replaces queries with the specified {@code configKey} with url decoded
    * {@code values} supplied.
-   * <p/>
+   * <br>
    * When the {@code value} is {@code null}, all queries with the {@code configKey}
    * are removed.
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * Like {@code WebTarget.query}, except the values can be templatized.
-   * <p/>
+   * <br>
    * ex.
-   * <p/>
+   * <br>
    * <pre>
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
    * </pre>
@@ -274,13 +274,13 @@ public final class RequestTemplate implements Serializable {
   /**
    * Replaces all existing queries with the newly supplied url decoded
    * queries.
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * Like {@code WebTarget.queries}, except the values can be templatized.
-   * <p/>
+   * <br>
    * ex.
-   * <p/>
+   * <br>
    * <pre>
    * template.queries(ImmutableMultimap.of(&quot;Signature&quot;, &quot;{signature}&quot;));
    * </pre>
@@ -323,17 +323,17 @@ public final class RequestTemplate implements Serializable {
   /**
    * Replaces headers with the specified {@code configKey} with the
    * {@code values} supplied.
-   * <p/>
+   * <br>
    * When the {@code value} is {@code null}, all headers with the {@code configKey}
    * are removed.
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * Like {@code WebTarget.queries} and {@code javax.ws.rs.client.Invocation.Builder.header},
    * except the values can be templatized.
-   * <p/>
+   * <br>
    * ex.
-   * <p/>
+   * <br>
    * <pre>
    * template.query(&quot;X-Application-Version&quot;, &quot;{version}&quot;);
    * </pre>
@@ -364,14 +364,14 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Replaces all existing headers with the newly supplied headers.
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * Like {@code Invocation.Builder.headers(MultivaluedMap)}, except the
    * values can be templatized.
-   * <p/>
+   * <br>
    * ex.
-   * <p/>
+   * <br>
    * <pre>
    * template.headers(ImmutableMultimap.of(&quot;X-Application-Version&quot;, &quot;{version}&quot;));
    * </pre>
@@ -399,7 +399,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * replaces the {@link feign.Util#CONTENT_LENGTH} header.
-   * <p/>
+   * <br>
    * Usually populated by {@link feign.codec.BodyEncoder} or {@link feign.codec.FormEncoder}
    *
    * @see Request#body()

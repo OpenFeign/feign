@@ -21,9 +21,9 @@ public interface BodyEncoder {
   /**
    * Converts objects to an appropriate representation. Can affect any part of
    * {@link RequestTemplate}.
-   * <p/>
+   * <br>
    * Ex.
-   * <p/>
+   * <br>
    * <pre>
    * public class GsonEncoder implements BodyEncoder {
    *   private final Gson gson;
@@ -38,10 +38,10 @@ public interface BodyEncoder {
    *   }
    * }
    * </pre>
-   * <p/>
+   * <br>
    * If a parameter has no {@code *Param} annotation, it is passed to this
    * method.
-   * <p/>
+   * <br>
    * <pre>
    * &#064;POST
    * &#064;Path(&quot;/&quot;)
