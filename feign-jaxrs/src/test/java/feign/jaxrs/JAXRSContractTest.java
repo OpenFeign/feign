@@ -26,7 +26,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 
-import javax.inject.Named;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -41,7 +40,6 @@ import javax.ws.rs.QueryParam;
 
 import feign.Body;
 import feign.MethodMetadata;
-import feign.RequestLine;
 import feign.Response;
 
 import static feign.Util.CONTENT_TYPE;

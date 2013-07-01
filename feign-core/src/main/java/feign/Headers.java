@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Expands headers supplied in the {@code value}.  Variables are permitted as values.
- * <p/>
+ * <br>
  * <pre>
  * &#64;RequestLine("GET /")
  * &#64;Headers("Cache-Control: max-age=640000")
@@ -21,13 +21,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Named("token") String token);
  * ...
  * </pre>
- * <p/>
+ * <br>
  * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
  * be included in the request.
- * <h4>Relationship to JAXRS</h4>
- * <p/>
+ * <br><br><b>Relationship to JAXRS</b><br>
+ * <br>
  * The following two forms are identical.
- * <p/>
+ * <br>
  * Feign:
  * <pre>
  * &#64;RequestLine("POST /")
@@ -36,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Named("token") String token);
  * ...
  * </pre>
- * <p/>
+ * <br>
  * JAX-RS:
  * <pre>
  * &#64;POST &#64;Path("/")

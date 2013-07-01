@@ -33,7 +33,7 @@ import static java.lang.String.format;
 /**
  * Basic integration for {@link com.netflix.loadbalancer.ILoadBalancer loadbalancer-aware} targets.
  * Using this will enable dynamic url discovery via ribbon including incrementing server request counts.
- * <p/>
+ * <br>
  * Ex.
  * <pre>
  * MyService api = Feign.create(LoadBalancingTarget.create(MyService.class, "http://myAppProd"))

@@ -61,7 +61,7 @@ public final class Response {
   /**
    * status code. ex {@code 200}
    *
-   * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html" />
+   * See <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html" >rfc2616</a>
    */
   public int status() {
     return status;
@@ -86,9 +86,9 @@ public final class Response {
 
     /**
      * length in bytes, if known. Null if not.
-     * <p/>
-     * <h4>Note</h4> This is an integer as most implementations cannot do
-     * bodies > 2GB. Moreover, the scope of this interface doesn't include
+     * <br>
+     * <br><br><b>Note</b><br> This is an integer as most implementations cannot do
+     * bodies greater than 2GB. Moreover, the scope of this interface doesn't include
      * large bodies.
      */
     Integer length();
