@@ -32,9 +32,8 @@ import java.util.Map;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * Feign's purpose is to ease development against http apis that feign restfulness.
- *
- * <p>In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
+ * Feign's purpose is to ease development against http apis that feign restfulness. <br>
+ * In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
  * targeted} http apis.
  */
 public abstract class Feign {
@@ -127,11 +126,11 @@ public abstract class Feign {
   }
 
   /**
+   * <br>
    * Configuration keys are formatted as unresolved <a href=
    * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html" >see
-   * tags</a>.
-   *
-   * <p>For example.
+   * tags</a>. <br>
+   * For example.
    *
    * <ul>
    *   <li>{@code Route53}: would match a class such as {@code denominator.route53.Route53}
@@ -143,7 +142,8 @@ public abstract class Feign {
    *       denominator.route53.Route53#listAt(String, String)}
    * </ul>
    *
-   * <p>Note that there is no whitespace expected in a key!
+   * <br>
+   * Note that there is no whitespace expected in a key!
    */
   public static String configKey(Method method) {
     StringBuilder builder = new StringBuilder();
