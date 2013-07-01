@@ -15,22 +15,21 @@
  */
 package feign.example.cli;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
+import feign.RequestLine;
 import feign.codec.Decoder;
 
 /**
@@ -39,8 +38,8 @@ import feign.codec.Decoder;
 public class GitHubExample {
 
   interface GitHub {
-    @GET @Path("/repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
   }
 
   static class Contributor {
@@ -64,14 +63,16 @@ public class GitHubExample {
   @Module(overrides = true, library = true)
   static class GsonModule {
     @Provides @Singleton Map<String, Decoder> decoders() {
-      return ImmutableMap.of("GitHub", jsonDecoder);
+      Map<String, Decoder> decoders = new LinkedHashMap<String, Decoder>();
+      decoders.put("GitHub", jsonDecoder);
+      return decoders;
     }
 
     final Decoder jsonDecoder = new Decoder() {
       Gson gson = new Gson();
 
-      @Override public Object decode(String methodKey, Reader reader, TypeToken<?> type) {
-        return gson.fromJson(reader, type.getType());
+      @Override public Object decode(String methodKey, Reader reader, Type type) {
+        return gson.fromJson(reader, type);
       }
     };
   }
