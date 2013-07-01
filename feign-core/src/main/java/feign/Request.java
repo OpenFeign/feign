@@ -24,14 +24,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * An immutable request to an http server.
- *
- * <p>
- *
- * <h4>Note</h4>
- *
- * <p>Since {@link Feign} is designed for non-binary apis, and expectations are that any request can
- * be replayed, we only support a String body.
+ * An immutable request to an http server. <br>
+ * <br>
+ * <br>
+ * <b>Note</b><br>
+ * <br>
+ * Since {@link Feign} is designed for non-binary apis, and expectations are that any request can be
+ * replayed, we only support a String body.
  */
 public final class Request {
 

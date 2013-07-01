@@ -7,9 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Expands headers supplied in the {@code value}. Variables are permitted as values.
- *
- * <p>
+ * Expands headers supplied in the {@code value}. Variables are permitted as values. <br>
  *
  * <pre>
  * &#64;RequestLine("GET /")
@@ -24,14 +22,14 @@ import java.lang.annotation.Target;
  * ...
  * </pre>
  *
- * <p><strong>Note:</strong> Headers do not overwrite each other. All headers with the same name
- * will be included in the request.
- *
- * <h4>Relationship to JAXRS</h4>
- *
- * <p>The following two forms are identical.
- *
- * <p>Feign:
+ * <br>
+ * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
+ * be included in the request. <br>
+ * <br>
+ * <b>Relationship to JAXRS</b><br>
+ * <br>
+ * The following two forms are identical. <br>
+ * Feign:
  *
  * <pre>
  * &#64;RequestLine("POST /")
@@ -41,7 +39,8 @@ import java.lang.annotation.Target;
  * ...
  * </pre>
  *
- * <p>JAX-RS:
+ * <br>
+ * JAX-RS:
  *
  * <pre>
  * &#64;POST &#64;Path("/")

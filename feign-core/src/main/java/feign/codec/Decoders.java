@@ -28,13 +28,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Static utility methods pertaining to {@code Decoder} instances.
- *
- * <p>
- *
- * <h4>Pattern Decoders</h4>
- *
- * <p>Pattern decoders typically require less initialization, dependencies, and code than reflective
+ * Static utility methods pertaining to {@code Decoder} instances. <br>
+ * <br>
+ * <br>
+ * <b>Pattern Decoders</b><br>
+ * <br>
+ * Pattern decoders typically require less initialization, dependencies, and code than reflective
  * decoders, but not can be awkward to those unfamiliar with regex. Typical use of pattern decoders
  * is to grab a single field from an xml response, or parse a list of Strings. The pattern decoders
  * here facilitate these use cases.
@@ -52,11 +51,8 @@ public class Decoders {
 
   /**
    * The first match group is applied to {@code applyGroups} and result returned. If no matches are
-   * found, the response is null;
-   *
-   * <p>Ex. to pull the first interesting element from an xml response:
-   *
-   * <p>
+   * found, the response is null; <br>
+   * Ex. to pull the first interesting element from an xml response: <br>
    *
    * <pre>
    * decodeFirstDirPoolID = transformFirstGroup(&quot;&lt;DirPoolID[&circ;&gt;]*&gt;([&circ;&lt;]+)&lt;/DirPoolID&gt;&quot;, ToLong.INSTANCE);
@@ -85,13 +81,9 @@ public class Decoders {
 
   /**
    * shortcut for {@link Decoders#transformFirstGroup(String, ApplyFirstGroup)} when {@code String}
-   * is the type you are decoding into.
-   *
-   * <p>
-   *
-   * <p>Ex. to pull the first interesting element from an xml response:
-   *
-   * <p>
+   * is the type you are decoding into. <br>
+   * <br>
+   * Ex. to pull the first interesting element from an xml response: <br>
    *
    * <pre>
    * decodeFirstDirPoolID = firstGroup(&quot;&lt;DirPoolID[&circ;&gt;]*&gt;([&circ;&lt;]+)&lt;/DirPoolID&gt;&quot;);
@@ -103,11 +95,8 @@ public class Decoders {
 
   /**
    * On the each find the first match group is applied to {@code applyFirstGroup} and added to the
-   * list returned. If no matches are found, the response is an empty list;
-   *
-   * <p>Ex. to pull a list zones constructed from http paths starting with {@code /Rest/Zone/}:
-   *
-   * <p>
+   * list returned. If no matches are found, the response is an empty list; <br>
+   * Ex. to pull a list zones constructed from http paths starting with {@code /Rest/Zone/}: <br>
    *
    * <pre>
    * decodeListOfZones = transformEachFirstGroup(&quot;/REST/Zone/([&circ;/]+)/&quot;, ToZone.INSTANCE);
@@ -139,11 +128,8 @@ public class Decoders {
 
   /**
    * shortcut for {@link Decoders#transformEachFirstGroup(String, ApplyFirstGroup)} when {@code
-   * List<String>} is the type you are decoding into.
-   *
-   * <p>Ex. to pull a list zones names, which are http paths starting with {@code /Rest/Zone/}:
-   *
-   * <p>
+   * List<String>} is the type you are decoding into. <br>
+   * Ex. to pull a list zones names, which are http paths starting with {@code /Rest/Zone/}: <br>
    *
    * <pre>
    * decodeListOfZonesNames = eachFirstGroup(&quot;/REST/Zone/([&circ;/]+)/&quot;);

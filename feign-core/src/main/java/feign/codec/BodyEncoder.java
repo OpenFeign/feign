@@ -20,11 +20,8 @@ import feign.RequestTemplate;
 public interface BodyEncoder {
   /**
    * Converts objects to an appropriate representation. Can affect any part of {@link
-   * RequestTemplate}.
-   *
-   * <p>Ex.
-   *
-   * <p>
+   * RequestTemplate}. <br>
+   * Ex. <br>
    *
    * <pre>
    * public class GsonEncoder implements BodyEncoder {
@@ -41,9 +38,8 @@ public interface BodyEncoder {
    * }
    * </pre>
    *
-   * <p>If a parameter has no {@code *Param} annotation, it is passed to this method.
-   *
-   * <p>
+   * <br>
+   * If a parameter has no {@code *Param} annotation, it is passed to this method. <br>
    *
    * <pre>
    * &#064;POST

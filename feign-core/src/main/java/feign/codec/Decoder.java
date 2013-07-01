@@ -22,11 +22,8 @@ import java.lang.reflect.Type;
 
 /**
  * Decodes an HTTP response into a given type. Invoked when {@link Response#status()} is in the 2xx
- * range.
- *
- * <p>Ex.
- *
- * <p>
+ * range. <br>
+ * Ex. <br>
  *
  * <pre>
  * public class GsonDecoder extends Decoder {
@@ -43,11 +40,12 @@ import java.lang.reflect.Type;
  * }
  * </pre>
  *
- * <p>
- *
- * <h4>Error handling</h4>
- *
- * <p>Responses where {@link Response#status()} is not in the 2xx range are classified as errors,
+ * <br>
+ * <br>
+ * <br>
+ * <b>Error handling</b><br>
+ * <br>
+ * Responses where {@link Response#status()} is not in the 2xx range are classified as errors,
  * addressed by the {@link ErrorDecoder}. That said, certain RPC apis return errors defined in the
  * {@link Response#body()} even on a 200 status. For example, in the DynECT api, a job still running
  * condition is returned with a 200 status, encoded in json. When scenarios like this occur, you

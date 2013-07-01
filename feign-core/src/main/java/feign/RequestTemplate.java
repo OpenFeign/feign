@@ -36,13 +36,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Builds a request to an http target. Not thread safe.
- *
- * <p>
- *
- * <h4>relationship to JAXRS 2.0</h4>
- *
- * <p>A combination of {@code javax.ws.rs.client.WebTarget} and {@code
+ * Builds a request to an http target. Not thread safe. <br>
+ * <br>
+ * <br>
+ * <b>relationship to JAXRS 2.0</b><br>
+ * <br>
+ * A combination of {@code javax.ws.rs.client.WebTarget} and {@code
  * javax.ws.rs.client.Invocation.Builder}, ensuring you can modify any part of the request. However,
  * this object is mutable, so needs to be guarded with the copy constructor.
  */
@@ -73,13 +72,9 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Targets a template to this target, adding the {@link #url() base url} and any authentication
-   * headers.
-   *
-   * <p>
-   *
-   * <p>For example:
-   *
-   * <p>
+   * headers. <br>
+   * <br>
+   * For example: <br>
    *
    * <pre>
    * public Request apply(RequestTemplate input) {
@@ -89,11 +84,12 @@ public final class RequestTemplate implements Serializable {
    * }
    * </pre>
    *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>This call is similar to {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues,
+   * <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * This call is similar to {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues,
    * true)} , except that the template values apply to any part of the request, not just the URL
    */
   public RequestTemplate resolve(Map<String, ?> unencoded) {
@@ -152,10 +148,8 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
-   * unresolved parameters will remain.
-   *
-   * <p>Note that if you'd like curly braces literally in the {@code template}, urlencode them
-   * first.
+   * unresolved parameters will remain. <br>
+   * Note that if you'd like curly braces literally in the {@code template}, urlencode them first.
    *
    * @param template URI template that can be in level 1 <a
    *     href="http://tools.ietf.org/html/rfc6570">RFC6570</a> form.
@@ -223,18 +217,15 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Replaces queries with the specified {@code configKey} with url decoded {@code values} supplied.
-   *
-   * <p>When the {@code value} is {@code null}, all queries with the {@code configKey} are removed.
-   *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>Like {@code WebTarget.query}, except the values can be templatized.
-   *
-   * <p>ex.
-   *
-   * <p>
+   * <br>
+   * When the {@code value} is {@code null}, all queries with the {@code configKey} are removed.
+   * <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * Like {@code WebTarget.query}, except the values can be templatized. <br>
+   * ex. <br>
    *
    * <pre>
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
@@ -269,17 +260,13 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces all existing queries with the newly supplied url decoded queries.
-   *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>Like {@code WebTarget.queries}, except the values can be templatized.
-   *
-   * <p>ex.
-   *
-   * <p>
+   * Replaces all existing queries with the newly supplied url decoded queries. <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * Like {@code WebTarget.queries}, except the values can be templatized. <br>
+   * ex. <br>
    *
    * <pre>
    * template.queries(ImmutableMultimap.of(&quot;Signature&quot;, &quot;{signature}&quot;));
@@ -320,20 +307,16 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces headers with the specified {@code configKey} with the {@code values} supplied.
-   *
-   * <p>When the {@code value} is {@code null}, all headers with the {@code configKey} are removed.
-   *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>Like {@code WebTarget.queries} and {@code javax.ws.rs.client.Invocation.Builder.header},
-   * except the values can be templatized.
-   *
-   * <p>ex.
-   *
-   * <p>
+   * Replaces headers with the specified {@code configKey} with the {@code values} supplied. <br>
+   * When the {@code value} is {@code null}, all headers with the {@code configKey} are removed.
+   * <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * Like {@code WebTarget.queries} and {@code javax.ws.rs.client.Invocation.Builder.header}, except
+   * the values can be templatized. <br>
+   * ex. <br>
    *
    * <pre>
    * template.query(&quot;X-Application-Version&quot;, &quot;{version}&quot;);
@@ -363,18 +346,14 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces all existing headers with the newly supplied headers.
-   *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>Like {@code Invocation.Builder.headers(MultivaluedMap)}, except the values can be
-   * templatized.
-   *
-   * <p>ex.
-   *
-   * <p>
+   * Replaces all existing headers with the newly supplied headers. <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * Like {@code Invocation.Builder.headers(MultivaluedMap)}, except the values can be templatized.
+   * <br>
+   * ex. <br>
    *
    * <pre>
    * template.headers(ImmutableMultimap.of(&quot;X-Application-Version&quot;, &quot;{version}&quot;));
@@ -399,9 +378,8 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * replaces the {@link feign.Util#CONTENT_LENGTH} header.
-   *
-   * <p>Usually populated by {@link feign.codec.BodyEncoder} or {@link feign.codec.FormEncoder}
+   * replaces the {@link feign.Util#CONTENT_LENGTH} header. <br>
+   * Usually populated by {@link feign.codec.BodyEncoder} or {@link feign.codec.FormEncoder}
    *
    * @see Request#body()
    */

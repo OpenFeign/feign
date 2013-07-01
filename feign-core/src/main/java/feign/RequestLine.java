@@ -7,9 +7,7 @@ import java.lang.annotation.Retention;
 
 /**
  * Expands the request-line supplied in the {@code value}, permitting path and query variables, or
- * just the http method.
- *
- * <p>
+ * just the http method. <br>
  *
  * <pre>
  * ...
@@ -26,23 +24,21 @@ import java.lang.annotation.Retention;
  * </pre>
  *
  * HTTP version suffix is optional, but permitted. There are no guarantees this version will impact
- * that sent by the client.
- *
- * <p>
+ * that sent by the client. <br>
  *
  * <pre>
  * &#64;RequestLine("POST /servers HTTP/1.1")
  * ...
  * </pre>
  *
- * <p><strong>Note:</strong> Query params do not overwrite each other. All queries with the same
- * name will be included in the request.
- *
- * <h4>Relationship to JAXRS</h4>
- *
- * <p>The following two forms are identical.
- *
- * <p>Feign:
+ * <br>
+ * <strong>Note:</strong> Query params do not overwrite each other. All queries with the same name
+ * will be included in the request. <br>
+ * <br>
+ * <b>Relationship to JAXRS</b><br>
+ * <br>
+ * The following two forms are identical. <br>
+ * Feign:
  *
  * <pre>
  * &#64;RequestLine("GET /servers/{serverId}?count={count}")
@@ -50,7 +46,8 @@ import java.lang.annotation.Retention;
  * ...
  * </pre>
  *
- * <p>JAX-RS:
+ * <br>
+ * JAX-RS:
  *
  * <pre>
  * &#64;GET &#64;Path("/servers/{serverId}")

@@ -16,13 +16,13 @@
 package feign;
 
 import static feign.Util.CONTENT_TYPE;
-import static org.testng.Assert.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.lang.annotation.*;
 import java.net.URI;
 import javax.inject.Named;
 import org.testng.annotations.Test;

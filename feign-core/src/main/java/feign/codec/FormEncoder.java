@@ -21,12 +21,9 @@ import java.util.Map;
 public interface FormEncoder {
 
   /**
-   * FormParam encoding
-   *
-   * <p>If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
-   * collected and passed as {code formParams}
-   *
-   * <p>
+   * FormParam encoding <br>
+   * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
+   * collected and passed as {code formParams} <br>
    *
    * <pre>
    * &#064;POST

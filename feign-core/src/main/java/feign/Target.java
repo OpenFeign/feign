@@ -21,11 +21,11 @@ import static feign.Util.emptyToNull;
 import java.util.Arrays;
 
 /**
- *
- *
- * <h4>relationship to JAXRS 2.0</h4>
- *
- * <p>Similar to {@code javax.ws.rs.client.WebTarget}, as it produces requests. However, {@link
+ * <br>
+ * <br>
+ * <b>relationship to JAXRS 2.0</b><br>
+ * <br>
+ * Similar to {@code javax.ws.rs.client.WebTarget}, as it produces requests. However, {@link
  * RequestTemplate} is a closer match to {@code WebTarget}.
  *
  * @param <T> type of the interface this target applies to.
@@ -42,13 +42,9 @@ public interface Target<T> {
 
   /**
    * Targets a template to this target, adding the {@link #url() base url} and any authentication
-   * headers.
-   *
-   * <p>
-   *
-   * <p>For example:
-   *
-   * <p>
+   * headers. <br>
+   * <br>
+   * For example: <br>
    *
    * <pre>
    * public Request apply(RequestTemplate input) {
@@ -58,12 +54,13 @@ public interface Target<T> {
    * }
    * </pre>
    *
-   * <p>
-   *
-   * <h4>relationship to JAXRS 2.0</h4>
-   *
-   * <p>This call is similar to {@code javax.ws.rs.client.WebTarget.request()}, except that we
-   * expect transient, but necessary decoration to be applied on invocation.
+   * <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * This call is similar to {@code javax.ws.rs.client.WebTarget.request()}, except that we expect
+   * transient, but necessary decoration to be applied on invocation.
    */
   public Request apply(RequestTemplate input);
 

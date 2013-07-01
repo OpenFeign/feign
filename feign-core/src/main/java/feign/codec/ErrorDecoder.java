@@ -35,11 +35,8 @@ import java.util.Date;
 /**
  * Allows you to massage an exception into a application-specific one, or fallback to a default
  * value. Falling back to null on {@link Response#status() status 404}, or converting out to a
- * throttle exception are examples of this in use.
- *
- * <p>Ex.
- *
- * <p>
+ * throttle exception are examples of this in use. <br>
+ * Ex. <br>
  *
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder extends ErrorDecoder {
@@ -64,7 +61,8 @@ public interface ErrorDecoder {
    *
    * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request. ex.
    *     {@code IAM#getUser()}
-   * @param response HTTP response where {@link Response#status() status} >= {@code 300}.
+   * @param response HTTP response where {@link Response#status() status} is greater than or equal
+   *     to {@code 300}.
    * @param type Target object type.
    * @return instance of {@code type}
    * @throws Throwable IOException, if there was a network error reading the response or an
@@ -89,9 +87,8 @@ public interface ErrorDecoder {
       };
 
   /**
-   * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible.
-   *
-   * @see <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
+   * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible. <br>
+   * See <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */
   static class RetryAfterDecoder {
     static final DateFormat RFC822_FORMAT =

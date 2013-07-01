@@ -32,13 +32,11 @@ import javax.inject.Singleton;
 
 /**
  * Adding this module will override URL resolution of {@link feign.Client Feign's client}, adding
- * smart routing and resiliency capabilities provided by Ribbon.
- *
- * <p>When using this, ensure the {@link feign.Target#url()} is set to as {@code http://clientName}
- * or {@code https://clientName}. {@link com.netflix.client.config.IClientConfig#getClientName()
- * clientName} will lookup the real url and port of your service dynamically.
- *
- * <p>Ex.
+ * smart routing and resiliency capabilities provided by Ribbon. <br>
+ * When using this, ensure the {@link feign.Target#url()} is set to as {@code http://clientName} or
+ * {@code https://clientName}. {@link com.netflix.client.config.IClientConfig#getClientName()
+ * clientName} will lookup the real url and port of your service dynamically. <br>
+ * Ex.
  *
  * <pre>
  * MyService api = Feign.create(MyService.class, "http://myAppProd", new RibbonModule());
