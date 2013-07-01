@@ -15,11 +15,10 @@
  */
 package feign.codec;
 
-import com.google.common.io.Closer;
-import com.google.common.reflect.TypeToken;
 import feign.Response;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Type;
 
 /**
  * Decodes an HTTP response into a given type. Invoked when {@link Response#status()} is in the 2xx
@@ -31,16 +30,16 @@ import java.io.Reader;
  *
  * <pre>
  * public class GsonDecoder extends Decoder {
- *     private final Gson gson;
+ *   private final Gson gson;
  *
- *     public GsonDecoder(Gson gson) {
- *    this.gson = gson;
- *     }
+ *   public GsonDecoder(Gson gson) {
+ *     this.gson = gson;
+ *   }
  *
- *     &#064;Override
- *     public Object decode(String methodKey, Reader reader, TypeToken&lt;?&gt; type) {
- *    return gson.fromJson(reader, type.getType());
- *     }
+ *   &#064;Override
+ *   public Object decode(String methodKey, Reader reader, Type type) {
+ *     return gson.fromJson(reader, type);
+ *   }
  * }
  * </pre>
  *
@@ -68,19 +67,17 @@ public abstract class Decoder {
    * @return instance of {@code type}
    * @throws IOException if there was a network error reading the response.
    */
-  public Object decode(String methodKey, Response response, TypeToken<?> type) throws IOException {
-    Response.Body body = response.body().orNull();
+  public Object decode(String methodKey, Response response, Type type) throws Throwable {
+    Response.Body body = response.body();
     if (body == null) return null;
-    Closer closer = Closer.create();
+    Reader reader = body.asReader();
     try {
-      Reader reader = closer.register(body.asReader());
       return decode(methodKey, reader, type);
-    } catch (IOException e) {
-      throw closer.rethrow(e, IOException.class);
-    } catch (Throwable e) {
-      throw closer.rethrow(e);
     } finally {
-      closer.close();
+      try {
+        reader.close();
+      } catch (IOException suppressed) { // NOPMD
+      }
     }
   }
 
@@ -89,12 +86,11 @@ public abstract class Decoder {
    *
    * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request. ex.
    *     {@code IAM#getUser()}
-   * @param reader no need to close this, as {@link #decode(String, Response, TypeToken)} manages
+   * @param reader no need to close this, as {@link #decode(String, Response, Type)} manages
    *     resources.
    * @param type Target object type.
    * @return instance of {@code type}
    * @throws Throwable will be propagated safely to the caller.
    */
-  public abstract Object decode(String methodKey, Reader reader, TypeToken<?> type)
-      throws Throwable;
+  public abstract Object decode(String methodKey, Reader reader, Type type) throws Throwable;
 }

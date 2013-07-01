@@ -15,13 +15,7 @@
  */
 package feign;
 
-import static com.google.common.primitives.Longs.max;
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-
-import com.google.common.base.Ticker;
 
 /**
  * Created for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
@@ -38,8 +32,16 @@ public interface Retryer {
     private final long period;
     private final long maxPeriod;
 
+    // visible for testing;
+    protected long currentTimeMillis() {
+      return System.currentTimeMillis();
+    }
+
+    int attempt;
+    long sleptForMillis;
+
     public Default() {
-      this(MILLISECONDS.toNanos(100), SECONDS.toNanos(1), 5);
+      this(100, SECONDS.toMillis(1), 5);
     }
 
     public Default(long period, long maxPeriod, int maxAttempts) {
@@ -49,22 +51,23 @@ public interface Retryer {
       this.attempt = 1;
     }
 
-    // visible for testing;
-    Ticker ticker = Ticker.systemTicker();
-    int attempt;
-    long sleptForNanos;
-
     public void continueOrPropagate(RetryableException e) {
       if (attempt++ >= maxAttempts) throw e;
 
       long interval;
-      if (e.retryAfter().isPresent()) {
-        interval = max(maxPeriod, e.retryAfter().get().getTime() - ticker.read(), 0);
+      if (e.retryAfter() != null) {
+        interval = e.retryAfter().getTime() - currentTimeMillis();
+        if (interval > maxPeriod) interval = maxPeriod;
+        if (interval < 0) return;
       } else {
         interval = nextMaxInterval();
       }
-      sleepUninterruptibly(interval, NANOSECONDS);
-      sleptForNanos += interval;
+      try {
+        Thread.sleep(interval);
+      } catch (InterruptedException ignored) {
+        Thread.currentThread().interrupt();
+      }
+      sleptForMillis += interval;
     }
 
     /**

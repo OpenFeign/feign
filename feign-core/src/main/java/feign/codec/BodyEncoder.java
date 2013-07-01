@@ -28,17 +28,16 @@ public interface BodyEncoder {
    *
    * <pre>
    * public class GsonEncoder implements BodyEncoder {
-   *     private final Gson gson;
+   *   private final Gson gson;
    *
-   *     public GsonEncoder(Gson gson) {
-   *    this.gson = gson;
-   *     }
+   *   public GsonEncoder(Gson gson) {
+   *     this.gson = gson;
+   *   }
    *
-   *     &#064;Override
-   *     public void encodeBody(Object bodyParam, RequestTemplate base) {
-   *    base.body(gson.toJson(bodyParam));
-   *     }
-   *
+   *   &#064;Override
+   *   public void encodeBody(Object bodyParam, RequestTemplate base) {
+   *     base.body(gson.toJson(bodyParam));
+   *   }
    * }
    * </pre>
    *

@@ -16,8 +16,8 @@
 package feign.ribbon;
 
 import static com.google.common.base.Objects.equal;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.netflix.client.ClientFactory.getNamedLoadBalancer;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 
 import com.google.common.base.Objects;

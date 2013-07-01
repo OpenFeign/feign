@@ -96,7 +96,7 @@ class LBClient
           .method(request.method())
           .append(getUri().toASCIIString())
           .headers(request.headers())
-          .body(request.body().orNull())
+          .body(request.body())
           .request();
     }
 
@@ -117,12 +117,12 @@ class LBClient
 
     @Override
     public Object getPayload() throws ClientException {
-      return response.body().orNull();
+      return response.body();
     }
 
     @Override
     public boolean hasPayload() {
-      return response.body().isPresent();
+      return response.body() != null;
     }
 
     @Override
@@ -137,7 +137,7 @@ class LBClient
 
     @Override
     public Map<String, Collection<String>> getHeaders() {
-      return response.headers().asMap();
+      return response.headers();
     }
 
     Response toResponse() {

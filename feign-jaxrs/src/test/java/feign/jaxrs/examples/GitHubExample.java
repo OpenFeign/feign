@@ -13,35 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.examples;
+package feign.jaxrs.examples;
 
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
-import static com.fasterxml.jackson.annotation.PropertyAccessor.FIELD;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
-import feign.RequestLine;
 import feign.codec.Decoder;
-import java.io.IOException;
+import feign.jaxrs.JAXRSModule;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
   interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+    @GET
+    @Path("/repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(
+        @PathParam("owner") String owner, @PathParam("repo") String repo);
   }
 
   static class Contributor {
@@ -50,7 +47,7 @@ public class GitHubExample {
   }
 
   public static void main(String... args) {
-    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
+    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GitHubModule());
 
     // Fetch and print a list of the contributors to this library.
     List<Contributor> contributors = github.contributors("netflix", "feign");
@@ -59,9 +56,9 @@ public class GitHubExample {
     }
   }
 
-  /** Here's how to wire gson deserialization. */
-  @Module(overrides = true, library = true)
-  static class GsonModule {
+  /** JAXRSModule tells us to process @GET etc annotations */
+  @Module(overrides = true, library = true, includes = JAXRSModule.class)
+  static class GitHubModule {
     @Provides
     @Singleton
     Map<String, Decoder> decoders() {
@@ -75,28 +72,6 @@ public class GitHubExample {
           @Override
           public Object decode(String methodKey, Reader reader, Type type) {
             return gson.fromJson(reader, type);
-          }
-        };
-  }
-
-  /** Here's how to wire jackson deserialization. */
-  @Module(overrides = true, library = true)
-  static class JacksonModule {
-    @Provides
-    @Singleton
-    Map<String, Decoder> decoders() {
-      return ImmutableMap.of("GitHub", jsonDecoder);
-    }
-
-    final Decoder jsonDecoder =
-        new Decoder() {
-          ObjectMapper mapper =
-              new ObjectMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES).setVisibility(FIELD, ANY);
-
-          @Override
-          public Object decode(String methodKey, Reader reader, final Type type)
-              throws JsonProcessingException, IOException {
-            return mapper.readValue(reader, mapper.constructType(type));
           }
         };
   }

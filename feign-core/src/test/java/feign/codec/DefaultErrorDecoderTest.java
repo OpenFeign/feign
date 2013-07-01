@@ -15,13 +15,14 @@
  */
 package feign.codec;
 
-import static com.google.common.net.HttpHeaders.RETRY_AFTER;
+import static feign.Util.RETRY_AFTER;
 
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.reflect.TypeToken;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
+import java.util.Collection;
 import org.testng.annotations.Test;
 
 public class DefaultErrorDecoderTest {
@@ -31,9 +32,9 @@ public class DefaultErrorDecoderTest {
   public void throwsFeignException() throws Throwable {
     Response response =
         Response.create(
-            500, "Internal server error", ImmutableListMultimap.<String, String>of(), null);
+            500, "Internal server error", ImmutableMap.<String, Collection<String>>of(), null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, TypeToken.of(Void.class));
+    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
   }
 
   @Test(
@@ -45,10 +46,10 @@ public class DefaultErrorDecoderTest {
         Response.create(
             500,
             "Internal server error",
-            ImmutableListMultimap.<String, String>of(),
+            ImmutableMap.<String, Collection<String>>of(),
             "hello world");
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, TypeToken.of(Void.class));
+    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
   }
 
   @Test(
@@ -59,9 +60,9 @@ public class DefaultErrorDecoderTest {
         Response.create(
             503,
             "Service Unavailable",
-            ImmutableListMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT"),
+            ImmutableMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT").asMap(),
             null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, TypeToken.of(Void.class));
+    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
   }
 }

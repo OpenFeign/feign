@@ -15,7 +15,6 @@
  */
 package feign;
 
-import com.google.common.base.Optional;
 import java.util.Date;
 
 /**
@@ -26,31 +25,29 @@ public class RetryableException extends FeignException {
 
   private static final long serialVersionUID = 1L;
 
-  private final Optional<Date> retryAfter;
+  private final Date retryAfter;
 
   /**
-   * @param retryAfter usually corresponds to the {@link
-   *     com.google.common.net.HttpHeaders#RETRY_AFTER} header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(String message, Throwable cause, Date retryAfter) {
     super(message, cause);
-    this.retryAfter = Optional.fromNullable(retryAfter);
+    this.retryAfter = retryAfter;
   }
 
   /**
-   * @param retryAfter usually corresponds to the {@link
-   *     com.google.common.net.HttpHeaders#RETRY_AFTER} header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(String message, Date retryAfter) {
     super(message);
-    this.retryAfter = Optional.fromNullable(retryAfter);
+    this.retryAfter = retryAfter;
   }
 
   /**
-   * Sometimes corresponds to the {@link com.google.common.net.HttpHeaders#RETRY_AFTER} header
-   * present in {@code 503} status. Other times parsed from an application-specific response.
+   * Sometimes corresponds to the {@link feign.Util#RETRY_AFTER} header present in {@code 503}
+   * status. Other times parsed from an application-specific response. Null if unknown.
    */
-  public Optional<Date> retryAfter() {
+  public Date retryAfter() {
     return retryAfter;
   }
 }
