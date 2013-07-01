@@ -16,7 +16,6 @@
 package feign;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
@@ -25,15 +24,13 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Map;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.SSLSocketFactory;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 
 import dagger.Module;
 import dagger.Provides;
@@ -46,9 +43,15 @@ import static org.testng.Assert.assertEquals;
 @Test
 public class FeignTest {
   interface TestInterface {
-    @POST String post();
+    @RequestLine("POST /") String post();
 
-    @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
+    @RequestLine("POST /")
+    @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
+    void login(
+        @Named("customer_name") String customer,
+        @Named("user_name") String user, @Named("password") String password);
+
+    @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
 
     @dagger.Module(overrides = true, library = true)
     static class Module {
@@ -57,6 +60,23 @@ public class FeignTest {
       @Provides @Singleton Map<String, Decoder> decoders() {
         return ImmutableMap.<String, Decoder>of("TestInterface", new ToStringDecoder());
       }
+    }
+  }
+
+  @Test
+  public void postTemplateParamsResolve() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      api.login("netflix", "denominator", "password");
+      assertEquals(new String(server.takeRequest().getBody()),
+          "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
+    } finally {
+      server.shutdown();
     }
   }
 
@@ -73,7 +93,7 @@ public class FeignTest {
         return ImmutableMap.<String, ErrorDecoder>of("TestInterface#post()", new ErrorDecoder() {
 
           @Override
-          public Object decode(String methodKey, Response response, TypeToken<?> type) throws Throwable {
+          public Object decode(String methodKey, Response response, Type type) throws Throwable {
             if (response.status() == 404)
               throw new IllegalArgumentException("zone not found");
             return ErrorDecoder.DEFAULT.decode(methodKey, response, type);
@@ -126,7 +146,7 @@ public class FeignTest {
           return ImmutableMap.<String, Decoder>of("TestInterface", new Decoder() {
 
             @Override
-            public Object decode(String methodKey, Reader reader, TypeToken<?> type) throws Throwable {
+            public Object decode(String methodKey, Reader reader, Type type) throws Throwable {
               throw new IOException("error reading response");
             }
 

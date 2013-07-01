@@ -15,8 +15,8 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 
 ```java
 interface GitHub {
-  @GET @Path("/repos/{owner}/{repo}/contributors")
-  List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
 }
 
 static class Contributor {
@@ -47,8 +47,8 @@ static class GsonModule {
   final Decoder gsonDecoder = new Decoder() {
     Gson gson = new Gson();
 
-    @Override public Object decode(String methodKey, Reader reader, TypeToken<?> type) {
-      return gson.fromJson(reader, type.getType());
+    @Override public Object decode(String methodKey, Reader reader, Type type) {
+      return gson.fromJson(reader, type);
     }
   };
 }
@@ -68,6 +68,16 @@ You can find [several examples](https://github.com/Netflix/feign/tree/master/fei
 
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+### JAX-RS
+[JAXRSModule](https://github.com/Netflix/feign/tree/master/feign-jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+
+Here's the example above re-written to use JAX-RS:
+```java
+interface GitHub {
+  @GET @Path("/repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+}
+```
 ### Ribbon
 [RibbonModule](https://github.com/Netflix/feign/tree/master/feign-ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
 

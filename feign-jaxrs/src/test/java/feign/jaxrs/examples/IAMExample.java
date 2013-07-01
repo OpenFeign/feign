@@ -13,28 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.examples;
+package feign.jaxrs.examples;
 
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
 import javax.inject.Singleton;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.Request;
-import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Decoders;
+import feign.examples.AWSSignatureVersion4;
+import feign.jaxrs.JAXRSModule;
 
 public class IAMExample {
 
   interface IAM {
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08") String arn();
+    @GET @Path("/?Action=GetUser&Version=2010-05-08") String arn();
   }
 
   public static void main(String... args) {
@@ -67,7 +70,7 @@ public class IAMExample {
     }
   }
 
-  @Module(overrides = true, library = true)
+  @Module(overrides = true, library = true, includes = JAXRSModule.class)
   static class IAMModule {
     @Provides @Singleton Map<String, Decoder> decoders() {
       return ImmutableMap.of("IAM#arn()", Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>"));
