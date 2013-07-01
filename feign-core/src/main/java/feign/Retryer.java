@@ -79,7 +79,7 @@ public interface Retryer {
 
     /**
      * Calculates the time interval to a retry attempt.
-     * <p/>
+     * <br>
      * The interval increases exponentially with each attempt, at a rate of
      * nextInterval *= 1.5 (where 1.5 is the backoff factor), to the maximum
      * interval.

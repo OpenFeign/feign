@@ -21,8 +21,8 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 
 /**
- * <h4>relationship to JAXRS 2.0</h4>
- * <p/>
+ * <br><br><b>relationship to JAXRS 2.0</b><br>
+ * <br>
  * Similar to {@code javax.ws.rs.client.WebTarget}, as it produces requests.
  * However, {@link RequestTemplate} is a closer match to {@code WebTarget}.
  *
@@ -41,10 +41,10 @@ public interface Target<T> {
   /**
    * Targets a template to this target, adding the {@link #url() base url} and
    * any authentication headers.
-   * <p/>
-   * <p/>
+   * <br>
+   * <br>
    * For example:
-   * <p/>
+   * <br>
    * <pre>
    * public Request apply(RequestTemplate input) {
    *     input.insert(0, url());
@@ -52,9 +52,9 @@ public interface Target<T> {
    *     return input.asRequest();
    * }
    * </pre>
-   * <p/>
-   * <h4>relationship to JAXRS 2.0</h4>
-   * <p/>
+   * <br>
+   * <br><br><b>relationship to JAXRS 2.0</b><br>
+   * <br>
    * This call is similar to {@code javax.ws.rs.client.WebTarget.request()},
    * except that we expect transient, but necessary decoration to be applied
    * on invocation.

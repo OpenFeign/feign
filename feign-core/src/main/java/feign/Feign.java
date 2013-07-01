@@ -36,7 +36,7 @@ import feign.codec.FormEncoder;
 /**
  * Feign's purpose is to ease development against http apis that feign
  * restfulness.
- * <p/>
+ * <br>
  * In implementation, Feign is a {@link Feign#newInstance factory} for
  * generating {@link Target targeted} http apis.
  */
@@ -122,11 +122,11 @@ public abstract class Feign {
   }
 
   /**
-   * <p/>
+   * <br>
    * Configuration keys are formatted as unresolved <a href=
    * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
    * >see tags</a>.
-   * <p/>
+   * <br>
    * For example.
    * <ul>
    * <li>{@code Route53}: would match a class such as
@@ -138,7 +138,7 @@ public abstract class Feign {
    * <li>{@code Route53#listByNameAndType(String, String)}: would match a
    * method such as {@code denominator.route53.Route53#listAt(String, String)}
    * </ul>
-   * <p/>
+   * <br>
    * Note that there is no whitespace expected in a key!
    */
   public static String configKey(Method method) {
