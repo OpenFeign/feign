@@ -23,17 +23,16 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.ws.rs.POST;
-
 import feign.Feign;
+import feign.RequestLine;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.testng.Assert.assertEquals;
 
 @Test
 public class LoadBalancingTargetTest {
-  static interface TestInterface {
-    @POST void post();
+  interface TestInterface {
+    @RequestLine("POST /") void post();
   }
 
   @Test

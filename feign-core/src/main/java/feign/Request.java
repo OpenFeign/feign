@@ -15,14 +15,13 @@
  */
 package feign;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableListMultimap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import java.util.Map.Entry;
-
-import static com.google.common.base.Objects.equal;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
@@ -36,14 +35,16 @@ public final class Request {
 
   private final String method;
   private final String url;
-  private final ImmutableListMultimap<String, String> headers;
-  private final Optional<String> body;
+  private final Map<String, Collection<String>> headers;
+  private final String body;
 
-  Request(String method, String url, ImmutableListMultimap<String, String> headers, Optional<String> body) {
+  Request(String method, String url, Map<String, Collection<String>> headers, String body) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
-    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = checkNotNull(body, "body of %s %s", method, url);
+    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
+    copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
+    this.headers = Collections.unmodifiableMap(copyOf);
+    this.body = body; // nullable
   }
 
   /* Method to invoke on the server. */
@@ -57,12 +58,12 @@ public final class Request {
   }
 
   /* Ordered list of headers that will be sent to the server. */
-  public ImmutableListMultimap<String, String> headers() {
+  public Map<String, Collection<String>> headers() {
     return headers;
   }
 
   /* If present, this is the replayable body to send to the server. */
-  public Optional<String> body() {
+  public String body() {
     return body;
   }
 
@@ -100,28 +101,16 @@ public final class Request {
     }
   }
 
-  @Override public int hashCode() {
-    return Objects.hashCode(method, url, headers, body);
-  }
-
-  @Override public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (Request.class != obj.getClass())
-      return false;
-    Request that = Request.class.cast(obj);
-    return equal(this.method, that.method) && equal(this.url, that.url) && equal(this.headers, that.headers)
-        && equal(this.body, that.body);
-  }
-
   @Override public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
-    for (Entry<String, String> header : headers.entries()) {
-      builder.append(header.getKey()).append(": ").append(header.getValue()).append('\n');
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
     }
-    if (body.isPresent()) {
-      builder.append('\n').append(body.get());
+    if (body != null) {
+      builder.append('\n').append(body);
     }
     return builder.toString();
   }

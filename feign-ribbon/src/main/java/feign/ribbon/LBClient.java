@@ -15,11 +15,6 @@
  */
 package feign.ribbon;
 
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.netflix.client.AbstractLoadBalancerAwareClient;
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
@@ -32,11 +27,7 @@ import com.netflix.util.Pair;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import feign.Client;
 import feign.Request;
@@ -102,7 +93,7 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
           .method(request.method())
           .append(getUri().toASCIIString())
           .headers(request.headers())
-          .body(request.body().orNull()).request();
+          .body(request.body()).request();
     }
 
     public Object clone() {
@@ -121,11 +112,11 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
     }
 
     @Override public Object getPayload() throws ClientException {
-      return response.body().orNull();
+      return response.body();
     }
 
     @Override public boolean hasPayload() {
-      return response.body().isPresent();
+      return response.body() != null;
     }
 
     @Override public boolean isSuccess() {
@@ -137,7 +128,7 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
     }
 
     @Override public Map<String, Collection<String>> getHeaders() {
-      return response.headers().asMap();
+      return response.headers();
     }
 
     Response toResponse() {

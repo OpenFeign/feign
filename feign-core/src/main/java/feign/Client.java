@@ -15,19 +15,19 @@
  */
 package feign;
 
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.io.ByteSink;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.inject.Inject;
 import javax.net.ssl.HttpsURLConnection;
@@ -36,8 +36,8 @@ import javax.net.ssl.SSLSocketFactory;
 import dagger.Lazy;
 import feign.Request.Options;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
+import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.UTF_8;
 
 /**
  * Submits HTTP {@link Request requests}. Implementations are expected to be
@@ -80,37 +80,46 @@ public interface Client {
       connection.setRequestMethod(request.method());
 
       Integer contentLength = null;
-      for (Entry<String, String> header : request.headers().entries()) {
-        if (header.getKey().equals(CONTENT_LENGTH))
-          contentLength = Integer.valueOf(header.getValue());
-        connection.addRequestProperty(header.getKey(), header.getValue());
+      for (String field : request.headers().keySet()) {
+        for (String value : request.headers().get(field)) {
+          if (field.equals(CONTENT_LENGTH)) {
+            contentLength = Integer.valueOf(value);
+          }
+          connection.addRequestProperty(field, value);
+        }
       }
 
-      if (request.body().isPresent()) {
+      if (request.body() != null) {
         if (contentLength != null) {
           connection.setFixedLengthStreamingMode(contentLength);
         } else {
           connection.setChunkedStreamingMode(8196);
         }
         connection.setDoOutput(true);
-        new ByteSink() {
-          public OutputStream openStream() throws IOException {
-            return connection.getOutputStream();
+        OutputStream out = connection.getOutputStream();
+        try {
+          out.write(request.body().getBytes(UTF_8));
+        } finally {
+          try {
+            out.close();
+          } catch (IOException suppressed) { // NOPMD
           }
-        }.asCharSink(UTF_8).write(request.body().get());
+        }
       }
       return connection;
     }
+
+    private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
     Response convertResponse(HttpURLConnection connection) throws IOException {
       int status = connection.getResponseCode();
       String reason = connection.getResponseMessage();
 
-      ImmutableListMultimap.Builder<String, String> headers = ImmutableListMultimap.builder();
+      Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
         // response message
         if (field.getKey() != null)
-          headers.putAll(field.getKey(), field.getValue());
+          headers.put(field.getKey(), field.getValue());
       }
 
       Integer length = connection.getContentLength();
@@ -123,7 +132,7 @@ public interface Client {
         stream = connection.getInputStream();
       }
       Reader body = stream != null ? new InputStreamReader(stream) : null;
-      return Response.create(status, reason, headers.build(), body, length);
+      return Response.create(status, reason, headers, body, length);
     }
   }
 }

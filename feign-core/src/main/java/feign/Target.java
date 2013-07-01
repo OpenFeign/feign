@@ -15,12 +15,10 @@
  */
 package feign;
 
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
+import java.util.Arrays;
 
-import static com.google.common.base.Objects.equal;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static feign.Util.checkNotNull;
+import static feign.Util.emptyToNull;
 
 /**
  * <h4>relationship to JAXRS 2.0</h4>
@@ -30,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @param <T> type of the interface this target applies to.
  */
-public interface Target<T> extends Function<RequestTemplate, Request> {
+public interface Target<T> {
   /* The type of the interface this target applies to. ex. {@code Route53}. */
   Class<T> type();
 
@@ -61,7 +59,7 @@ public interface Target<T> extends Function<RequestTemplate, Request> {
    * except that we expect transient, but necessary decoration to be applied
    * on invocation.
    */
-  @Override public Request apply(RequestTemplate input);
+  public Request apply(RequestTemplate input);
 
   public static class HardCodedTarget<T> implements Target<T> {
     private final Class<T> type;
@@ -74,8 +72,8 @@ public interface Target<T> extends Function<RequestTemplate, Request> {
 
     public HardCodedTarget(Class<T> type, String name, String url) {
       this.type = checkNotNull(type, "type");
-      this.name = checkNotNull(Strings.emptyToNull(name), "name");
-      this.url = checkNotNull(Strings.emptyToNull(url), "url");
+      this.name = checkNotNull(emptyToNull(name), "name");
+      this.url = checkNotNull(emptyToNull(url), "url");
     }
 
     @Override public Class<T> type() {
@@ -98,7 +96,7 @@ public interface Target<T> extends Function<RequestTemplate, Request> {
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(type, name, url);
+      return Arrays.hashCode(new Object[]{type, name, url});
     }
 
     @Override public boolean equals(Object obj) {
@@ -107,7 +105,7 @@ public interface Target<T> extends Function<RequestTemplate, Request> {
       if (HardCodedTarget.class != obj.getClass())
         return false;
       HardCodedTarget<?> that = HardCodedTarget.class.cast(obj);
-      return equal(this.type, that.type) && equal(this.name, that.name) && equal(this.url, that.url);
+      return this.type.equals(that.type) && this.name.equals(that.name) && this.url.equals(that.url);
     }
   }
 }
