@@ -101,13 +101,13 @@ abstract class MethodHandler {
 
     @Override
     protected Object decode(Object[] argv, Response response) throws Throwable {
-      if (metadata.returnType().equals(Response.class)) {
+      if (metadata.decodeInto().equals(Response.class)) {
         return response;
-      } else if (metadata.returnType() == void.class || response.body() == null) {
+      } else if (metadata.decodeInto() == void.class || response.body() == null) {
         return null;
       }
       try {
-        return decoder.decode(response.body().asReader(), metadata.returnType());
+        return decoder.decode(response.body().asReader(), metadata.decodeInto());
       } catch (FeignException e) {
         throw e;
       } catch (RuntimeException e) {

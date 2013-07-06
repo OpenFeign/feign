@@ -30,12 +30,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.reflect.TypeToken;
 import feign.Body;
+import feign.IncrementalCallback;
 import feign.MethodMetadata;
 import feign.Response;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 import javax.ws.rs.DELETE;
@@ -343,5 +345,74 @@ public class JAXRSContractTest {
 
     assertEquals(md.template().headers().get("Auth-Token"), ImmutableSet.of("{Auth-Token}"));
     assertEquals(md.indexToName().get(0), ImmutableSet.of("Auth-Token"));
+  }
+
+  interface WithIncrementalCallback {
+    @GET
+    @Path("/")
+    void valid(IncrementalCallback<List<String>> one);
+
+    @GET
+    @Path("/{path}")
+    void badOrder(IncrementalCallback<List<String>> one, @PathParam("path") String path);
+
+    @GET
+    @Path("/")
+    Response returnType(IncrementalCallback<List<String>> one);
+
+    @GET
+    @Path("/")
+    void wildcardExtends(IncrementalCallback<? extends List<String>> one);
+
+    @GET
+    @Path("/")
+    void subtype(ParameterizedIncrementalCallback<List<String>> one);
+  }
+
+  static final List<String> listString = null;
+
+  interface ParameterizedIncrementalCallback<T extends List<String>>
+      extends IncrementalCallback<T> {}
+
+  @Test
+  public void methodCanHaveIncrementalCallbackParam() throws Exception {
+    contract.parseAndValidatateMetadata(
+        WithIncrementalCallback.class.getDeclaredMethod("valid", IncrementalCallback.class));
+  }
+
+  @Test
+  public void methodMetadataReturnTypeOnObservableMethodIsItsTypeParameter() throws Exception {
+    Type listStringType = getClass().getDeclaredField("listString").getGenericType();
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(
+            WithIncrementalCallback.class.getDeclaredMethod("valid", IncrementalCallback.class));
+    assertEquals(md.decodeInto(), listStringType);
+    md =
+        contract.parseAndValidatateMetadata(
+            WithIncrementalCallback.class.getDeclaredMethod(
+                "wildcardExtends", IncrementalCallback.class));
+    assertEquals(md.decodeInto(), listStringType);
+    md =
+        contract.parseAndValidatateMetadata(
+            WithIncrementalCallback.class.getDeclaredMethod(
+                "subtype", ParameterizedIncrementalCallback.class));
+    assertEquals(md.decodeInto(), listStringType);
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = ".*the last parameter.*")
+  public void incrementalCallbackParamMustBeLast() throws Exception {
+    contract.parseAndValidatateMetadata(
+        WithIncrementalCallback.class.getDeclaredMethod(
+            "badOrder", IncrementalCallback.class, String.class));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = ".*must return void.*")
+  public void incrementalCallbackMethodMustReturnVoid() throws Exception {
+    contract.parseAndValidatateMetadata(
+        WithIncrementalCallback.class.getDeclaredMethod("returnType", IncrementalCallback.class));
   }
 }

@@ -17,9 +17,11 @@ package feign;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
+import static feign.Util.resolveLastTypeParameter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +44,7 @@ public abstract class Contract {
   /** Called indirectly by {@link #parseAndValidatateMetadata(Class)}. */
   public MethodMetadata parseAndValidatateMetadata(Method method) {
     MethodMetadata data = new MethodMetadata();
-    data.returnType(method.getGenericReturnType());
+    data.decodeInto(method.getGenericReturnType());
     data.configKey(Feign.configKey(method));
 
     for (Annotation methodAnnotation : method.getAnnotations()) {
@@ -63,10 +65,25 @@ public abstract class Contract {
       }
       if (parameterTypes[i] == URI.class) {
         data.urlIndex(i);
+      } else if (IncrementalCallback.class.isAssignableFrom(parameterTypes[i])) {
+        checkState(
+            method.getReturnType() == void.class,
+            "IncrementalCallback methods must return void: %s",
+            method);
+        checkState(i == count - 1, "IncrementalCallback must be the last parameter: %s", method);
+        Type context = method.getGenericParameterTypes()[i];
+        Type incrementalCallbackType = resolveLastTypeParameter(context, IncrementalCallback.class);
+        data.decodeInto(incrementalCallbackType);
+        data.incrementalCallbackIndex(i);
+        checkState(
+            incrementalCallbackType != null,
+            "Expected param %s to be IncrementalCallback<X> or IncrementalCallback<? super X> or a"
+                + " subtype",
+            context,
+            incrementalCallbackType);
       } else if (!isHttpAnnotation) {
         checkState(
-            data.formParams().isEmpty(),
-            "Body parameters cannot be used with @FormParam parameters.");
+            data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
         checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
         data.bodyIndex(i);
         data.bodyType(method.getGenericParameterTypes()[i]);

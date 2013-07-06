@@ -179,7 +179,7 @@ public class ReflectiveFeign extends Feign {
       List<MethodMetadata> metadata = contract.parseAndValidatateMetadata(key.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
-        Decoder.TextStream decoder = decoders.get(md.returnType());
+        Decoder.TextStream decoder = decoders.get(md.decodeInto());
         if (decoder == null) {
           decoder = decoders.get(Object.class);
         }
@@ -188,7 +188,7 @@ public class ReflectiveFeign extends Feign {
               format(
                   "%s needs @Provides(type = Set) Decoder decoder()"
                       + "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}",
-                  md.configKey(), md.returnType()));
+                  md.configKey(), md.decodeInto()));
         }
         BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
@@ -210,7 +210,7 @@ public class ReflectiveFeign extends Feign {
                 format(
                     "%s needs @Provides(type = Set) Encoder encoder()"
                         + "{ // Encoder.Text<%s> or Encoder.Text<Object>}",
-                    md.bodyType(), md.returnType()));
+                    md.bodyType(), md.decodeInto()));
           }
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
