@@ -42,7 +42,7 @@ import feign.Body;
 import feign.MethodMetadata;
 import feign.Response;
 
-import static feign.Util.CONTENT_TYPE;
+import static feign.jaxrs.JAXRSModule.CONTENT_TYPE;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.POST;

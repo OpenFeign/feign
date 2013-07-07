@@ -19,7 +19,9 @@ import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import feign.FeignException;
 import feign.Response;
@@ -28,7 +30,6 @@ import feign.RetryableException;
 import static feign.FeignException.errorStatus;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
-import static feign.Util.firstOrNull;
 import static java.util.Locale.US;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -85,6 +86,13 @@ public interface ErrorDecoder {
       if (retryAfter != null)
         throw new RetryableException(exception.getMessage(), exception, retryAfter);
       throw exception;
+    }
+
+    private <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
+      if (map.containsKey(key) && !map.get(key).isEmpty()) {
+        return map.get(key).iterator().next();
+      }
+      return null;
     }
   };
 
