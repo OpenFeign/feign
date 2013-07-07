@@ -25,7 +25,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
-import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,20 +33,19 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * Allows you to massage an exception into a application-specific one, or fallback to a default
- * value. Falling back to null on {@link Response#status() status 404}, or converting out to a
- * throttle exception are examples of this in use. <br>
+ * Allows you to massage an exception into a application-specific one. Converting out to a throttle
+ * exception are examples of this in use. <br>
  * Ex. <br>
  *
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder extends ErrorDecoder {
  *
- *     &#064;Override
- *     public Object decode(String methodKey, Response response, Type&lt;?&gt; type) throws Throwable {
+ *   &#064;Override
+ *   public Exception decode(String methodKey, Response response) {
  *    if (response.status() == 404)
  *        throw new IllegalArgumentException(&quot;zone not found&quot;);
- *    return ErrorDecoder.DEFAULT.decode(request, response, type);
- *     }
+ *    return ErrorDecoder.DEFAULT.decode(methodKey, request, response);
+ *   }
  *
  * }
  * </pre>
@@ -56,21 +54,18 @@ public interface ErrorDecoder {
 
   /**
    * Implement this method in order to decode an HTTP {@link Response} when {@link
-   * Response#status()} is not in the 2xx range. Please raise application-specific exceptions or
-   * return fallback values where possible. If your exception is retryable, wrap or subclass {@link
-   * RetryableException}
+   * Response#status()} is not in the 2xx range. Please raise application-specific exceptions where
+   * possible. If your exception is retryable, wrap or subclass {@link RetryableException}
    *
    * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request. ex.
    *     {@code IAM#getUser()}
    * @param response HTTP response where {@link Response#status() status} is greater than or equal
    *     to {@code 300}.
-   * @param type Target object type.
-   * @return instance of {@code type}
-   * @throws Throwable IOException, if there was a network error reading the response or an
+   * @return Exception IOException, if there was a network error reading the response or an
    *     application-specific exception decoded by the implementation. If the throwable is
    *     retryable, it should be wrapped, or a subtype of {@link RetryableException}
    */
-  public Object decode(String methodKey, Response response, Type type) throws Throwable;
+  public Exception decode(String methodKey, Response response);
 
   public static final ErrorDecoder DEFAULT =
       new ErrorDecoder() {
@@ -78,12 +73,12 @@ public interface ErrorDecoder {
         private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
 
         @Override
-        public Object decode(String methodKey, Response response, Type type) throws Throwable {
+        public Exception decode(String methodKey, Response response) {
           FeignException exception = errorStatus(methodKey, response);
           Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
           if (retryAfter != null)
-            throw new RetryableException(exception.getMessage(), exception, retryAfter);
-          throw exception;
+            return new RetryableException(exception.getMessage(), exception, retryAfter);
+          return exception;
         }
 
         private <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
