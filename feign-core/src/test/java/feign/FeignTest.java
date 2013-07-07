@@ -93,10 +93,10 @@ public class FeignTest {
         return ImmutableMap.<String, ErrorDecoder>of("TestInterface#post()", new ErrorDecoder() {
 
           @Override
-          public Object decode(String methodKey, Response response, Type type) throws Throwable {
+          public Exception decode(String methodKey, Response response) {
             if (response.status() == 404)
-              throw new IllegalArgumentException("zone not found");
-            return ErrorDecoder.DEFAULT.decode(methodKey, response, type);
+              return new IllegalArgumentException("zone not found");
+            return ErrorDecoder.DEFAULT.decode(methodKey, response);
           }
 
         });
