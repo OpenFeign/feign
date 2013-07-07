@@ -33,13 +33,12 @@ import feign.Body;
 import feign.Contract;
 import feign.MethodMetadata;
 
-import static feign.Util.ACCEPT;
-import static feign.Util.CONTENT_TYPE;
 import static feign.Util.checkState;
-import static feign.Util.join;
 
 @dagger.Module(library = true)
 public final class JAXRSModule {
+  static final String ACCEPT = "Accept";
+  static final String CONTENT_TYPE = "Content-Type";
 
   @Provides Contract provideContract() {
     return new JAXRSContract();
@@ -102,5 +101,18 @@ public final class JAXRSModule {
       }
       return isHttpParam;
     }
+  }
+
+  private static String join(char separator, String... parts) {
+    if (parts == null || parts.length == 0)
+      return "";
+    StringBuilder to = new StringBuilder();
+    for (int i = 0; i < parts.length; i++) {
+      to.append(parts[i]);
+      if (i + 1 < parts.length) {
+        to.append(separator);
+      }
+    }
+    return to.toString();
   }
 }
