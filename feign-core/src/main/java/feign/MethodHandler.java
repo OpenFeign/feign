@@ -17,7 +17,6 @@ package feign;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -28,9 +27,7 @@ import feign.codec.ErrorDecoder;
 
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
-import static feign.Util.LOCATION;
 import static feign.Util.checkNotNull;
-import static feign.Util.firstOrNull;
 
 final class MethodHandler {
 
@@ -109,10 +106,6 @@ final class MethodHandler {
       if (response.status() >= 200 && response.status() < 300) {
         if (returnType.equals(Response.class)) {
           return response;
-        } else if (returnType == URI.class && response.body() == null) {
-          String location = firstOrNull(response.headers(), LOCATION);
-          if (location != null)
-            return URI.create(location);
         } else if (returnType == void.class) {
           return null;
         }
