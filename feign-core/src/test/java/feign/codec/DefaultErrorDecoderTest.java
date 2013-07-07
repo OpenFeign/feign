@@ -34,7 +34,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.create(500, "Internal server error", ImmutableMap.<String, Collection<String>>of(),
         null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 
   @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "status 500 reading Service#foo\\(\\); content:\nhello world")
@@ -42,7 +42,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.create(500, "Internal server error", ImmutableMap.<String, Collection<String>>of(),
         "hello world");
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 
   @Test(expectedExceptions = RetryableException.class, expectedExceptionsMessageRegExp = "status 503 reading Service#foo\\(\\)")
@@ -50,6 +50,6 @@ public class DefaultErrorDecoderTest {
     Response response = Response.create(503, "Service Unavailable",
         ImmutableMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT").asMap(), null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 }
