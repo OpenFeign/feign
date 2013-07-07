@@ -34,7 +34,7 @@ public class DefaultErrorDecoderTest {
         Response.create(
             500, "Internal server error", ImmutableMap.<String, Collection<String>>of(), null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 
   @Test(
@@ -49,7 +49,7 @@ public class DefaultErrorDecoderTest {
             ImmutableMap.<String, Collection<String>>of(),
             "hello world");
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 
   @Test(
@@ -63,6 +63,6 @@ public class DefaultErrorDecoderTest {
             ImmutableMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT").asMap(),
             null);
 
-    ErrorDecoder.DEFAULT.decode("Service#foo()", response, void.class);
+    throw ErrorDecoder.DEFAULT.decode("Service#foo()", response);
   }
 }

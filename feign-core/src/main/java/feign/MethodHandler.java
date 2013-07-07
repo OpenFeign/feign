@@ -122,7 +122,7 @@ final class MethodHandler {
         }
         return decoder.decode(configKey, response, returnType);
       } else {
-        return errorDecoder.decode(configKey, response, returnType);
+        throw errorDecoder.decode(configKey, response);
       }
     } catch (Throwable e) {
       ensureBodyClosed(response);
