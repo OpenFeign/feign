@@ -29,21 +29,8 @@ public class Util {
   private Util() { // no instances
   }
 
-  // feign.Util
-  /** The HTTP Accept header field name. */
-  public static final String ACCEPT = "Accept";
-
   /** The HTTP Content-Length header field name. */
   public static final String CONTENT_LENGTH = "Content-Length";
-
-  /** The HTTP Content-Type header field name. */
-  public static final String CONTENT_TYPE = "Content-Type";
-
-  /** The HTTP Host header field name. */
-  public static final String HOST = "Host";
-
-  /** The HTTP Location header field name. */
-  public static final String LOCATION = "Location";
 
   /** The HTTP Retry-After header field name. */
   public static final String RETRY_AFTER = "Retry-After";
@@ -83,18 +70,6 @@ public class Util {
     return string == null || string.isEmpty() ? null : string;
   }
 
-  public static String join(char separator, String... parts) {
-    if (parts == null || parts.length == 0) return "";
-    StringBuilder to = new StringBuilder();
-    for (int i = 0; i < parts.length; i++) {
-      to.append(parts[i]);
-      if (i + 1 < parts.length) {
-        to.append(separator);
-      }
-    }
-    return to.toString();
-  }
-
   /** Adapted from {@code com.google.common.base.Strings#emptyToNull}. */
   public static <T> T[] toArray(Iterable<? extends T> iterable, Class<T> type) {
     Collection<T> collection;
@@ -113,12 +88,5 @@ public class Util {
   /** Returns an unmodifiable collection which may be empty, but is never null. */
   public static <T> Collection<T> valuesOrEmpty(Map<String, Collection<T>> map, String key) {
     return map.containsKey(key) ? map.get(key) : Collections.<T>emptyList();
-  }
-
-  public static <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
-    if (map.containsKey(key) && !map.get(key).isEmpty()) {
-      return map.get(key).iterator().next();
-    }
-    return null;
   }
 }

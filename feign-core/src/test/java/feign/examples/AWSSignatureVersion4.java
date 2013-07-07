@@ -19,7 +19,6 @@ import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.hash.Hashing.sha256;
 import static com.google.common.io.BaseEncoding.base16;
-import static feign.Util.HOST;
 import static feign.Util.UTF_8;
 
 import com.google.common.base.Function;
@@ -52,7 +51,7 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
 
   @Override
   public Request apply(RequestTemplate input) {
-    input.header(HOST, URI.create(input.url()).getHost());
+    input.header("Host", URI.create(input.url()).getHost());
     TreeMultimap<String, String> sortedLowercaseHeaders = TreeMultimap.create();
     for (String key : input.headers().keySet()) {
       sortedLowercaseHeaders.putAll(
