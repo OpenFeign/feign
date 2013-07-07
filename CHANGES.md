@@ -1,3 +1,6 @@
+### Version 3.0
+* decoupled ErrorDecoder from fallback handling
+
 ### Version 2.0.0
 * removes guava and jax-rs dependencies
 * adds JAX-RS integration
