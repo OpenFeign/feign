@@ -15,7 +15,6 @@
  */
 package feign;
 
-import static feign.Util.CONTENT_TYPE;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
@@ -183,7 +182,7 @@ public class DefaultContractTest {
   public void producesAddsContentTypeHeader() throws Exception {
     MethodMetadata md =
         contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().headers().get(CONTENT_TYPE), ImmutableSet.of("application/xml"));
+    assertEquals(md.template().headers().get("Content-Type"), ImmutableSet.of("application/xml"));
   }
 
   interface WithURIParam {
