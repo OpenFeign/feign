@@ -15,6 +15,7 @@
  */
 package feign;
 
+import static feign.Util.ensureClosed;
 import static feign.Util.valuesOrEmpty;
 
 import java.io.BufferedReader;
@@ -144,10 +145,7 @@ public abstract class Wire {
         return Response.create(
             response.status(), response.reason(), response.headers(), buffered.toString());
       } finally {
-        try {
-          body.close();
-        } catch (IOException suppressed) { // NOPMD
-        }
+        ensureClosed(response.body());
       }
     }
     return response;
