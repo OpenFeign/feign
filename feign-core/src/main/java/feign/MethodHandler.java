@@ -18,6 +18,7 @@ package feign;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
+import static feign.Util.ensureClosed;
 
 import feign.Request.Options;
 import feign.codec.Decoder;
@@ -125,19 +126,10 @@ final class MethodHandler {
         throw errorDecoder.decode(configKey, response);
       }
     } catch (Throwable e) {
-      ensureBodyClosed(response);
+      ensureClosed(response.body());
       if (IOException.class.isInstance(e))
         throw errorReading(request, response, IOException.class.cast(e));
       throw e;
-    }
-  }
-
-  private void ensureBodyClosed(Response response) {
-    if (response.body() != null) {
-      try {
-        response.body().close();
-      } catch (IOException ignored) { // NOPMD
-      }
     }
   }
 

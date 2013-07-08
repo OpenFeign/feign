@@ -15,6 +15,8 @@
  */
 package feign.codec;
 
+import static feign.Util.ensureClosed;
+
 import feign.Response;
 import java.io.IOException;
 import java.io.Reader;
@@ -34,10 +36,7 @@ public class ToStringDecoder extends Decoder {
     try {
       return decode(methodKey, reader, type);
     } finally {
-      try {
-        reader.close();
-      } catch (IOException suppressed) { // NOPMD
-      }
+      ensureClosed(body);
     }
   }
 
