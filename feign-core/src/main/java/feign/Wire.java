@@ -25,6 +25,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import static feign.Util.ensureClosed;
 import static feign.Util.valuesOrEmpty;
 
 /*  Writes http headers and body. Plumb to your favorite log impl. */
@@ -138,10 +139,7 @@ public abstract class Wire {
         }
         return Response.create(response.status(), response.reason(), response.headers(), buffered.toString());
       } finally {
-        try {
-          body.close();
-        } catch (IOException suppressed) { // NOPMD
-        }
+        ensureClosed(response.body());
       }
     }
     return response;

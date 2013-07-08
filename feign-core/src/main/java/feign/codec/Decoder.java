@@ -21,6 +21,8 @@ import java.lang.reflect.Type;
 
 import feign.Response;
 
+import static feign.Util.ensureClosed;
+
 /**
  * Decodes an HTTP response into a given type. Invoked when
  * {@link Response#status()} is in the 2xx range.
@@ -73,10 +75,7 @@ public abstract class Decoder {
     try {
       return decode(methodKey, reader, type);
     } finally {
-      try {
-        reader.close();
-      } catch (IOException suppressed) { // NOPMD
-      }
+      ensureClosed(body);
     }
   }
 
