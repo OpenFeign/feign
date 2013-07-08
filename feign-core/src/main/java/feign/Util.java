@@ -15,6 +15,7 @@
  */
 package feign;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -113,5 +114,14 @@ public class Util {
    */
   public static <T> Collection<T> valuesOrEmpty(Map<String, Collection<T>> map, String key) {
     return map.containsKey(key) ? map.get(key) : Collections.<T>emptyList();
+  }
+
+  public static void ensureClosed(Response.Body body) {
+    if (body != null) {
+      try {
+        body.close();
+      } catch (IOException ignored) { // NOPMD
+      }
+    }
   }
 }

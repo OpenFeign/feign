@@ -22,6 +22,8 @@ import java.nio.CharBuffer;
 
 import feign.Response;
 
+import static feign.Util.ensureClosed;
+
 /**
  * Adapted from {@code com.google.common.io.CharStreams.toString()}.
  */
@@ -38,10 +40,7 @@ public class ToStringDecoder extends Decoder {
     try {
       return decode(methodKey, reader, type);
     } finally {
-      try {
-        reader.close();
-      } catch (IOException suppressed) { // NOPMD
-      }
+      ensureClosed(body);
     }
   }
 
