@@ -72,6 +72,7 @@ public class Util {
   }
 
   /** Adapted from {@code com.google.common.base.Strings#emptyToNull}. */
+  @SuppressWarnings("unchecked")
   public static <T> T[] toArray(Iterable<? extends T> iterable, Class<T> type) {
     Collection<T> collection;
     if (iterable instanceof Collection) {

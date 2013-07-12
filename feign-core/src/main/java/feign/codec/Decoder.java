@@ -66,8 +66,9 @@ public abstract class Decoder {
    * @param type Target object type.
    * @return instance of {@code type}
    * @throws IOException if there was a network error reading the response.
+   * @throws Exception if the decoder threw a checked exception.
    */
-  public Object decode(String methodKey, Response response, Type type) throws Throwable {
+  public Object decode(String methodKey, Response response, Type type) throws Exception {
     Response.Body body = response.body();
     if (body == null) return null;
     Reader reader = body.asReader();
@@ -87,7 +88,8 @@ public abstract class Decoder {
    *     resources.
    * @param type Target object type.
    * @return instance of {@code type}
-   * @throws Throwable will be propagated safely to the caller.
+   * @throws IOException will be propagated safely to the caller.
+   * @throws Exception if the decoder threw a checked exception.
    */
-  public abstract Object decode(String methodKey, Reader reader, Type type) throws Throwable;
+  public abstract Object decode(String methodKey, Reader reader, Type type) throws Exception;
 }

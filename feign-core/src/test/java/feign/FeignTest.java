@@ -25,7 +25,7 @@ import dagger.Module;
 import dagger.Provides;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.ToStringDecoder;
+import feign.codec.StringDecoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -61,7 +61,7 @@ public class FeignTest {
       @Provides
       @Singleton
       Map<String, Decoder> decoders() {
-        return ImmutableMap.<String, Decoder>of("TestInterface", new ToStringDecoder());
+        return ImmutableMap.<String, Decoder>of("TestInterface", new StringDecoder());
       }
     }
   }
@@ -173,7 +173,8 @@ public class FeignTest {
               new Decoder() {
 
                 @Override
-                public Object decode(String methodKey, Reader reader, Type type) throws Throwable {
+                public Object decode(String methodKey, Reader reader, Type type)
+                    throws IOException {
                   throw new IOException("error reading response");
                 }
               });

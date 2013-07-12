@@ -1,5 +1,6 @@
 ### Version 3.0
 * decoupled ErrorDecoder from fallback handling
+* Decoders can throw checked exceptions, but needn't declare Throwable
 
 ### Version 2.0.0
 * removes guava and jax-rs dependencies

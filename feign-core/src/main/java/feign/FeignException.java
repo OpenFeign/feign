@@ -17,7 +17,7 @@ package feign;
 
 import static java.lang.String.format;
 
-import feign.codec.ToStringDecoder;
+import feign.codec.StringDecoder;
 import java.io.IOException;
 
 /** Origin exception type for all Http Apis. */
@@ -27,7 +27,7 @@ public class FeignException extends RuntimeException {
         format("%s %s %s", cause.getMessage(), request.method(), request.url(), 0), cause);
   }
 
-  private static final ToStringDecoder toString = new ToStringDecoder();
+  private static final StringDecoder toString = new StringDecoder();
 
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
