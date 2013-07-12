@@ -27,7 +27,7 @@ import static feign.Util.ensureClosed;
 /**
  * Adapted from {@code com.google.common.io.CharStreams.toString()}.
  */
-public class ToStringDecoder extends Decoder {
+public class StringDecoder extends Decoder {
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
   // overridden to throw only IOException

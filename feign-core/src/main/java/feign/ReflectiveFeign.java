@@ -33,7 +33,7 @@ import feign.codec.BodyEncoder;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.FormEncoder;
-import feign.codec.ToStringDecoder;
+import feign.codec.StringDecoder;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
@@ -52,7 +52,7 @@ public class ReflectiveFeign extends Feign {
    * creates an api binding to the {@code target}. As this invokes reflection,
    * care should be taken to cache the result.
    */
-  @Override public <T> T newInstance(Target<T> target) {
+  @SuppressWarnings("unchecked") @Override public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
     for (Method method : target.type().getDeclaredMethods()) {
@@ -143,7 +143,7 @@ public class ReflectiveFeign extends Feign {
         Decoder decoder = forMethodOrClass(decoders, md.configKey());
         if (decoder == null
             && (md.returnType() == void.class || md.returnType() == Response.class)) {
-          decoder = new ToStringDecoder();
+          decoder = new StringDecoder();
         }
         if (decoder == null) {
           throw noConfig(md.configKey(), Decoder.class);
