@@ -73,7 +73,7 @@ public class GitHubExample {
           Gson gson = new Gson();
 
           @Override
-          public Object decode(String methodKey, Reader reader, Type type) {
+          public Object decode(Reader reader, Type type) {
             return gson.fromJson(reader, type);
           }
         };
@@ -94,7 +94,7 @@ public class GitHubExample {
               new ObjectMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES).setVisibility(FIELD, ANY);
 
           @Override
-          public Object decode(String methodKey, Reader reader, final Type type)
+          public Object decode(Reader reader, final Type type)
               throws JsonProcessingException, IOException {
             return mapper.readValue(reader, mapper.constructType(type));
           }

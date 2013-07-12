@@ -83,7 +83,7 @@ abstract class MethodHandler {
       } else if (metadata.returnType() == void.class) {
         return null;
       }
-      return decoder.decode(metadata.configKey(), response, metadata.returnType());
+      return decoder.decode(response, metadata.returnType());
     }
   }
 

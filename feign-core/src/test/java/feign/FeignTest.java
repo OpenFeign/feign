@@ -173,8 +173,7 @@ public class FeignTest {
               new Decoder() {
 
                 @Override
-                public Object decode(String methodKey, Reader reader, Type type)
-                    throws IOException {
+                public Object decode(Reader reader, Type type) throws IOException {
                   throw new IOException("error reading response");
                 }
               });

@@ -65,7 +65,7 @@ public class Decoders {
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public Object decode(String methodKey, Reader reader, Type type) throws IOException {
+      public Object decode(Reader reader, Type type) throws IOException {
         Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
         if (matcher.find()) {
           return applyFirstGroup.apply(matcher.group(1));
@@ -109,7 +109,7 @@ public class Decoders {
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public List<T> decode(String methodKey, Reader reader, Type type) throws IOException {
+      public List<T> decode(Reader reader, Type type) throws IOException {
         Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
         List<T> result = new ArrayList<T>();
         while (matcher.find()) {
@@ -141,7 +141,7 @@ public class Decoders {
   }
 
   private static String toString(Reader reader) throws IOException {
-    return TO_STRING.decode(null, reader, null).toString();
+    return TO_STRING.decode(reader, null).toString();
   }
 
   private static final StringDecoder TO_STRING = new StringDecoder();
