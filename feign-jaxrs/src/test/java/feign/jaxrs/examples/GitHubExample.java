@@ -70,7 +70,7 @@ public class GitHubExample {
           Gson gson = new Gson();
 
           @Override
-          public Object decode(String methodKey, Reader reader, Type type) {
+          public Object decode(Reader reader, Type type) {
             return gson.fromJson(reader, type);
           }
         };

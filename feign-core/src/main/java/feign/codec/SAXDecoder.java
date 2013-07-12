@@ -48,7 +48,7 @@ public abstract class SAXDecoder extends Decoder {
   }
 
   @Override
-  public Object decode(String methodKey, Reader reader, Type type)
+  public Object decode(Reader reader, Type type)
       throws IOException, SAXException, ParserConfigurationException {
     ContentHandlerWithResult handler = typeToNewHandler(type);
     checkState(handler != null, "%s returned null for type %s", this, type);
