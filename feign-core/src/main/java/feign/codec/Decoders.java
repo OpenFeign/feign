@@ -20,6 +20,7 @@ import static java.lang.String.format;
 import static java.util.regex.Pattern.DOTALL;
 import static java.util.regex.Pattern.compile;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class Decoders {
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public Object decode(String methodKey, Reader reader, Type type) throws Throwable {
+      public Object decode(String methodKey, Reader reader, Type type) throws IOException {
         Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
         if (matcher.find()) {
           return applyFirstGroup.apply(matcher.group(1));
@@ -108,7 +109,7 @@ public class Decoders {
     checkNotNull(applyFirstGroup, "applyFirstGroup");
     return new Decoder() {
       @Override
-      public List<T> decode(String methodKey, Reader reader, Type type) throws Throwable {
+      public List<T> decode(String methodKey, Reader reader, Type type) throws IOException {
         Matcher matcher = patternForMatcher.matcher(Decoders.toString(reader));
         List<T> result = new ArrayList<T>();
         while (matcher.find()) {
@@ -139,11 +140,11 @@ public class Decoders {
     return transformEachFirstGroup(pattern, IDENTITY);
   }
 
-  private static String toString(Reader reader) throws Throwable {
+  private static String toString(Reader reader) throws IOException {
     return TO_STRING.decode(null, reader, null).toString();
   }
 
-  private static final Decoder TO_STRING = new ToStringDecoder();
+  private static final StringDecoder TO_STRING = new StringDecoder();
 
   private static final ApplyFirstGroup<String> IDENTITY =
       new ApplyFirstGroup<String>() {

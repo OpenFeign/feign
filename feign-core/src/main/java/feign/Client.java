@@ -104,8 +104,6 @@ public interface Client {
       return connection;
     }
 
-    private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
-
     Response convertResponse(HttpURLConnection connection) throws IOException {
       int status = connection.getResponseCode();
       String reason = connection.getResponseMessage();
