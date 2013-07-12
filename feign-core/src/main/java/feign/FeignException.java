@@ -34,7 +34,7 @@ public class FeignException extends RuntimeException {
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
     try {
-      Object body = toString.decode(methodKey, response, String.class);
+      Object body = toString.decode(response, String.class);
       if (body != null) {
         response = Response.create(response.status(), response.reason(), response.headers(), body.toString());
         message += "; content:\n" + body;
