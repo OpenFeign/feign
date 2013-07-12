@@ -17,7 +17,7 @@ package feign;
 
 import java.io.IOException;
 
-import feign.codec.ToStringDecoder;
+import feign.codec.StringDecoder;
 
 import static java.lang.String.format;
 
@@ -29,7 +29,7 @@ public class FeignException extends RuntimeException {
     return new FeignException(format("%s %s %s", cause.getMessage(), request.method(), request.url(), 0), cause);
   }
 
-  private static final ToStringDecoder toString = new ToStringDecoder();
+  private static final StringDecoder toString = new StringDecoder();
 
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
