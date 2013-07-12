@@ -68,6 +68,59 @@ The generic parameter of `Decoder.TextStream<T>` designates which The type param
   return new SAXDecoder<ZoneList>(handlers){};
 }
 ```
+### Asynchronous Incremental Callbacks
+If specified as the last argument of a method `IncrementalCallback<T>` fires a background task to add new elements to the callback as they are decoded.  Think of `IncrementalCallback<T>` as an asynchronous equivalent to a lazy sequence.
+
+Here's how one looks:
+```java
+IncrementalCallback<Contributor> printlnObserver = new IncrementalCallback<Contributor>() {
+
+  public int count;
+
+  @Override public void onNext(Contributor element) {
+    count++;
+  }
+
+  @Override public void onSuccess() {
+    System.out.println("found " + count + " contributors");
+  }
+
+  @Override public void onFailure(Throwable cause) {
+    cause.printStackTrace();
+  }
+};
+github.contributors("netflix", "feign", printlnObserver);
+```
+#### Incremental Decoding
+When using an `IncrementalCallback<T>`, you'll need to configure an `IncrementalDecoderi.TextStream<T>` or a general one for all types (`IncrementalDecoder.TextStream<Object>`).
+
+Here's how to wire in a reflective incremental json decoder:
+```java
+@Provides(type = SET) IncrementalDecoder incrementalDecoder(final Gson gson) {
+  return new IncrementalDecoder.TextStream<Object>() {
+
+    @Override
+    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws IOException {
+      JsonReader jsonReader = new JsonReader(reader);
+      jsonReader.beginArray();
+      while (jsonReader.hasNext()) {
+        try {
+          incrementalCallback.onNext(gson.fromJson(jsonReader, type));
+        } catch (JsonIOException e) {
+          if (e.getCause() != null && e.getCause() instanceof IOException) {
+            throw IOException.class.cast(e.getCause());
+          }
+          throw e;
+        }
+      }
+      jsonReader.endArray();
+    }
+  };
+}
+```
+
+
+
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
