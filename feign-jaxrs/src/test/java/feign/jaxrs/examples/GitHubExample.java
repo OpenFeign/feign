@@ -71,7 +71,7 @@ public class GitHubExample {
     final Decoder jsonDecoder = new Decoder() {
       Gson gson = new Gson();
 
-      @Override public Object decode(String methodKey, Reader reader, Type type) {
+      @Override public Object decode(Reader reader, Type type) {
         return gson.fromJson(reader, type);
       }
     };

@@ -146,7 +146,7 @@ public class FeignTest {
           return ImmutableMap.<String, Decoder>of("TestInterface", new Decoder() {
 
             @Override
-            public Object decode(String methodKey, Reader reader, Type type) throws IOException {
+            public Object decode(Reader reader, Type type) throws IOException {
               throw new IOException("error reading response");
             }
 
