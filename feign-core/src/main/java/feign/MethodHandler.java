@@ -20,16 +20,26 @@ import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
 import static feign.Util.ensureClosed;
 
+import dagger.Lazy;
 import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.IncrementalDecoder;
 import java.io.IOException;
+import java.io.Reader;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 abstract class MethodHandler {
+
+  /** same approach as retrofit: temporarily rename threads */
+  static final String THREAD_PREFIX = "Feign-";
+
+  static final String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
 
   /** Those using guava will implement as {@code Function<Object[], RequestTemplate>}. */
   static interface BuildTemplateFromArgs {
@@ -39,13 +49,20 @@ abstract class MethodHandler {
   static class Factory {
 
     private final Client client;
+    private final Lazy<Executor> httpExecutor;
     private final Provider<Retryer> retryer;
     private final Logger logger;
     private final Logger.Level logLevel;
 
     @Inject
-    Factory(Client client, Provider<Retryer> retryer, Logger logger, Logger.Level logLevel) {
+    Factory(
+        Client client,
+        @Named("http") Lazy<Executor> httpExecutor,
+        Provider<Retryer> retryer,
+        Logger logger,
+        Logger.Level logLevel) {
       this.client = checkNotNull(client, "client");
+      this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor");
       this.retryer = checkNotNull(retryer, "retryer");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
@@ -69,6 +86,114 @@ abstract class MethodHandler {
           options,
           decoder,
           errorDecoder);
+    }
+
+    public MethodHandler create(
+        Target<?> target,
+        MethodMetadata md,
+        BuildTemplateFromArgs buildTemplateFromArgs,
+        Options options,
+        IncrementalDecoder.TextStream<?> incrementalCallbackDecoder,
+        ErrorDecoder errorDecoder) {
+      return new IncrementalCallbackMethodHandler(
+          target,
+          client,
+          retryer,
+          logger,
+          logLevel,
+          md,
+          buildTemplateFromArgs,
+          options,
+          incrementalCallbackDecoder,
+          errorDecoder,
+          httpExecutor);
+    }
+  }
+
+  static final class IncrementalCallbackMethodHandler extends MethodHandler {
+    private final Lazy<Executor> httpExecutor;
+    private final IncrementalDecoder.TextStream<?> incDecoder;
+
+    private IncrementalCallbackMethodHandler(
+        Target<?> target,
+        Client client,
+        Provider<Retryer> retryer,
+        Logger logger,
+        Logger.Level logLevel,
+        MethodMetadata metadata,
+        BuildTemplateFromArgs buildTemplateFromArgs,
+        Options options,
+        IncrementalDecoder.TextStream<?> incDecoder,
+        ErrorDecoder errorDecoder,
+        Lazy<Executor> httpExecutor) {
+      super(
+          target,
+          client,
+          retryer,
+          logger,
+          logLevel,
+          metadata,
+          buildTemplateFromArgs,
+          options,
+          errorDecoder);
+      this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor for %s", target);
+      this.incDecoder = checkNotNull(incDecoder, "incrementalCallbackDecoder for %s", target);
+    }
+
+    @Override
+    public Object invoke(final Object[] argv) throws Throwable {
+      httpExecutor
+          .get()
+          .execute(
+              new Runnable() {
+                @Override
+                public void run() {
+                  Error error = null;
+                  Object arg = argv[metadata.incrementalCallbackIndex()];
+                  IncrementalCallback<Object> incrementalCallback =
+                      IncrementalCallback.class.cast(arg);
+                  try {
+                    IncrementalCallbackMethodHandler.super.invoke(argv);
+                    incrementalCallback.onSuccess();
+                  } catch (Error cause) {
+                    // assign to a variable in case .onFailure throws a RTE
+                    error = cause;
+                    incrementalCallback.onFailure(cause);
+                  } catch (Throwable cause) {
+                    incrementalCallback.onFailure(cause);
+                  } finally {
+                    Thread.currentThread().setName(IDLE_THREAD_NAME);
+                    if (error != null) throw error;
+                  }
+                }
+              });
+      return null; // void.
+    }
+
+    @Override
+    protected Object decode(Object[] argv, Response response) throws Throwable {
+      Object arg = argv[metadata.incrementalCallbackIndex()];
+      IncrementalCallback<Object> incrementalCallback = IncrementalCallback.class.cast(arg);
+      if (metadata.decodeInto().equals(Response.class)) {
+        incrementalCallback.onNext(response);
+      } else if (metadata.decodeInto() != Void.class) {
+        Response.Body body = response.body();
+        if (body == null) return null;
+        Reader reader = body.asReader();
+        try {
+          incDecoder.decode(reader, metadata.decodeInto(), incrementalCallback);
+        } finally {
+          ensureClosed(body);
+        }
+      }
+      return null; // void
+    }
+
+    @Override
+    protected Request targetRequest(RequestTemplate template) {
+      Request request = super.targetRequest(template);
+      Thread.currentThread().setName(THREAD_PREFIX + metadata.configKey());
+      return request;
     }
   }
 
@@ -162,8 +287,7 @@ abstract class MethodHandler {
   }
 
   public Object executeAndDecode(Object[] argv, RequestTemplate template) throws Throwable {
-    // create the request from a mutable copy of the input template.
-    Request request = target.apply(new RequestTemplate(template));
+    Request request = targetRequest(template);
 
     if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
       logger.logRequest(target, logLevel, request);
@@ -192,6 +316,10 @@ abstract class MethodHandler {
     } finally {
       ensureClosed(response.body());
     }
+  }
+
+  protected Request targetRequest(RequestTemplate template) {
+    return target.apply(new RequestTemplate(template));
   }
 
   protected abstract Object decode(Object[] argv, Response response) throws Throwable;
