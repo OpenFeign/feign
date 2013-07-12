@@ -32,20 +32,20 @@ public class StringDecoder extends Decoder {
 
   // overridden to throw only IOException
   @Override
-  public Object decode(String methodKey, Response response, Type type) throws IOException {
+  public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
     if (body == null)
       return null;
     Reader reader = body.asReader();
     try {
-      return decode(methodKey, reader, type);
+      return decode(reader, type);
     } finally {
       ensureClosed(body);
     }
   }
 
   @Override
-  public Object decode(String methodKey, Reader from, Type type) throws IOException {
+  public Object decode(Reader from, Type type) throws IOException {
     StringBuilder to = new StringBuilder();
     CharBuffer buf = CharBuffer.allocate(BUF_SIZE);
     while (from.read(buf) != -1) {

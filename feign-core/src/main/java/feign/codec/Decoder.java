@@ -38,7 +38,7 @@ import static feign.Util.ensureClosed;
  *   }
  *
  *   &#064;Override
- *   public Object decode(String methodKey, Reader reader, Type type) {
+ *   public Object decode(Reader reader, Type type) {
  *     return gson.fromJson(reader, type);
  *   }
  * }
@@ -61,20 +61,19 @@ public abstract class Decoder {
    * opposed to just the {@link feign.Response.Body} when decoding into a new
    * instance of {@code type}.
    *
-   * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request.  ex. {@code IAM#getUser()}
    * @param response  HTTP response.
    * @param type      Target object type.
    * @return instance of {@code type}
    * @throws IOException if there was a network error reading the response.
    * @throws Exception if the decoder threw a checked exception.
    */
-  public Object decode(String methodKey, Response response, Type type) throws Exception {
+  public Object decode(Response response, Type type) throws Exception {
     Response.Body body = response.body();
     if (body == null)
       return null;
     Reader reader = body.asReader();
     try {
-      return decode(methodKey, reader, type);
+      return decode(reader, type);
     } finally {
       ensureClosed(body);
     }
@@ -84,14 +83,12 @@ public abstract class Decoder {
    * Implement this to decode a {@code Reader} to an object of the specified
    * type.
    *
-   * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request.
-   *                  ex. {@code IAM#getUser()}
-   * @param reader    no need to close this, as {@link #decode(String, Response, Type)}
+   * @param reader    no need to close this, as {@link #decode(Response, Type)}
    *                  manages resources.
    * @param type      Target object type.
    * @return instance of {@code type}
    * @throws IOException will be propagated safely to the caller.
    * @throws Exception if the decoder threw a checked exception.
    */
-  public abstract Object decode(String methodKey, Reader reader, Type type) throws Exception;
+  public abstract Object decode(Reader reader, Type type) throws Exception;
 }
