@@ -20,15 +20,14 @@ import dagger.Provides;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
-import feign.codec.BodyEncoder;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.FormEncoder;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -72,6 +71,7 @@ public abstract class Feign {
     return ObjectGraph.create(modulesForGraph(modules).toArray());
   }
 
+  @SuppressWarnings("rawtypes")
   @dagger.Module(complete = false, injects = Feign.class, library = true)
   public static class Defaults {
 
@@ -82,7 +82,7 @@ public abstract class Feign {
 
     @Provides
     Contract contract() {
-      return new Contract.DefaultContract();
+      return new Contract.Default();
     }
 
     @Provides
@@ -106,28 +106,23 @@ public abstract class Feign {
     }
 
     @Provides
-    Map<String, Options> noOptions() {
-      return Collections.emptyMap();
+    ErrorDecoder errorDecoder() {
+      return new ErrorDecoder.Default();
     }
 
     @Provides
-    Map<String, BodyEncoder> noBodyEncoders() {
-      return Collections.emptyMap();
+    Options options() {
+      return new Options();
     }
 
     @Provides
-    Map<String, FormEncoder> noFormEncoders() {
-      return Collections.emptyMap();
+    Set<Encoder> noEncoders() {
+      return Collections.emptySet();
     }
 
     @Provides
-    Map<String, Decoder> noDecoders() {
-      return Collections.emptyMap();
-    }
-
-    @Provides
-    Map<String, ErrorDecoder> noErrorDecoders() {
-      return Collections.emptyMap();
+    Set<Decoder> noDecoders() {
+      return Collections.emptySet();
     }
   }
 

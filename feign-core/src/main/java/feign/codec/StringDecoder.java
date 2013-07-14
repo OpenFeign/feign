@@ -15,33 +15,17 @@
  */
 package feign.codec;
 
-import static feign.Util.ensureClosed;
-
-import feign.Response;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.CharBuffer;
 
 /** Adapted from {@code com.google.common.io.CharStreams.toString()}. */
-public class StringDecoder extends Decoder {
+public class StringDecoder implements Decoder.TextStream<String> {
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
-  // overridden to throw only IOException
   @Override
-  public Object decode(Response response, Type type) throws IOException {
-    Response.Body body = response.body();
-    if (body == null) return null;
-    Reader reader = body.asReader();
-    try {
-      return decode(reader, type);
-    } finally {
-      ensureClosed(body);
-    }
-  }
-
-  @Override
-  public Object decode(Reader from, Type type) throws IOException {
+  public String decode(Reader from, Type type) throws IOException {
     StringBuilder to = new StringBuilder();
     CharBuffer buf = CharBuffer.allocate(BUF_SIZE);
     while (from.read(buf) != -1) {

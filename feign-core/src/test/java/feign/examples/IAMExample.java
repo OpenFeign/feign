@@ -15,7 +15,8 @@
  */
 package feign.examples;
 
-import com.google.common.collect.ImmutableMap;
+import static dagger.Provides.Type.SET;
+
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
@@ -25,8 +26,6 @@ import feign.RequestTemplate;
 import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Decoders;
-import java.util.Map;
-import javax.inject.Singleton;
 
 public class IAMExample {
 
@@ -71,10 +70,9 @@ public class IAMExample {
 
   @Module(overrides = true, library = true)
   static class IAMModule {
-    @Provides
-    @Singleton
-    Map<String, Decoder> decoders() {
-      return ImmutableMap.of("IAM#arn()", Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>"));
+    @Provides(type = SET)
+    Decoder decoder() {
+      return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");
     }
   }
 }

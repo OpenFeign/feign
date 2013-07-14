@@ -22,17 +22,19 @@ import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.gson.reflect.TypeToken;
 import java.net.URI;
+import java.util.List;
 import javax.inject.Named;
 import org.testng.annotations.Test;
 
 /**
- * Tests interfaces defined per {@link feign.Contract.DefaultContract} are interpreted into expected
- * {@link feign .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link feign.Contract.Default} are interpreted into expected {@link
+ * feign .RequestTemplate template} instances.
  */
 @Test
 public class DefaultContractTest {
-  Contract.DefaultContract contract = new Contract.DefaultContract();
+  Contract.Default contract = new Contract.Default();
 
   interface Methods {
     @RequestLine("POST /")
@@ -74,6 +76,33 @@ public class DefaultContractTest {
             .template()
             .method(),
         "DELETE");
+  }
+
+  interface BodyParams {
+    @RequestLine("POST")
+    Response post(List<String> body);
+
+    @RequestLine("POST")
+    Response tooMany(List<String> body, List<String> body2);
+  }
+
+  @Test
+  public void bodyParamIsGeneric() throws Exception {
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post", List.class));
+    assertNull(md.template().body());
+    assertNull(md.template().bodyTemplate());
+    assertNull(md.urlIndex());
+    assertEquals(md.bodyIndex(), Integer.valueOf(0));
+    assertEquals(md.bodyType(), new TypeToken<List<String>>() {}.getType());
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Method has too many Body.*")
+  public void tooManyBodies() throws Exception {
+    contract.parseAndValidatateMetadata(
+        BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
   interface CustomMethodAndURIParam {
