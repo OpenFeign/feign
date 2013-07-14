@@ -33,7 +33,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@dagger.Module(library = true)
+@dagger.Module(library = true, overrides = true)
 public final class JAXRSModule {
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
