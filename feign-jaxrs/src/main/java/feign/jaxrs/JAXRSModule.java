@@ -38,7 +38,7 @@ import static feign.Util.CONTENT_TYPE;
 import static feign.Util.checkState;
 import static feign.Util.join;
 
-@dagger.Module(library = true)
+@dagger.Module(library = true, overrides = true)
 public final class JAXRSModule {
 
   @Provides Contract provideContract() {
