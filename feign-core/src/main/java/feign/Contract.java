@@ -73,6 +73,7 @@ public abstract class Contract {
         checkState(data.formParams().isEmpty(), "Body parameters cannot be used with @FormParam parameters.");
         checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
         data.bodyIndex(i);
+        data.bodyType(method.getGenericParameterTypes()[i]);
       }
     }
     return data;
@@ -112,7 +113,7 @@ public abstract class Contract {
     data.indexToName().put(i, names);
   }
 
-  static class DefaultContract extends Contract {
+  static class Default extends Contract {
 
     @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {

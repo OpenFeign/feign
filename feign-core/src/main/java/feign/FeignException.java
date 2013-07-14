@@ -15,11 +15,11 @@
  */
 package feign;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 
 import feign.codec.StringDecoder;
-
-import static java.lang.String.format;
 
 /**
  * Origin exception type for all Http Apis.
@@ -34,8 +34,8 @@ public class FeignException extends RuntimeException {
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
     try {
-      Object body = toString.decode(response, String.class);
-      if (body != null) {
+      if (response.body() != null) {
+        String body = toString.decode(response.body().asReader(), String.class);
         response = Response.create(response.status(), response.reason(), response.headers(), body.toString());
         message += "; content:\n" + body;
       }
