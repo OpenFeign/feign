@@ -35,7 +35,7 @@ import feign.MethodMetadata;
 
 import static feign.Util.checkState;
 
-@dagger.Module(library = true)
+@dagger.Module(library = true, overrides = true)
 public final class JAXRSModule {
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
