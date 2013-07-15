@@ -20,6 +20,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import dagger.Provides;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
 import feign.codec.StringDecoder;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static dagger.Provides.Type.SET;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -105,8 +107,12 @@ public class LoggerTest {
     server.play();
 
     @dagger.Module(overrides = true, library = true) class Module {
-      @Provides @Singleton Map<String, Decoder> decoders() {
-        return ImmutableMap.<String, Decoder>of("SendsStuff", new StringDecoder());
+      @Provides(type = SET) Encoder defaultEncoder() {
+        return new Encoder.Text<Object>() {
+          @Override public String encode(Object object) {
+            return object.toString();
+          }
+        };
       }
 
       @Provides @Singleton Logger logger() {

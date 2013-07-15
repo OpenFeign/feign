@@ -18,6 +18,8 @@ package feign.jaxrs;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import com.google.gson.reflect.TypeToken;
+import feign.RequestLine;
 import org.testng.annotations.Test;
 
 import java.lang.annotation.ElementType;
@@ -25,6 +27,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -167,6 +170,28 @@ public class JAXRSContractTest {
   @Test public void producesAddsContentTypeHeader() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
     assertEquals(md.template().headers().get(CONTENT_TYPE), ImmutableSet.of(APPLICATION_XML));
+  }
+
+  interface BodyParams {
+    @POST Response post(List<String> body);
+
+    @POST Response tooMany(List<String> body, List<String> body2);
+  }
+
+  @Test public void bodyParamIsGeneric() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post",
+        List.class));
+    assertNull(md.template().body());
+    assertNull(md.template().bodyTemplate());
+    assertNull(md.urlIndex());
+    assertEquals(md.bodyIndex(), Integer.valueOf(0));
+    assertEquals(md.bodyType(), new TypeToken<List<String>>() {
+    }.getType());
+  }
+
+  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Method has too many Body.*")
+  public void tooManyBodies() throws Exception {
+    contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
   interface WithURIParam {

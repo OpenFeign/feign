@@ -15,11 +15,6 @@
  */
 package feign.jaxrs.examples;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.util.Map;
-
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
@@ -33,6 +28,8 @@ import feign.codec.Decoder;
 import feign.codec.Decoders;
 import feign.examples.AWSSignatureVersion4;
 import feign.jaxrs.JAXRSModule;
+
+import static dagger.Provides.Type.SET;
 
 public class IAMExample {
 
@@ -72,8 +69,8 @@ public class IAMExample {
 
   @Module(overrides = true, library = true, includes = JAXRSModule.class)
   static class IAMModule {
-    @Provides @Singleton Map<String, Decoder> decoders() {
-      return ImmutableMap.of("IAM#arn()", Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>"));
+    @Provides(type = SET) Decoder decoder() {
+      return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");
     }
   }
 }

@@ -68,7 +68,7 @@ public interface ErrorDecoder {
    */
   public Exception decode(String methodKey, Response response);
 
-  public static final ErrorDecoder DEFAULT = new ErrorDecoder() {
+  public static class Default implements ErrorDecoder {
 
     private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
 
@@ -87,7 +87,7 @@ public interface ErrorDecoder {
       }
       return null;
     }
-  };
+  }
 
   /**
    * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date,

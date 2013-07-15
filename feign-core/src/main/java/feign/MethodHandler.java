@@ -15,15 +15,15 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import feign.Request.Options;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -54,19 +54,19 @@ abstract class MethodHandler {
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md, BuildTemplateFromArgs buildTemplateFromArgs,
-                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, logger, logLevel, md, buildTemplateFromArgs,
-          options, decoder, errorDecoder);
+                                Options options, Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
+      return new SynchronousMethodHandler(target, client, retryer, logger, logLevel, md, buildTemplateFromArgs, options,
+          decoder, errorDecoder);
     }
   }
 
   static final class SynchronousMethodHandler extends MethodHandler {
-    private final Decoder decoder;
+    private final Decoder.TextStream<?> decoder;
 
     private SynchronousMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
                                      Logger.Level logLevel, MethodMetadata metadata,
-                                     BuildTemplateFromArgs buildTemplateFromArgs, Options options, Decoder decoder,
-                                     ErrorDecoder errorDecoder) {
+                                     BuildTemplateFromArgs buildTemplateFromArgs, Options options,
+                                     Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
       super(target, client, retryer, logger, logLevel, metadata, buildTemplateFromArgs, options, errorDecoder);
       this.decoder = checkNotNull(decoder, "decoder for %s", target);
     }
@@ -74,10 +74,16 @@ abstract class MethodHandler {
     @Override protected Object decode(Object[] argv, Response response) throws Throwable {
       if (metadata.returnType().equals(Response.class)) {
         return response;
-      } else if (metadata.returnType() == void.class) {
+      } else if (metadata.returnType() == void.class || response.body() == null) {
         return null;
       }
-      return decoder.decode(response, metadata.returnType());
+      try {
+        return decoder.decode(response.body().asReader(), metadata.returnType());
+      } catch (FeignException e) {
+        throw e;
+      } catch (RuntimeException e) {
+        throw new DecodeException(e.getMessage(), e);
+      }
     }
   }
 

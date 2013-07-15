@@ -15,24 +15,23 @@
  */
 package feign.jaxrs.examples;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-
+import com.google.gson.JsonIOException;
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.jaxrs.JAXRSModule;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.List;
+
+import static dagger.Provides.Type.SET;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
@@ -64,16 +63,21 @@ public class GitHubExample {
    */
   @Module(overrides = true, library = true, includes = JAXRSModule.class)
   static class GitHubModule {
-    @Provides @Singleton Map<String, Decoder> decoders() {
-      return ImmutableMap.of("GitHub", jsonDecoder);
+    @Provides(type = SET) Decoder decoder() {
+      return new Decoder.TextStream<Object>() {
+        Gson gson = new Gson();
+
+        @Override public Object decode(Reader reader, Type type) throws IOException {
+          try {
+            return gson.fromJson(reader, type);
+          } catch (JsonIOException e) {
+            if (e.getCause() != null && e.getCause() instanceof IOException) {
+              throw IOException.class.cast(e.getCause());
+            }
+            throw e;
+          }
+        }
+      };
     }
-
-    final Decoder jsonDecoder = new Decoder() {
-      Gson gson = new Gson();
-
-      @Override public Object decode(Reader reader, Type type) {
-        return gson.fromJson(reader, type);
-      }
-    };
   }
 }

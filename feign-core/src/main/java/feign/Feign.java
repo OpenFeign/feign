@@ -15,23 +15,21 @@
  */
 package feign;
 
+import dagger.ObjectGraph;
+import dagger.Provides;
+import feign.Logger.NoOpLogger;
+import feign.Request.Options;
+import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+
+import javax.net.ssl.SSLSocketFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.SSLSocketFactory;
-
-import dagger.ObjectGraph;
-import dagger.Provides;
-import feign.Request.Options;
-import feign.Target.HardCodedTarget;
-import feign.Logger.NoOpLogger;
-import feign.codec.BodyEncoder;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.FormEncoder;
+import java.util.Set;
 
 /**
  * Feign's purpose is to ease development against http apis that feign
@@ -78,16 +76,16 @@ public abstract class Feign {
     return ObjectGraph.create(modulesForGraph(modules).toArray());
   }
 
+  @SuppressWarnings("rawtypes")
   @dagger.Module(complete = false, injects = Feign.class, library = true)
   public static class Defaults {
 
-    @Provides
-    Logger.Level logLevel() {
+    @Provides Logger.Level logLevel() {
       return Logger.Level.NONE;
     }
 
     @Provides Contract contract() {
-      return new Contract.DefaultContract();
+      return new Contract.Default();
     }
 
     @Provides SSLSocketFactory sslSocketFactory() {
@@ -106,24 +104,20 @@ public abstract class Feign {
       return new NoOpLogger();
     }
 
-    @Provides Map<String, Options> noOptions() {
-      return Collections.emptyMap();
+    @Provides ErrorDecoder errorDecoder() {
+      return new ErrorDecoder.Default();
     }
 
-    @Provides Map<String, BodyEncoder> noBodyEncoders() {
-      return Collections.emptyMap();
+    @Provides Options options() {
+      return new Options();
     }
 
-    @Provides Map<String, FormEncoder> noFormEncoders() {
-      return Collections.emptyMap();
+    @Provides Set<Encoder> noEncoders() {
+      return Collections.emptySet();
     }
 
-    @Provides Map<String, Decoder> noDecoders() {
-      return Collections.emptyMap();
-    }
-
-    @Provides Map<String, ErrorDecoder> noErrorDecoders() {
-      return Collections.emptyMap();
+    @Provides Set<Decoder> noDecoders() {
+      return Collections.emptySet();
     }
   }
 
