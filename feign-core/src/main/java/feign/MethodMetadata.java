@@ -31,6 +31,7 @@ public final class MethodMetadata implements Serializable {
   private transient Type returnType;
   private Integer urlIndex;
   private Integer bodyIndex;
+  private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
   private Map<Integer, Collection<String>> indexToName = new LinkedHashMap<Integer, Collection<String>>();
@@ -71,6 +72,15 @@ public final class MethodMetadata implements Serializable {
 
   MethodMetadata bodyIndex(Integer bodyIndex) {
     this.bodyIndex = bodyIndex;
+    return this;
+  }
+
+  public Type bodyType() {
+    return bodyType;
+  }
+
+  MethodMetadata bodyType(Type bodyType) {
+    this.bodyType = bodyType;
     return this;
   }
 

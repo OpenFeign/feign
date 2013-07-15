@@ -15,32 +15,36 @@
  */
 package feign;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Joiner;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
-
+import dagger.Module;
+import dagger.Provides;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.codec.StringDecoder;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.util.Map;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-import dagger.Module;
-import dagger.Provides;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
-
+import static dagger.Provides.Type.SET;
 import static org.testng.Assert.assertEquals;
 
 @Test
+// unbound wildcards are not currently injectable in dagger.
+@SuppressWarnings("rawtypes")
 public class FeignTest {
   interface TestInterface {
     @RequestLine("POST /") String post();
@@ -48,17 +52,33 @@ public class FeignTest {
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     void login(
-        @Named("customer_name") String customer,
-        @Named("user_name") String user, @Named("password") String password);
+        @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
+
+    @RequestLine("POST /")
+    void body(List<String> contents);
+
+    @RequestLine("POST /")
+    void form(
+        @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
 
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
 
     @dagger.Module(overrides = true, library = true)
     static class Module {
-      // until dagger supports real map binding, we need to recreate the
-      // entire map, as opposed to overriding a single entry.
-      @Provides @Singleton Map<String, Decoder> decoders() {
-        return ImmutableMap.<String, Decoder>of("TestInterface", new StringDecoder());
+      @Provides(type = SET) Encoder defaultEncoder() {
+        return new Encoder.Text<Object>() {
+          @Override public String encode(Object object) {
+            return object.toString();
+          }
+        };
+      }
+
+      @Provides(type = SET) Encoder formEncoder() {
+        return new Encoder.Text<Map<String, ?>>() {
+          @Override public String encode(Map<String, ?> object) {
+            return Joiner.on(',').withKeyValueSeparator("=").join(object);
+          }
+        };
       }
     }
   }
@@ -80,6 +100,39 @@ public class FeignTest {
     }
   }
 
+  @Test
+  public void postFormParams() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      api.form("netflix", "denominator", "password");
+      assertEquals(new String(server.takeRequest().getBody()),
+          "customer_name=netflix,user_name=denominator,password=password");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void postBodyParam() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      api.body(Arrays.asList("netflix", "denominator", "password"));
+      assertEquals(new String(server.takeRequest().getBody()), "[netflix, denominator, password]");
+    } finally {
+      server.shutdown();
+    }
+  }
+
   @Test public void toKeyMethodFormatsAsExpected() throws Exception {
     assertEquals(Feign.configKey(TestInterface.class.getDeclaredMethod("post")), "TestInterface#post()");
     assertEquals(Feign.configKey(TestInterface.class.getDeclaredMethod("uriParam", String.class, URI.class,
@@ -87,19 +140,19 @@ public class FeignTest {
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "zone not found")
-  public void canOverrideErrorDecoderOnMethod() throws IOException, InterruptedException {
+  public void canOverrideErrorDecoder() throws IOException, InterruptedException {
     @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
-      @Provides @Singleton Map<String, ErrorDecoder> decoders() {
-        return ImmutableMap.<String, ErrorDecoder>of("TestInterface#post()", new ErrorDecoder() {
+      @Provides @Singleton ErrorDecoder errorDecoder() {
+        return new ErrorDecoder.Default() {
 
           @Override
           public Exception decode(String methodKey, Response response) {
             if (response.status() == 404)
               return new IllegalArgumentException("zone not found");
-            return ErrorDecoder.DEFAULT.decode(methodKey, response);
+            return super.decode(methodKey, response);
           }
 
-        });
+        };
       }
     }
 
@@ -134,6 +187,63 @@ public class FeignTest {
     }
   }
 
+  public void overrideTypeSpecificDecoder() throws IOException, InterruptedException {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.play();
+
+    try {
+      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
+        @Provides(type = SET) Decoder decoder() {
+          return new Decoder.TextStream<String>() {
+            @Override
+            public String decode(Reader reader, Type type) throws IOException {
+              return "fail";
+            }
+          };
+        }
+      }
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+
+      assertEquals(api.post(), "fail");
+    } finally {
+      server.shutdown();
+      assertEquals(server.getRequestCount(), 1);
+    }
+  }
+
+  /**
+   * when you must parse a 2xx status to determine if the operation succeeded or not.
+   */
+  public void retryableExceptionInDecoder() throws IOException, InterruptedException {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("retry!".getBytes()));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.play();
+
+    try {
+      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
+        @Provides(type = SET) Decoder decoder() {
+          return new StringDecoder() {
+            @Override
+            public String decode(Reader reader, Type type) throws RetryableException, IOException {
+              String string = super.decode(reader, type);
+              if ("retry!".equals(string))
+                throw new RetryableException(string, null);
+              return string;
+            }
+          };
+        }
+      }
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+
+      assertEquals(api.post(), "success!");
+    } finally {
+      server.shutdown();
+      assertEquals(server.getRequestCount(), 2);
+    }
+  }
+
   @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "error reading response POST http://.*")
   public void doesntRetryAfterResponseIsSent() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
@@ -141,16 +251,14 @@ public class FeignTest {
     server.play();
 
     try {
-      @dagger.Module(overrides = true) class Overrides {
-        @Provides @Singleton Map<String, Decoder> decoders() {
-          return ImmutableMap.<String, Decoder>of("TestInterface", new Decoder() {
-
+      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
+        @Provides(type = SET) Decoder decoder() {
+          return new Decoder.TextStream<String>() {
             @Override
-            public Object decode(Reader reader, Type type) throws IOException {
+            public String decode(Reader reader, Type type) throws IOException {
               throw new IOException("error reading response");
             }
-
-          });
+          };
         }
       }
       TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());

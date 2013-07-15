@@ -1,5 +1,5 @@
 # Feign makes writing java http clients easier
-Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [jclouds](https://github.com/jclouds/jclouds), and [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
+Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSockets](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
 
 ### Why Feign and not X?
 
@@ -35,26 +35,39 @@ public static void main(String... args) {
 }
 ```
 ### Decoders
-The last argument to `Feign.create` specifies how to decode the responses.  You can plug-in your favorite library, such as gson, or use builtin RegEx Pattern decoders.  Here's how the Gson module looks.
+The last argument to `Feign.create` specifies how to decode the responses, modeled in Dagger.  Here's how it looks to wire in a default gson decoder:
 
 ```java
 @Module(overrides = true, library = true)
 static class GsonModule {
-  @Provides @Singleton Map<String, Decoder> decoders() {
-    return ImmutableMap.of("GitHub", gsonDecoder);
+  @Provides(type = SET) Decoder decoder() {
+    return new Decoder.TextStream<Object>() {
+      Gson gson = new Gson();
+
+      @Override public Object decode(Reader reader, Type type) throws IOException {
+        try {
+          return gson.fromJson(reader, type);
+        } catch (JsonIOException e) {
+          if (e.getCause() != null && e.getCause() instanceof IOException) {
+            throw IOException.class.cast(e.getCause());
+          }
+          throw e;
+        }
+      }
+    };
   }
-
-  final Decoder gsonDecoder = new Decoder() {
-    Gson gson = new Gson();
-
-    @Override public Object decode(String methodKey, Reader reader, Type type) {
-      return gson.fromJson(reader, type);
-    }
-  };
 }
 ```
 Feign doesn't offer a built-in json decoder as you can see above it is very few lines of code to wire yours in.  If you are a jackson user, you'd probably thank us for not dragging in a dependency you don't use.
 
+#### Type-specific Decoders
+The generic parameter of `Decoder.TextStream<T>` designates which The type parameter is either a concrete type, or `Object`, if your decoder can handle multiple types.  To add a type-specific decoder, ensure your type parameter is correct.  Here's an example of an xml decoder that will only apply to methods that return `ZoneList`.
+
+```
+@Provides(type = SET) Decoder zoneListDecoder(Provider<ListHostedZonesResponseHandler> handlers) {
+  return new SAXDecoder<ZoneList>(handlers){};
+}
+```
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
@@ -89,10 +102,14 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 #### Dagger
 Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
 
-Almost all configuration of Feign is represented as Map bindings, where the key is either the simple name (ex. `GitHub`) or the method (ex. `GitHub#contributors()`) in javadoc link format. For example, the following routes all decoding to gson:
+Where possible, Feign configuration uses normal Dagger conventions.  For example, `Decoder` bindings are of `Provider.Type.SET`, meaning you can make multiple bindings for all the different types you return.  Here's an example of multiple decoder bindings.
 ```java
-@Provides @Singleton Map<String, Decoder> decoders() {
-  return ImmutableMap.of("GitHub", gsonDecoder);
+@Provides(type = SET) Decoder recordListDecoder(Provider<RecordListHandler> handlers) {
+  return new SAXDecoder<List<Record>>(handlers){};
+}
+
+@Provides(type = SET) Decoder directionalRecordListDecoder(Provider<DirectionalRecordListHandler> handlers) {
+  return new SAXDecoder<List<DirectionalRecord>>(handlers){};
 }
 ```
 #### Logging
@@ -117,8 +134,8 @@ Here's how our IAM example grabs only one xml element from a response.
 ```java
 @Module(overrides = true, library = true)
 static class IAMModule {
-  @Provides @Singleton Map<String, Decoder> decoders() {
-    return ImmutableMap.of("IAM#arn()", Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>"));
+  @Provides(type = SET) Decoder arnDecoder() {
+    return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");
   }
 }
 ```
