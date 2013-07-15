@@ -17,9 +17,9 @@ package feign;
 
 import dagger.ObjectGraph;
 import dagger.Provides;
+import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
-import feign.Wire.NoOpWire;
 import feign.codec.BodyEncoder;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
@@ -74,6 +74,12 @@ public abstract class Feign {
 
   @dagger.Module(complete = false, injects = Feign.class, library = true)
   public static class Defaults {
+
+    @Provides
+    Logger.Level logLevel() {
+      return Logger.Level.NONE;
+    }
+
     @Provides
     Contract contract() {
       return new Contract.DefaultContract();
@@ -95,8 +101,8 @@ public abstract class Feign {
     }
 
     @Provides
-    Wire noOp() {
-      return new NoOpWire();
+    Logger noOp() {
+      return new NoOpLogger();
     }
 
     @Provides
