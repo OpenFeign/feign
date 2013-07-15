@@ -379,7 +379,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * replaces the {@link feign.Util#CONTENT_LENGTH} header. <br>
-   * Usually populated by {@link feign.codec.BodyEncoder} or {@link feign.codec.FormEncoder}
+   * Usually populated by an {@link feign.codec.Encoder}.
    *
    * @see Request#body()
    */

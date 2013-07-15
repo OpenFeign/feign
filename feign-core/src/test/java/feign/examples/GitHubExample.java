@@ -18,11 +18,11 @@ package feign.examples;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.PropertyAccessor.FIELD;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static dagger.Provides.Type.SET;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
@@ -32,9 +32,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
@@ -62,42 +60,40 @@ public class GitHubExample {
   /** Here's how to wire gson deserialization. */
   @Module(overrides = true, library = true)
   static class GsonModule {
-    @Provides
-    @Singleton
-    Map<String, Decoder> decoders() {
-      return ImmutableMap.of("GitHub", jsonDecoder);
-    }
+    @Provides(type = SET)
+    Decoder decoder() {
+      return new Decoder.TextStream<Object>() {
+        Gson gson = new Gson();
 
-    final Decoder jsonDecoder =
-        new Decoder() {
-          Gson gson = new Gson();
-
-          @Override
-          public Object decode(Reader reader, Type type) {
+        @Override
+        public Object decode(Reader reader, Type type) throws IOException {
+          try {
             return gson.fromJson(reader, type);
+          } catch (JsonIOException e) {
+            if (e.getCause() != null && e.getCause() instanceof IOException) {
+              throw IOException.class.cast(e.getCause());
+            }
+            throw e;
           }
-        };
+        }
+      };
+    }
   }
 
   /** Here's how to wire jackson deserialization. */
   @Module(overrides = true, library = true)
   static class JacksonModule {
-    @Provides
-    @Singleton
-    Map<String, Decoder> decoders() {
-      return ImmutableMap.of("GitHub", jsonDecoder);
+    @Provides(type = SET)
+    Decoder decoder() {
+      return new Decoder.TextStream<Object>() {
+        ObjectMapper mapper =
+            new ObjectMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES).setVisibility(FIELD, ANY);
+
+        @Override
+        public Object decode(Reader reader, final Type type) throws IOException {
+          return mapper.readValue(reader, mapper.constructType(type));
+        }
+      };
     }
-
-    final Decoder jsonDecoder =
-        new Decoder() {
-          ObjectMapper mapper =
-              new ObjectMapper().disable(FAIL_ON_UNKNOWN_PROPERTIES).setVisibility(FIELD, ANY);
-
-          @Override
-          public Object decode(Reader reader, final Type type)
-              throws JsonProcessingException, IOException {
-            return mapper.readValue(reader, mapper.constructType(type));
-          }
-        };
   }
 }

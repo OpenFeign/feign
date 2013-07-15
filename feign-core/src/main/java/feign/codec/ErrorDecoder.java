@@ -67,27 +67,26 @@ public interface ErrorDecoder {
    */
   public Exception decode(String methodKey, Response response);
 
-  public static final ErrorDecoder DEFAULT =
-      new ErrorDecoder() {
+  public static class Default implements ErrorDecoder {
 
-        private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
+    private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
 
-        @Override
-        public Exception decode(String methodKey, Response response) {
-          FeignException exception = errorStatus(methodKey, response);
-          Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
-          if (retryAfter != null)
-            return new RetryableException(exception.getMessage(), exception, retryAfter);
-          return exception;
-        }
+    @Override
+    public Exception decode(String methodKey, Response response) {
+      FeignException exception = errorStatus(methodKey, response);
+      Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
+      if (retryAfter != null)
+        return new RetryableException(exception.getMessage(), exception, retryAfter);
+      return exception;
+    }
 
-        private <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
-          if (map.containsKey(key) && !map.get(key).isEmpty()) {
-            return map.get(key).iterator().next();
-          }
-          return null;
-        }
-      };
+    private <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
+      if (map.containsKey(key) && !map.get(key).isEmpty()) {
+        return map.get(key).iterator().next();
+      }
+      return null;
+    }
+  }
 
   /**
    * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible. <br>

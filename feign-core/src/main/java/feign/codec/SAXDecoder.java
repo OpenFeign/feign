@@ -21,43 +21,55 @@ import static feign.Util.checkState;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
+import javax.inject.Provider;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
-public abstract class SAXDecoder extends Decoder {
+public class SAXDecoder<T> implements Decoder.TextStream<T> {
   /* Implementations are not intended to be shared across requests. */
-  public interface ContentHandlerWithResult extends ContentHandler {
-    /* expected to be set following a call to {@link XMLReader#parse(InputSource)} */
-    Object getResult();
+  public interface ContentHandlerWithResult<T> extends ContentHandler {
+    /*
+     * expected to be set following a call to {@link
+     * XMLReader#parse(InputSource)}
+     */
+    T result();
   }
 
-  private final SAXParserFactory factory;
+  private final Provider<? extends ContentHandlerWithResult<T>> handlers;
 
-  protected SAXDecoder() {
-    this(SAXParserFactory.newInstance());
-    factory.setNamespaceAware(false);
-    factory.setValidating(false);
-  }
-
-  protected SAXDecoder(SAXParserFactory factory) {
-    this.factory = checkNotNull(factory, "factory");
+  /**
+   * You must subclass this, in order to prevent type erasure on {@code T}. In addition to making a
+   * concrete type, you can also use the following form.
+   *
+   * <p><br>
+   *
+   * <p>
+   *
+   * <pre>
+   * new SaxDecoder&lt;Foo&gt;(fooHandlers) {
+   * }; // note the curly braces ensures no type erasure!
+   * </pre>
+   */
+  protected SAXDecoder(Provider<? extends ContentHandlerWithResult<T>> handlers) {
+    this.handlers = checkNotNull(handlers, "handlers");
   }
 
   @Override
-  public Object decode(Reader reader, Type type)
-      throws IOException, SAXException, ParserConfigurationException {
-    ContentHandlerWithResult handler = typeToNewHandler(type);
+  public T decode(Reader reader, Type type) throws IOException, DecodeException {
+    ContentHandlerWithResult<T> handler = handlers.get();
     checkState(handler != null, "%s returned null for type %s", this, type);
-    XMLReader xmlReader = factory.newSAXParser().getXMLReader();
-    xmlReader.setContentHandler(handler);
-    InputSource source = new InputSource(reader);
-    xmlReader.parse(source);
-    return handler.getResult();
+    try {
+      XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+      xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
+      xmlReader.setFeature("http://xml.org/sax/features/validation", false);
+      xmlReader.setContentHandler(handler);
+      xmlReader.parse(new InputSource(reader));
+      return handler.result();
+    } catch (SAXException e) {
+      throw new DecodeException(e.getMessage(), e);
+    }
   }
-
-  protected abstract ContentHandlerWithResult typeToNewHandler(Type type);
 }

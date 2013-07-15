@@ -21,6 +21,7 @@ import static feign.Util.checkNotNull;
 import static feign.Util.ensureClosed;
 
 import feign.Request.Options;
+import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
@@ -55,7 +56,7 @@ abstract class MethodHandler {
         MethodMetadata md,
         BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
-        Decoder decoder,
+        Decoder.TextStream<?> decoder,
         ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(
           target,
@@ -72,7 +73,7 @@ abstract class MethodHandler {
   }
 
   static final class SynchronousMethodHandler extends MethodHandler {
-    private final Decoder decoder;
+    private final Decoder.TextStream<?> decoder;
 
     private SynchronousMethodHandler(
         Target<?> target,
@@ -83,7 +84,7 @@ abstract class MethodHandler {
         MethodMetadata metadata,
         BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
-        Decoder decoder,
+        Decoder.TextStream<?> decoder,
         ErrorDecoder errorDecoder) {
       super(
           target,
@@ -102,10 +103,16 @@ abstract class MethodHandler {
     protected Object decode(Object[] argv, Response response) throws Throwable {
       if (metadata.returnType().equals(Response.class)) {
         return response;
-      } else if (metadata.returnType() == void.class) {
+      } else if (metadata.returnType() == void.class || response.body() == null) {
         return null;
       }
-      return decoder.decode(response, metadata.returnType());
+      try {
+        return decoder.decode(response.body().asReader(), metadata.returnType());
+      } catch (FeignException e) {
+        throw e;
+      } catch (RuntimeException e) {
+        throw new DecodeException(e.getMessage(), e);
+      }
     }
   }
 

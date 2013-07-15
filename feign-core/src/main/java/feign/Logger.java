@@ -22,7 +22,6 @@ import static feign.Util.valuesOrEmpty;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.text.SimpleDateFormat;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
@@ -79,9 +78,11 @@ public abstract class Logger {
       logger.fine(String.format(format, args));
     }
 
-    /** helper that configures jul to sanely log messages. */
+    /**
+     * helper that configures jul to sanely log messages at FINE level without additional
+     * formatting.
+     */
     public JavaLogger appendToFile(String logfile) {
-      final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
       logger.setLevel(java.util.logging.Level.FINE);
       try {
         FileHandler handler = new FileHandler(logfile, true);
@@ -89,8 +90,7 @@ public abstract class Logger {
             new SimpleFormatter() {
               @Override
               public String format(LogRecord record) {
-                String timestamp = sdf.format(new java.util.Date(record.getMillis())); // NOPMD
-                return String.format("%s %s%n", timestamp, record.getMessage()); // NOPMD
+                return String.format("%s%n", record.getMessage()); // NOPMD
               }
             });
         logger.addHandler(handler);
