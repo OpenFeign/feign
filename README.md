@@ -95,13 +95,17 @@ Almost all configuration of Feign is represented as Map bindings, where the key 
   return ImmutableMap.of("GitHub", gsonDecoder);
 }
 ```
-#### Wire Logging
-You can log the http messages going to and from the target by setting up a `Wire`.  Here's the easiest way to do that:
+#### Logging
+You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
 ```java
 @Module(overrides = true)
 class Overrides {
-  @Provides @Singleton Wire provideWire() {
-    return new Wire.LoggingWire().appendToFile("logs/http-wire.log");
+  @Provides @Singleton Logger.Level provideLoggerLevel() {
+    return Logger.Level.FULL;
+  }
+
+  @Provides @Singleton Logger provideLogger() {
+    return new Logger.JavaLogger().appendToFile("logs/http.log");
   }
 }
 GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonGitHubModule(), new Overrides());

@@ -24,6 +24,7 @@ import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -38,13 +39,15 @@ abstract class MethodHandler {
 
     private final Client client;
     private final Provider<Retryer> retryer;
-    private final Wire wire;
+    private final Logger logger;
+    private final Logger.Level logLevel;
 
     @Inject
-    Factory(Client client, Provider<Retryer> retryer, Wire wire) {
+    Factory(Client client, Provider<Retryer> retryer, Logger logger, Logger.Level logLevel) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
-      this.wire = checkNotNull(wire, "wire");
+      this.logger = checkNotNull(logger, "logger");
+      this.logLevel = checkNotNull(logLevel, "logLevel");
     }
 
     public MethodHandler create(
@@ -55,7 +58,16 @@ abstract class MethodHandler {
         Decoder decoder,
         ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(
-          target, client, retryer, wire, md, buildTemplateFromArgs, options, decoder, errorDecoder);
+          target,
+          client,
+          retryer,
+          logger,
+          logLevel,
+          md,
+          buildTemplateFromArgs,
+          options,
+          decoder,
+          errorDecoder);
     }
   }
 
@@ -66,13 +78,23 @@ abstract class MethodHandler {
         Target<?> target,
         Client client,
         Provider<Retryer> retryer,
-        Wire wire,
+        Logger logger,
+        Logger.Level logLevel,
         MethodMetadata metadata,
         BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
         Decoder decoder,
         ErrorDecoder errorDecoder) {
-      super(target, client, retryer, wire, metadata, buildTemplateFromArgs, options, errorDecoder);
+      super(
+          target,
+          client,
+          retryer,
+          logger,
+          logLevel,
+          metadata,
+          buildTemplateFromArgs,
+          options,
+          errorDecoder);
       this.decoder = checkNotNull(decoder, "decoder for %s", target);
     }
 
@@ -91,7 +113,8 @@ abstract class MethodHandler {
   protected final Target<?> target;
   protected final Client client;
   protected final Provider<Retryer> retryer;
-  protected final Wire wire;
+  protected final Logger logger;
+  protected final Logger.Level logLevel;
 
   protected final BuildTemplateFromArgs buildTemplateFromArgs;
   protected final Options options;
@@ -101,7 +124,8 @@ abstract class MethodHandler {
       Target<?> target,
       Client client,
       Provider<Retryer> retryer,
-      Wire wire,
+      Logger logger,
+      Logger.Level logLevel,
       MethodMetadata metadata,
       BuildTemplateFromArgs buildTemplateFromArgs,
       Options options,
@@ -109,7 +133,8 @@ abstract class MethodHandler {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
-    this.wire = checkNotNull(wire, "wire for %s", target);
+    this.logger = checkNotNull(logger, "logger for %s", target);
+    this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
@@ -132,15 +157,24 @@ abstract class MethodHandler {
   public Object executeAndDecode(Object[] argv, RequestTemplate template) throws Throwable {
     // create the request from a mutable copy of the input template.
     Request request = target.apply(new RequestTemplate(template));
-    wire.wireRequest(target, request);
+
+    if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
+      logger.logRequest(target, logLevel, request);
+    }
+
     Response response;
+    long start = System.nanoTime();
     try {
       response = client.execute(request, options);
     } catch (IOException e) {
       throw errorExecuting(request, e);
     }
+    long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
     try {
-      response = wire.wireAndRebufferResponse(target, response);
+      if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
+        response = logger.logAndRebufferResponse(target, logLevel, response, elapsedTime);
+      }
       if (response.status() >= 200 && response.status() < 300) {
         return decode(argv, response);
       } else {
