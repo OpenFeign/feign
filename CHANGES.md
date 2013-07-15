@@ -1,4 +1,5 @@
 ### Version 3.0
+* Wire is now Logger, with configurable Logger.Level.
 * decoupled ErrorDecoder from fallback handling
 * Decoders can throw checked exceptions, but needn't declare Throwable
 * Decoders no longer read methodKey
