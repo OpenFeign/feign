@@ -15,22 +15,14 @@
  */
 package feign.example.cli;
 
-import com.google.gson.Gson;
-
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import feign.Feign;
+import feign.IncrementalCallback;
+import feign.RequestLine;
+import feign.gson.GsonModule;
 
 import javax.inject.Named;
-import javax.inject.Singleton;
-
-import dagger.Module;
-import dagger.Provides;
-import feign.Feign;
-import feign.RequestLine;
-import feign.codec.Decoder;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
@@ -40,6 +32,10 @@ public class GitHubExample {
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    void contributors(@Named("owner") String owner, @Named("repo") String repo,
+                      IncrementalCallback<Contributor> contributors);
   }
 
   static class Contributor {
@@ -47,33 +43,45 @@ public class GitHubExample {
     int contributions;
   }
 
-  public static void main(String... args) {
+  public static void main(String... args) throws InterruptedException {
     GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
 
-    // Fetch and print a list of the contributors to this library.
+    System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
-  }
 
-  /**
-   * Here's how to wire gson deserialization.
-   */
-  @Module(overrides = true, library = true)
-  static class GsonModule {
-    @Provides @Singleton Map<String, Decoder> decoders() {
-      Map<String, Decoder> decoders = new LinkedHashMap<String, Decoder>();
-      decoders.put("GitHub", jsonDecoder);
-      return decoders;
-    }
+    final CountDownLatch latch = new CountDownLatch(1);
 
-    final Decoder jsonDecoder = new Decoder() {
-      Gson gson = new Gson();
+    System.out.println("Now, let's do it as an incremental async task.");
+    IncrementalCallback<Contributor> task = new IncrementalCallback<Contributor>() {
 
-      @Override public Object decode(String methodKey, Reader reader, Type type) {
-        return gson.fromJson(reader, type);
+      public int count;
+
+      // parsed directly from the text stream without an intermediate collection.
+      @Override public void onNext(Contributor contributor) {
+        System.out.println(contributor.login + " (" + contributor.contributions + ")");
+        count++;
+      }
+
+      @Override public void onSuccess() {
+        System.out.println("found " + count + " contributors");
+        latch.countDown();
+      }
+
+      @Override public void onFailure(Throwable cause) {
+        cause.printStackTrace();
+        latch.countDown();
       }
     };
+
+    // fire a task in the background.
+    github.contributors("netflix", "feign", task);
+
+    // wait for the task to complete.
+    latch.await();
+
+    System.exit(0);
   }
 }
