@@ -51,6 +51,16 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * }
  * </pre>
+ * <br>
+ * <b>Error handling</b><br>
+ * <br>
+ * Responses where {@link Response#status()} is not in the 2xx range are
+ * classified as errors, addressed by the {@link ErrorDecoder}. That said,
+ * certain RPC apis return errors defined in the {@link Response#body()} even on
+ * a 200 status. For example, in the DynECT api, a job still running condition
+ * is returned with a 200 status, encoded in json. When scenarios like this
+ * occur, you should raise an application-specific exception (which may be
+ * {@link feign.RetryableException retryable}).
  */
 public interface ErrorDecoder {
 
