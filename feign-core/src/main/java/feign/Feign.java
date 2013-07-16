@@ -15,6 +15,8 @@
  */
 package feign;
 
+
+import dagger.Lazy;
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Logger.NoOpLogger;
@@ -23,13 +25,23 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.IncrementalDecoder;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.Closeable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
+import static java.lang.Thread.MIN_PRIORITY;
 
 /**
  * Feign's purpose is to ease development against http apis that feign
@@ -38,7 +50,7 @@ import java.util.Set;
  * In implementation, Feign is a {@link Feign#newInstance factory} for
  * generating {@link Target targeted} http apis.
  */
-public abstract class Feign {
+public abstract class Feign implements Closeable {
 
   /**
    * Returns a new instance of an HTTP API, defined by annotations in the
@@ -119,6 +131,26 @@ public abstract class Feign {
     @Provides Set<Decoder> noDecoders() {
       return Collections.emptySet();
     }
+
+    @Provides Set<IncrementalDecoder> noIncrementalDecoders() {
+      return Collections.emptySet();
+    }
+
+    /**
+     * Used for both http invocation and decoding when incrementalCallbacks are used.
+     */
+    @Provides @Singleton @Named("http") Executor httpExecutor() {
+      return Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override public Thread newThread(final Runnable r) {
+          return new Thread(new Runnable() {
+            @Override public void run() {
+              Thread.currentThread().setPriority(MIN_PRIORITY);
+              r.run();
+            }
+          }, MethodHandler.IDLE_THREAD_NAME);
+        }
+      });
+    }
   }
 
   /**
@@ -162,7 +194,16 @@ public abstract class Feign {
     return modulesForGraph;
   }
 
-  Feign() {
+  private final Lazy<Executor> httpExecutor;
 
+  Feign(Lazy<Executor> httpExecutor) {
+    this.httpExecutor = httpExecutor;
+  }
+
+  @Override public void close() {
+    Executor e = httpExecutor.get();
+    if (e instanceof ExecutorService) {
+      ExecutorService.class.cast(e).shutdownNow();
+    }
   }
 }

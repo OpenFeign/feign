@@ -15,9 +15,10 @@
  */
 package feign.jaxrs;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collection;
+import dagger.Provides;
+import feign.Body;
+import feign.Contract;
+import feign.MethodMetadata;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -27,11 +28,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-
-import dagger.Provides;
-import feign.Body;
-import feign.Contract;
-import feign.MethodMetadata;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collection;
 
 import static feign.Util.checkState;
 
@@ -44,7 +43,7 @@ public final class JAXRSModule {
     return new JAXRSContract();
   }
 
-  static final class JAXRSContract extends Contract {
+  public static final class JAXRSContract extends Contract {
 
     @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {

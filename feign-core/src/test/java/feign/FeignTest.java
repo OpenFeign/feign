@@ -19,10 +19,10 @@ import com.google.common.base.Joiner;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
+import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
 import feign.codec.Decoder;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
@@ -38,14 +38,35 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test
 // unbound wildcards are not currently injectable in dagger.
 @SuppressWarnings("rawtypes")
 public class FeignTest {
+
+  @Test public void closeShutsdownExecutorService() throws IOException, InterruptedException {
+    final ExecutorService service = Executors.newCachedThreadPool();
+    new Feign(new Lazy<Executor>() {
+      @Override public Executor get() {
+        return service;
+      }
+    }) {
+      @Override public <T> T newInstance(Target<T> target) {
+        return null;
+      }
+    }.close();
+    assertTrue(service.isShutdown());
+  }
+
   interface TestInterface {
     @RequestLine("POST /") String post();
 
@@ -54,14 +75,18 @@ public class FeignTest {
     void login(
         @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
 
-    @RequestLine("POST /")
-    void body(List<String> contents);
+    @RequestLine("POST /") void body(List<String> contents);
 
-    @RequestLine("POST /")
-    void form(
+    @RequestLine("POST /") void form(
         @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
 
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
+
+    @RequestLine("POST /") void incrementVoid(IncrementalCallback<Void> incrementalCallback);
+
+    @RequestLine("POST /") void incrementString(IncrementalCallback<String> incrementalCallback);
+
+    @RequestLine("POST /") void incrementResponse(IncrementalCallback<Response> incrementalCallback);
 
     @dagger.Module(overrides = true, library = true)
     static class Module {
@@ -80,6 +105,117 @@ public class FeignTest {
           }
         };
       }
+
+      // just run synchronously
+      @Provides @Singleton @Named("http") Executor httpExecutor() {
+        return new Executor() {
+          @Override public void execute(Runnable command) {
+            command.run();
+          }
+        };
+      }
+    }
+  }
+
+  @Test
+  public void incrementVoid() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      final AtomicBoolean success = new AtomicBoolean();
+
+      IncrementalCallback<Void> incrementalCallback = new IncrementalCallback<Void>() {
+
+        @Override public void onNext(Void element) {
+          fail("on next isn't valid for void");
+        }
+
+        @Override public void onSuccess() {
+          success.set(true);
+        }
+
+        @Override public void onFailure(Throwable cause) {
+          fail(cause.getMessage());
+        }
+      };
+      api.incrementVoid(incrementalCallback);
+
+      assertTrue(success.get());
+      assertEquals(server.getRequestCount(), 1);
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void incrementResponse() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      final AtomicBoolean success = new AtomicBoolean();
+
+      IncrementalCallback<Response> incrementalCallback = new IncrementalCallback<Response>() {
+
+        @Override public void onNext(Response element) {
+          assertEquals(element.status(), 200);
+        }
+
+        @Override public void onSuccess() {
+          success.set(true);
+        }
+
+        @Override public void onFailure(Throwable cause) {
+          fail(cause.getMessage());
+        }
+      };
+      api.incrementResponse(incrementalCallback);
+
+      assertTrue(success.get());
+      assertEquals(server.getRequestCount(), 1);
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void incrementString() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      final AtomicBoolean success = new AtomicBoolean();
+
+      IncrementalCallback<String> incrementalCallback = new IncrementalCallback<String>() {
+
+        @Override public void onNext(String element) {
+          assertEquals(element, "foo");
+        }
+
+        @Override public void onSuccess() {
+          success.set(true);
+        }
+
+        @Override public void onFailure(Throwable cause) {
+          fail(cause.getMessage());
+        }
+      };
+      api.incrementString(incrementalCallback);
+
+      assertTrue(success.get());
+      assertEquals(server.getRequestCount(), 1);
+    } finally {
+      server.shutdown();
     }
   }
 
