@@ -25,23 +25,13 @@ import java.lang.reflect.Type;
  * Decodes an HTTP response into a given type. Invoked when {@link Response#status()} is in the 2xx
  * range. Like {@code javax.websocket.Decoder}, except that the decode method is passed the generic
  * type of the target. <br>
- * <br>
- * <br>
- * <b>Error handling</b><br>
- * <br>
- * Responses where {@link Response#status()} is not in the 2xx range are classified as errors,
- * addressed by the {@link ErrorDecoder}. That said, certain RPC apis return errors defined in the
- * {@link Response#body()} even on a 200 status. For example, in the DynECT api, a job still running
- * condition is returned with a 200 status, encoded in json. When scenarios like this occur, you
- * should raise an application-specific exception (which may be {@link feign.RetryableException
- * retryable}).
  *
  * @param <I> input that can be derived from {@link feign.Response.Body}.
  * @param <T> widest type an instance of this can decode.
  */
 public interface Decoder<I, T> {
   /**
-   * Implement this to decode a resource to an object of the specified type. If you need to wrap
+   * Implement this to decode a resource to an object into a single object. If you need to wrap
    * exceptions, please do so via {@link DecodeException}.
    *
    * @param input if {@code Closeable}, no need to close this, as the caller manages resources.

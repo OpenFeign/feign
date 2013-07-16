@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.Map;
 
 public final class MethodMetadata implements Serializable {
+
   MethodMetadata() {}
 
   private String configKey;
-  private transient Type returnType;
+  private transient Type decodeInto;
   private Integer urlIndex;
+  private Integer incrementalCallbackIndex;
   private Integer bodyIndex;
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
@@ -48,12 +50,16 @@ public final class MethodMetadata implements Serializable {
     return this;
   }
 
-  public Type returnType() {
-    return returnType;
+  /**
+   * Method return type unless there is an {@link IncrementalCallback} arg. In this case, it is the
+   * type parameter of the incrementalCallback.
+   */
+  public Type decodeInto() {
+    return decodeInto;
   }
 
-  MethodMetadata returnType(Type returnType) {
-    this.returnType = returnType;
+  MethodMetadata decodeInto(Type decodeInto) {
+    this.decodeInto = decodeInto;
     return this;
   }
 
@@ -63,6 +69,15 @@ public final class MethodMetadata implements Serializable {
 
   MethodMetadata urlIndex(Integer urlIndex) {
     this.urlIndex = urlIndex;
+    return this;
+  }
+
+  public Integer incrementalCallbackIndex() {
+    return incrementalCallbackIndex;
+  }
+
+  MethodMetadata incrementalCallbackIndex(Integer incrementalCallbackIndex) {
+    this.incrementalCallbackIndex = incrementalCallbackIndex;
     return this;
   }
 
