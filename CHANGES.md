@@ -1,6 +1,7 @@
 ### Version 3.0
 * Added support for asynchronous callbacks via `IncrementalCallback<T>` and `IncrementalDecoder.TextStream<T>`.
 * Wire is now Logger, with configurable Logger.Level.
+* Added `feign-gson` codec, used via `new GsonModule()`
 * changed codec to be similar to [WebSocket JSR 356](http://docs.oracle.com/javaee/7/api/javax/websocket/package-summary.html)
   * Decoder is now `Decoder.TextStream<T>`
   * BodyEncoder is now `Encoder.Text<T>`

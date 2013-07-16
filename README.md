@@ -34,40 +34,9 @@ public static void main(String... args) {
   }
 }
 ```
-### Decoders
-The last argument to `Feign.create` specifies how to decode the responses, modeled in Dagger.  Here's how it looks to wire in a default gson decoder:
 
-```java
-@Module(overrides = true, library = true)
-static class GsonModule {
-  @Provides(type = SET) Decoder decoder() {
-    return new Decoder.TextStream<Object>() {
-      Gson gson = new Gson();
+Feign includes a fully functional json codec in the `feign-gson` extension.  See the `Decoder` section for how to write your own.
 
-      @Override public Object decode(Reader reader, Type type) throws IOException {
-        try {
-          return gson.fromJson(reader, type);
-        } catch (JsonIOException e) {
-          if (e.getCause() != null && e.getCause() instanceof IOException) {
-            throw IOException.class.cast(e.getCause());
-          }
-          throw e;
-        }
-      }
-    };
-  }
-}
-```
-Feign doesn't offer a built-in json decoder as you can see above it is very few lines of code to wire yours in.  If you are a jackson user, you'd probably thank us for not dragging in a dependency you don't use.
-
-#### Type-specific Decoders
-The generic parameter of `Decoder.TextStream<T>` designates which The type parameter is either a concrete type, or `Object`, if your decoder can handle multiple types.  To add a type-specific decoder, ensure your type parameter is correct.  Here's an example of an xml decoder that will only apply to methods that return `ZoneList`.
-
-```
-@Provides(type = SET) Decoder zoneListDecoder(Provider<ListHostedZonesResponseHandler> handlers) {
-  return new SAXDecoder<ZoneList>(handlers){};
-}
-```
 ### Asynchronous Incremental Callbacks
 If specified as the last argument of a method `IncrementalCallback<T>` fires a background task to add new elements to the callback as they are decoded.  Think of `IncrementalCallback<T>` as an asynchronous equivalent to a lazy sequence.
 
@@ -91,36 +60,6 @@ IncrementalCallback<Contributor> printlnObserver = new IncrementalCallback<Contr
 };
 github.contributors("netflix", "feign", printlnObserver);
 ```
-#### Incremental Decoding
-When using an `IncrementalCallback<T>`, you'll need to configure an `IncrementalDecoderi.TextStream<T>` or a general one for all types (`IncrementalDecoder.TextStream<Object>`).
-
-Here's how to wire in a reflective incremental json decoder:
-```java
-@Provides(type = SET) IncrementalDecoder incrementalDecoder(final Gson gson) {
-  return new IncrementalDecoder.TextStream<Object>() {
-
-    @Override
-    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws IOException {
-      JsonReader jsonReader = new JsonReader(reader);
-      jsonReader.beginArray();
-      while (jsonReader.hasNext()) {
-        try {
-          incrementalCallback.onNext(gson.fromJson(jsonReader, type));
-        } catch (JsonIOException e) {
-          if (e.getCause() != null && e.getCause() instanceof IOException) {
-            throw IOException.class.cast(e.getCause());
-          }
-          throw e;
-        }
-      }
-      jsonReader.endArray();
-    }
-  };
-}
-```
-
-
-
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
@@ -134,6 +73,14 @@ You can find [several examples](https://github.com/Netflix/feign/tree/master/fei
 
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+### Gson
+[GsonModule](https://github.com/Netflix/feign/tree/master/feign-gson) adds default encoders and decoders so you get get started with a json api.
+
+Integration requires you pass `new GsonModule()` to `Feign.create()`, or add it to your graph with Dagger:
+```java
+GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
+```
+
 ### JAX-RS
 [JAXRSModule](https://github.com/Netflix/feign/tree/master/feign-jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 
@@ -150,6 +97,60 @@ interface GitHub {
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java
 MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonModule());
+```
+
+### Decoders
+The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
+
+If any methods in your interface return types besides `void` or `String`, you'll need to configure a `Decoder.TextStream<T>` or a general one for all types (`Decoder.TextStream<Object>`).
+
+The `GsonModule` in the `feign-gson` extension configures a (`Decoder.TextStream<Object>`) which parses objects from json using reflection.
+
+Here's how you could write this yourself, using whatever library you prefer:
+```java
+@Module(overrides = true, library = true)
+static class JsonModule {
+  @Provides(type = SET) Decoder decoder(final JsonParser parser) {
+    return new Decoder.TextStream<Object>() {
+
+      @Override public Object decode(Reader reader, Type type) throws IOException {
+        return parser.readJson(reader, type);
+      }
+
+    };
+  }
+}
+```
+#### Type-specific Decoders
+The generic parameter of `Decoder.TextStream<T>` designates which The type parameter is either a concrete type, or `Object`, if your decoder can handle multiple types.  To add a type-specific decoder, ensure your type parameter is correct.  Here's an example of an xml decoder that will only apply to methods that return `ZoneList`.
+
+```
+@Provides(type = SET) Decoder zoneListDecoder(Provider<ListHostedZonesResponseHandler> handlers) {
+  return new SAXDecoder<ZoneList>(handlers){};
+}
+```
+#### Incremental Decoding
+The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
+
+When using an `IncrementalCallback<T>`, if `T` is not `Void` or `String`, you'll need to configure an `IncrementalDecoder.TextStream<T>` or a general one for all types (`IncrementalDecoder.TextStream<Object>`).
+
+The `GsonModule` in the `feign-gson` extension configures a (`IncrementalDecoder.TextStream<Object>`) which parses objects from json using reflection.
+
+Here's how you could write this yourself, using whatever library you prefer:
+```java
+@Provides(type = SET) IncrementalDecoder incrementalDecoder(final JsonParser parser) {
+  return new IncrementalDecoder.TextStream<Object>() {
+
+    @Override
+    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws IOException {
+      jsonReader.beginArray();
+      while (jsonReader.hasNext()) {
+        incrementalCallback.onNext(parser.readJson(reader, type));
+      }
+      jsonReader.endArray();
+    }
+  };
+}
 ```
 ### Advanced usage and Dagger
 #### Dagger
