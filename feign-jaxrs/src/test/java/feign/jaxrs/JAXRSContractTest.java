@@ -19,8 +19,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.reflect.TypeToken;
 import feign.Body;
-import feign.IncrementalCallback;
 import feign.MethodMetadata;
+import feign.Observable;
+import feign.Observer;
 import feign.Response;
 import org.testng.annotations.Test;
 
@@ -263,44 +264,37 @@ public class JAXRSContractTest {
     assertEquals(md.indexToName().get(0), ImmutableSet.of("Auth-Token"));
   }
 
-  interface WithIncrementalCallback {
-    @GET @Path("/") void valid(IncrementalCallback<List<String>> one);
+  interface WithObservable {
+    @GET @Path("/") Observable<List<String>> valid();
 
-    @GET @Path("/{path}") void badOrder(IncrementalCallback<List<String>> one, @PathParam("path") String path);
+    @GET @Path("/") Observable<? extends List<String>> wildcardExtends();
 
-    @GET @Path("/") Response returnType(IncrementalCallback<List<String>> one);
+    @GET @Path("/") ParameterizedObservable<List<String>> subtype();
 
-    @GET @Path("/") void wildcardExtends(IncrementalCallback<? extends List<String>> one);
+    @GET @Path("/") Observable<List<String>> alsoObserver(Observer<List<String>> observer);
+  }
 
-    @GET @Path("/") void subtype(ParameterizedIncrementalCallback<List<String>> one);
+  interface ParameterizedObservable<T extends List<String>> extends Observable<T> {
   }
 
   static final List<String> listString = null;
 
-  interface ParameterizedIncrementalCallback<T extends List<String>> extends IncrementalCallback<T> {
-  }
-
-  @Test public void methodCanHaveIncrementalCallbackParam() throws Exception {
-    contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("valid", IncrementalCallback.class));
+  @Test public void methodCanHaveObservableReturn() throws Exception {
+    contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
   }
 
   @Test public void methodMetadataReturnTypeOnObservableMethodIsItsTypeParameter() throws Exception {
     Type listStringType = getClass().getDeclaredField("listString").getGenericType();
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("valid", IncrementalCallback.class));
-    assertEquals(md.decodeInto(), listStringType);
-    md = contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("wildcardExtends", IncrementalCallback.class));
-    assertEquals(md.decodeInto(), listStringType);
-    md = contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("subtype", ParameterizedIncrementalCallback.class));
-    assertEquals(md.decodeInto(), listStringType);
+    MethodMetadata md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
+    assertEquals(md.incrementalType(), listStringType);
+    md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("wildcardExtends"));
+    assertEquals(md.incrementalType(), listStringType);
+    md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("subtype"));
+    assertEquals(md.incrementalType(), listStringType);
   }
 
-  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = ".*the last parameter.*")
-  public void incrementalCallbackParamMustBeLast() throws Exception {
-    contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("badOrder", IncrementalCallback.class, String.class));
-  }
-
-  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = ".*must return void.*")
-  public void incrementalCallbackMethodMustReturnVoid() throws Exception {
-    contract.parseAndValidatateMetadata(WithIncrementalCallback.class.getDeclaredMethod("returnType", IncrementalCallback.class));
+  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Please return Observer as opposed to passing an Observable arg.*")
+  public void noObserverArgs() throws Exception {
+    contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("alsoObserver", Observer.class));
   }
 }

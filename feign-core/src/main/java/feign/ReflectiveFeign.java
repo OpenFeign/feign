@@ -194,30 +194,30 @@ public class ReflectiveFeign extends Feign {
           }
           if (encoder == null) {
             throw new IllegalStateException(format("%s needs @Provides(type = Set) Encoder encoder()" +
-                "{ // Encoder.Text<%s> or Encoder.Text<Object>}", md.bodyType(), md.decodeInto()));
+                "{ // Encoder.Text<%s> or Encoder.Text<Object>}", md.configKey(), md.bodyType()));
           }
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
-        if (md.incrementalCallbackIndex() != null) {
-          IncrementalDecoder.TextStream incrementalDecoder = incrementalDecoders.get(md.decodeInto());
+        if (md.incrementalType() != null) {
+          IncrementalDecoder.TextStream incrementalDecoder = incrementalDecoders.get(md.incrementalType());
           if (incrementalDecoder == null) {
             incrementalDecoder = incrementalDecoders.get(Object.class);
           }
           if (incrementalDecoder == null) {
             throw new IllegalStateException(format("%s needs @Provides(type = Set) IncrementalDecoder incrementalDecoder()" +
-                "{ // IncrementalDecoder.TextStream<%s> or IncrementalDecoder.TextStream<Object>}", md.configKey(), md.decodeInto()));
+                "{ // IncrementalDecoder.TextStream<%s> or IncrementalDecoder.TextStream<Object>}", md.configKey(), md.incrementalType()));
           }
           result.put(md.configKey(), factory.create(key, md, buildTemplate, options, incrementalDecoder, errorDecoder));
         } else {
-          Decoder.TextStream decoder = decoders.get(md.decodeInto());
+          Decoder.TextStream decoder = decoders.get(md.returnType());
           if (decoder == null) {
             decoder = decoders.get(Object.class);
           }
           if (decoder == null) {
             throw new IllegalStateException(format("%s needs @Provides(type = Set) Decoder decoder()" +
-                "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}", md.configKey(), md.decodeInto()));
+                "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}", md.configKey(), md.returnType()));
           }
           result.put(md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
         }
