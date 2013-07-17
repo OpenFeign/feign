@@ -16,14 +16,15 @@
 package feign.codec;
 
 import feign.FeignException;
-import feign.IncrementalCallback;
+import feign.Observer;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Decodes an HTTP response incrementally into an {@link IncrementalCallback} via a series of {@link
- * IncrementalCallback#onNext(Object) onNext} calls.
+ * Decodes an HTTP response incrementally into an {@link feign.Observer} via a series of {@link
+ * feign.Observer#onNext(Object) onNext} calls.
  *
  * <p>Invoked when {@link feign.Response#status()} is in the 2xx range.
  *
@@ -34,25 +35,27 @@ public interface IncrementalDecoder<I, T> {
   /**
    * Implement this to decode a resource to an object into a single object. If you need to wrap
    * exceptions, please do so via {@link feign.codec.DecodeException}. <br>
-   * Do not call {@link feign.IncrementalCallback#onSuccess() onSuccess} or {@link
-   * feign.IncrementalCallback#onFailure onFailure}.
+   * Do not call {@link feign.Observer#onSuccess() onSuccess} or {@link feign.Observer#onFailure
+   * onFailure}.
    *
    * @param input if {@code Closeable}, no need to close this, as the caller manages resources.
-   * @param type type parameter of {@link feign.IncrementalCallback#onNext}.
-   * @param incrementalCallback call {@link feign.IncrementalCallback#onNext onNext} each time an
-   *     object of {@code type} is decoded from the response.
+   * @param type type parameter of {@link feign.Observer#onNext}.
+   * @param observer call {@link feign.Observer#onNext onNext} each time an object of {@code type}
+   *     is decoded from the response.
+   * @param subscribed false indicates the observer should no longer receive {@link
+   *     Observer#onNext(Object)} calls.
    * @throws java.io.IOException will be propagated safely to the caller.
    * @throws feign.codec.DecodeException when decoding failed due to a checked exception besides
    *     IOException.
    * @throws feign.FeignException when decoding succeeds, but conveys the operation failed.
    */
-  void decode(I input, Type type, IncrementalCallback<? super T> incrementalCallback)
+  void decode(I input, Type type, Observer<? super T> observer, AtomicBoolean subscribed)
       throws IOException, DecodeException, FeignException;
 
   /**
    * Used for text-based apis, follows {@link feign.codec.IncrementalDecoder#decode(Object,
-   * java.lang.reflect.Type, IncrementalCallback)} semantics, applied to inputs of type {@link
-   * java.io.Reader}. <br>
+   * java.lang.reflect.Type, feign.Observer, AtomicBoolean)} semantics, applied to inputs of type
+   * {@link java.io.Reader}. <br>
    * Ex. <br>
    *
    * <p>
@@ -88,12 +91,12 @@ public interface IncrementalDecoder<I, T> {
    *     this.gson = gson;
    *   }
    *
-   *   &#064;Override public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws Exception {
+   *   &#064;Override public void decode(Reader reader, Type type, Observer<? super Object> observer) throws Exception {
    *     JsonReader jsonReader = new JsonReader(reader);
    *     jsonReader.beginArray();
    *     while (jsonReader.hasNext()) {
    *       try {
-   *          incrementalCallback.onNext(gson.fromJson(jsonReader, type));
+   *          observer.onNext(gson.fromJson(jsonReader, type));
    *       } catch (JsonIOException e) {
    *         if (e.getCause() != null &amp;&amp;
    *             e.getCause() instanceof IOException) {

@@ -223,15 +223,15 @@ public class ReflectiveFeign extends Feign {
                 format(
                     "%s needs @Provides(type = Set) Encoder encoder()"
                         + "{ // Encoder.Text<%s> or Encoder.Text<Object>}",
-                    md.bodyType(), md.decodeInto()));
+                    md.configKey(), md.bodyType()));
           }
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
-        if (md.incrementalCallbackIndex() != null) {
+        if (md.incrementalType() != null) {
           IncrementalDecoder.TextStream incrementalDecoder =
-              incrementalDecoders.get(md.decodeInto());
+              incrementalDecoders.get(md.incrementalType());
           if (incrementalDecoder == null) {
             incrementalDecoder = incrementalDecoders.get(Object.class);
           }
@@ -241,13 +241,13 @@ public class ReflectiveFeign extends Feign {
                     "%s needs @Provides(type = Set) IncrementalDecoder incrementalDecoder(){ //"
                         + " IncrementalDecoder.TextStream<%s> or"
                         + " IncrementalDecoder.TextStream<Object>}",
-                    md.configKey(), md.decodeInto()));
+                    md.configKey(), md.incrementalType()));
           }
           result.put(
               md.configKey(),
               factory.create(key, md, buildTemplate, options, incrementalDecoder, errorDecoder));
         } else {
-          Decoder.TextStream decoder = decoders.get(md.decodeInto());
+          Decoder.TextStream decoder = decoders.get(md.returnType());
           if (decoder == null) {
             decoder = decoders.get(Object.class);
           }
@@ -256,7 +256,7 @@ public class ReflectiveFeign extends Feign {
                 format(
                     "%s needs @Provides(type = Set) Decoder decoder()"
                         + "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}",
-                    md.configKey(), md.decodeInto()));
+                    md.configKey(), md.returnType()));
           }
           result.put(
               md.configKey(),
