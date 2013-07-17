@@ -45,6 +45,21 @@ project(':feign-core') {
     }
 }
 
+project(':feign-gson') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        compile     'com.google.code.gson:gson:2.2.4'
+        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        testCompile 'org.testng:testng:6.8.1'
+    }
+}
+
 project(':feign-jaxrs') {
     apply plugin: 'java'
 
@@ -58,23 +73,8 @@ project(':feign-jaxrs') {
         provided    'com.squareup.dagger:dagger-compiler:1.0.1'
         // for example classes
         testCompile project(':feign-core').sourceSets.test.output
+        testCompile project(':feign-gson')
         testCompile 'com.google.guava:guava:14.0.1'
-        testCompile 'com.google.code.gson:gson:2.2.4'
-        testCompile 'org.testng:testng:6.8.1'
-    }
-}
-
-project(':feign-gson') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        compile     'com.google.code.gson:gson:2.2.4'
-        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
         testCompile 'org.testng:testng:6.8.1'
     }
 }

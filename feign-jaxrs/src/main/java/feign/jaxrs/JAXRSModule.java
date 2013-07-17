@@ -43,7 +43,7 @@ public final class JAXRSModule {
     return new JAXRSContract();
   }
 
-  public static final class JAXRSContract extends Contract {
+  public static final class JAXRSContract extends Contract.BaseContract {
 
     @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {

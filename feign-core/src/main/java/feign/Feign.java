@@ -137,7 +137,7 @@ public abstract class Feign implements Closeable {
     }
 
     /**
-     * Used for both http invocation and decoding when incrementalCallbacks are used.
+     * Used for both http invocation and decoding when observers are used.
      */
     @Provides @Singleton @Named("http") Executor httpExecutor() {
       return Executors.newCachedThreadPool(new ThreadFactory() {

@@ -21,7 +21,9 @@ import com.google.gson.stream.JsonReader;
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
-import feign.IncrementalCallback;
+import feign.Logger;
+import feign.Observable;
+import feign.Observer;
 import feign.RequestLine;
 import feign.codec.Decoder;
 import feign.codec.IncrementalDecoder;
@@ -34,6 +36,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 
@@ -47,8 +50,7 @@ public class GitHubExample {
     List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
 
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    void contributors(@Named("owner") String owner, @Named("repo") String repo,
-                      IncrementalCallback<Contributor> contributors);
+    Observable<Contributor> observable(@Named("owner") String owner, @Named("repo") String repo);
   }
 
   static class Contributor {
@@ -57,7 +59,7 @@ public class GitHubExample {
   }
 
   public static void main(String... args) throws InterruptedException {
-    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
+    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GitHubModule());
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
@@ -65,32 +67,14 @@ public class GitHubExample {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
 
-    final CountDownLatch latch = new CountDownLatch(1);
+    System.out.println("Let's treat our contributors as an observable.");
+    Observable<Contributor> observable = github.observable("netflix", "feign");
 
-    System.out.println("Now, let's do it as an incremental async task.");
-    IncrementalCallback<Contributor> task = new IncrementalCallback<Contributor>() {
+    CountDownLatch latch = new CountDownLatch(2);
 
-      public int count;
-
-      // parsed directly from the text stream without an intermediate collection.
-      @Override public void onNext(Contributor contributor) {
-        System.out.println(contributor.login + " (" + contributor.contributions + ")");
-        count++;
-      }
-
-      @Override public void onSuccess() {
-        System.out.println("found " + count + " contributors");
-        latch.countDown();
-      }
-
-      @Override public void onFailure(Throwable cause) {
-        cause.printStackTrace();
-        latch.countDown();
-      }
-    };
-
-    // fire a task in the background.
-    github.contributors("netflix", "feign", task);
+    System.out.println("Let's add 2 subscribers.");
+    observable.subscribe(new ContributorObserver(latch));
+    observable.subscribe(new ContributorObserver(latch));
 
     // wait for the task to complete.
     latch.await();
@@ -98,11 +82,24 @@ public class GitHubExample {
     System.exit(0);
   }
 
+  @Module(overrides = true, library = true, includes = GsonModule.class)
+  static class GitHubModule {
+
+    @Provides Logger.Level loggingLevel() {
+      return Logger.Level.BASIC;
+    }
+
+    @Provides Logger logger() {
+      return new Logger.ErrorLogger();
+    }
+  }
+
   /**
-   * Here's how to wire gson deserialization.
+   * Here's how it looks to wire json codecs.  Note, that you can always instead use {@code feign-gson}!
    */
   @Module(overrides = true, library = true)
   static class GsonModule {
+
     @Provides @Singleton Gson gson() {
       return new Gson();
     }
@@ -128,13 +125,12 @@ public class GitHubExample {
     }
 
     @Override
-    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws IOException {
+    public void decode(Reader reader, Type type, Observer<? super Object> observer, AtomicBoolean subscribed) throws IOException {
       JsonReader jsonReader = new JsonReader(reader);
       jsonReader.beginArray();
-      while (jsonReader.hasNext()) {
-        incrementalCallback.onNext(fromJson(jsonReader, type));
+      while (jsonReader.hasNext() && subscribed.get()) {
+        observer.onNext(fromJson(jsonReader, type));
       }
-      jsonReader.endArray();
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {
@@ -146,6 +142,31 @@ public class GitHubExample {
         }
         throw e;
       }
+    }
+  }
+
+  static class ContributorObserver implements Observer<Contributor> {
+
+    private final CountDownLatch latch;
+    public int count;
+
+    public ContributorObserver(CountDownLatch latch) {
+      this.latch = latch;
+    }
+
+    // parsed directly from the text stream without an intermediate collection.
+    @Override public void onNext(Contributor contributor) {
+      count++;
+    }
+
+    @Override public void onSuccess() {
+      System.out.println("found " + count + " contributors");
+      latch.countDown();
+    }
+
+    @Override public void onFailure(Throwable cause) {
+      cause.printStackTrace();
+      latch.countDown();
     }
   }
 }

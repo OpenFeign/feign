@@ -38,6 +38,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,11 +83,11 @@ public class FeignTest {
 
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
 
-    @RequestLine("POST /") void incrementVoid(IncrementalCallback<Void> incrementalCallback);
+    @RequestLine("POST /") Observable<Void> observableVoid();
 
-    @RequestLine("POST /") void incrementString(IncrementalCallback<String> incrementalCallback);
+    @RequestLine("POST /") Observable<String> observableString();
 
-    @RequestLine("POST /") void incrementResponse(IncrementalCallback<Response> incrementalCallback);
+    @RequestLine("POST /") Observable<Response> observableResponse();
 
     @dagger.Module(overrides = true, library = true)
     static class Module {
@@ -118,7 +119,7 @@ public class FeignTest {
   }
 
   @Test
-  public void incrementVoid() throws IOException, InterruptedException {
+  public void observableVoid() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
     server.play();
@@ -128,7 +129,7 @@ public class FeignTest {
 
       final AtomicBoolean success = new AtomicBoolean();
 
-      IncrementalCallback<Void> incrementalCallback = new IncrementalCallback<Void>() {
+      Observer<Void> observer = new Observer<Void>() {
 
         @Override public void onNext(Void element) {
           fail("on next isn't valid for void");
@@ -142,7 +143,7 @@ public class FeignTest {
           fail(cause.getMessage());
         }
       };
-      api.incrementVoid(incrementalCallback);
+      api.observableVoid().subscribe(observer);
 
       assertTrue(success.get());
       assertEquals(server.getRequestCount(), 1);
@@ -152,7 +153,7 @@ public class FeignTest {
   }
 
   @Test
-  public void incrementResponse() throws IOException, InterruptedException {
+  public void observableResponse() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
     server.play();
@@ -162,7 +163,7 @@ public class FeignTest {
 
       final AtomicBoolean success = new AtomicBoolean();
 
-      IncrementalCallback<Response> incrementalCallback = new IncrementalCallback<Response>() {
+      Observer<Response> observer = new Observer<Response>() {
 
         @Override public void onNext(Response element) {
           assertEquals(element.status(), 200);
@@ -176,7 +177,7 @@ public class FeignTest {
           fail(cause.getMessage());
         }
       };
-      api.incrementResponse(incrementalCallback);
+      api.observableResponse().subscribe(observer);
 
       assertTrue(success.get());
       assertEquals(server.getRequestCount(), 1);
@@ -196,7 +197,7 @@ public class FeignTest {
 
       final AtomicBoolean success = new AtomicBoolean();
 
-      IncrementalCallback<String> incrementalCallback = new IncrementalCallback<String>() {
+      Observer<String> observer = new Observer<String>() {
 
         @Override public void onNext(String element) {
           assertEquals(element, "foo");
@@ -210,10 +211,48 @@ public class FeignTest {
           fail(cause.getMessage());
         }
       };
-      api.incrementString(incrementalCallback);
+      api.observableString().subscribe(observer);
 
       assertTrue(success.get());
       assertEquals(server.getRequestCount(), 1);
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void multipleObservers() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+
+      final CountDownLatch latch = new CountDownLatch(2);
+
+      Observer<String> observer = new Observer<String>() {
+
+        @Override public void onNext(String element) {
+          assertEquals(element, "foo");
+        }
+
+        @Override public void onSuccess() {
+          latch.countDown();
+        }
+
+        @Override public void onFailure(Throwable cause) {
+          fail(cause.getMessage());
+        }
+      };
+
+      Observable<String> observable = api.observableString();
+      observable.subscribe(observer);
+      observable.subscribe(observer);
+      latch.await();
+
+      assertEquals(server.getRequestCount(), 2);
     } finally {
       server.shutdown();
     }

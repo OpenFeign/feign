@@ -18,7 +18,7 @@ package feign.gson;
 import com.google.gson.reflect.TypeToken;
 import dagger.Module;
 import dagger.ObjectGraph;
-import feign.IncrementalCallback;
+import feign.Observer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.IncrementalDecoder;
@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
@@ -146,7 +147,7 @@ public class GsonModuleTest {
 
     final AtomicInteger index = new AtomicInteger(0);
 
-    IncrementalCallback<Zone> zoneCallback = new IncrementalCallback<Zone>() {
+    Observer<Zone> zoneCallback = new Observer<Zone>() {
 
       @Override public void onNext(Zone element) {
         assertEquals(element, zones.get(index.getAndIncrement()));
@@ -164,7 +165,7 @@ public class GsonModuleTest {
     };
 
     IncrementalDecoder.TextStream.class.cast(bindings.decoders.iterator().next())
-        .decode(new StringReader(zonesJson), Zone.class, zoneCallback);
+        .decode(new StringReader(zonesJson), Zone.class, zoneCallback, new AtomicBoolean(true));
 
     assertEquals(index.get(), 2);
   }
