@@ -30,21 +30,13 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-abstract class MethodHandler {
-
-  /** same approach as retrofit: temporarily rename threads */
-  static final String THREAD_PREFIX = "Feign-";
-
-  static final String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
-
-  /** Those using guava will implement as {@code Function<Object[], RequestTemplate>}. */
-  static interface BuildTemplateFromArgs {
-    public RequestTemplate apply(Object[] argv);
-  }
+interface MethodHandler {
+  Object invoke(Object[] argv) throws Throwable;
 
   static class Factory {
 
@@ -93,28 +85,60 @@ abstract class MethodHandler {
         MethodMetadata md,
         BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
-        IncrementalDecoder.TextStream<?> incrementalCallbackDecoder,
+        IncrementalDecoder.TextStream<?> incrementalDecoder,
         ErrorDecoder errorDecoder) {
-      return new IncrementalCallbackMethodHandler(
-          target,
-          client,
-          retryer,
-          logger,
-          logLevel,
-          md,
-          buildTemplateFromArgs,
-          options,
-          incrementalCallbackDecoder,
-          errorDecoder,
-          httpExecutor);
+      ObserverHandler observerHandler =
+          new ObserverHandler(
+              target,
+              client,
+              retryer,
+              logger,
+              logLevel,
+              md,
+              buildTemplateFromArgs,
+              options,
+              incrementalDecoder,
+              errorDecoder,
+              httpExecutor);
+      return new ObservableMethodHandler(observerHandler);
     }
   }
 
-  static final class IncrementalCallbackMethodHandler extends MethodHandler {
-    private final Lazy<Executor> httpExecutor;
-    private final IncrementalDecoder.TextStream<?> incDecoder;
+  /** Those using guava will implement as {@code Function<Object[], RequestTemplate>}. */
+  interface BuildTemplateFromArgs {
+    public RequestTemplate apply(Object[] argv);
+  }
 
-    private IncrementalCallbackMethodHandler(
+  static class ObservableMethodHandler implements MethodHandler {
+    private final ObserverHandler observerHandler;
+
+    private ObservableMethodHandler(ObserverHandler observerHandler) {
+      this.observerHandler = observerHandler;
+    }
+
+    @Override
+    public Object invoke(Object[] argv) {
+      final Object[] argvCopy = new Object[argv != null ? argv.length : 0];
+      if (argv != null) System.arraycopy(argv, 0, argvCopy, 0, argv.length);
+
+      return new Observable<Object>() {
+
+        @Override
+        public Subscription subscribe(Observer<Object> observer) {
+          final Object[] oneMoreArg = new Object[argvCopy.length + 1];
+          System.arraycopy(argvCopy, 0, oneMoreArg, 0, argvCopy.length);
+          oneMoreArg[argvCopy.length] = observer;
+          return observerHandler.invoke(oneMoreArg);
+        }
+      };
+    }
+  }
+
+  static class ObserverHandler extends BaseMethodHandler {
+    private final Lazy<Executor> httpExecutor;
+    private final IncrementalDecoder.TextStream<?> incrementalDecoder;
+
+    private ObserverHandler(
         Target<?> target,
         Client client,
         Provider<Retryer> retryer,
@@ -123,7 +147,7 @@ abstract class MethodHandler {
         MethodMetadata metadata,
         BuildTemplateFromArgs buildTemplateFromArgs,
         Options options,
-        IncrementalDecoder.TextStream<?> incDecoder,
+        IncrementalDecoder.TextStream<?> incrementalDecoder,
         ErrorDecoder errorDecoder,
         Lazy<Executor> httpExecutor) {
       super(
@@ -137,11 +161,16 @@ abstract class MethodHandler {
           options,
           errorDecoder);
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor for %s", target);
-      this.incDecoder = checkNotNull(incDecoder, "incrementalCallbackDecoder for %s", target);
+      this.incrementalDecoder =
+          checkNotNull(incrementalDecoder, "incrementalDecoder for %s", target);
     }
 
     @Override
-    public Object invoke(final Object[] argv) throws Throwable {
+    public Subscription invoke(Object[] argv) {
+      final AtomicBoolean subscribed = new AtomicBoolean(true);
+      final Object[] oneMoreArg = new Object[argv.length + 1];
+      System.arraycopy(argv, 0, oneMoreArg, 0, argv.length);
+      oneMoreArg[argv.length] = subscribed;
       httpExecutor
           .get()
           .execute(
@@ -149,44 +178,49 @@ abstract class MethodHandler {
                 @Override
                 public void run() {
                   Error error = null;
-                  Object arg = argv[metadata.incrementalCallbackIndex()];
-                  IncrementalCallback<Object> incrementalCallback =
-                      IncrementalCallback.class.cast(arg);
+                  Object arg = oneMoreArg[oneMoreArg.length - 2];
+                  Observer<Object> observer = Observer.class.cast(arg);
                   try {
-                    IncrementalCallbackMethodHandler.super.invoke(argv);
-                    incrementalCallback.onSuccess();
+                    ObserverHandler.super.invoke(oneMoreArg);
+                    observer.onSuccess();
                   } catch (Error cause) {
                     // assign to a variable in case .onFailure throws a RTE
                     error = cause;
-                    incrementalCallback.onFailure(cause);
+                    observer.onFailure(cause);
                   } catch (Throwable cause) {
-                    incrementalCallback.onFailure(cause);
+                    observer.onFailure(cause);
                   } finally {
                     Thread.currentThread().setName(IDLE_THREAD_NAME);
                     if (error != null) throw error;
                   }
                 }
               });
-      return null; // void.
+      return new Subscription() {
+        @Override
+        public void unsubscribe() {
+          subscribed.set(false);
+        }
+      };
     }
 
     @Override
-    protected Object decode(Object[] argv, Response response) throws Throwable {
-      Object arg = argv[metadata.incrementalCallbackIndex()];
-      IncrementalCallback<Object> incrementalCallback = IncrementalCallback.class.cast(arg);
-      if (metadata.decodeInto().equals(Response.class)) {
-        incrementalCallback.onNext(response);
-      } else if (metadata.decodeInto() != Void.class) {
+    protected Void decode(Object[] oneMoreArg, Response response) throws IOException {
+      Object arg = oneMoreArg[oneMoreArg.length - 2];
+      Observer<Object> observer = Observer.class.cast(arg);
+      AtomicBoolean subscribed = AtomicBoolean.class.cast(oneMoreArg[oneMoreArg.length - 1]);
+      if (metadata.incrementalType().equals(Response.class)) {
+        observer.onNext(response);
+      } else if (metadata.incrementalType() != Void.class) {
         Response.Body body = response.body();
         if (body == null) return null;
         Reader reader = body.asReader();
         try {
-          incDecoder.decode(reader, metadata.decodeInto(), incrementalCallback);
+          incrementalDecoder.decode(reader, metadata.incrementalType(), observer, subscribed);
         } finally {
           ensureClosed(body);
         }
       }
-      return null; // void
+      return null;
     }
 
     @Override
@@ -197,7 +231,12 @@ abstract class MethodHandler {
     }
   }
 
-  static final class SynchronousMethodHandler extends MethodHandler {
+  /** same approach as retrofit: temporarily rename threads */
+  static String THREAD_PREFIX = "Feign-";
+
+  static String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
+
+  static class SynchronousMethodHandler extends BaseMethodHandler {
     private final Decoder.TextStream<?> decoder;
 
     private SynchronousMethodHandler(
@@ -226,13 +265,13 @@ abstract class MethodHandler {
 
     @Override
     protected Object decode(Object[] argv, Response response) throws Throwable {
-      if (metadata.decodeInto().equals(Response.class)) {
+      if (metadata.returnType().equals(Response.class)) {
         return response;
-      } else if (metadata.decodeInto() == void.class || response.body() == null) {
+      } else if (metadata.returnType() == void.class || response.body() == null) {
         return null;
       }
       try {
-        return decoder.decode(response.body().asReader(), metadata.decodeInto());
+        return decoder.decode(response.body().asReader(), metadata.returnType());
       } catch (FeignException e) {
         throw e;
       } catch (RuntimeException e) {
@@ -241,86 +280,90 @@ abstract class MethodHandler {
     }
   }
 
-  protected final MethodMetadata metadata;
-  protected final Target<?> target;
-  protected final Client client;
-  protected final Provider<Retryer> retryer;
-  protected final Logger logger;
-  protected final Logger.Level logLevel;
+  abstract static class BaseMethodHandler implements MethodHandler {
 
-  protected final BuildTemplateFromArgs buildTemplateFromArgs;
-  protected final Options options;
-  protected final ErrorDecoder errorDecoder;
+    protected final MethodMetadata metadata;
+    protected final Target<?> target;
+    protected final Client client;
+    protected final Provider<Retryer> retryer;
+    protected final Logger logger;
+    protected final Logger.Level logLevel;
 
-  private MethodHandler(
-      Target<?> target,
-      Client client,
-      Provider<Retryer> retryer,
-      Logger logger,
-      Logger.Level logLevel,
-      MethodMetadata metadata,
-      BuildTemplateFromArgs buildTemplateFromArgs,
-      Options options,
-      ErrorDecoder errorDecoder) {
-    this.target = checkNotNull(target, "target");
-    this.client = checkNotNull(client, "client for %s", target);
-    this.retryer = checkNotNull(retryer, "retryer for %s", target);
-    this.logger = checkNotNull(logger, "logger for %s", target);
-    this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
-    this.metadata = checkNotNull(metadata, "metadata for %s", target);
-    this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
-    this.options = checkNotNull(options, "options for %s", target);
-    this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
-  }
+    protected final BuildTemplateFromArgs buildTemplateFromArgs;
+    protected final Options options;
+    protected final ErrorDecoder errorDecoder;
 
-  public Object invoke(Object[] argv) throws Throwable {
-    RequestTemplate template = buildTemplateFromArgs.apply(argv);
-    Retryer retryer = this.retryer.get();
-    while (true) {
-      try {
-        return executeAndDecode(argv, template);
-      } catch (RetryableException e) {
-        retryer.continueOrPropagate(e);
-        continue;
+    private BaseMethodHandler(
+        Target<?> target,
+        Client client,
+        Provider<Retryer> retryer,
+        Logger logger,
+        Logger.Level logLevel,
+        MethodMetadata metadata,
+        BuildTemplateFromArgs buildTemplateFromArgs,
+        Options options,
+        ErrorDecoder errorDecoder) {
+      this.target = checkNotNull(target, "target");
+      this.client = checkNotNull(client, "client for %s", target);
+      this.retryer = checkNotNull(retryer, "retryer for %s", target);
+      this.logger = checkNotNull(logger, "logger for %s", target);
+      this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
+      this.metadata = checkNotNull(metadata, "metadata for %s", target);
+      this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
+      this.options = checkNotNull(options, "options for %s", target);
+      this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
+    }
+
+    @Override
+    public Object invoke(Object[] argv) throws Throwable {
+      RequestTemplate template = buildTemplateFromArgs.apply(argv);
+      Retryer retryer = this.retryer.get();
+      while (true) {
+        try {
+          return executeAndDecode(argv, template);
+        } catch (RetryableException e) {
+          retryer.continueOrPropagate(e);
+          continue;
+        }
       }
     }
-  }
 
-  public Object executeAndDecode(Object[] argv, RequestTemplate template) throws Throwable {
-    Request request = targetRequest(template);
+    public Object executeAndDecode(Object[] argv, RequestTemplate template) throws Throwable {
+      Request request = targetRequest(template);
 
-    if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
-      logger.logRequest(target, logLevel, request);
-    }
-
-    Response response;
-    long start = System.nanoTime();
-    try {
-      response = client.execute(request, options);
-    } catch (IOException e) {
-      throw errorExecuting(request, e);
-    }
-    long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-    try {
       if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
-        response = logger.logAndRebufferResponse(target, logLevel, response, elapsedTime);
+        logger.logRequest(target, logLevel, request);
       }
-      if (response.status() >= 200 && response.status() < 300) {
-        return decode(argv, response);
-      } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
+
+      Response response;
+      long start = System.nanoTime();
+      try {
+        response = client.execute(request, options);
+      } catch (IOException e) {
+        throw errorExecuting(request, e);
       }
-    } catch (IOException e) {
-      throw errorReading(request, response, e);
-    } finally {
-      ensureClosed(response.body());
+      long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+      try {
+        if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
+          response = logger.logAndRebufferResponse(target, logLevel, response, elapsedTime);
+        }
+        if (response.status() >= 200 && response.status() < 300) {
+          return decode(argv, response);
+        } else {
+          throw errorDecoder.decode(metadata.configKey(), response);
+        }
+      } catch (IOException e) {
+        throw errorReading(request, response, e);
+      } finally {
+        ensureClosed(response.body());
+      }
     }
-  }
 
-  protected Request targetRequest(RequestTemplate template) {
-    return target.apply(new RequestTemplate(template));
-  }
+    protected Request targetRequest(RequestTemplate template) {
+      return target.apply(new RequestTemplate(template));
+    }
 
-  protected abstract Object decode(Object[] argv, Response response) throws Throwable;
+    protected abstract Object decode(Object[] argv, Response response) throws Throwable;
+  }
 }

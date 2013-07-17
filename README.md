@@ -1,5 +1,5 @@
 # Feign makes writing java http clients easier
-Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSockets](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
+Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [RxJava](https://github.com/Netflix/RxJava), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
 
 ### Why Feign and not X?
 
@@ -37,12 +37,20 @@ public static void main(String... args) {
 
 Feign includes a fully functional json codec in the `feign-gson` extension.  See the `Decoder` section for how to write your own.
 
-### Asynchronous Incremental Callbacks
-If specified as the last argument of a method `IncrementalCallback<T>` fires a background task to add new elements to the callback as they are decoded.  Think of `IncrementalCallback<T>` as an asynchronous equivalent to a lazy sequence.
+### Observable Methods
+If specified as the last return type of a method `Observable<T>` will invoke a new http request for each call to `subscribe()`.  This is the async equivalent to an `Iterable`.
+Here's how one looks:
+```java
+Observable<Contributor> observable = github.contributorsObservable("netflix", "feign");
+subscription = observable.subscribe(newObserver());
+subscription = observable.subscribe(newObserver());
+```
+
+`Observer<T>` is fired as a background which adds new elements as they are decoded, or until `subscription.unsubscribe()` is called.  Think of `Observer<T>` as an asynchronous equivalent to a lazy sequence.
 
 Here's how one looks:
 ```java
-IncrementalCallback<Contributor> printlnObserver = new IncrementalCallback<Contributor>() {
+Observer<Contributor> printlnObserver = new Observer<Contributor>() {
 
   public int count;
 
@@ -58,8 +66,10 @@ IncrementalCallback<Contributor> printlnObserver = new IncrementalCallback<Contr
     cause.printStackTrace();
   }
 };
-github.contributors("netflix", "feign", printlnObserver);
 ```
+
+For more robust integration with `Observable` check out [RxJava](https://github.com/Netflix/RxJava).
+
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
@@ -142,10 +152,10 @@ Here's how you could write this yourself, using whatever library you prefer:
   return new IncrementalDecoder.TextStream<Object>() {
 
     @Override
-    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback) throws IOException {
+    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> observer) throws IOException {
       jsonReader.beginArray();
       while (jsonReader.hasNext()) {
-        incrementalCallback.onNext(parser.readJson(reader, type));
+        observer.onNext(parser.readJson(reader, type));
       }
       jsonReader.endArray();
     }

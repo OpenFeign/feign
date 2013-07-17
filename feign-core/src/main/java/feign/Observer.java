@@ -1,20 +1,22 @@
 package feign;
 
 /**
- * Communicates results as they are {@link feign.codec.Decoder decoded} from an {@link Response.Body
- * http response body}. {@link #onNext(Object) onNext} will be called for each incremental value of
- * type {@code T}, or not at all when there are no values present in the response. Methods that
- * accept {@code IncrementalCallback} are asynchronous, which implies background processing. <br>
+ * An {@code Observer} is asynchronous equivalent to an {@code Iterator}.
+ *
+ * <p>Observers receive results as they are {@link feign.codec.IncrementalDecoder decoded} from an
+ * {@link Response.Body http response body}. {@link #onNext(Object) onNext} will be called for each
+ * incremental value of type {@code T} until {@link feign.Subscription#unsubscribe()} is called or
+ * the response is finished. <br>
  * {@link #onSuccess() onSuccess} or {@link #onFailure(Throwable)} onFailure} will be called when
  * the response is finished, but not both. <br>
- * {@code IncrementalCallback} can be used as an asynchronous alternative to a {@code Collection},
- * or any other use where iterative response parsing is worth the additional effort to implement
- * this interface. <br>
+ * {@code Observer} can be used as an asynchronous alternative to a {@code Collection}, or any other
+ * use where iterative response parsing is worth the additional effort to implement this interface.
  * <br>
- * Here's an example of implementing {@code IncrementalCallback}: <br>
+ * <br>
+ * Here's an example of implementing {@code Observer}: <br>
  *
  * <pre>
- * IncrementalCallback<Contributor> counter = new IncrementalCallback<Contributor>() {
+ * Observer<Contributor> counter = new Observer<Contributor>() {
  *
  *   public int count;
  *
@@ -30,12 +32,12 @@ package feign;
  *     System.err.println("sad face after contributor " + count);
  *   }
  * };
- * github.contributors("netflix", "feign", counter);
+ * subscription = github.contributors("netflix", "feign", counter);
  * </pre>
  *
- * @param <T> expected value to decode
+ * @param <T> expected value to decode incrementally from the http response.
  */
-public interface IncrementalCallback<T> {
+public interface Observer<T> {
   /**
    * Invoked as soon as new data is available. Could be invoked many times or not at all.
    *

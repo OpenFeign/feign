@@ -141,7 +141,7 @@ public abstract class Feign implements Closeable {
       return Collections.emptySet();
     }
 
-    /** Used for both http invocation and decoding when incrementalCallbacks are used. */
+    /** Used for both http invocation and decoding when observers are used. */
     @Provides
     @Singleton
     @Named("http")

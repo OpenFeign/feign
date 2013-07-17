@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
-import feign.IncrementalCallback;
+import feign.Observer;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -38,6 +38,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -82,14 +83,13 @@ public final class GsonModule {
 
     @Override
     public void decode(
-        Reader reader, Type type, IncrementalCallback<? super Object> incrementalCallback)
+        Reader reader, Type type, Observer<? super Object> observer, AtomicBoolean subscribed)
         throws IOException {
       JsonReader jsonReader = new JsonReader(reader);
       jsonReader.beginArray();
-      while (jsonReader.hasNext()) {
-        incrementalCallback.onNext(fromJson(jsonReader, type));
+      while (subscribed.get() && jsonReader.hasNext()) {
+        observer.onNext(fromJson(jsonReader, type));
       }
-      jsonReader.endArray();
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {

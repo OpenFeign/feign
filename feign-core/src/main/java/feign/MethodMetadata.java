@@ -28,9 +28,10 @@ public final class MethodMetadata implements Serializable {
   MethodMetadata() {}
 
   private String configKey;
-  private transient Type decodeInto;
+  private transient Type returnType;
+  private transient Type incrementalType;
   private Integer urlIndex;
-  private Integer incrementalCallbackIndex;
+  private Integer observerIndex;
   private Integer bodyIndex;
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
@@ -50,16 +51,26 @@ public final class MethodMetadata implements Serializable {
     return this;
   }
 
-  /**
-   * Method return type unless there is an {@link IncrementalCallback} arg. In this case, it is the
-   * type parameter of the incrementalCallback.
-   */
-  public Type decodeInto() {
-    return decodeInto;
+  /** Method return type. */
+  public Type returnType() {
+    return returnType;
   }
 
-  MethodMetadata decodeInto(Type decodeInto) {
-    this.decodeInto = decodeInto;
+  MethodMetadata returnType(Type returnType) {
+    this.returnType = returnType;
+    return this;
+  }
+
+  /**
+   * Type that {@link feign.codec.IncrementalDecoder} must process. If null, {@link
+   * feign.codec.Decoder} will be used against the {@link #returnType()};
+   */
+  public Type incrementalType() {
+    return incrementalType;
+  }
+
+  MethodMetadata incrementalType(Type incrementalType) {
+    this.incrementalType = incrementalType;
     return this;
   }
 
@@ -69,15 +80,6 @@ public final class MethodMetadata implements Serializable {
 
   MethodMetadata urlIndex(Integer urlIndex) {
     this.urlIndex = urlIndex;
-    return this;
-  }
-
-  public Integer incrementalCallbackIndex() {
-    return incrementalCallbackIndex;
-  }
-
-  MethodMetadata incrementalCallbackIndex(Integer incrementalCallbackIndex) {
-    this.incrementalCallbackIndex = incrementalCallbackIndex;
     return this;
   }
 

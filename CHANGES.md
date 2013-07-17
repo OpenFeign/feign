@@ -1,3 +1,9 @@
+### Version 4.0
+* Support RxJava-style Observers.
+  * Return type can be `Observable<T>` for an async equiv of `Iterable<T>`.
+  * `Observer<T>` replaces `IncrementalCallback<T>` and is passed to `Observable.subscribe()`.
+  * On `Subscription.unsubscribe()`, `Observer.onNext()` will stop being called.
+
 ### Version 3.0
 * Added support for asynchronous callbacks via `IncrementalCallback<T>` and `IncrementalDecoder.TextStream<T>`.
 * Wire is now Logger, with configurable Logger.Level.

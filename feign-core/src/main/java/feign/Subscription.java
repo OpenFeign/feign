@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign;
 
-import feign.Observer;
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.concurrent.atomic.AtomicBoolean;
+/** Subscription returns from {@link Observable#subscribe(Observer)} to allow unsubscribing. */
+public interface Subscription {
 
-public class StringIncrementalDecoder implements IncrementalDecoder.TextStream<String> {
-  private static final StringDecoder STRING_DECODER = new StringDecoder();
-
-  @Override
-  public void decode(
-      Reader reader, Type type, Observer<? super String> observer, AtomicBoolean subscribed)
-      throws IOException {
-    observer.onNext(STRING_DECODER.decode(reader, type));
-  }
+  /**
+   * Stop receiving notifications on the {@link Observer} that was registered when this Subscription
+   * was received. <br>
+   * This allows unregistering an {@link Observer} before it has finished receiving all events (ie.
+   * before onCompleted is called).
+   */
+  void unsubscribe();
 }
