@@ -31,99 +31,105 @@ import static feign.Util.resolveLastTypeParameter;
 /**
  * Defines what annotations and values are valid on interfaces.
  */
-public abstract class Contract {
+public interface Contract {
 
   /**
    * Called to parse the methods in the class that are linked to HTTP requests.
    */
-  public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
-    List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
-    for (Method method : declaring.getDeclaredMethods()) {
-      if (method.getDeclaringClass() == Object.class)
-        continue;
-      metadata.add(parseAndValidatateMetadata(method));
-    }
-    return metadata;
-  }
+  List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring);
 
-  /**
-   * Called indirectly by {@link #parseAndValidatateMetadata(Class)}.
-   */
-  public MethodMetadata parseAndValidatateMetadata(Method method) {
-    MethodMetadata data = new MethodMetadata();
-    data.decodeInto(method.getGenericReturnType());
-    data.configKey(Feign.configKey(method));
+  public static abstract class BaseContract implements Contract {
 
-    for (Annotation methodAnnotation : method.getAnnotations()) {
-      processAnnotationOnMethod(data, methodAnnotation, method);
-    }
-    checkState(data.template().method() != null, "Method %s not annotated with HTTP method type (ex. GET, POST)",
-        method.getName());
-    Class<?>[] parameterTypes = method.getParameterTypes();
-
-    Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-    int count = parameterAnnotations.length;
-    for (int i = 0; i < count; i++) {
-      boolean isHttpAnnotation = false;
-      if (parameterAnnotations[i] != null) {
-        isHttpAnnotation = processAnnotationsOnParameter(data, parameterAnnotations[i], i);
+    @Override public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+      List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
+      for (Method method : declaring.getDeclaredMethods()) {
+        if (method.getDeclaringClass() == Object.class)
+          continue;
+        metadata.add(parseAndValidatateMetadata(method));
       }
-      if (parameterTypes[i] == URI.class) {
-        data.urlIndex(i);
-      } else if (IncrementalCallback.class.isAssignableFrom(parameterTypes[i])) {
-        checkState(method.getReturnType() == void.class, "IncrementalCallback methods must return void: %s", method);
-        checkState(i == count - 1, "IncrementalCallback must be the last parameter: %s", method);
-        Type context = method.getGenericParameterTypes()[i];
-        Type incrementalCallbackType = resolveLastTypeParameter(context, IncrementalCallback.class);
-        data.decodeInto(incrementalCallbackType);
-        data.incrementalCallbackIndex(i);
-        checkState(incrementalCallbackType != null, "Expected param %s to be IncrementalCallback<X> or IncrementalCallback<? super X> or a subtype",
-            context, incrementalCallbackType);
-      } else if (!isHttpAnnotation) {
-        checkState(data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
-        checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
-        data.bodyIndex(i);
-        data.bodyType(method.getGenericParameterTypes()[i]);
-      }
+      return metadata;
     }
-    return data;
+
+    /**
+     * Called indirectly by {@link #parseAndValidatateMetadata(Class)}.
+     */
+    public MethodMetadata parseAndValidatateMetadata(Method method) {
+      MethodMetadata data = new MethodMetadata();
+      data.returnType(method.getGenericReturnType());
+      data.configKey(Feign.configKey(method));
+
+      if (Observable.class.isAssignableFrom(method.getReturnType())) {
+        Type context = method.getGenericReturnType();
+        Type observableType = resolveLastTypeParameter(method.getGenericReturnType(), Observable.class);
+        checkState(observableType != null, "Expected param %s to be Observable<X> or Observable<? super X> or a subtype",
+            context, observableType);
+        data.incrementalType(observableType);
+      }
+
+      for (Annotation methodAnnotation : method.getAnnotations()) {
+        processAnnotationOnMethod(data, methodAnnotation, method);
+      }
+      checkState(data.template().method() != null, "Method %s not annotated with HTTP method type (ex. GET, POST)",
+          method.getName());
+      Class<?>[] parameterTypes = method.getParameterTypes();
+
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      int count = parameterAnnotations.length;
+      for (int i = 0; i < count; i++) {
+        boolean isHttpAnnotation = false;
+        if (parameterAnnotations[i] != null) {
+          isHttpAnnotation = processAnnotationsOnParameter(data, parameterAnnotations[i], i);
+        }
+        if (parameterTypes[i] == URI.class) {
+          data.urlIndex(i);
+        } else if (!isHttpAnnotation) {
+          checkState(!Observer.class.isAssignableFrom(parameterTypes[i]),
+              "Please return Observer as opposed to passing an Observable arg: %s", method);
+          checkState(data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
+          checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
+          data.bodyIndex(i);
+          data.bodyType(method.getGenericParameterTypes()[i]);
+        }
+      }
+      return data;
+    }
+
+    /**
+     * @param data       metadata collected so far relating to the current java method.
+     * @param annotation annotations present on the current method annotation.
+     * @param method     method currently being processed.
+     */
+    protected abstract void processAnnotationOnMethod(MethodMetadata data, Annotation annotation, Method method);
+
+    /**
+     * @param data        metadata collected so far relating to the current java method.
+     * @param annotations annotations present on the current parameter annotation.
+     * @param paramIndex  if you find a name in {@code annotations}, call {@link #nameParam(MethodMetadata, String,
+     *                    int)} with this as the last parameter.
+     * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an http-relevant
+     *         annotation.
+     */
+    protected abstract boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations, int paramIndex);
+
+
+    protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
+      if (possiblyNull == null)
+        possiblyNull = new ArrayList<String>();
+      possiblyNull.add(String.format("{%s}", name));
+      return possiblyNull;
+    }
+
+    /**
+     * links a parameter name to its index in the method signature.
+     */
+    protected void nameParam(MethodMetadata data, String name, int i) {
+      Collection<String> names = data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
+      names.add(name);
+      data.indexToName().put(i, names);
+    }
   }
 
-  /**
-   * @param data       metadata collected so far relating to the current java method.
-   * @param annotation annotations present on the current method annotation.
-   * @param method     method currently being processed.
-   */
-  protected abstract void processAnnotationOnMethod(MethodMetadata data, Annotation annotation, Method method);
-
-  /**
-   * @param data        metadata collected so far relating to the current java method.
-   * @param annotations annotations present on the current parameter annotation.
-   * @param paramIndex  if you find a name in {@code annotations}, call {@link #nameParam(MethodMetadata, String,
-   *                    int)} with this as the last parameter.
-   * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an http-relevant
-   *         annotation.
-   */
-  protected abstract boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations, int paramIndex);
-
-
-  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-    if (possiblyNull == null)
-      possiblyNull = new ArrayList<String>();
-    possiblyNull.add(String.format("{%s}", name));
-    return possiblyNull;
-  }
-
-  /**
-   * links a parameter name to its index in the method signature.
-   */
-  protected void nameParam(MethodMetadata data, String name, int i) {
-    Collection<String> names = data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
-    names.add(name);
-    data.indexToName().put(i, names);
-  }
-
-  static class Default extends Contract {
+  static class Default extends BaseContract {
 
     @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {
