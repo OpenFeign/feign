@@ -4,6 +4,9 @@
   * `Observer<T>` replaces `IncrementalCallback<T>` and is passed to `Observable.subscribe()`.
   * On `Subscription.unsubscribe()`, `Observer.onNext()` will stop being called.
 
+### Version 3.1
+* Log when an http request is retried or a response fails due to an IOException.
+
 ### Version 3.0
 * Added support for asynchronous callbacks via `IncrementalCallback<T>` and `IncrementalDecoder.TextStream<T>`.
 * Wire is now Logger, with configurable Logger.Level.
