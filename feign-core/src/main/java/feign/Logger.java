@@ -21,7 +21,9 @@ import static feign.Util.valuesOrEmpty;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
@@ -47,8 +49,8 @@ public abstract class Logger {
         java.util.logging.Logger.getLogger(Logger.class.getName());
 
     @Override
-    protected void log(Target<?> target, String format, Object... args) {
-      System.err.printf(format + "%n", args);
+    protected void log(String configKey, String format, Object... args) {
+      System.err.printf(methodTag(configKey) + format + "%n", args);
     }
   }
 
@@ -58,24 +60,24 @@ public abstract class Logger {
         java.util.logging.Logger.getLogger(Logger.class.getName());
 
     @Override
-    void logRequest(Target<?> target, Level logLevel, Request request) {
+    void logRequest(String configKey, Level logLevel, Request request) {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        super.logRequest(target, logLevel, request);
+        super.logRequest(configKey, logLevel, request);
       }
     }
 
     @Override
     Response logAndRebufferResponse(
-        Target<?> target, Level logLevel, Response response, long elapsedTime) throws IOException {
+        String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        return super.logAndRebufferResponse(target, logLevel, response, elapsedTime);
+        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
       }
       return response;
     }
 
     @Override
-    protected void log(Target<?> target, String format, Object... args) {
-      logger.fine(String.format(format, args));
+    protected void log(String configKey, String format, Object... args) {
+      logger.fine(String.format(methodTag(configKey) + format, args));
     }
 
     /**
@@ -103,35 +105,35 @@ public abstract class Logger {
 
   public static class NoOpLogger extends Logger {
     @Override
-    void logRequest(Target<?> target, Level logLevel, Request request) {}
+    void logRequest(String configKey, Level logLevel, Request request) {}
 
     @Override
     Response logAndRebufferResponse(
-        Target<?> target, Level logLevel, Response response, long elapsedTime) throws IOException {
+        String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
       return response;
     }
 
     @Override
-    protected void log(Target<?> target, String format, Object... args) {}
+    protected void log(String configKey, String format, Object... args) {}
   }
 
   /**
    * Override to log requests and responses using your own implementation. Messages will be http
    * request and response text.
    *
-   * @param target useful if using MDC (Mapped Diagnostic Context) loggers
+   * @param configKey value of {@link Feign#configKey(java.lang.reflect.Method)}
    * @param format {@link java.util.Formatter format string}
    * @param args arguments applied to {@code format}
    */
-  protected abstract void log(Target<?> target, String format, Object... args);
+  protected abstract void log(String configKey, String format, Object... args);
 
-  void logRequest(Target<?> target, Level logLevel, Request request) {
-    log(target, "---> %s %s HTTP/1.1", request.method(), request.url());
+  void logRequest(String configKey, Level logLevel, Request request) {
+    log(configKey, "---> %s %s HTTP/1.1", request.method(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
         for (String value : valuesOrEmpty(request.headers(), field)) {
-          log(target, "%s: %s", field, value);
+          log(configKey, "%s: %s", field, value);
         }
       }
 
@@ -139,28 +141,32 @@ public abstract class Logger {
       if (request.body() != null) {
         bytes = request.body().getBytes(UTF_8).length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-          log(target, ""); // CRLF
-          log(target, "%s", request.body());
+          log(configKey, ""); // CRLF
+          log(configKey, "%s", request.body());
         }
       }
-      log(target, "---> END HTTP (%s-byte body)", bytes);
+      log(configKey, "---> END HTTP (%s-byte body)", bytes);
     }
   }
 
+  void logRetry(String configKey, Level logLevel) {
+    log(configKey, "---> RETRYING");
+  }
+
   Response logAndRebufferResponse(
-      Target<?> target, Level logLevel, Response response, long elapsedTime) throws IOException {
-    log(target, "<--- HTTP/1.1 %s %s (%sms)", response.status(), response.reason(), elapsedTime);
+      String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+    log(configKey, "<--- HTTP/1.1 %s %s (%sms)", response.status(), response.reason(), elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
         for (String value : valuesOrEmpty(response.headers(), field)) {
-          log(target, "%s: %s", field, value);
+          log(configKey, "%s: %s", field, value);
         }
       }
 
       if (response.body() != null) {
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-          log(target, ""); // CRLF
+          log(configKey, ""); // CRLF
         }
 
         Reader body = response.body().asReader();
@@ -171,11 +177,11 @@ public abstract class Logger {
           while ((line = reader.readLine()) != null) {
             buffered.append(line);
             if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-              log(target, "%s", line);
+              log(configKey, "%s", line);
             }
           }
           String bodyAsString = buffered.toString();
-          log(target, "<--- END HTTP (%s-byte body)", bodyAsString.getBytes(UTF_8).length);
+          log(configKey, "<--- END HTTP (%s-byte body)", bodyAsString.getBytes(UTF_8).length);
           return Response.create(
               response.status(), response.reason(), response.headers(), bodyAsString);
         } finally {
@@ -184,5 +190,29 @@ public abstract class Logger {
       }
     }
     return response;
+  }
+
+  IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
+    log(
+        configKey,
+        "<--- ERROR %s: %s (%sms)",
+        ioe.getClass().getSimpleName(),
+        ioe.getMessage(),
+        elapsedTime);
+    if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+      StringWriter sw = new StringWriter();
+      ioe.printStackTrace(new PrintWriter(sw));
+      log(configKey, sw.toString());
+      log(configKey, "<--- END ERROR");
+    }
+    return ioe;
+  }
+
+  static String methodTag(String configKey) {
+    return new StringBuilder()
+        .append('[')
+        .append(configKey.substring(0, configKey.indexOf('(')))
+        .append("] ")
+        .toString();
   }
 }
