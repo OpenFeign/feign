@@ -45,10 +45,10 @@ interface MethodHandler {
     private final Lazy<Executor> httpExecutor;
     private final Provider<Retryer> retryer;
     private final Logger logger;
-    private final Logger.Level logLevel;
+    private final Provider<Logger.Level> logLevel;
 
     @Inject Factory(Client client, @Named("http") Lazy<Executor> httpExecutor, Provider<Retryer> retryer, Logger logger,
-                    Logger.Level logLevel) {
+                    Provider<Logger.Level> logLevel) {
       this.client = checkNotNull(client, "client");
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor");
       this.retryer = checkNotNull(retryer, "retryer");
@@ -107,9 +107,10 @@ interface MethodHandler {
     private final IncrementalDecoder.TextStream<?> incrementalDecoder;
 
     private ObserverHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
-                            Logger.Level logLevel, MethodMetadata metadata, BuildTemplateFromArgs buildTemplateFromArgs,
-                            Options options, IncrementalDecoder.TextStream<?> incrementalDecoder,
-                            ErrorDecoder errorDecoder, Lazy<Executor> httpExecutor) {
+                            Provider<Logger.Level> logLevel, MethodMetadata metadata,
+                            BuildTemplateFromArgs buildTemplateFromArgs, Options options,
+                            IncrementalDecoder.TextStream<?> incrementalDecoder, ErrorDecoder errorDecoder,
+                            Lazy<Executor> httpExecutor) {
       super(target, client, retryer, logger, logLevel, metadata, buildTemplateFromArgs, options, errorDecoder);
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor for %s", target);
       this.incrementalDecoder = checkNotNull(incrementalDecoder, "incrementalDecoder for %s", target);
@@ -185,7 +186,7 @@ interface MethodHandler {
     private final Decoder.TextStream<?> decoder;
 
     private SynchronousMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
-                                     Logger.Level logLevel, MethodMetadata metadata,
+                                     Provider<Logger.Level> logLevel, MethodMetadata metadata,
                                      BuildTemplateFromArgs buildTemplateFromArgs, Options options,
                                      Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
       super(target, client, retryer, logger, logLevel, metadata, buildTemplateFromArgs, options, errorDecoder);
@@ -215,15 +216,14 @@ interface MethodHandler {
     protected final Client client;
     protected final Provider<Retryer> retryer;
     protected final Logger logger;
-    protected final Logger.Level logLevel;
-
+    protected final Provider<Logger.Level> logLevel;
     protected final BuildTemplateFromArgs buildTemplateFromArgs;
     protected final Options options;
     protected final ErrorDecoder errorDecoder;
 
     private BaseMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
-                              Logger.Level logLevel, MethodMetadata metadata, BuildTemplateFromArgs buildTemplateFromArgs,
-                              Options options, ErrorDecoder errorDecoder) {
+                              Provider<Logger.Level> logLevel, MethodMetadata metadata,
+                              BuildTemplateFromArgs buildTemplateFromArgs, Options options, ErrorDecoder errorDecoder) {
       this.target = checkNotNull(target, "target");
       this.client = checkNotNull(client, "client for %s", target);
       this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -243,6 +243,9 @@ interface MethodHandler {
           return executeAndDecode(argv, template);
         } catch (RetryableException e) {
           retryer.continueOrPropagate(e);
+          if (logLevel.get() != Logger.Level.NONE) {
+            logger.logRetry(metadata.configKey(), logLevel.get());
+          }
           continue;
         }
       }
@@ -251,8 +254,8 @@ interface MethodHandler {
     public Object executeAndDecode(Object[] argv, RequestTemplate template) throws Throwable {
       Request request = targetRequest(template);
 
-      if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
-        logger.logRequest(target, logLevel, request);
+      if (logLevel.get() != Logger.Level.NONE) {
+        logger.logRequest(metadata.configKey(), logLevel.get(), request);
       }
 
       Response response;
@@ -260,13 +263,16 @@ interface MethodHandler {
       try {
         response = client.execute(request, options);
       } catch (IOException e) {
+        if (logLevel.get() != Logger.Level.NONE) {
+          logger.logIOException(metadata.configKey(), logLevel.get(), e, elapsedTime(start));
+        }
         throw errorExecuting(request, e);
       }
       long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
       try {
-        if (logLevel.ordinal() > Logger.Level.NONE.ordinal()) {
-          response = logger.logAndRebufferResponse(target, logLevel, response, elapsedTime);
+        if (logLevel.get() != Logger.Level.NONE) {
+          response = logger.logAndRebufferResponse(metadata.configKey(), logLevel.get(), response, elapsedTime);
         }
         if (response.status() >= 200 && response.status() < 300) {
           return decode(argv, response);
@@ -274,10 +280,17 @@ interface MethodHandler {
           throw errorDecoder.decode(metadata.configKey(), response);
         }
       } catch (IOException e) {
+        if (logLevel.get() != Logger.Level.NONE) {
+          logger.logIOException(metadata.configKey(), logLevel.get(), e, elapsedTime);
+        }
         throw errorReading(request, response, e);
       } finally {
         ensureClosed(response.body());
       }
+    }
+
+    protected long elapsedTime(long start) {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     }
 
     protected Request targetRequest(RequestTemplate template) {
