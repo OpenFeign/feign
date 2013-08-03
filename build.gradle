@@ -79,6 +79,23 @@ project(':feign-jaxrs') {
     }
 }
 
+project(':feign-rxjava') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        compile     'com.netflix.rxjava:rxjava-core:0.10.0'
+        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        // for example classes
+        testCompile project(':feign-gson')
+        testCompile 'org.testng:testng:6.8.1'
+    }
+}
+
 project(':feign-ribbon') {
     apply plugin: 'java'
 
