@@ -26,7 +26,7 @@ task fatJar(dependsOn: classes, type: Jar) {
   // http://skife.org/java/unix/2011/06/20/really_executable_jars.html
 
   manifest {
-    attributes 'Main-Class': 'feign.example.cli.GitHubExample'
+    attributes 'Main-Class': 'feign.example.github.GitHubExample'
   }
 
   // for convenience, we make a file in the build dir named github with no extension
