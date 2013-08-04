@@ -1,5 +1,6 @@
 ### Version 3.2
 * Add wikipedia search example
+* Allow `@Path` on types in feign-jaxrs
 
 ### Version 3.1
 * Log when an http request is retried or a response fails due to an IOException.
