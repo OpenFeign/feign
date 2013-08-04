@@ -1,0 +1,49 @@
+apply plugin: 'java'
+
+dependencies {
+  compile  'com.netflix.feign:feign-core:3.1.0'
+  compile  'com.netflix.feign:feign-gson:3.1.0'
+  provided 'com.squareup.dagger:dagger-compiler:1.0.1'
+}
+
+// create a self-contained jar that is executable
+// the output is both a 'fat' project artifact and
+// a convenience file named "build/github"
+task fatJar(dependsOn: classes, type: Jar) { 
+  classifier 'fat'
+
+  doFirst {
+    // Delay evaluation until the compile configuration is ready
+    from {
+      configurations.compile.collect { zipTree(it) }
+    }
+  }
+
+  from (sourceSets*.output.classesDir) {
+  }
+
+  // really executable jar
+  // http://skife.org/java/unix/2011/06/20/really_executable_jars.html
+
+  manifest {
+    attributes 'Main-Class': 'feign.example.wikipedia.WikipediaExample'
+  }
+
+  // for convenience, we make a file in the build dir named github with no extension
+  doLast {
+    def srcFile = new File("${buildDir}/libs/${archiveName}")
+    def shortcutFile = new File("${buildDir}/wikipedia")
+    shortcutFile.delete()
+    shortcutFile << "#!/usr/bin/env sh\n"
+    shortcutFile << 'exec java -jar $0 "$@"' + "\n"
+    shortcutFile << srcFile.bytes
+    shortcutFile.setExecutable(true, true)
+    srcFile.delete()
+    srcFile << shortcutFile.bytes   
+    srcFile.setExecutable(true, true)
+  }
+}
+
+artifacts {
+    archives fatJar
+}
