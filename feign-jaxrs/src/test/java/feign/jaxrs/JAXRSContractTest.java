@@ -193,6 +193,20 @@ public class JAXRSContractTest {
     contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
+  @Path("/base")
+  interface PathOnType {
+    @GET Response base();
+
+    @GET @Path("/specific") Response get();
+  }
+
+  @Test public void pathOnType() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("base"));
+    assertEquals(md.template().url(), "/base");
+    md = contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("get"));
+    assertEquals(md.template().url(), "/base/specific");
+  }
+
   interface WithURIParam {
     @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
   }
