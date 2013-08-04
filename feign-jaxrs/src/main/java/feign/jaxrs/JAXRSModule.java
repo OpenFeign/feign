@@ -46,6 +46,16 @@ public final class JAXRSModule {
   public static final class JAXRSContract extends Contract.BaseContract {
 
     @Override
+    public MethodMetadata parseAndValidatateMetadata(Method method) {
+      MethodMetadata md = super.parseAndValidatateMetadata(method);
+      Path path = method.getDeclaringClass().getAnnotation(Path.class);
+      if (path != null) {
+        md.template().insert(0, path.value());
+      }
+      return md;
+    }
+
+    @Override
     protected void processAnnotationOnMethod(
         MethodMetadata data, Annotation methodAnnotation, Method method) {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
