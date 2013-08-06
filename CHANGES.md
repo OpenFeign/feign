@@ -1,7 +1,13 @@
-### Version 3.2
+### Version 4.1/3.2
 * update to dagger 1.1
 * Add wikipedia search example
 * Allow `@Path` on types in feign-jaxrs
+
+### Version 4.0
+* Support RxJava-style Observers.
+  * Return type can be `Observable<T>` for an async equiv of `Iterable<T>`.
+  * `Observer<T>` replaces `IncrementalCallback<T>` and is passed to `Observable.subscribe()`.
+  * On `Subscription.unsubscribe()`, `Observer.onNext()` will stop being called.
 
 ### Version 3.1
 * Log when an http request is retried or a response fails due to an IOException.
