@@ -35,13 +35,13 @@ project(':feign-core') {
     }
 
     dependencies {
-        compile     'com.squareup.dagger:dagger:1.0.1'
-        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        compile     'com.squareup.dagger:dagger:1.1.0'
+        provided     'com.squareup.dagger:dagger-compiler:1.1.0'
         testCompile 'com.google.guava:guava:14.0.1'
         testCompile 'com.google.code.gson:gson:2.2.4'
         testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
-        testCompile 'org.testng:testng:6.8.1'
-        testCompile 'com.google.mockwebserver:mockwebserver:20130505'
+        testCompile 'org.testng:testng:6.8.5'
+        testCompile 'com.google.mockwebserver:mockwebserver:20130706'
     }
 }
 
@@ -55,8 +55,8 @@ project(':feign-gson') {
     dependencies {
         compile     project(':feign-core')
         compile     'com.google.code.gson:gson:2.2.4'
-        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
-        testCompile 'org.testng:testng:6.8.1'
+        provided    'com.squareup.dagger:dagger-compiler:1.1.0'
+        testCompile 'org.testng:testng:6.8.5'
     }
 }
 
@@ -70,12 +70,12 @@ project(':feign-jaxrs') {
     dependencies {
         compile     project(':feign-core')
         compile     'javax.ws.rs:jsr311-api:1.1.1'
-        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
+        provided    'com.squareup.dagger:dagger-compiler:1.1.0'
         // for example classes
         testCompile project(':feign-core').sourceSets.test.output
         testCompile project(':feign-gson')
         testCompile 'com.google.guava:guava:14.0.1'
-        testCompile 'org.testng:testng:6.8.1'
+        testCompile 'org.testng:testng:6.8.5'
     }
 }
 
@@ -89,8 +89,8 @@ project(':feign-ribbon') {
     dependencies {
         compile     project(':feign-core')
         compile     'com.netflix.ribbon:ribbon-core:0.2.0'
-        provided    'com.squareup.dagger:dagger-compiler:1.0.1'
-        testCompile 'org.testng:testng:6.8.1'
-        testCompile 'com.google.mockwebserver:mockwebserver:20130505'
+        provided    'com.squareup.dagger:dagger-compiler:1.1.0'
+        testCompile 'org.testng:testng:6.8.5'
+        testCompile 'com.google.mockwebserver:mockwebserver:20130706'
     }
 }

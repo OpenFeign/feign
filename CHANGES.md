@@ -5,6 +5,7 @@
   * On `Subscription.unsubscribe()`, `Observer.onNext()` will stop being called.
 
 ### Version 3.2
+* update to dagger 1.1
 * Add wikipedia search example
 * Allow `@Path` on types in feign-jaxrs
 

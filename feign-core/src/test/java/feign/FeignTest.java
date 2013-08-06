@@ -125,7 +125,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       final AtomicBoolean success = new AtomicBoolean();
 
@@ -159,7 +159,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       final AtomicBoolean success = new AtomicBoolean();
 
@@ -193,7 +193,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       final AtomicBoolean success = new AtomicBoolean();
 
@@ -228,7 +228,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       final CountDownLatch latch = new CountDownLatch(2);
 
@@ -265,7 +265,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       api.login("netflix", "denominator", "password");
       assertEquals(new String(server.takeRequest().getBody()),
@@ -282,7 +282,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       api.form("netflix", "denominator", "password");
       assertEquals(new String(server.takeRequest().getBody()),
@@ -299,7 +299,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
 
       api.body(Arrays.asList("netflix", "denominator", "password"));
       assertEquals(new String(server.takeRequest().getBody()), "[netflix, denominator, password]");
@@ -314,29 +314,32 @@ public class FeignTest {
         String.class)), "TestInterface#uriParam(String,URI,String)");
   }
 
+  @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
+  static class IllegalArgumentExceptionOn404 {
+    @Provides @Singleton ErrorDecoder errorDecoder() {
+      return new ErrorDecoder.Default() {
+
+        @Override
+        public Exception decode(String methodKey, Response response) {
+          if (response.status() == 404)
+            return new IllegalArgumentException("zone not found");
+          return super.decode(methodKey, response);
+        }
+
+      };
+    }
+  }
+
   @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "zone not found")
   public void canOverrideErrorDecoder() throws IOException, InterruptedException {
-    @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
-      @Provides @Singleton ErrorDecoder errorDecoder() {
-        return new ErrorDecoder.Default() {
-
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            if (response.status() == 404)
-              return new IllegalArgumentException("zone not found");
-            return super.decode(methodKey, response);
-          }
-
-        };
-      }
-    }
 
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404).setBody("foo"));
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new IllegalArgumentExceptionOn404());
 
       api.post();
     } finally {
@@ -351,7 +354,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(),
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
           new TestInterface.Module());
 
       api.post();
@@ -362,28 +365,46 @@ public class FeignTest {
     }
   }
 
+  @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
+  static class DecodeFail {
+    @Provides(type = SET) Decoder decoder() {
+      return new Decoder.TextStream<String>() {
+        @Override
+        public String decode(Reader reader, Type type) throws IOException {
+          return "fail";
+        }
+      };
+    }
+  }
+
   public void overrideTypeSpecificDecoder() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
     server.play();
 
     try {
-      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
-        @Provides(type = SET) Decoder decoder() {
-          return new Decoder.TextStream<String>() {
-            @Override
-            public String decode(Reader reader, Type type) throws IOException {
-              return "fail";
-            }
-          };
-        }
-      }
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new DecodeFail());
 
       assertEquals(api.post(), "fail");
     } finally {
       server.shutdown();
       assertEquals(server.getRequestCount(), 1);
+    }
+  }
+
+  @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
+  static class RetryableExceptionOnRetry {
+    @Provides(type = SET) Decoder decoder() {
+      return new StringDecoder() {
+        @Override
+        public String decode(Reader reader, Type type) throws RetryableException, IOException {
+          String string = super.decode(reader, type);
+          if ("retry!".equals(string))
+            throw new RetryableException(string, null);
+          return string;
+        }
+      };
     }
   }
 
@@ -397,25 +418,25 @@ public class FeignTest {
     server.play();
 
     try {
-      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
-        @Provides(type = SET) Decoder decoder() {
-          return new StringDecoder() {
-            @Override
-            public String decode(Reader reader, Type type) throws RetryableException, IOException {
-              String string = super.decode(reader, type);
-              if ("retry!".equals(string))
-                throw new RetryableException(string, null);
-              return string;
-            }
-          };
-        }
-      }
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new RetryableExceptionOnRetry());
 
       assertEquals(api.post(), "success!");
     } finally {
       server.shutdown();
       assertEquals(server.getRequestCount(), 2);
+    }
+  }
+
+  @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
+  static class IOEOnDecode {
+    @Provides(type = SET) Decoder decoder() {
+      return new Decoder.TextStream<String>() {
+        @Override
+        public String decode(Reader reader, Type type) throws IOException {
+          throw new IOException("error reading response");
+        }
+      };
     }
   }
 
@@ -426,17 +447,8 @@ public class FeignTest {
     server.play();
 
     try {
-      @dagger.Module(overrides = true, includes = TestInterface.Module.class) class Overrides {
-        @Provides(type = SET) Decoder decoder() {
-          return new Decoder.TextStream<String>() {
-            @Override
-            public String decode(Reader reader, Type type) throws IOException {
-              throw new IOException("error reading response");
-            }
-          };
-        }
-      }
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(), new Overrides());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new IOEOnDecode());
 
       api.post();
     } finally {
@@ -459,7 +471,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(),
+      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
           new TestInterface.Module(), new TrustSSLSockets());
       api.post();
     } finally {
@@ -475,7 +487,7 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, server.getUrl("").toString(),
+      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
           new TestInterface.Module(), new TrustSSLSockets());
       api.post();
       assertEquals(server.getRequestCount(), 2);

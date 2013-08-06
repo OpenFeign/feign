@@ -105,26 +105,9 @@ public class LoggerTest {
     server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
-    @dagger.Module(overrides = true, library = true) class Module {
-      @Provides(type = SET) Encoder defaultEncoder() {
-        return new Encoder.Text<Object>() {
-          @Override public String encode(Object object) {
-            return object.toString();
-          }
-        };
-      }
-
-      @Provides @Singleton Logger logger() {
-        return logger;
-      }
-
-      @Provides @Singleton Logger.Level level() {
-        return logLevel;
-      }
-    }
-
     try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(), new Module());
+      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(),
+          new DefaultModule(logger, logLevel));
 
       api.login("netflix", "denominator", "password");
 
@@ -137,6 +120,32 @@ public class LoggerTest {
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
     } finally {
       server.shutdown();
+    }
+  }
+
+  static @dagger.Module(overrides = true, library = true) class DefaultModule {
+    final Logger logger;
+    final Logger.Level logLevel;
+
+    DefaultModule(Logger logger, Logger.Level logLevel) {
+      this.logger = logger;
+      this.logLevel = logLevel;
+    }
+
+    @Provides(type = SET) Encoder defaultEncoder() {
+      return new Encoder.Text<Object>() {
+        @Override public String encode(Object object) {
+          return object.toString();
+        }
+      };
+    }
+
+    @Provides @Singleton Logger logger() {
+      return logger;
+    }
+
+    @Provides @Singleton Logger.Level level() {
+      return logLevel;
     }
   }
 
@@ -179,36 +188,23 @@ public class LoggerTest {
     return data;
   }
 
+  @dagger.Module(overrides = true, library = true)
+  static class LessReadTimeoutModule {
+    @Provides Request.Options lessReadTimeout() {
+      return new Request.Options(10 * 1000, 50);
+    }
+  }
+
   @Test(dataProvider = "levelToReadTimeoutOutput")
   public void readTimeoutEmits(final Logger.Level logLevel, List<String> expectedMessages) throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBytesPerSecond(1).setBody("foo"));
     server.play();
 
-    @dagger.Module(overrides = true, library = true) class Module {
-      @Provides Request.Options lessReadTimeout() {
-        return new Request.Options(10 * 1000, 50);
-      }
-
-      @Provides(type = SET) Encoder defaultEncoder() {
-        return new Encoder.Text<Object>() {
-          @Override public String encode(Object object) {
-            return object.toString();
-          }
-        };
-      }
-
-      @Provides @Singleton Logger logger() {
-        return logger;
-      }
-
-      @Provides @Singleton Logger.Level level() {
-        return logLevel;
-      }
-    }
 
     try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(), new Module());
+      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(),
+          new LessReadTimeoutModule(), new DefaultModule(logger, logLevel));
 
       api.login("netflix", "denominator", "password");
 
@@ -257,37 +253,23 @@ public class LoggerTest {
     return data;
   }
 
+  @dagger.Module(overrides = true, library = true)
+  static class DontRetryModule {
+    @Provides Retryer retryer() {
+      return new Retryer() {
+        @Override public void continueOrPropagate(RetryableException e) {
+          throw e;
+        }
+      };
+    }
+  }
+
   @Test(dataProvider = "levelToUnknownHostOutput")
   public void unknownHostEmits(final Logger.Level logLevel, List<String> expectedMessages) throws IOException, InterruptedException {
-    @dagger.Module(overrides = true, library = true) class Module {
-
-      @Provides Retryer retryer() {
-        return new Retryer() {
-          @Override public void continueOrPropagate(RetryableException e) {
-            throw e;
-          }
-        };
-      }
-
-      @Provides(type = SET) Encoder defaultEncoder() {
-        return new Encoder.Text<Object>() {
-          @Override public String encode(Object object) {
-            return object.toString();
-          }
-        };
-      }
-
-      @Provides @Singleton Logger logger() {
-        return logger;
-      }
-
-      @Provides @Singleton Logger.Level level() {
-        return logLevel;
-      }
-    }
 
     try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc", new Module());
+      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc",
+          new DontRetryModule(), new DefaultModule(logger, logLevel));
 
       api.login("netflix", "denominator", "password");
 
@@ -297,43 +279,28 @@ public class LoggerTest {
     }
   }
 
+  @dagger.Module(overrides = true, library = true)
+  static class RetryOnceModule {
+    @Provides Retryer retryer() {
+      return new Retryer() {
+        boolean retried;
+
+        @Override public void continueOrPropagate(RetryableException e) {
+          if (!retried) {
+            retried = true;
+            return;
+          }
+          throw e;
+        }
+      };
+    }
+  }
 
   public void retryEmits() throws IOException, InterruptedException {
-    @dagger.Module(overrides = true, library = true) class Module {
-
-      @Provides Retryer retryer() {
-        return new Retryer() {
-          boolean retried;
-
-          @Override public void continueOrPropagate(RetryableException e) {
-            if (!retried) {
-              retried = true;
-              return;
-            }
-            throw e;
-          }
-        };
-      }
-
-      @Provides(type = SET) Encoder defaultEncoder() {
-        return new Encoder.Text<Object>() {
-          @Override public String encode(Object object) {
-            return object.toString();
-          }
-        };
-      }
-
-      @Provides @Singleton Logger logger() {
-        return logger;
-      }
-
-      @Provides @Singleton Logger.Level level() {
-        return Logger.Level.BASIC;
-      }
-    }
 
     try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc", new Module());
+      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc",
+          new RetryOnceModule(), new DefaultModule(logger, Logger.Level.BASIC));
 
       api.login("netflix", "denominator", "password");
 
