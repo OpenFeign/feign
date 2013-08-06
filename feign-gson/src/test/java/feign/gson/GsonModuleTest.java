@@ -39,17 +39,16 @@ import org.testng.annotations.Test;
 
 @Test
 public class GsonModuleTest {
+  @Module(includes = GsonModule.class, library = true, injects = EncodersAndDecoders.class)
+  static class EncodersAndDecoders {
+    @Inject Set<Encoder> encoders;
+    @Inject Set<Decoder> decoders;
+    @Inject Set<IncrementalDecoder> incrementalDecoders;
+  }
 
   @Test
   public void providesEncoderDecoderAndIncrementalDecoder() throws Exception {
-    @Module(includes = GsonModule.class, injects = SetBindings.class)
-    class SetBindings {
-      @Inject Set<Encoder> encoders;
-      @Inject Set<Decoder> decoders;
-      @Inject Set<IncrementalDecoder> incrementalDecoders;
-    }
-
-    SetBindings bindings = new SetBindings();
+    EncodersAndDecoders bindings = new EncodersAndDecoders();
     ObjectGraph.create(bindings).inject(bindings);
 
     assertEquals(bindings.encoders.size(), 1);
@@ -61,14 +60,14 @@ public class GsonModuleTest {
         bindings.incrementalDecoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
   }
 
+  @Module(includes = GsonModule.class, library = true, injects = Encoders.class)
+  static class Encoders {
+    @Inject Set<Encoder> encoders;
+  }
+
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
-    @Module(includes = GsonModule.class, injects = SetBindings.class)
-    class SetBindings {
-      @Inject Set<Encoder> encoders;
-    }
-
-    SetBindings bindings = new SetBindings();
+    Encoders bindings = new Encoders();
     ObjectGraph.create(bindings).inject(bindings);
 
     Map<String, Object> map = new LinkedHashMap<String, Object>();
@@ -84,12 +83,8 @@ public class GsonModuleTest {
 
   @Test
   public void encodesFormParams() throws Exception {
-    @Module(includes = GsonModule.class, injects = SetBindings.class)
-    class SetBindings {
-      @Inject Set<Encoder> encoders;
-    }
 
-    SetBindings bindings = new SetBindings();
+    Encoders bindings = new Encoders();
     ObjectGraph.create(bindings).inject(bindings);
 
     Map<String, Object> form = new LinkedHashMap<String, Object>();
@@ -125,14 +120,14 @@ public class GsonModuleTest {
     private static final long serialVersionUID = 1L;
   }
 
+  @Module(includes = GsonModule.class, library = true, injects = Decoders.class)
+  static class Decoders {
+    @Inject Set<Decoder> decoders;
+  }
+
   @Test
   public void decodes() throws Exception {
-    @Module(includes = GsonModule.class, injects = SetBindings.class)
-    class SetBindings {
-      @Inject Set<Decoder> decoders;
-    }
-
-    SetBindings bindings = new SetBindings();
+    Decoders bindings = new Decoders();
     ObjectGraph.create(bindings).inject(bindings);
 
     List<Zone> zones = new LinkedList<Zone>();
@@ -146,14 +141,14 @@ public class GsonModuleTest {
         zones);
   }
 
+  @Module(includes = GsonModule.class, library = true, injects = IncrementalDecoders.class)
+  static class IncrementalDecoders {
+    @Inject Set<IncrementalDecoder> decoders;
+  }
+
   @Test
   public void decodesIncrementally() throws Exception {
-    @Module(includes = GsonModule.class, injects = SetBindings.class)
-    class SetBindings {
-      @Inject Set<IncrementalDecoder> decoders;
-    }
-
-    SetBindings bindings = new SetBindings();
+    IncrementalDecoders bindings = new IncrementalDecoders();
     ObjectGraph.create(bindings).inject(bindings);
 
     final List<Zone> zones = new LinkedList<Zone>();
