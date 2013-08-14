@@ -16,9 +16,9 @@
 package feign.jaxrs;
 
 import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
 
 import dagger.Provides;
-import feign.Body;
 import feign.Contract;
 import feign.MethodMetadata;
 import java.lang.annotation.Annotation;
@@ -33,6 +33,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+/**
+ * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
+ * JAX-RS README</a>.
+ */
 @dagger.Module(library = true, overrides = true)
 public final class JAXRSModule {
   static final String ACCEPT = "Accept";
@@ -50,7 +54,12 @@ public final class JAXRSModule {
       MethodMetadata md = super.parseAndValidatateMetadata(method);
       Path path = method.getDeclaringClass().getAnnotation(Path.class);
       if (path != null) {
-        md.template().insert(0, path.value());
+        String pathValue = emptyToNull(path.value());
+        checkState(
+            pathValue != null,
+            "Path.value() was empty on type %s",
+            method.getDeclaringClass().getName());
+        md.template().insert(0, pathValue);
       }
       return md;
     }
@@ -68,19 +77,22 @@ public final class JAXRSModule {
             data.template().method(),
             http.value());
         data.template().method(http.value());
-      } else if (annotationType == Body.class) {
-        String body = Body.class.cast(methodAnnotation).value();
-        if (body.indexOf('{') == -1) {
-          data.template().body(body);
-        } else {
-          data.template().bodyTemplate(body);
-        }
       } else if (annotationType == Path.class) {
+        String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
+        checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
         data.template().append(Path.class.cast(methodAnnotation).value());
       } else if (annotationType == Produces.class) {
-        data.template().header(CONTENT_TYPE, join(',', ((Produces) methodAnnotation).value()));
+        String[] serverProduces = ((Produces) methodAnnotation).value();
+        String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
+        checkState(
+            clientAccepts != null, "Produces.value() was empty on method %s", method.getName());
+        data.template().header(ACCEPT, clientAccepts);
       } else if (annotationType == Consumes.class) {
-        data.template().header(ACCEPT, join(',', ((Consumes) methodAnnotation).value()));
+        String[] serverConsumes = ((Consumes) methodAnnotation).value();
+        String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
+        checkState(
+            clientProduces != null, "Consumes.value() was empty on method %s", method.getName());
+        data.template().header(CONTENT_TYPE, clientProduces);
       }
     }
 
@@ -92,22 +104,34 @@ public final class JAXRSModule {
         Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
         if (annotationType == PathParam.class) {
           String name = PathParam.class.cast(parameterAnnotation).value();
+          checkState(
+              emptyToNull(name) != null, "PathParam.value() was empty on parameter %s", paramIndex);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
         } else if (annotationType == QueryParam.class) {
           String name = QueryParam.class.cast(parameterAnnotation).value();
+          checkState(
+              emptyToNull(name) != null,
+              "QueryParam.value() was empty on parameter %s",
+              paramIndex);
           Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
           data.template().query(name, query);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
         } else if (annotationType == HeaderParam.class) {
           String name = HeaderParam.class.cast(parameterAnnotation).value();
+          checkState(
+              emptyToNull(name) != null,
+              "HeaderParam.value() was empty on parameter %s",
+              paramIndex);
           Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
           data.template().header(name, header);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
         } else if (annotationType == FormParam.class) {
           String name = FormParam.class.cast(parameterAnnotation).value();
+          checkState(
+              emptyToNull(name) != null, "FormParam.value() was empty on parameter %s", paramIndex);
           data.formParams().add(name);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
@@ -115,17 +139,5 @@ public final class JAXRSModule {
       }
       return isHttpParam;
     }
-  }
-
-  private static String join(char separator, String... parts) {
-    if (parts == null || parts.length == 0) return "";
-    StringBuilder to = new StringBuilder();
-    for (int i = 0; i < parts.length; i++) {
-      to.append(parts[i]);
-      if (i + 1 < parts.length) {
-        to.append(separator);
-      }
-    }
-    return to.toString();
   }
 }
