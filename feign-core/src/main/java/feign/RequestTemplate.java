@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,9 +98,7 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    String queryLine = expand(queryLine(), encoded);
-    queries.clear();
-    pullAnyQueriesOutOfUrl(new StringBuilder(queryLine));
+    replaceQueryValues(encoded);
     String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/");
     url = new StringBuilder(resolvedUrl);
 
@@ -479,6 +478,37 @@ public final class RequestTemplate implements Serializable {
   @Override
   public String toString() {
     return request().toString();
+  }
+
+  /**
+   * Replaces query values which are templated with corresponding values from the {@code unencoded}
+   * map. Any unresolved queries are removed.
+   */
+  public void replaceQueryValues(Map<String, ?> unencoded) {
+    Iterator<Entry<String, Collection<String>>> iterator = queries.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Entry<String, Collection<String>> entry = iterator.next();
+      if (entry.getValue() == null) {
+        continue;
+      }
+      Collection<String> values = new ArrayList<String>();
+      for (String value : entry.getValue()) {
+        if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
+          Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
+          // only add non-null expressions
+          if (variableValue != null) {
+            values.add(String.valueOf(variableValue));
+          }
+        } else {
+          values.add(value);
+        }
+      }
+      if (values.isEmpty()) {
+        iterator.remove();
+      } else {
+        entry.setValue(values);
+      }
+    }
   }
 
   public String queryLine() {
