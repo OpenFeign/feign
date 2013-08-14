@@ -30,7 +30,7 @@ Adds the first value as the `Content-Type` header.
 #### `@PathParam`
 Links the value of the corresponding parameter to a template variable declared in the path.
 #### `@QueryParam`
-Links the value of the corresponding parameter to a query parameter.
+Links the value of the corresponding parameter to a query parameter.  When invoked, null will skip the query param.
 #### `@HeaderParam`
 Links the value of the corresponding parameter to a header.
 #### `@FormParam`
