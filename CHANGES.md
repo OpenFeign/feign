@@ -1,5 +1,6 @@
 ### Version 4.2/3.3
 * Document and enforce JAX-RS annotation processing from server POV
+* Skip query template parameters when corresponding java arg is null
 
 ### Version 4.1/3.2
 * update to dagger 1.1
