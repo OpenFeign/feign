@@ -1,3 +1,6 @@
+### Version 4.2/3.3
+* Document and enforce JAX-RS annotation processing from server POV
+
 ### Version 4.1/3.2
 * update to dagger 1.1
 * Add wikipedia search example
