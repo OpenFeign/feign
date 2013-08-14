@@ -15,21 +15,21 @@
  */
 package feign.jaxrs;
 
+import static feign.jaxrs.JAXRSModule.ACCEPT;
 import static feign.jaxrs.JAXRSModule.CONTENT_TYPE;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.reflect.TypeToken;
-import feign.Body;
 import feign.MethodMetadata;
 import feign.Observable;
 import feign.Observer;
@@ -41,6 +41,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -199,28 +200,78 @@ public class JAXRSContractTest {
     }
   }
 
-  interface BodyWithoutParameters {
-    @POST
+  interface ProducesAndConsumes {
+    @GET
     @Produces(APPLICATION_XML)
-    @Body("<v01:getAccountsListOfUser/>")
-    Response post();
+    Response produces();
+
+    @GET
+    @Produces({})
+    Response producesNada();
+
+    @GET
+    @Produces({""})
+    Response producesEmpty();
+
+    @POST
+    @Consumes(APPLICATION_JSON)
+    Response consumes();
+
+    @POST
+    @Consumes({})
+    Response consumesNada();
+
+    @POST
+    @Consumes({""})
+    Response consumesEmpty();
   }
 
   @Test
-  public void bodyWithoutParameters() throws Exception {
+  public void producesAddsAcceptHeader() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().body(), "<v01:getAccountsListOfUser/>");
-    assertFalse(md.template().bodyTemplate() != null);
-    assertTrue(md.formParams().isEmpty());
-    assertTrue(md.indexToName().isEmpty());
+        contract.parseAndValidatateMetadata(
+            ProducesAndConsumes.class.getDeclaredMethod("produces"));
+    assertEquals(md.template().headers().get(ACCEPT), ImmutableSet.of(APPLICATION_XML));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Produces.value\\(\\) was empty on method producesNada")
+  public void producesNada() throws Exception {
+    contract.parseAndValidatateMetadata(
+        ProducesAndConsumes.class.getDeclaredMethod("producesNada"));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Produces.value\\(\\) was empty on method producesEmpty")
+  public void producesEmpty() throws Exception {
+    contract.parseAndValidatateMetadata(
+        ProducesAndConsumes.class.getDeclaredMethod("producesEmpty"));
   }
 
   @Test
-  public void producesAddsContentTypeHeader() throws Exception {
+  public void consumesAddsContentTypeHeader() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().headers().get(CONTENT_TYPE), ImmutableSet.of(APPLICATION_XML));
+        contract.parseAndValidatateMetadata(
+            ProducesAndConsumes.class.getDeclaredMethod("consumes"));
+    assertEquals(md.template().headers().get(CONTENT_TYPE), ImmutableSet.of(APPLICATION_JSON));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Consumes.value\\(\\) was empty on method consumesNada")
+  public void consumesNada() throws Exception {
+    contract.parseAndValidatateMetadata(
+        ProducesAndConsumes.class.getDeclaredMethod("consumesNada"));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Consumes.value\\(\\) was empty on method consumesEmpty")
+  public void consumesEmpty() throws Exception {
+    contract.parseAndValidatateMetadata(
+        ProducesAndConsumes.class.getDeclaredMethod("consumesEmpty"));
   }
 
   interface BodyParams {
@@ -250,6 +301,19 @@ public class JAXRSContractTest {
         BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
+  @Path("")
+  interface EmptyPathOnType {
+    @GET
+    Response base();
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Path.value\\(\\) was empty on type .*")
+  public void emptyPathOnType() throws Exception {
+    contract.parseAndValidatateMetadata(EmptyPathOnType.class.getDeclaredMethod("base"));
+  }
+
   @Path("/base")
   interface PathOnType {
     @GET
@@ -258,6 +322,14 @@ public class JAXRSContractTest {
     @GET
     @Path("/specific")
     Response get();
+
+    @GET
+    @Path("")
+    Response emptyPath();
+
+    @GET
+    @Path("/{param}")
+    Response emptyPathParam(@PathParam("") String empty);
   }
 
   @Test
@@ -267,6 +339,21 @@ public class JAXRSContractTest {
     assertEquals(md.template().url(), "/base");
     md = contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("get"));
     assertEquals(md.template().url(), "/base/specific");
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "Path.value\\(\\) was empty on method emptyPath")
+  public void emptyPathOnMethod() throws Exception {
+    contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("emptyPath"));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "PathParam.value\\(\\) was empty on parameter 0")
+  public void emptyPathParam() throws Exception {
+    contract.parseAndValidatateMetadata(
+        PathOnType.class.getDeclaredMethod("emptyPathParam", String.class));
   }
 
   interface WithURIParam {
@@ -302,6 +389,9 @@ public class JAXRSContractTest {
         @PathParam("domainId") int id,
         @QueryParam("name") String nameFilter,
         @QueryParam("type") String typeFilter);
+
+    @GET
+    Response emptyQueryParam(@QueryParam("") String empty);
   }
 
   @Test
@@ -324,15 +414,23 @@ public class JAXRSContractTest {
         "GET /domains/{domainId}/records?name={name}&type={type} HTTP/1.1\n");
   }
 
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "QueryParam.value\\(\\) was empty on parameter 0")
+  public void emptyQueryParam() throws Exception {
+    contract.parseAndValidatateMetadata(
+        WithPathAndQueryParams.class.getDeclaredMethod("emptyQueryParam", String.class));
+  }
+
   interface FormParams {
     @POST
-    @Body(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
-            + " \"{password}\"%7D")
     void login(
         @FormParam("customer_name") String customer,
         @FormParam("user_name") String user,
         @FormParam("password") String password);
+
+    @GET
+    Response emptyFormParam(@FormParam("") String empty);
   }
 
   @Test
@@ -341,20 +439,28 @@ public class JAXRSContractTest {
         contract.parseAndValidatateMetadata(
             FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
 
-    assertFalse(md.template().body() != null);
-    assertEquals(
-        md.template().bodyTemplate(),
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
-            + " \"{password}\"%7D");
+    assertNull(md.template().body());
+    assertNull(md.template().bodyTemplate());
     assertEquals(md.formParams(), ImmutableList.of("customer_name", "user_name", "password"));
     assertEquals(md.indexToName().get(0), ImmutableSet.of("customer_name"));
     assertEquals(md.indexToName().get(1), ImmutableSet.of("user_name"));
     assertEquals(md.indexToName().get(2), ImmutableSet.of("password"));
   }
 
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "FormParam.value\\(\\) was empty on parameter 0")
+  public void emptyFormParam() throws Exception {
+    contract.parseAndValidatateMetadata(
+        FormParams.class.getDeclaredMethod("emptyFormParam", String.class));
+  }
+
   interface HeaderParams {
     @POST
     void logout(@HeaderParam("Auth-Token") String token);
+
+    @GET
+    Response emptyHeaderParam(@HeaderParam("") String empty);
   }
 
   @Test
@@ -365,6 +471,14 @@ public class JAXRSContractTest {
 
     assertEquals(md.template().headers().get("Auth-Token"), ImmutableSet.of("{Auth-Token}"));
     assertEquals(md.indexToName().get(0), ImmutableSet.of("Auth-Token"));
+  }
+
+  @Test(
+      expectedExceptions = IllegalStateException.class,
+      expectedExceptionsMessageRegExp = "HeaderParam.value\\(\\) was empty on parameter 0")
+  public void emptyHeaderParam() throws Exception {
+    contract.parseAndValidatateMetadata(
+        HeaderParams.class.getDeclaredMethod("emptyHeaderParam", String.class));
   }
 
   interface WithObservable {
