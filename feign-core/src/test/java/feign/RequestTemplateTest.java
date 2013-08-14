@@ -18,7 +18,6 @@ package feign;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-
 import org.testng.annotations.Test;
 
 import static feign.RequestTemplate.expand;
@@ -132,5 +131,36 @@ public class RequestTemplateTest {
         + "Content-Length: 80\n" //
         + "\n" //
         + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
+  }
+
+  @Test public void skipUnresolvedQueries() throws Exception {
+    RequestTemplate template = new RequestTemplate().method("GET")//
+        .append("/domains/{domainId}/records")//
+        .query("optional", "{optional}")//
+        .query("name", "{nameVariable}");
+
+    template = template.resolve(ImmutableMap.<String, Object>builder()//
+        .put("domainId", 1001)//
+        .put("nameVariable", "denominator.io")//
+        .build()
+    );
+
+    assertEquals(template.toString(), ""//
+        + "GET /domains/1001/records?name=denominator.io HTTP/1.1\n");
+  }
+
+  @Test public void allQueriesUnresolvable() throws Exception {
+    RequestTemplate template = new RequestTemplate().method("GET")//
+        .append("/domains/{domainId}/records")//
+        .query("optional", "{optional}")//
+        .query("optional2", "{optional2}");
+
+    template = template.resolve(ImmutableMap.<String, Object>builder()//
+        .put("domainId", 1001)//
+        .build()
+    );
+
+    assertEquals(template.toString(), ""//
+        + "GET /domains/1001/records HTTP/1.1\n");
   }
 }
