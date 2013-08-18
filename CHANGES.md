@@ -1,5 +1,6 @@
 ### Version 4.3
 * Add ability to configure zero or more RequestInterceptors.
+* Remove `overrides = true` on codec modules.
 
 ### Version 4.2/3.3
 * Document and enforce JAX-RS annotation processing from server POV

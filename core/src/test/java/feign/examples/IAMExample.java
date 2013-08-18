@@ -68,7 +68,7 @@ public class IAMExample {
     }
   }
 
-  @Module(overrides = true, library = true)
+  @Module(library = true)
   static class IAMModule {
     @Provides(type = SET)
     Decoder decoder() {
