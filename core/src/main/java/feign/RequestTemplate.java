@@ -72,20 +72,8 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Targets a template to this target, adding the {@link #url() base url} and any authentication
-   * headers. <br>
-   * <br>
-   * For example: <br>
-   *
-   * <pre>
-   * public Request apply(RequestTemplate input) {
-   *     input.insert(0, url());
-   *     input.replaceHeader(&quot;X-Auth&quot;, currentToken);
-   *     return input.asRequest();
-   * }
-   * </pre>
-   *
-   * <br>
+   * Resolves any templated variables in the requests path, query, or headers against the supplied
+   * unencoded arguments. <br>
    * <br>
    * <br>
    * <b>relationship to JAXRS 2.0</b><br>

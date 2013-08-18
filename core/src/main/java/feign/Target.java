@@ -41,8 +41,8 @@ public interface Target<T> {
   String url();
 
   /**
-   * Targets a template to this target, adding the {@link #url() base url} and any authentication
-   * headers. <br>
+   * Targets a template to this target, adding the {@link #url() base url} and any target-specific
+   * headers or query parameters. <br>
    * <br>
    * For example: <br>
    *

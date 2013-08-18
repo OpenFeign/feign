@@ -28,6 +28,7 @@ import feign.codec.ErrorDecoder;
 import feign.codec.IncrementalDecoder;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,6 +44,7 @@ interface MethodHandler {
     private final Client client;
     private final Lazy<Executor> httpExecutor;
     private final Provider<Retryer> retryer;
+    private final Set<RequestInterceptor> requestInterceptors;
     private final Logger logger;
     private final Provider<Logger.Level> logLevel;
 
@@ -51,11 +53,13 @@ interface MethodHandler {
         Client client,
         @Named("http") Lazy<Executor> httpExecutor,
         Provider<Retryer> retryer,
+        Set<RequestInterceptor> requestInterceptors,
         Logger logger,
         Provider<Logger.Level> logLevel) {
       this.client = checkNotNull(client, "client");
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor");
       this.retryer = checkNotNull(retryer, "retryer");
+      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
     }
@@ -71,6 +75,7 @@ interface MethodHandler {
           target,
           client,
           retryer,
+          requestInterceptors,
           logger,
           logLevel,
           md,
@@ -92,6 +97,7 @@ interface MethodHandler {
               target,
               client,
               retryer,
+              requestInterceptors,
               logger,
               logLevel,
               md,
@@ -142,6 +148,7 @@ interface MethodHandler {
         Target<?> target,
         Client client,
         Provider<Retryer> retryer,
+        Set<RequestInterceptor> requestInterceptors,
         Logger logger,
         Provider<Logger.Level> logLevel,
         MethodMetadata metadata,
@@ -154,6 +161,7 @@ interface MethodHandler {
           target,
           client,
           retryer,
+          requestInterceptors,
           logger,
           logLevel,
           metadata,
@@ -243,6 +251,7 @@ interface MethodHandler {
         Target<?> target,
         Client client,
         Provider<Retryer> retryer,
+        Set<RequestInterceptor> requestInterceptors,
         Logger logger,
         Provider<Logger.Level> logLevel,
         MethodMetadata metadata,
@@ -254,6 +263,7 @@ interface MethodHandler {
           target,
           client,
           retryer,
+          requestInterceptors,
           logger,
           logLevel,
           metadata,
@@ -286,6 +296,7 @@ interface MethodHandler {
     protected final Target<?> target;
     protected final Client client;
     protected final Provider<Retryer> retryer;
+    protected final Set<RequestInterceptor> requestInterceptors;
     protected final Logger logger;
     protected final Provider<Logger.Level> logLevel;
     protected final BuildTemplateFromArgs buildTemplateFromArgs;
@@ -296,6 +307,7 @@ interface MethodHandler {
         Target<?> target,
         Client client,
         Provider<Retryer> retryer,
+        Set<RequestInterceptor> requestInterceptors,
         Logger logger,
         Provider<Logger.Level> logLevel,
         MethodMetadata metadata,
@@ -305,6 +317,8 @@ interface MethodHandler {
       this.target = checkNotNull(target, "target");
       this.client = checkNotNull(client, "client for %s", target);
       this.retryer = checkNotNull(retryer, "retryer for %s", target);
+      this.requestInterceptors =
+          checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
       this.logger = checkNotNull(logger, "logger for %s", target);
       this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
       this.metadata = checkNotNull(metadata, "metadata for %s", target);
@@ -375,6 +389,9 @@ interface MethodHandler {
     }
 
     protected Request targetRequest(RequestTemplate template) {
+      for (RequestInterceptor interceptor : requestInterceptors) {
+        interceptor.apply(template);
+      }
       return target.apply(new RequestTemplate(template));
     }
 
