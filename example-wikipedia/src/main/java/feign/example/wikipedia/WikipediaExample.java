@@ -16,8 +16,6 @@
 package feign.example.wikipedia;
 
 import static dagger.Provides.Type.SET;
-import static feign.Logger.ErrorLogger;
-import static feign.Logger.Level.BASIC;
 
 import com.google.gson.stream.JsonReader;
 import dagger.Module;
@@ -56,7 +54,8 @@ public class WikipediaExample {
 
   public static void main(String... args) throws InterruptedException {
     Wikipedia wikipedia =
-        Feign.create(Wikipedia.class, "http://en.wikipedia.org", new WikipediaModule());
+        Feign.create(
+            Wikipedia.class, "http://en.wikipedia.org", new WikipediaDecoder(), new LogToStderr());
 
     System.out.println("Let's search for PTAL!");
     Iterator<Page> pages = lazySearch(wikipedia, "PTAL");
@@ -101,18 +100,8 @@ public class WikipediaExample {
     };
   }
 
-  @Module(overrides = true, library = true, includes = GsonModule.class)
-  static class WikipediaModule {
-
-    @Provides
-    Logger.Level loggingLevel() {
-      return BASIC;
-    }
-
-    @Provides
-    Logger logger() {
-      return new ErrorLogger();
-    }
+  @Module(library = true, includes = GsonModule.class)
+  static class WikipediaDecoder {
 
     /** add to the set of Decoders one that handles {@code Response<Page>}. */
     @Provides(type = SET)
@@ -140,6 +129,20 @@ public class WikipediaExample {
           return page;
         }
       };
+    }
+  }
+
+  @Module(overrides = true, library = true)
+  static class LogToStderr {
+
+    @Provides
+    Logger.Level loggingLevel() {
+      return Logger.Level.BASIC;
+    }
+
+    @Provides
+    Logger logger() {
+      return new Logger.ErrorLogger();
     }
   }
 }
