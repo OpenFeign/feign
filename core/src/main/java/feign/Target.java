@@ -40,7 +40,7 @@ public interface Target<T> {
 
   /**
    * Targets a template to this target, adding the {@link #url() base url} and
-   * any authentication headers.
+   * any target-specific headers or query parameters.
    * <br>
    * <br>
    * For example:

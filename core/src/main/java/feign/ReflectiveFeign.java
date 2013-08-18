@@ -35,6 +35,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -105,17 +106,15 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  @dagger.Module(complete = false, injects = Feign.class, library = true)
+  @dagger.Module(complete = false, injects = {Feign.class, MethodHandler.Factory.class}, library = true)
   public static class Module {
+    @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> noRequestInterceptors() {
+      return new LinkedHashSet<RequestInterceptor>();
+    }
 
     @Provides Feign provideFeign(ReflectiveFeign in) {
       return in;
     }
-  }
-
-  private static IllegalStateException noConfig(String configKey, Class<?> type) {
-    return new IllegalStateException(format("no configuration for %s present for %s!", configKey,
-        type.getSimpleName()));
   }
 
   static final class ParseHandlersByName {

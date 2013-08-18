@@ -37,6 +37,25 @@ public static void main(String... args) {
 
 Feign includes a fully functional json codec in the `feign-gson` extension.  See the `Decoder` section for how to write your own.
 
+### Request Interceptors
+When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
+For example, if you are acting as an intermediary, you might want to propagate the `X-Forwarded-For` header.
+
+```
+@Module(library = true)
+static class ForwardedForInterceptor implements RequestInterceptor {
+  @Provides(type = SET) RequestInterceptor provideThis() {
+    return this;
+  }
+
+  @Override public void apply(RequestTemplate template) {
+    template.header("X-Forwarded-For", "origin.host.com");
+  }
+}
+...
+GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule(), new ForwardedForInterceptor());
+```
+
 ### Observable Methods
 If specified as the last return type of a method `Observable<T>` will invoke a new http request for each call to `subscribe()`.  This is the async equivalent to an `Iterable`.
 Here's how one looks:
