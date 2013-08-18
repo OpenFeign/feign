@@ -27,6 +27,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,29 +45,31 @@ interface MethodHandler {
     private final Client client;
     private final Lazy<Executor> httpExecutor;
     private final Provider<Retryer> retryer;
+    private final Set<RequestInterceptor> requestInterceptors;
     private final Logger logger;
     private final Provider<Logger.Level> logLevel;
 
-    @Inject Factory(Client client, @Named("http") Lazy<Executor> httpExecutor, Provider<Retryer> retryer, Logger logger,
-                    Provider<Logger.Level> logLevel) {
+    @Inject Factory(Client client, @Named("http") Lazy<Executor> httpExecutor, Provider<Retryer> retryer,
+                    Set<RequestInterceptor> requestInterceptors, Logger logger, Provider<Logger.Level> logLevel) {
       this.client = checkNotNull(client, "client");
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor");
       this.retryer = checkNotNull(retryer, "retryer");
+      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md, BuildTemplateFromArgs buildTemplateFromArgs,
                                 Options options, Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, logger, logLevel, md, buildTemplateFromArgs, options,
-          decoder, errorDecoder);
+      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger, logLevel, md,
+          buildTemplateFromArgs, options, decoder, errorDecoder);
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md, BuildTemplateFromArgs buildTemplateFromArgs,
                                 Options options, IncrementalDecoder.TextStream<?> incrementalDecoder,
                                 ErrorDecoder errorDecoder) {
-      ObserverHandler observerHandler = new ObserverHandler(target, client, retryer, logger, logLevel, md,
-          buildTemplateFromArgs, options, incrementalDecoder, errorDecoder, httpExecutor);
+      ObserverHandler observerHandler = new ObserverHandler(target, client, retryer, requestInterceptors, logger,
+          logLevel, md, buildTemplateFromArgs, options, incrementalDecoder, errorDecoder, httpExecutor);
       return new ObservableMethodHandler(observerHandler);
     }
   }
@@ -106,12 +109,14 @@ interface MethodHandler {
     private final Lazy<Executor> httpExecutor;
     private final IncrementalDecoder.TextStream<?> incrementalDecoder;
 
-    private ObserverHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
+    private ObserverHandler(Target<?> target, Client client, Provider<Retryer> retryer,
+                            Set<RequestInterceptor> requestInterceptors, Logger logger,
                             Provider<Logger.Level> logLevel, MethodMetadata metadata,
                             BuildTemplateFromArgs buildTemplateFromArgs, Options options,
                             IncrementalDecoder.TextStream<?> incrementalDecoder, ErrorDecoder errorDecoder,
                             Lazy<Executor> httpExecutor) {
-      super(target, client, retryer, logger, logLevel, metadata, buildTemplateFromArgs, options, errorDecoder);
+      super(target, client, retryer, requestInterceptors, logger, logLevel, metadata, buildTemplateFromArgs, options,
+          errorDecoder);
       this.httpExecutor = checkNotNull(httpExecutor, "httpExecutor for %s", target);
       this.incrementalDecoder = checkNotNull(incrementalDecoder, "incrementalDecoder for %s", target);
     }
@@ -185,11 +190,13 @@ interface MethodHandler {
   static class SynchronousMethodHandler extends BaseMethodHandler {
     private final Decoder.TextStream<?> decoder;
 
-    private SynchronousMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
+    private SynchronousMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer,
+                                     Set<RequestInterceptor> requestInterceptors, Logger logger,
                                      Provider<Logger.Level> logLevel, MethodMetadata metadata,
                                      BuildTemplateFromArgs buildTemplateFromArgs, Options options,
                                      Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
-      super(target, client, retryer, logger, logLevel, metadata, buildTemplateFromArgs, options, errorDecoder);
+      super(target, client, retryer, requestInterceptors, logger, logLevel, metadata, buildTemplateFromArgs, options,
+          errorDecoder);
       this.decoder = checkNotNull(decoder, "decoder for %s", target);
     }
 
@@ -215,18 +222,21 @@ interface MethodHandler {
     protected final Target<?> target;
     protected final Client client;
     protected final Provider<Retryer> retryer;
+    protected final Set<RequestInterceptor> requestInterceptors;
     protected final Logger logger;
     protected final Provider<Logger.Level> logLevel;
     protected final BuildTemplateFromArgs buildTemplateFromArgs;
     protected final Options options;
     protected final ErrorDecoder errorDecoder;
 
-    private BaseMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer, Logger logger,
+    private BaseMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer,
+                              Set<RequestInterceptor> requestInterceptors, Logger logger,
                               Provider<Logger.Level> logLevel, MethodMetadata metadata,
                               BuildTemplateFromArgs buildTemplateFromArgs, Options options, ErrorDecoder errorDecoder) {
       this.target = checkNotNull(target, "target");
       this.client = checkNotNull(client, "client for %s", target);
       this.retryer = checkNotNull(retryer, "retryer for %s", target);
+      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
       this.logger = checkNotNull(logger, "logger for %s", target);
       this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
       this.metadata = checkNotNull(metadata, "metadata for %s", target);
@@ -294,6 +304,9 @@ interface MethodHandler {
     }
 
     protected Request targetRequest(RequestTemplate template) {
+      for (RequestInterceptor interceptor : requestInterceptors) {
+        interceptor.apply(template);
+      }
       return target.apply(new RequestTemplate(template));
     }
 

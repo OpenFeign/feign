@@ -1,3 +1,6 @@
+### Version 4.3
+* Add ability to configure zero or more RequestInterceptors.
+
 ### Version 4.2/3.3
 * Document and enforce JAX-RS annotation processing from server POV
 * Skip query template parameters when corresponding java arg is null

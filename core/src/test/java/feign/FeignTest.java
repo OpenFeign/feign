@@ -18,6 +18,7 @@ package feign;
 import com.google.common.base.Joiner;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 import com.google.mockwebserver.SocketPolicy;
 import dagger.Lazy;
 import dagger.Module;
@@ -303,6 +304,64 @@ public class FeignTest {
 
       api.body(Arrays.asList("netflix", "denominator", "password"));
       assertEquals(new String(server.takeRequest().getBody()), "[netflix, denominator, password]");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Module(library = true)
+  static class ForwardedForInterceptor implements RequestInterceptor {
+    @Provides(type = SET) RequestInterceptor provideThis() {
+      return this;
+    }
+
+    @Override public void apply(RequestTemplate template) {
+      template.header("X-Forwarded-For", "origin.host.com");
+    }
+  }
+
+  @Test
+  public void singleInterceptor() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new TestInterface.Module(), new ForwardedForInterceptor());
+
+      api.post();
+      assertEquals(server.takeRequest().getHeader("X-Forwarded-For"), "origin.host.com");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Module(library = true)
+  static class UserAgentInterceptor implements RequestInterceptor {
+    @Provides(type = SET) RequestInterceptor provideThis() {
+      return this;
+    }
+
+    @Override public void apply(RequestTemplate template) {
+      template.header("User-Agent", "Feign");
+    }
+  }
+
+  @Test
+  public void multipleInterceptor() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new TestInterface.Module(), new ForwardedForInterceptor(), new UserAgentInterceptor());
+
+      api.post();
+      RecordedRequest request = server.takeRequest();
+      assertEquals(request.getHeader("X-Forwarded-For"), "origin.host.com");
+      assertEquals(request.getHeader("User-Agent"), "Feign");
     } finally {
       server.shutdown();
     }
