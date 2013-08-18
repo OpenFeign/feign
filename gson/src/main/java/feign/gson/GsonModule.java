@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 
-@dagger.Module(library = true, overrides = true)
+@dagger.Module(library = true)
 public final class GsonModule {
 
   @Provides(type = SET) Encoder encoder(GsonCodec codec) {

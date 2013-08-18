@@ -137,7 +137,7 @@ The `GsonModule` in the `feign-gson` extension configures a (`Decoder.TextStream
 
 Here's how you could write this yourself, using whatever library you prefer:
 ```java
-@Module(overrides = true, library = true)
+@Module(library = true)
 static class JsonModule {
   @Provides(type = SET) Decoder decoder(final JsonParser parser) {
     return new Decoder.TextStream<Object>() {
@@ -215,7 +215,7 @@ If you have to only grab a single field from a server response, you may find reg
 
 Here's how our IAM example grabs only one xml element from a response. 
 ```java
-@Module(overrides = true, library = true)
+@Module(library = true)
 static class IAMModule {
   @Provides(type = SET) Decoder arnDecoder() {
     return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");

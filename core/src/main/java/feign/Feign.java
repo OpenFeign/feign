@@ -124,18 +124,6 @@ public abstract class Feign implements Closeable {
       return new Options();
     }
 
-    @Provides Set<Encoder> noEncoders() {
-      return Collections.emptySet();
-    }
-
-    @Provides Set<Decoder> noDecoders() {
-      return Collections.emptySet();
-    }
-
-    @Provides Set<IncrementalDecoder> noIncrementalDecoders() {
-      return Collections.emptySet();
-    }
-
     /**
      * Used for both http invocation and decoding when observers are used.
      */

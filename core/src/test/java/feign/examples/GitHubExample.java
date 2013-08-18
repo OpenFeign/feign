@@ -97,7 +97,7 @@ public class GitHubExample {
   /**
    * Here's how it looks to wire json codecs.  Note, that you can always instead use {@code feign-gson}!
    */
-  @Module(overrides = true, library = true)
+  @Module(library = true)
   static class GsonModule {
 
     @Provides @Singleton Gson gson() {

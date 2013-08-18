@@ -90,7 +90,7 @@ public class FeignTest {
 
     @RequestLine("POST /") Observable<Response> observableResponse();
 
-    @dagger.Module(overrides = true, library = true)
+    @dagger.Module(library = true)
     static class Module {
       @Provides(type = SET) Encoder defaultEncoder() {
         return new Encoder.Text<Object>() {
@@ -108,14 +108,6 @@ public class FeignTest {
         };
       }
 
-      // just run synchronously
-      @Provides @Singleton @Named("http") Executor httpExecutor() {
-        return new Executor() {
-          @Override public void execute(Runnable command) {
-            command.run();
-          }
-        };
-      }
     }
   }
 
@@ -126,7 +118,8 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new TestInterface.Module(), new RunSynchronous());
 
       final AtomicBoolean success = new AtomicBoolean();
 
@@ -160,7 +153,8 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new TestInterface.Module(), new RunSynchronous());
 
       final AtomicBoolean success = new AtomicBoolean();
 
@@ -187,6 +181,17 @@ public class FeignTest {
     }
   }
 
+  @Module(library = true, overrides = true)
+  static class RunSynchronous {
+    @Provides @Singleton @Named("http") Executor httpExecutor() {
+      return new Executor() {
+        @Override public void execute(Runnable command) {
+          command.run();
+        }
+      };
+    }
+  }
+
   @Test
   public void incrementString() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
@@ -194,7 +199,8 @@ public class FeignTest {
     server.play();
 
     try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+          new TestInterface.Module(), new RunSynchronous());
 
       final AtomicBoolean success = new AtomicBoolean();
 
