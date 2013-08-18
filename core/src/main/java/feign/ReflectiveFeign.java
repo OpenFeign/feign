@@ -36,9 +36,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -119,7 +119,22 @@ public class ReflectiveFeign extends Feign {
   public static class Module {
     @Provides(type = Provides.Type.SET_VALUES)
     Set<RequestInterceptor> noRequestInterceptors() {
-      return new LinkedHashSet<RequestInterceptor>();
+      return Collections.emptySet();
+    }
+
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<Encoder> noEncoders() {
+      return Collections.emptySet();
+    }
+
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<Decoder> noDecoders() {
+      return Collections.emptySet();
+    }
+
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<IncrementalDecoder> noIncrementalDecoders() {
+      return Collections.emptySet();
     }
 
     @Provides

@@ -23,16 +23,11 @@ import dagger.Provides;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.IncrementalDecoder;
 import java.io.Closeable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -124,21 +119,6 @@ public abstract class Feign implements Closeable {
     @Provides
     Options options() {
       return new Options();
-    }
-
-    @Provides
-    Set<Encoder> noEncoders() {
-      return Collections.emptySet();
-    }
-
-    @Provides
-    Set<Decoder> noDecoders() {
-      return Collections.emptySet();
-    }
-
-    @Provides
-    Set<IncrementalDecoder> noIncrementalDecoders() {
-      return Collections.emptySet();
     }
 
     /** Used for both http invocation and decoding when observers are used. */
