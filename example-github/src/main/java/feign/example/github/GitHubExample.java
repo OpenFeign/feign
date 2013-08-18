@@ -47,7 +47,7 @@ public class GitHubExample {
   }
 
   public static void main(String... args) throws InterruptedException {
-    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GitHubModule());
+    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule(), new LogToStderr());
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
@@ -95,8 +95,8 @@ public class GitHubExample {
     }
   }
 
-  @Module(overrides = true, library = true, includes = GsonModule.class)
-  static class GitHubModule {
+  @Module(overrides = true, library = true)
+  static class LogToStderr {
 
     @Provides Logger.Level loggingLevel() {
       return Logger.Level.BASIC;
