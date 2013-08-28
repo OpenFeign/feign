@@ -34,6 +34,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -94,6 +96,11 @@ public abstract class Feign implements Closeable {
     @Provides
     SSLSocketFactory sslSocketFactory() {
       return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
+    }
+
+    @Provides
+    HostnameVerifier hostnameVerifier() {
+      return HttpsURLConnection.getDefaultHostnameVerifier();
     }
 
     @Provides
