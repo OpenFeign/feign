@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -49,10 +50,13 @@ public interface Client {
 
   public static class Default implements Client {
     private final Lazy<SSLSocketFactory> sslContextFactory;
+    private final Lazy<HostnameVerifier> hostnameVerifier;
 
     @Inject
-    public Default(Lazy<SSLSocketFactory> sslContextFactory) {
+    public Default(
+        Lazy<SSLSocketFactory> sslContextFactory, Lazy<HostnameVerifier> hostnameVerifier) {
       this.sslContextFactory = sslContextFactory;
+      this.hostnameVerifier = hostnameVerifier;
     }
 
     @Override
@@ -67,6 +71,7 @@ public interface Client {
       if (connection instanceof HttpsURLConnection) {
         HttpsURLConnection sslCon = (HttpsURLConnection) connection;
         sslCon.setSSLSocketFactory(sslContextFactory.get());
+        sslCon.setHostnameVerifier(hostnameVerifier.get());
       }
       connection.setConnectTimeout(options.connectTimeoutMillis());
       connection.setReadTimeout(options.readTimeoutMillis());
