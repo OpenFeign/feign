@@ -36,8 +36,14 @@ public class Util {
   /** The HTTP Content-Length header field name. */
   public static final String CONTENT_LENGTH = "Content-Length";
 
+  /** The HTTP Content-Encoding header field name. */
+  public static final String CONTENT_ENCODING = "Content-Encoding";
+
   /** The HTTP Retry-After header field name. */
   public static final String RETRY_AFTER = "Retry-After";
+
+  /** Value for the Content-Encoding header that indicates that GZIP encoding is in use. */
+  public static final String ENCODING_GZIP = "gzip";
 
   // com.google.common.base.Charsets
   /** UTF-8: eight-bit UCS Transformation Format. */
