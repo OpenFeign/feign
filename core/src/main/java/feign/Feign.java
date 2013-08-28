@@ -29,6 +29,8 @@ import feign.codec.IncrementalDecoder;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.Closeable;
 import java.lang.reflect.Method;
@@ -102,6 +104,11 @@ public abstract class Feign implements Closeable {
 
     @Provides SSLSocketFactory sslSocketFactory() {
       return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
+    }
+
+    @Provides
+    HostnameVerifier hostnameVerifier() {
+        return HttpsURLConnection.getDefaultHostnameVerifier();
     }
 
     @Provides Client httpClient(Client.Default client) {

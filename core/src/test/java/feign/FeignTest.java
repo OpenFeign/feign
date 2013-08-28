@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.Reader;
@@ -522,7 +523,7 @@ public class FeignTest {
     }
   }
 
-  @Module(injects = Client.Default.class, overrides = true)
+  @Module(injects = Client.Default.class, overrides = true, addsTo = Feign.Defaults.class)
   static class TrustSSLSockets {
     @Provides SSLSocketFactory trustingSSLSocketFactory() {
       return TrustingSSLSocketFactory.get();
@@ -531,7 +532,7 @@ public class FeignTest {
 
   @Test public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.useHttps(TrustingSSLSocketFactory.get(), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
     server.play();
 
@@ -544,9 +545,31 @@ public class FeignTest {
     }
   }
 
+  @Module(injects = Client.Default.class, overrides = true, addsTo = Feign.Defaults.class)
+  static class DisableHostnameVerification {
+    @Provides HostnameVerifier acceptAllHostnameVerifier() {
+      return new AcceptAllHostnameVerifier();
+    }
+  }
+
+  @Test public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
+    MockWebServer server = new MockWebServer();
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
+          new TestInterface.Module(), new TrustSSLSockets(), new DisableHostnameVerification());
+      api.post();
+    } finally {
+      server.shutdown();
+    }
+  }
+
   @Test public void retriesFailedHandshake() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.useHttps(TrustingSSLSocketFactory.get(), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
     server.play();
