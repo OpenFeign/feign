@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
@@ -35,7 +36,9 @@ import javax.net.ssl.SSLSocketFactory;
 import dagger.Lazy;
 import feign.Request.Options;
 
+import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.ENCODING_GZIP;
 import static feign.Util.UTF_8;
 
 /**
@@ -81,13 +84,20 @@ public interface Client {
       connection.setInstanceFollowRedirects(true);
       connection.setRequestMethod(request.method());
 
+      Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
+      boolean gzipEncodedRequest = contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
+
       Integer contentLength = null;
       for (String field : request.headers().keySet()) {
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
-            contentLength = Integer.valueOf(value);
+            if (!gzipEncodedRequest) {
+              contentLength = Integer.valueOf(value);
+              connection.addRequestProperty(field, value);
+            }
+          } else {
+            connection.addRequestProperty(field, value);
           }
-          connection.addRequestProperty(field, value);
         }
       }
 
@@ -99,6 +109,9 @@ public interface Client {
         }
         connection.setDoOutput(true);
         OutputStream out = connection.getOutputStream();
+        if (gzipEncodedRequest) {
+          out = new GZIPOutputStream(out);
+        }
         try {
           out.write(request.body().getBytes(UTF_8));
         } finally {
