@@ -16,11 +16,15 @@
 package feign;
 
 import static dagger.Provides.Type.SET;
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
@@ -88,6 +92,10 @@ public class FeignTest {
 
     @RequestLine("POST /")
     void body(List<String> contents);
+
+    @RequestLine("POST /")
+    @Headers("Content-Encoding: gzip")
+    void gzipBody(List<String> contents);
 
     @RequestLine("POST /")
     void form(
@@ -380,7 +388,38 @@ public class FeignTest {
               new TestInterface.Module());
 
       api.body(Arrays.asList("netflix", "denominator", "password"));
-      assertEquals(new String(server.takeRequest().getBody()), "[netflix, denominator, password]");
+      RecordedRequest request = server.takeRequest();
+      assertEquals(request.getHeader("Content-Length"), "32");
+      assertEquals(new String(request.getBody()), "[netflix, denominator, password]");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void postGZIPEncodedBodyParam() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api =
+          Feign.create(
+              TestInterface.class,
+              "http://localhost:" + server.getPort(),
+              new TestInterface.Module());
+
+      api.gzipBody(Arrays.asList("netflix", "denominator", "password"));
+      RecordedRequest request = server.takeRequest();
+      assertNull(request.getHeader("Content-Length"));
+      byte[] compressedBody = request.getBody();
+      String uncompressedBody =
+          CharStreams.toString(
+              CharStreams.newReaderSupplier(
+                  GZIPStreams.newInputStreamSupplier(
+                      ByteStreams.newInputStreamSupplier(compressedBody)),
+                  UTF_8));
+      assertEquals(uncompressedBody, "[netflix, denominator, password]");
     } finally {
       server.shutdown();
     }

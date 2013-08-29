@@ -1,3 +1,7 @@
+### Version 4.4
+* Support overriding default HostnameVerifier
+* Support GZIP content encoding for request bodies
+
 ### Version 4.3
 * Add ability to configure zero or more RequestInterceptors.
 * Remove `overrides = true` on codec modules.
