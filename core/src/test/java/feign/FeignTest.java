@@ -91,6 +91,8 @@ public class FeignTest {
 
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
 
+    @RequestLine("GET /?1={1}&2={2}") Response queryParams(@Named("1") String one, @Named("2") Iterable<String> twos);
+
     @RequestLine("POST /") Observable<Void> observableVoid();
 
     @RequestLine("POST /") Observable<String> observableString();
@@ -114,14 +116,29 @@ public class FeignTest {
           }
         };
       }
+    }
+  }
 
+  @Test
+  public void iterableQueryParams() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+
+      api.queryParams("user", Arrays.asList("apple", "pear"));
+      assertEquals(server.takeRequest().getRequestLine(), "GET /?1=user&2=apple&2=pear HTTP/1.1");
+    } finally {
+      server.shutdown();
     }
   }
 
   @Test
   public void observableVoid() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -156,7 +173,7 @@ public class FeignTest {
   @Test
   public void observableResponse() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -202,7 +219,7 @@ public class FeignTest {
   @Test
   public void incrementString() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -237,8 +254,8 @@ public class FeignTest {
   @Test
   public void multipleObservers() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -275,7 +292,7 @@ public class FeignTest {
   @Test
   public void postTemplateParamsResolve() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -292,7 +309,7 @@ public class FeignTest {
   @Test
   public void postFormParams() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -309,7 +326,7 @@ public class FeignTest {
   @Test
   public void postBodyParam() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -327,7 +344,7 @@ public class FeignTest {
   @Test
   public void postGZIPEncodedBodyParam() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -359,7 +376,7 @@ public class FeignTest {
   @Test
   public void singleInterceptor() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -387,7 +404,7 @@ public class FeignTest {
   @Test
   public void multipleInterceptor() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+    server.enqueue(new MockResponse().setBody("foo"));
     server.play();
 
     try {
@@ -445,7 +462,7 @@ public class FeignTest {
   @Test public void retriesLostConnectionBeforeRead() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -474,7 +491,7 @@ public class FeignTest {
 
   public void overrideTypeSpecificDecoder() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -508,8 +525,8 @@ public class FeignTest {
    */
   public void retryableExceptionInDecoder() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("retry!".getBytes()));
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("retry!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -538,7 +555,7 @@ public class FeignTest {
   @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "error reading response POST http://.*")
   public void doesntRetryAfterResponseIsSent() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -562,7 +579,7 @@ public class FeignTest {
   @Test public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -584,7 +601,7 @@ public class FeignTest {
   @Test public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
@@ -600,7 +617,7 @@ public class FeignTest {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes()));
     server.play();
 
     try {
