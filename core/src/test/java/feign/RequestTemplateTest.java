@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
+
 import static feign.RequestTemplate.expand;
 import static org.testng.Assert.assertEquals;
 
@@ -81,6 +83,20 @@ public class RequestTemplateTest {
 
     assertEquals(template.request().toString(), ""//
         + "GET https://iam.amazonaws.com/?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n");
+  }
+
+  @Test public void resolveTemplateWithBaseAndParameterizedIterableQuery() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .append("/?Query=one").query("Queries", "{queries}");
+
+    template.resolve(ImmutableMap.of("queries", Arrays.asList("us-east-1", "eu-west-1")));
+    assertEquals(template.queries(),
+        ImmutableListMultimap.<String, String> builder()
+                             .put("Query", "one")
+                             .putAll("Queries", "us-east-1", "eu-west-1")
+                             .build().asMap());
+
+    assertEquals(template.toString(), "GET /?Query=one&Queries=us-east-1&Queries=eu-west-1 HTTP/1.1\n");
   }
 
   @Test public void resolveTemplateWithMixedRequestLineParams() throws Exception {
