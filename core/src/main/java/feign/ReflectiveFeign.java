@@ -90,6 +90,18 @@ public class ReflectiveFeign extends Feign {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      if ("equals".equals(method.getName())) {
+        try {
+          Object otherHandler =
+              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+          return equals(otherHandler);
+        } catch (IllegalArgumentException e) {
+          return false;
+        }
+      }
+      if ("hashCode".equals(method.getName())) {
+        return hashCode();
+      }
       return methodToHandler.get(method).invoke(args);
     }
 
@@ -100,8 +112,15 @@ public class ReflectiveFeign extends Feign {
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (FeignInvocationHandler.class != obj.getClass()) return false;
+      if (obj == null) {
+        return false;
+      }
+      if (this == obj) {
+        return true;
+      }
+      if (FeignInvocationHandler.class != obj.getClass()) {
+        return false;
+      }
       FeignInvocationHandler that = FeignInvocationHandler.class.cast(obj);
       return this.target.equals(that.target);
     }
