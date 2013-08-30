@@ -1,7 +1,8 @@
 ### Version 4.4
-* Support overriding default HostnameVerifier
-* Support GZIP content encoding for request bodies
-* Support Iterable args for query parameters
+* Support overriding default HostnameVerifier.
+* Support GZIP content encoding for request bodies.
+* Support Iterable args for query parameters.
+* Support urls which have query parameters.
 
 ### Version 4.3
 * Add ability to configure zero or more RequestInterceptors.
