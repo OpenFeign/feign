@@ -193,8 +193,7 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #url() */
   public RequestTemplate insert(int pos, CharSequence value) {
-    url.insert(pos, value);
-    url = pullAnyQueriesOutOfUrl(url);
+    url.insert(pos, pullAnyQueriesOutOfUrl(new StringBuilder(value)));
     return this;
   }
 
