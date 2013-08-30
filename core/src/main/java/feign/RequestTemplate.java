@@ -82,11 +82,11 @@ public final class RequestTemplate implements Serializable {
    * true)} , except that the template values apply to any part of the request, not just the URL
    */
   public RequestTemplate resolve(Map<String, ?> unencoded) {
+    replaceQueryValues(unencoded);
     Map<String, String> encoded = new LinkedHashMap<String, String>();
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    replaceQueryValues(encoded);
     String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/");
     url = new StringBuilder(resolvedUrl);
 
@@ -484,8 +484,15 @@ public final class RequestTemplate implements Serializable {
         if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
           Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
           // only add non-null expressions
-          if (variableValue != null) {
-            values.add(String.valueOf(variableValue));
+          if (variableValue == null) {
+            continue;
+          }
+          if (variableValue instanceof Iterable) {
+            for (Object val : Iterable.class.cast(variableValue)) {
+              values.add(urlEncode(String.valueOf(val)));
+            }
+          } else {
+            values.add(urlEncode(String.valueOf(variableValue)));
           }
         } else {
           values.add(value);
