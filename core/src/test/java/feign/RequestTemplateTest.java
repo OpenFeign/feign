@@ -122,6 +122,28 @@ public class RequestTemplateTest {
         + "/domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
   }
 
+  @Test public void insertHasQueryParams() throws Exception {
+    RequestTemplate template = new RequestTemplate().method("GET")//
+        .append("/domains/{domainId}/records")//
+        .query("name", "{name}")//
+        .query("type", "{type}");
+
+    template = template.resolve(ImmutableMap.<String, Object>builder()//
+        .put("domainId", 1001)//
+        .put("name", "denominator.io")//
+        .put("type", "CNAME")//
+        .build()
+    );
+
+    assertEquals(template.toString(), ""//
+        + "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+
+    template.insert(0, "https://host/v1.0/1234?provider=foo");
+
+    assertEquals(template.request().toString(), ""//
+        + "GET https://host/v1.0/1234/domains/1001/records?provider=foo&name=denominator.io&type=CNAME HTTP/1.1\n");
+  }
+
   @Test public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
     RequestTemplate template = new RequestTemplate().method("POST")
         .bodyTemplate("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
