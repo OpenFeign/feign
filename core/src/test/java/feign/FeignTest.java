@@ -18,6 +18,7 @@ package feign;
 import static dagger.Provides.Type.SET;
 import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -160,6 +161,11 @@ public class FeignTest {
     } finally {
       server.shutdown();
     }
+  }
+
+  interface OtherTestInterface {
+    @RequestLine("POST /")
+    String post();
   }
 
   @Test
@@ -766,5 +772,24 @@ public class FeignTest {
     } finally {
       server.shutdown();
     }
+  }
+
+  @Test
+  public void equalsAndHashCodeWork() {
+    TestInterface i1 =
+        Feign.create(TestInterface.class, "http://localhost:8080", new TestInterface.Module());
+    TestInterface i2 =
+        Feign.create(TestInterface.class, "http://localhost:8080", new TestInterface.Module());
+    TestInterface i3 =
+        Feign.create(TestInterface.class, "http://localhost:8888", new TestInterface.Module());
+    OtherTestInterface i4 = Feign.create(OtherTestInterface.class, "http://localhost:8080");
+
+    assertTrue(i1.equals(i1));
+    assertTrue(i1.equals(i2));
+    assertFalse(i1.equals(i3));
+    assertFalse(i1.equals(i4));
+
+    assertEquals(i1.hashCode(), i1.hashCode());
+    assertEquals(i1.hashCode(), i2.hashCode());
   }
 }

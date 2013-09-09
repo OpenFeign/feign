@@ -1,3 +1,6 @@
+### Version 4.4.1
+* Fix NullPointerException on calling equals and hashCode.
+
 ### Version 4.4
 * Support overriding default HostnameVerifier.
 * Support GZIP content encoding for request bodies.
