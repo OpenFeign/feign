@@ -25,11 +25,52 @@ import javax.inject.Provider;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
+import static feign.Util.resolveLastTypeParameter;
 
-public class SAXDecoder<T> implements Decoder.TextStream<T> {
+/**
+ * Decodes responses using SAX. Configure using the {@link SAXDecoder.Builder
+ * builder}.
+ * <p/>
+ * 
+ * <pre>
+ * &#064;Provides(type = SET)
+ * Decoder saxDecoder(Provider&lt;ContentHandlerForFoo&gt; foo, //
+ *         Provider&lt;ContentHandlerForBar&gt; bar) {
+ *     return SAXDecoder.builder() //
+ *             .addContentHandler(foo) //
+ *             .addContentHandler(bar) //
+ *             .build();
+ * }
+ * </pre>
+ */
+public class SAXDecoder implements Decoder.TextStream<Object> {
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // builder as dagger doesn't support wildcard bindings, map bindings, or set bindings of providers.
+  public static class Builder {
+    private final Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders =
+        new LinkedHashMap<Type, Provider<? extends ContentHandlerWithResult<?>>>();
+
+    public Builder addContentHandler(Provider<? extends ContentHandlerWithResult<?>> handler) {
+      Type type = resolveLastTypeParameter(checkNotNull(handler, "handler").getClass(), Provider.class);
+      type = resolveLastTypeParameter(type, ContentHandlerWithResult.class);
+      this.handlerProviders.put(type, handler);
+      return this;
+    }
+
+    public SAXDecoder build() {
+      return new SAXDecoder(handlerProviders);
+    }
+  }
+
   /* Implementations are not intended to be shared across requests. */
   public interface ContentHandlerWithResult<T> extends ContentHandler {
     /*
@@ -39,27 +80,17 @@ public class SAXDecoder<T> implements Decoder.TextStream<T> {
     T result();
   }
 
-  private final Provider<? extends ContentHandlerWithResult<T>> handlers;
+  private final Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders;
 
-  /**
-   * You must subclass this, in order to prevent type erasure on {@code T}. In
-   * addition to making a concrete type, you can also use the following form.
-   * <p/>
-   * <br>
-   * <p/>
-   * <pre>
-   * new SaxDecoder&lt;Foo&gt;(fooHandlers) {
-   * }; // note the curly braces ensures no type erasure!
-   * </pre>
-   */
-  protected SAXDecoder(Provider<? extends ContentHandlerWithResult<T>> handlers) {
-    this.handlers = checkNotNull(handlers, "handlers");
+  private SAXDecoder(Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders) {
+    this.handlerProviders = handlerProviders;
   }
 
   @Override
-  public T decode(Reader reader, Type type) throws IOException, DecodeException {
-    ContentHandlerWithResult<T> handler = handlers.get();
-    checkState(handler != null, "%s returned null for type %s", this, type);
+  public Object decode(Reader reader, Type type) throws IOException, DecodeException {
+    Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
+    checkState(handlerProvider != null, "type %s not in configured handlers %s", type, handlerProviders.keySet());
+    ContentHandlerWithResult<?> handler = handlerProvider.get();
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
