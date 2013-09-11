@@ -17,11 +17,9 @@ package feign;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
-import static feign.Util.resolveLastTypeParameter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,18 +50,6 @@ public interface Contract {
       data.returnType(method.getGenericReturnType());
       data.configKey(Feign.configKey(method));
 
-      if (Observable.class.isAssignableFrom(method.getReturnType())) {
-        Type context = method.getGenericReturnType();
-        Type observableType =
-            resolveLastTypeParameter(method.getGenericReturnType(), Observable.class);
-        checkState(
-            observableType != null,
-            "Expected param %s to be Observable<X> or Observable<? super X> or a subtype",
-            context,
-            observableType);
-        data.incrementalType(observableType);
-      }
-
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
@@ -83,10 +69,6 @@ public interface Contract {
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
         } else if (!isHttpAnnotation) {
-          checkState(
-              !Observer.class.isAssignableFrom(parameterTypes[i]),
-              "Please return Observer as opposed to passing an Observable arg: %s",
-              method);
           checkState(
               data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);

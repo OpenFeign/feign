@@ -21,16 +21,13 @@ import static feign.Util.checkState;
 import static feign.Util.resolveLastTypeParameter;
 import static java.lang.String.format;
 
-import dagger.Lazy;
 import dagger.Provides;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.IncrementalDecoder;
 import feign.codec.StringDecoder;
-import feign.codec.StringIncrementalDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -43,9 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 @SuppressWarnings("rawtypes")
 public class ReflectiveFeign extends Feign {
@@ -53,9 +48,7 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
 
   @Inject
-  ReflectiveFeign(
-      @Named("http") Lazy<Executor> httpExecutor, ParseHandlersByName targetToHandlersByName) {
-    super(httpExecutor);
+  ReflectiveFeign(ParseHandlersByName targetToHandlersByName) {
     this.targetToHandlersByName = targetToHandlersByName;
   }
 
@@ -151,11 +144,6 @@ public class ReflectiveFeign extends Feign {
       return Collections.emptySet();
     }
 
-    @Provides(type = Provides.Type.SET_VALUES)
-    Set<IncrementalDecoder> noIncrementalDecoders() {
-      return Collections.emptySet();
-    }
-
     @Provides
     Feign provideFeign(ReflectiveFeign in) {
       return in;
@@ -170,8 +158,6 @@ public class ReflectiveFeign extends Feign {
     private final Encoder.Text<Map<String, ?>> formEncoder;
     private final Map<Type, Decoder.TextStream<?>> decoders =
         new HashMap<Type, Decoder.TextStream<?>>();
-    private final Map<Type, IncrementalDecoder.TextStream<?>> incrementalDecoders =
-        new HashMap<Type, IncrementalDecoder.TextStream<?>>();
     private final ErrorDecoder errorDecoder;
     private final MethodHandler.Factory factory;
 
@@ -182,7 +168,6 @@ public class ReflectiveFeign extends Feign {
         Options options,
         Set<Encoder> encoders,
         Set<Decoder> decoders,
-        Set<IncrementalDecoder> incrementalDecoders,
         ErrorDecoder errorDecoder,
         MethodHandler.Factory factory) {
       this.contract = contract;
@@ -220,20 +205,6 @@ public class ReflectiveFeign extends Feign {
         Type type = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
         this.decoders.put(type, Decoder.TextStream.class.cast(decoder));
       }
-      StringIncrementalDecoder stringIncrementalDecoder = new StringIncrementalDecoder();
-      this.incrementalDecoders.put(Void.class, stringIncrementalDecoder);
-      this.incrementalDecoders.put(Response.class, stringIncrementalDecoder);
-      this.incrementalDecoders.put(String.class, stringIncrementalDecoder);
-      for (IncrementalDecoder incrementalDecoder : incrementalDecoders) {
-        checkState(
-            incrementalDecoder instanceof IncrementalDecoder.TextStream,
-            "Currently, only IncrementalDecoder.TextStream is supported.  Found: ",
-            incrementalDecoder);
-        Type type =
-            resolveLastTypeParameter(incrementalDecoder.getClass(), IncrementalDecoder.class);
-        this.incrementalDecoders.put(
-            type, IncrementalDecoder.TextStream.class.cast(incrementalDecoder));
-      }
     }
 
     public Map<String, MethodHandler> apply(Target key) {
@@ -266,39 +237,19 @@ public class ReflectiveFeign extends Feign {
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
-        if (md.incrementalType() != null) {
-          IncrementalDecoder.TextStream incrementalDecoder =
-              incrementalDecoders.get(md.incrementalType());
-          if (incrementalDecoder == null) {
-            incrementalDecoder = incrementalDecoders.get(Object.class);
-          }
-          if (incrementalDecoder == null) {
-            throw new IllegalStateException(
-                format(
-                    "%s needs @Provides(type = Set) IncrementalDecoder incrementalDecoder(){ //"
-                        + " IncrementalDecoder.TextStream<%s> or"
-                        + " IncrementalDecoder.TextStream<Object>}",
-                    md.configKey(), md.incrementalType()));
-          }
-          result.put(
-              md.configKey(),
-              factory.create(key, md, buildTemplate, options, incrementalDecoder, errorDecoder));
-        } else {
-          Decoder.TextStream decoder = decoders.get(md.returnType());
-          if (decoder == null) {
-            decoder = decoders.get(Object.class);
-          }
-          if (decoder == null) {
-            throw new IllegalStateException(
-                format(
-                    "%s needs @Provides(type = Set) Decoder decoder()"
-                        + "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}",
-                    md.configKey(), md.returnType()));
-          }
-          result.put(
-              md.configKey(),
-              factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+        Decoder.TextStream decoder = decoders.get(md.returnType());
+        if (decoder == null) {
+          decoder = decoders.get(Object.class);
         }
+        if (decoder == null) {
+          throw new IllegalStateException(
+              format(
+                  "%s needs @Provides(type = Set) Decoder decoder()"
+                      + "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}",
+                  md.configKey(), md.returnType()));
+        }
+        result.put(
+            md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
       }
       return result;
     }
