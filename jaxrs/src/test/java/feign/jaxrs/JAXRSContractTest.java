@@ -19,8 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.reflect.TypeToken;
 import feign.MethodMetadata;
-import feign.Observable;
-import feign.Observer;
 import feign.Response;
 import org.testng.annotations.Test;
 
@@ -40,7 +38,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 
@@ -344,39 +341,5 @@ public class JAXRSContractTest {
   @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "HeaderParam.value\\(\\) was empty on parameter 0")
   public void emptyHeaderParam() throws Exception {
     contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("emptyHeaderParam", String.class));
-  }
-
-  interface WithObservable {
-    @GET @Path("/") Observable<List<String>> valid();
-
-    @GET @Path("/") Observable<? extends List<String>> wildcardExtends();
-
-    @GET @Path("/") ParameterizedObservable<List<String>> subtype();
-
-    @GET @Path("/") Observable<List<String>> alsoObserver(Observer<List<String>> observer);
-  }
-
-  interface ParameterizedObservable<T extends List<String>> extends Observable<T> {
-  }
-
-  static final List<String> listString = null;
-
-  @Test public void methodCanHaveObservableReturn() throws Exception {
-    contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
-  }
-
-  @Test public void methodMetadataReturnTypeOnObservableMethodIsItsTypeParameter() throws Exception {
-    Type listStringType = getClass().getDeclaredField("listString").getGenericType();
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
-    assertEquals(md.incrementalType(), listStringType);
-    md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("wildcardExtends"));
-    assertEquals(md.incrementalType(), listStringType);
-    md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("subtype"));
-    assertEquals(md.incrementalType(), listStringType);
-  }
-
-  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Please return Observer as opposed to passing an Observable arg.*")
-  public void noObserverArgs() throws Exception {
-    contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("alsoObserver", Observer.class));
   }
 }
