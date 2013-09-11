@@ -16,7 +16,6 @@
 package feign;
 
 import feign.codec.Decoder;
-import feign.codec.Decoders;
 import feign.codec.StringDecoder;
 import org.testng.annotations.Test;
 
@@ -50,12 +49,6 @@ public class UtilTest {
 
   @Test public void lastTypeFromInstance() throws Exception {
     Decoder.TextStream<?> decoder = new StringDecoder();
-    Type last = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
-    assertEquals(last, String.class);
-  }
-
-  @Test public void lastTypeFromStaticMethod() throws Exception {
-    Decoder.TextStream<?> decoder = Decoders.firstGroup("foo");
     Type last = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
     assertEquals(last, String.class);
   }
