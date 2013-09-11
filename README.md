@@ -1,5 +1,8 @@
 # Feign makes writing java http clients easier
-Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [RxJava](https://github.com/Netflix/RxJava), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
+Feign is a java to http client binder inspired by [Dagger](https://github.com/square/dagger), [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
+
+## Disclaimer
+Feign is experimental and [being simplified further](https://github.com/Netflix/feign/issues/53) in version 5.  Particularly, this will impact how encoders and encoders are declared, and remove support for observable methods.
 
 ### Why Feign and not X?
 
@@ -55,39 +58,6 @@ static class ForwardedForInterceptor implements RequestInterceptor {
 ...
 GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule(), new ForwardedForInterceptor());
 ```
-
-### Observable Methods
-If specified as the last return type of a method `Observable<T>` will invoke a new http request for each call to `subscribe()`.  This is the async equivalent to an `Iterable`.
-Here's how one looks:
-```java
-Observable<Contributor> observable = github.contributorsObservable("netflix", "feign");
-subscription = observable.subscribe(newObserver());
-subscription = observable.subscribe(newObserver());
-```
-
-`Observer<T>` is fired as a background which adds new elements as they are decoded, or until `subscription.unsubscribe()` is called.  Think of `Observer<T>` as an asynchronous equivalent to a lazy sequence.
-
-Here's how one looks:
-```java
-Observer<Contributor> printlnObserver = new Observer<Contributor>() {
-
-  public int count;
-
-  @Override public void onNext(Contributor element) {
-    count++;
-  }
-
-  @Override public void onSuccess() {
-    System.out.println("found " + count + " contributors");
-  }
-
-  @Override public void onFailure(Throwable cause) {
-    cause.printStackTrace();
-  }
-};
-```
-
-For more robust integration with `Observable` check out [RxJava](https://github.com/Netflix/RxJava).
 
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
@@ -158,29 +128,7 @@ The generic parameter of `Decoder.TextStream<T>` designates which The type param
   return new SAXDecoder<ZoneList>(handlers){};
 }
 ```
-#### Incremental Decoding
-The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
 
-When using an `IncrementalCallback<T>`, if `T` is not `Void` or `String`, you'll need to configure an `IncrementalDecoder.TextStream<T>` or a general one for all types (`IncrementalDecoder.TextStream<Object>`).
-
-The `GsonModule` in the `feign-gson` extension configures a (`IncrementalDecoder.TextStream<Object>`) which parses objects from json using reflection.
-
-Here's how you could write this yourself, using whatever library you prefer:
-```java
-@Provides(type = SET) IncrementalDecoder incrementalDecoder(final JsonParser parser) {
-  return new IncrementalDecoder.TextStream<Object>() {
-
-    @Override
-    public void decode(Reader reader, Type type, IncrementalCallback<? super Object> observer) throws IOException {
-      jsonReader.beginArray();
-      while (jsonReader.hasNext()) {
-        observer.onNext(parser.readJson(reader, type));
-      }
-      jsonReader.endArray();
-    }
-  };
-}
-```
 ### Advanced usage and Dagger
 #### Dagger
 Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
