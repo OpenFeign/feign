@@ -25,19 +25,21 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
 import feign.codec.Decoder;
-import feign.codec.Decoders;
+import feign.codec.SAXDecoder;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class IAMExample {
 
   interface IAM {
     @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
-    String arn();
+    Long userId();
   }
 
   public static void main(String... args) {
-
-    IAM iam = Feign.create(new IAMTarget(args[0], args[1]), new IAMModule());
-    System.out.println(iam.arn());
+    IAM iam = Feign.create(new IAMTarget(args[0], args[1]), new DecodeWithSax());
+    System.out.println(iam.userId());
   }
 
   static class IAMTarget extends AWSSignatureVersion4 implements Target<IAM> {
@@ -69,10 +71,40 @@ public class IAMExample {
   }
 
   @Module(library = true)
-  static class IAMModule {
+  static class DecodeWithSax {
     @Provides(type = SET)
-    Decoder decoder() {
-      return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");
+    Decoder saxDecoder(Provider<UserIdHandler> userIdHandler) {
+      return SAXDecoder.builder() //
+          .addContentHandler(userIdHandler) //
+          .build();
+    }
+  }
+
+  static class UserIdHandler extends DefaultHandler
+      implements SAXDecoder.ContentHandlerWithResult<Long> {
+    @Inject
+    UserIdHandler() {}
+
+    private StringBuilder currentText = new StringBuilder();
+
+    private Long userId;
+
+    @Override
+    public Long result() {
+      return userId;
+    }
+
+    @Override
+    public void endElement(String uri, String name, String qName) {
+      if (qName.equals("UserId")) {
+        this.userId = Long.parseLong(currentText.toString().trim());
+      }
+      currentText = new StringBuilder();
+    }
+
+    @Override
+    public void characters(char ch[], int start, int length) {
+      currentText.append(ch, start, length);
     }
   }
 }
