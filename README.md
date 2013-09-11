@@ -158,16 +158,3 @@ class Overrides {
 }
 GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonGitHubModule(), new Overrides());
 ```
-#### Pattern Decoders
-If you have to only grab a single field from a server response, you may find regular expressions less maintenance than writing a type adapter.
-
-Here's how our IAM example grabs only one xml element from a response. 
-```java
-@Module(library = true)
-static class IAMModule {
-  @Provides(type = SET) Decoder arnDecoder() {
-    return Decoders.firstGroup("<Arn>([\\S&&[^<]]+)</Arn>");
-  }
-}
-```
-
