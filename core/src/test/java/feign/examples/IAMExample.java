@@ -25,8 +25,6 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
 import feign.codec.Decoder;
-import feign.codec.Decoders.ApplyFirstGroup;
-import feign.codec.Decoders.TransformFirstGroup;
 import feign.codec.SAXDecoder;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -40,11 +38,8 @@ public class IAMExample {
   }
 
   public static void main(String... args) {
-
-    for (Object decodingApproach : new Object[] {new DecodeWithSax(), new DecodeWithRegEx()}) {
-      IAM iam = Feign.create(new IAMTarget(args[0], args[1]), decodingApproach);
-      System.out.println(iam.userId());
-    }
+    IAM iam = Feign.create(new IAMTarget(args[0], args[1]), new DecodeWithSax());
+    System.out.println(iam.userId());
   }
 
   static class IAMTarget extends AWSSignatureVersion4 implements Target<IAM> {
@@ -72,22 +67,6 @@ public class IAMExample {
     public Request apply(RequestTemplate in) {
       in.insert(0, url());
       return super.apply(in);
-    }
-  }
-
-  @Module(library = true)
-  static class DecodeWithRegEx {
-    @Provides(type = SET)
-    Decoder regExDecoder() {
-      return new TransformFirstGroup<Long>(
-          "<UserId>([0-9]+)</UserId>",
-          new ApplyFirstGroup<Long>() {
-
-            @Override
-            public Long apply(String firstGroup) {
-              return Long.parseLong(firstGroup);
-            }
-          }) {};
     }
   }
 
