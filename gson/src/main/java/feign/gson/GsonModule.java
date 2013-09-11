@@ -26,11 +26,9 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
-import feign.Observer;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import feign.codec.IncrementalDecoder;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,7 +37,6 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 
@@ -54,11 +51,7 @@ public final class GsonModule {
     return codec;
   }
 
-  @Provides(type = SET) IncrementalDecoder incrementalDecoder(GsonCodec codec) {
-    return codec;
-  }
-
-  static class GsonCodec implements Encoder.Text<Object>, Decoder.TextStream<Object>, IncrementalDecoder.TextStream<Object> {
+  static class GsonCodec implements Encoder.Text<Object>, Decoder.TextStream<Object> {
     private final Gson gson;
 
     @Inject GsonCodec(Gson gson) {
@@ -71,15 +64,6 @@ public final class GsonModule {
 
     @Override public Object decode(Reader reader, Type type) throws IOException {
       return fromJson(new JsonReader(reader), type);
-    }
-
-    @Override
-    public void decode(Reader reader, Type type, Observer<? super Object> observer, AtomicBoolean subscribed) throws IOException {
-      JsonReader jsonReader = new JsonReader(reader);
-      jsonReader.beginArray();
-      while (subscribed.get() && jsonReader.hasNext()) {
-        observer.onNext(fromJson(jsonReader, type));
-      }
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {

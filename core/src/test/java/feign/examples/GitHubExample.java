@@ -22,11 +22,8 @@ import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
-import feign.Observable;
-import feign.Observer;
 import feign.RequestLine;
 import feign.codec.Decoder;
-import feign.codec.IncrementalDecoder;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -35,8 +32,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 
@@ -48,9 +43,6 @@ public class GitHubExample {
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
-
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    Observable<Contributor> observable(@Named("owner") String owner, @Named("repo") String repo);
   }
 
   static class Contributor {
@@ -66,20 +58,6 @@ public class GitHubExample {
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
-
-    System.out.println("Let's treat our contributors as an observable.");
-    Observable<Contributor> observable = github.observable("netflix", "feign");
-
-    CountDownLatch latch = new CountDownLatch(2);
-
-    System.out.println("Let's add 2 subscribers.");
-    observable.subscribe(new ContributorObserver(latch));
-    observable.subscribe(new ContributorObserver(latch));
-
-    // wait for the task to complete.
-    latch.await();
-
-    System.exit(0);
   }
 
   @Module(overrides = true, library = true, includes = GsonModule.class)
@@ -107,13 +85,9 @@ public class GitHubExample {
     @Provides(type = SET) Decoder decoder(GsonDecoder gsonDecoder) {
       return gsonDecoder;
     }
-
-    @Provides(type = SET) IncrementalDecoder incrementalDecoder(GsonDecoder gsonDecoder) {
-      return gsonDecoder;
-    }
   }
 
-  static class GsonDecoder implements Decoder.TextStream<Object>, IncrementalDecoder.TextStream<Object> {
+  static class GsonDecoder implements Decoder.TextStream<Object> {
     private final Gson gson;
 
     @Inject GsonDecoder(Gson gson) {
@@ -122,15 +96,6 @@ public class GitHubExample {
 
     @Override public Object decode(Reader reader, Type type) throws IOException {
       return fromJson(new JsonReader(reader), type);
-    }
-
-    @Override
-    public void decode(Reader reader, Type type, Observer<? super Object> observer, AtomicBoolean subscribed) throws IOException {
-      JsonReader jsonReader = new JsonReader(reader);
-      jsonReader.beginArray();
-      while (jsonReader.hasNext() && subscribed.get()) {
-        observer.onNext(fromJson(jsonReader, type));
-      }
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {
@@ -142,31 +107,6 @@ public class GitHubExample {
         }
         throw e;
       }
-    }
-  }
-
-  static class ContributorObserver implements Observer<Contributor> {
-
-    private final CountDownLatch latch;
-    public int count;
-
-    public ContributorObserver(CountDownLatch latch) {
-      this.latch = latch;
-    }
-
-    // parsed directly from the text stream without an intermediate collection.
-    @Override public void onNext(Contributor contributor) {
-      count++;
-    }
-
-    @Override public void onSuccess() {
-      System.out.println("found " + count + " contributors");
-      latch.countDown();
-    }
-
-    @Override public void onFailure(Throwable cause) {
-      cause.printStackTrace();
-      latch.countDown();
     }
   }
 }
