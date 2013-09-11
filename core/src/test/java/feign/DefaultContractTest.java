@@ -23,7 +23,6 @@ import static org.testng.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 import javax.inject.Named;
@@ -310,54 +309,5 @@ public class DefaultContractTest {
 
     assertEquals(md.template().headers().get("Auth-Token"), ImmutableSet.of("{Auth-Token}"));
     assertEquals(md.indexToName().get(0), ImmutableSet.of("Auth-Token"));
-  }
-
-  interface WithObservable {
-    @RequestLine("GET /")
-    Observable<List<String>> valid();
-
-    @RequestLine("GET /")
-    Observable<? extends List<String>> wildcardExtends();
-
-    @RequestLine("GET /")
-    ParameterizedObservable<List<String>> subtype();
-
-    @RequestLine("GET /")
-    Response returnType(Observable<List<String>> one);
-
-    @RequestLine("GET /")
-    Observable<List<String>> alsoObserver(Observer<List<String>> observer);
-  }
-
-  interface ParameterizedObservable<T extends List<String>> extends Observable<T> {}
-
-  static final List<String> listString = null;
-
-  @Test
-  public void methodCanHaveObservableReturn() throws Exception {
-    contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
-  }
-
-  @Test
-  public void methodMetadataReturnTypeOnObservableMethodIsItsTypeParameter() throws Exception {
-    Type listStringType = getClass().getDeclaredField("listString").getGenericType();
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("valid"));
-    assertEquals(md.incrementalType(), listStringType);
-    md =
-        contract.parseAndValidatateMetadata(
-            WithObservable.class.getDeclaredMethod("wildcardExtends"));
-    assertEquals(md.incrementalType(), listStringType);
-    md = contract.parseAndValidatateMetadata(WithObservable.class.getDeclaredMethod("subtype"));
-    assertEquals(md.incrementalType(), listStringType);
-  }
-
-  @Test(
-      expectedExceptions = IllegalStateException.class,
-      expectedExceptionsMessageRegExp =
-          "Please return Observer as opposed to passing an Observable arg.*")
-  public void noObserverArgs() throws Exception {
-    contract.parseAndValidatateMetadata(
-        WithObservable.class.getDeclaredMethod("alsoObserver", Observer.class));
   }
 }

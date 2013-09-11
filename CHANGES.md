@@ -1,3 +1,6 @@
+### Version 5.0
+* Remove support for Observable methods.
+
 ### Version 4.4.1
 * Fix NullPointerException on calling equals and hashCode.
 

@@ -16,15 +16,12 @@
 package feign.gson;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 import com.google.gson.reflect.TypeToken;
 import dagger.Module;
 import dagger.ObjectGraph;
-import feign.Observer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import feign.codec.IncrementalDecoder;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -32,8 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import org.testng.annotations.Test;
 
@@ -43,7 +38,6 @@ public class GsonModuleTest {
   static class EncodersAndDecoders {
     @Inject Set<Encoder> encoders;
     @Inject Set<Decoder> decoders;
-    @Inject Set<IncrementalDecoder> incrementalDecoders;
   }
 
   @Test
@@ -55,9 +49,6 @@ public class GsonModuleTest {
     assertEquals(bindings.encoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
     assertEquals(bindings.decoders.size(), 1);
     assertEquals(bindings.decoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
-    assertEquals(bindings.incrementalDecoders.size(), 1);
-    assertEquals(
-        bindings.incrementalDecoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
   }
 
   @Module(includes = GsonModule.class, library = true, injects = Encoders.class)
@@ -139,50 +130,6 @@ public class GsonModuleTest {
             .cast(bindings.decoders.iterator().next())
             .decode(new StringReader(zonesJson), new TypeToken<List<Zone>>() {}.getType()),
         zones);
-  }
-
-  @Module(includes = GsonModule.class, library = true, injects = IncrementalDecoders.class)
-  static class IncrementalDecoders {
-    @Inject Set<IncrementalDecoder> decoders;
-  }
-
-  @Test
-  public void decodesIncrementally() throws Exception {
-    IncrementalDecoders bindings = new IncrementalDecoders();
-    ObjectGraph.create(bindings).inject(bindings);
-
-    final List<Zone> zones = new LinkedList<Zone>();
-    zones.add(new Zone("denominator.io."));
-    zones.add(new Zone("denominator.io.", "ABCD"));
-
-    final AtomicInteger index = new AtomicInteger(0);
-
-    Observer<Zone> zoneCallback =
-        new Observer<Zone>() {
-
-          @Override
-          public void onNext(Zone element) {
-            assertEquals(element, zones.get(index.getAndIncrement()));
-          }
-
-          @Override
-          public void onSuccess() {
-            // decoder shouldn't call onSuccess
-            fail();
-          }
-
-          @Override
-          public void onFailure(Throwable cause) {
-            // decoder shouldn't call onFailure
-            fail();
-          }
-        };
-
-    IncrementalDecoder.TextStream.class
-        .cast(bindings.decoders.iterator().next())
-        .decode(new StringReader(zonesJson), Zone.class, zoneCallback, new AtomicBoolean(true));
-
-    assertEquals(index.get(), 2);
   }
 
   private String zonesJson =

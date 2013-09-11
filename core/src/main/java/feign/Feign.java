@@ -15,25 +15,15 @@
  */
 package feign;
 
-import static java.lang.Thread.MIN_PRIORITY;
-
-import dagger.Lazy;
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.ErrorDecoder;
-import java.io.Closeable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
@@ -43,7 +33,7 @@ import javax.net.ssl.SSLSocketFactory;
  * In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
  * targeted} http apis.
  */
-public abstract class Feign implements Closeable {
+public abstract class Feign {
 
   /**
    * Returns a new instance of an HTTP API, defined by annotations in the {@link Feign Contract},
@@ -127,28 +117,6 @@ public abstract class Feign implements Closeable {
     Options options() {
       return new Options();
     }
-
-    /** Used for both http invocation and decoding when observers are used. */
-    @Provides
-    @Singleton
-    @Named("http")
-    Executor httpExecutor() {
-      return Executors.newCachedThreadPool(
-          new ThreadFactory() {
-            @Override
-            public Thread newThread(final Runnable r) {
-              return new Thread(
-                  new Runnable() {
-                    @Override
-                    public void run() {
-                      Thread.currentThread().setPriority(MIN_PRIORITY);
-                      r.run();
-                    }
-                  },
-                  MethodHandler.IDLE_THREAD_NAME);
-            }
-          });
-    }
   }
 
   /**
@@ -187,19 +155,5 @@ public abstract class Feign implements Closeable {
     modulesForGraph.add(new ReflectiveFeign.Module());
     if (modules != null) for (Object module : modules) modulesForGraph.add(module);
     return modulesForGraph;
-  }
-
-  private final Lazy<Executor> httpExecutor;
-
-  Feign(Lazy<Executor> httpExecutor) {
-    this.httpExecutor = httpExecutor;
-  }
-
-  @Override
-  public void close() {
-    Executor e = httpExecutor.get();
-    if (e instanceof ExecutorService) {
-      ExecutorService.class.cast(e).shutdownNow();
-    }
   }
 }
