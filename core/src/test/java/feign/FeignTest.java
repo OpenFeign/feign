@@ -22,7 +22,6 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 import com.google.mockwebserver.SocketPolicy;
-import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
 import feign.codec.Decoder;
@@ -42,11 +41,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dagger.Provides.Type.SET;
 import static feign.Util.UTF_8;
@@ -54,26 +49,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 @Test
 // unbound wildcards are not currently injectable in dagger.
 @SuppressWarnings("rawtypes")
 public class FeignTest {
-
-  @Test public void closeShutsdownExecutorService() throws IOException, InterruptedException {
-    final ExecutorService service = Executors.newCachedThreadPool();
-    new Feign(new Lazy<Executor>() {
-      @Override public Executor get() {
-        return service;
-      }
-    }) {
-      @Override public <T> T newInstance(Target<T> target) {
-        return null;
-      }
-    }.close();
-    assertTrue(service.isShutdown());
-  }
 
   interface TestInterface {
     @RequestLine("POST /") String post();
@@ -93,12 +73,6 @@ public class FeignTest {
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
 
     @RequestLine("GET /?1={1}&2={2}") Response queryParams(@Named("1") String one, @Named("2") Iterable<String> twos);
-
-    @RequestLine("POST /") Observable<Void> observableVoid();
-
-    @RequestLine("POST /") Observable<String> observableString();
-
-    @RequestLine("POST /") Observable<Response> observableResponse();
 
     @dagger.Module(library = true)
     static class Module {
@@ -140,76 +114,6 @@ public class FeignTest {
     @RequestLine("POST /") String post();
   }
 
-  @Test
-  public void observableVoid() throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
-          new TestInterface.Module(), new RunSynchronous());
-
-      final AtomicBoolean success = new AtomicBoolean();
-
-      Observer<Void> observer = new Observer<Void>() {
-
-        @Override public void onNext(Void element) {
-          fail("on next isn't valid for void");
-        }
-
-        @Override public void onSuccess() {
-          success.set(true);
-        }
-
-        @Override public void onFailure(Throwable cause) {
-          fail(cause.getMessage());
-        }
-      };
-      api.observableVoid().subscribe(observer);
-
-      assertTrue(success.get());
-      assertEquals(server.getRequestCount(), 1);
-    } finally {
-      server.shutdown();
-    }
-  }
-
-  @Test
-  public void observableResponse() throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
-          new TestInterface.Module(), new RunSynchronous());
-
-      final AtomicBoolean success = new AtomicBoolean();
-
-      Observer<Response> observer = new Observer<Response>() {
-
-        @Override public void onNext(Response element) {
-          assertEquals(element.status(), 200);
-        }
-
-        @Override public void onSuccess() {
-          success.set(true);
-        }
-
-        @Override public void onFailure(Throwable cause) {
-          fail(cause.getMessage());
-        }
-      };
-      api.observableResponse().subscribe(observer);
-
-      assertTrue(success.get());
-      assertEquals(server.getRequestCount(), 1);
-    } finally {
-      server.shutdown();
-    }
-  }
-
   @Module(library = true, overrides = true)
   static class RunSynchronous {
     @Provides @Singleton @Named("http") Executor httpExecutor() {
@@ -218,79 +122,6 @@ public class FeignTest {
           command.run();
         }
       };
-    }
-  }
-
-  @Test
-  public void incrementString() throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
-          new TestInterface.Module(), new RunSynchronous());
-
-      final AtomicBoolean success = new AtomicBoolean();
-
-      Observer<String> observer = new Observer<String>() {
-
-        @Override public void onNext(String element) {
-          assertEquals(element, "foo");
-        }
-
-        @Override public void onSuccess() {
-          success.set(true);
-        }
-
-        @Override public void onFailure(Throwable cause) {
-          fail(cause.getMessage());
-        }
-      };
-      api.observableString().subscribe(observer);
-
-      assertTrue(success.get());
-      assertEquals(server.getRequestCount(), 1);
-    } finally {
-      server.shutdown();
-    }
-  }
-
-  @Test
-  public void multipleObservers() throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
-
-      final CountDownLatch latch = new CountDownLatch(2);
-
-      Observer<String> observer = new Observer<String>() {
-
-        @Override public void onNext(String element) {
-          assertEquals(element, "foo");
-        }
-
-        @Override public void onSuccess() {
-          latch.countDown();
-        }
-
-        @Override public void onFailure(Throwable cause) {
-          fail(cause.getMessage());
-        }
-      };
-
-      Observable<String> observable = api.observableString();
-      observable.subscribe(observer);
-      observable.subscribe(observer);
-      latch.await();
-
-      assertEquals(server.getRequestCount(), 2);
-    } finally {
-      server.shutdown();
     }
   }
 

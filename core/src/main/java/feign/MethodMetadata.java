@@ -30,9 +30,7 @@ public final class MethodMetadata implements Serializable {
 
   private String configKey;
   private transient Type returnType;
-  private transient Type incrementalType;
   private Integer urlIndex;
-  private Integer observerIndex;
   private Integer bodyIndex;
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
@@ -60,19 +58,6 @@ public final class MethodMetadata implements Serializable {
 
   MethodMetadata returnType(Type returnType) {
     this.returnType = returnType;
-    return this;
-  }
-
-  /**
-   * Type that {@link feign.codec.IncrementalDecoder} must process.  If null,
-   * {@link feign.codec.Decoder} will be used against the {@link #returnType()};
-   */
-  public Type incrementalType() {
-    return incrementalType;
-  }
-
-  MethodMetadata incrementalType(Type incrementalType) {
-    this.incrementalType = incrementalType;
     return this;
   }
 
