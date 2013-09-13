@@ -191,7 +191,7 @@ public abstract class Logger {
           log(configKey, "<--- END HTTP (%s-byte body)", bodyAsString.getBytes(UTF_8).length);
           return Response.create(response.status(), response.reason(), response.headers(), bodyAsString);
         } finally {
-          ensureClosed(response.body());
+          ensureClosed(body);
         }
       }
     }

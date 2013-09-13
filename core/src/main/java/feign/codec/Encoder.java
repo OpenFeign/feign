@@ -15,61 +15,70 @@
  */
 package feign.codec;
 
+import feign.RequestTemplate;
+
+import static java.lang.String.format;
+
 /**
- * Encodes an object into an HTTP request body. Like
- * {@code javax.websocket.Encoder}. <br>
- * {@code Encoder} is used when a method parameter has no {@code *Param}
- * annotation. For example: <br>
+ * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}.
+ * {@code Encoder} is used when a method parameter has no {@code @Param} annotation.
+ * For example: <br>
  * <p/>
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
  * void create(User user);
  * </pre>
+ * Example implementation: <br>
+ * <p/>
+ * <pre>
+ * public class GsonEncoder implements Encoder {
+ *   private final Gson gson;
+ *
+ *   public GsonEncoder(Gson gson) {
+ *     this.gson = gson;
+ *   }
+ *
+ *   &#064;Override
+ *   public void encode(Object object, RequestTemplate template) {
+ *     template.body(gson.toJson(object));
+ *   }
+ * }
+ * </pre>
+ *
  * <p/>
  * <h3>Form encoding</h3>
  * <br>
  * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
- * collected and passed to {@code Encoder.Text<Map<String, ?>>}.
+ * collected and passed to the Encoder as a {@code Map<String, ?>}.
  * <br>
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
  * Session login(@Named(&quot;username&quot;) String username, @Named(&quot;password&quot;) String password);
  * </pre>
- *
- * @param <T> widest type an instance of this can encode.
  */
-public interface Encoder<T> {
+public interface Encoder {
+  /**
+   * Converts objects to an appropriate representation in the template.
+   *
+   * @param object what to encode as the request body.
+   * @param template the request template to populate.
+   * @throws EncodeException when encoding failed due to a checked exception.
+   */
+  void encode(Object object, RequestTemplate template) throws EncodeException;
 
   /**
-   * Converts objects to an appropriate text representation. <br>
-   * Ex. <br>
-   * <p/>
-   * <pre>
-   * public class GsonEncoder implements Encoder.Text&lt;Object&gt; {
-   *     private final Gson gson;
-   *
-   *     public GsonEncoder(Gson gson) {
-   *         this.gson = gson;
-   *     }
-   *
-   *     &#064;Override
-   *     public String encode(Object object) {
-   *         return gson.toJson(object);
-   *     }
-   * }
-   * </pre>
+   * Default implementation of {@code Encoder} that supports {@code String}s only.
    */
-  interface Text<T> extends Encoder<T> {
-    /**
-     * Implement this to encode an object as a String.. If you need to wrap
-     * exceptions, please do so via {@link EncodeException}
-     *
-     * @param object what to encode as the request body.
-     * @return the encoded object as a string. * @throws EncodeException
-     *         when encoding failed due to a checked exception.
-     */
-    String encode(T object) throws EncodeException;
+  public class Default implements Encoder {
+    @Override
+    public void encode(Object object, RequestTemplate template) throws EncodeException {
+      if (object instanceof String) {
+        template.body(object.toString());
+      } else if (object != null) {
+        throw new EncodeException(format("%s is not a type supported by this encoder.", object.getClass()));
+      }
+    }
   }
 }

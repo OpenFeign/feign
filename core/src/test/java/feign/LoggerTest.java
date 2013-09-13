@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static dagger.Provides.Type.SET;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -132,10 +131,10 @@ public class LoggerTest {
       this.logLevel = logLevel;
     }
 
-    @Provides(type = SET) Encoder defaultEncoder() {
-      return new Encoder.Text<Object>() {
-        @Override public String encode(Object object) {
-          return object.toString();
+    @Provides Encoder defaultEncoder() {
+      return new Encoder() {
+        @Override public void encode(Object object, RequestTemplate template) {
+          template.body(object.toString());
         }
       };
     }
