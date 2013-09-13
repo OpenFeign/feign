@@ -20,52 +20,54 @@ import static org.testng.Assert.assertEquals;
 import com.google.gson.reflect.TypeToken;
 import dagger.Module;
 import dagger.ObjectGraph;
+import feign.RequestTemplate;
+import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.inject.Inject;
 import org.testng.annotations.Test;
 
 @Test
 public class GsonModuleTest {
-  @Module(includes = GsonModule.class, library = true, injects = EncodersAndDecoders.class)
-  static class EncodersAndDecoders {
-    @Inject Set<Encoder> encoders;
-    @Inject Set<Decoder> decoders;
+  @Module(includes = GsonModule.class, library = true, injects = EncoderAndDecoderBindings.class)
+  static class EncoderAndDecoderBindings {
+    @Inject Encoder encoder;
+    @Inject Decoder decoder;
   }
 
   @Test
-  public void providesEncoderDecoderAndIncrementalDecoder() throws Exception {
-    EncodersAndDecoders bindings = new EncodersAndDecoders();
+  public void providesEncoderDecoder() throws Exception {
+    EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
-    assertEquals(bindings.encoders.size(), 1);
-    assertEquals(bindings.encoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
-    assertEquals(bindings.decoders.size(), 1);
-    assertEquals(bindings.decoders.iterator().next().getClass(), GsonModule.GsonCodec.class);
+    assertEquals(bindings.encoder.getClass(), GsonModule.GsonCodec.class);
+    assertEquals(bindings.decoder.getClass(), GsonModule.GsonCodec.class);
   }
 
-  @Module(includes = GsonModule.class, library = true, injects = Encoders.class)
-  static class Encoders {
-    @Inject Set<Encoder> encoders;
+  @Module(includes = GsonModule.class, library = true, injects = EncoderBindings.class)
+  static class EncoderBindings {
+    @Inject Encoder encoder;
   }
 
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
-    Encoders bindings = new Encoders();
+    EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
     Map<String, Object> map = new LinkedHashMap<String, Object>();
     map.put("foo", 1);
 
+    RequestTemplate template = new RequestTemplate();
+    bindings.encoder.encode(map, template);
     assertEquals(
-        Encoder.Text.class.cast(bindings.encoders.iterator().next()).encode(map),
+        template.body(),
         "" //
             + "{\n" //
             + "  \"foo\": 1\n" //
@@ -75,15 +77,17 @@ public class GsonModuleTest {
   @Test
   public void encodesFormParams() throws Exception {
 
-    Encoders bindings = new Encoders();
+    EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
     Map<String, Object> form = new LinkedHashMap<String, Object>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
+    RequestTemplate template = new RequestTemplate();
+    bindings.encoder.encode(form, template);
     assertEquals(
-        Encoder.Text.class.cast(bindings.encoders.iterator().next()).encode(form),
+        template.body(),
         "" //
             + "{\n" //
             + "  \"foo\": 1,\n" //
@@ -111,25 +115,24 @@ public class GsonModuleTest {
     private static final long serialVersionUID = 1L;
   }
 
-  @Module(includes = GsonModule.class, library = true, injects = Decoders.class)
-  static class Decoders {
-    @Inject Set<Decoder> decoders;
+  @Module(includes = GsonModule.class, library = true, injects = DecoderBindings.class)
+  static class DecoderBindings {
+    @Inject Decoder decoder;
   }
 
   @Test
   public void decodes() throws Exception {
-    Decoders bindings = new Decoders();
+    DecoderBindings bindings = new DecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
     assertEquals(
-        Decoder.TextStream.class
-            .cast(bindings.decoders.iterator().next())
-            .decode(new StringReader(zonesJson), new TypeToken<List<Zone>>() {}.getType()),
-        zones);
+        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
   }
 
   private String zonesJson =
