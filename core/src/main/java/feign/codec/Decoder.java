@@ -19,6 +19,7 @@ import static java.lang.String.format;
 
 import feign.FeignException;
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -73,16 +74,19 @@ public interface Decoder {
    * {@code String} signatures.
    */
   public class Default implements Decoder {
-    private final StringDecoder stringDecoder = new StringDecoder();
-
     @Override
     public Object decode(Response response, Type type) throws IOException {
       if (Response.class.equals(type)) {
-        return response;
-      } else if (String.class.equals(type)) {
-        return stringDecoder.decode(response, type);
+        String bodyString = null;
+        if (response.body() != null) {
+          bodyString = Util.toString(response.body().asReader());
+        }
+        return Response.create(
+            response.status(), response.reason(), response.headers(), bodyString);
       } else if (void.class.equals(type) || response.body() == null) {
         return null;
+      } else if (String.class.equals(type)) {
+        return Util.toString(response.body().asReader());
       }
       throw new DecodeException(format("%s is not a type supported by this decoder.", type));
     }
