@@ -20,6 +20,8 @@ import dagger.Provides;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -106,6 +108,16 @@ public abstract class Feign {
     @Provides
     Logger noOp() {
       return new NoOpLogger();
+    }
+
+    @Provides
+    Encoder defaultEncoder() {
+      return new Encoder.Default();
+    }
+
+    @Provides
+    Decoder defaultDecoder() {
+      return new Decoder.Default();
     }
 
     @Provides

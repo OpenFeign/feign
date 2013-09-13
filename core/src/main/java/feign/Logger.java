@@ -185,7 +185,7 @@ public abstract class Logger {
           return Response.create(
               response.status(), response.reason(), response.headers(), bodyAsString);
         } finally {
-          ensureClosed(response.body());
+          ensureClosed(body);
         }
       }
     }

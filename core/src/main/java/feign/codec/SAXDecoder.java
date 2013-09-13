@@ -17,8 +17,10 @@ package feign.codec;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
+import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
+import feign.Response;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -37,7 +39,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <p>
  *
  * <pre>
- * &#064;Provides(type = SET)
+ * &#064;Provides
  * Decoder saxDecoder(Provider&lt;ContentHandlerForFoo&gt; foo, //
  *         Provider&lt;ContentHandlerForBar&gt; bar) {
  *     return SAXDecoder.builder() //
@@ -47,7 +49,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * }
  * </pre>
  */
-public class SAXDecoder implements Decoder.TextStream<Object> {
+public class SAXDecoder implements Decoder {
 
   public static Builder builder() {
     return new Builder();
@@ -88,7 +90,10 @@ public class SAXDecoder implements Decoder.TextStream<Object> {
   }
 
   @Override
-  public Object decode(Reader reader, Type type) throws IOException, DecodeException {
+  public Object decode(Response response, Type type) throws IOException, DecodeException {
+    if (response.body() == null) {
+      return null;
+    }
     Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
     checkState(
         handlerProvider != null,
@@ -101,7 +106,12 @@ public class SAXDecoder implements Decoder.TextStream<Object> {
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
       xmlReader.setFeature("http://xml.org/sax/features/validation", false);
       xmlReader.setContentHandler(handler);
-      xmlReader.parse(new InputSource(reader));
+      Reader reader = response.body().asReader();
+      try {
+        xmlReader.parse(new InputSource(reader));
+      } finally {
+        ensureClosed(reader);
+      }
       return handler.result();
     } catch (SAXException e) {
       throw new DecodeException(e.getMessage(), e);

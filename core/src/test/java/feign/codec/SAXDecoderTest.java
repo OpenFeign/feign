@@ -15,15 +15,15 @@
  */
 package feign.codec;
 
-import static dagger.Provides.Type.SET;
 import static org.testng.Assert.assertEquals;
 
 import dagger.ObjectGraph;
 import dagger.Provides;
+import feign.Response;
 import java.io.IOException;
-import java.io.StringReader;
 import java.text.ParseException;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import org.testng.annotations.BeforeClass;
@@ -36,7 +36,7 @@ public class SAXDecoderTest {
 
   @dagger.Module(injects = SAXDecoderTest.class)
   static class Module {
-    @Provides(type = SET)
+    @Provides
     Decoder saxDecoder(
         Provider<NetworkStatusHandler> networkStatus, //
         Provider<NetworkStatusStringHandler> networkStatusAsString) {
@@ -47,7 +47,7 @@ public class SAXDecoderTest {
     }
   }
 
-  @Inject Set<Decoder> decoders;
+  @Inject Decoder decoder;
 
   @BeforeClass
   void inject() {
@@ -56,10 +56,8 @@ public class SAXDecoderTest {
 
   @Test
   public void parsesConfiguredTypes() throws ParseException, IOException {
-    Decoder decoder = decoders.iterator().next();
-    assertEquals(
-        decoder.decode(new StringReader(statusFailed), NetworkStatus.class), NetworkStatus.FAILED);
-    assertEquals(decoder.decode(new StringReader(statusFailed), String.class), "Failed");
+    assertEquals(decoder.decode(statusFailedResponse(), NetworkStatus.class), NetworkStatus.FAILED);
+    assertEquals(decoder.decode(statusFailedResponse(), String.class), "Failed");
   }
 
   @Test(
@@ -67,8 +65,12 @@ public class SAXDecoderTest {
       expectedExceptionsMessageRegExp =
           "type int not in configured handlers \\[class .*NetworkStatus, class java.lang.String\\]")
   public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
-    Decoder decoder = decoders.iterator().next();
-    decoder.decode(new StringReader(statusFailed), int.class);
+    decoder.decode(statusFailedResponse(), int.class);
+  }
+
+  private Response statusFailedResponse() {
+    return Response.create(
+        200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed);
   }
 
   static String statusFailed =

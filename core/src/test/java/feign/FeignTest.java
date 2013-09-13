@@ -36,7 +36,6 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
@@ -86,24 +85,18 @@ public class FeignTest {
     @RequestLine("GET /?1={1}&2={2}")
     Response queryParams(@Named("1") String one, @Named("2") Iterable<String> twos);
 
-    @dagger.Module(library = true)
+    @dagger.Module(overrides = true, library = true)
     static class Module {
-      @Provides(type = SET)
+      @Provides
       Encoder defaultEncoder() {
-        return new Encoder.Text<Object>() {
+        return new Encoder() {
           @Override
-          public String encode(Object object) {
-            return object.toString();
-          }
-        };
-      }
-
-      @Provides(type = SET)
-      Encoder formEncoder() {
-        return new Encoder.Text<Map<String, ?>>() {
-          @Override
-          public String encode(Map<String, ?> object) {
-            return Joiner.on(',').withKeyValueSeparator("=").join(object);
+          public void encode(Object object, RequestTemplate template) {
+            if (object instanceof Map) {
+              template.body(Joiner.on(',').withKeyValueSeparator("=").join((Map) object));
+            } else {
+              template.body(object.toString());
+            }
           }
         };
       }
@@ -390,11 +383,11 @@ public class FeignTest {
 
   @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
   static class DecodeFail {
-    @Provides(type = SET)
+    @Provides
     Decoder decoder() {
-      return new Decoder.TextStream<String>() {
+      return new Decoder() {
         @Override
-        public String decode(Reader reader, Type type) throws IOException {
+        public Object decode(Response response, Type type) {
           return "fail";
         }
       };
@@ -420,12 +413,12 @@ public class FeignTest {
 
   @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
   static class RetryableExceptionOnRetry {
-    @Provides(type = SET)
+    @Provides
     Decoder decoder() {
       return new StringDecoder() {
         @Override
-        public String decode(Reader reader, Type type) throws RetryableException, IOException {
-          String string = super.decode(reader, type);
+        public Object decode(Response response, Type type) throws IOException, FeignException {
+          String string = super.decode(response, type).toString();
           if ("retry!".equals(string)) throw new RetryableException(string, null);
           return string;
         }
@@ -456,11 +449,11 @@ public class FeignTest {
 
   @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
   static class IOEOnDecode {
-    @Provides(type = SET)
+    @Provides
     Decoder decoder() {
-      return new Decoder.TextStream<String>() {
+      return new Decoder() {
         @Override
-        public String decode(Reader reader, Type type) throws IOException {
+        public Object decode(Response response, Type type) throws IOException {
           throw new IOException("error reading response");
         }
       };

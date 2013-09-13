@@ -15,7 +15,7 @@
  */
 package feign.examples;
 
-import static dagger.Provides.Type.SET;
+import static feign.Util.ensureClosed;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -25,6 +25,7 @@ import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
+import feign.Response;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.Reader;
@@ -84,13 +85,13 @@ public class GitHubExample {
       return new Gson();
     }
 
-    @Provides(type = SET)
+    @Provides
     Decoder decoder(GsonDecoder gsonDecoder) {
       return gsonDecoder;
     }
   }
 
-  static class GsonDecoder implements Decoder.TextStream<Object> {
+  static class GsonDecoder implements Decoder {
     private final Gson gson;
 
     @Inject
@@ -99,8 +100,16 @@ public class GitHubExample {
     }
 
     @Override
-    public Object decode(Reader reader, Type type) throws IOException {
-      return fromJson(new JsonReader(reader), type);
+    public Object decode(Response response, Type type) throws IOException {
+      if (response.body() == null) {
+        return null;
+      }
+      Reader reader = response.body().asReader();
+      try {
+        return fromJson(new JsonReader(reader), type);
+      } finally {
+        ensureClosed(reader);
+      }
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {
