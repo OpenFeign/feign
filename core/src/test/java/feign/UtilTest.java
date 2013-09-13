@@ -16,7 +16,6 @@
 package feign;
 
 import feign.codec.Decoder;
-import feign.codec.StringDecoder;
 import org.testng.annotations.Test;
 
 import java.io.Reader;
@@ -31,42 +30,44 @@ public class UtilTest {
 
   interface LastTypeParameter {
     final List<String> LIST_STRING = null;
-    final Decoder.TextStream<List<String>> DECODER_LIST_STRING = null;
-    final Decoder.TextStream<? extends List<String>> DECODER_WILDCARD_LIST_STRING = null;
+    final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
+    final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
     final ParameterizedDecoder<List<String>> PARAMETERIZED_DECODER_LIST_STRING = null;
     final ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
   }
 
-  interface ParameterizedDecoder<T extends List<String>> extends Decoder.TextStream<T> {
+  interface ParameterizedDecoder<T extends List<String>> extends Decoder {
+  }
+
+  interface Parameterized<T> {
+  }
+
+  class ParameterizedSubtype implements Parameterized<String> {
   }
 
   @Test public void resolveLastTypeParameterWhenNotSubtype() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("DECODER_LIST_STRING").getGenericType();
+    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
-    Type last = resolveLastTypeParameter(context, Decoder.class);
+    Type last = resolveLastTypeParameter(context, Parameterized.class);
     assertEquals(last, listStringType);
   }
 
   @Test public void lastTypeFromInstance() throws Exception {
-    Decoder.TextStream<?> decoder = new StringDecoder();
-    Type last = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
+    Parameterized instance = new ParameterizedSubtype();
+    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
     assertEquals(last, String.class);
   }
 
   @Test public void lastTypeFromAnonymous() throws Exception {
-    Decoder.TextStream<?> decoder = new Decoder.TextStream<Reader>() {
-      @Override public Reader decode(Reader reader, Type type) {
-        return null;
-      }
-    };
-    Type last = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
+    Parameterized instance = new Parameterized<Reader>() {};
+    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
     assertEquals(last, Reader.class);
   }
 
   @Test public void resolveLastTypeParameterWhenWildcard() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("DECODER_WILDCARD_LIST_STRING").getGenericType();
+    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_WILDCARD_LIST_STRING").getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
-    Type last = resolveLastTypeParameter(context, Decoder.class);
+    Type last = resolveLastTypeParameter(context, Parameterized.class);
     assertEquals(last, listStringType);
   }
 

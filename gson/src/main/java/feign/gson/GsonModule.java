@@ -26,8 +26,9 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
+import feign.RequestTemplate;
+import feign.Response;
 import feign.codec.Decoder;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
 
 import javax.inject.Inject;
@@ -38,32 +39,40 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
 
-import static dagger.Provides.Type.SET;
+import static feign.Util.ensureClosed;
 
 @dagger.Module(library = true)
 public final class GsonModule {
 
-  @Provides(type = SET) Encoder encoder(GsonCodec codec) {
+  @Provides Encoder encoder(GsonCodec codec) {
     return codec;
   }
 
-  @Provides(type = SET) Decoder decoder(GsonCodec codec) {
+  @Provides Decoder decoder(GsonCodec codec) {
     return codec;
   }
 
-  static class GsonCodec implements Encoder.Text<Object>, Decoder.TextStream<Object> {
+  static class GsonCodec implements Encoder, Decoder {
     private final Gson gson;
 
     @Inject GsonCodec(Gson gson) {
       this.gson = gson;
     }
 
-    @Override public String encode(Object object) throws EncodeException {
-      return gson.toJson(object);
+    @Override public void encode(Object object, RequestTemplate template) {
+      template.body(gson.toJson(object));
     }
 
-    @Override public Object decode(Reader reader, Type type) throws IOException {
-      return fromJson(new JsonReader(reader), type);
+    @Override public Object decode(Response response, Type type) throws IOException {
+      if (response.body() == null) {
+        return null;
+      }
+      Reader reader = response.body().asReader();
+      try {
+        return fromJson(new JsonReader(reader), type);
+      } finally {
+        ensureClosed(reader);
+      }
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {

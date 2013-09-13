@@ -21,16 +21,13 @@ import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
 
 import javax.inject.Inject;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +36,6 @@ import java.util.Set;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.resolveLastTypeParameter;
-import static java.lang.String.format;
 
 @SuppressWarnings("rawtypes")
 public class ReflectiveFeign extends Feign {
@@ -122,14 +116,6 @@ public class ReflectiveFeign extends Feign {
       return Collections.emptySet();
     }
 
-    @Provides(type = Provides.Type.SET_VALUES) Set<Encoder> noEncoders() {
-      return Collections.emptySet();
-    }
-
-    @Provides(type = Provides.Type.SET_VALUES) Set<Decoder> noDecoders() {
-      return Collections.emptySet();
-    }
-
     @Provides Feign provideFeign(ReflectiveFeign in) {
       return in;
     }
@@ -138,46 +124,20 @@ public class ReflectiveFeign extends Feign {
   static final class ParseHandlersByName {
     private final Contract contract;
     private final Options options;
-    private final Map<Type, Encoder.Text<? super Object>> encoders = new HashMap<Type, Encoder.Text<? super Object>>();
-    private final Encoder.Text<Map<String, ?>> formEncoder;
-    private final Map<Type, Decoder.TextStream<?>> decoders = new HashMap<Type, Decoder.TextStream<?>>();
+    private final Encoder encoder;
+    private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
     private final MethodHandler.Factory factory;
 
     @SuppressWarnings("unchecked")
-    @Inject ParseHandlersByName(Contract contract, Options options, Set<Encoder> encoders, Set<Decoder> decoders,
+    @Inject ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
                                 ErrorDecoder errorDecoder, MethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
       this.errorDecoder = errorDecoder;
-      for (Encoder encoder : encoders) {
-        checkState(encoder instanceof Encoder.Text,
-            "Currently, only Encoder.Text is supported.  Found: ", encoder);
-        Type type = resolveLastTypeParameter(encoder.getClass(), Encoder.class);
-        this.encoders.put(type, Encoder.Text.class.cast(encoder));
-      }
-      try {
-        Type formEncoderType = getClass().getDeclaredField("formEncoder").getGenericType();
-        Type formType = resolveLastTypeParameter(formEncoderType, Encoder.class);
-        Encoder.Text<? super Object> formEncoder = this.encoders.get(formType);
-        if (formEncoder == null) {
-          formEncoder = this.encoders.get(Object.class);
-        }
-        this.formEncoder = (Encoder.Text) formEncoder;
-      } catch (NoSuchFieldException e) {
-        throw new AssertionError(e);
-      }
-      StringDecoder stringDecoder = new StringDecoder();
-      this.decoders.put(void.class, stringDecoder);
-      this.decoders.put(Response.class, stringDecoder);
-      this.decoders.put(String.class, stringDecoder);
-      for (Decoder decoder : decoders) {
-        checkState(decoder instanceof Decoder.TextStream,
-            "Currently, only Decoder.TextStream is supported.  Found: ", decoder);
-        Type type = resolveLastTypeParameter(decoder.getClass(), Decoder.class);
-        this.decoders.put(type, Decoder.TextStream.class.cast(decoder));
-      }
+      this.encoder = checkNotNull(encoder, "encoder");
+      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     public Map<String, MethodHandler> apply(Target key) {
@@ -186,31 +146,11 @@ public class ReflectiveFeign extends Feign {
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          if (formEncoder == null) {
-            throw new IllegalStateException(format("%s needs @Provides(type = Set) Encoder encoder()" +
-                "{ // Encoder.Text<Map<String, ?>> or Encoder.Text<Object>}", md.configKey()));
-          }
-          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, formEncoder);
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder);
         } else if (md.bodyIndex() != null) {
-          Encoder.Text<? super Object> encoder = encoders.get(md.bodyType());
-          if (encoder == null) {
-            encoder = encoders.get(Object.class);
-          }
-          if (encoder == null) {
-            throw new IllegalStateException(format("%s needs @Provides(type = Set) Encoder encoder()" +
-                "{ // Encoder.Text<%s> or Encoder.Text<Object>}", md.configKey(), md.bodyType()));
-          }
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
-        }
-        Decoder.TextStream decoder = decoders.get(md.returnType());
-        if (decoder == null) {
-          decoder = decoders.get(Object.class);
-        }
-        if (decoder == null) {
-          throw new IllegalStateException(format("%s needs @Provides(type = Set) Decoder decoder()" +
-              "{ // Decoder.TextStream<%s> or Decoder.TextStream<Object>}", md.configKey(), md.returnType()));
         }
         result.put(md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
       }
@@ -249,11 +189,11 @@ public class ReflectiveFeign extends Feign {
   }
 
   private static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
-    private final Encoder.Text<Map<String, ?>> formEncoder;
+    private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder.Text<Map<String, ?>> formEncoder) {
+    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
       super(metadata);
-      this.formEncoder = formEncoder;
+      this.encoder = encoder;
     }
 
     @Override
@@ -264,7 +204,7 @@ public class ReflectiveFeign extends Feign {
           formVariables.put(entry.getKey(), entry.getValue());
       }
       try {
-        mutable.body(formEncoder.encode(formVariables));
+        encoder.encode(formVariables, mutable);
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
@@ -275,9 +215,9 @@ public class ReflectiveFeign extends Feign {
   }
 
   private static class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
-    private final Encoder.Text<? super Object> encoder;
+    private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder.Text<? super Object> encoder) {
+    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
       super(metadata);
       this.encoder = encoder;
     }
@@ -287,7 +227,7 @@ public class ReflectiveFeign extends Feign {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       try {
-        mutable.body(encoder.encode(body));
+        encoder.encode(body, mutable);
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {

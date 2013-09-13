@@ -19,64 +19,73 @@ import feign.FeignException;
 import feign.Response;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
 
+import static java.lang.String.format;
+
 /**
- * Decodes an HTTP response into a given type. Invoked when
+ * Decodes an HTTP response into a single object of the given {@code Type}. Invoked when
  * {@link Response#status()} is in the 2xx range. Like
  * {@code javax.websocket.Decoder}, except that the decode method is passed the
- * generic type of the target. <br>
+ * generic type of the target.
  *
- * @param <I> input that can be derived from {@link feign.Response.Body}.
- * @param <T> widest type an instance of this can decode.
+ * <p>
+ * Example Implementation:<br>
+ * <p/>
+ * <pre>
+ * public class GsonDecoder implements Decoder {
+ *   private final Gson gson;
+ *
+ *   public GsonDecoder(Gson gson) {
+ *     this.gson = gson;
+ *   }
+ *
+ *   &#064;Override
+ *   public Object decode(Response response, Type type) throws IOException {
+ *     try {
+ *       return gson.fromJson(response.body().asReader(), type);
+ *     } catch (JsonIOException e) {
+ *       if (e.getCause() != null &amp;&amp;
+ *           e.getCause() instanceof IOException) {
+ *         throw IOException.class.cast(e.getCause());
+ *       }
+ *       throw e;
+ *     }
+ *   }
+ * }
+ * </pre>
  */
-public interface Decoder<I, T> {
+public interface Decoder {
   /**
-   * Implement this to decode a resource to an object into a single object.
+   * Decodes a response into a single object.
    * If you need to wrap exceptions, please do so via {@link DecodeException}.
    *
-   * @param input if {@code Closeable}, no need to close this, as the caller
-   *              manages resources.
+   * @param response the response to decode
    * @param type  Target object type.
    * @return instance of {@code type}
    * @throws IOException     will be propagated safely to the caller.
-   * @throws DecodeException when decoding failed due to a checked exception
-   *                         besides IOException.
-   * @throws FeignException  when decoding succeeds, but conveys the operation
-   *                         failed.
+   * @throws DecodeException when decoding failed due to a checked exception besides IOException.
+   * @throws FeignException  when decoding succeeds, but conveys the operation failed.
    */
-  T decode(I input, Type type) throws IOException, DecodeException, FeignException;
+  Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
   /**
-   * Used for text-based apis, follows
-   * {@link Decoder#decode(Object, java.lang.reflect.Type)}
-   * semantics, applied to inputs of type {@link java.io.Reader}. <br>
-   * Ex. <br>
-   * <p/>
-   * <pre>
-   * public class GsonDecoder implements Decoder.TextStream&lt;Object&gt; {
-   *   private final Gson gson;
-   *
-   *   public GsonDecoder(Gson gson) {
-   *     this.gson = gson;
-   *   }
-   *
-   *   &#064;Override
-   *   public Object decode(Reader reader, Type type) throws IOException {
-   *     try {
-   *       return gson.fromJson(reader, type);
-   *     } catch (JsonIOException e) {
-   *       if (e.getCause() != null &amp;&amp;
-   *           e.getCause() instanceof IOException) {
-   *         throw IOException.class.cast(e.getCause());
-   *       }
-   *       throw e;
-   *     }
-   *   }
-   * }
-   * </pre>
+   * Default implementation of {@code Decoder} that supports {@code void}, {@code Response}, and {@code String}
+   * signatures.
    */
-  public interface TextStream<T> extends Decoder<Reader, T> {
+  public class Default implements Decoder {
+    private final StringDecoder stringDecoder = new StringDecoder();
+
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
+      if (Response.class.equals(type)) {
+        return response;
+      } else if (String.class.equals(type)) {
+        return stringDecoder.decode(response, type);
+      } else if (void.class.equals(type) || response.body() == null) {
+        return null;
+      }
+      throw new DecodeException(format("%s is not a type supported by this decoder.", type));
+    }
   }
 }

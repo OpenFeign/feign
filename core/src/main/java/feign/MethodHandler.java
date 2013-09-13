@@ -52,7 +52,7 @@ interface MethodHandler {
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md, BuildTemplateFromArgs buildTemplateFromArgs,
-                                Options options, Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
+                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger, logLevel, md,
           buildTemplateFromArgs, options, decoder, errorDecoder);
     }
@@ -82,14 +82,14 @@ interface MethodHandler {
     private final Provider<Logger.Level> logLevel;
     private final BuildTemplateFromArgs buildTemplateFromArgs;
     private final Options options;
-    private final Decoder.TextStream<?> decoder;
+    private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
 
     private SynchronousMethodHandler(Target<?> target, Client client, Provider<Retryer> retryer,
                                      Set<RequestInterceptor> requestInterceptors, Logger logger,
                                      Provider<Logger.Level> logLevel, MethodMetadata metadata,
                                      BuildTemplateFromArgs buildTemplateFromArgs, Options options,
-                                     Decoder.TextStream<?> decoder, ErrorDecoder errorDecoder) {
+                                     Decoder decoder, ErrorDecoder errorDecoder) {
       this.target = checkNotNull(target, "target");
       this.client = checkNotNull(client, "client for %s", target);
       this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -169,13 +169,8 @@ interface MethodHandler {
     }
 
     Object decode(Response response) throws Throwable {
-      if (metadata.returnType().equals(Response.class)) {
-        return response;
-      } else if (metadata.returnType() == void.class || response.body() == null) {
-        return null;
-      }
       try {
-        return decoder.decode(response.body().asReader(), metadata.returnType());
+        return decoder.decode(response, metadata.returnType());
       } catch (FeignException e) {
         throw e;
       } catch (RuntimeException e) {

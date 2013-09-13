@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import feign.Response;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
+import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
 /**
@@ -38,7 +40,7 @@ import static feign.Util.resolveLastTypeParameter;
  * <p/>
  * 
  * <pre>
- * &#064;Provides(type = SET)
+ * &#064;Provides
  * Decoder saxDecoder(Provider&lt;ContentHandlerForFoo&gt; foo, //
  *         Provider&lt;ContentHandlerForBar&gt; bar) {
  *     return SAXDecoder.builder() //
@@ -48,7 +50,7 @@ import static feign.Util.resolveLastTypeParameter;
  * }
  * </pre>
  */
-public class SAXDecoder implements Decoder.TextStream<Object> {
+public class SAXDecoder implements Decoder {
 
   public static Builder builder() {
     return new Builder();
@@ -87,7 +89,10 @@ public class SAXDecoder implements Decoder.TextStream<Object> {
   }
 
   @Override
-  public Object decode(Reader reader, Type type) throws IOException, DecodeException {
+  public Object decode(Response response, Type type) throws IOException, DecodeException {
+    if (response.body() == null) {
+      return null;
+    }
     Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
     checkState(handlerProvider != null, "type %s not in configured handlers %s", type, handlerProviders.keySet());
     ContentHandlerWithResult<?> handler = handlerProvider.get();
@@ -96,7 +101,12 @@ public class SAXDecoder implements Decoder.TextStream<Object> {
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
       xmlReader.setFeature("http://xml.org/sax/features/validation", false);
       xmlReader.setContentHandler(handler);
-      xmlReader.parse(new InputSource(reader));
+      Reader reader = response.body().asReader();
+      try {
+        xmlReader.parse(new InputSource(reader));
+      } finally {
+        ensureClosed(reader);
+      }
       return handler.result();
     } catch (SAXException e) {
       throw new DecodeException(e.getMessage(), e);

@@ -15,6 +15,7 @@
  */
 package feign;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -128,10 +129,10 @@ public class Util {
     return map.containsKey(key) ? map.get(key) : Collections.<T>emptyList();
   }
 
-  public static void ensureClosed(Response.Body body) {
-    if (body != null) {
+  public static void ensureClosed(Closeable closeable) {
+    if (closeable != null) {
       try {
-        body.close();
+        closeable.close();
       } catch (IOException ignored) { // NOPMD
       }
     }

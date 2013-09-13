@@ -73,7 +73,7 @@ You can find [several examples](https://github.com/Netflix/feign/tree/master/fei
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
 ### Gson
-[GsonModule](https://github.com/Netflix/feign/tree/master/feign-gson) adds default encoders and decoders so you get get started with a json api.
+[GsonModule](https://github.com/Netflix/feign/tree/master/feign-gson) adds default encoders and decoders so you get get started with a JSON api.
 
 Integration requires you pass `new GsonModule()` to `Feign.create()`, or add it to your graph with Dagger:
 ```java
@@ -101,31 +101,23 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 ### Decoders
 The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
 
-If any methods in your interface return types besides `void` or `String`, you'll need to configure a `Decoder.TextStream<T>` or a general one for all types (`Decoder.TextStream<Object>`).
+If any methods in your interface return types besides `Response`, `void` or `String`, you'll need to configure a `Decoder`.
 
-The `GsonModule` in the `feign-gson` extension configures a (`Decoder.TextStream<Object>`) which parses objects from json using reflection.
+The `GsonModule` in the `feign-gson` extension configures a `Decoder` which parses objects from JSON using reflection.
 
 Here's how you could write this yourself, using whatever library you prefer:
 ```java
 @Module(library = true)
 static class JsonModule {
-  @Provides(type = SET) Decoder decoder(final JsonParser parser) {
-    return new Decoder.TextStream<Object>() {
+  @Provides Decoder decoder(final JsonParser parser) {
+    return new Decoder() {
 
-      @Override public Object decode(Reader reader, Type type) throws IOException {
-        return parser.readJson(reader, type);
+      @Override public Object decode(Response response, Type type) throws IOException {
+        return parser.readJson(response.body().asReader(), type);
       }
 
     };
   }
-}
-```
-#### Type-specific Decoders
-The generic parameter of `Decoder.TextStream<T>` designates which The type parameter is either a concrete type, or `Object`, if your decoder can handle multiple types.  To add a type-specific decoder, ensure your type parameter is correct.  Here's an example of an xml decoder that will only apply to methods that return `ZoneList`.
-
-```
-@Provides(type = SET) Decoder zoneListDecoder(Provider<ListHostedZonesResponseHandler> handlers) {
-  return new SAXDecoder<ZoneList>(handlers){};
 }
 ```
 
@@ -133,14 +125,22 @@ The generic parameter of `Decoder.TextStream<T>` designates which The type param
 #### Dagger
 Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
 
-Where possible, Feign configuration uses normal Dagger conventions.  For example, `Decoder` bindings are of `Provider.Type.SET`, meaning you can make multiple bindings for all the different types you return.  Here's an example of multiple decoder bindings.
+Where possible, Feign configuration uses normal Dagger conventions.  For example, `RequestInterceptor` bindings are of `Provider.Type.SET`, meaning you can have multiple interceptors.  Here's an example of multiple interceptor bindings.
 ```java
-@Provides(type = SET) Decoder recordListDecoder(Provider<RecordListHandler> handlers) {
-  return new SAXDecoder<List<Record>>(handlers){};
+@Provides(type = SET) RequestInterceptor forwardedForInterceptor() {
+  return new RequestInterceptor() {
+    @Override public void apply(RequestTemplate template) {
+      template.header("X-Forwarded-For", "origin.host.com");
+    }
+  };
 }
 
-@Provides(type = SET) Decoder directionalRecordListDecoder(Provider<DirectionalRecordListHandler> handlers) {
-  return new SAXDecoder<List<DirectionalRecord>>(handlers){};
+@Provides(type = SET) RequestInterceptor userAgentInterceptor() {
+  return new RequestInterceptor() {
+    @Override public void apply(RequestTemplate template) {
+      template.header("User-Agent", "My Cool Client");
+    }
+  };
 }
 ```
 #### Logging
