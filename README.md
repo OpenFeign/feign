@@ -40,23 +40,33 @@ public static void main(String... args) {
 
 Feign includes a fully functional json codec in the `feign-gson` extension.  See the `Decoder` section for how to write your own.
 
+### Customization
+
+Feign has several aspects that can be customized.  For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.  For example:
+
+```java
+interface Bank {
+  @RequestLine("POST /account/{id}")
+  Account getAccountInfo(@Named("id") String id);
+}
+...
+Bank bank = Feign.builder().decoder(new AccountDecoder()).target(Bank.class, "https://api.examplebank.com");
+```
+
+For further flexibility, you can use Dagger modules directly.  See the `Dagger` section for more details.
+
 ### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
 For example, if you are acting as an intermediary, you might want to propagate the `X-Forwarded-For` header.
 
 ```
-@Module(library = true)
 static class ForwardedForInterceptor implements RequestInterceptor {
-  @Provides(type = SET) RequestInterceptor provideThis() {
-    return this;
-  }
-
   @Override public void apply(RequestTemplate template) {
     template.header("X-Forwarded-For", "origin.host.com");
   }
 }
 ...
-GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule(), new ForwardedForInterceptor());
+Bank bank = Feign.builder().decoder(accountDecoder).requestInterceptor(new ForwardedForInterceptor()).target(Bank.class, "https://api.examplebank.com");
 ```
 
 ### Multiple Interfaces
@@ -65,7 +75,7 @@ Feign can produce multiple api interfaces.  These are defined as `Target<T>` (de
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-CloudDNS cloudDNS =  Feign.create().newInstance(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 You can find [several examples](https://github.com/Netflix/feign/tree/master/feign-core/src/test/java/feign/examples) in the test tree.  Do take time to look at them, as seeing is believing!
