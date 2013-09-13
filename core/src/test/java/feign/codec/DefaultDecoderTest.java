@@ -19,6 +19,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 import feign.Response;
+import feign.Util;
+import java.io.StringReader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,12 +40,12 @@ public class DefaultDecoderTest {
   public void testDecodesToResponse() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, Response.class);
-    assertEquals(decodedObject.getClass(), Response.class, "");
+    assertEquals(decodedObject.getClass(), Response.class);
     Response decodedResponse = (Response) decodedObject;
     assertEquals(decodedResponse.status(), response.status());
     assertEquals(decodedResponse.reason(), response.reason());
     assertEquals(decodedResponse.headers(), response.headers());
-    assertEquals(decodedResponse.body().toString(), response.body().toString());
+    assertEquals(Util.toString(decodedResponse.body().asReader()), "response body");
   }
 
   @Test
@@ -51,7 +53,7 @@ public class DefaultDecoderTest {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
     assertEquals(decodedObject.getClass(), String.class);
-    assertEquals(decodedObject.toString(), response.body().toString());
+    assertEquals(decodedObject.toString(), "response body");
   }
 
   @Test
@@ -67,9 +69,11 @@ public class DefaultDecoderTest {
   }
 
   private Response knownResponse() {
+    String content = "response body";
+    StringReader reader = new StringReader(content);
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
-    return Response.create(200, "OK", headers, "response body");
+    return Response.create(200, "OK", headers, reader, content.length());
   }
 
   private Response nullBodyResponse() {

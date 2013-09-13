@@ -15,36 +15,19 @@
  */
 package feign.codec;
 
-import static feign.Util.ensureClosed;
-
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
-import java.nio.CharBuffer;
 
 /** Adapted from {@code com.google.common.io.CharStreams.toString()}. */
 public class StringDecoder implements Decoder {
-  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
-
   @Override
   public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
     if (body == null) {
       return null;
     }
-    Reader from = body.asReader();
-    try {
-      StringBuilder to = new StringBuilder();
-      CharBuffer buf = CharBuffer.allocate(BUF_SIZE);
-      while (from.read(buf) != -1) {
-        buf.flip();
-        to.append(buf);
-        buf.clear();
-      }
-      return to.toString();
-    } finally {
-      ensureClosed(from);
-    }
+    return Util.toString(body.asReader());
   }
 }

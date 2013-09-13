@@ -19,10 +19,12 @@ import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -140,5 +142,25 @@ public class Util {
       }
     }
     return types[types.length - 1];
+  }
+
+  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
+
+  public static String toString(Reader reader) throws IOException {
+    if (reader == null) {
+      return null;
+    }
+    try {
+      StringBuilder to = new StringBuilder();
+      CharBuffer buf = CharBuffer.allocate(BUF_SIZE);
+      while (reader.read(buf) != -1) {
+        buf.flip();
+        to.append(buf);
+        buf.clear();
+      }
+      return to.toString();
+    } finally {
+      ensureClosed(reader);
+    }
   }
 }
