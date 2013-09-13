@@ -35,8 +35,8 @@ public class FeignException extends RuntimeException {
     String message = format("status %s reading %s", response.status(), methodKey);
     try {
       if (response.body() != null) {
-        String body = toString.decode(response.body().asReader(), String.class);
-        response = Response.create(response.status(), response.reason(), response.headers(), body.toString());
+        String body = toString.decode(response, String.class).toString();
+        response = Response.create(response.status(), response.reason(), response.headers(), body);
         message += "; content:\n" + body;
       }
     } catch (IOException ignored) { // NOPMD

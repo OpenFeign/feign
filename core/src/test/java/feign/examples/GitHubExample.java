@@ -23,6 +23,7 @@ import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
+import feign.Response;
 import feign.codec.Decoder;
 
 import javax.inject.Inject;
@@ -33,7 +34,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static dagger.Provides.Type.SET;
+import static feign.Util.ensureClosed;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
@@ -82,20 +83,28 @@ public class GitHubExample {
       return new Gson();
     }
 
-    @Provides(type = SET) Decoder decoder(GsonDecoder gsonDecoder) {
+    @Provides Decoder decoder(GsonDecoder gsonDecoder) {
       return gsonDecoder;
     }
   }
 
-  static class GsonDecoder implements Decoder.TextStream<Object> {
+  static class GsonDecoder implements Decoder {
     private final Gson gson;
 
     @Inject GsonDecoder(Gson gson) {
       this.gson = gson;
     }
 
-    @Override public Object decode(Reader reader, Type type) throws IOException {
-      return fromJson(new JsonReader(reader), type);
+    @Override public Object decode(Response response, Type type) throws IOException {
+      if (response.body() == null) {
+        return null;
+      }
+      Reader reader = response.body().asReader();
+      try {
+        return fromJson(new JsonReader(reader), type);
+      } finally {
+        ensureClosed(reader);
+      }
     }
 
     private Object fromJson(JsonReader jsonReader, Type type) throws IOException {
