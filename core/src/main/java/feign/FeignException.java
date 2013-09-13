@@ -19,8 +19,6 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 
-import feign.codec.StringDecoder;
-
 /**
  * Origin exception type for all Http Apis.
  */
@@ -29,14 +27,11 @@ public class FeignException extends RuntimeException {
     return new FeignException(format("%s %s %s", cause.getMessage(), request.method(), request.url(), 0), cause);
   }
 
-  private static final StringDecoder toString = new StringDecoder();
-
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
     try {
       if (response.body() != null) {
-        String body = toString.decode(response, String.class).toString();
-        response = Response.create(response.status(), response.reason(), response.headers(), body);
+        String body = Util.toString(response.body().asReader());
         message += "; content:\n" + body;
       }
     } catch (IOException ignored) { // NOPMD
