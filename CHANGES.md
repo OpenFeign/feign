@@ -4,6 +4,7 @@
 * Remove pattern decoders in favor of SaxDecoder.
 * Use single non-generic Decoder/Encoder instead of sets of type-specific Decoders/Encoders.
 * Decoders/Encoders are now more flexible, having access to the Response/RequestTemplate respectively.
+* Added Feign.Builder to simplify client customizations without using Dagger.
 
 ### Version 4.4.1
 * Fix NullPointerException on calling equals and hashCode.
