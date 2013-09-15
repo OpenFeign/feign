@@ -17,13 +17,18 @@ package feign.gson;
 
 import static org.testng.Assert.assertEquals;
 
+import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import dagger.Module;
 import dagger.ObjectGraph;
+import dagger.Provides;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -146,4 +151,46 @@ public class GsonModuleTest {
           + "    \"id\": \"ABCD\"\n" //
           + "  }\n" //
           + "]\n";
+
+  @Module(includes = GsonModule.class, library = true, injects = CustomTypeAdapter.class)
+  static class CustomTypeAdapter {
+    @Provides(type = Provides.Type.SET)
+    TypeAdapter upperZone() {
+      return new TypeAdapter<Zone>() {
+
+        @Override
+        public void write(JsonWriter out, Zone value) throws IOException {
+          throw new IllegalArgumentException();
+        }
+
+        @Override
+        public Zone read(JsonReader in) throws IOException {
+          in.beginObject();
+          Zone zone = new Zone();
+          while (in.hasNext()) {
+            zone.put(in.nextName(), in.nextString().toUpperCase());
+          }
+          in.endObject();
+          return zone;
+        }
+      };
+    }
+
+    @Inject Decoder decoder;
+  }
+
+  @Test
+  public void customDecoder() throws Exception {
+    CustomTypeAdapter bindings = new CustomTypeAdapter();
+    ObjectGraph.create(bindings).inject(bindings);
+
+    List<Zone> zones = new LinkedList<Zone>();
+    zones.add(new Zone("DENOMINATOR.IO."));
+    zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
+
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    assertEquals(
+        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
+  }
 }
