@@ -83,62 +83,74 @@ public abstract class Feign {
   @dagger.Module(
       complete = false,
       injects = {Feign.class, Builder.class},
+      includes = {Defaults.WithoutCodec.class, Defaults.Codec.class},
       library = true)
   public static class Defaults {
 
-    @Provides
-    Logger.Level logLevel() {
-      return Logger.Level.NONE;
+    @dagger.Module(
+        includes = {Defaults.Client.class},
+        library = true)
+    public static class WithoutCodec {
+      @Provides
+      Contract contract() {
+        return new Contract.Default();
+      }
+
+      @Provides
+      Logger.Level logLevel() {
+        return Logger.Level.NONE;
+      }
+
+      @Provides
+      Logger noOp() {
+        return new NoOpLogger();
+      }
+
+      @Provides
+      Retryer retryer() {
+        return new Retryer.Default();
+      }
+
+      @Provides
+      ErrorDecoder errorDecoder() {
+        return new ErrorDecoder.Default();
+      }
     }
 
-    @Provides
-    Contract contract() {
-      return new Contract.Default();
+    @dagger.Module(library = true)
+    public static class Client {
+      @Provides
+      SSLSocketFactory sslSocketFactory() {
+        return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
+      }
+
+      @Provides
+      HostnameVerifier hostnameVerifier() {
+        return HttpsURLConnection.getDefaultHostnameVerifier();
+      }
+
+      @Provides
+      feign.Client httpClient(feign.Client.Default client) {
+        return client;
+      }
+
+      @Provides
+      Options options() {
+        return new Options();
+      }
     }
 
-    @Provides
-    SSLSocketFactory sslSocketFactory() {
-      return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
-    }
+    @dagger.Module(library = true)
+    public static class Codec {
+      @Provides
+      Encoder defaultEncoder() {
+        return new Encoder.Default();
+      }
 
-    @Provides
-    HostnameVerifier hostnameVerifier() {
-      return HttpsURLConnection.getDefaultHostnameVerifier();
-    }
-
-    @Provides
-    Client httpClient(Client.Default client) {
-      return client;
-    }
-
-    @Provides
-    Retryer retryer() {
-      return new Retryer.Default();
-    }
-
-    @Provides
-    Logger noOp() {
-      return new NoOpLogger();
-    }
-
-    @Provides
-    Encoder defaultEncoder() {
-      return new Encoder.Default();
-    }
-
-    @Provides
-    Decoder defaultDecoder() {
-      return new Decoder.Default();
-    }
-
-    @Provides
-    ErrorDecoder errorDecoder() {
-      return new ErrorDecoder.Default();
-    }
-
-    @Provides
-    Options options() {
-      return new Options();
+      @Provides
+      Decoder defaultDecoder() {
+        return new Decoder.Default();
+      }
     }
   }
 
