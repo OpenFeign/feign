@@ -15,6 +15,7 @@
  */
 package feign;
 
+import dagger.Module;
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Logger.NoOpLogger;
@@ -25,7 +26,10 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
@@ -42,6 +46,10 @@ public abstract class Feign {
    * for the specified {@code target}. You should cache this result.
    */
   public abstract <T> T newInstance(Target<T> target);
+
+  public static Builder builder() {
+    return new Builder();
+  }
 
   public static <T> T create(Class<T> apiType, String url, Object... modules) {
     return create(new HardCodedTarget<T>(apiType, url), modules);
@@ -72,7 +80,10 @@ public abstract class Feign {
   }
 
   @SuppressWarnings("rawtypes")
-  @dagger.Module(complete = false, injects = Feign.class, library = true)
+  @dagger.Module(
+      complete = false,
+      injects = {Feign.class, Builder.class},
+      library = true)
   public static class Defaults {
 
     @Provides
@@ -167,5 +178,172 @@ public abstract class Feign {
     modulesForGraph.add(new ReflectiveFeign.Module());
     if (modules != null) for (Object module : modules) modulesForGraph.add(module);
     return modulesForGraph;
+  }
+
+  public static class Builder {
+    private final Set<RequestInterceptor> requestInterceptors =
+        new LinkedHashSet<RequestInterceptor>();
+    @Inject Logger.Level logLevel;
+    @Inject Contract contract;
+    @Inject Client client;
+    @Inject Retryer retryer;
+    @Inject Logger logger;
+    @Inject Encoder encoder;
+    @Inject Decoder decoder;
+    @Inject ErrorDecoder errorDecoder;
+    @Inject Options options;
+
+    Builder() {
+      ObjectGraph.create(new Defaults()).inject(this);
+    }
+
+    public Builder logLevel(Logger.Level logLevel) {
+      this.logLevel = logLevel;
+      return this;
+    }
+
+    public Builder contract(Contract contract) {
+      this.contract = contract;
+      return this;
+    }
+
+    public Builder client(Client client) {
+      this.client = client;
+      return this;
+    }
+
+    public Builder retryer(Retryer retryer) {
+      this.retryer = retryer;
+      return this;
+    }
+
+    public Builder logger(Logger logger) {
+      this.logger = logger;
+      return this;
+    }
+
+    public Builder encoder(Encoder encoder) {
+      this.encoder = encoder;
+      return this;
+    }
+
+    public Builder decoder(Decoder decoder) {
+      this.decoder = decoder;
+      return this;
+    }
+
+    public Builder errorDecoder(ErrorDecoder errorDecoder) {
+      this.errorDecoder = errorDecoder;
+      return this;
+    }
+
+    public Builder options(Options options) {
+      this.options = options;
+      return this;
+    }
+
+    /** Adds a single request interceptor to the builder. */
+    public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
+      this.requestInterceptors.add(requestInterceptor);
+      return this;
+    }
+
+    /**
+     * Sets the full set of request interceptors for the builder, overwriting any previous
+     * interceptors.
+     */
+    public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
+      this.requestInterceptors.clear();
+      for (RequestInterceptor requestInterceptor : requestInterceptors) {
+        this.requestInterceptors.add(requestInterceptor);
+      }
+      return this;
+    }
+
+    public <T> T target(Class<T> apiType, String url) {
+      return target(new HardCodedTarget<T>(apiType, url));
+    }
+
+    public <T> T target(Target<T> target) {
+      BuilderModule module = new BuilderModule(this);
+      return create(module).newInstance(target);
+    }
+  }
+
+  @Module(library = true, overrides = true, addsTo = Defaults.class)
+  static class BuilderModule {
+    private final Logger.Level logLevel;
+    private final Contract contract;
+    private final Client client;
+    private final Retryer retryer;
+    private final Logger logger;
+    private final Encoder encoder;
+    private final Decoder decoder;
+    private final ErrorDecoder errorDecoder;
+    private final Options options;
+    private final Set<RequestInterceptor> requestInterceptors;
+
+    BuilderModule(Builder builder) {
+      this.logLevel = builder.logLevel;
+      this.contract = builder.contract;
+      this.client = builder.client;
+      this.retryer = builder.retryer;
+      this.logger = builder.logger;
+      this.encoder = builder.encoder;
+      this.decoder = builder.decoder;
+      this.errorDecoder = builder.errorDecoder;
+      this.options = builder.options;
+      this.requestInterceptors = builder.requestInterceptors;
+    }
+
+    @Provides
+    Logger.Level logLevel() {
+      return logLevel;
+    }
+
+    @Provides
+    Contract contract() {
+      return contract;
+    }
+
+    @Provides
+    Client client() {
+      return client;
+    }
+
+    @Provides
+    Retryer retryer() {
+      return retryer;
+    }
+
+    @Provides
+    Logger logger() {
+      return logger;
+    }
+
+    @Provides
+    Encoder encoder() {
+      return encoder;
+    }
+
+    @Provides
+    Decoder decoder() {
+      return decoder;
+    }
+
+    @Provides
+    ErrorDecoder errorDecoder() {
+      return errorDecoder;
+    }
+
+    @Provides
+    Options options() {
+      return options;
+    }
+
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<RequestInterceptor> requestInterceptors() {
+      return requestInterceptors;
+    }
   }
 }
