@@ -16,6 +16,7 @@
 package feign.gson;
 
 import static feign.Util.ensureClosed;
+import static feign.Util.resolveLastTypeParameter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,9 +38,45 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+/**
+ *
+ *
+ * <h3>Custom type adapters</h3>
+ *
+ * <br>
+ * In order to specify custom json parsing, {@code Gson} supports {@link TypeAdapter type adapters}.
+ * This module adds one to read numbers in a {@code Map<String, Object>} as Integers. You can
+ * customize further by adding additional set bindings to the raw type {@code TypeAdapter}. <br>
+ * Here's an example of adding a custom json type adapter.
+ *
+ * <pre>
+ * &#064;Provides(type = Provides.Type.SET)
+ * TypeAdapter upperZone() {
+ *     return new TypeAdapter&lt;Zone&gt;() {
+ *
+ *         &#064;Override
+ *         public void write(JsonWriter out, Zone value) throws IOException {
+ *             throw new IllegalArgumentException();
+ *         }
+ *
+ *         &#064;Override
+ *         public Zone read(JsonReader in) throws IOException {
+ *             in.beginObject();
+ *             Zone zone = new Zone();
+ *             while (in.hasNext()) {
+ *                 zone.put(in.nextName(), in.nextString().toUpperCase());
+ *             }
+ *             in.endObject();
+ *             return zone;
+ *         }
+ *     };
+ * }
+ * </pre>
+ */
 @dagger.Module(library = true)
 public final class GsonModule {
 
@@ -91,9 +128,20 @@ public final class GsonModule {
     }
   }
 
-  // deals with scenario where gson Object type treats all numbers as doubles.
   @Provides
-  TypeAdapter<Map<String, Object>> doubleToInt() {
+  @Singleton
+  Gson gson(Set<TypeAdapter> adapters) {
+    GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
+    for (TypeAdapter<?> adapter : adapters) {
+      Type type = resolveLastTypeParameter(adapter.getClass(), TypeAdapter.class);
+      builder.registerTypeAdapter(type, adapter);
+    }
+    return builder.create();
+  }
+
+  // deals with scenario where gson Object type treats all numbers as doubles.
+  @Provides(type = Provides.Type.SET)
+  TypeAdapter doubleToInt() {
     return new TypeAdapter<Map<String, Object>>() {
       TypeAdapter<Map<String, Object>> delegate =
           new MapTypeAdapterFactory(
@@ -119,15 +167,6 @@ public final class GsonModule {
     }.nullSafe();
   }
 
-  @Provides
-  @Singleton
-  Gson gson(TypeAdapter<Map<String, Object>> doubleToInt) {
-    return new GsonBuilder()
-        .registerTypeAdapter(token.getType(), doubleToInt)
-        .setPrettyPrinting()
-        .create();
-  }
-
-  protected static final TypeToken<Map<String, Object>> token =
+  private static final TypeToken<Map<String, Object>> token =
       new TypeToken<Map<String, Object>>() {};
 }
