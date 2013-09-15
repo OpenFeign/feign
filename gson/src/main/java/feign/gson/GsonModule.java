@@ -29,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
+import feign.Feign;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
@@ -77,7 +78,7 @@ import javax.inject.Singleton;
  * }
  * </pre>
  */
-@dagger.Module(library = true)
+@dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class GsonModule {
 
   @Provides

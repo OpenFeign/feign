@@ -85,8 +85,13 @@ public class FeignTest {
     @RequestLine("GET /?1={1}&2={2}")
     Response queryParams(@Named("1") String one, @Named("2") Iterable<String> twos);
 
-    @dagger.Module(overrides = true, library = true)
+    @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
     static class Module {
+      @Provides
+      Decoder defaultDecoder() {
+        return new Decoder.Default();
+      }
+
       @Provides
       Encoder defaultEncoder() {
         return new Encoder() {
@@ -480,7 +485,7 @@ public class FeignTest {
     }
   }
 
-  @Module(injects = Client.Default.class, overrides = true, addsTo = Feign.Defaults.class)
+  @Module(overrides = true, includes = TestInterface.Module.class)
   static class TrustSSLSockets {
     @Provides
     SSLSocketFactory trustingSSLSocketFactory() {
@@ -498,17 +503,14 @@ public class FeignTest {
     try {
       TestInterface api =
           Feign.create(
-              TestInterface.class,
-              "https://localhost:" + server.getPort(),
-              new TestInterface.Module(),
-              new TrustSSLSockets());
+              TestInterface.class, "https://localhost:" + server.getPort(), new TrustSSLSockets());
       api.post();
     } finally {
       server.shutdown();
     }
   }
 
-  @Module(injects = Client.Default.class, overrides = true, addsTo = Feign.Defaults.class)
+  @Module(overrides = true, includes = TrustSSLSockets.class)
   static class DisableHostnameVerification {
     @Provides
     HostnameVerifier acceptAllHostnameVerifier() {
@@ -528,8 +530,6 @@ public class FeignTest {
           Feign.create(
               TestInterface.class,
               "https://localhost:" + server.getPort(),
-              new TestInterface.Module(),
-              new TrustSSLSockets(),
               new DisableHostnameVerification());
       api.post();
     } finally {
@@ -567,7 +567,8 @@ public class FeignTest {
         Feign.create(TestInterface.class, "http://localhost:8080", new TestInterface.Module());
     TestInterface i3 =
         Feign.create(TestInterface.class, "http://localhost:8888", new TestInterface.Module());
-    OtherTestInterface i4 = Feign.create(OtherTestInterface.class, "http://localhost:8080");
+    OtherTestInterface i4 =
+        Feign.create(OtherTestInterface.class, "http://localhost:8080", new TestInterface.Module());
 
     assertTrue(i1.equals(i1));
     assertTrue(i1.equals(i2));
