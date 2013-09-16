@@ -20,8 +20,11 @@ import static org.testng.Assert.assertEquals;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import dagger.Provides;
 import feign.Feign;
 import feign.RequestLine;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
 import java.io.IOException;
 import java.net.URL;
 import org.testng.annotations.Test;
@@ -31,6 +34,19 @@ public class RibbonClientTest {
   interface TestInterface {
     @RequestLine("POST /")
     void post();
+
+    @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
+    static class Module {
+      @Provides
+      Decoder defaultDecoder() {
+        return new Decoder.Default();
+      }
+
+      @Provides
+      Encoder defaultEncoder() {
+        return new Encoder.Default();
+      }
+    }
   }
 
   @Test
@@ -51,7 +67,12 @@ public class RibbonClientTest {
 
     try {
 
-      TestInterface api = Feign.create(TestInterface.class, "http://" + client, new RibbonModule());
+      TestInterface api =
+          Feign.create(
+              TestInterface.class,
+              "http://" + client,
+              new TestInterface.Module(),
+              new RibbonModule());
 
       api.post();
       api.post();

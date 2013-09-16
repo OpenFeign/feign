@@ -6,7 +6,7 @@
 * Decoders/Encoders are now more flexible, having access to the Response/RequestTemplate respectively.
 * Added Feign.Builder to simplify client customizations without using Dagger.
 * Gson type adapters can be registered as Dagger set bindings.
-* New Defaults.WithoutCodec to avoid binding collisions.
+* `Feign.create(...)` now requires specifying an encoder and decoder.
 
 ### Version 4.4.1
 * Fix NullPointerException on calling equals and hashCode.

@@ -52,7 +52,7 @@ public class LoadBalancingTargetTest {
     try {
       LoadBalancingTarget<TestInterface> target =
           LoadBalancingTarget.create(TestInterface.class, "http://" + name);
-      TestInterface api = Feign.create(target);
+      TestInterface api = Feign.builder().target(target);
 
       api.post();
       api.post();

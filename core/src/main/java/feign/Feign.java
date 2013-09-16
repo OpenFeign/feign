@@ -15,7 +15,6 @@
  */
 package feign;
 
-import dagger.Module;
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Logger.NoOpLogger;
@@ -80,77 +79,55 @@ public abstract class Feign {
   }
 
   @SuppressWarnings("rawtypes")
+  // incomplete as missing Encoder/Decoder
   @dagger.Module(
-      complete = false,
       injects = {Feign.class, Builder.class},
-      includes = {Defaults.WithoutCodec.class, Defaults.Codec.class},
-      library = true)
+      complete = false,
+      includes = ReflectiveFeign.Module.class)
   public static class Defaults {
-
-    @dagger.Module(
-        includes = {Defaults.Client.class},
-        library = true)
-    public static class WithoutCodec {
-      @Provides
-      Contract contract() {
-        return new Contract.Default();
-      }
-
-      @Provides
-      Logger.Level logLevel() {
-        return Logger.Level.NONE;
-      }
-
-      @Provides
-      Logger noOp() {
-        return new NoOpLogger();
-      }
-
-      @Provides
-      Retryer retryer() {
-        return new Retryer.Default();
-      }
-
-      @Provides
-      ErrorDecoder errorDecoder() {
-        return new ErrorDecoder.Default();
-      }
+    @Provides
+    Contract contract() {
+      return new Contract.Default();
     }
 
-    @dagger.Module(library = true)
-    public static class Client {
-      @Provides
-      SSLSocketFactory sslSocketFactory() {
-        return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
-      }
-
-      @Provides
-      HostnameVerifier hostnameVerifier() {
-        return HttpsURLConnection.getDefaultHostnameVerifier();
-      }
-
-      @Provides
-      feign.Client httpClient(feign.Client.Default client) {
-        return client;
-      }
-
-      @Provides
-      Options options() {
-        return new Options();
-      }
+    @Provides
+    Logger.Level logLevel() {
+      return Logger.Level.NONE;
     }
 
-    @dagger.Module(library = true)
-    public static class Codec {
-      @Provides
-      Encoder defaultEncoder() {
-        return new Encoder.Default();
-      }
+    @Provides
+    Logger noOp() {
+      return new NoOpLogger();
+    }
 
-      @Provides
-      Decoder defaultDecoder() {
-        return new Decoder.Default();
-      }
+    @Provides
+    Retryer retryer() {
+      return new Retryer.Default();
+    }
+
+    @Provides
+    ErrorDecoder errorDecoder() {
+      return new ErrorDecoder.Default();
+    }
+
+    @Provides
+    Options options() {
+      return new Options();
+    }
+
+    @Provides
+    SSLSocketFactory sslSocketFactory() {
+      return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
+    }
+
+    @Provides
+    HostnameVerifier hostnameVerifier() {
+      return HttpsURLConnection.getDefaultHostnameVerifier();
+    }
+
+    @Provides
+    feign.Client httpClient(feign.Client.Default client) {
+      return client;
     }
   }
 
@@ -185,13 +162,13 @@ public abstract class Feign {
   }
 
   private static List<Object> modulesForGraph(Object... modules) {
-    List<Object> modulesForGraph = new ArrayList<Object>(3);
+    List<Object> modulesForGraph = new ArrayList<Object>(2);
     modulesForGraph.add(new Defaults());
-    modulesForGraph.add(new ReflectiveFeign.Module());
     if (modules != null) for (Object module : modules) modulesForGraph.add(module);
     return modulesForGraph;
   }
 
+  @dagger.Module(injects = Feign.class, includes = ReflectiveFeign.Module.class)
   public static class Builder {
     private final Set<RequestInterceptor> requestInterceptors =
         new LinkedHashSet<RequestInterceptor>();
@@ -200,8 +177,8 @@ public abstract class Feign {
     @Inject Client client;
     @Inject Retryer retryer;
     @Inject Logger logger;
-    @Inject Encoder encoder;
-    @Inject Decoder decoder;
+    Encoder encoder = new Encoder.Default();
+    Decoder decoder = new Decoder.Default();
     @Inject ErrorDecoder errorDecoder;
     @Inject Options options;
 
@@ -277,35 +254,7 @@ public abstract class Feign {
     }
 
     public <T> T target(Target<T> target) {
-      BuilderModule module = new BuilderModule(this);
-      return create(module).newInstance(target);
-    }
-  }
-
-  @Module(library = true, overrides = true, addsTo = Defaults.class)
-  static class BuilderModule {
-    private final Logger.Level logLevel;
-    private final Contract contract;
-    private final Client client;
-    private final Retryer retryer;
-    private final Logger logger;
-    private final Encoder encoder;
-    private final Decoder decoder;
-    private final ErrorDecoder errorDecoder;
-    private final Options options;
-    private final Set<RequestInterceptor> requestInterceptors;
-
-    BuilderModule(Builder builder) {
-      this.logLevel = builder.logLevel;
-      this.contract = builder.contract;
-      this.client = builder.client;
-      this.retryer = builder.retryer;
-      this.logger = builder.logger;
-      this.encoder = builder.encoder;
-      this.decoder = builder.decoder;
-      this.errorDecoder = builder.errorDecoder;
-      this.options = builder.options;
-      this.requestInterceptors = builder.requestInterceptors;
+      return ObjectGraph.create(this).get(Feign.class).newInstance(target);
     }
 
     @Provides
