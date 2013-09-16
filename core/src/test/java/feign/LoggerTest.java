@@ -19,6 +19,7 @@ import com.google.common.base.Joiner;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import dagger.Provides;
+import feign.codec.Decoder;
 import feign.codec.Encoder;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -122,7 +123,7 @@ public class LoggerTest {
     }
   }
 
-  static @dagger.Module(overrides = true, library = true) class DefaultModule {
+  static @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class) class DefaultModule {
     final Logger logger;
     final Logger.Level logLevel;
 
@@ -131,12 +132,12 @@ public class LoggerTest {
       this.logLevel = logLevel;
     }
 
+    @Provides Decoder defaultDecoder() {
+      return new Decoder.Default();
+    }
+
     @Provides Encoder defaultEncoder() {
-      return new Encoder() {
-        @Override public void encode(Object object, RequestTemplate template) {
-          template.body(object.toString());
-        }
-      };
+      return new Encoder.Default();
     }
 
     @Provides @Singleton Logger logger() {

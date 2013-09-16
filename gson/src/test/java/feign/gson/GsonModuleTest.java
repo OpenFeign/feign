@@ -42,7 +42,7 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class GsonModuleTest {
-  @Module(includes = GsonModule.class, library = true, injects = EncoderAndDecoderBindings.class)
+  @Module(includes = GsonModule.class, injects = EncoderAndDecoderBindings.class)
   static class EncoderAndDecoderBindings {
     @Inject Encoder encoder;
     @Inject Decoder decoder;
@@ -56,7 +56,7 @@ public class GsonModuleTest {
     assertEquals(bindings.decoder.getClass(), GsonModule.GsonCodec.class);
   }
 
-  @Module(includes = GsonModule.class, library = true, injects = EncoderBindings.class)
+  @Module(includes = GsonModule.class, injects = EncoderBindings.class)
   static class EncoderBindings {
     @Inject Encoder encoder;
   }
@@ -115,7 +115,7 @@ public class GsonModuleTest {
     private static final long serialVersionUID = 1L;
   }
 
-  @Module(includes = GsonModule.class, library = true, injects = DecoderBindings.class)
+  @Module(includes = GsonModule.class, injects = DecoderBindings.class)
   static class DecoderBindings {
     @Inject Decoder decoder;
   }
@@ -144,7 +144,7 @@ public class GsonModuleTest {
       + "  }\n"//
       + "]\n";
 
-  @Module(includes = GsonModule.class, library = true, injects = CustomTypeAdapter.class)
+  @Module(includes = GsonModule.class, injects = CustomTypeAdapter.class)
   static class CustomTypeAdapter {
     @Provides(type = Provides.Type.SET) TypeAdapter upperZone() {
       return new TypeAdapter<Zone>() {
