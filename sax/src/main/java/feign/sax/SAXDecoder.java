@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.sax;
 
 import feign.Response;
+import feign.codec.Decoder;
+import feign.codec.DecodeException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -90,7 +92,7 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.body() == null) {
+    if (void.class.equals(type) || response.body() == null) {
       return null;
     }
     Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
