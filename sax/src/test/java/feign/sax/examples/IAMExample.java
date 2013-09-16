@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.examples;
-
-import static dagger.Provides.Type.SET;
+package feign.sax.examples;
 
 import dagger.Module;
 import dagger.Provides;
@@ -25,7 +23,8 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
 import feign.codec.Decoder;
-import feign.codec.SAXDecoder;
+import feign.codec.Encoder;
+import feign.sax.SAXDecoder;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import org.xml.sax.helpers.DefaultHandler;
@@ -70,13 +69,18 @@ public class IAMExample {
     }
   }
 
-  @Module(library = true)
+  @Module(addsTo = Feign.Defaults.class)
   static class DecodeWithSax {
-    @Provides(type = SET)
+    @Provides
     Decoder saxDecoder(Provider<UserIdHandler> userIdHandler) {
       return SAXDecoder.builder() //
           .addContentHandler(userIdHandler) //
           .build();
+    }
+
+    @Provides
+    Encoder defaultEncoder() {
+      return new Encoder.Default();
     }
   }
 

@@ -45,6 +45,20 @@ project(':feign-core') {
     }
 }
 
+project(':feign-sax') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        testCompile 'com.google.guava:guava:14.0.1'
+        testCompile 'org.testng:testng:6.8.5'
+    }
+}
+
 project(':feign-gson') {
     apply plugin: 'java'
 
