@@ -16,8 +16,8 @@
 package feign.sax;
 
 import feign.Response;
-import feign.codec.Decoder;
 import feign.codec.DecodeException;
+import feign.codec.Decoder;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -27,6 +27,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,17 +38,28 @@ import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
 /**
- * Decodes responses using SAX. Configure using the {@link SAXDecoder.Builder
- * builder}.
+ * Decodes responses using SAX, which is supported both in normal JVM environments, as well Android.
+ * <br>
+ * <h4>Basic example with with Feign.Builder</h4>
+ * <br>
+ * <pre>
+ * api = Feign.builder()
+ *            .decoder(SAXDecoder.builder()
+ *                               .registerContentHandler(ContentHandlerForFoo.class)
+ *                               .registerContentHandler(ContentHandlerForBar.class)
+ *                               .build())
+ *            .target(MyApi.class, "http://api");
+ * </pre>
  * <p/>
- * 
+ * <h4>Advanced example with Dagger</h4>
+ * <br>
  * <pre>
  * &#064;Provides
  * Decoder saxDecoder(Provider&lt;ContentHandlerForFoo&gt; foo, //
  *         Provider&lt;ContentHandlerForBar&gt; bar) {
  *     return SAXDecoder.builder() //
- *             .addContentHandler(foo) //
- *             .addContentHandler(bar) //
+ *             .registerContentHandler(Foo.class, foo) //
+ *             .registerContentHandler(Bar.class, bar) //
  *             .build();
  * }
  * </pre>
@@ -63,10 +75,48 @@ public class SAXDecoder implements Decoder {
     private final Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders =
         new LinkedHashMap<Type, Provider<? extends ContentHandlerWithResult<?>>>();
 
-    public Builder addContentHandler(Provider<? extends ContentHandlerWithResult<?>> handler) {
-      Type type = resolveLastTypeParameter(checkNotNull(handler, "handler").getClass(), Provider.class);
-      type = resolveLastTypeParameter(type, ContentHandlerWithResult.class);
-      this.handlerProviders.put(type, handler);
+    /**
+     * Will call {@link Constructor#newInstance(Object...)} on {@code handlerClass} for each content stream.
+     * <p/>
+     * <h3>Note</h3>
+     * <br/>
+     * While this is costly vs {@code new}, it may not affect real performance due to the high cost of reading streams.
+     *
+     * @throws IllegalArgumentException if there's no no-arg constructor on {@code handlerClass}.
+     */
+    public <T extends ContentHandlerWithResult<?>> Builder registerContentHandler(Class<T> handlerClass) {
+      Type type = resolveLastTypeParameter(checkNotNull(handlerClass, "handlerClass"), ContentHandlerWithResult.class);
+      return registerContentHandler(type, new NewInstanceProvider(handlerClass));
+    }
+
+    private static class NewInstanceProvider<T extends ContentHandlerWithResult<?>> implements Provider<T> {
+      private final Constructor<T> ctor;
+
+      private NewInstanceProvider(Class<T> clazz) {
+        try {
+          this.ctor = clazz.getDeclaredConstructor();
+          // allow private or package protected ctors
+          ctor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+          throw new IllegalArgumentException("ensure " + clazz + " has a no-args constructor", e);
+        }
+      }
+
+      @Override public T get() {
+        try {
+          return ctor.newInstance();
+        } catch (Exception e) {
+          throw new IllegalArgumentException("exception attempting to instantiate " + ctor, e);
+        }
+      }
+    }
+
+    /**
+     * Will call {@link Provider#get()} on {@code handler} for each content stream.
+     * The {@code handler} is expected to have a generic parameter of {@code type}.
+     */
+    public Builder registerContentHandler(Type type, Provider<? extends ContentHandlerWithResult<?>> handler) {
+      this.handlerProviders.put(checkNotNull(type, "type"), checkNotNull(handler, "handler"));
       return this;
     }
 
@@ -75,11 +125,12 @@ public class SAXDecoder implements Decoder {
     }
   }
 
-  /* Implementations are not intended to be shared across requests. */
+  /**
+   * Implementations are not intended to be shared across requests.
+   */
   public interface ContentHandlerWithResult<T> extends ContentHandler {
-    /*
-     * expected to be set following a call to {@link
-     * XMLReader#parse(InputSource)}
+    /**
+     * expected to be set following a call to {@link XMLReader#parse(InputSource)}
      */
     T result();
   }

@@ -15,20 +15,13 @@
  */
 package feign.sax.examples;
 
-import dagger.Module;
-import dagger.Provides;
 import feign.Feign;
 import feign.Request;
 import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import feign.sax.SAXDecoder;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 public class IAMExample {
 
@@ -37,7 +30,9 @@ public class IAMExample {
   }
 
   public static void main(String... args) {
-    IAM iam = Feign.create(new IAMTarget(args[0], args[1]), new DecodeWithSax());
+    IAM iam = Feign.builder()//
+        .decoder(SAXDecoder.builder().registerContentHandler(UserIdHandler.class).build())//
+        .target(new IAMTarget(args[0], args[1]));
     System.out.println(iam.userId());
   }
 
@@ -65,23 +60,7 @@ public class IAMExample {
     }
   }
 
-  @Module(addsTo = Feign.Defaults.class)
-  static class DecodeWithSax {
-    @Provides Decoder saxDecoder(Provider<UserIdHandler> userIdHandler) {
-      return SAXDecoder.builder() //
-          .addContentHandler(userIdHandler) //
-          .build();
-    }
-
-    @Provides Encoder defaultEncoder() {
-      return new Encoder.Default();
-    }
-  }
-
-  static class UserIdHandler extends DefaultHandler implements
-      SAXDecoder.ContentHandlerWithResult<Long> {
-    @Inject UserIdHandler() {
-    }
+  static class UserIdHandler extends DefaultHandler implements SAXDecoder.ContentHandlerWithResult<Long> {
 
     private StringBuilder currentText = new StringBuilder();
 
