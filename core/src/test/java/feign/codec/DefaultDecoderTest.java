@@ -32,21 +32,6 @@ import static org.testng.Assert.assertNull;
 public class DefaultDecoderTest {
   private final Decoder decoder = new Decoder.Default();
 
-  @Test public void testDecodesToVoid() throws Exception {
-    assertEquals(decoder.decode(knownResponse(), void.class), null);
-  }
-
-  @Test public void testDecodesToResponse() throws Exception {
-    Response response = knownResponse();
-    Object decodedObject = decoder.decode(response, Response.class);
-    assertEquals(decodedObject.getClass(), Response.class);
-    Response decodedResponse = (Response) decodedObject;
-    assertEquals(decodedResponse.status(), response.status());
-    assertEquals(decodedResponse.reason(), response.reason());
-    assertEquals(decodedResponse.headers(), response.headers());
-    assertEquals(Util.toString(decodedResponse.body().asReader()), "response body");
-  }
-
   @Test public void testDecodesToString() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);

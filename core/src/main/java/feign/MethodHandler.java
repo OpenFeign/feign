@@ -65,12 +65,6 @@ interface MethodHandler {
     public RequestTemplate apply(Object[] argv);
   }
 
-  /**
-   * same approach as retrofit: temporarily rename threads
-   */
-  static String THREAD_PREFIX = "Feign-";
-  static String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
-
   static final class SynchronousMethodHandler implements MethodHandler {
 
     private final MethodMetadata metadata;
@@ -143,7 +137,17 @@ interface MethodHandler {
           response = logger.logAndRebufferResponse(metadata.configKey(), logLevel.get(), response, elapsedTime);
         }
         if (response.status() >= 200 && response.status() < 300) {
-          return decode(response);
+          if (Response.class == metadata.returnType()) {
+            if (response.body() == null) {
+              return response;
+            }
+            String bodyString = Util.toString(response.body().asReader());
+            return Response.create(response.status(), response.reason(), response.headers(), bodyString);
+          } else if (void.class == metadata.returnType()) {
+            return null;
+          } else {
+            return decode(response);
+          }
         } else {
           throw errorDecoder.decode(metadata.configKey(), response);
         }
