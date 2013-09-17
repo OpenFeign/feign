@@ -25,8 +25,10 @@ import java.lang.reflect.Type;
 
 /**
  * Decodes an HTTP response into a single object of the given {@code Type}. Invoked when {@link
- * Response#status()} is in the 2xx range. Like {@code javax.websocket.Decoder}, except that the
- * decode method is passed the generic type of the target.
+ * Response#status()} is in the 2xx range and the return type is neither {@code void} nor {@code
+ * Response}.
+ *
+ * <p>
  *
  * <p>Example Implementation:<br>
  *
@@ -34,11 +36,7 @@ import java.lang.reflect.Type;
  *
  * <pre>
  * public class GsonDecoder implements Decoder {
- *   private final Gson gson;
- *
- *   public GsonDecoder(Gson gson) {
- *     this.gson = gson;
- *   }
+ *   private final Gson gson = new Gson();
  *
  *   &#064;Override
  *   public Object decode(Response response, Type type) throws IOException {
@@ -69,21 +67,11 @@ public interface Decoder {
    */
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
-  /**
-   * Default implementation of {@code Decoder} that supports {@code void}, {@code Response}, and
-   * {@code String} signatures.
-   */
+  /** Default implementation of {@code Decoder} that supports {@code String} signatures. */
   public class Default implements Decoder {
     @Override
     public Object decode(Response response, Type type) throws IOException {
-      if (Response.class.equals(type)) {
-        String bodyString = null;
-        if (response.body() != null) {
-          bodyString = Util.toString(response.body().asReader());
-        }
-        return Response.create(
-            response.status(), response.reason(), response.headers(), bodyString);
-      } else if (void.class.equals(type) || response.body() == null) {
+      if (response.body() == null) {
         return null;
       } else if (String.class.equals(type)) {
         return Util.toString(response.body().asReader());

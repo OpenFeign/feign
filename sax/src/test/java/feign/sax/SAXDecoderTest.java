@@ -146,14 +146,6 @@ public class SAXDecoderTest {
   }
 
   @Test
-  public void voidDecodesToNull() throws Exception {
-    Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed);
-    assertEquals(decoder.decode(response, void.class), null);
-  }
-
-  @Test
   public void nullBodyDecodesToNull() throws Exception {
     Response response =
         Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
