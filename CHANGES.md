@@ -1,9 +1,10 @@
 ### Version 5.0
 * Remove support for Observable methods.
-* SaxDecoder now decodes multiple types.
-* Remove pattern decoders in favor of SaxDecoder.
 * Use single non-generic Decoder/Encoder instead of sets of type-specific Decoders/Encoders.
 * Decoders/Encoders are now more flexible, having access to the Response/RequestTemplate respectively.
+* Moved SaxDecoder into `feign-sax` dependency.
+  * SaxDecoder now decodes multiple types.
+  * Remove pattern decoders in favor of SaxDecoder.
 * Added Feign.Builder to simplify client customizations without using Dagger.
 * Gson type adapters can be registered as Dagger set bindings.
 * `Feign.create(...)` now requires specifying an encoder and decoder.
