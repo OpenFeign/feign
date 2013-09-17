@@ -82,11 +82,6 @@ interface MethodHandler {
     public RequestTemplate apply(Object[] argv);
   }
 
-  /** same approach as retrofit: temporarily rename threads */
-  static String THREAD_PREFIX = "Feign-";
-
-  static String IDLE_THREAD_NAME = THREAD_PREFIX + "Idle";
-
   static final class SynchronousMethodHandler implements MethodHandler {
 
     private final MethodMetadata metadata;
