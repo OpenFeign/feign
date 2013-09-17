@@ -1,3 +1,6 @@
+### Version 5.0.1
+* `Decoder.decode()` is no longer called for `Response` or `void` types.
+
 ### Version 5.0
 * Remove support for Observable methods.
 * Use single non-generic Decoder/Encoder instead of sets of type-specific Decoders/Encoders.
