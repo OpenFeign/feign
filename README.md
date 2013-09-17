@@ -94,6 +94,15 @@ GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonMod
 ### Sax
 [SaxDecoder](https://github.com/Netflix/feign/tree/master/sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 
+Here's an example of how to configure Sax response parsing:
+```java
+api = Feign.builder()
+           .decoder(SAXDecoder.builder()
+                              .registerContentHandler(UserIdHandler.class)
+                              .build())
+           .target(Api.class, "https://apihost");
+```
+
 ### JAX-RS
 [JAXRSModule](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 
