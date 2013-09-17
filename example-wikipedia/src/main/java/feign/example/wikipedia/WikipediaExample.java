@@ -15,13 +15,13 @@
  */
 package feign.example.wikipedia;
 
+import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
-import feign.codec.Decoder;
 import feign.gson.GsonModule;
 
 import javax.inject.Named;
@@ -101,14 +101,14 @@ public class WikipediaExample {
     };
   }
 
-  @Module(library = true, includes = GsonModule.class)
+  @Module(includes = GsonModule.class)
   static class WikipediaDecoder {
 
     /**
-     * add to the set of Decoders one that handles {@code Response<Page>}.
+     * registers a gson {@link TypeAdapter} for {@code Response<Page>}.
      */
-    @Provides(type = SET) Decoder pagesDecoder() {
-      return new ResponseDecoder<Page>() {
+    @Provides(type = SET) TypeAdapter pagesAdapter() {
+      return new ResponseAdapter<Page>() {
 
         @Override
         protected String query() {
