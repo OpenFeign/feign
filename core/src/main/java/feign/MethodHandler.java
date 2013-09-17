@@ -143,7 +143,17 @@ interface MethodHandler {
           response = logger.logAndRebufferResponse(metadata.configKey(), logLevel.get(), response, elapsedTime);
         }
         if (response.status() >= 200 && response.status() < 300) {
-          return decode(response);
+          if (Response.class == metadata.returnType()) {
+            if (response.body() == null) {
+              return response;
+            }
+            String bodyString = Util.toString(response.body().asReader());
+            return Response.create(response.status(), response.reason(), response.headers(), bodyString);
+          } else if (void.class == metadata.returnType()) {
+            return null;
+          } else {
+            return decode(response);
+          }
         } else {
           throw errorDecoder.decode(metadata.configKey(), response);
         }
