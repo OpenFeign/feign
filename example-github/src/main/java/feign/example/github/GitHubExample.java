@@ -19,12 +19,9 @@ import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
-import feign.Observable;
-import feign.Observer;
 import feign.RequestLine;
 import feign.gson.GsonModule;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import javax.inject.Named;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
@@ -33,9 +30,6 @@ public class GitHubExample {
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
-
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    Observable<Contributor> observable(@Named("owner") String owner, @Named("repo") String repo);
   }
 
   static class Contributor {
@@ -52,51 +46,9 @@ public class GitHubExample {
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
-
-    System.out.println("Let's treat our contributors as an observable.");
-    Observable<Contributor> observable = github.observable("netflix", "feign");
-
-    CountDownLatch latch = new CountDownLatch(2);
-
-    System.out.println("Let's add 2 subscribers.");
-    observable.subscribe(new ContributorObserver(latch));
-    observable.subscribe(new ContributorObserver(latch));
-
-    // wait for the task to complete.
-    latch.await();
-
-    System.exit(0);
   }
 
-  static class ContributorObserver implements Observer<Contributor> {
-
-    private final CountDownLatch latch;
-    public int count;
-
-    public ContributorObserver(CountDownLatch latch) {
-      this.latch = latch;
-    }
-
-    // parsed directly from the text stream without an intermediate collection.
-    @Override
-    public void onNext(Contributor contributor) {
-      count++;
-    }
-
-    @Override
-    public void onSuccess() {
-      System.out.println("found " + count + " contributors");
-      latch.countDown();
-    }
-
-    @Override
-    public void onFailure(Throwable cause) {
-      cause.printStackTrace();
-      latch.countDown();
-    }
-  }
-
-  @Module(overrides = true, library = true)
+  @Module(overrides = true, library = true, includes = GsonModule.class)
   static class LogToStderr {
 
     @Provides

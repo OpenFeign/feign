@@ -1,12 +1,11 @@
 package feign.example.wikipedia;
 
+import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
-import feign.codec.Decoder;
+import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Type;
 
-abstract class ResponseDecoder<X> implements Decoder.TextStream<WikipediaExample.Response<X>> {
+abstract class ResponseAdapter<X> extends TypeAdapter<WikipediaExample.Response<X>> {
 
   /**
    * name of the key inside the {@code query} dict which holds the elements desired. ex. {@code
@@ -35,9 +34,8 @@ abstract class ResponseDecoder<X> implements Decoder.TextStream<WikipediaExample
 
   /** the wikipedia api doesn't use json arrays, rather a series of nested objects. */
   @Override
-  public WikipediaExample.Response<X> decode(Reader ireader, Type type) throws IOException {
+  public WikipediaExample.Response<X> read(JsonReader reader) throws IOException {
     WikipediaExample.Response<X> pages = new WikipediaExample.Response<X>();
-    JsonReader reader = new JsonReader(ireader);
     reader.beginObject();
     while (reader.hasNext()) {
       String nextName = reader.nextName();
@@ -83,5 +81,10 @@ abstract class ResponseDecoder<X> implements Decoder.TextStream<WikipediaExample
     reader.endObject();
     reader.close();
     return pages;
+  }
+
+  @Override
+  public void write(JsonWriter out, WikipediaExample.Response<X> response) throws IOException {
+    throw new UnsupportedOperationException();
   }
 }
