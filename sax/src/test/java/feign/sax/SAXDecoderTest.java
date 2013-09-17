@@ -38,12 +38,10 @@ public class SAXDecoderTest {
   @dagger.Module(injects = SAXDecoderTest.class)
   static class Module {
     @Provides
-    Decoder saxDecoder(
-        Provider<NetworkStatusHandler> networkStatus, //
-        Provider<NetworkStatusStringHandler> networkStatusAsString) {
+    Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus) {
       return SAXDecoder.builder() //
-          .addContentHandler(networkStatus) //
-          .addContentHandler(networkStatusAsString) //
+          .registerContentHandler(NetworkStatus.class, networkStatus) //
+          .registerContentHandler(NetworkStatusStringHandler.class) //
           .build();
     }
   }
