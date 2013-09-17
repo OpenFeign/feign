@@ -17,9 +17,8 @@ package feign.sax;
 
 import dagger.ObjectGraph;
 import dagger.Provides;
-import feign.codec.Decoder;
-import feign.codec.DecodeException;
 import feign.Response;
+import feign.codec.Decoder;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.xml.sax.helpers.DefaultHandler;
@@ -39,11 +38,10 @@ public class SAXDecoderTest {
 
   @dagger.Module(injects = SAXDecoderTest.class)
   static class Module {
-    @Provides Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus, //
-                                 Provider<NetworkStatusStringHandler> networkStatusAsString) {
+    @Provides Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus) {
       return SAXDecoder.builder() //
-          .addContentHandler(networkStatus) //
-          .addContentHandler(networkStatusAsString) //
+          .registerContentHandler(NetworkStatus.class, networkStatus) //
+          .registerContentHandler(NetworkStatusStringHandler.class) //
           .build();
     }
   }
