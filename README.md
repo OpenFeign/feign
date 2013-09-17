@@ -78,20 +78,24 @@ For example, the following pattern might decorate each request with the current 
 CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
-You can find [several examples](https://github.com/Netflix/feign/tree/master/feign-core/src/test/java/feign/examples) in the test tree.  Do take time to look at them, as seeing is believing!
+You can find [several examples](https://github.com/Netflix/feign/tree/master/core/src/test/java/feign/examples) in the test tree.  Do take time to look at them, as seeing is believing!
 
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+
 ### Gson
-[GsonModule](https://github.com/Netflix/feign/tree/master/feign-gson) adds default encoders and decoders so you get get started with a JSON api.
+[GsonModule](https://github.com/Netflix/feign/tree/master/gson) adds default encoders and decoders so you get get started with a JSON api.
 
 Integration requires you pass `new GsonModule()` to `Feign.create()`, or add it to your graph with Dagger:
 ```java
 GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
 ```
 
+### Sax
+[SaxDecoder](https://github.com/Netflix/feign/tree/master/sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
+
 ### JAX-RS
-[JAXRSModule](https://github.com/Netflix/feign/tree/master/feign-jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+[JAXRSModule](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 
 Here's the example above re-written to use JAX-RS:
 ```java
@@ -101,7 +105,7 @@ interface GitHub {
 }
 ```
 ### Ribbon
-[RibbonModule](https://github.com/Netflix/feign/tree/master/feign-ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
+[RibbonModule](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
 
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java

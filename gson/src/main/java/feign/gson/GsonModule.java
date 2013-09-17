@@ -103,7 +103,7 @@ public final class GsonModule {
     }
 
     @Override public Object decode(Response response, Type type) throws IOException {
-      if (response.body() == null) {
+      if (void.class.equals(type) || response.body() == null) {
         return null;
       }
       Reader reader = response.body().asReader();
