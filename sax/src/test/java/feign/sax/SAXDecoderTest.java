@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.sax;
 
 import static org.testng.Assert.assertEquals;
 
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Response;
+import feign.codec.Decoder;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
@@ -144,5 +145,20 @@ public class SAXDecoderTest {
     public void characters(char ch[], int start, int length) {
       currentText.append(ch, start, length);
     }
+  }
+
+  @Test
+  public void voidDecodesToNull() throws Exception {
+    Response response =
+        Response.create(
+            200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed);
+    assertEquals(decoder.decode(response, void.class), null);
+  }
+
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    Response response =
+        Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
+    assertEquals(decoder.decode(response, String.class), null);
   }
 }

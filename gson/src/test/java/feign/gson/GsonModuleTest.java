@@ -140,6 +140,26 @@ public class GsonModuleTest {
         bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
   }
 
+  @Test
+  public void voidDecodesToNull() throws Exception {
+    DecoderBindings bindings = new DecoderBindings();
+    ObjectGraph.create(bindings).inject(bindings);
+
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    assertEquals(bindings.decoder.decode(response, void.class), null);
+  }
+
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    DecoderBindings bindings = new DecoderBindings();
+    ObjectGraph.create(bindings).inject(bindings);
+
+    Response response =
+        Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
+    assertEquals(bindings.decoder.decode(response, String.class), null);
+  }
+
   private String zonesJson =
       "" //
           + "[\n" //

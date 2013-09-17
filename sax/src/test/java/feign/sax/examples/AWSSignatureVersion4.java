@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.examples;
+package feign.sax.examples;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Iterables.transform;

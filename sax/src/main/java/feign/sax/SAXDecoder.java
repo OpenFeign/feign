@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.sax;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
@@ -21,6 +21,8 @@ import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
 import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -91,7 +93,7 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.body() == null) {
+    if (void.class.equals(type) || response.body() == null) {
       return null;
     }
     Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
