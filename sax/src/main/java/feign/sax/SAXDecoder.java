@@ -157,7 +157,7 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (void.class.equals(type) || response.body() == null) {
+    if (response.body() == null) {
       return null;
     }
     Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);

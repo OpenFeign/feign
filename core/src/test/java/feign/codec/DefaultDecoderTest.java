@@ -19,7 +19,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 import feign.Response;
-import feign.Util;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,23 +29,6 @@ import org.w3c.dom.Document;
 
 public class DefaultDecoderTest {
   private final Decoder decoder = new Decoder.Default();
-
-  @Test
-  public void testDecodesToVoid() throws Exception {
-    assertEquals(decoder.decode(knownResponse(), void.class), null);
-  }
-
-  @Test
-  public void testDecodesToResponse() throws Exception {
-    Response response = knownResponse();
-    Object decodedObject = decoder.decode(response, Response.class);
-    assertEquals(decodedObject.getClass(), Response.class);
-    Response decodedResponse = (Response) decodedObject;
-    assertEquals(decodedResponse.status(), response.status());
-    assertEquals(decodedResponse.reason(), response.reason());
-    assertEquals(decodedResponse.headers(), response.headers());
-    assertEquals(Util.toString(decodedResponse.body().asReader()), "response body");
-  }
 
   @Test
   public void testDecodesToString() throws Exception {

@@ -55,6 +55,9 @@ public class FeignTest {
 
   interface TestInterface {
     @RequestLine("POST /")
+    Response response();
+
+    @RequestLine("POST /")
     String post();
 
     @RequestLine("POST /")
@@ -166,6 +169,27 @@ public class FeignTest {
           new String(server.takeRequest().getBody()),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
               + " \"password\"}");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test
+  public void responseCoercesToStringBody() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo"));
+    server.play();
+
+    try {
+      TestInterface api =
+          Feign.create(
+              TestInterface.class,
+              "http://localhost:" + server.getPort(),
+              new TestInterface.Module());
+
+      Response response = api.response();
+      assertTrue(response.body().isRepeatable());
+      assertEquals(response.body().toString(), "foo");
     } finally {
       server.shutdown();
     }
