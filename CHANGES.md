@@ -1,6 +1,8 @@
+### Version 5.1.0
+* Miscellaneous findbugs fixes.
+
 ### Version 5.0.1
 * `Decoder.decode()` is no longer called for `Response` or `void` types.
-* Miscellaneous findbugs fixes.
 
 ### Version 5.0
 * Remove support for Observable methods.
