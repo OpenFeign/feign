@@ -27,6 +27,7 @@ import feign.Feign;
 import feign.RequestLine;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 
 @Test
@@ -41,10 +42,10 @@ public class LoadBalancingTargetTest {
     String serverListKey = name + ".ribbon.listOfServers";
 
     MockWebServer server1 = new MockWebServer();
-    server1.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server1.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server1.play();
     MockWebServer server2 = new MockWebServer();
-    server2.enqueue(new MockResponse().setResponseCode(200).setBody("success!".getBytes()));
+    server2.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server2.play();
 
     getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
