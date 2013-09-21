@@ -39,7 +39,7 @@ public class UtilTest {
 
   interface Parameterized<T> {}
 
-  class ParameterizedSubtype implements Parameterized<String> {}
+  static class ParameterizedSubtype implements Parameterized<String> {}
 
   @Test
   public void resolveLastTypeParameterWhenNotSubtype() throws Exception {

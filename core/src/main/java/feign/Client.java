@@ -141,7 +141,7 @@ public interface Client {
       } else {
         stream = connection.getInputStream();
       }
-      Reader body = stream != null ? new InputStreamReader(stream) : null;
+      Reader body = stream != null ? new InputStreamReader(stream, UTF_8) : null;
       return Response.create(status, reason, headers, body, length);
     }
   }

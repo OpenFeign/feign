@@ -15,6 +15,7 @@
  */
 package feign;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -127,7 +128,7 @@ public class LoggerTest {
       }
 
       assertEquals(
-          new String(server.takeRequest().getBody()),
+          new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
               + " \"password\"}");
     } finally {
@@ -242,7 +243,7 @@ public class LoggerTest {
       assertMessagesMatch(expectedMessages);
 
       assertEquals(
-          new String(server.takeRequest().getBody()),
+          new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
               + " \"password\"}");
     } finally {

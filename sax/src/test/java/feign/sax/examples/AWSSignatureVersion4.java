@@ -58,7 +58,11 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
           trimToLowercase.apply(key), transform(input.headers().get(key), trimToLowercase));
     }
 
-    String timestamp = iso8601.format(new Date());
+    String timestamp;
+    synchronized (iso8601) {
+      timestamp = iso8601.format(new Date());
+    }
+
     String credentialScope =
         Joiner.on('/').join(timestamp.substring(0, 8), region, service, "aws4_request");
 
@@ -143,7 +147,7 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
   private static final Function<String, String> trimToLowercase =
       new Function<String, String>() {
         public String apply(String in) {
-          return in.toLowerCase().trim();
+          return in == null ? null : in.toLowerCase().trim();
         }
       };
 
