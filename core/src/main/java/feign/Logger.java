@@ -176,10 +176,9 @@ public abstract class Logger {
           log(configKey, ""); // CRLF
         }
 
-        Reader body = response.body().asReader();
+        BufferedReader reader = new BufferedReader(response.body().asReader());
         try {
           StringBuilder buffered = new StringBuilder();
-          BufferedReader reader = new BufferedReader(body);
           String line;
           while ((line = reader.readLine()) != null) {
             buffered.append(line);
@@ -191,7 +190,7 @@ public abstract class Logger {
           log(configKey, "<--- END HTTP (%s-byte body)", bodyAsString.getBytes(UTF_8).length);
           return Response.create(response.status(), response.reason(), response.headers(), bodyAsString);
         } finally {
-          ensureClosed(body);
+          ensureClosed(reader);
         }
       }
     }

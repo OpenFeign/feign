@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -116,7 +117,7 @@ public class LoggerTest {
         assertTrue(messages.get(i).matches(expectedMessages.get(i)), messages.get(i));
       }
 
-      assertEquals(new String(server.takeRequest().getBody()),
+      assertEquals(new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
     } finally {
       server.shutdown();
@@ -213,7 +214,7 @@ public class LoggerTest {
 
       assertMessagesMatch(expectedMessages);
 
-      assertEquals(new String(server.takeRequest().getBody()),
+      assertEquals(new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
     } finally {
       server.shutdown();
