@@ -1,4 +1,5 @@
 ### Version 5.1.0
+* Correctly handle IOExceptions wrapped by Ribbon.
 * Miscellaneous findbugs fixes.
 
 ### Version 5.0.1

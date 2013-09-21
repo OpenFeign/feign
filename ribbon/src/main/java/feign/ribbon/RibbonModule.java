@@ -76,6 +76,9 @@ public class RibbonModule {
         LBClient.RibbonRequest ribbonRequest = new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
         return lbClient(clientName).executeWithLoadBalancer(ribbonRequest).toResponse();
       } catch (ClientException e) {
+        if (e.getCause() instanceof IOException) {
+          throw IOException.class.cast(e.getCause());
+        }
         throw Throwables.propagate(e);
       }
     }

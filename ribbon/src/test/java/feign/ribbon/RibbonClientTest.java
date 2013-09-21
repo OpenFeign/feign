@@ -17,6 +17,7 @@ package feign.ribbon;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.SocketPolicy;
 import dagger.Provides;
 import feign.Feign;
 import feign.RequestLine;
@@ -36,7 +37,7 @@ public class RibbonClientTest {
   interface TestInterface {
     @RequestLine("POST /") void post();
 
-    @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
+    @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class)
     static class Module {
       @Provides Decoder defaultDecoder() {
         return new Decoder.Default();
@@ -76,6 +77,33 @@ public class RibbonClientTest {
     } finally {
       server1.shutdown();
       server2.shutdown();
+      getConfigInstance().clearProperty(serverListKey);
+    }
+  }
+
+  @Test
+  public void ioExceptionRetry() throws IOException, InterruptedException {
+    String client = "RibbonClientTest-ioExceptionRetry";
+    String serverListKey = client + ".ribbon.listOfServers";
+
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
+    server.play();
+
+    getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+
+    try {
+
+      TestInterface api = Feign.create(TestInterface.class, "http://" + client, new TestInterface.Module(), new RibbonModule());
+
+      api.post();
+
+      assertEquals(server.getRequestCount(), 2);
+      // TODO: verify ribbon stats match
+      // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    } finally {
+      server.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }
