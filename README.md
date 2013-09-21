@@ -121,7 +121,7 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 ### Decoders
 The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
 
-If any methods in your interface return types besides `Response`, `void` or `String`, you'll need to configure a `Decoder`.
+If any methods in your interface return types besides `Response` or `void`, you'll need to configure a `Decoder`.
 
 The `GsonModule` in the `feign-gson` extension configures a `Decoder` which parses objects from JSON using reflection.
 
