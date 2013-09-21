@@ -109,6 +109,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
 
   @Override
   public boolean equals(Object obj) {
+    if (obj == null) return false;
     if (this == obj) return true;
     if (LoadBalancingTarget.class != obj.getClass()) return false;
     LoadBalancingTarget<?> that = LoadBalancingTarget.class.cast(obj);

@@ -166,7 +166,7 @@ public class FeignTest {
 
       api.login("netflix", "denominator", "password");
       assertEquals(
-          new String(server.takeRequest().getBody()),
+          new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
               + " \"password\"}");
     } finally {
@@ -210,7 +210,7 @@ public class FeignTest {
 
       api.form("netflix", "denominator", "password");
       assertEquals(
-          new String(server.takeRequest().getBody()),
+          new String(server.takeRequest().getBody(), UTF_8),
           "customer_name=netflix,user_name=denominator,password=password");
     } finally {
       server.shutdown();
@@ -233,7 +233,7 @@ public class FeignTest {
       api.body(Arrays.asList("netflix", "denominator", "password"));
       RecordedRequest request = server.takeRequest();
       assertEquals(request.getHeader("Content-Length"), "32");
-      assertEquals(new String(request.getBody()), "[netflix, denominator, password]");
+      assertEquals(new String(request.getBody(), UTF_8), "[netflix, denominator, password]");
     } finally {
       server.shutdown();
     }
@@ -392,7 +392,7 @@ public class FeignTest {
   public void retriesLostConnectionBeforeRead() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -425,7 +425,7 @@ public class FeignTest {
 
   public void overrideTypeSpecificDecoder() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -458,8 +458,8 @@ public class FeignTest {
   /** when you must parse a 2xx status to determine if the operation succeeded or not. */
   public void retryableExceptionInDecoder() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("retry!".getBytes()));
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("retry!".getBytes(UTF_8)));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -494,7 +494,7 @@ public class FeignTest {
       expectedExceptionsMessageRegExp = "error reading response POST http://.*")
   public void doesntRetryAfterResponseIsSent() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -521,7 +521,7 @@ public class FeignTest {
   public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -546,7 +546,7 @@ public class FeignTest {
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {
@@ -566,7 +566,7 @@ public class FeignTest {
     MockWebServer server = new MockWebServer();
     server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
-    server.enqueue(new MockResponse().setBody("success!".getBytes()));
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server.play();
 
     try {

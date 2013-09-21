@@ -21,9 +21,9 @@ import java.io.IOException;
 
 /** Origin exception type for all Http Apis. */
 public class FeignException extends RuntimeException {
-  static FeignException errorReading(Request request, Response response, IOException cause) {
+  static FeignException errorReading(Request request, Response ignored, IOException cause) {
     return new FeignException(
-        format("%s %s %s", cause.getMessage(), request.method(), request.url(), 0), cause);
+        format("%s %s %s", cause.getMessage(), request.method(), request.url()), cause);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {

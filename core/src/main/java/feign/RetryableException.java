@@ -25,14 +25,14 @@ public class RetryableException extends FeignException {
 
   private static final long serialVersionUID = 1L;
 
-  private final Date retryAfter;
+  private final Long retryAfter;
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(String message, Throwable cause, Date retryAfter) {
     super(message, cause);
-    this.retryAfter = retryAfter;
+    this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
   /**
@@ -40,7 +40,7 @@ public class RetryableException extends FeignException {
    */
   public RetryableException(String message, Date retryAfter) {
     super(message);
-    this.retryAfter = retryAfter;
+    this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
   /**
@@ -48,6 +48,6 @@ public class RetryableException extends FeignException {
    * status. Other times parsed from an application-specific response. Null if unknown.
    */
   public Date retryAfter() {
-    return retryAfter;
+    return retryAfter != null ? new Date(retryAfter) : null;
   }
 }
