@@ -1,3 +1,6 @@
+### Version 5.2.0
+* Support usage of `GsonCodec` via `Feign.Builder`
+
 ### Version 5.1.0
 * Correctly handle IOExceptions wrapped by Ribbon.
 * Miscellaneous findbugs fixes.
