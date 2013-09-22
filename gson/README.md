@@ -1,19 +1,18 @@
 Gson Codec
 ===================
 
-This module adds support for encoding and decoding json via the Gson library.
+This module adds support for encoding and decoding JSON via the Gson library.
 
-Add `GsonCodec` to your `Feign.Builder` like so:
+Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
 
 ```java
-GsonCodec codec = new GsonCodec();
 GitHub github = Feign.builder()
-                     .encoder(codec)
-                     .decoder(codec)
+                     .encoder(new GsonEncoder())
+                     .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-Or.. to your object graph like so:
+Or add them to your Dagger object graph like so:
 
 ```java
 GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());

@@ -17,7 +17,7 @@ package feign.gson.examples;
 
 import feign.Feign;
 import feign.RequestLine;
-import feign.gson.GsonCodec;
+import feign.gson.GsonDecoder;
 import java.util.List;
 import javax.inject.Named;
 
@@ -36,7 +36,7 @@ public class GitHubExample {
 
   public static void main(String... args) throws InterruptedException {
     GitHub github =
-        Feign.builder().decoder(new GsonCodec()).target(GitHub.class, "https://api.github.com");
+        Feign.builder().decoder(new GsonDecoder()).target(GitHub.class, "https://api.github.com");
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
