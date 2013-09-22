@@ -25,7 +25,9 @@ static class Contributor {
 }
 
 public static void main(String... args) {
-  GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
+  GitHub github = Feign.builder()
+                       .decoder(new GsonCodec())
+                       .target(GitHub.class, "https://api.github.com");
 
   // Fetch and print a list of the contributors to this library.
   List<Contributor> contributors = github.contributors("netflix", "feign");
@@ -34,8 +36,6 @@ public static void main(String... args) {
   }
 }
 ```
-
-Feign includes a fully functional json codec in the `feign-gson` extension.  See the `Decoder` section for how to write your own.
 
 ### Customization
 
@@ -83,9 +83,14 @@ Feign intends to work well within Netflix and other Open Source communities.  Mo
 ### Gson
 [GsonModule](https://github.com/Netflix/feign/tree/master/gson) adds default encoders and decoders so you get get started with a JSON api.
 
-Integration requires you pass `new GsonModule()` to `Feign.create()`, or add it to your graph with Dagger:
+Add `GsonCodec` to your `Feign.Builder` like so:
+
 ```java
-GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
+GsonCodec codec = new GsonCodec();
+GitHub github = Feign.builder()
+                     .encoder(codec)
+                     .decoder(codec)
+                     .target(GitHub.class, "https://api.github.com");
 ```
 
 ### Sax
@@ -119,26 +124,16 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 ```
 
 ### Decoders
-The last argument to `Feign.create` allows you to specify additional configuration such as how to decode a responses, modeled in Dagger.
+`Feign.builder()` allows you to specify additional configuration such as how to decode a response.
 
 If any methods in your interface return types besides `Response` or `void`, you'll need to configure a `Decoder`.
 
-The `GsonModule` in the `feign-gson` extension configures a `Decoder` which parses objects from JSON using reflection.
+Here's how to configure json decoding (using the `feign-gson` extension):
 
-Here's how you could write this yourself, using whatever library you prefer:
 ```java
-@Module(library = true)
-static class JsonModule {
-  @Provides Decoder decoder(final JsonParser parser) {
-    return new Decoder() {
-
-      @Override public Object decode(Response response, Type type) throws IOException {
-        return parser.readJson(response.body().asReader(), type);
-      }
-
-    };
-  }
-}
+GitHub github = Feign.builder()
+                     .decoder(new GsonCodec())
+                     .target(GitHub.class, "https://api.github.com");
 ```
 
 ### Advanced usage and Dagger
@@ -166,15 +161,9 @@ Where possible, Feign configuration uses normal Dagger conventions.  For example
 #### Logging
 You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
 ```java
-@Module(overrides = true)
-class Overrides {
-  @Provides @Singleton Logger.Level provideLoggerLevel() {
-    return Logger.Level.FULL;
-  }
-
-  @Provides @Singleton Logger provideLogger() {
-    return new Logger.JavaLogger().appendToFile("logs/http.log");
-  }
-}
-GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonGitHubModule(), new Overrides());
+GitHub github = Feign.builder()
+                     .decoder(new GsonCodec())
+                     .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
+                     .logLevel(Logger.Level.FULL)
+                     .target(GitHub.class, "https://api.github.com");
 ```
