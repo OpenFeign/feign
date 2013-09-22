@@ -15,11 +15,8 @@
  */
 package feign.codec;
 
-import static java.lang.String.format;
-
 import feign.FeignException;
 import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -79,16 +76,6 @@ public interface Decoder {
    */
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
-  /** Default implementation of {@code Decoder} that supports {@code String} signatures. */
-  public class Default implements Decoder {
-    @Override
-    public Object decode(Response response, Type type) throws IOException {
-      if (response.body() == null) {
-        return null;
-      } else if (String.class.equals(type)) {
-        return Util.toString(response.body().asReader());
-      }
-      throw new DecodeException(format("%s is not a type supported by this decoder.", type));
-    }
-  }
+  /** Default implementation of {@code Decoder}. */
+  public class Default extends StringDecoder {}
 }
