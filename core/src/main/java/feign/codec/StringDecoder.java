@@ -21,9 +21,8 @@ import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/**
- * Adapted from {@code com.google.common.io.CharStreams.toString()}.
- */
+import static java.lang.String.format;
+
 public class StringDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException {
@@ -31,6 +30,9 @@ public class StringDecoder implements Decoder {
     if (body == null) {
       return null;
     }
-    return Util.toString(body.asReader());
+    if (String.class.equals(type)) {
+      return Util.toString(body.asReader());
+    }
+    throw new DecodeException(format("%s is not a type supported by this decoder.", type));
   }
 }
