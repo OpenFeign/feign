@@ -17,12 +17,9 @@ package feign.codec;
 
 import feign.FeignException;
 import feign.Response;
-import feign.Util;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-
-import static java.lang.String.format;
 
 /**
  * Decodes an HTTP response into a single object of the given {@code type}. Invoked when
@@ -76,17 +73,8 @@ public interface Decoder {
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
   /**
-   * Default implementation of {@code Decoder} that supports {@code String} signatures.
+   * Default implementation of {@code Decoder}.
    */
-  public class Default implements Decoder {
-    @Override
-    public Object decode(Response response, Type type) throws IOException {
-      if (response.body() == null) {
-        return null;
-      } else if (String.class.equals(type)) {
-        return Util.toString(response.body().asReader());
-      }
-      throw new DecodeException(format("%s is not a type supported by this decoder.", type));
-    }
+  public class Default extends StringDecoder {
   }
 }

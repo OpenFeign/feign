@@ -16,7 +16,6 @@
 package feign.codec;
 
 import feign.Response;
-import feign.Util;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 

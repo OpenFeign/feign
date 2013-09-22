@@ -168,6 +168,9 @@ public class Util {
 
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
+  /**
+   * Adapted from {@code com.google.common.io.CharStreams.toString()}.
+   */
   public static String toString(Reader reader) throws IOException {
     if (reader == null) {
       return null;
