@@ -26,7 +26,7 @@ static class Contributor {
 
 public static void main(String... args) {
   GitHub github = Feign.builder()
-                       .decoder(new GsonCodec())
+                       .decoder(new GsonDecoder())
                        .target(GitHub.class, "https://api.github.com");
 
   // Fetch and print a list of the contributors to this library.
@@ -83,13 +83,13 @@ Feign intends to work well within Netflix and other Open Source communities.  Mo
 ### Gson
 [GsonModule](https://github.com/Netflix/feign/tree/master/gson) adds default encoders and decoders so you get get started with a JSON api.
 
-Add `GsonCodec` to your `Feign.Builder` like so:
+Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
 
 ```java
 GsonCodec codec = new GsonCodec();
 GitHub github = Feign.builder()
-                     .encoder(codec)
-                     .decoder(codec)
+                     .encoder(new GsonEncoder())
+                     .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
@@ -126,13 +126,13 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 ### Decoders
 `Feign.builder()` allows you to specify additional configuration such as how to decode a response.
 
-If any methods in your interface return types besides `Response` or `void`, you'll need to configure a `Decoder`.
+If any methods in your interface return types besides `Response`, `String` or `void`, you'll need to configure a `Decoder`.
 
 Here's how to configure json decoding (using the `feign-gson` extension):
 
 ```java
 GitHub github = Feign.builder()
-                     .decoder(new GsonCodec())
+                     .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
@@ -162,7 +162,7 @@ Where possible, Feign configuration uses normal Dagger conventions.  For example
 You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
 ```java
 GitHub github = Feign.builder()
-                     .decoder(new GsonCodec())
+                     .decoder(new GsonDecoder())
                      .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");

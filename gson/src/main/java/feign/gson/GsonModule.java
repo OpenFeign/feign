@@ -17,23 +17,14 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapter;
-import com.google.gson.internal.ConstructorConstructor;
-import com.google.gson.internal.bind.MapTypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import static feign.Util.resolveLastTypeParameter;
@@ -77,12 +68,12 @@ import static feign.Util.resolveLastTypeParameter;
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class GsonModule {
 
-  @Provides Encoder encoder(GsonCodec codec) {
-    return codec;
+  @Provides Encoder encoder(Gson gson) {
+    return new GsonEncoder(gson);
   }
 
-  @Provides Decoder decoder(GsonCodec codec) {
-    return codec;
+  @Provides Decoder decoder(Gson gson) {
+    return new GsonDecoder(gson);
   }
 
   @Provides @Singleton Gson gson(Set<TypeAdapter> adapters) {
@@ -96,28 +87,6 @@ public final class GsonModule {
 
   // deals with scenario where gson Object type treats all numbers as doubles.
   @Provides(type = Provides.Type.SET) TypeAdapter doubleToInt() {
-    return new TypeAdapter<Map<String, Object>>() {
-      TypeAdapter<Map<String, Object>> delegate = new MapTypeAdapterFactory(new ConstructorConstructor(
-          Collections.<Type, InstanceCreator<?>>emptyMap()), false).create(new Gson(), token);
-
-      @Override
-      public void write(JsonWriter out, Map<String, Object> value) throws IOException {
-        delegate.write(out, value);
-      }
-
-      @Override
-      public Map<String, Object> read(JsonReader in) throws IOException {
-        Map<String, Object> map = delegate.read(in);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-          if (entry.getValue() instanceof Double) {
-            entry.setValue(Double.class.cast(entry.getValue()).intValue());
-          }
-        }
-        return map;
-      }
-    }.nullSafe();
+    return new DoubleToIntMapTypeAdapter();
   }
-
-  private final static TypeToken<Map<String, Object>> token = new TypeToken<Map<String, Object>>() {
-  };
 }
