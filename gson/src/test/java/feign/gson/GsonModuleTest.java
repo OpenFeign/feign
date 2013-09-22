@@ -52,8 +52,8 @@ public class GsonModuleTest {
     EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
-    assertEquals(bindings.encoder.getClass(), GsonModule.GsonCodec.class);
-    assertEquals(bindings.decoder.getClass(), GsonModule.GsonCodec.class);
+    assertEquals(bindings.encoder.getClass(), GsonCodec.class);
+    assertEquals(bindings.decoder.getClass(), GsonCodec.class);
   }
 
   @Module(includes = GsonModule.class, injects = EncoderBindings.class)

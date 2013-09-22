@@ -15,13 +15,11 @@
  */
 package feign.gson;
 
-import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
-import com.google.gson.JsonIOException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.internal.ConstructorConstructor;
 import com.google.gson.internal.bind.MapTypeAdapterFactory;
@@ -30,17 +28,13 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dagger.Provides;
 import feign.Feign;
-import feign.RequestTemplate;
-import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
@@ -51,8 +45,12 @@ import javax.inject.Singleton;
  * <br>
  * In order to specify custom json parsing, {@code Gson} supports {@link TypeAdapter type adapters}.
  * This module adds one to read numbers in a {@code Map<String, Object>} as Integers. You can
- * customize further by adding additional set bindings to the raw type {@code TypeAdapter}. <br>
+ * customize further by adding additional set bindings to the raw type {@code TypeAdapter}.
+ *
+ * <p><br>
  * Here's an example of adding a custom json type adapter.
+ *
+ * <p>
  *
  * <pre>
  * &#064;Provides(type = Provides.Type.SET)
@@ -89,44 +87,6 @@ public final class GsonModule {
   @Provides
   Decoder decoder(GsonCodec codec) {
     return codec;
-  }
-
-  static class GsonCodec implements Encoder, Decoder {
-    private final Gson gson;
-
-    @Inject
-    GsonCodec(Gson gson) {
-      this.gson = gson;
-    }
-
-    @Override
-    public void encode(Object object, RequestTemplate template) {
-      template.body(gson.toJson(object));
-    }
-
-    @Override
-    public Object decode(Response response, Type type) throws IOException {
-      if (response.body() == null) {
-        return null;
-      }
-      Reader reader = response.body().asReader();
-      try {
-        return fromJson(new JsonReader(reader), type);
-      } finally {
-        ensureClosed(reader);
-      }
-    }
-
-    private Object fromJson(JsonReader jsonReader, Type type) throws IOException {
-      try {
-        return gson.fromJson(jsonReader, type);
-      } catch (JsonIOException e) {
-        if (e.getCause() != null && e.getCause() instanceof IOException) {
-          throw IOException.class.cast(e.getCause());
-        }
-        throw e;
-      }
-    }
   }
 
   @Provides
