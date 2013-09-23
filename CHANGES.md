@@ -1,6 +1,7 @@
 ### Version 5.3.0
 * Split `GsonCodec` into `GsonEncoder` and `GsonDecoder`, which are easy to use with `Feign.Builder`
 * Deprecate `GsonCodec`
+* Update to Ribbon 0.2.3
 
 ### Version 5.2.0
 * Support usage of `GsonCodec` via `Feign.Builder`
