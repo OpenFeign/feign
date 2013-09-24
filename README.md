@@ -56,7 +56,7 @@ For further flexibility, you can use Dagger modules directly.  See the `Dagger` 
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
 For example, if you are acting as an intermediary, you might want to propagate the `X-Forwarded-For` header.
 
-```
+```java
 static class ForwardedForInterceptor implements RequestInterceptor {
   @Override public void apply(RequestTemplate template) {
     template.header("X-Forwarded-For", "origin.host.com");
@@ -64,6 +64,12 @@ static class ForwardedForInterceptor implements RequestInterceptor {
 }
 ...
 Bank bank = Feign.builder().decoder(accountDecoder).requestInterceptor(new ForwardedForInterceptor()).target(Bank.class, "https://api.examplebank.com");
+```
+
+Another common example of an interceptor would be authentication, such as using the built-in `BasicAuthRequestInterceptor`.
+
+```java
+Bank bank = Feign.builder().decoder(accountDecoder).requestInterceptor(new BasicAuthRequestInterceptor(username, password)).target(Bank.class, "https://api.examplebank.com");
 ```
 
 ### Multiple Interfaces
