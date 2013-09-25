@@ -60,6 +60,10 @@ public class Util {
    * UTF-8: eight-bit UCS Transformation Format.
    */
   public static final Charset UTF_8 = Charset.forName("UTF-8");
+  /**
+   * ISO-8859-1: ISO Latin Alphabet Number 1 (ISO-LATIN-1).
+   */
+  public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
   /**
    * Copy of {@code com.google.common.base.Preconditions#checkArgument}.
