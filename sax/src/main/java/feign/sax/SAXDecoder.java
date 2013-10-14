@@ -26,7 +26,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.inject.Provider;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -154,11 +154,11 @@ public class SAXDecoder implements Decoder {
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
       xmlReader.setFeature("http://xml.org/sax/features/validation", false);
       xmlReader.setContentHandler(handler);
-      Reader reader = response.body().asReader();
+      InputStream inputStream = response.body().asInputStream();
       try {
-        xmlReader.parse(new InputSource(reader));
+        xmlReader.parse(new InputSource(inputStream));
       } finally {
-        ensureClosed(reader);
+        ensureClosed(inputStream);
       }
       return handler.result();
     } catch (SAXException e) {

@@ -22,7 +22,7 @@ import feign.Response;
 import feign.codec.Decoder;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 
 public class JacksonDecoder implements Decoder {
@@ -40,9 +40,9 @@ public class JacksonDecoder implements Decoder {
     if (response.body() == null) {
       return null;
     }
-    Reader reader = response.body().asReader();
+    InputStream inputStream = response.body().asInputStream();
     try {
-      return mapper.readValue(reader, mapper.constructType(type));
+      return mapper.readValue(inputStream, mapper.constructType(type));
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());

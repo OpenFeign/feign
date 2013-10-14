@@ -19,7 +19,8 @@ import feign.Response;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+
+import static feign.Util.UTF_8;
 
 public class DefaultDecoderTest {
   private final Decoder decoder = new Decoder.Default();
@@ -36,6 +39,13 @@ public class DefaultDecoderTest {
     Object decodedObject = decoder.decode(response, String.class);
     assertEquals(decodedObject.getClass(), String.class);
     assertEquals(decodedObject.toString(), "response body");
+  }
+
+  @Test public void testDecodesToByteArray() throws Exception {
+    Response response = knownResponse();
+    Object decodedObject = decoder.decode(response, byte[].class);
+    assertEquals(decodedObject.getClass(), byte[].class);
+    assertEquals((byte[]) decodedObject, "response body".getBytes(UTF_8));
   }
 
   @Test public void testDecodesNullBodyToNull() throws Exception {
@@ -49,10 +59,10 @@ public class DefaultDecoderTest {
 
   private Response knownResponse() {
     String content = "response body";
-    StringReader reader = new StringReader(content);
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
-    return Response.create(200, "OK", headers, reader, content.length());
+    return Response.create(200, "OK", headers, inputStream, content.length());
   }
 
   private Response nullBodyResponse() {

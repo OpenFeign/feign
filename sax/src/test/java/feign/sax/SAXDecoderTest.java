@@ -32,6 +32,8 @@ import java.util.Collections;
 
 import static org.testng.Assert.assertEquals;
 
+import static feign.Util.UTF_8;
+
 // unbound wildcards are not currently injectable in dagger.
 @SuppressWarnings("rawtypes")
 public class SAXDecoderTest {
@@ -64,7 +66,7 @@ public class SAXDecoderTest {
   }
 
   private Response statusFailedResponse() {
-    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed);
+    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
   }
 
   static String statusFailed = ""//

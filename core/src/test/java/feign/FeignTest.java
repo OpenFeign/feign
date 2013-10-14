@@ -113,6 +113,10 @@ public class FeignTest {
 
   interface OtherTestInterface {
     @RequestLine("POST /") String post();
+
+    @RequestLine("POST /") byte[] binaryResponseBody();
+
+    @RequestLine("POST /") void binaryRequestBody(byte[] contents);
   }
 
   @Module(library = true, overrides = true)
@@ -498,5 +502,38 @@ public class FeignTest {
 
     assertEquals(i1.hashCode(), i1.hashCode());
     assertEquals(i1.hashCode(), i2.hashCode());
+  }
+
+  @Test public void decodeLogicSupportsByteArray() throws Exception {
+    byte[] expectedResponse = {12, 34, 56};
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody(expectedResponse));
+    server.play();
+
+    try {
+      OtherTestInterface api = Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+
+      byte[] actualResponse = api.binaryResponseBody();
+      assertEquals(actualResponse, expectedResponse);
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  @Test public void encodeLogicSupportsByteArray() throws Exception {
+    byte[] expectedRequest = {12, 34, 56};
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse());
+    server.play();
+
+    try {
+      OtherTestInterface api = Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+
+      api.binaryRequestBody(expectedRequest);
+      byte[] actualRequest = server.takeRequest().getBody();
+      assertEquals(actualRequest, expectedRequest);
+    } finally {
+      server.shutdown();
+    }
   }
 }

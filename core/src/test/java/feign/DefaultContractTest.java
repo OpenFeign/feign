@@ -29,6 +29,8 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import static feign.Util.UTF_8;
+
 /**
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected {@link feign
  * .RequestTemplate template}
@@ -154,8 +156,9 @@ public class DefaultContractTest {
   }
 
   @Test public void bodyWithoutParameters() throws Exception {
+    String expectedBody = "<v01:getAccountsListOfUser/>";
     MethodMetadata md = contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().body(), "<v01:getAccountsListOfUser/>");
+    assertEquals(md.template().body(), expectedBody.getBytes(UTF_8));
     assertFalse(md.template().bodyTemplate() != null);
     assertTrue(md.formParams().isEmpty());
     assertTrue(md.indexToName().isEmpty());

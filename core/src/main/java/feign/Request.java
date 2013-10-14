@@ -15,6 +15,7 @@
  */
 package feign;
 
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,26 +26,23 @@ import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
- * <br>
- * <br><br><b>Note</b><br>
- * <br>
- * Since {@link Feign} is designed for non-binary apis, and expectations are
- * that any request can be replayed, we only support a String body.
  */
 public final class Request {
 
   private final String method;
   private final String url;
   private final Map<String, Collection<String>> headers;
-  private final String body;
+  private final byte[] body;
+  private final Charset charset;
 
-  Request(String method, String url, Map<String, Collection<String>> headers, String body) {
+  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body, Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
     copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
     this.headers = Collections.unmodifiableMap(copyOf);
     this.body = body; // nullable
+    this.charset = charset; // nullable
   }
 
   /* Method to invoke on the server. */
@@ -62,8 +60,20 @@ public final class Request {
     return headers;
   }
 
-  /* If present, this is the replayable body to send to the server. */
-  public String body() {
+  /**
+   * The character set with which the body is encoded, or null if unknown or not applicable.  When this is
+   * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   */
+  public Charset charset() {
+    return charset;
+  }
+
+  /**
+   * If present, this is the replayable body to send to the server.  In some cases, this may be interpretable as text.
+   *
+   * @see #charset()
+   */
+  public byte[] body() {
     return body;
   }
 
@@ -110,7 +120,7 @@ public final class Request {
       }
     }
     if (body != null) {
-      builder.append('\n').append(body);
+      builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
     }
     return builder.toString();
   }

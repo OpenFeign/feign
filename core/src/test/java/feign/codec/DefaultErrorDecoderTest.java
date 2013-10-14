@@ -27,6 +27,7 @@ import feign.Response;
 import feign.RetryableException;
 
 import static feign.Util.RETRY_AFTER;
+import static feign.Util.UTF_8;
 
 public class DefaultErrorDecoderTest {
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();
@@ -42,7 +43,7 @@ public class DefaultErrorDecoderTest {
   @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "status 500 reading Service#foo\\(\\); content:\nhello world")
   public void throwsFeignExceptionIncludingBody() throws Throwable {
     Response response = Response.create(500, "Internal server error", ImmutableMap.<String, Collection<String>>of(),
-        "hello world");
+        "hello world", UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
