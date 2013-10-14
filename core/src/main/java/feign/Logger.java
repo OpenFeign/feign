@@ -16,10 +16,9 @@
 package feign;
 
 import static feign.Util.UTF_8;
-import static feign.Util.ensureClosed;
+import static feign.Util.decodeOrDefault;
 import static feign.Util.valuesOrEmpty;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -136,15 +135,17 @@ public abstract class Logger {
         }
       }
 
-      int bytes = 0;
+      int bodyLength = 0;
       if (request.body() != null) {
-        bytes = request.body().getBytes(UTF_8).length;
+        bodyLength = request.body().length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+          String bodyText =
+              request.charset() != null ? new String(request.body(), request.charset()) : null;
           log(configKey, ""); // CRLF
-          log(configKey, "%s", request.body());
+          log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
         }
       }
-      log(configKey, "---> END HTTP (%s-byte body)", bytes);
+      log(configKey, "---> END HTTP (%s-byte body)", bodyLength);
     }
   }
 
@@ -163,28 +164,20 @@ public abstract class Logger {
         }
       }
 
+      int bodyLength = 0;
       if (response.body() != null) {
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           log(configKey, ""); // CRLF
         }
-
-        BufferedReader reader = new BufferedReader(response.body().asReader());
-        try {
-          StringBuilder buffered = new StringBuilder();
-          String line;
-          while ((line = reader.readLine()) != null) {
-            buffered.append(line);
-            if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-              log(configKey, "%s", line);
-            }
-          }
-          String bodyAsString = buffered.toString();
-          log(configKey, "<--- END HTTP (%s-byte body)", bodyAsString.getBytes(UTF_8).length);
-          return Response.create(
-              response.status(), response.reason(), response.headers(), bodyAsString);
-        } finally {
-          ensureClosed(reader);
+        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        bodyLength = bodyData.length;
+        if (logLevel.ordinal() >= Level.FULL.ordinal() && bodyLength > 0) {
+          log(configKey, "%s", decodeOrDefault(bodyData, UTF_8, "Binary data"));
         }
+        log(configKey, "<--- END HTTP (%s-byte body)", bodyLength);
+        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+      } else {
+        log(configKey, "<--- END HTTP (%s-byte body)", bodyLength);
       }
     }
     return response;

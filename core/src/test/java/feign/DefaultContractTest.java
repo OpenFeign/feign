@@ -15,6 +15,7 @@
  */
 package feign;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
@@ -199,9 +200,10 @@ public class DefaultContractTest {
 
   @Test
   public void bodyWithoutParameters() throws Exception {
+    String expectedBody = "<v01:getAccountsListOfUser/>";
     MethodMetadata md =
         contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(md.template().body(), "<v01:getAccountsListOfUser/>");
+    assertEquals(md.template().body(), expectedBody.getBytes(UTF_8));
     assertFalse(md.template().bodyTemplate() != null);
     assertTrue(md.formParams().isEmpty());
     assertTrue(md.indexToName().isEmpty());

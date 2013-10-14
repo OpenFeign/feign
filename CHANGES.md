@@ -1,3 +1,6 @@
+### Version 6.0
+* Support binary request and response bodies.
+
 ### Version 5.4.0
 * Add `BasicAuthRequestInterceptor`
 * Add Jackson integration
