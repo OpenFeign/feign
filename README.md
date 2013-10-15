@@ -99,6 +99,18 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
+### Jackson
+[JacksonModule](https://github.com/Netflix/feign/tree/master/jackson) adds an encoder and decoder you can use with a JSON API.
+
+Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
+
+```java
+GitHub github = Feign.builder()
+                     .encoder(new JacksonEncoder())
+                     .decoder(new JacksonDecoder())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
 ### Sax
 [SaxDecoder](https://github.com/Netflix/feign/tree/master/sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 

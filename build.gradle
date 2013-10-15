@@ -73,6 +73,21 @@ project(':feign-gson') {
     }
 }
 
+project(':feign-jackson') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        compile     'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+        testCompile 'org.testng:testng:6.8.5'
+        testCompile 'com.google.guava:guava:14.0.1'
+    }
+}
+
 project(':feign-jaxrs') {
     apply plugin: 'java'
 
