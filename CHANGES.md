@@ -1,5 +1,6 @@
 ### Version 5.4.0
 * Add `BasicAuthRequestInterceptor`
+* Add Jackson integration
 
 ### Version 5.3.0
 * Split `GsonCodec` into `GsonEncoder` and `GsonDecoder`, which are easy to use with `Feign.Builder`
