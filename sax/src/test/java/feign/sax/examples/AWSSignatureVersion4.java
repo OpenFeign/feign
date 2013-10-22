@@ -128,9 +128,10 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
     canonicalRequest.append(Joiner.on(',').join(sortedLowercaseHeaders.keySet())).append('\n');
 
     // HexEncode(Hash(Payload))
-    if (input.body() != null) {
-      canonicalRequest.append(base16().lowerCase().encode(
-          sha256().hashString(input.body() != null ? input.body() : "", UTF_8).asBytes()));
+    String bodyText =
+        input.charset() != null && input.body() != null ? new String(input.body(), input.charset()) : null;
+    if (bodyText != null) {
+      canonicalRequest.append(base16().lowerCase().encode(sha256().hashString(bodyText, UTF_8).asBytes()));
     } else {
       canonicalRequest.append(EMPTY_STRING_HASH);
     }

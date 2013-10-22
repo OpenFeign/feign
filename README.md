@@ -144,13 +144,26 @@ MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonMod
 ### Decoders
 `Feign.builder()` allows you to specify additional configuration such as how to decode a response.
 
-If any methods in your interface return types besides `Response`, `String` or `void`, you'll need to configure a `Decoder`.
+If any methods in your interface return types besides `Response`, `String`, `byte[]` or `void`, you'll need to configure a non-default `Decoder`.
 
-Here's how to configure json decoding (using the `feign-gson` extension):
+Here's how to configure JSON decoding (using the `feign-gson` extension):
 
 ```java
 GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+### Encoders
+`Feign.builder()` allows you to specify additional configuration such as how to encode a request.
+
+If any methods in your interface use parameters types besides `String` or `byte[]`, you'll need to configure a non-default `Encoder`.
+
+Here's how to configure JSON encoding (using the `feign-gson` extension):
+
+```json
+GitHub github = Feign.builder()
+                     .encoder(new GsonEncoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
 

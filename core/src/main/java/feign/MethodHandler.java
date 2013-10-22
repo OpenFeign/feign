@@ -141,8 +141,9 @@ interface MethodHandler {
             if (response.body() == null) {
               return response;
             }
-            String bodyString = Util.toString(response.body().asReader());
-            return Response.create(response.status(), response.reason(), response.headers(), bodyString);
+            // Ensure the response body is disconnected
+            byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+            return Response.create(response.status(), response.reason(), response.headers(), bodyData);
           } else if (void.class == metadata.returnType()) {
             return null;
           } else {

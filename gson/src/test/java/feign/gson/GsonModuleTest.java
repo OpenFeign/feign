@@ -40,6 +40,8 @@ import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 
+import static feign.Util.UTF_8;
+
 @Test
 public class GsonModuleTest {
   @Module(includes = GsonModule.class, injects = EncoderAndDecoderBindings.class)
@@ -62,6 +64,11 @@ public class GsonModuleTest {
   }
 
   @Test public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
+    String expectedBody = ""
+        + "{\n"
+        + "  \"foo\": 1\n"
+        + "}";
+
     EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
@@ -70,13 +77,18 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(template.body(), ""//
-        + "{\n" //
-        + "  \"foo\": 1\n" //
-        + "}");
+    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
   }
 
   @Test public void encodesFormParams() throws Exception {
+    String expectedBody = ""//
+        + "{\n" //
+        + "  \"foo\": 1,\n" //
+        + "  \"bar\": [\n" //
+        + "    2,\n" //
+        + "    3\n" //
+        + "  ]\n" //
+        + "}";
 
     EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
@@ -87,14 +99,7 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(template.body(), ""//
-        + "{\n" //
-        + "  \"foo\": 1,\n" //
-        + "  \"bar\": [\n" //
-        + "    2,\n" //
-        + "    3\n" //
-        + "  ]\n" //
-        + "}");
+    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -128,7 +133,8 @@ public class GsonModuleTest {
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
-    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
     }.getType()), zones);
   }
@@ -184,7 +190,8 @@ public class GsonModuleTest {
     zones.add(new Zone("DENOMINATOR.IO."));
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
-    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
     }.getType()), zones);
   }

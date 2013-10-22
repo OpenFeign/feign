@@ -21,6 +21,8 @@ import java.util.*;
 
 import static org.testng.Assert.assertEquals;
 
+import static feign.Util.UTF_8;
+
 @Test
 public class JacksonModuleTest {
   @Module(includes = JacksonModule.class, injects = EncoderAndDecoderBindings.class)
@@ -54,7 +56,7 @@ public class JacksonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(template.body(), ""//
+    assertEquals(new String(template.body(), UTF_8), ""//
         + "{\n" //
         + "  \"foo\" : 1\n" //
         + "}");
@@ -70,7 +72,7 @@ public class JacksonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(template.body(), ""//
+    assertEquals(new String(template.body(), UTF_8), ""//
         + "{\n" //
         + "  \"foo\" : 1,\n" //
         + "  \"bar\" : [ 2, 3 ]\n" //
@@ -109,7 +111,8 @@ public class JacksonModuleTest {
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
-    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
     }.getType()), zones);
   }
@@ -177,7 +180,8 @@ public class JacksonModuleTest {
     zones.add(new Zone("DENOMINATOR.IO."));
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
-    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+    Response response =
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
     }.getType()), zones);
   }

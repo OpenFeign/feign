@@ -15,16 +15,20 @@
  */
 package feign;
 
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static feign.Util.UTF_8;
+import static feign.Util.decodeOrDefault;
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.valuesOrEmpty;
@@ -40,12 +44,18 @@ public final class Response {
   private final Body body;
 
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                Reader chars, Integer length) {
-    return new Response(status, reason, headers, ReaderBody.orNull(chars, length));
+                                InputStream inputStream, Integer length) {
+    return new Response(status, reason, headers, InputStreamBody.orNull(inputStream, length));
   }
 
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers, String chars) {
-    return new Response(status, reason, headers, StringBody.orNull(chars));
+  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+                                byte[] data) {
+    return new Response(status, reason, headers, ByteArrayBody.orNull(data));
+  }
+
+  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+                                String text, Charset charset) {
+    return new Response(status, reason, headers, ByteArrayBody.orNull(text, charset));
   }
 
   private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
@@ -94,9 +104,14 @@ public final class Response {
     Integer length();
 
     /**
-     * True if {@link #asReader()} can be called more than once.
+     * True if {@link #asInputStream()} and {@link #asReader()} can be called more than once.
      */
     boolean isRepeatable();
+
+    /**
+     * It is the responsibility of the caller to close the stream.
+     */
+    InputStream asInputStream() throws IOException;
 
     /**
      * It is the responsibility of the caller to close the stream.
@@ -104,18 +119,19 @@ public final class Response {
     Reader asReader() throws IOException;
   }
 
-  private static final class ReaderBody implements Response.Body {
-    private static Body orNull(Reader chars, Integer length) {
-      if (chars == null)
+  private static final class InputStreamBody implements Response.Body {
+    private static Body orNull(InputStream inputStream, Integer length) {
+      if (inputStream == null) {
         return null;
-      return new ReaderBody(chars, length);
+      }
+      return new InputStreamBody(inputStream, length);
     }
 
-    private final Reader chars;
+    private final InputStream inputStream;
     private final Integer length;
 
-    private ReaderBody(Reader chars, Integer length) {
-      this.chars = chars;
+    private InputStreamBody(InputStream inputStream, Integer length) {
+      this.inputStream = inputStream;
       this.length = length;
     }
 
@@ -127,50 +143,62 @@ public final class Response {
       return false;
     }
 
+    @Override public InputStream asInputStream() throws IOException {
+      return inputStream;
+    }
+
     @Override public Reader asReader() throws IOException {
-      return chars;
+      return new InputStreamReader(inputStream, UTF_8);
     }
 
     @Override public void close() throws IOException {
-      chars.close();
+      inputStream.close();
     }
   }
 
-  private static final class StringBody implements Response.Body {
-    private static Body orNull(String chars) {
-      if (chars == null)
+  private static final class ByteArrayBody implements Response.Body {
+    private static Body orNull(byte[] data) {
+      if (data == null) {
         return null;
-      return new StringBody(chars);
+      }
+      return new ByteArrayBody(data);
     }
 
-    private final String chars;
-
-    public StringBody(String chars) {
-      this.chars = chars;
+    private static Body orNull(String text, Charset charset) {
+      if (text == null) {
+        return null;
+      }
+      checkNotNull(charset, "charset");
+      return new ByteArrayBody(text.getBytes(charset));
     }
 
-    private volatile Integer length;
+    private final byte[] data;
+
+    public ByteArrayBody(byte[] data) {
+      this.data = data;
+    }
 
     @Override public Integer length() {
-      if (length == null) {
-        length = chars.getBytes(UTF_8).length;
-      }
-      return length;
+      return data.length;
     }
 
     @Override public boolean isRepeatable() {
       return true;
     }
 
+    @Override public InputStream asInputStream() throws IOException {
+      return new ByteArrayInputStream(data);
+    }
+
     @Override public Reader asReader() throws IOException {
-      return new StringReader(chars);
+      return new InputStreamReader(asInputStream(), UTF_8);
     }
 
-    public String toString() {
-      return chars;
+    @Override public void close() throws IOException {
     }
 
-    @Override public void close() {
+    @Override public String toString() {
+      return decodeOrDefault(data, UTF_8, "Binary data");
     }
   }
 

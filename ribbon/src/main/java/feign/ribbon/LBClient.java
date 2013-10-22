@@ -93,7 +93,8 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
           .method(request.method())
           .append(getUri().toASCIIString())
           .headers(request.headers())
-          .body(request.body()).request();
+          .body(request.body(), request.charset())
+          .request();
     }
 
     public Object clone() {

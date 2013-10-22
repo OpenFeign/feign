@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,7 +55,8 @@ public final class RequestTemplate implements Serializable {
   private StringBuilder url = new StringBuilder();
   private final Map<String, Collection<String>> queries = new LinkedHashMap<String, Collection<String>>();
   private final Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
-  private String body;
+  private transient Charset charset;
+  private byte[] body;
   private String bodyTemplate;
 
   public RequestTemplate() {
@@ -68,6 +70,7 @@ public final class RequestTemplate implements Serializable {
     this.url.append(toCopy.url);
     this.queries.putAll(toCopy.queries);
     this.headers.putAll(toCopy.headers);
+    this.charset = toCopy.charset;
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
   }
@@ -117,7 +120,7 @@ public final class RequestTemplate implements Serializable {
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
     return new Request(method, new StringBuilder(url).append(queryLine()).toString(),
-        headers, body);
+        headers, body, charset);
   }
 
   private static String urlDecode(String arg) {
@@ -391,18 +394,39 @@ public final class RequestTemplate implements Serializable {
    *
    * @see Request#body()
    */
-  public RequestTemplate body(String body) {
-    this.body = body;
-    if (this.body != null) {
-      byte[] contentLength = body.getBytes(UTF_8);
-      header(CONTENT_LENGTH, String.valueOf(contentLength.length));
-    }
+  public RequestTemplate body(byte[] bodyData, Charset charset) {
     this.bodyTemplate = null;
+    this.charset = charset;
+    this.body = bodyData;
+    int bodyLength = bodyData != null ? bodyData.length : 0;
+    header(CONTENT_LENGTH, String.valueOf(bodyLength));
     return this;
   }
 
-  /* @see Request#body() */
-  public String body() {
+  /**
+   * replaces the {@link feign.Util#CONTENT_LENGTH} header.
+   * <br>
+   * Usually populated by an {@link feign.codec.Encoder}.
+   *
+   * @see Request#body()
+   */
+  public RequestTemplate body(String bodyText) {
+    byte[] bodyData = bodyText != null ? bodyText.getBytes(UTF_8) : null;
+    return body(bodyData, UTF_8);
+  }
+
+  /**
+   * The character set with which the body is encoded, or null if unknown or not applicable.  When this is
+   * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   */
+  public Charset charset() {
+    return charset;
+  }
+
+  /**
+   * @see Request#body()
+   */
+  public byte[] body() {
     return body;
   }
 
@@ -413,6 +437,7 @@ public final class RequestTemplate implements Serializable {
    */
   public RequestTemplate bodyTemplate(String bodyTemplate) {
     this.bodyTemplate = bodyTemplate;
+    this.charset = null;
     this.body = null;
     return this;
   }
@@ -426,10 +451,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * if there are any query params in the {@link #body()}, this will extract
-   * them out.
-   *
-   * @return
+   * if there are any query params in the URL, this will extract them out.
    */
   private StringBuilder pullAnyQueriesOutOfUrl(StringBuilder url) {
     // parse out queries
