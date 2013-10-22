@@ -15,11 +15,13 @@
  */
 package feign.codec;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 import feign.Response;
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +41,14 @@ public class DefaultDecoderTest {
   }
 
   @Test
+  public void testDecodesToByteArray() throws Exception {
+    Response response = knownResponse();
+    Object decodedObject = decoder.decode(response, byte[].class);
+    assertEquals(decodedObject.getClass(), byte[].class);
+    assertEquals((byte[]) decodedObject, "response body".getBytes(UTF_8));
+  }
+
+  @Test
   public void testDecodesNullBodyToNull() throws Exception {
     assertNull(decoder.decode(nullBodyResponse(), Document.class));
   }
@@ -52,10 +62,10 @@ public class DefaultDecoderTest {
 
   private Response knownResponse() {
     String content = "response body";
-    StringReader reader = new StringReader(content);
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
-    return Response.create(200, "OK", headers, reader, content.length());
+    return Response.create(200, "OK", headers, inputStream, content.length());
   }
 
   private Response nullBodyResponse() {

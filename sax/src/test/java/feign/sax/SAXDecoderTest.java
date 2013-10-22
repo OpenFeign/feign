@@ -15,6 +15,7 @@
  */
 package feign.sax;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 
 import dagger.ObjectGraph;
@@ -69,7 +70,7 @@ public class SAXDecoderTest {
 
   private Response statusFailedResponse() {
     return Response.create(
-        200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed);
+        200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
   }
 
   static String statusFailed =

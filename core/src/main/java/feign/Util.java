@@ -17,14 +17,19 @@ package feign;
 
 import static java.lang.String.format;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -165,6 +170,47 @@ public class Util {
       return to.toString();
     } finally {
       ensureClosed(reader);
+    }
+  }
+
+  /** Adapted from {@code com.google.common.io.ByteStreams.toByteArray()}. */
+  public static byte[] toByteArray(InputStream in) throws IOException {
+    checkNotNull(in, "in");
+    try {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      copy(in, out);
+      return out.toByteArray();
+    } finally {
+      ensureClosed(in);
+    }
+  }
+
+  /** Adapted from {@code com.google.common.io.ByteStreams.copy()}. */
+  private static long copy(InputStream from, OutputStream to) throws IOException {
+    checkNotNull(from, "from");
+    checkNotNull(to, "to");
+    byte[] buf = new byte[BUF_SIZE];
+    long total = 0;
+    while (true) {
+      int r = from.read(buf);
+      if (r == -1) {
+        break;
+      }
+      to.write(buf, 0, r);
+      total += r;
+    }
+    return total;
+  }
+
+  static String decodeOrDefault(byte[] data, Charset charset, String defaultValue) {
+    if (data == null) {
+      return defaultValue;
+    }
+    checkNotNull(charset, "charset");
+    try {
+      return charset.newDecoder().decode(ByteBuffer.wrap(data)).toString();
+    } catch (CharacterCodingException ex) {
+      return defaultValue;
     }
   }
 }

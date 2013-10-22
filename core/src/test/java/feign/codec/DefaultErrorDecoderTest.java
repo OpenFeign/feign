@@ -16,6 +16,7 @@
 package feign.codec;
 
 import static feign.Util.RETRY_AFTER;
+import static feign.Util.UTF_8;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -49,7 +50,8 @@ public class DefaultErrorDecoderTest {
             500,
             "Internal server error",
             ImmutableMap.<String, Collection<String>>of(),
-            "hello world");
+            "hello world",
+            UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
   }

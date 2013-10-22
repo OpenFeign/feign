@@ -96,7 +96,7 @@ class LBClient
           .method(request.method())
           .append(getUri().toASCIIString())
           .headers(request.headers())
-          .body(request.body())
+          .body(request.body(), request.charset())
           .request();
     }
 

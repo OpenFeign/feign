@@ -18,15 +18,12 @@ package feign;
 import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_GZIP;
-import static feign.Util.UTF_8;
 
 import dagger.Lazy;
 import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
@@ -112,7 +109,7 @@ public interface Client {
           out = new GZIPOutputStream(out);
         }
         try {
-          out.write(request.body().getBytes(UTF_8));
+          out.write(request.body());
         } finally {
           try {
             out.close();
@@ -141,8 +138,7 @@ public interface Client {
       } else {
         stream = connection.getInputStream();
       }
-      Reader body = stream != null ? new InputStreamReader(stream, UTF_8) : null;
-      return Response.create(status, reason, headers, body, length);
+      return Response.create(status, reason, headers, stream, length);
     }
   }
 }

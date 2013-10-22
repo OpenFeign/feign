@@ -1,5 +1,6 @@
 package feign.jackson;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -53,7 +54,7 @@ public class JacksonModuleTest {
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
     assertEquals(
-        template.body(),
+        new String(template.body(), UTF_8),
         "" //
             + "{\n" //
             + "  \"foo\" : 1\n" //
@@ -72,7 +73,7 @@ public class JacksonModuleTest {
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
     assertEquals(
-        template.body(),
+        new String(template.body(), UTF_8),
         "" //
             + "{\n" //
             + "  \"foo\" : 1,\n" //
@@ -114,7 +115,8 @@ public class JacksonModuleTest {
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+        Response.create(
+            200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
         bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
   }
@@ -187,7 +189,8 @@ public class JacksonModuleTest {
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
     Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson);
+        Response.create(
+            200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
         bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
   }

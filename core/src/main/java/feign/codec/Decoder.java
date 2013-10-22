@@ -17,6 +17,7 @@ package feign.codec;
 
 import feign.FeignException;
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -77,5 +78,17 @@ public interface Decoder {
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
   /** Default implementation of {@code Decoder}. */
-  public class Default extends StringDecoder {}
+  public class Default extends StringDecoder {
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
+      Response.Body body = response.body();
+      if (body == null) {
+        return null;
+      }
+      if (byte[].class.equals(type)) {
+        return Util.toByteArray(body.asInputStream());
+      }
+      return super.decode(response, type);
+    }
+  }
 }

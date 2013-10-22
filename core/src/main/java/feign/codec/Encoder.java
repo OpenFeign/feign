@@ -74,12 +74,14 @@ public interface Encoder {
    */
   void encode(Object object, RequestTemplate template) throws EncodeException;
 
-  /** Default implementation of {@code Encoder} that supports {@code String}s only. */
+  /** Default implementation of {@code Encoder}. */
   public class Default implements Encoder {
     @Override
     public void encode(Object object, RequestTemplate template) throws EncodeException {
       if (object instanceof String) {
         template.body(object.toString());
+      } else if (object instanceof byte[]) {
+        template.body((byte[]) object, null);
       } else if (object != null) {
         throw new EncodeException(
             format("%s is not a type supported by this encoder.", object.getClass()));

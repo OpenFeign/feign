@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 
 import feign.RequestTemplate;
@@ -27,6 +28,14 @@ public class DefaultEncoderTest {
   @Test
   public void testEncodesStrings() throws Exception {
     String content = "This is my content";
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(content, template);
+    assertEquals(template.body(), content.getBytes(UTF_8));
+  }
+
+  @Test
+  public void testEncodesByteArray() throws Exception {
+    byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, template);
     assertEquals(template.body(), content);
