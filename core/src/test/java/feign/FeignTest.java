@@ -536,4 +536,16 @@ public class FeignTest {
       server.shutdown();
     }
   }
+
+  @Test
+  public void responseTypeGetsReturnedDirectlyEvenWithErrorResponseCode() throws Exception {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.play();
+
+    TestInterface testInterface = Feign.builder().options(new Request.Options(1000, 1000))
+                                       .target(TestInterface.class, "http://localhost:" + server.getPort());
+    Response response = testInterface.response();
+    assertEquals(response.status(), 404);
+  }
 }
