@@ -1,5 +1,6 @@
 ### Version 6.0
 * Support binary request and response bodies.
+* Don't throw http status code exceptions when return type is `Response`.
 
 ### Version 5.4.0
 * Add `BasicAuthRequestInterceptor`
