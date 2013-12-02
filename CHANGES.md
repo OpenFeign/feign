@@ -1,3 +1,6 @@
+### Version 6.0.2
+* Fix for BasicAuthRequestInterceptor when username and/or password are long.
+
 ### Version 6.0
 * Support binary request and response bodies.
 * Don't throw http status code exceptions when return type is `Response`.
