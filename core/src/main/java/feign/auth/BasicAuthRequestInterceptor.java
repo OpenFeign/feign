@@ -21,7 +21,6 @@ import static feign.Util.checkNotNull;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import java.nio.charset.Charset;
-import sun.misc.BASE64Encoder;
 
 /** An interceptor that adds the request header needed to use HTTP basic authentication. */
 public class BasicAuthRequestInterceptor implements RequestInterceptor {
@@ -62,6 +61,6 @@ public class BasicAuthRequestInterceptor implements RequestInterceptor {
    * response would be to pull the necessary portions of Guava's BaseEncoding class into Util.
    */
   private static String base64Encode(byte[] bytes) {
-    return new BASE64Encoder().encode(bytes);
+    return Base64.encode(bytes);
   }
 }
