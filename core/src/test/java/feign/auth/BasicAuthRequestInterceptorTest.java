@@ -38,4 +38,18 @@ public class BasicAuthRequestInterceptorTest {
     Collection<String> expectedValue = Collections.singletonList("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
     assertEquals(actualValue, expectedValue);
   }
+
+  /**
+   * Tests that requests headers are added as expected when user and pass are too long
+   */
+  @Test public void testAuthenticationWhenUserPassAreTooLong() {
+    RequestTemplate template = new RequestTemplate();
+    BasicAuthRequestInterceptor interceptor = new BasicAuthRequestInterceptor("IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO",
+              "101010101010101010101010101010101010101010");
+    interceptor.apply(template);
+    Collection<String> actualValue = template.headers().get("Authorization");
+    Collection<String> expectedValue = Collections.
+        singletonList("Basic SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw");
+    assertEquals(actualValue, expectedValue);
+  }
 }
