@@ -1,3 +1,6 @@
+### Version 6.1.0
+* Add [SLF4J](http://www.slf4j.org/) integration
+
 ### Version 6.0.1
 * Fix for BasicAuthRequestInterceptor when username and/or password are long.
 
