@@ -1,4 +1,4 @@
-### Version 6.0.2
+### Version 6.0.1
 * Fix for BasicAuthRequestInterceptor when username and/or password are long.
 
 ### Version 6.0
