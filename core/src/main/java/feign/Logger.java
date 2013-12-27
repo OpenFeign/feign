@@ -70,14 +70,13 @@ public abstract class Logger {
   public static class JavaLogger extends Logger {
     final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Logger.class.getName());
 
-    @Override void logRequest(String configKey, Level logLevel, Request request) {
+    @Override protected void logRequest(String configKey, Level logLevel, Request request) {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
         super.logRequest(configKey, logLevel, request);
       }
     }
 
-    @Override
-    Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+    @Override protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
         return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
       }
@@ -110,16 +109,14 @@ public abstract class Logger {
   }
 
   public static class NoOpLogger extends Logger {
-    @Override void logRequest(String configKey, Level logLevel, Request request) {
+    @Override protected void logRequest(String configKey, Level logLevel, Request request) {
     }
 
-    @Override
-    Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+    @Override protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
       return response;
     }
 
-    @Override
-    protected void log(String configKey, String format, Object... args) {
+    @Override protected void log(String configKey, String format, Object... args) {
     }
   }
 
@@ -133,7 +130,7 @@ public abstract class Logger {
    */
   protected abstract void log(String configKey, String format, Object... args);
 
-  void logRequest(String configKey, Level logLevel, Request request) {
+  protected void logRequest(String configKey, Level logLevel, Request request) {
     log(configKey, "---> %s %s HTTP/1.1", request.method(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
@@ -160,7 +157,7 @@ public abstract class Logger {
     log(configKey, "---> RETRYING");
   }
 
-  Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+  protected  Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
     log(configKey, "<--- HTTP/1.1 %s %s (%sms)", response.status(), response.reason(), elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
@@ -200,7 +197,7 @@ public abstract class Logger {
     return ioe;
   }
 
-  static String methodTag(String configKey) {
+  protected static String methodTag(String configKey) {
     return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('('))).append("] ").toString();
   }
 }
