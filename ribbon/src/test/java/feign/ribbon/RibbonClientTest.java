@@ -31,6 +31,7 @@ import java.net.URL;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Test
 public class RibbonClientTest {
@@ -97,9 +98,14 @@ public class RibbonClientTest {
 
       TestInterface api = Feign.create(TestInterface.class, "http://" + client, new TestInterface.Module(), new RibbonModule());
 
-      api.post();
+      Exception ex = null;
+      try{
+        api.post();
+      } catch (Exception e){
+        ex = e;
+      }
 
-      assertEquals(server.getRequestCount(), 2);
+      assertNotNull(ex);
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
