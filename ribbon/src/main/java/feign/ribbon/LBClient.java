@@ -62,11 +62,11 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
     return new RibbonResponse(request.getUri(), response);
   }
 
-  @Override protected boolean isCircuitBreakerException(Exception e) {
+  @Override protected boolean isCircuitBreakerException(Throwable e) {
     return e instanceof IOException;
   }
 
-  @Override protected boolean isRetriableException(Exception e) {
+  @Override protected boolean isRetriableException(Throwable e) {
     return e instanceof RetryableException;
   }
 
@@ -75,7 +75,7 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
     return new Pair<String, Integer>(URI.create(task.request.url()).getScheme(), task.getUri().getPort());
   }
 
-  @Override protected int getDefaultPort() {
+  protected int getDefaultPort() {
     return 443;
   }
 
@@ -134,6 +134,13 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
 
     Response toResponse() {
       return response;
+    }
+    
+    @Override
+    public void close() throws IOException {
+        if(response.body() != null){
+            response.body().close();
+        }
     }
   }
 
