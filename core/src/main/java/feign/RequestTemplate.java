@@ -463,13 +463,38 @@ public final class RequestTemplate implements Serializable {
         firstQueries.putAll(queries);
         queries.clear();
       }
-      queries.putAll(firstQueries);
+      //Since we decode all queries, we want to use the
+	  //query()-method to re-add them to ensure that all
+	  //logic (such as url-encoding) are executed, giving
+	  //a valid queryLine()
+      for(String key : firstQueries.keySet()) {
+		  Collection<String> values = firstQueries.get(key);
+		  if(allValuesAreNull(values)) {
+			  //Queryies where all values are null will
+			  //be ignored by the query(key, value)-method
+			  //So we manually avoid this case here, to ensure that
+			  //we still fulfill the contract (ex. parameters without values)
+			  queries.put(urlEncode(key), values);
+		  }
+		  else {
+			  query(key, values);
+		  }
+
+	  }
       return new StringBuilder(url.substring(0, queryIndex));
     }
     return url;
   }
 
-  private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
+	private boolean allValuesAreNull(Collection<String> values) {
+		if(values.isEmpty()) return true;
+		for(String val : values) {
+			if(val != null) return false;
+		}
+		return true;
+	}
+
+	private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
     Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
     if (emptyToNull(queryLine) == null)
       return map;
