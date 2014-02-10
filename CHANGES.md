@@ -1,3 +1,6 @@
+### Version 6.1.1
+* Fix for #85
+
 ### Version 6.1.0
 * Add [SLF4J](http://www.slf4j.org/) integration
 

@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Named;
 
 /** Defines what annotations and values are valid on interfaces. */
@@ -174,15 +175,26 @@ public interface Contract {
               emptyToNull(name) != null, "Named annotation was empty on param %s.", paramIndex);
           nameParam(data, name, paramIndex);
           isHttpAnnotation = true;
-          if (data.template().url().indexOf('{' + name + '}') == -1
-              && //
-              !(data.template().queries().containsKey(name)
-                  || data.template().headers().containsKey(name))) {
+          String varName = '{' + name + '}';
+          if (data.template().url().indexOf(varName) == -1
+              && !searchMapValues(data.template().queries(), varName)
+              && !searchMapValues(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
         }
       }
       return isHttpAnnotation;
+    }
+
+    private <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
+      Collection<Collection<V>> values = map.values();
+      if (values == null) return false;
+
+      for (Collection<V> entry : values) {
+        if (entry.contains(search)) return true;
+      }
+
+      return false;
     }
   }
 }
