@@ -1,8 +1,8 @@
 apply plugin: 'java'
 
 dependencies {
-  compile  'com.netflix.feign:feign-core:5.0.0'
-  compile  'com.netflix.feign:feign-gson:5.0.0'
+  compile  'com.netflix.feign:feign-core:6.0.1'
+  compile  'com.netflix.feign:feign-gson:6.0.1'
   provided 'com.squareup.dagger:dagger-compiler:1.1.0'
 }
 
