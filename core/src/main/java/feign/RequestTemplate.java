@@ -170,7 +170,6 @@ public final class RequestTemplate implements Serializable {
           inVar = false;
           String key = var.toString();
           Object value = variables.get(var.toString());
-          System.out.println("About to add "+value);
           if (value != null)
             builder.append(value);
           else
