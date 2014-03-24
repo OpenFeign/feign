@@ -29,6 +29,7 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;
 import java.net.URL;
+import javax.inject.Named;
 import org.testng.annotations.Test;
 
 @Test
@@ -36,6 +37,9 @@ public class RibbonClientTest {
   interface TestInterface {
     @RequestLine("POST /")
     void post();
+
+    @RequestLine("GET /?a={a}")
+    void getWithQueryParameters(@Named("a") String a);
 
     @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class)
     static class Module {
@@ -116,6 +120,47 @@ public class RibbonClientTest {
       assertEquals(server.getRequestCount(), 2);
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    } finally {
+      server.shutdown();
+      getConfigInstance().clearProperty(serverListKey);
+    }
+  }
+
+  /*
+  This test-case replicates a bug that occurs when using RibbonRequest with a query string.
+
+  The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
+  invalid characters (ex. space).
+  */
+  @Test
+  public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
+    String client = "RibbonClientTest-urlEncodeQueryStringParameters";
+    String serverListKey = client + ".ribbon.listOfServers";
+
+    String queryStringValue = "some string with space";
+    String expectedQueryStringValue = "some+string+with+space";
+    String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
+
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
+    server.play();
+
+    getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+
+    try {
+
+      TestInterface api =
+          Feign.create(
+              TestInterface.class,
+              "http://" + client,
+              new TestInterface.Module(),
+              new RibbonModule());
+
+      api.getWithQueryParameters(queryStringValue);
+
+      final String recordedRequestLine = server.takeRequest().getRequestLine();
+
+      assertEquals(recordedRequestLine, expectedRequestLine);
     } finally {
       server.shutdown();
       getConfigInstance().clearProperty(serverListKey);
