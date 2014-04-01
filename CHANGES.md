@@ -1,3 +1,6 @@
+### Version 6.1.2
+* Named query parameters on GET request result in POST request (bug #85)
+
 ### Version 6.0.2
 * Fix for BasicAuthRequestInterceptor when username and/or password are long.
 
