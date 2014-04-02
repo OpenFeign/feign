@@ -547,11 +547,20 @@ public final class RequestTemplate implements Serializable {
     Iterator<Entry<String, Collection<String>>> iterator = queries.entrySet().iterator();
     while (iterator.hasNext()) {
       Entry<String, Collection<String>> entry = iterator.next();
-      if (entry.getValue() == null) {
+      Collection<String> entryValue = entry.getValue();
+      String entryKey = entry.getKey();
+      if (entryKey == null || entryValue == null) {
+        continue;
+      }
+      System.out.println("Looking at "+entryKey+" value"+entryValue);
+      if (entryKey.indexOf('{') == 0 && entryKey.indexOf('}') == entryKey.length() - 1) {
+        Object variableValue = unencoded.get(entryKey.substring(1, entryKey.length() - 1));
+        entry.setValue(Arrays.asList(Util.variableToQueryString(variableValue)));
         continue;
       }
       Collection<String> values = new ArrayList<String>();
-      for (String value : entry.getValue()) {
+      for (String value : entryValue) {
+        if (value == null) continue;
         if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
           Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
           // only add non-null expressions
@@ -582,13 +591,18 @@ public final class RequestTemplate implements Serializable {
       return "";
     StringBuilder queryBuilder = new StringBuilder();
     for (String field : queries.keySet()) {
-      for (String value : valuesOrEmpty(queries, field)) {
+      if(field != null && field.indexOf('{') == 0 && field.indexOf('}') == field.length() - 1) {
         queryBuilder.append('&');
-        queryBuilder.append(field);
-        if (value != null) {
-          queryBuilder.append('=');
-          if (!value.isEmpty())
-            queryBuilder.append(value);
+        queryBuilder.append(queries.get(field).iterator().next());
+      } else {
+        for (String value : valuesOrEmpty(queries, field)) {
+          queryBuilder.append('&');
+          queryBuilder.append(field);
+          if (value != null) {
+            queryBuilder.append('=');
+            if (!value.isEmpty())
+              queryBuilder.append(value);
+          }
         }
       }
     }
