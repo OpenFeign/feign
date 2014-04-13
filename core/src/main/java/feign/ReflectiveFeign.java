@@ -41,9 +41,12 @@ import static feign.Util.checkNotNull;
 public class ReflectiveFeign extends Feign {
 
   private final ParseHandlersByName targetToHandlersByName;
+  private final InvocationHandlerFactory invocationHandlerFactory;
 
-  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName) {
+  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName,
+                          InvocationHandlerFactory invocationHandlerFactory) {
     this.targetToHandlersByName = targetToHandlersByName;
+    this.invocationHandlerFactory = invocationHandlerFactory;
   }
 
   /**
@@ -58,56 +61,8 @@ public class ReflectiveFeign extends Feign {
         continue;
       methodToHandler.put(method, nameToHandler.get(Feign.configKey(method)));
     }
-    FeignInvocationHandler handler = new FeignInvocationHandler(target, methodToHandler);
+    InvocationHandler handler = invocationHandlerFactory.create(target, methodToHandler);
     return (T) Proxy.newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
-  }
-
-  static class FeignInvocationHandler implements InvocationHandler {
-
-    private final Target target;
-    private final Map<Method, MethodHandler> methodToHandler;
-
-    FeignInvocationHandler(Target target, Map<Method, MethodHandler> methodToHandler) {
-      this.target = checkNotNull(target, "target");
-      this.methodToHandler = checkNotNull(methodToHandler, "methodToHandler for %s", target);
-    }
-
-    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      if ("equals".equals(method.getName())) {
-        try {
-          Object otherHandler = args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
-          return equals(otherHandler);
-        } catch (IllegalArgumentException e) {
-          return false;
-        }
-      }
-      if ("hashCode".equals(method.getName())) {
-        return hashCode();
-      }
-      return methodToHandler.get(method).invoke(args);
-    }
-
-    @Override public int hashCode() {
-      return target.hashCode();
-    }
-
-    @Override public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      if (this == obj) {
-        return true;
-      }
-      if (FeignInvocationHandler.class != obj.getClass()) {
-        return false;
-      }
-      FeignInvocationHandler that = FeignInvocationHandler.class.cast(obj);
-      return this.target.equals(that.target);
-    }
-
-    @Override public String toString() {
-      return "target(" + target + ")";
-    }
   }
 
   @dagger.Module(complete = false, injects = {Feign.class, MethodHandler.Factory.class}, library = true)
