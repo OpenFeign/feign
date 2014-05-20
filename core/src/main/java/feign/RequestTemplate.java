@@ -552,7 +552,6 @@ public final class RequestTemplate implements Serializable {
       if (entryKey == null || entryValue == null) {
         continue;
       }
-      System.out.println("Looking at "+entryKey+" value"+entryValue);
       if (entryKey.indexOf('{') == 0 && entryKey.indexOf('}') == entryKey.length() - 1) {
         Object variableValue = unencoded.get(entryKey.substring(1, entryKey.length() - 1));
         entry.setValue(Arrays.asList(Util.variableToQueryString(variableValue)));
