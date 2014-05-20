@@ -278,7 +278,7 @@ public class Util {
               }
             }
           } catch (Exception e) {
-              
+              throw new RuntimeException(e);
           } 
       }
       if (KVPairs.size() > 0) {
