@@ -124,7 +124,11 @@ public class UtilTest {
       assertEquals(Util.encodePair("key with spaces", "value"), "key+with+spaces=value");
       assertEquals(Util.encodePair("key", "value with spaces"), "key=value+with+spaces");
       assertEquals(Util.encodePair("key", 1234), "key=1234");
-      assertEquals(Util.encodePair("key", new java.util.Date(0)), "key=Thu+Jan+01+10%3A00%3A00+EST+1970");
+      
+      java.util.Calendar cal = java.util.Calendar.getInstance();
+      cal.setTimeInMillis(0);
+      
+      assertEquals(Util.encodePair("key", cal.getTime()), "key=Thu+Jan+01+10%3A00%3A00+EST+1970");
   }
   
   @Test public void isVariable() throws Exception {
