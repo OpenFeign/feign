@@ -201,4 +201,46 @@ public class RequestTemplateTest {
     assertEquals(template.toString(), ""//
         + "GET /domains/1001/records HTTP/1.1\n");
   }
+  
+  @Test public void expandMapOfKeyPairForQuery() throws Exception {
+      RequestTemplate template = new RequestTemplate().method("POST")
+              .append("/1/cards")//
+              .query("key", "{key}")//
+              .query("token", "{token}")
+              .query("name", "{name}")
+              .query("idList", "{idList}")
+              .query("{fields}", ImmutableList.of(""));
+      
+      ImmutableMap<String,Object> fields = ImmutableMap.of(
+              "label", (Object)"blue", 
+              "description", (Object)"nice");
+      
+      template = template.resolve(ImmutableMap.<String, Object>builder()
+              .put("key", "9f867f42asdfasdfa406981c0468b0134")
+              .put("token", "asdfasdf87df285c943b7627basdfasdfc9df8cde08a81f380935")
+              .put("name", "CardName")
+              .put("idList", Arrays.asList("537be504aaf676a1adee4871"))
+              .put("fields", fields)
+              .build()
+          );
+      
+      assertEquals(template.toString(), ""
+              + "POST /1/cards?key=9f867f42asdfasdfa406981c0468b0134&"
+              + "token=asdfasdf87df285c943b7627basdfasdfc9df8cde08a81f380935&"
+              + "name=CardName&"
+              + "idList=537be504aaf676a1adee4871&"
+              + "label=blue&"
+              + "description=nice HTTP/1.1\n");
+  }
+  
+  @Test public void fieldsInRequestLine() throws Exception {
+      RequestTemplate template = new RequestTemplate()
+          .method("PUT")
+          .append("/1/cards/{cardIdOrShortLink}?key={key}&token={token}&{fields}");
+      
+      assertEquals(template.queries().size(), 3);
+      assertEquals(template.queries().containsKey("{fields}"), true);
+  }
+  
+  
 }

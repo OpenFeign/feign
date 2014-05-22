@@ -16,7 +16,10 @@
 package feign;
 
 import feign.codec.Decoder;
+
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -82,5 +85,52 @@ public class UtilTest {
     Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
     assertEquals(last, Object.class);
+  }
+  
+  @Test public void variableToQueryString() throws Exception {
+      ImmutableMap<String, String> map = ImmutableMap.of(
+              "field1", "value1",
+              "field2", "value2",
+              "field3", "value3");
+      
+      String queryString = Util.variableToQueryString(map);
+      assertEquals(queryString, "field1=value1&field2=value2&field3=value3");
+          
+      class Simple {
+          private String field1;
+          private int field2;
+          
+          public Simple(String field1, int field2) {
+              this.field1 = field1;
+              this.field2 = field2;
+          }
+          
+          public String getField1() { 
+              return field1; 
+          }
+          
+          public int getField2() { 
+              return field2;
+          }
+      }
+      
+      Simple simpleObject = new Simple("value1", 1234); 
+      queryString = Util.variableToQueryString(simpleObject);
+      assertEquals(queryString, "field1=value1&field2=1234");
+  }
+  
+  @Test public void encodePair() throws Exception {
+      assertEquals(Util.encodePair("key", "value") , "key=value");
+      assertEquals(Util.encodePair("key with spaces", "value"), "key+with+spaces=value");
+      assertEquals(Util.encodePair("key", "value with spaces"), "key=value+with+spaces");
+      assertEquals(Util.encodePair("key", 1234), "key=1234");
+      assertEquals(Util.encodePair("key", new java.util.Date(0)), "key=Thu+Jan+01+10%3A00%3A00+EST+1970");
+  }
+  
+  @Test public void isVariable() throws Exception {
+      assertEquals(Util.isVariable("{test}"), true);
+      assertEquals(Util.isVariable("{test"), false);
+      assertEquals(Util.isVariable(" {test} "), false);
+      assertEquals(Util.isVariable("test}"), false);
   }
 }

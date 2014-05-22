@@ -469,14 +469,15 @@ public final class RequestTemplate implements Serializable {
 	  //a valid queryLine()
       for(String key : firstQueries.keySet()) {
 		  Collection<String> values = firstQueries.get(key);
-		  if(allValuesAreNull(values)) {
+		  if (Util.isVariable(key)) {
+		      queries.put(key,values);
+		  } else if(allValuesAreNull(values)) {
 			  //Queryies where all values are null will
 			  //be ignored by the query(key, value)-method
 			  //So we manually avoid this case here, to ensure that
 			  //we still fulfill the contract (ex. parameters without values)
 			  queries.put(urlEncode(key), values);
-		  }
-		  else {
+		  } else {
 			  query(key, values);
 		  }
 
@@ -549,18 +550,21 @@ public final class RequestTemplate implements Serializable {
       Entry<String, Collection<String>> entry = iterator.next();
       Collection<String> entryValue = entry.getValue();
       String entryKey = entry.getKey();
-      if (entryKey == null || entryValue == null) {
+      if (entryKey == null) {
         continue;
       }
-      if (entryKey.indexOf('{') == 0 && entryKey.indexOf('}') == entryKey.length() - 1) {
+      if (Util.isVariable(entryKey)) {
         Object variableValue = unencoded.get(entryKey.substring(1, entryKey.length() - 1));
         entry.setValue(Arrays.asList(Util.variableToQueryString(variableValue)));
         continue;
       }
+      if (entryValue == null) {
+          continue;
+      }
       Collection<String> values = new ArrayList<String>();
       for (String value : entryValue) {
         if (value == null) continue;
-        if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
+        if (Util.isVariable(value)) {
           Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
           // only add non-null expressions
           if (variableValue == null) {
@@ -590,7 +594,7 @@ public final class RequestTemplate implements Serializable {
       return "";
     StringBuilder queryBuilder = new StringBuilder();
     for (String field : queries.keySet()) {
-      if(field != null && field.indexOf('{') == 0 && field.indexOf('}') == field.length() - 1) {
+      if(Util.isVariable(field)) {
         queryBuilder.append('&');
         queryBuilder.append(queries.get(field).iterator().next());
       } else {

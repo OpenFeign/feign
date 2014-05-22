@@ -308,4 +308,11 @@ public class Util {
       throw new RuntimeException(e);
     }
   }
+  
+  public static boolean isVariable(String item) {
+      if (item == null || item.length() == 0) {
+          return false;
+      }
+      return (item.indexOf('{') == 0 && item.indexOf('}') == item.length() - 1);
+  }
 }
