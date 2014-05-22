@@ -559,7 +559,7 @@ public final class RequestTemplate implements Serializable {
         continue;
       }
       if (entryValue == null) {
-          continue;
+        continue;
       }
       Collection<String> values = new ArrayList<String>();
       for (String value : entryValue) {
