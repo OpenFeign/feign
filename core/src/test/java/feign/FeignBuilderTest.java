@@ -23,9 +23,13 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
 
@@ -121,6 +125,35 @@ public class FeignBuilderTest {
       RecordedRequest request = server.takeRequest();
       assertEquals(request.getUtf8Body(), "request data");
       assertEquals(request.getHeader("Content-Type"), "text/plain");
+    }
+  }
+
+  @Test public void testProvideInvocationHandlerFactory() throws Exception {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("response data"));
+    server.play();
+
+    String url = "http://localhost:" + server.getPort();
+
+    final AtomicInteger callCount = new AtomicInteger();
+    InvocationHandlerFactory factory = new InvocationHandlerFactory() {
+      private final InvocationHandlerFactory delegate = new Default();
+      @Override public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+        callCount.incrementAndGet();
+        return delegate.create(target, dispatch);
+      }
+    };
+
+    try {
+      TestInterface api = Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
+      Response response = api.codecPost("request data");
+      assertEquals(Util.toString(response.body().asReader()), "response data");
+      assertEquals(callCount.get(), 1);
+    } finally {
+      server.shutdown();
+      assertEquals(server.getRequestCount(), 1);
+      RecordedRequest request = server.takeRequest();
+      assertEquals(request.getUtf8Body(), "request data");
     }
   }
 }

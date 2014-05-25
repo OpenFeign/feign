@@ -1,3 +1,6 @@
+### Version 7.0
+* Expose reflective dispatch hook: InvocationHandlerFactory
+
 ### Version 6.1.1
 * Fix for #85
 
