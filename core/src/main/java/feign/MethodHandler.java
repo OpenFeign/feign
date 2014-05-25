@@ -31,7 +31,7 @@ import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
 import static feign.Util.ensureClosed;
 
-interface MethodHandler {
+public interface MethodHandler {
   Object invoke(Object[] argv) throws Throwable;
 
   static class Factory {

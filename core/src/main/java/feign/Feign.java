@@ -123,6 +123,10 @@ public abstract class Feign {
     @Provides feign.Client httpClient(feign.Client.Default client) {
       return client;
     }
+
+    @Provides InvocationHandlerFactory invocationHandlerFactory() {
+        return new InvocationHandlerFactory.Default();
+    }
   }
 
   /**
@@ -177,6 +181,7 @@ public abstract class Feign {
     Decoder decoder = new Decoder.Default();
     @Inject ErrorDecoder errorDecoder;
     @Inject Options options;
+    @Inject InvocationHandlerFactory invocationHandlerFactory;
 
     Builder() {
       ObjectGraph.create(new Defaults()).inject(this);
@@ -246,6 +251,11 @@ public abstract class Feign {
       return this;
     }
 
+    public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      this.invocationHandlerFactory = invocationHandlerFactory;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -292,6 +302,10 @@ public abstract class Feign {
 
     @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> requestInterceptors() {
       return requestInterceptors;
+    }
+
+    @Provides InvocationHandlerFactory invocationHandlerFactory() {
+      return invocationHandlerFactory;
     }
   }
 }
