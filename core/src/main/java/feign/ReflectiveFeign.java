@@ -16,6 +16,7 @@
 package feign;
 
 import dagger.Provides;
+import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
@@ -41,9 +42,11 @@ import static feign.Util.checkNotNull;
 public class ReflectiveFeign extends Feign {
 
   private final ParseHandlersByName targetToHandlersByName;
+  private final InvocationHandlerFactory factory;
 
-  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName) {
+  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
     this.targetToHandlersByName = targetToHandlersByName;
+    this.factory = factory;
   }
 
   /**
@@ -58,18 +61,18 @@ public class ReflectiveFeign extends Feign {
         continue;
       methodToHandler.put(method, nameToHandler.get(Feign.configKey(method)));
     }
-    FeignInvocationHandler handler = new FeignInvocationHandler(target, methodToHandler);
+    InvocationHandler handler = factory.create(target, methodToHandler);
     return (T) Proxy.newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
   }
 
   static class FeignInvocationHandler implements InvocationHandler {
 
     private final Target target;
-    private final Map<Method, MethodHandler> methodToHandler;
+    private final Map<Method, MethodHandler> dispatch;
 
-    FeignInvocationHandler(Target target, Map<Method, MethodHandler> methodToHandler) {
+    FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {
       this.target = checkNotNull(target, "target");
-      this.methodToHandler = checkNotNull(methodToHandler, "methodToHandler for %s", target);
+      this.dispatch = checkNotNull(dispatch, "dispatch for %s", target);
     }
 
     @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -84,25 +87,19 @@ public class ReflectiveFeign extends Feign {
       if ("hashCode".equals(method.getName())) {
         return hashCode();
       }
-      return methodToHandler.get(method).invoke(args);
+      return dispatch.get(method).invoke(args);
     }
 
     @Override public int hashCode() {
       return target.hashCode();
     }
 
-    @Override public boolean equals(Object obj) {
-      if (obj == null) {
-        return false;
+    @Override public boolean equals(Object other) {
+      if (other instanceof FeignInvocationHandler) {
+        FeignInvocationHandler that = (FeignInvocationHandler) other;
+        return this.target.equals(that.target);
       }
-      if (this == obj) {
-        return true;
-      }
-      if (FeignInvocationHandler.class != obj.getClass()) {
-        return false;
-      }
-      FeignInvocationHandler that = FeignInvocationHandler.class.cast(obj);
-      return this.target.equals(that.target);
+      return false;
     }
 
     @Override public String toString() {
@@ -110,7 +107,7 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  @dagger.Module(complete = false, injects = {Feign.class, MethodHandler.Factory.class}, library = true)
+  @dagger.Module(complete = false, injects = {Feign.class, SynchronousMethodHandler.Factory.class}, library = true)
   public static class Module {
     @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> noRequestInterceptors() {
       return Collections.emptySet();
@@ -127,11 +124,11 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
-    private final MethodHandler.Factory factory;
+    private final SynchronousMethodHandler.Factory factory;
 
     @SuppressWarnings("unchecked")
     @Inject ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                                ErrorDecoder errorDecoder, MethodHandler.Factory factory) {
+                                ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -158,14 +155,14 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  private static class BuildTemplateByResolvingArgs implements MethodHandler.BuildTemplateFromArgs {
+  private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
     protected final MethodMetadata metadata;
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
     }
 
-    public RequestTemplate apply(Object[] argv) {
+    @Override public RequestTemplate create(Object[] argv) {
       RequestTemplate mutable = new RequestTemplate(metadata.template());
       if (metadata.urlIndex() != null) {
         int urlIndex = metadata.urlIndex();
