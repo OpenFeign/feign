@@ -49,6 +49,11 @@ import java.util.Map.Entry;
  */
 public final class RequestTemplate implements Serializable {
 
+  interface Factory {
+    /** create a request template using args passed to a method invocation. */
+    RequestTemplate create(Object[] argv);
+  }
+
   private String method;
   /* final to encourage mutable use vs replacing the object. */
   private StringBuilder url = new StringBuilder();
