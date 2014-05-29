@@ -120,7 +120,8 @@ project(':feign-ribbon') {
 
     dependencies {
         compile     project(':feign-core')
-        compile     'com.netflix.ribbon:ribbon-core:0.2.3'
+        compile     'com.netflix.ribbon:ribbon-core:0.3.2'
+        compile     'com.netflix.ribbon:ribbon-httpclient:0.3.2'
         testCompile 'org.testng:testng:6.8.5'
         testCompile 'com.google.mockwebserver:mockwebserver:20130706'
     }
