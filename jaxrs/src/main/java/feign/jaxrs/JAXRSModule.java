@@ -57,6 +57,9 @@ public final class JAXRSModule {
       if (path != null) {
         String pathValue = emptyToNull(path.value());
         checkState(pathValue != null, "Path.value() was empty on type %s", method.getDeclaringClass().getName());
+        if (!pathValue.startsWith("/")) {
+            pathValue = "/" + pathValue;
+        }
         md.template().insert(0, pathValue);
       }
       return md;
@@ -74,7 +77,11 @@ public final class JAXRSModule {
       } else if (annotationType == Path.class) {
         String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
         checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
-        data.template().append(Path.class.cast(methodAnnotation).value());
+        String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
+        if (!methodAnnotationValue.startsWith("/") && !data.template().toString().endsWith("/")) {
+          methodAnnotationValue = "/" + methodAnnotationValue;
+        }
+        data.template().append(methodAnnotationValue);
       } else if (annotationType == Produces.class) {
         String[] serverProduces = ((Produces) methodAnnotation).value();
         String clientAccepts = serverProduces.length == 0 ? null: emptyToNull(serverProduces[0]);
