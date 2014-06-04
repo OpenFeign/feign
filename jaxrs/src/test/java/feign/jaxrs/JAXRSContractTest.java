@@ -342,4 +342,34 @@ public class JAXRSContractTest {
   public void emptyHeaderParam() throws Exception {
     contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("emptyHeaderParam", String.class));
   }
+
+  @Path("base")
+  interface PathsWithoutAnySlashes {
+    @GET @Path("specific") Response get();
+  }
+
+  @Test public void pathsWithoutSlashesParseCorrectly() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithoutAnySlashes.class.getDeclaredMethod("get"));
+    assertEquals(md.template().url(), "/base/specific");
+  }
+
+  @Path("/base")
+  interface PathsWithSomeSlashes {
+    @GET @Path("specific") Response get();
+  }
+
+  @Test public void pathsWithSomeSlashesParseCorrectly() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithSomeSlashes.class.getDeclaredMethod("get"));
+    assertEquals(md.template().url(), "/base/specific");
+  }
+
+  @Path("base")
+  interface PathsWithSomeOtherSlashes {
+    @GET @Path("/specific") Response get();
+  }
+
+  @Test public void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithSomeOtherSlashes.class.getDeclaredMethod("get"));
+    assertEquals(md.template().url(), "/base/specific");
+  }
 }
