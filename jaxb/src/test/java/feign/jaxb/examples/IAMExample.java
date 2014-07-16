@@ -71,11 +71,6 @@ public class IAMExample {
         public void setResponseMetadata(ResponseMetadata responseMetadata) {
             this.responseMetadata = responseMetadata;
         }
-
-        @Override
-        public String toString() {
-            return super.toString();
-        }
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
