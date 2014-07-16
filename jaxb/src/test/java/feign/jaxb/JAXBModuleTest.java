@@ -20,9 +20,6 @@ import java.util.Collections;
 import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
 
-/**
- * @author gwhit7
- */
 @Test
 public class JAXBModuleTest {
     @Module(includes = JAXBModule.class, injects = EncoderAndDecoderBindings.class)
