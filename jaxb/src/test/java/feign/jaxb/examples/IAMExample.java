@@ -1,10 +1,18 @@
 package feign.jaxb.examples;
 
-import feign.*;
+import feign.Feign;
+import feign.Request;
+import feign.RequestLine;
+import feign.RequestTemplate;
+import feign.Target;
 import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.Collections;
 
 public class IAMExample {
