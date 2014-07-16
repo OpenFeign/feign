@@ -8,12 +8,15 @@ Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
 ```java
 //The context factory should be reused across requests.  Recreating it will be a performance
 //bottleneck as it has to recreate the JAXBContext.
-JAXBContextFactory ctxFactory = new JAXBContextFactory(); 
+JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
+    .withMarshallerJAXBEncoding("UTF-8")
+    .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+    .build();
 
 Response response = Feign.builder()
-                     .encoder(new JAXBEncoder(ctxFactory))
-                     .decoder(new JAXBDecoder(ctxFactory))
-                     .target(Response.class, "https://api.test.com");
+                        .encoder(new JAXBEncoder(jaxbFactory))
+                        .decoder(new JAXBDecoder(jaxbFactory))
+                        .target(Response.class, "https://api.test.com");
 ```
 
 Alternatively, you can add the encoder and decoder to your Dagger object graph using the provided JAXBModule like so:
