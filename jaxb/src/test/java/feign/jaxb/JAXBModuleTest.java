@@ -114,6 +114,93 @@ public class JAXBModuleTest {
     }
 
     @Test
+    public void encodesXmlWithCustomJAXBEncoding() throws Exception {
+        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
+                .withMarshallerJAXBEncoding("UTF-16")
+                .build();
+
+        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+
+        MockObject mock = new MockObject();
+        mock.setValue("Test");
+
+        RequestTemplate template = new RequestTemplate();
+        encoder.encode(mock, template);
+
+        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-16\" " +
+                "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+    }
+
+    @Test
+    public void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
+        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
+                .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+                .build();
+
+        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+
+        MockObject mock = new MockObject();
+        mock.setValue("Test");
+
+        RequestTemplate template = new RequestTemplate();
+        encoder.encode(mock, template);
+
+        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+                "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://api.test.com " +
+                "http://api.test.com/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+                "<value>Test</value></mockObject>");
+    }
+
+    @Test
+    public void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
+        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
+                .withMarshallerNoNamespaceSchemaLocation("http://api.test.com/schema.xsd")
+                .build();
+
+        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+
+        MockObject mock = new MockObject();
+        mock.setValue("Test");
+
+        RequestTemplate template = new RequestTemplate();
+        encoder.encode(mock, template);
+
+        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+                "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://api.test.com/schema.xsd\" " +
+                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+                "<value>Test</value></mockObject>");
+    }
+
+    @Test
+    public void encodesXmlWithCustomJAXBFormattedOutput() {
+        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
+                .withMarshallerFormattedOutput(true)
+                .build();
+
+        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+
+        MockObject mock = new MockObject();
+        mock.setValue("Test");
+
+        RequestTemplate template = new RequestTemplate();
+        encoder.encode(mock, template);
+
+        String NEWLINE = System.getProperty("line.separator");
+
+        StringBuilder expectedXml = new StringBuilder();
+        expectedXml.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>").append(NEWLINE)
+                .append("<mockObject>").append(NEWLINE)
+                .append("    <value>Test</value>").append(NEWLINE)
+                .append("</mockObject>").append(NEWLINE);
+
+        assertEquals(new String(template.body(), UTF_8), expectedXml.toString());
+    }
+
+    @Test
     public void decodesXml() throws Exception {
         DecoderBindings bindings = new DecoderBindings();
         ObjectGraph.create(bindings).inject(bindings);

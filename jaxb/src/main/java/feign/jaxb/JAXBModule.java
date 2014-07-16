@@ -21,13 +21,33 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 
 import javax.inject.Singleton;
-import javax.xml.bind.Marshaller;
-import java.util.HashMap;
-import java.util.Map;
 
+/**
+ * Provides an Encoder and Decoder for handling XML responses with JAXB annotated classes.
+ * <p>
+ * <br>
+ * Here is an example of configuring a custom JAXBContextFactory:
+ * </p>
+ * <pre>
+ *    JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
+ *               .withMarshallerJAXBEncoding("UTF-8")
+ *               .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+ *               .build();
+ *
+ *    Response response = Feign.create(Response.class, "http://api.test.com", new JAXBModule(jaxbFactory));
+ * </pre>
+ */
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class JAXBModule {
-    private final Map<String, Object> properties = new HashMap<String, Object>(5);
+    private final JAXBContextFactory jaxbContextFactory;
+
+    public JAXBModule() {
+        this.jaxbContextFactory = defaultJAXBContextFactory();
+    }
+
+    public JAXBModule(JAXBContextFactory jaxbContextFactory) {
+        this.jaxbContextFactory = jaxbContextFactory;
+    }
 
     @Provides
     public Encoder encoder(JAXBContextFactory jaxbContextFactory) {
@@ -41,27 +61,7 @@ public final class JAXBModule {
 
     @Provides
     @Singleton
-    JAXBContextFactory jaxbContextFactory() {
-        return new JAXBContextFactory(properties);
-    }
-
-    public void setMarshallerJaxbEncoding(String value) {
-        properties.put(Marshaller.JAXB_ENCODING, value);
-    }
-
-    public void setMarshallerSchemaLocation(String value) {
-        properties.put(Marshaller.JAXB_SCHEMA_LOCATION, value);
-    }
-
-    public void setMarshallerNoNamespaceSchemaLocation(String value) {
-        properties.put(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION, value);
-    }
-
-    public void setMarshallerFormattedOutput(Boolean value) {
-        properties.put(Marshaller.JAXB_FORMATTED_OUTPUT, value);
-    }
-
-    public void setMarshallerFragment(Boolean value) {
-        properties.put(Marshaller.JAXB_FRAGMENT, value);
+    JAXBContextFactory defaultJAXBContextFactory() {
+        return new JAXBContextFactory.Builder().build();
     }
 }

@@ -28,7 +28,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.Collections;
 
 public class IAMExample {
 
@@ -38,7 +37,7 @@ public class IAMExample {
 
     public static void main(String... args) {
         IAM iam = Feign.builder()
-                .decoder(new JAXBDecoder(new JAXBContextFactory(Collections.EMPTY_MAP)))
+                .decoder(new JAXBDecoder(new JAXBContextFactory.Builder().build()))
                 .target(new IAMTarget(args[0], args[1]));
 
         GetUserResponse response = iam.userResponse();

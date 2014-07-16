@@ -25,19 +25,28 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Creates and caches JAXBContexts as well as creates Marshallers and Unmarshallers for each context.
+ */
 public final class JAXBContextFactory {
     private final ConcurrentHashMap<Class, JAXBContext> jaxbContexts = new ConcurrentHashMap<Class, JAXBContext>(64);
-    private Map<String, Object> properties = new HashMap<String, Object>(5);
+    private final Map<String, Object> properties;
 
-    public JAXBContextFactory(Map<String, Object> properties) {
+    private JAXBContextFactory(Map<String, Object> properties) {
         this.properties = properties;
     }
 
+    /**
+     * Creates a new {@link javax.xml.bind.Unmarshaller} that handles the supplied class.
+     */
     public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
         JAXBContext ctx = getContext(clazz);
         return ctx.createUnmarshaller();
     }
 
+    /**
+     * Creates a new {@link javax.xml.bind.Marshaller} that handles the supplied class.
+     */
     public Marshaller createMarshaller(Class<?> clazz) throws JAXBException {
         JAXBContext ctx = getContext(clazz);
         Marshaller marshaller = ctx.createMarshaller();
@@ -61,5 +70,59 @@ public final class JAXBContextFactory {
             this.jaxbContexts.putIfAbsent(clazz, jaxbContext);
         }
         return jaxbContext;
+    }
+
+    /**
+     * Creates instances of {@link feign.jaxb.JAXBContextFactory}
+     */
+    public static class Builder {
+        private final Map<String, Object> properties = new HashMap<String, Object>(5);
+
+        /**
+         * Sets the jaxb.encoding property of any Marshaller created by this factory.
+         */
+        public Builder withMarshallerJAXBEncoding(String value) {
+            properties.put(Marshaller.JAXB_ENCODING, value);
+            return this;
+        }
+
+        /**
+         * Sets the jaxb.schemaLocation property of any Marshaller created by this factory.
+         */
+        public Builder withMarshallerSchemaLocation(String value) {
+            properties.put(Marshaller.JAXB_SCHEMA_LOCATION, value);
+            return this;
+        }
+
+        /**
+         * Sets the jaxb.noNamespaceSchemaLocation property of any Marshaller created by this factory.
+         */
+        public Builder withMarshallerNoNamespaceSchemaLocation(String value) {
+            properties.put(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION, value);
+            return this;
+        }
+
+        /**
+         * Sets the jaxb.formatted.output property of any Marshaller created by this factory.
+         */
+        public Builder withMarshallerFormattedOutput(Boolean value) {
+            properties.put(Marshaller.JAXB_FORMATTED_OUTPUT, value);
+            return this;
+        }
+
+        /**
+         * Sets the jaxb.fragment property of any Marshaller created by this factory.
+         */
+        public Builder withMarshallerFragment(Boolean value) {
+            properties.put(Marshaller.JAXB_FRAGMENT, value);
+            return this;
+        }
+
+        /**
+         * Creates a new {@link feign.jaxb.JAXBContextFactory} instance.
+         */
+        public JAXBContextFactory build() {
+            return new JAXBContextFactory(properties);
+        }
     }
 }
