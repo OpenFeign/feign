@@ -22,5 +22,5 @@ Response response = Feign.builder()
 Alternatively, you can add the encoder and decoder to your Dagger object graph using the provided JAXBModule like so:
 
 ```java
-Response response = Feign.create(Response.class, "https://api.test.com", new JAXBModule());
+Response response = Feign.create(Response.class, "https://apihost", new JAXBModule());
 ```
