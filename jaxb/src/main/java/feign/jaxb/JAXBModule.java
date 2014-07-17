@@ -31,10 +31,10 @@ import javax.inject.Singleton;
  * <pre>
  *    JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *               .withMarshallerJAXBEncoding("UTF-8")
- *               .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+ *               .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
  *               .build();
  *
- *    Response response = Feign.create(Response.class, "http://api.test.com", new JAXBModule(jaxbFactory));
+ *    Response response = Feign.create(Response.class, "http://apihost", new JAXBModule(jaxbFactory));
  * </pre>
  */
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
@@ -49,15 +49,15 @@ public final class JAXBModule {
         this.jaxbContextFactory = jaxbContextFactory;
     }
 
-    @Provides Encoder encoder(JAXBContextFactory jaxbContextFactory) {
-        return new JAXBEncoder(jaxbContextFactory);
+    @Provides Encoder encoder(JAXBEncoder jaxbEncoder) {
+        return jaxbEncoder;
     }
 
-    @Provides Decoder decoder(JAXBContextFactory jaxbContextFactory) {
-        return new JAXBDecoder(jaxbContextFactory);
+    @Provides Decoder decoder(JAXBDecoder jaxbDecoder) {
+        return jaxbDecoder;
     }
 
-    @Provides @Singleton JAXBContextFactory defaultJAXBContextFactory() {
+    @Provides @Singleton JAXBContextFactory jaxbContextFactory() {
         return this.jaxbContextFactory;
     }
 }

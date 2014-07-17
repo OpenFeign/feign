@@ -20,6 +20,7 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.lang.reflect.Type;
 public class JAXBDecoder implements Decoder {
     private final JAXBContextFactory jaxbContextFactory;
 
+    @Inject
     public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
         this.jaxbContextFactory = jaxbContextFactory;
     }

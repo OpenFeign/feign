@@ -120,7 +120,7 @@ public class JAXBModuleTest {
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
 
         MockObject mock = new MockObject();
         mock.setValue("Test");
@@ -139,7 +139,7 @@ public class JAXBModuleTest {
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
 
         MockObject mock = new MockObject();
         mock.setValue("Test");
@@ -160,7 +160,7 @@ public class JAXBModuleTest {
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
 
         MockObject mock = new MockObject();
         mock.setValue("Test");
@@ -181,7 +181,7 @@ public class JAXBModuleTest {
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(jaxbContextFactory);
+        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
 
         MockObject mock = new MockObject();
         mock.setValue("Test");
