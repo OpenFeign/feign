@@ -135,7 +135,7 @@ public class JAXBModuleTest {
     @Test
     public void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
         JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+                .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
@@ -148,15 +148,15 @@ public class JAXBModuleTest {
         encoder.encode(mock, template);
 
         assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://api.test.com " +
-                "http://api.test.com/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+                "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
+                "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
                 "<value>Test</value></mockObject>");
     }
 
     @Test
     public void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
         JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerNoNamespaceSchemaLocation("http://api.test.com/schema.xsd")
+                .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
                 .build();
 
         JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
@@ -169,7 +169,7 @@ public class JAXBModuleTest {
         encoder.encode(mock, template);
 
         assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://api.test.com/schema.xsd\" " +
+                "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
                 "<value>Test</value></mockObject>");
     }

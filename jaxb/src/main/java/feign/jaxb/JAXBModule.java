@@ -42,26 +42,22 @@ public final class JAXBModule {
     private final JAXBContextFactory jaxbContextFactory;
 
     public JAXBModule() {
-        this.jaxbContextFactory = defaultJAXBContextFactory();
+        this.jaxbContextFactory = new JAXBContextFactory.Builder().build();
     }
 
     public JAXBModule(JAXBContextFactory jaxbContextFactory) {
         this.jaxbContextFactory = jaxbContextFactory;
     }
 
-    @Provides
-    public Encoder encoder(JAXBContextFactory jaxbContextFactory) {
+    @Provides Encoder encoder(JAXBContextFactory jaxbContextFactory) {
         return new JAXBEncoder(jaxbContextFactory);
     }
 
-    @Provides
-    public Decoder decoder(JAXBContextFactory jaxbContextFactory) {
+    @Provides Decoder decoder(JAXBContextFactory jaxbContextFactory) {
         return new JAXBDecoder(jaxbContextFactory);
     }
 
-    @Provides
-    @Singleton
-    JAXBContextFactory defaultJAXBContextFactory() {
-        return new JAXBContextFactory.Builder().build();
+    @Provides @Singleton JAXBContextFactory defaultJAXBContextFactory() {
+        return this.jaxbContextFactory;
     }
 }
