@@ -10,13 +10,13 @@ Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
 //bottleneck as it has to recreate the JAXBContext.
 JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
     .withMarshallerJAXBEncoding("UTF-8")
-    .withMarshallerSchemaLocation("http://api.test.com http://api.test.com/schema.xsd")
+    .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
     .build();
 
 Response response = Feign.builder()
                         .encoder(new JAXBEncoder(jaxbFactory))
                         .decoder(new JAXBDecoder(jaxbFactory))
-                        .target(Response.class, "https://api.test.com");
+                        .target(Response.class, "https://apihost");
 ```
 
 Alternatively, you can add the encoder and decoder to your Dagger object graph using the provided JAXBModule like so:
