@@ -95,6 +95,20 @@ project(':feign-jackson') {
     }
 }
 
+project(':feign-jaxb') {
+    apply plugin: 'java'
+
+    test {
+        useTestNG()
+    }
+
+    dependencies {
+        compile     project(':feign-core')
+        testCompile 'org.testng:testng:6.8.5'
+        testCompile 'com.google.guava:guava:14.0.1'
+    }
+}
+
 project(':feign-jaxrs') {
     apply plugin: 'java'
 
