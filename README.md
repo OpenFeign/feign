@@ -123,6 +123,18 @@ api = Feign.builder()
            .target(Api.class, "https://apihost");
 ```
 
+### JAXB
+[JAXBModule](https://github.com/Netflix/feign/tree/master/jaxb) allows you to encode and decode XML using JAXB.
+
+Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
+
+```java
+api = Feign.builder()
+           .encoder(new JAXBEncoder())
+           .decoder(new JAXBDecoder())
+           .target(Api.class, "https://apihost");
+```
+
 ### JAX-RS
 [JAXRSModule](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 

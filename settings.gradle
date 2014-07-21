@@ -1,5 +1,5 @@
 rootProject.name='feign'
-include 'core', 'sax', 'gson', 'jackson', 'jaxrs', 'ribbon', 'slf4j', 'example-github', 'example-wikipedia'
+include 'core', 'sax', 'gson', 'jackson', 'jaxb', 'jaxrs', 'ribbon', 'slf4j', 'example-github', 'example-wikipedia'
 
 rootProject.children.each { childProject ->
     childProject.name = 'feign-' + childProject.name
