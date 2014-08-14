@@ -19,10 +19,10 @@ import com.netflix.client.AbstractLoadBalancerAwareClient;
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
+import com.netflix.client.RequestSpecificRetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.util.Pair;
 
 import java.io.IOException;
 import java.net.URI;
@@ -35,9 +35,6 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.RetryableException;
 
-import static com.netflix.client.config.CommonClientConfigKey.ConnectTimeout;
-import static com.netflix.client.config.CommonClientConfigKey.ReadTimeout;
-
 class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
 
   private final Client delegate;
@@ -45,38 +42,40 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
   private final int readTimeout;
 
   LBClient(Client delegate, ILoadBalancer lb, IClientConfig clientConfig) {
+    super(lb, clientConfig);
     this.delegate = delegate;
-    this.connectTimeout = Integer.valueOf(clientConfig.getProperty(ConnectTimeout).toString());
-    this.readTimeout = Integer.valueOf(clientConfig.getProperty(ReadTimeout).toString());
-    setLoadBalancer(lb);
-    initWithNiwsConfig(clientConfig);
+    connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
+    readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
   }
 
   @Override
-  public RibbonResponse execute(RibbonRequest request) throws IOException {
-    int connectTimeout = config(request, ConnectTimeout, this.connectTimeout);
-    int readTimeout = config(request, ReadTimeout, this.readTimeout);
-
-    Request.Options options = new Request.Options(connectTimeout, readTimeout);
+  public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride) throws IOException {
+    Request.Options options;
+    if (configOverride != null) {
+      options = new Request.Options(configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+          (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)));
+    } else {
+      options = new Request.Options(connectTimeout, readTimeout);
+    }
     Response response = delegate.execute(request.toRequest(), options);
     return new RibbonResponse(request.getUri(), response);
   }
 
-  @Override protected boolean isCircuitBreakerException(Exception e) {
-    return e instanceof IOException;
-  }
-
-  @Override protected boolean isRetriableException(Exception e) {
-    return e instanceof RetryableException;
-  }
-
   @Override
-  protected Pair<String, Integer> deriveSchemeAndPortFromPartialUri(RibbonRequest task) {
-    return new Pair<String, Integer>(URI.create(task.request.url()).getScheme(), task.getUri().getPort());
-  }
+  public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
+      RibbonRequest request, IClientConfig requestConfig) {
 
-  @Override protected int getDefaultPort() {
-    return 443;
+    return new RequestSpecificRetryHandler(true, false) {
+      @Override
+      public boolean isRetriableException(Throwable e, boolean sameServer) {
+        return e instanceof RetryableException;
+      }
+
+      @Override
+      public boolean isCircuitTrippingException(Throwable e) {
+        return e instanceof IOException;
+      }
+    };
   }
 
   static class RibbonRequest extends ClientRequest implements Cloneable {
@@ -135,11 +134,14 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
     Response toResponse() {
       return response;
     }
+
+    @Override
+    public void close() throws IOException {
+      if (response != null && response.body() != null) {
+        response.body().close();
+      }
+    }
+
   }
 
-  static int config(RibbonRequest request, CommonClientConfigKey key, int defaultValue) {
-    if (request.getOverrideConfig() != null && request.getOverrideConfig().containsProperty(key))
-      return Integer.valueOf(request.getOverrideConfig().getProperty(key).toString());
-    return defaultValue;
-  }
 }
