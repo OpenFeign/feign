@@ -120,7 +120,7 @@ project(':feign-ribbon') {
 
     dependencies {
         compile     project(':feign-core')
-        compile     'com.netflix.ribbon:ribbon-core:0.2.4'
+        compile     'com.netflix.ribbon:ribbon-loadbalancer:2.0-RC5'
         testCompile 'org.testng:testng:6.8.5'
         testCompile 'com.google.mockwebserver:mockwebserver:20130706'
     }
