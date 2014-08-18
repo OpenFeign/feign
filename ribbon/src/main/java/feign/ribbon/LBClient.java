@@ -69,9 +69,6 @@ class LBClient
   @Override
   public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
       RibbonRequest request, IClientConfig requestConfig) {
-    if (!request.isRetriable()) {
-      return new RequestSpecificRetryHandler(false, false, this.getRetryHandler(), requestConfig);
-    }
     if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
       return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
     }
