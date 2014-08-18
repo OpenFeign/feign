@@ -20,6 +20,7 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
 import com.netflix.client.RequestSpecificRetryHandler;
+import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -27,7 +28,6 @@ import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.RetryableException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -39,9 +39,12 @@ class LBClient
   private final Client delegate;
   private final int connectTimeout;
   private final int readTimeout;
+  private final IClientConfig clientConfig;
 
   LBClient(Client delegate, ILoadBalancer lb, IClientConfig clientConfig) {
     super(lb, clientConfig);
+    this.setRetryHandler(RetryHandler.DEFAULT);
+    this.clientConfig = clientConfig;
     this.delegate = delegate;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
@@ -66,18 +69,17 @@ class LBClient
   @Override
   public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
       RibbonRequest request, IClientConfig requestConfig) {
-
-    return new RequestSpecificRetryHandler(true, false) {
-      @Override
-      public boolean isRetriableException(Throwable e, boolean sameServer) {
-        return e instanceof RetryableException;
-      }
-
-      @Override
-      public boolean isCircuitTrippingException(Throwable e) {
-        return e instanceof IOException;
-      }
-    };
+    if (!request.isRetriable()) {
+      return new RequestSpecificRetryHandler(false, false, this.getRetryHandler(), requestConfig);
+    }
+    if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
+      return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+    }
+    if (!request.toRequest().method().equals("GET")) {
+      return new RequestSpecificRetryHandler(true, false, this.getRetryHandler(), requestConfig);
+    } else {
+      return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+    }
   }
 
   static class RibbonRequest extends ClientRequest implements Cloneable {
