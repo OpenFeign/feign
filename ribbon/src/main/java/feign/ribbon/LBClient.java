@@ -19,60 +19,61 @@ import com.netflix.client.AbstractLoadBalancerAwareClient;
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
+import com.netflix.client.RequestSpecificRetryHandler;
+import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.util.Pair;
+import feign.Client;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
-import feign.Client;
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.RetryableException;
-
-import static com.netflix.client.config.CommonClientConfigKey.ConnectTimeout;
-import static com.netflix.client.config.CommonClientConfigKey.ReadTimeout;
-
 class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
 
   private final Client delegate;
   private final int connectTimeout;
   private final int readTimeout;
+  private final IClientConfig clientConfig;
 
   LBClient(Client delegate, ILoadBalancer lb, IClientConfig clientConfig) {
+    super(lb, clientConfig);
+    this.setRetryHandler(RetryHandler.DEFAULT);
+    this.clientConfig = clientConfig;
     this.delegate = delegate;
-    this.connectTimeout = Integer.valueOf(clientConfig.getProperty(ConnectTimeout).toString());
-    this.readTimeout = Integer.valueOf(clientConfig.getProperty(ReadTimeout).toString());
-    setLoadBalancer(lb);
-    initWithNiwsConfig(clientConfig);
+    connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
+    readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
   }
 
   @Override
-  public RibbonResponse execute(RibbonRequest request) throws IOException {
-    int connectTimeout = config(request, ConnectTimeout, this.connectTimeout);
-    int readTimeout = config(request, ReadTimeout, this.readTimeout);
-
-    Request.Options options = new Request.Options(connectTimeout, readTimeout);
+  public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride) throws IOException {
+    Request.Options options;
+    if (configOverride != null) {
+      options = new Request.Options(configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+          (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)));
+    } else {
+      options = new Request.Options(connectTimeout, readTimeout);
+    }
     Response response = delegate.execute(request.toRequest(), options);
     return new RibbonResponse(request.getUri(), response);
   }
 
-  @Override protected boolean isCircuitBreakerException(Throwable e) {
-    return e instanceof IOException;
-  }
-
-  @Override protected boolean isRetriableException(Throwable e) {
-    return e instanceof RetryableException;
-  }
-
   @Override
-  protected Pair<String, Integer> deriveSchemeAndPortFromPartialUri(RibbonRequest task) {
-    return new Pair<String, Integer>(URI.create(task.request.url()).getScheme(), task.getUri().getPort());
+  public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
+          RibbonRequest request, IClientConfig requestConfig) {
+    if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
+        return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+    }
+    if (!request.toRequest().method().equals("GET")) {
+        return new RequestSpecificRetryHandler(true, false, this.getRetryHandler(), requestConfig);
+    } else {
+        return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+    }
   }
 
   static class RibbonRequest extends ClientRequest implements Cloneable {
@@ -134,15 +135,11 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
 
     @Override
     public void close() throws IOException {
-        if (response.body() != null) {
-            response.body().close();
-        }
+      if (response != null && response.body() != null) {
+        response.body().close();
+      }
     }
+
   }
 
-  static int config(RibbonRequest request, CommonClientConfigKey key, int defaultValue) {
-    if (request.getOverrideConfig() != null && request.getOverrideConfig().containsProperty(key))
-      return Integer.valueOf(request.getOverrideConfig().getProperty(key).toString());
-    return defaultValue;
-  }
 }
