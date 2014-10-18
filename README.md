@@ -172,7 +172,7 @@ If any methods in your interface use parameters types besides `String` or `byte[
 
 Here's how to configure JSON encoding (using the `feign-gson` extension):
 
-```json
+```java
 GitHub github = Feign.builder()
                      .encoder(new GsonEncoder())
                      .target(GitHub.class, "https://api.github.com");
