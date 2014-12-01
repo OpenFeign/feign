@@ -19,6 +19,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.SocketPolicy;
 import dagger.Provides;
+import feign.Client;
 import feign.Feign;
 import feign.RequestLine;
 import feign.codec.Decoder;
@@ -146,6 +147,35 @@ public class RibbonClientTest {
 		}
 	}
 
+
+    @Test
+    public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
+      String client = "RibbonClientTest-ioExceptionRetryWithBuilder";
+      String serverListKey = client + ".ribbon.listOfServers";
+
+      MockWebServer server = new MockWebServer();
+      server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+      server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
+      server.play();
+
+      getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+
+      try {
+
+        TestInterface api = Feign.builder().
+                client(new RibbonClient()).
+                target(TestInterface.class, "http://" + client);
+
+        api.post();
+
+        assertEquals(server.getRequestCount(), 2);
+        // TODO: verify ribbon stats match
+        // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+      } finally {
+        server.shutdown();
+        getConfigInstance().clearProperty(serverListKey);
+      }
+    }
 
 
   static String hostAndPort(URL url) {
