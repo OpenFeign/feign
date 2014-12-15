@@ -11,7 +11,7 @@ Feign works by processing annotations into a templatized request.  Just before s
 
 ### Basics
 
-Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/retrofit-samples/github-client/src/main/java/com/example/retrofit/GitHubClient.java).
+Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/samples/github-client/src/main/java/com/example/retrofit/GitHubClient.java).
 
 ```java
 interface GitHub {
