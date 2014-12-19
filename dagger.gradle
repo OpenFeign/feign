@@ -28,7 +28,7 @@ apply plugin: 'idea'
 
 if (!project.hasProperty('daggerVersion')) {
     ext {
-        daggerVersion = "1.1.0"
+        daggerVersion = "1.2.2"
     }    
 }
 
