@@ -15,18 +15,9 @@
  */
 package feign.ribbon;
 
-import com.google.common.base.Throwables;
-import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.IClientConfig;
-import com.netflix.loadbalancer.ILoadBalancer;
+
 import dagger.Provides;
 import feign.Client;
-import feign.Request;
-import feign.Response;
-import java.io.IOException;
-import java.net.URI;
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -56,41 +47,7 @@ public class RibbonModule {
 
   @Provides
   @Singleton
-  Client httpClient(RibbonClient ribbon) {
-    return ribbon;
-  }
-
-  @Singleton
-  static class RibbonClient implements Client {
-    private final Client delegate;
-
-    @Inject
-    public RibbonClient(@Named("delegate") Client delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public Response execute(Request request, Request.Options options) throws IOException {
-      try {
-        URI asUri = URI.create(request.url());
-        String clientName = asUri.getHost();
-        URI uriWithoutSchemeAndPort =
-            URI.create(request.url().replace(asUri.getScheme() + "://" + asUri.getHost(), ""));
-        LBClient.RibbonRequest ribbonRequest =
-            new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
-        return lbClient(clientName).executeWithLoadBalancer(ribbonRequest).toResponse();
-      } catch (ClientException e) {
-        if (e.getCause() instanceof IOException) {
-          throw IOException.class.cast(e.getCause());
-        }
-        throw Throwables.propagate(e);
-      }
-    }
-
-    private LBClient lbClient(String clientName) {
-      IClientConfig config = ClientFactory.getNamedConfig(clientName);
-      ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
-      return new LBClient(delegate, lb, config);
-    }
+  Client httpClient(@Named("delegate") Client client) {
+    return new RibbonClient(client);
   }
 }
