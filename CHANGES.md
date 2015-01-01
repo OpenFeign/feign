@@ -1,6 +1,7 @@
 ### Version 7.0
 * Expose reflective dispatch hook: InvocationHandlerFactory
 * Add JAXB integration
+* Add SLF4J integration
 * Upgrade to Dagger 1.2.2.
   * **Note:** Dagger-generated code prior to version 1.2.0 is incompatible with Dagger 1.2.0 and beyond. Dagger users should upgrade Dagger to at least version 1.2.0, and recompile any dependency-injected classes.
 
