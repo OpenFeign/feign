@@ -92,7 +92,7 @@ rootProject.idea.project.ipr.withXml { projectXml ->
 tasks.ideaModule.dependsOn(prepareAnnotationGeneratedSourceDirs)
 
 idea.module {
-    scopes.PROVIDED.plus += project.configurations.daggerCompiler
+    scopes.PROVIDED.plus += [project.configurations.daggerCompiler]
     iml.withXml { xml->
         def moduleSource = xml.asNode().component.find { it.@name = 'NewModuleRootManager' }.content[0]
         moduleSource.appendNode('sourceFolder', [url: "file://\$MODULE_DIR\$/${relativePath(annotationGeneratedSources)}", isTestSource: false])
@@ -103,7 +103,7 @@ idea.module {
 tasks.eclipseClasspath.dependsOn(prepareAnnotationGeneratedSourceDirs)
 
 eclipse.classpath {
-    plusConfigurations += project.configurations.daggerCompiler
+    plusConfigurations += [project.configurations.daggerCompiler]
 }
 
 tasks.eclipseClasspath {
