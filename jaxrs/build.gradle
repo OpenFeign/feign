@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile project(':feign-core')
+    compile 'javax.ws.rs:jsr311-api:1.1.1'
+    testCompile project(':feign-gson')
+    testCompile 'com.google.guava:guava:14.0.1'
+    testCompile 'org.testng:testng:6.8.5'
+}

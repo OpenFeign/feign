@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    testCompile 'com.google.guava:guava:14.0.1'
+    testCompile 'com.google.code.gson:gson:2.2.4'
+    testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+    testCompile 'org.testng:testng:6.8.5'
+    testCompile 'com.google.mockwebserver:mockwebserver:20130706'
+}
