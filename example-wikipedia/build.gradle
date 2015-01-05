@@ -1,4 +1,10 @@
+plugins {
+  id 'nebula.provided-base' version '2.0.1'
+}
+
 apply plugin: 'java'
+
+sourceCompatibility = 1.6
 
 dependencies {
   compile project(':feign-core')

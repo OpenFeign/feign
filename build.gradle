@@ -1,127 +1,20 @@
-// Establish version and status
-ext.githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
-
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-    apply from: file('gradle/buildscript.gradle'), to: buildscript 
+plugins {
+    id 'nebula.netflixoss' version '2.2.2'
 }
 
-allprojects {
-    if (JavaVersion.current().isJava8Compatible()) {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet') // Doclint is onerous in Java 8.
-        }
-    }
-    repositories { 
-        mavenLocal()
-        mavenCentral()
-        maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
-    }
+ext {
+    githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
 }
-
-apply from: file('gradle/convention.gradle')
-apply from: file('gradle/maven.gradle')
-if (!JavaVersion.current().isJava8Compatible()) {
-    apply from: file('gradle/check.gradle') // FindBugs is incompatible with Java 8.
-}
-apply from: file('gradle/license.gradle')
-apply from: file('gradle/release.gradle')
-apply plugin: 'idea'
 
 subprojects {
+    apply plugin: 'nebula.netflixoss'
+
+    repositories { 
+        jcenter()
+        //mavenLocal()
+        //mavenCentral()
+        //maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
+    }
     apply from: rootProject.file('dagger.gradle')
     group = "com.netflix.${githubProjectName}" // TEMPLATE: Set to organization of project
-}
-
-project(':feign-core') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        testCompile 'com.google.guava:guava:14.0.1'
-        testCompile 'com.google.code.gson:gson:2.2.4'
-        testCompile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
-        testCompile 'org.testng:testng:6.8.5'
-        testCompile 'com.google.mockwebserver:mockwebserver:20130706'
-    }
-}
-
-project(':feign-sax') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        testCompile 'com.google.guava:guava:14.0.1'
-        testCompile 'org.testng:testng:6.8.5'
-    }
-}
-
-project(':feign-gson') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        compile     'com.google.code.gson:gson:2.2.4'
-        testCompile 'org.testng:testng:6.8.5'
-    }
-}
-
-project(':feign-jackson') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        compile     'com.fasterxml.jackson.core:jackson-databind:2.2.2'
-        testCompile 'org.testng:testng:6.8.5'
-        testCompile 'com.google.guava:guava:14.0.1'
-    }
-}
-
-project(':feign-jaxrs') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        compile     'javax.ws.rs:jsr311-api:1.1.1'
-        testCompile project(':feign-gson')
-        testCompile 'com.google.guava:guava:14.0.1'
-        testCompile 'org.testng:testng:6.8.5'
-    }
-}
-
-project(':feign-ribbon') {
-    apply plugin: 'java'
-
-    test {
-        useTestNG()
-    }
-
-    dependencies {
-        compile     project(':feign-core')
-        compile     'com.netflix.ribbon:ribbon-loadbalancer:2.0-RC5'
-        testCompile 'org.testng:testng:6.8.5'
-        testCompile 'com.google.mockwebserver:mockwebserver:20130706'
-    }
 }
