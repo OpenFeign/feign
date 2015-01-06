@@ -1,0 +1,14 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile project(':feign-core')
+    compile 'com.netflix.ribbon:ribbon-loadbalancer:2.0-RC5'
+    testCompile 'org.testng:testng:6.8.5'
+    testCompile 'com.google.mockwebserver:mockwebserver:20130706'
+}

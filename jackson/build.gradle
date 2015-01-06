@@ -1,0 +1,14 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile project(':feign-core')
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+    testCompile 'org.testng:testng:6.8.5'
+    testCompile 'com.google.guava:guava:14.0.1'
+}
