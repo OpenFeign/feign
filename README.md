@@ -144,6 +144,19 @@ interface GitHub {
   @GET @Path("/repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
 }
+
+public static void main(String... args) {
+  GitHub github = Feign.builder()
+                       .contract(new JAXRSModule.JAXRSContract())
+                       .decoder(new GsonDecoder())
+                       .target(GitHub.class, "https://api.github.com");
+
+  // Fetch and print a list of the contributors to this library.
+  List<Contributor> contributors = github.contributors("netflix", "feign");
+  for (Contributor contributor : contributors) {
+    System.out.println(contributor.login + " (" + contributor.contributions + ")");
+  }
+}
 ```
 ### Ribbon
 [RibbonModule](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
