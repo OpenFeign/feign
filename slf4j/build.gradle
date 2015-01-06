@@ -1,0 +1,12 @@
+apply plugin: 'java'
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile project(':feign-core')
+    compile 'org.slf4j:slf4j-api:1.7.5'
+    testCompile 'org.testng:testng:6.8.5'
+    testCompile 'org.slf4j:slf4j-simple:1.7.5'
+}

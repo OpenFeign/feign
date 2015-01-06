@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+
+test {
+    useTestNG()
+}
+
+dependencies {
+    compile project(':feign-core')
+    compile 'com.google.code.gson:gson:2.2.4'
+    testCompile 'org.testng:testng:6.8.5'
+}
