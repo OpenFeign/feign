@@ -145,6 +145,11 @@ interface GitHub {
   List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
 }
 ```
+```java
+GitHub github = Feign.builder()
+                     .contract(new JAXRSModule.JAXRSContract())
+                     .target(GitHub.class, "https://api.github.com");           
+```
 ### Ribbon
 [RibbonModule](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
 
