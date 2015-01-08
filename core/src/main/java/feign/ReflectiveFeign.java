@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.io.UnsupportedEncodingException;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
@@ -144,6 +145,8 @@ public class ReflectiveFeign extends Feign {
         BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
           buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder);
+        } else if (!md.formParams().isEmpty() && md.template().bodyTemplate() != null && !(encoder instanceof Encoder.Default)) {
+          buildTemplate = new BuildFormTemplateByResolvingAndEncodingArgs(md, encoder);
         } else if (md.bodyIndex() != null) {
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
@@ -181,6 +184,37 @@ public class ReflectiveFeign extends Feign {
     }
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+      return mutable.resolve(variables);
+    }
+  }
+
+  private static class BuildFormTemplateByResolvingAndEncodingArgs extends BuildTemplateByResolvingArgs {
+    private final Encoder encoder;
+
+    private BuildFormTemplateByResolvingAndEncodingArgs(MethodMetadata metadata, Encoder encoder) {
+      super(metadata);
+      this.encoder = encoder;
+    }
+
+    @Override
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+      Map<String, Object> formVariables = new LinkedHashMap<String, Object>();
+      RequestTemplate tempTemplate = new RequestTemplate();
+      for (Entry<String, Object> entry : variables.entrySet()) {
+        if (metadata.formParams().contains(entry.getKey()) && !(entry.getValue() instanceof String) ) {
+            try {
+              encoder.encode(entry.getValue(), tempTemplate);
+              variables.put(entry.getKey(), new String(tempTemplate.body(), "UTF-8"));
+            } catch (EncodeException e) {
+              throw e;
+            } catch (RuntimeException e) {
+              throw new EncodeException(e.getMessage(), e);
+            } catch (UnsupportedEncodingException uee) {
+              throw new EncodeException(uee.getMessage(), uee);
+            }
+        }
+      }
+     
       return mutable.resolve(variables);
     }
   }

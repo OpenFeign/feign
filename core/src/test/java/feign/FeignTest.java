@@ -199,6 +199,49 @@ public class FeignTest {
       server.shutdown();
     }
   }
+  
+  class Operation {
+      public String param1;
+      public String param2;
+      public Operation(String param1, String param2) {
+          this.param1 = param1;
+          this.param2 = param2;
+      }
+  }
+  interface ObjectBodyParamInterface {
+      @RequestLine("POST /sdpapi/request")
+      @Body("OPERATION_NAME=GET_REQUESTS&TECHNICIAN_KEY={technicalKey}&INPUT_DATA={inputData}")
+          public String getRequests(
+              @Named("technicalKey") String technicalKey,
+              @Named("inputData") Operation operation
+          );
+  }
+  
+  @Test
+  public void postBodyEncodedBodyParam() throws Exception {
+      final MockWebServer server = new MockWebServer();
+      server.enqueue(new MockResponse().setBody("foo"));
+      server.play();
+      ObjectBodyParamInterface api = Feign.builder()
+              .encoder(new Encoder() {
+                public void encode(Object object, RequestTemplate template)
+                        throws feign.codec.EncodeException {
+                    if(object instanceof Operation) {
+                        Operation op = (Operation) object;
+                        template.body("<param1>"+op.param1+"</param1>"
+                                +"<param2>"+op.param2+"</param2>");
+                    } else {
+                        template.body(object.toString());
+                    }
+                }
+              })
+              .target(ObjectBodyParamInterface.class, "http://localhost:"+ server.getPort()); 
+      api.getRequests("Test", new Operation("param1", "param2"));
+      RecordedRequest request = server.takeRequest();
+      
+      assertEquals(new String(request.getBody(), UTF_8),
+              "OPERATION_NAME=GET_REQUESTS&TECHNICIAN_KEY=Test&INPUT_DATA=<param1>param1</param1><param2>param2</param2>");
+  }
 
   @Test
   public void postGZIPEncodedBodyParam() throws IOException, InterruptedException {

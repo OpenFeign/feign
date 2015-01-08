@@ -15,16 +15,23 @@
  */
 package feign;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -32,8 +39,12 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import static feign.Util.UTF_8;
 import static java.lang.String.format;
 
 /**
@@ -242,5 +253,66 @@ public class Util {
     } catch (CharacterCodingException ex) {
       return defaultValue;
     }
+  }
+  
+  public static String variableToQueryString(Object variableValue) {
+      if (variableValue == null) return null;
+      List<String> KVPairs = new ArrayList<String>();
+      if (variableValue instanceof Map) {
+          Iterator<?> entries = ((Map<?, ?>) variableValue).entrySet().iterator();
+          while (entries.hasNext()) {
+              Entry<?, ?> entry = (Entry<?, ?>) entries.next();
+              Object itemKey = entry.getKey();
+              Object value = entry.getValue();
+              if (itemKey != null && itemKey instanceof String && value != null) {
+                  KVPairs.add(encodePair(itemKey, value));
+              }
+          }
+      } else if (variableValue instanceof Object) {
+          try {
+            for(PropertyDescriptor propertyDescriptor : Introspector.getBeanInfo(variableValue.getClass()).getPropertyDescriptors()) {
+              Method reader = propertyDescriptor.getReadMethod();
+              String methodName = propertyDescriptor.getDisplayName();
+              if (reader != null && methodName.indexOf("class") != 0 && methodName.indexOf("metaClass") != 0) {
+                  KVPairs.add(encodePair(methodName, reader.invoke(variableValue)));
+              }
+            }
+          } catch (Exception e) {
+              throw new RuntimeException(e);
+          } 
+      }
+      if (KVPairs.size() > 0) {
+          StringBuilder sb = new StringBuilder();
+          for (int i = 0; i < KVPairs.size(); i++) {
+              sb.append("&").append(KVPairs.get(i));
+          }
+          sb.deleteCharAt(0);
+          return sb.toString();
+      }
+      return null;
+  }
+  
+  public static String encodePair(Object key, Object value) {
+      StringBuilder sb = new StringBuilder();
+      return sb
+        .append(urlEncode(key))
+        .append("=")
+        .append(urlEncode(value))
+        .toString();
+  }
+  
+  public static String urlEncode(Object arg) {
+    try {
+      return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  public static boolean isVariable(String item) {
+      if (item == null || item.length() == 0) {
+          return false;
+      }
+      return (item.indexOf('{') == 0 && item.indexOf('}') == item.length() - 1);
   }
 }

@@ -169,6 +169,7 @@ public interface Contract {
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1 &&
               !searchMapValues(data.template().queries(), varName) &&
+              !data.template().queries().containsKey(varName) &&
               !searchMapValues(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
