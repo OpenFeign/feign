@@ -11,9 +11,3 @@ GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
-
-Or add them to your Dagger object graph like so:
-
-```java
-GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GsonModule());
-```

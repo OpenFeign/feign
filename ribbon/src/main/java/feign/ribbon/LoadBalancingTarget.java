@@ -34,7 +34,7 @@ import static java.lang.String.format;
  * <br>
  * Ex.
  * <pre>
- * MyService api = Feign.create(LoadBalancingTarget.create(MyService.class, "http://myAppProd"))
+ * MyService api = Feign.builder().target(LoadBalancingTarget.create(MyService.class, "http://myAppProd"))
  * </pre>
  * Where {@code myAppProd} is the ribbon loadbalancer name and {@code myAppProd.ribbon.listOfServers} configuration
  * is set.

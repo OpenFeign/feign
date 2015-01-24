@@ -36,8 +36,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
-import static com.google.common.base.Throwables.propagate;
-
 /**
  * Used for ssl tests to simplify setup.
  */
@@ -69,7 +67,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
       sc.init(new KeyManager[]{this}, new TrustManager[]{this}, new SecureRandom());
       this.delegate = sc.getSocketFactory();
     } catch (Exception e) {
-      throw propagate(e);
+      throw new RuntimeException(e);
     }
     this.serverAlias = serverAlias;
     if (serverAlias.isEmpty()) {
@@ -82,7 +80,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
         this.certificateChain = Arrays.copyOf(rawChain, rawChain.length, X509Certificate[].class);
       } catch (Exception e) {
-        throw propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }

@@ -16,6 +16,7 @@
 package feign.jackson;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import feign.Response;
@@ -24,12 +25,18 @@ import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Collections;
 
 public class JacksonDecoder implements Decoder {
   private final ObjectMapper mapper;
 
   public JacksonDecoder() {
-    this(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false));
+    this(Collections.<Module>emptyList());
+  }
+
+  public JacksonDecoder(Iterable<Module> modules) {
+    this(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .registerModules(modules));
   }
 
   public JacksonDecoder(ObjectMapper mapper) {

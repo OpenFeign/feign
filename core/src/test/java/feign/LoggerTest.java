@@ -192,7 +192,6 @@ public class LoggerTest {
     }
 
     @Test public void unknownHostEmits() throws IOException, InterruptedException {
-
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
@@ -232,7 +231,6 @@ public class LoggerTest {
     }
 
     @Test public void retryEmits() throws IOException, InterruptedException {
-
       thrown.expect(FeignException.class);
 
       SendsStuff api = Feign.builder()

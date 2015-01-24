@@ -4,7 +4,6 @@ import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
-
 import java.util.List;
 
 /**
@@ -29,8 +28,11 @@ public class GitHubExample {
     }
   }
 
-  public static void main(String... args) throws InterruptedException {
-    GitHub github = Feign.builder().decoder(new JacksonDecoder()).target(GitHub.class, "https://api.github.com");
+  public static void main(String... args) {
+    GitHub github = Feign.builder()
+                         .decoder(new JacksonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {

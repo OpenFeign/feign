@@ -16,11 +16,3 @@ Response response = Feign.builder()
                          .decoder(new JAXBDecoder(jaxbFactory))
                          .target(Response.class, "https://apihost");
 ```
-
-Alternatively, you can add the encoder and decoder to your Dagger object graph using the provided JAXBModule like so:
-
-```java
-JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder().build();
-
-Response response = Feign.create(Response.class, "https://apihost", new JAXBModule(jaxbFactory));
-```

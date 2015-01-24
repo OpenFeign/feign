@@ -15,25 +15,16 @@
  */
 package feign;
 
-
-import dagger.ObjectGraph;
-import dagger.Provides;
 import feign.Logger.NoOpLogger;
+import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-
-import javax.inject.Inject;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Feign's purpose is to ease development against http apis that feign
@@ -53,80 +44,6 @@ public abstract class Feign {
 
   public static Builder builder() {
     return new Builder();
-  }
-
-  public static <T> T create(Class<T> apiType, String url, Object... modules) {
-    return create(new HardCodedTarget<T>(apiType, url), modules);
-  }
-
-  /**
-   * Shortcut to {@link #newInstance(Target) create} a single {@code targeted}
-   * http api using {@link ReflectiveFeign reflection}.
-   */
-  public static <T> T create(Target<T> target, Object... modules) {
-    return create(modules).newInstance(target);
-  }
-
-  /**
-   * Returns a {@link ReflectiveFeign reflective} factory for generating
-   * {@link Target targeted} http apis.
-   */
-  public static Feign create(Object... modules) {
-    return ObjectGraph.create(modulesForGraph(modules).toArray()).get(Feign.class);
-  }
-
-
-  /**
-   * Returns an {@link ObjectGraph Dagger ObjectGraph} that can inject a
-   * {@link ReflectiveFeign reflective} Feign.
-   */
-  public static ObjectGraph createObjectGraph(Object... modules) {
-    return ObjectGraph.create(modulesForGraph(modules).toArray());
-  }
-
-  @SuppressWarnings("rawtypes")
-  // incomplete as missing Encoder/Decoder
-  @dagger.Module(injects = {Feign.class, Builder.class}, complete = false, includes = ReflectiveFeign.Module.class)
-  public static class Defaults {
-    @Provides Contract contract() {
-      return new Contract.Default();
-    }
-
-    @Provides Logger.Level logLevel() {
-      return Logger.Level.NONE;
-    }
-
-    @Provides Logger noOp() {
-      return new NoOpLogger();
-    }
-
-    @Provides Retryer retryer() {
-      return new Retryer.Default();
-    }
-
-    @Provides ErrorDecoder errorDecoder() {
-      return new ErrorDecoder.Default();
-    }
-
-    @Provides Options options() {
-      return new Options();
-    }
-
-    @Provides SSLSocketFactory sslSocketFactory() {
-      return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
-    }
-
-    @Provides HostnameVerifier hostnameVerifier() {
-      return HttpsURLConnection.getDefaultHostnameVerifier();
-    }
-
-    @Provides Client httpClient(Client.Default client) {
-      return client;
-    }
-
-    @Provides InvocationHandlerFactory invocationHandlerFactory() {
-      return new InvocationHandlerFactory.Default();
-    }
   }
 
   /**
@@ -160,32 +77,18 @@ public abstract class Feign {
     return builder.append(')').toString();
   }
 
-  private static List<Object> modulesForGraph(Object... modules) {
-    List<Object> modulesForGraph = new ArrayList<Object>(2);
-    modulesForGraph.add(new Defaults());
-    if (modules != null)
-      for (Object module : modules)
-        modulesForGraph.add(module);
-    return modulesForGraph;
-  }
-
-  @dagger.Module(injects = Feign.class, includes = ReflectiveFeign.Module.class)
   public static class Builder {
-    private final Set<RequestInterceptor> requestInterceptors = new LinkedHashSet<RequestInterceptor>();
-    @Inject Logger.Level logLevel;
-    @Inject Contract contract;
-    @Inject Client client;
-    @Inject Retryer retryer;
-    @Inject Logger logger;
-    Encoder encoder = new Encoder.Default();
-    Decoder decoder = new Decoder.Default();
-    @Inject ErrorDecoder errorDecoder;
-    @Inject Options options;
-    @Inject InvocationHandlerFactory invocationHandlerFactory;
-
-    Builder() {
-      ObjectGraph.create(new Defaults()).inject(this);
-    }
+    private final List<RequestInterceptor> requestInterceptors = new ArrayList<RequestInterceptor>();
+    private Logger.Level logLevel = Logger.Level.NONE;
+    private Contract contract = new Contract.Default();
+    private Client client = new Client.Default(null, null);
+    private Retryer retryer = new Retryer.Default();
+    private Logger logger = new NoOpLogger();
+    private Encoder encoder = new Encoder.Default();
+    private Decoder decoder = new Decoder.Default();
+    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+    private Options options = new Options();
+    private InvocationHandlerFactory invocationHandlerFactory = new InvocationHandlerFactory.Default();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -262,51 +165,15 @@ public abstract class Feign {
     }
 
     public <T> T target(Target<T> target) {
-      return ObjectGraph.create(this).get(Feign.class).newInstance(target);
+      return build().newInstance(target);
     }
 
-    @Provides Logger.Level logLevel() {
-      return logLevel;
-    }
-
-    @Provides Contract contract() {
-      return contract;
-    }
-
-    @Provides Client client() {
-      return client;
-    }
-
-    @Provides Retryer retryer() {
-      return retryer;
-    }
-
-    @Provides Logger logger() {
-      return logger;
-    }
-
-    @Provides Encoder encoder() {
-      return encoder;
-    }
-
-    @Provides Decoder decoder() {
-      return decoder;
-    }
-
-    @Provides ErrorDecoder errorDecoder() {
-      return errorDecoder;
-    }
-
-    @Provides Options options() {
-      return options;
-    }
-
-    @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> requestInterceptors() {
-      return requestInterceptors;
-    }
-
-    @Provides InvocationHandlerFactory invocationHandlerFactory() {
-      return invocationHandlerFactory;
+    public Feign build() {
+      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger, logLevel);
+      ParseHandlersByName handlersByName = new ParseHandlersByName( contract,  options,  encoder,  decoder,
+          errorDecoder, synchronousMethodHandlerFactory);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
     }
   }
 }

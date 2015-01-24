@@ -15,17 +15,12 @@
  */
 package feign.sax;
 
-import dagger.ObjectGraph;
-import dagger.Provides;
 import feign.Response;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,26 +30,17 @@ import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-// unbound wildcards are not currently injectable in dagger.
-@SuppressWarnings("rawtypes")
 public class SAXDecoderTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  @dagger.Module(injects = SAXDecoderTest.class)
-  static class Module {
-    @Provides Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus) {
-      return SAXDecoder.builder() //
-          .registerContentHandler(NetworkStatus.class, networkStatus) //
-          .registerContentHandler(NetworkStatusStringHandler.class) //
-          .build();
-    }
-  }
-
-  @Inject Decoder decoder;
-
-  @Before public void inject() {
-    ObjectGraph.create(new Module()).inject(this);
-  }
+  Decoder decoder = SAXDecoder.builder() //
+      .registerContentHandler(NetworkStatus.class, new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
+            @Override public SAXDecoder.ContentHandlerWithResult<NetworkStatus> create() {
+              return new NetworkStatusHandler();
+            }
+          }) //
+      .registerContentHandler(NetworkStatusStringHandler.class) //
+      .build();
 
   @Test public void parsesConfiguredTypes() throws ParseException, IOException {
     assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
@@ -87,8 +73,6 @@ public class SAXDecoderTest {
 
   static class NetworkStatusStringHandler extends DefaultHandler implements
       SAXDecoder.ContentHandlerWithResult<String> {
-    @Inject NetworkStatusStringHandler() {
-    }
 
     private StringBuilder currentText = new StringBuilder();
 
@@ -115,8 +99,6 @@ public class SAXDecoderTest {
 
   static class NetworkStatusHandler extends DefaultHandler implements
       SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
-    @Inject NetworkStatusHandler() {
-    }
 
     private StringBuilder currentText = new StringBuilder();
 
