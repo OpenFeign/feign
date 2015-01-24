@@ -18,8 +18,6 @@ package feign;
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 
-import java.util.Arrays;
-
 /**
  * <br>
  * <br>
@@ -102,19 +100,35 @@ public interface Target<T> {
     }
 
     @Override
-    public int hashCode() {
-      return Arrays.hashCode(new Object[] {type, name, url});
+    public boolean equals(Object obj) {
+      if (obj instanceof HardCodedTarget) {
+        HardCodedTarget<?> other = (HardCodedTarget) obj;
+        return type.equals(other.type) && name.equals(other.name) && url.equals(other.url);
+      }
+      return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (obj == null) return false;
-      if (this == obj) return true;
-      if (HardCodedTarget.class != obj.getClass()) return false;
-      HardCodedTarget<?> that = HardCodedTarget.class.cast(obj);
-      return this.type.equals(that.type)
-          && this.name.equals(that.name)
-          && this.url.equals(that.url);
+    public int hashCode() {
+      int result = 17;
+      result = 31 * result + type.hashCode();
+      result = 31 * result + name.hashCode();
+      result = 31 * result + url.hashCode();
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      if (name.equals(url)) {
+        return "HardCodedTarget(type=" + type.getSimpleName() + ", url=" + url + ")";
+      }
+      return "HardCodedTarget(type="
+          + type.getSimpleName()
+          + ", name="
+          + name
+          + ", url="
+          + url
+          + ")";
     }
   }
 }
