@@ -29,7 +29,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.inject.Provider;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -52,23 +51,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *                               .build())
  *            .target(MyApi.class, "http://api");
  * </pre>
- *
- * <p>
- *
- * <h4>Advanced example with Dagger</h4>
- *
- * <br>
- *
- * <pre>
- * &#064;Provides
- * Decoder saxDecoder(Provider&lt;ContentHandlerForFoo&gt; foo, //
- *         Provider&lt;ContentHandlerForBar&gt; bar) {
- *     return SAXDecoder.builder() //
- *             .registerContentHandler(Foo.class, foo) //
- *             .registerContentHandler(Bar.class, bar) //
- *             .build();
- * }
- * </pre>
  */
 public class SAXDecoder implements Decoder {
 
@@ -76,11 +58,9 @@ public class SAXDecoder implements Decoder {
     return new Builder();
   }
 
-  // builder as dagger doesn't support wildcard bindings, map bindings, or set bindings of
-  // providers.
   public static class Builder {
-    private final Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders =
-        new LinkedHashMap<Type, Provider<? extends ContentHandlerWithResult<?>>>();
+    private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories =
+        new LinkedHashMap<Type, ContentHandlerWithResult.Factory<?>>();
 
     /**
      * Will call {@link Constructor#newInstance(Object...)} on {@code handlerClass} for each content
@@ -101,14 +81,15 @@ public class SAXDecoder implements Decoder {
       Type type =
           resolveLastTypeParameter(
               checkNotNull(handlerClass, "handlerClass"), ContentHandlerWithResult.class);
-      return registerContentHandler(type, new NewInstanceProvider(handlerClass));
+      return registerContentHandler(
+          type, new NewInstanceContentHandlerWithResultFactory(handlerClass));
     }
 
-    private static class NewInstanceProvider<T extends ContentHandlerWithResult<?>>
-        implements Provider<T> {
-      private final Constructor<T> ctor;
+    private static class NewInstanceContentHandlerWithResultFactory<T>
+        implements ContentHandlerWithResult.Factory<T> {
+      private final Constructor<ContentHandlerWithResult<T>> ctor;
 
-      private NewInstanceProvider(Class<T> clazz) {
+      private NewInstanceContentHandlerWithResultFactory(Class<ContentHandlerWithResult<T>> clazz) {
         try {
           this.ctor = clazz.getDeclaredConstructor();
           // allow private or package protected ctors
@@ -119,7 +100,7 @@ public class SAXDecoder implements Decoder {
       }
 
       @Override
-      public T get() {
+      public ContentHandlerWithResult<T> create() {
         try {
           return ctor.newInstance();
         } catch (Exception e) {
@@ -129,30 +110,34 @@ public class SAXDecoder implements Decoder {
     }
 
     /**
-     * Will call {@link Provider#get()} on {@code handler} for each content stream. The {@code
-     * handler} is expected to have a generic parameter of {@code type}.
+     * Will call {@link ContentHandlerWithResult.Factory#create()} on {@code handler} for each
+     * content stream. The {@code handler} is expected to have a generic parameter of {@code type}.
      */
-    public Builder registerContentHandler(
-        Type type, Provider<? extends ContentHandlerWithResult<?>> handler) {
-      this.handlerProviders.put(checkNotNull(type, "type"), checkNotNull(handler, "handler"));
+    public Builder registerContentHandler(Type type, ContentHandlerWithResult.Factory<?> handler) {
+      this.handlerFactories.put(checkNotNull(type, "type"), checkNotNull(handler, "handler"));
       return this;
     }
 
     public SAXDecoder build() {
-      return new SAXDecoder(handlerProviders);
+      return new SAXDecoder(handlerFactories);
     }
   }
 
   /** Implementations are not intended to be shared across requests. */
   public interface ContentHandlerWithResult<T> extends ContentHandler {
+
+    public interface Factory<T> {
+      ContentHandlerWithResult<T> create();
+    }
+
     /** expected to be set following a call to {@link XMLReader#parse(InputSource)} */
     T result();
   }
 
-  private final Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders;
+  private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories;
 
-  private SAXDecoder(Map<Type, Provider<? extends ContentHandlerWithResult<?>>> handlerProviders) {
-    this.handlerProviders = handlerProviders;
+  private SAXDecoder(Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories) {
+    this.handlerFactories = handlerFactories;
   }
 
   @Override
@@ -160,13 +145,13 @@ public class SAXDecoder implements Decoder {
     if (response.body() == null) {
       return null;
     }
-    Provider<? extends ContentHandlerWithResult<?>> handlerProvider = handlerProviders.get(type);
+    ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(
-        handlerProvider != null,
+        handlerFactory != null,
         "type %s not in configured handlers %s",
         type,
-        handlerProviders.keySet());
-    ContentHandlerWithResult<?> handler = handlerProvider.get();
+        handlerFactories.keySet());
+    ContentHandlerWithResult<?> handler = handlerFactory.create();
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);

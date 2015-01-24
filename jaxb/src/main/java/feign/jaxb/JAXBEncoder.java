@@ -19,7 +19,6 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.StringWriter;
-import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
@@ -45,7 +44,6 @@ import javax.xml.bind.Marshaller;
 public class JAXBEncoder implements Encoder {
   private final JAXBContextFactory jaxbContextFactory;
 
-  @Inject
   public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {
     this.jaxbContextFactory = jaxbContextFactory;
   }

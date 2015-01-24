@@ -12,6 +12,5 @@ subprojects {
     repositories { 
         jcenter()
     }
-    apply from: rootProject.file('dagger.gradle')
     group = "com.netflix.${githubProjectName}" // TEMPLATE: Set to organization of project
 }

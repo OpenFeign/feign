@@ -4,15 +4,11 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-import dagger.Lazy;
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import java.io.IOException;
 import java.net.URI;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
 
 /**
  * RibbonClient can be used in Fiegn builder to activate smart routing and resiliency capabilities
@@ -30,18 +26,7 @@ public class RibbonClient implements Client {
   private final Client delegate;
 
   public RibbonClient() {
-    this.delegate =
-        new Client.Default(
-            new Lazy<SSLSocketFactory>() {
-              public SSLSocketFactory get() {
-                return (SSLSocketFactory) SSLSocketFactory.getDefault();
-              }
-            },
-            new Lazy<HostnameVerifier>() {
-              public HostnameVerifier get() {
-                return HttpsURLConnection.getDefaultHostnameVerifier();
-              }
-            });
+    this.delegate = new Client.Default(null, null);
   }
 
   public RibbonClient(Client delegate) {

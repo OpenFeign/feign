@@ -44,13 +44,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /**
- * Tests interfaces defined per {@link feign.jaxrs.JAXRSModule.JAXRSContract} are interpreted into
- * expected {@link feign .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link feign.jaxrs.JAXRSContract} are interpreted into expected
+ * {@link feign .RequestTemplate template} instances.
  */
 public class JAXRSContractTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
-
-  JAXRSModule.JAXRSContract contract = new JAXRSModule.JAXRSContract();
+  JAXRSContract contract = new JAXRSContract();
 
   interface Methods {
     @POST

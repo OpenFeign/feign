@@ -50,35 +50,14 @@ interface Bank {
 Bank bank = Feign.builder().decoder(new AccountDecoder()).target(Bank.class, "https://api.examplebank.com");
 ```
 
-For further flexibility, you can use Dagger modules directly.  See the `Dagger` section for more details.
-
-### Request Interceptors
-When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
-For example, if you are acting as an intermediary, you might want to propagate the `X-Forwarded-For` header.
-
-```java
-static class ForwardedForInterceptor implements RequestInterceptor {
-  @Override public void apply(RequestTemplate template) {
-    template.header("X-Forwarded-For", "origin.host.com");
-  }
-}
-...
-Bank bank = Feign.builder().decoder(accountDecoder).requestInterceptor(new ForwardedForInterceptor()).target(Bank.class, "https://api.examplebank.com");
-```
-
-Another common example of an interceptor would be authentication, such as using the built-in `BasicAuthRequestInterceptor`.
-
-```java
-Bank bank = Feign.builder().decoder(accountDecoder).requestInterceptor(new BasicAuthRequestInterceptor(username, password)).target(Bank.class, "https://api.examplebank.com");
-```
-
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+Feign feign = Feign.builder().build();
+CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 You can find [several examples](https://github.com/Netflix/feign/tree/master/core/src/test/java/feign/examples) in the test tree.  Do take time to look at them, as seeing is believing!
@@ -87,7 +66,7 @@ You can find [several examples](https://github.com/Netflix/feign/tree/master/cor
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
 
 ### Gson
-[GsonModule](https://github.com/Netflix/feign/tree/master/gson) adds default encoders and decoders so you get get started with a JSON api.
+[Gson](https://github.com/Netflix/feign/tree/master/gson) includes an encoder and decoder you can use with a JSON API.
 
 Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
 
@@ -100,7 +79,7 @@ GitHub github = Feign.builder()
 ```
 
 ### Jackson
-[JacksonModule](https://github.com/Netflix/feign/tree/master/jackson) adds an encoder and decoder you can use with a JSON API.
+[Jackson](https://github.com/Netflix/feign/tree/master/jackson) includes an encoder and decoder you can use with a JSON API.
 
 Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
 
@@ -124,7 +103,7 @@ api = Feign.builder()
 ```
 
 ### JAXB
-[JAXBModule](https://github.com/Netflix/feign/tree/master/jaxb) allows you to encode and decode XML using JAXB.
+[JAXB](https://github.com/Netflix/feign/tree/master/jaxb) includes an encoder and decoder you can use with an XML API.
 
 Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
 
@@ -136,7 +115,7 @@ api = Feign.builder()
 ```
 
 ### JAX-RS
-[JAXRSModule](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+[JAXRSContract](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 
 Here's the example above re-written to use JAX-RS:
 ```java
@@ -147,7 +126,7 @@ interface GitHub {
 ```
 ```java
 GitHub github = Feign.builder()
-                     .contract(new JAXRSModule.JAXRSContract())
+                     .contract(new JAXRSContract())
                      .target(GitHub.class, "https://api.github.com");           
 ```
 ### OkHttp
@@ -162,11 +141,12 @@ GitHub github = Feign.builder()
 ```
 
 ### Ribbon
-[RibbonModule](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
+[RibbonClient](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
 
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java
-MyService api = Feign.create(MyService.class, "https://myAppProd", new RibbonModule());
+MyService api = Feign.builder().client(new RibbonClient()).target(MyService.class, "https://myAppProd");
+
 ```
 
 ### SLF4J
@@ -206,37 +186,7 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-### Advanced usage and Dagger
-#### Dagger
-Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
-
-Where possible, Feign configuration uses normal Dagger conventions.  For example, `RequestInterceptor` bindings are of `Provider.Type.SET`, meaning you can have multiple interceptors.  Here's an example of multiple interceptor bindings.
-```java
-@Provides(type = SET) RequestInterceptor forwardedForInterceptor() {
-  return new RequestInterceptor() {
-    @Override public void apply(RequestTemplate template) {
-      template.header("X-Forwarded-For", "origin.host.com");
-    }
-  };
-}
-
-@Provides(type = SET) RequestInterceptor userAgentInterceptor() {
-  return new RequestInterceptor() {
-    @Override public void apply(RequestTemplate template) {
-      template.header("User-Agent", "My Cool Client");
-    }
-  };
-}
-```
-
-#### Custom Parameter Expansion
-Parameters annotated with `Param` expand based on their `toString`. By
-specifying a custom `Param.Expander`, users can control this behavior,
-for example formatting dates.
-
-```java
-@RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
-```
+### Advanced usage
 
 #### Logging
 You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
@@ -248,4 +198,40 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-The SLF4JModule (see above) may also be of interest.
+The SLF4JLogger (see above) may also be of interest.
+
+
+#### Request Interceptors
+When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
+For example, if you are acting as an intermediary, you might want to propagate the `X-Forwarded-For` header.
+
+```java
+static class ForwardedForInterceptor implements RequestInterceptor {
+  @Override public void apply(RequestTemplate template) {
+    template.header("X-Forwarded-For", "origin.host.com");
+  }
+}
+...
+Bank bank = Feign.builder()
+                 .decoder(accountDecoder)
+                 .requestInterceptor(new ForwardedForInterceptor())
+                 .target(Bank.class, "https://api.examplebank.com");
+```
+
+Another common example of an interceptor would be authentication, such as using the built-in `BasicAuthRequestInterceptor`.
+
+```java
+Bank bank = Feign.builder()
+                 .decoder(accountDecoder)
+                 .requestInterceptor(new BasicAuthRequestInterceptor(username, password))
+                 .target(Bank.class, "https://api.examplebank.com");
+```
+
+#### Custom Parameter Expansion
+Parameters annotated with `Param` expand based on their `toString`. By
+specifying a custom `Param.Expander`, users can control this behavior,
+for example formatting dates.
+
+```java
+@RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
+```

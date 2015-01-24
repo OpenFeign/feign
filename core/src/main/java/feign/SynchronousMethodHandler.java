@@ -26,28 +26,25 @@ import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
   static class Factory {
 
     private final Client client;
-    private final Provider<Retryer> retryer;
-    private final Set<RequestInterceptor> requestInterceptors;
+    private final Retryer retryer;
+    private final List<RequestInterceptor> requestInterceptors;
     private final Logger logger;
-    private final Provider<Logger.Level> logLevel;
+    private final Logger.Level logLevel;
 
-    @Inject
     Factory(
         Client client,
-        Provider<Retryer> retryer,
-        Set<RequestInterceptor> requestInterceptors,
+        Retryer retryer,
+        List<RequestInterceptor> requestInterceptors,
         Logger logger,
-        Provider<Logger.Level> logLevel) {
+        Logger.Level logLevel) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -80,10 +77,10 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
-  private final Provider<Retryer> retryer;
-  private final Set<RequestInterceptor> requestInterceptors;
+  private final Retryer retryer;
+  private final List<RequestInterceptor> requestInterceptors;
   private final Logger logger;
-  private final Provider<Logger.Level> logLevel;
+  private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final Decoder decoder;
@@ -92,10 +89,10 @@ final class SynchronousMethodHandler implements MethodHandler {
   private SynchronousMethodHandler(
       Target<?> target,
       Client client,
-      Provider<Retryer> retryer,
-      Set<RequestInterceptor> requestInterceptors,
+      Retryer retryer,
+      List<RequestInterceptor> requestInterceptors,
       Logger logger,
-      Provider<Logger.Level> logLevel,
+      Logger.Level logLevel,
       MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs,
       Options options,
@@ -118,14 +115,14 @@ final class SynchronousMethodHandler implements MethodHandler {
   @Override
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
-    Retryer retryer = this.retryer.get();
+    Retryer retryer = this.retryer;
     while (true) {
       try {
         return executeAndDecode(template);
       } catch (RetryableException e) {
         retryer.continueOrPropagate(e);
-        if (logLevel.get() != Logger.Level.NONE) {
-          logger.logRetry(metadata.configKey(), logLevel.get());
+        if (logLevel != Logger.Level.NONE) {
+          logger.logRetry(metadata.configKey(), logLevel);
         }
         continue;
       }
@@ -135,8 +132,8 @@ final class SynchronousMethodHandler implements MethodHandler {
   Object executeAndDecode(RequestTemplate template) throws Throwable {
     Request request = targetRequest(template);
 
-    if (logLevel.get() != Logger.Level.NONE) {
-      logger.logRequest(metadata.configKey(), logLevel.get(), request);
+    if (logLevel != Logger.Level.NONE) {
+      logger.logRequest(metadata.configKey(), logLevel, request);
     }
 
     Response response;
@@ -144,18 +141,17 @@ final class SynchronousMethodHandler implements MethodHandler {
     try {
       response = client.execute(request, options);
     } catch (IOException e) {
-      if (logLevel.get() != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel.get(), e, elapsedTime(start));
+      if (logLevel != Logger.Level.NONE) {
+        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
       }
       throw errorExecuting(request, e);
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     try {
-      if (logLevel.get() != Logger.Level.NONE) {
+      if (logLevel != Logger.Level.NONE) {
         response =
-            logger.logAndRebufferResponse(
-                metadata.configKey(), logLevel.get(), response, elapsedTime);
+            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
       if (response.status() >= 200 && response.status() < 300) {
         if (Response.class == metadata.returnType()) {
@@ -175,8 +171,8 @@ final class SynchronousMethodHandler implements MethodHandler {
         throw errorDecoder.decode(metadata.configKey(), response);
       }
     } catch (IOException e) {
-      if (logLevel.get() != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel.get(), e, elapsedTime);
+      if (logLevel != Logger.Level.NONE) {
+        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
       }
       throw errorReading(request, response, e);
     } finally {

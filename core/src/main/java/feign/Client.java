@@ -19,7 +19,6 @@ import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_GZIP;
 
-import dagger.Lazy;
 import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
-import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
@@ -49,12 +47,11 @@ public interface Client {
   Response execute(Request request, Options options) throws IOException;
 
   public static class Default implements Client {
-    private final Lazy<SSLSocketFactory> sslContextFactory;
-    private final Lazy<HostnameVerifier> hostnameVerifier;
+    private final SSLSocketFactory sslContextFactory;
+    private final HostnameVerifier hostnameVerifier;
 
-    @Inject
-    public Default(
-        Lazy<SSLSocketFactory> sslContextFactory, Lazy<HostnameVerifier> hostnameVerifier) {
+    /** Null parameters imply platform defaults. */
+    public Default(SSLSocketFactory sslContextFactory, HostnameVerifier hostnameVerifier) {
       this.sslContextFactory = sslContextFactory;
       this.hostnameVerifier = hostnameVerifier;
     }
@@ -70,8 +67,12 @@ public interface Client {
           (HttpURLConnection) new URL(request.url()).openConnection();
       if (connection instanceof HttpsURLConnection) {
         HttpsURLConnection sslCon = (HttpsURLConnection) connection;
-        sslCon.setSSLSocketFactory(sslContextFactory.get());
-        sslCon.setHostnameVerifier(hostnameVerifier.get());
+        if (sslContextFactory != null) {
+          sslCon.setSSLSocketFactory(sslContextFactory);
+        }
+        if (hostnameVerifier != null) {
+          sslCon.setHostnameVerifier(hostnameVerifier);
+        }
       }
       connection.setConnectTimeout(options.connectTimeoutMillis());
       connection.setReadTimeout(options.readTimeoutMillis());

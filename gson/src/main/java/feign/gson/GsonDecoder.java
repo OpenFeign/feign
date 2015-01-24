@@ -19,17 +19,23 @@ import static feign.Util.ensureClosed;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
+import com.google.gson.TypeAdapter;
 import feign.Response;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.util.Collections;
 
 public class GsonDecoder implements Decoder {
   private final Gson gson;
 
+  public GsonDecoder(Iterable<TypeAdapter<?>> adapters) {
+    this(GsonFactory.create(adapters));
+  }
+
   public GsonDecoder() {
-    this(new Gson());
+    this(Collections.<TypeAdapter<?>>emptyList());
   }
 
   public GsonDecoder(Gson gson) {

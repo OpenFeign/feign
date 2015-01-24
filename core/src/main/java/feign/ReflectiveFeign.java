@@ -18,7 +18,6 @@ package feign;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 
-import dagger.Provides;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
@@ -30,21 +29,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import javax.inject.Inject;
 
-@SuppressWarnings("rawtypes")
 public class ReflectiveFeign extends Feign {
 
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
 
-  @Inject
   ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
@@ -117,22 +111,6 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  @dagger.Module(
-      complete = false,
-      injects = {Feign.class, SynchronousMethodHandler.Factory.class},
-      library = true)
-  public static class Module {
-    @Provides(type = Provides.Type.SET_VALUES)
-    Set<RequestInterceptor> noRequestInterceptors() {
-      return Collections.emptySet();
-    }
-
-    @Provides
-    Feign provideFeign(ReflectiveFeign in) {
-      return in;
-    }
-  }
-
   static final class ParseHandlersByName {
     private final Contract contract;
     private final Options options;
@@ -141,8 +119,6 @@ public class ReflectiveFeign extends Feign {
     private final ErrorDecoder errorDecoder;
     private final SynchronousMethodHandler.Factory factory;
 
-    @SuppressWarnings("unchecked")
-    @Inject
     ParseHandlersByName(
         Contract contract,
         Options options,
