@@ -83,27 +83,28 @@ public class ReflectiveFeign extends Feign {
         } catch (IllegalArgumentException e) {
           return false;
         }
-      }
-      if ("hashCode".equals(method.getName())) {
+      } else if ("hashCode".equals(method.getName())) {
         return hashCode();
+      } else if ("toString".equals(method.getName())) {
+        return toString();
       }
       return dispatch.get(method).invoke(args);
+    }
+
+    @Override public boolean equals(Object obj) {
+      if (obj instanceof FeignInvocationHandler) {
+        FeignInvocationHandler other = (FeignInvocationHandler) obj;
+        return target.equals(other.target);
+      }
+      return false;
     }
 
     @Override public int hashCode() {
       return target.hashCode();
     }
 
-    @Override public boolean equals(Object other) {
-      if (other instanceof FeignInvocationHandler) {
-        FeignInvocationHandler that = (FeignInvocationHandler) other;
-        return this.target.equals(that.target);
-      }
-      return false;
-    }
-
     @Override public String toString() {
-      return "target(" + target + ")";
+      return target.toString();
     }
   }
 
