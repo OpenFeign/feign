@@ -16,44 +16,48 @@
 package feign.codec;
 
 import feign.Response;
-import org.testng.annotations.Test;
-import org.w3c.dom.Document;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.w3c.dom.Document;
 
 import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DefaultDecoderTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+
   private final Decoder decoder = new Decoder.Default();
 
   @Test public void testDecodesToString() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
-    assertEquals(decodedObject.getClass(), String.class);
-    assertEquals(decodedObject.toString(), "response body");
+    assertEquals(String.class, decodedObject.getClass());
+    assertEquals("response body", decodedObject.toString());
   }
 
   @Test public void testDecodesToByteArray() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, byte[].class);
-    assertEquals(decodedObject.getClass(), byte[].class);
-    assertEquals((byte[]) decodedObject, "response body".getBytes(UTF_8));
+    assertEquals(byte[].class, decodedObject.getClass());
+    assertEquals("response body", new String((byte[]) decodedObject, UTF_8));
   }
 
   @Test public void testDecodesNullBodyToNull() throws Exception {
     assertNull(decoder.decode(nullBodyResponse(), Document.class));
   }
 
-  @Test(expectedExceptions = DecodeException.class, expectedExceptionsMessageRegExp = ".* is not a type supported by this decoder.")
-  public void testRefusesToDecodeOtherTypes() throws Exception {
+  @Test public void testRefusesToDecodeOtherTypes() throws Exception {
+    thrown.expect(DecodeException.class);
+    thrown.expectMessage(" is not a type supported by this decoder.");
+
     decoder.decode(knownResponse(), Document.class);
   }
 

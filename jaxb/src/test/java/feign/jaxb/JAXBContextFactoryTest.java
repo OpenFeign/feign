@@ -15,12 +15,11 @@
  */
 package feign.jaxb;
 
-import org.testng.annotations.Test;
-
 import javax.xml.bind.Marshaller;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JAXBContextFactoryTest {
     @Test
@@ -30,7 +29,7 @@ public class JAXBContextFactoryTest {
                 .build();
 
         Marshaller marshaller = factory.createMarshaller(Object.class);
-        assertEquals(marshaller.getProperty(Marshaller.JAXB_ENCODING), "UTF-16");
+        assertEquals("UTF-16", marshaller.getProperty(Marshaller.JAXB_ENCODING));
     }
 
     @Test
@@ -40,8 +39,8 @@ public class JAXBContextFactoryTest {
                 .build();
 
         Marshaller marshaller = factory.createMarshaller(Object.class);
-        assertEquals(marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION),
-                "http://apihost http://apihost/schema.xsd");
+        assertEquals("http://apihost http://apihost/schema.xsd",
+            marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
     }
 
     @Test
@@ -51,7 +50,8 @@ public class JAXBContextFactoryTest {
                 .build();
 
         Marshaller marshaller = factory.createMarshaller(Object.class);
-        assertEquals(marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION), "http://apihost/schema.xsd");
+        assertEquals("http://apihost/schema.xsd",
+            marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
     }
 
     @Test
