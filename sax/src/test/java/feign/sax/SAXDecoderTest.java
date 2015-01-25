@@ -19,24 +19,26 @@ import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Response;
 import feign.codec.Decoder;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-import org.xml.sax.helpers.DefaultHandler;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
-
-import static org.testng.Assert.assertEquals;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 // unbound wildcards are not currently injectable in dagger.
 @SuppressWarnings("rawtypes")
 public class SAXDecoderTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   @dagger.Module(injects = SAXDecoderTest.class)
   static class Module {
@@ -50,18 +52,19 @@ public class SAXDecoderTest {
 
   @Inject Decoder decoder;
 
-  @BeforeClass void inject() {
+  @Before public void inject() {
     ObjectGraph.create(new Module()).inject(this);
   }
 
   @Test public void parsesConfiguredTypes() throws ParseException, IOException {
-    assertEquals(decoder.decode(statusFailedResponse(), NetworkStatus.class), NetworkStatus.FAILED);
-    assertEquals(decoder.decode(statusFailedResponse(), String.class), "Failed");
+    assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
+    assertEquals("Failed", decoder.decode(statusFailedResponse(), String.class));
   }
 
-  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp =
-      "type int not in configured handlers \\[class .*NetworkStatus, class java.lang.String\\]")
-  public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+  @Test public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("type int not in configured handlers");
+
     decoder.decode(statusFailedResponse(), int.class);
   }
 
@@ -140,6 +143,6 @@ public class SAXDecoderTest {
 
   @Test public void nullBodyDecodesToNull() throws Exception {
     Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
-    assertEquals(decoder.decode(response, String.class), null);
+    assertNull(decoder.decode(response, String.class));
   }
 }

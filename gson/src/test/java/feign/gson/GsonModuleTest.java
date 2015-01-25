@@ -26,9 +26,6 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import org.testng.annotations.Test;
-
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,12 +34,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static org.testng.Assert.assertEquals;
+import javax.inject.Inject;
+import org.junit.Test;
 
 import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-@Test
 public class GsonModuleTest {
   @Module(includes = GsonModule.class, injects = EncoderAndDecoderBindings.class)
   static class EncoderAndDecoderBindings {
@@ -54,8 +52,8 @@ public class GsonModuleTest {
     EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
-    assertEquals(bindings.encoder.getClass(), GsonEncoder.class);
-    assertEquals(bindings.decoder.getClass(), GsonDecoder.class);
+    assertEquals(GsonEncoder.class, bindings.encoder.getClass());
+    assertEquals(GsonDecoder.class, bindings.decoder.getClass());
   }
 
   @Module(includes = GsonModule.class, injects = EncoderBindings.class)
@@ -77,7 +75,7 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
+    assertEquals(expectedBody, new String(template.body(), UTF_8));
   }
 
   @Test public void encodesFormParams() throws Exception {
@@ -99,7 +97,7 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
+    assertEquals(expectedBody, new String(template.body(), UTF_8));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -135,8 +133,8 @@ public class GsonModuleTest {
 
     Response response =
         Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
-    assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
-    }.getType()), zones);
+    assertEquals(zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
+    }.getType()));
   }
 
   @Test public void nullBodyDecodesToNull() throws Exception {
@@ -144,7 +142,7 @@ public class GsonModuleTest {
     ObjectGraph.create(bindings).inject(bindings);
 
     Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
-    assertEquals(bindings.decoder.decode(response, String.class), null);
+    assertNull(bindings.decoder.decode(response, String.class));
   }
 
   private String zonesJson = ""//
@@ -192,7 +190,7 @@ public class GsonModuleTest {
 
     Response response =
         Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
-    assertEquals(bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
-    }.getType()), zones);
+    assertEquals(zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
+    }.getType()));
   }
 }
