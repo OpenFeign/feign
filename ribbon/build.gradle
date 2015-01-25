@@ -2,13 +2,9 @@ apply plugin: 'java'
 
 sourceCompatibility = 1.6
 
-test {
-    useTestNG()
-}
-
 dependencies {
     compile project(':feign-core')
     compile 'com.netflix.ribbon:ribbon-loadbalancer:2.0-RC5'
-    testCompile 'org.testng:testng:6.8.5'
-    testCompile 'com.google.mockwebserver:mockwebserver:20130706'
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.squareup.okhttp:mockwebserver:2.2.0'
 }

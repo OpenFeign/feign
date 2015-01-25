@@ -1,7 +1,8 @@
 package feign.jackson;
 
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -17,11 +18,16 @@ import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-@Test
 public class JacksonModuleTest {
   @Module(includes = JacksonModule.class, injects = EncoderAndDecoderBindings.class)
   static class EncoderAndDecoderBindings {
@@ -34,8 +40,8 @@ public class JacksonModuleTest {
     EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
-    assertEquals(bindings.encoder.getClass(), JacksonEncoder.class);
-    assertEquals(bindings.decoder.getClass(), JacksonDecoder.class);
+    assertEquals(JacksonEncoder.class, bindings.encoder.getClass());
+    assertEquals(JacksonDecoder.class, bindings.decoder.getClass());
   }
 
   @Module(includes = JacksonModule.class, injects = EncoderBindings.class)
@@ -54,11 +60,11 @@ public class JacksonModuleTest {
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
     assertEquals(
-        new String(template.body(), UTF_8),
         "" //
             + "{\n" //
             + "  \"foo\" : 1\n" //
-            + "}");
+            + "}",
+        new String(template.body(), UTF_8));
   }
 
   @Test
@@ -73,12 +79,12 @@ public class JacksonModuleTest {
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
     assertEquals(
-        new String(template.body(), UTF_8),
         "" //
             + "{\n" //
             + "  \"foo\" : 1,\n" //
             + "  \"bar\" : [ 2, 3 ]\n" //
-            + "}");
+            + "}",
+        new String(template.body(), UTF_8));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -118,7 +124,7 @@ public class JacksonModuleTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
-        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
+        zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
   @Test
@@ -128,7 +134,7 @@ public class JacksonModuleTest {
 
     Response response =
         Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
-    assertEquals(bindings.decoder.decode(response, String.class), null);
+    assertNull(bindings.decoder.decode(response, String.class));
   }
 
   private String zonesJson =
@@ -192,6 +198,6 @@ public class JacksonModuleTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
-        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
+        zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 }

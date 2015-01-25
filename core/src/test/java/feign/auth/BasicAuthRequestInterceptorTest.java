@@ -15,12 +15,11 @@
  */
 package feign.auth;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import feign.RequestTemplate;
-import java.util.Collection;
 import java.util.Collections;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 /** Tests for {@link BasicAuthRequestInterceptor}. */
 public class BasicAuthRequestInterceptorTest {
@@ -31,10 +30,9 @@ public class BasicAuthRequestInterceptorTest {
     BasicAuthRequestInterceptor interceptor =
         new BasicAuthRequestInterceptor("Aladdin", "open sesame");
     interceptor.apply(template);
-    Collection<String> actualValue = template.headers().get("Authorization");
-    Collection<String> expectedValue =
-        Collections.singletonList("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
-    assertEquals(actualValue, expectedValue);
+    assertEquals(
+        Collections.singletonList("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="),
+        template.headers().get("Authorization"));
   }
 
   /** Tests that requests headers are added as expected when user and pass are too long */
@@ -45,11 +43,10 @@ public class BasicAuthRequestInterceptorTest {
         new BasicAuthRequestInterceptor(
             "IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO", "101010101010101010101010101010101010101010");
     interceptor.apply(template);
-    Collection<String> actualValue = template.headers().get("Authorization");
-    Collection<String> expectedValue =
+    assertEquals(
         Collections.singletonList(
             "Basic"
-                + " SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw");
-    assertEquals(actualValue, expectedValue);
+                + " SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw"),
+        template.headers().get("Authorization"));
   }
 }

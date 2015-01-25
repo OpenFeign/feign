@@ -17,18 +17,21 @@ package feign.ribbon;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Feign;
 import feign.RequestLine;
 import java.io.IOException;
 import java.net.URL;
-import org.testng.annotations.Test;
+import org.junit.Rule;
+import org.junit.Test;
 
-@Test
 public class LoadBalancingTargetTest {
+  @Rule public final MockWebServerRule server1 = new MockWebServerRule();
+  @Rule public final MockWebServerRule server2 = new MockWebServerRule();
+
   interface TestInterface {
     @RequestLine("POST /")
     void post();
@@ -39,12 +42,8 @@ public class LoadBalancingTargetTest {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
-    MockWebServer server1 = new MockWebServer();
     server1.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server1.play();
-    MockWebServer server2 = new MockWebServer();
     server2.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server2.play();
 
     getConfigInstance()
         .setProperty(
@@ -58,13 +57,11 @@ public class LoadBalancingTargetTest {
       api.post();
       api.post();
 
-      assertEquals(server1.getRequestCount(), 1);
-      assertEquals(server2.getRequestCount(), 1);
+      assertEquals(1, server1.getRequestCount());
+      assertEquals(1, server2.getRequestCount());
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
-      server1.shutdown();
-      server2.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }

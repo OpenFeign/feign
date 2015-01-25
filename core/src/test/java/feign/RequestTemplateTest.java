@@ -16,36 +16,36 @@
 package feign;
 
 import static feign.RequestTemplate.expand;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class RequestTemplateTest {
   @Test
   public void expandNotUrlEncoded() {
     for (String val : ImmutableList.of("apples", "sp ace", "unic???de", "qu?stion"))
-      assertEquals(expand("/users/{user}", ImmutableMap.of("user", val)), "/users/" + val);
+      assertEquals("/users/" + val, expand("/users/{user}", ImmutableMap.of("user", val)));
   }
 
   @Test
   public void expandMultipleParams() {
     assertEquals(
-        expand("/users/{user}/{repo}", ImmutableMap.of("user", "unic???de", "repo", "foo")),
-        "/users/unic???de/foo");
+        "/users/unic???de/foo",
+        expand("/users/{user}/{repo}", ImmutableMap.of("user", "unic???de", "repo", "foo")));
   }
 
   @Test
   public void expandParamKeyHyphen() {
-    assertEquals(expand("/{user-dir}", ImmutableMap.of("user-dir", "foo")), "/foo");
+    assertEquals("/foo", expand("/{user-dir}", ImmutableMap.of("user-dir", "foo")));
   }
 
   @Test
   public void expandMissingParamProceeds() {
-    assertEquals(expand("/{user-dir}", ImmutableMap.of("user_dir", "foo")), "/{user-dir}");
+    assertEquals("/{user-dir}", expand("/{user-dir}", ImmutableMap.of("user_dir", "foo")));
   }
 
   @Test
@@ -53,24 +53,17 @@ public class RequestTemplateTest {
 
     RequestTemplate template = new RequestTemplate().method("GET").append("{zoneId}");
 
-    assertEquals(
-        template.toString(),
-        "" //
-            + "GET {zoneId} HTTP/1.1\n");
+    assertEquals("GET {zoneId} HTTP/1.1\n", template.toString());
 
     template.resolve(ImmutableMap.of("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
-    assertEquals(
-        template.toString(),
-        "" //
-            + "GET /hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n");
+    assertEquals("GET /hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n", template.toString());
 
     template.insert(0, "https://route53.amazonaws.com/2012-12-12");
 
     assertEquals(
-        template.request().toString(),
-        "" //
-            + "GET https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n");
+        "GET https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n",
+        template.request().toString());
   }
 
   @Test
@@ -82,30 +75,24 @@ public class RequestTemplateTest {
             .query("RegionName.1", "{region}");
 
     assertEquals(
-        template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}").asMap());
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}").asMap(),
+        template.queries());
     assertEquals(
-        template.toString(),
-        "" //
-            + "GET /?Action=DescribeRegions&RegionName.1={region} HTTP/1.1\n");
+        "GET /?Action=DescribeRegions&RegionName.1={region} HTTP/1.1\n", template.toString());
 
     template.resolve(ImmutableMap.of("region", "eu-west-1"));
     assertEquals(
-        template.queries(),
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1").asMap());
+        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1").asMap(),
+        template.queries());
 
     assertEquals(
-        template.toString(),
-        "" //
-            + "GET /?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n");
+        "GET /?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n", template.toString());
 
     template.insert(0, "https://iam.amazonaws.com");
 
     assertEquals(
-        template.request().toString(),
-        "" //
-            + "GET https://iam.amazonaws.com/?Action=DescribeRegions&RegionName.1=eu-west-1"
-            + " HTTP/1.1\n");
+        "GET https://iam.amazonaws.com/?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n",
+        template.request().toString());
   }
 
   @Test
@@ -123,7 +110,7 @@ public class RequestTemplateTest {
             .asMap());
 
     assertEquals(
-        template.toString(), "GET /?Query=one&Queries=us-east-1&Queries=eu-west-1 HTTP/1.1\n");
+        "GET /?Query=one&Queries=us-east-1&Queries=eu-west-1 HTTP/1.1\n", template.toString());
   }
 
   @Test
@@ -144,17 +131,15 @@ public class RequestTemplateTest {
                 .build());
 
     assertEquals(
-        template.toString(),
-        "" //
-            + "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+        "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n", template.toString());
 
     template.insert(0, "https://dns.api.rackspacecloud.com/v1.0/1234");
 
     assertEquals(
-        template.request().toString(),
         "" //
             + "GET https://dns.api.rackspacecloud.com/v1.0/1234" //
-            + "/domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+            + "/domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n",
+        template.request().toString());
   }
 
   @Test
@@ -175,17 +160,14 @@ public class RequestTemplateTest {
                 .build());
 
     assertEquals(
-        template.toString(),
-        "" //
-            + "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n");
+        "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n", template.toString());
 
     template.insert(0, "https://host/v1.0/1234?provider=foo");
 
     assertEquals(
-        template.request().toString(),
-        "" //
-            + "GET https://host/v1.0/1234/domains/1001/records?provider=foo&name=denominator.io&type=CNAME"
-            + " HTTP/1.1\n");
+        "GET https://host/v1.0/1234/domains/1001/records?provider=foo&name=denominator.io&type=CNAME"
+            + " HTTP/1.1\n",
+        template.request().toString());
   }
 
   @Test
@@ -206,24 +188,24 @@ public class RequestTemplateTest {
                 .build());
 
     assertEquals(
-        template.toString(),
         "" //
             + "POST  HTTP/1.1\n" //
             + "Content-Length: 80\n" //
             + "\n" //
             + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-            + " \"password\"}");
+            + " \"password\"}",
+        template.toString());
 
     template.insert(0, "https://api2.dynect.net/REST");
 
     assertEquals(
-        template.request().toString(),
         "" //
             + "POST https://api2.dynect.net/REST HTTP/1.1\n" //
             + "Content-Length: 80\n" //
             + "\n" //
             + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-            + " \"password\"}");
+            + " \"password\"}",
+        template.request().toString());
   }
 
   @Test
@@ -242,10 +224,7 @@ public class RequestTemplateTest {
                 .put("nameVariable", "denominator.io") //
                 .build());
 
-    assertEquals(
-        template.toString(),
-        "" //
-            + "GET /domains/1001/records?name=denominator.io HTTP/1.1\n");
+    assertEquals("GET /domains/1001/records?name=denominator.io HTTP/1.1\n", template.toString());
   }
 
   @Test
@@ -263,9 +242,6 @@ public class RequestTemplateTest {
                 .put("domainId", 1001) //
                 .build());
 
-    assertEquals(
-        template.toString(),
-        "" //
-            + "GET /domains/1001/records HTTP/1.1\n");
+    assertEquals("GET /domains/1001/records HTTP/1.1\n", template.toString());
   }
 }

@@ -16,13 +16,19 @@
 package feign.codec;
 
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import feign.RequestTemplate;
+import java.util.Arrays;
 import java.util.Date;
-import org.testng.annotations.Test;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultEncoderTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+
   private final Encoder encoder = new Encoder.Default();
 
   @Test
@@ -30,7 +36,7 @@ public class DefaultEncoderTest {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, template);
-    assertEquals(template.body(), content.getBytes(UTF_8));
+    assertEquals(content, new String(template.body(), UTF_8));
   }
 
   @Test
@@ -38,13 +44,14 @@ public class DefaultEncoderTest {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, template);
-    assertEquals(template.body(), content);
+    assertTrue(Arrays.equals(content, template.body()));
   }
 
-  @Test(
-      expectedExceptions = EncodeException.class,
-      expectedExceptionsMessageRegExp = ".* is not a type supported by this encoder.")
+  @Test
   public void testRefusesToEncodeOtherTypes() throws Exception {
+    thrown.expect(EncodeException.class);
+    thrown.expectMessage("is not a type supported by this encoder.");
+
     encoder.encode(new Date(), new RequestTemplate());
   }
 }
