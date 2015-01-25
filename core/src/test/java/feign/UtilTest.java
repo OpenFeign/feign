@@ -16,15 +16,14 @@
 package feign;
 
 import static feign.Util.resolveLastTypeParameter;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-@Test
 public class UtilTest {
 
   interface LastTypeParameter {
@@ -47,21 +46,21 @@ public class UtilTest {
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(last, listStringType);
+    assertEquals(listStringType, last);
   }
 
   @Test
   public void lastTypeFromInstance() throws Exception {
     Parameterized instance = new ParameterizedSubtype();
     Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(last, String.class);
+    assertEquals(String.class, last);
   }
 
   @Test
   public void lastTypeFromAnonymous() throws Exception {
     Parameterized instance = new Parameterized<Reader>() {};
     Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(last, Reader.class);
+    assertEquals(Reader.class, last);
   }
 
   @Test
@@ -72,7 +71,7 @@ public class UtilTest {
             .getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(last, listStringType);
+    assertEquals(listStringType, last);
   }
 
   @Test
@@ -83,7 +82,7 @@ public class UtilTest {
             .getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(last, listStringType);
+    assertEquals(listStringType, last);
   }
 
   @Test
@@ -91,6 +90,6 @@ public class UtilTest {
     Type context =
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(last, Object.class);
+    assertEquals(Object.class, last);
   }
 }

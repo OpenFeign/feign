@@ -16,7 +16,8 @@
 package feign.gson;
 
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
@@ -38,9 +39,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-@Test
 public class GsonModuleTest {
   @Module(includes = GsonModule.class, injects = EncoderAndDecoderBindings.class)
   static class EncoderAndDecoderBindings {
@@ -53,8 +53,8 @@ public class GsonModuleTest {
     EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
-    assertEquals(bindings.encoder.getClass(), GsonEncoder.class);
-    assertEquals(bindings.decoder.getClass(), GsonDecoder.class);
+    assertEquals(GsonEncoder.class, bindings.encoder.getClass());
+    assertEquals(GsonDecoder.class, bindings.decoder.getClass());
   }
 
   @Module(includes = GsonModule.class, injects = EncoderBindings.class)
@@ -74,7 +74,7 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
+    assertEquals(expectedBody, new String(template.body(), UTF_8));
   }
 
   @Test
@@ -98,7 +98,7 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(template.body(), expectedBody.getBytes(UTF_8));
+    assertEquals(expectedBody, new String(template.body(), UTF_8));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -136,7 +136,7 @@ public class GsonModuleTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
-        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
+        zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
   @Test
@@ -146,7 +146,7 @@ public class GsonModuleTest {
 
     Response response =
         Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
-    assertEquals(bindings.decoder.decode(response, String.class), null);
+    assertNull(bindings.decoder.decode(response, String.class));
   }
 
   private String zonesJson =
@@ -201,6 +201,6 @@ public class GsonModuleTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(
-        bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()), zones);
+        zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 }

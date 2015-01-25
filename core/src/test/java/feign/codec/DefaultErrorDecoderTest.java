@@ -22,17 +22,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import feign.FeignException;
 import feign.Response;
-import feign.RetryableException;
 import java.util.Collection;
-import org.testng.annotations.Test;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultErrorDecoderTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
-  @Test(
-      expectedExceptions = FeignException.class,
-      expectedExceptionsMessageRegExp = "status 500 reading Service#foo\\(\\)")
+  @Test
   public void throwsFeignException() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 500 reading Service#foo()");
+
     Response response =
         Response.create(
             500, "Internal server error", ImmutableMap.<String, Collection<String>>of(), null);
@@ -40,11 +44,11 @@ public class DefaultErrorDecoderTest {
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test(
-      expectedExceptions = FeignException.class,
-      expectedExceptionsMessageRegExp =
-          "status 500 reading Service#foo\\(\\); content:\nhello world")
+  @Test
   public void throwsFeignExceptionIncludingBody() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
+
     Response response =
         Response.create(
             500,
@@ -56,10 +60,11 @@ public class DefaultErrorDecoderTest {
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test(
-      expectedExceptions = RetryableException.class,
-      expectedExceptionsMessageRegExp = "status 503 reading Service#foo\\(\\)")
+  @Test
   public void retryAfterHeaderThrowsRetryableException() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 503 reading Service#foo()");
+
     Response response =
         Response.create(
             503,

@@ -16,12 +16,11 @@
 package feign.ribbon;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
-import com.google.mockwebserver.SocketPolicy;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.SocketPolicy;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import dagger.Provides;
 import feign.Feign;
 import feign.RequestLine;
@@ -30,10 +29,13 @@ import feign.codec.Encoder;
 import java.io.IOException;
 import java.net.URL;
 import javax.inject.Named;
-import org.testng.annotations.Test;
+import org.junit.Rule;
+import org.junit.Test;
 
-@Test
 public class RibbonClientTest {
+  @Rule public final MockWebServerRule server1 = new MockWebServerRule();
+  @Rule public final MockWebServerRule server2 = new MockWebServerRule();
+
   interface TestInterface {
     @RequestLine("POST /")
     void post();
@@ -60,19 +62,14 @@ public class RibbonClientTest {
     String client = "RibbonClientTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = client + ".ribbon.listOfServers";
 
-    MockWebServer server1 = new MockWebServer();
-    server1.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server1.play();
-    MockWebServer server2 = new MockWebServer();
-    server2.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server2.play();
+    server1.enqueue(new MockResponse().setBody("success!"));
+    server2.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance()
         .setProperty(
             serverListKey, hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
 
     try {
-
       TestInterface api =
           Feign.create(
               TestInterface.class,
@@ -83,13 +80,11 @@ public class RibbonClientTest {
       api.post();
       api.post();
 
-      assertEquals(server1.getRequestCount(), 1);
-      assertEquals(server2.getRequestCount(), 1);
+      assertEquals(1, server1.getRequestCount());
+      assertEquals(1, server2.getRequestCount());
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
-      server1.shutdown();
-      server2.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }
@@ -99,15 +94,12 @@ public class RibbonClientTest {
     String client = "RibbonClientTest-ioExceptionRetry";
     String serverListKey = client + ".ribbon.listOfServers";
 
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server.play();
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
 
     try {
-
       TestInterface api =
           Feign.create(
               TestInterface.class,
@@ -117,11 +109,10 @@ public class RibbonClientTest {
 
       api.post();
 
-      assertEquals(server.getRequestCount(), 2);
+      assertEquals(2, server1.getRequestCount());
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
-      server.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }
@@ -141,11 +132,9 @@ public class RibbonClientTest {
     String expectedQueryStringValue = "some+string+with+space";
     String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
 
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server.play();
+    server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
 
     try {
 
@@ -158,11 +147,10 @@ public class RibbonClientTest {
 
       api.getWithQueryParameters(queryStringValue);
 
-      final String recordedRequestLine = server.takeRequest().getRequestLine();
+      final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
       assertEquals(recordedRequestLine, expectedRequestLine);
     } finally {
-      server.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }
@@ -172,12 +160,10 @@ public class RibbonClientTest {
     String client = "RibbonClientTest-ioExceptionRetryWithBuilder";
     String serverListKey = client + ".ribbon.listOfServers";
 
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-    server.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server.play();
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server.getUrl("")));
+    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
 
     try {
 
@@ -188,11 +174,10 @@ public class RibbonClientTest {
 
       api.post();
 
-      assertEquals(server.getRequestCount(), 2);
+      assertEquals(server1.getRequestCount(), 2);
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
-      server.shutdown();
       getConfigInstance().clearProperty(serverListKey);
     }
   }

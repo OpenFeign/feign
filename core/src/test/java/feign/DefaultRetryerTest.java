@@ -15,40 +15,42 @@
  */
 package feign;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import feign.Retryer.Default;
 import java.util.Date;
-import org.testng.annotations.Test;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-@Test
 public class DefaultRetryerTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  @Test(expectedExceptions = RetryableException.class)
+  @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
     RetryableException e = new RetryableException(null, null, null);
     Default retryer = new Retryer.Default();
-    assertEquals(retryer.attempt, 1);
-    assertEquals(retryer.sleptForMillis, 0);
+    assertEquals(1, retryer.attempt);
+    assertEquals(0, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
-    assertEquals(retryer.attempt, 2);
-    assertEquals(retryer.sleptForMillis, 150);
+    assertEquals(2, retryer.attempt);
+    assertEquals(150, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
-    assertEquals(retryer.attempt, 3);
-    assertEquals(retryer.sleptForMillis, 375);
+    assertEquals(3, retryer.attempt);
+    assertEquals(375, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
-    assertEquals(retryer.attempt, 4);
-    assertEquals(retryer.sleptForMillis, 712);
+    assertEquals(4, retryer.attempt);
+    assertEquals(712, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
-    assertEquals(retryer.attempt, 5);
-    assertEquals(retryer.sleptForMillis, 1218);
+    assertEquals(5, retryer.attempt);
+    assertEquals(1218, retryer.sleptForMillis);
 
+    thrown.expect(RetryableException.class);
     retryer.continueOrPropagate(e);
-    // fail
   }
 
   @Test
@@ -61,7 +63,7 @@ public class DefaultRetryerTest {
         };
 
     retryer.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
-    assertEquals(retryer.attempt, 2);
-    assertEquals(retryer.sleptForMillis, 1000);
+    assertEquals(2, retryer.attempt);
+    assertEquals(1000, retryer.sleptForMillis);
   }
 }

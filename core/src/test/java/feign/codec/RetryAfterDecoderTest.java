@@ -17,12 +17,12 @@ package feign.codec;
 
 import static feign.codec.ErrorDecoder.RetryAfterDecoder.RFC822_FORMAT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import java.text.ParseException;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class RetryAfterDecoderTest {
 
@@ -34,13 +34,13 @@ public class RetryAfterDecoderTest {
   @Test
   public void rfc822Parses() throws ParseException {
     assertEquals(
-        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"),
-        RFC822_FORMAT.parse("Fri, 31 Dec 1999 23:59:59 GMT"));
+        RFC822_FORMAT.parse("Fri, 31 Dec 1999 23:59:59 GMT"),
+        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test
   public void relativeSecondsParses() throws ParseException {
-    assertEquals(decoder.apply("86400"), RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"));
+    assertEquals(RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400"));
   }
 
   private RetryAfterDecoder decoder =
