@@ -15,7 +15,6 @@
  */
 package feign.ribbon;
 
-import com.google.common.base.Objects;
 import com.netflix.loadbalancer.AbstractLoadBalancer;
 import com.netflix.loadbalancer.Server;
 
@@ -25,7 +24,6 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.Target;
 
-import static com.google.common.base.Objects.equal;
 import static com.netflix.client.ClientFactory.getNamedLoadBalancer;
 import static feign.Util.checkNotNull;
 import static java.lang.String.format;
@@ -99,18 +97,23 @@ public class LoadBalancingTarget<T> implements Target<T> {
     }
   }
 
-  @Override public int hashCode() {
-    return Objects.hashCode(type, name);
+  @Override public boolean equals(Object obj) {
+    if (obj instanceof LoadBalancingTarget) {
+      LoadBalancingTarget<?> other = (LoadBalancingTarget) obj;
+      return type.equals(other.type)
+          && name.equals(other.name);
+    }
+    return false;
   }
 
-  @Override public boolean equals(Object obj) {
-    if (obj == null)
-      return false;
-    if (this == obj)
-      return true;
-    if (LoadBalancingTarget.class != obj.getClass())
-      return false;
-    LoadBalancingTarget<?> that = LoadBalancingTarget.class.cast(obj);
-    return equal(this.type, that.type) && equal(this.name, that.name);
+  @Override public int hashCode() {
+    int result = 17;
+    result = 31 * result + type.hashCode();
+    result = 31 * result + name.hashCode();
+    return result;
+  }
+
+  @Override public String toString() {
+    return "LoadBalancingTarget(type=" + type.getSimpleName() + ", name=" + name + ")";
   }
 }
