@@ -18,7 +18,7 @@ package feign;
 import static dagger.Provides.Type.SET;
 import static feign.Util.UTF_8;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -31,6 +31,7 @@ import com.google.mockwebserver.RecordedRequest;
 import com.google.mockwebserver.SocketPolicy;
 import dagger.Module;
 import dagger.Provides;
+import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -590,23 +591,40 @@ public class FeignTest {
   }
 
   @Test
-  public void equalsAndHashCodeWork() {
-    TestInterface i1 =
-        Feign.create(TestInterface.class, "http://localhost:8080", new TestInterface.Module());
-    TestInterface i2 =
-        Feign.create(TestInterface.class, "http://localhost:8080", new TestInterface.Module());
-    TestInterface i3 =
-        Feign.create(TestInterface.class, "http://localhost:8888", new TestInterface.Module());
-    OtherTestInterface i4 =
-        Feign.create(OtherTestInterface.class, "http://localhost:8080", new TestInterface.Module());
+  public void equalsHashCodeAndToStringWork() {
+    Target<TestInterface> t1 =
+        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8080");
+    Target<TestInterface> t2 =
+        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
+    Target<OtherTestInterface> t3 =
+        new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
+    TestInterface i1 = Feign.builder().target(t1);
+    TestInterface i2 = Feign.builder().target(t1);
+    TestInterface i3 = Feign.builder().target(t2);
+    OtherTestInterface i4 = Feign.builder().target(t3);
 
-    assertTrue(i1.equals(i1));
-    assertTrue(i1.equals(i2));
-    assertFalse(i1.equals(i3));
-    assertFalse(i1.equals(i4));
+    assertEquals(i1, i1);
+    assertEquals(i1, i2);
+    assertNotEquals(i1, i3);
+    assertNotEquals(i1, i4);
 
     assertEquals(i1.hashCode(), i1.hashCode());
     assertEquals(i1.hashCode(), i2.hashCode());
+    assertNotEquals(i1.hashCode(), i3.hashCode());
+    assertNotEquals(i1.hashCode(), i4.hashCode());
+
+    assertEquals(i1.hashCode(), t1.hashCode());
+    assertEquals(i3.hashCode(), t2.hashCode());
+    assertEquals(i4.hashCode(), t3.hashCode());
+
+    assertEquals(i1.toString(), i1.toString());
+    assertEquals(i1.toString(), i2.toString());
+    assertNotEquals(i1.toString(), i3.toString());
+    assertNotEquals(i1.toString(), i4.toString());
+
+    assertEquals(i1.toString(), t1.toString());
+    assertEquals(i3.toString(), t2.toString());
+    assertEquals(i4.toString(), t3.toString());
   }
 
   @Test
