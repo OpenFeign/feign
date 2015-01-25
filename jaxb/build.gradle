@@ -1,11 +1,7 @@
 apply plugin: 'java'
 
-test {
-    useTestNG()
-}
-
 dependencies {
     compile project(':feign-core')
-    testCompile 'org.testng:testng:6.8.5'
+    testCompile 'junit:junit:4.12'
     testCompile 'com.google.guava:guava:14.0.1'
 }

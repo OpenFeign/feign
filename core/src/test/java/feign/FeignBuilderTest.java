@@ -15,13 +15,13 @@
  */
 package feign;
 
-import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
-import com.google.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import org.testng.annotations.Test;
+import org.junit.Rule;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -30,10 +30,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class FeignBuilderTest {
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+
   interface TestInterface {
     @RequestLine("POST /") Response codecPost(String data);
 
@@ -43,26 +46,20 @@ public class FeignBuilderTest {
   }
 
   @Test public void testDefaults() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("response data"));
-    server.play();
 
     String url = "http://localhost:" + server.getPort();
-    try {
-      TestInterface api = Feign.builder().target(TestInterface.class, url);
-      Response response = api.codecPost("request data");
-      assertEquals(Util.toString(response.body().asReader()), "response data");
-    } finally {
-      server.shutdown();
-      assertEquals(server.getRequestCount(), 1);
-      assertEquals(server.takeRequest().getUtf8Body(), "request data");
-    }
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+
+    Response response = api.codecPost("request data");
+    assertEquals("response data", Util.toString(response.body().asReader()));
+
+    assertEquals(1, server.getRequestCount());
+    assertEquals("request data", server.takeRequest().getUtf8Body());
   }
 
   @Test public void testOverrideEncoder() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("response data"));
-    server.play();
 
     String url = "http://localhost:" + server.getPort();
     Encoder encoder = new Encoder() {
@@ -71,20 +68,16 @@ public class FeignBuilderTest {
         template.body(object.toString());
       }
     };
-    try {
-      TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
-      api.encodedPost(Arrays.asList("This", "is", "my", "request"));
-    } finally {
-      server.shutdown();
-      assertEquals(server.getRequestCount(), 1);
-      assertEquals(server.takeRequest().getUtf8Body(), "[This, is, my, request]");
-    }
+
+    TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
+    api.encodedPost(Arrays.asList("This", "is", "my", "request"));
+
+    assertEquals(1, server.getRequestCount());
+    assertEquals("[This, is, my, request]", server.takeRequest().getUtf8Body());
   }
 
   @Test public void testOverrideDecoder() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("success!"));
-    server.play();
 
     String url = "http://localhost:" + server.getPort();
     Decoder decoder = new Decoder() {
@@ -94,19 +87,14 @@ public class FeignBuilderTest {
       }
     };
 
-    try {
-      TestInterface api = Feign.builder().decoder(decoder).target(TestInterface.class, url);
-      assertEquals(api.decodedPost(), "fail");
-    } finally {
-      server.shutdown();
-      assertEquals(server.getRequestCount(), 1);
-    }
+    TestInterface api = Feign.builder().decoder(decoder).target(TestInterface.class, url);
+    assertEquals("fail", api.decodedPost());
+
+    assertEquals(1, server.getRequestCount());
   }
 
   @Test public void testProvideRequestInterceptors() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("response data"));
-    server.play();
 
     String url = "http://localhost:" + server.getPort();
     RequestInterceptor requestInterceptor = new RequestInterceptor() {
@@ -115,23 +103,19 @@ public class FeignBuilderTest {
         template.header("Content-Type", "text/plain");
       }
     };
-    try {
-      TestInterface api = Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
-      Response response = api.codecPost("request data");
-      assertEquals(Util.toString(response.body().asReader()), "response data");
-    } finally {
-      server.shutdown();
-      assertEquals(server.getRequestCount(), 1);
-      RecordedRequest request = server.takeRequest();
-      assertEquals(request.getUtf8Body(), "request data");
-      assertEquals(request.getHeader("Content-Type"), "text/plain");
-    }
+
+    TestInterface api = Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
+    Response response = api.codecPost("request data");
+    assertEquals(Util.toString(response.body().asReader()), "response data");
+
+    assertEquals(1, server.getRequestCount());
+    RecordedRequest request = server.takeRequest();
+    assertEquals("request data", request.getUtf8Body());
+    assertEquals("text/plain", request.getHeader("Content-Type"));
   }
 
   @Test public void testProvideInvocationHandlerFactory() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("response data"));
-    server.play();
 
     String url = "http://localhost:" + server.getPort();
 
@@ -144,16 +128,13 @@ public class FeignBuilderTest {
       }
     };
 
-    try {
-      TestInterface api = Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
-      Response response = api.codecPost("request data");
-      assertEquals(Util.toString(response.body().asReader()), "response data");
-      assertEquals(callCount.get(), 1);
-    } finally {
-      server.shutdown();
-      assertEquals(server.getRequestCount(), 1);
-      RecordedRequest request = server.takeRequest();
-      assertEquals(request.getUtf8Body(), "request data");
-    }
+    TestInterface api = Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
+    Response response = api.codecPost("request data");
+    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertEquals(1, callCount.get());
+
+    assertEquals(1, server.getRequestCount());
+    RecordedRequest request = server.takeRequest();
+    assertEquals("request data", request.getUtf8Body());
   }
 }

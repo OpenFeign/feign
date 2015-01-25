@@ -16,45 +16,38 @@
 package feign;
 
 import com.google.common.base.Joiner;
-import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
-import dagger.Provides;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import feign.Logger.Level;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import javax.inject.Named;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.model.Statement;
 
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-@Test
+@RunWith(Enclosed.class)
 public class LoggerTest {
-
-  Logger logger = new Logger() {
-    @Override protected void log(String configKey, String format, Object... args) {
-      messages.add(methodTag(configKey) + String.format(format, args));
-    }
-  };
-
-  List<String> messages = new ArrayList<String>();
-
-  @BeforeMethod void clear() {
-    messages.clear();
-  }
+  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final RecordingLogger logger = new RecordingLogger();
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   interface SendsStuff {
-
     @RequestLine("POST /")
     @Headers("Content-Type: application/json")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
@@ -63,265 +56,238 @@ public class LoggerTest {
         @Named("user_name") String user, @Named("password") String password);
   }
 
-  @DataProvider(name = "levelToOutput")
-  public Object[][] levelToOutput() {
-    Object[][] data = new Object[4][2];
-    data[0][0] = Logger.Level.NONE;
-    data[0][1] = Arrays.<String>asList();
-    data[1][0] = Logger.Level.BASIC;
-    data[1][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)"
-    );
-    data[2][0] = Logger.Level.HEADERS;
-    data[2][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] Content-Length: 3",
-        "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)"
-    );
-    data[3][0] = Logger.Level.FULL;
-    data[3][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ",
-        "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] Content-Length: 3",
-        "\\[SendsStuff#login\\] ",
-        "\\[SendsStuff#login\\] foo",
-        "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)"
-    );
-    return data;
-  }
+  @RunWith(Parameterized.class)
+  public static class LogLevelEmitsTest extends LoggerTest {
+    private final Level logLevel;
 
-  @Test(dataProvider = "levelToOutput")
-  public void levelEmits(final Logger.Level logLevel, List<String> expectedMessages) throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.play();
-
-    try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(),
-          new DefaultModule(logger, logLevel));
-
-      api.login("netflix", "denominator", "password");
-
-      assertEquals(messages.size(), expectedMessages.size());
-      for (int i = 0; i < messages.size(); i++) {
-        assertTrue(messages.get(i).matches(expectedMessages.get(i)), messages.get(i));
-      }
-
-      assertEquals(new String(server.takeRequest().getBody(), UTF_8),
-          "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
-    } finally {
-      server.shutdown();
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][] {
+          { Level.NONE, Arrays.asList() },
+          { Level.BASIC, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)") },
+          { Level.HEADERS, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)") },
+          { Level.FULL, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ",
+              "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] ",
+              "\\[SendsStuff#login\\] foo",
+              "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)") }
+      });
     }
-  }
 
-  static @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class) class DefaultModule {
-    final Logger logger;
-    final Logger.Level logLevel;
-
-    DefaultModule(Logger logger, Logger.Level logLevel) {
-      this.logger = logger;
+    public LogLevelEmitsTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
     }
 
-    @Provides Decoder defaultDecoder() {
-      return new Decoder.Default();
-    }
+    @Test public void levelEmits() throws IOException, InterruptedException {
+      server.enqueue(new MockResponse().setBody("foo"));
 
-    @Provides Encoder defaultEncoder() {
-      return new Encoder.Default();
-    }
-
-    @Provides @Singleton Logger logger() {
-      return logger;
-    }
-
-    @Provides @Singleton Logger.Level level() {
-      return logLevel;
-    }
-  }
-
-  @DataProvider(name = "levelToReadTimeoutOutput")
-  public Object[][] levelToReadTimeoutOutput() {
-    Object[][] data = new Object[4][2];
-    data[0][0] = Logger.Level.NONE;
-    data[0][1] = Arrays.<String>asList();
-    data[1][0] = Logger.Level.BASIC;
-    data[1][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)"
-    );
-    data[2][0] = Logger.Level.HEADERS;
-    data[2][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] Content-Length: 3",
-        "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)"
-    );
-    data[3][0] = Logger.Level.FULL;
-    data[3][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ",
-        "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] Content-Length: 3",
-        "\\[SendsStuff#login\\] ",
-        "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] java.net.SocketTimeoutException: Read timed out.*",
-        "\\[SendsStuff#login\\] <--- END ERROR"
-    );
-    return data;
-  }
-
-  @dagger.Module(overrides = true, library = true)
-  static class LessReadTimeoutModule {
-    @Provides Request.Options lessReadTimeout() {
-      return new Request.Options(10 * 1000, 50);
-    }
-  }
-
-  @Test(dataProvider = "levelToReadTimeoutOutput")
-  public void readTimeoutEmits(final Logger.Level logLevel, List<String> expectedMessages) throws IOException, InterruptedException {
-    final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBytesPerSecond(1).setBody("foo"));
-    server.play();
-
-
-    try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort(),
-          new LessReadTimeoutModule(), new DefaultModule(logger, logLevel));
+      SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
 
       api.login("netflix", "denominator", "password");
-
-      fail();
-    } catch (FeignException e) {
-
-      assertMessagesMatch(expectedMessages);
 
       assertEquals(new String(server.takeRequest().getBody(), UTF_8),
           "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
-    } finally {
-      server.shutdown();
     }
   }
 
-  @DataProvider(name = "levelToUnknownHostOutput")
-  public Object[][] levelToUnknownHostOutput() {
-    Object[][] data = new Object[4][2];
-    data[0][0] = Logger.Level.NONE;
-    data[0][1] = Arrays.<String>asList();
-    data[1][0] = Logger.Level.BASIC;
-    data[1][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-        "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)"
-    );
-    data[2][0] = Logger.Level.HEADERS;
-    data[2][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)"
-    );
-    data[3][0] = Logger.Level.FULL;
-    data[3][1] = Arrays.asList(
-        "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-        "\\[SendsStuff#login\\] Content-Type: application/json",
-        "\\[SendsStuff#login\\] Content-Length: 80",
-        "\\[SendsStuff#login\\] ",
-        "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
-        "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-        "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
-        "\\[SendsStuff#login\\] java.net.UnknownHostException: robofu.abc.*",
-        "\\[SendsStuff#login\\] <--- END ERROR"
-    );
-    return data;
-  }
+  @RunWith(Parameterized.class)
+  public static class ReadTimeoutEmitsTest extends LoggerTest {
+    private final Level logLevel;
 
-  @dagger.Module(overrides = true, library = true)
-  static class DontRetryModule {
-    @Provides Retryer retryer() {
-      return new Retryer() {
-        @Override public void continueOrPropagate(RetryableException e) {
-          throw e;
-        }
-      };
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][] {
+          { Level.NONE, Arrays.asList() },
+          { Level.BASIC, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)") },
+          { Level.HEADERS, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)") },
+          { Level.FULL, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ",
+              "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] ",
+              "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] java.net.SocketTimeoutException: Read timed out.*",
+              "\\[SendsStuff#login\\] <--- END ERROR") }
+      });
     }
-  }
 
-  @Test(dataProvider = "levelToUnknownHostOutput")
-  public void unknownHostEmits(final Logger.Level logLevel, List<String> expectedMessages) throws IOException, InterruptedException {
+    public ReadTimeoutEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
 
-    try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc",
-          new DontRetryModule(), new DefaultModule(logger, logLevel));
+    @Test public void levelEmitsOnReadTimeout() throws IOException, InterruptedException {
+      server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
+      thrown.expect(FeignException.class);
+
+      SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .options(new Request.Options(10 * 1000, 50))
+          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
 
       api.login("netflix", "denominator", "password");
-
-      fail();
-    } catch (FeignException e) {
-      assertMessagesMatch(expectedMessages);
     }
   }
 
-  @dagger.Module(overrides = true, library = true)
-  static class RetryOnceModule {
-    @Provides Retryer retryer() {
-      return new Retryer() {
-        boolean retried;
+  @RunWith(Parameterized.class)
+  public static class UnknownHostEmitsTest extends LoggerTest {
+    private final Level logLevel;
 
-        @Override public void continueOrPropagate(RetryableException e) {
-          if (!retried) {
-            retried = true;
-            return;
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][] {
+          { Level.NONE, Arrays.asList() },
+          { Level.BASIC, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)") },
+          { Level.HEADERS, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)") },
+          { Level.FULL, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
+              "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] ",
+              "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
+              "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] java.net.UnknownHostException: robofu.abc.*",
+              "\\[SendsStuff#login\\] <--- END ERROR") }
+      });
+    }
+
+    public UnknownHostEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Test public void unknownHostEmits() throws IOException, InterruptedException {
+
+      SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .retryer(new Retryer() {
+            @Override public void continueOrPropagate(RetryableException e) {
+              throw e;
+            }
+          })
+          .target(SendsStuff.class, "http://robofu.abc");
+
+      thrown.expect(FeignException.class);
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class RetryEmitsTest extends LoggerTest {
+    private final Level logLevel;
+
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][] {
+          { Level.NONE, Arrays.asList() },
+          { Level.BASIC, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] ---> RETRYING",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)") }
+      });
+    }
+
+    public RetryEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Test public void retryEmits() throws IOException, InterruptedException {
+
+      thrown.expect(FeignException.class);
+
+      SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .retryer( new Retryer() {
+            boolean retried;
+
+            @Override public void continueOrPropagate(RetryableException e) {
+              if (!retried) {
+                retried = true;
+                return;
+              }
+              throw e;
+            }
+          })
+          .target(SendsStuff.class, "http://robofu.abc");
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  private static final class RecordingLogger extends Logger implements TestRule {
+    private final List<String> messages = new ArrayList<String>();
+    private final List<String> expectedMessages = new ArrayList<String>();
+
+    RecordingLogger expectMessages(List<String> expectedMessages){
+      this.expectedMessages.addAll(expectedMessages);
+      return this;
+    }
+    
+    @Override protected void log(String configKey, String format, Object... args) {
+      messages.add(methodTag(configKey) + String.format(format, args));
+    }
+
+    @Override public Statement apply(final Statement base, Description description) {
+      return new Statement() {
+        @Override public void evaluate() throws Throwable {
+          base.evaluate();
+          assertEquals(messages.size(), expectedMessages.size());
+          for (int i = 0; i < messages.size(); i++) {
+            assertTrue("Didn't match at message " + (i + 1) + ":\n" + Joiner.on('\n').join(messages),
+                Pattern.compile(expectedMessages.get(i), Pattern.DOTALL).matcher(messages.get(i)).matches());
           }
-          throw e;
         }
       };
-    }
-  }
-
-  public void retryEmits() throws IOException, InterruptedException {
-
-    try {
-      SendsStuff api = Feign.create(SendsStuff.class, "http://robofu.abc",
-          new RetryOnceModule(), new DefaultModule(logger, Logger.Level.BASIC));
-
-      api.login("netflix", "denominator", "password");
-
-      fail();
-    } catch (FeignException e) {
-      assertMessagesMatch(Arrays.asList(
-          "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-          "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
-          "\\[SendsStuff#login\\] ---> RETRYING",
-          "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-          "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)"
-      ));
-    }
-  }
-
-  private void assertMessagesMatch(List<String> expectedMessages) {
-    assertEquals(messages.size(), expectedMessages.size());
-    for (int i = 0; i < messages.size(); i++) {
-      assertTrue(Pattern.compile(expectedMessages.get(i), Pattern.DOTALL).matcher(messages.get(i)).matches(),
-          "Didn't match at message " + (i + 1) + ":\n" + Joiner.on('\n').join(messages));
     }
   }
 }

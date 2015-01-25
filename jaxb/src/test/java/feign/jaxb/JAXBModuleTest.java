@@ -22,7 +22,6 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -31,11 +30,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Collection;
 import java.util.Collections;
+import org.junit.Test;
 
 import static feign.Util.UTF_8;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-@Test
 public class JAXBModuleTest {
     @Module(includes = JAXBModule.class, injects = EncoderAndDecoderBindings.class)
     static class EncoderAndDecoderBindings {
@@ -61,8 +60,8 @@ public class JAXBModuleTest {
         EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
         ObjectGraph.create(bindings).inject(bindings);
 
-        assertEquals(bindings.encoder.getClass(), JAXBEncoder.class);
-        assertEquals(bindings.decoder.getClass(), JAXBDecoder.class);
+        assertEquals(JAXBEncoder.class, bindings.encoder.getClass());
+        assertEquals(JAXBDecoder.class, bindings.decoder.getClass());
     }
 
     @XmlRootElement
@@ -109,8 +108,9 @@ public class JAXBModuleTest {
         RequestTemplate template = new RequestTemplate();
         bindings.encoder.encode(mock, template);
 
-        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+        assertEquals(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>",
+            new String(template.body(), UTF_8));
     }
 
     @Test
@@ -128,8 +128,9 @@ public class JAXBModuleTest {
         RequestTemplate template = new RequestTemplate();
         encoder.encode(mock, template);
 
-        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-16\" " +
-                "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-16\" " +
+                "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>",
+            new String(template.body(), UTF_8));
     }
 
     @Test
@@ -147,10 +148,10 @@ public class JAXBModuleTest {
         RequestTemplate template = new RequestTemplate();
         encoder.encode(mock, template);
 
-        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
                 "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
                 "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                "<value>Test</value></mockObject>");
+                "<value>Test</value></mockObject>", new String(template.body(), UTF_8));
     }
 
     @Test
@@ -168,10 +169,10 @@ public class JAXBModuleTest {
         RequestTemplate template = new RequestTemplate();
         encoder.encode(mock, template);
 
-        assertEquals(new String(template.body(), UTF_8), "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
                 "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                "<value>Test</value></mockObject>");
+                "<value>Test</value></mockObject>", new String(template.body(), UTF_8));
     }
 
     @Test
@@ -197,7 +198,7 @@ public class JAXBModuleTest {
                 .append("    <value>Test</value>").append(NEWLINE)
                 .append("</mockObject>").append(NEWLINE);
 
-        assertEquals(new String(template.body(), UTF_8), expectedXml.toString());
+        assertEquals(expectedXml.toString(), new String(template.body(), UTF_8));
     }
 
     @Test
@@ -214,6 +215,6 @@ public class JAXBModuleTest {
         Response response =
                 Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), mockXml, UTF_8);
 
-        assertEquals(bindings.decoder.decode(response, new TypeToken<MockObject>() {}.getType()), mock);
+        assertEquals(mock, bindings.decoder.decode(response, new TypeToken<MockObject>() {}.getType()));
     }
 }

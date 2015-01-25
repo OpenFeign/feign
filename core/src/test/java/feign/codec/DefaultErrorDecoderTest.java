@@ -17,39 +17,45 @@ package feign.codec;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-
-import org.testng.annotations.Test;
-
-import java.util.Collection;
-
 import feign.FeignException;
 import feign.Response;
-import feign.RetryableException;
+import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 
 public class DefaultErrorDecoderTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
-  @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "status 500 reading Service#foo\\(\\)")
-  public void throwsFeignException() throws Throwable {
+  @Test public void throwsFeignException() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 500 reading Service#foo()");
+    
     Response response = Response.create(500, "Internal server error", ImmutableMap.<String, Collection<String>>of(),
         null);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test(expectedExceptions = FeignException.class, expectedExceptionsMessageRegExp = "status 500 reading Service#foo\\(\\); content:\nhello world")
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
+  @Test public void throwsFeignExceptionIncludingBody() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
+
     Response response = Response.create(500, "Internal server error", ImmutableMap.<String, Collection<String>>of(),
         "hello world", UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test(expectedExceptions = RetryableException.class, expectedExceptionsMessageRegExp = "status 503 reading Service#foo\\(\\)")
-  public void retryAfterHeaderThrowsRetryableException() throws Throwable {
+  @Test public void retryAfterHeaderThrowsRetryableException() throws Throwable {
+    thrown.expect(FeignException.class);
+    thrown.expectMessage("status 503 reading Service#foo()");
+
     Response response = Response.create(503, "Service Unavailable",
         ImmutableMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT").asMap(), null);
 
