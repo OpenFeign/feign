@@ -15,12 +15,8 @@
  */
 package feign.jaxrs.examples;
 
-import dagger.Module;
-import dagger.Provides;
 import feign.Feign;
-import feign.Logger;
-import feign.gson.GsonModule;
-import feign.jaxrs.JAXRSModule;
+import feign.jaxrs.JAXRSContract;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -42,30 +38,15 @@ public class GitHubExample {
   }
 
   public static void main(String... args) throws InterruptedException {
-    GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GitHubModule());
+    GitHub github =
+        Feign.builder()
+            .contract(new JAXRSContract())
+            .target(GitHub.class, "https://api.github.com");
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
-    }
-  }
-
-  /** JAXRSModule tells us to process @GET etc annotations */
-  @Module(
-      overrides = true,
-      library = true,
-      includes = {JAXRSModule.class, GsonModule.class})
-  static class GitHubModule {
-
-    @Provides
-    Logger.Level loggingLevel() {
-      return Logger.Level.BASIC;
-    }
-
-    @Provides
-    Logger logger() {
-      return new Logger.ErrorLogger();
     }
   }
 }

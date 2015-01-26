@@ -15,8 +15,6 @@
  */
 package feign.client;
 
-import static com.google.common.base.Throwables.propagate;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -69,7 +67,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
       sc.init(new KeyManager[] {this}, new TrustManager[] {this}, new SecureRandom());
       this.delegate = sc.getSocketFactory();
     } catch (Exception e) {
-      throw propagate(e);
+      throw new RuntimeException(e);
     }
     this.serverAlias = serverAlias;
     if (serverAlias.isEmpty()) {
@@ -83,7 +81,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
         this.certificateChain = Arrays.copyOf(rawChain, rawChain.length, X509Certificate[].class);
       } catch (Exception e) {
-        throw propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }

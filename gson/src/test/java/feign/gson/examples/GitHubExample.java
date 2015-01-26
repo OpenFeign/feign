@@ -34,7 +34,7 @@ public class GitHubExample {
     int contributions;
   }
 
-  public static void main(String... args) throws InterruptedException {
+  public static void main(String... args) {
     GitHub github =
         Feign.builder().decoder(new GsonDecoder()).target(GitHub.class, "https://api.github.com");
 

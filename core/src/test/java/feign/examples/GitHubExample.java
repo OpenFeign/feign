@@ -46,9 +46,9 @@ public class GitHubExample {
   public static void main(String... args) {
     GitHub github =
         Feign.builder()
+            .decoder(new GsonDecoder())
             .logger(new Logger.ErrorLogger())
             .logLevel(Logger.Level.BASIC)
-            .decoder(new GsonDecoder())
             .target(GitHub.class, "https://api.github.com");
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
