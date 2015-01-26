@@ -70,6 +70,6 @@ public class DefaultDecoderTest {
   }
 
   private Response nullBodyResponse() {
-    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), null);
+    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
   }
 }
