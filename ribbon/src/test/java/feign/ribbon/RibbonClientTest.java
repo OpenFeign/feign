@@ -31,10 +31,13 @@ import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
 import javax.inject.Named;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 public class RibbonClientTest {
+  @Rule public final TestName testName = new TestName();
   @Rule public final MockWebServerRule server1 = new MockWebServerRule();
   @Rule public final MockWebServerRule server2 = new MockWebServerRule();
 
@@ -54,52 +57,37 @@ public class RibbonClientTest {
     }
   }
 
-  @Test
-  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
-    String client = "RibbonClientTest-loadBalancingDefaultPolicyRoundRobin";
-    String serverListKey = client + ".ribbon.listOfServers";
-
+  @Test public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setBody("success!"));
     server2.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
 
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://" + client, new TestInterface.Module(), new RibbonModule());
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
 
-      api.post();
-      api.post();
+    api.post();
+    api.post();
 
-      assertEquals(1, server1.getRequestCount());
-      assertEquals(1, server2.getRequestCount());
-      // TODO: verify ribbon stats match
-      // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
-      } finally {
-      getConfigInstance().clearProperty(serverListKey);
-    }
+    assertEquals(1, server1.getRequestCount());
+    assertEquals(1, server2.getRequestCount());
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
-  @Test
-  public void ioExceptionRetry() throws IOException, InterruptedException {
-    String client = "RibbonClientTest-ioExceptionRetry";
-    String serverListKey = client + ".ribbon.listOfServers";
-
+  @Test public void ioExceptionRetry() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "http://" + client, new TestInterface.Module(), new RibbonModule());
 
-      api.post();
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
 
-      assertEquals(2, server1.getRequestCount());
-      // TODO: verify ribbon stats match
-      // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
-    } finally {
-      getConfigInstance().clearProperty(serverListKey);
-    }
+    api.post();
+
+    assertEquals(2, server1.getRequestCount());
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
 	/*
@@ -109,61 +97,54 @@ public class RibbonClientTest {
 		invalid characters (ex. space).
 	 */
 	@Test public void urlEncodeQueryStringParameters () throws IOException, InterruptedException {
-		String client = "RibbonClientTest-urlEncodeQueryStringParameters";
-		String serverListKey = client + ".ribbon.listOfServers";
-
 		String queryStringValue = "some string with space";
 		String expectedQueryStringValue = "some+string+with+space";
 		String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
 
 		server1.enqueue(new MockResponse().setBody("success!"));
 
-		getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
+		getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-		try {
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
 
-			TestInterface api = Feign.create(TestInterface.class, "http://" + client, new TestInterface.Module(), new RibbonModule());
+    api.getWithQueryParameters(queryStringValue);
 
-			api.getWithQueryParameters(queryStringValue);
+    final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
-			final String recordedRequestLine = server1.takeRequest().getRequestLine();
-
-			assertEquals(recordedRequestLine, expectedRequestLine);
-		} finally {
-			getConfigInstance().clearProperty(serverListKey);
-		}
+    assertEquals(recordedRequestLine, expectedRequestLine);
 	}
 
+  @Test public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setBody("success!"));
 
-    @Test
-    public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
-      String client = "RibbonClientTest-ioExceptionRetryWithBuilder";
-      String serverListKey = client + ".ribbon.listOfServers";
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-      server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-      server1.enqueue(new MockResponse().setBody("success!"));
+    TestInterface api = Feign.builder().
+        client(new RibbonClient()).
+        target(TestInterface.class, "http://" + client());
 
-      getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")));
+    api.post();
 
-      try {
-
-        TestInterface api = Feign.builder().
-                client(new RibbonClient()).
-                target(TestInterface.class, "http://" + client);
-
-        api.post();
-
-        assertEquals(server1.getRequestCount(), 2);
-        // TODO: verify ribbon stats match
-        // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
-      } finally {
-        getConfigInstance().clearProperty(serverListKey);
-      }
-    }
-
+    assertEquals(server1.getRequestCount(), 2);
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
 
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
     return "localhost:" + url.getPort();
+  }
+
+  private String client() {
+    return testName.getMethodName();
+  }
+
+  private String serverListKey() {
+    return client() + ".ribbon.listOfServers";
+  }
+
+  @After public void clearServerList() {
+    getConfigInstance().clearProperty(serverListKey());
   }
 }

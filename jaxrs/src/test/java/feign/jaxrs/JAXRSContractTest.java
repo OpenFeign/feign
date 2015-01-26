@@ -15,7 +15,6 @@
  */
 package feign.jaxrs;
 
-import com.google.gson.reflect.TypeToken;
 import feign.MethodMetadata;
 import feign.Response;
 import java.lang.annotation.ElementType;
@@ -23,7 +22,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -41,17 +39,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static feign.jaxrs.JAXRSModule.ACCEPT;
-import static feign.jaxrs.JAXRSModule.CONTENT_TYPE;
-import static javax.ws.rs.HttpMethod.DELETE;
-import static javax.ws.rs.HttpMethod.GET;
-import static javax.ws.rs.HttpMethod.POST;
-import static javax.ws.rs.HttpMethod.PUT;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 /**
  * Tests interfaces defined per {@link feign.jaxrs.JAXRSModule.JAXRSContract} are interpreted into expected {@link feign
@@ -74,32 +64,33 @@ public class JAXRSContractTest {
   }
 
   @Test public void httpMethods() throws Exception {
-    assertEquals(POST, contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("post")).template().method());
-    assertEquals(PUT, contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("put")).template().method());
-    assertEquals(GET, contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("get")).template().method());
-    assertEquals(DELETE, contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("delete")).template().method());
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("post")).template())
+        .hasMethod("POST");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("put")).template())
+        .hasMethod("PUT");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("get")).template())
+        .hasMethod("GET");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("delete")).template())
+        .hasMethod("DELETE");
   }
 
-  interface CustomMethodAndURIParam {
+  interface CustomMethod {
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @HttpMethod("PATCH")
     public @interface PATCH {
     }
 
-    @PATCH Response patch(URI nextLink);
+    @PATCH Response patch();
   }
 
-  @Test public void requestLineOnlyRequiresMethod() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(CustomMethodAndURIParam.class.getDeclaredMethod("patch",
-        URI.class));
-    assertEquals("PATCH", md.template().method());
-    assertEquals("", md.template().url());
-    assertTrue(md.template().queries().isEmpty());
-    assertTrue(md.template().headers().isEmpty());
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertEquals(Integer.valueOf(0), md.urlIndex());
+  @Test public void customMethodWithoutPath() throws Exception {
+    assertThat(contract.parseAndValidatateMetadata(CustomMethod.class.getDeclaredMethod("patch")).template())
+        .hasMethod("PATCH")
+        .hasUrl("");
   }
 
   interface WithQueryParamsInPath {
@@ -115,51 +106,48 @@ public class JAXRSContractTest {
   }
 
   @Test public void queryParamsInPathExtract() throws Exception {
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none"));
-      assertEquals("/", md.template().url());
-      assertTrue(md.template().queries().isEmpty());
-      assertEquals("GET / HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals("GET /?Action=GetUser HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals("GET /?Action=GetUser&Version=2010-05-08 HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals(Arrays.asList("1"), md.template().queries().get("limit"));
-      assertEquals("GET /?Action=GetUser&Version=2010-05-08&limit=1 HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty"));
-      assertEquals("/", md.template().url());
-      assertTrue(md.template().queries().containsKey("flag"));
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals("GET /?flag&Action=GetUser&Version=2010-05-08 HTTP/1.1\n", md.template().toString());
-    }
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none")).template())
+        .hasUrl("/")
+        .hasQueries();
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08")),
+            entry("limit", asList("1"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("flag", asList(new String[] { null })),
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08"))
+        );
   }
 
   interface ProducesAndConsumes {
-    @GET @Produces(APPLICATION_XML) Response produces();
+    @GET @Produces("application/xml") Response produces();
 
     @GET @Produces({}) Response producesNada();
 
     @GET @Produces({""}) Response producesEmpty();
 
-    @POST @Consumes(APPLICATION_JSON) Response consumes();
+    @POST @Consumes("application/xml") Response consumes();
 
     @POST @Consumes({}) Response consumesNada();
 
@@ -168,7 +156,9 @@ public class JAXRSContractTest {
 
   @Test public void producesAddsAcceptHeader() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(ProducesAndConsumes.class.getDeclaredMethod("produces"));
-    assertEquals(Arrays.asList(APPLICATION_XML), md.template().headers().get(ACCEPT));
+
+    assertThat(md.template())
+        .hasHeaders(entry("Accept", asList("application/xml")));
   }
 
   @Test public void producesNada() throws Exception {
@@ -187,7 +177,9 @@ public class JAXRSContractTest {
 
   @Test public void consumesAddsContentTypeHeader() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(ProducesAndConsumes.class.getDeclaredMethod("consumes"));
-    assertEquals(Arrays.asList(APPLICATION_JSON), md.template().headers().get(CONTENT_TYPE));
+
+    assertThat(md.template())
+        .hasHeaders(entry("Content-Type", asList("application/xml")));
   }
 
   @Test public void consumesNada() throws Exception {
@@ -210,15 +202,16 @@ public class JAXRSContractTest {
     @POST Response tooMany(List<String> body, List<String> body2);
   }
 
+  private static final List<String> STRING_LIST = null;
+
   @Test public void bodyParamIsGeneric() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post",
         List.class));
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertNull(md.urlIndex());
-    assertEquals(Integer.valueOf(0), md.bodyIndex());
-    assertEquals(new TypeToken<List<String>>() {
-    }.getType(), md.bodyType());
+
+    assertThat(md.bodyIndex())
+        .isEqualTo(0);
+    assertThat(md.bodyType())
+        .isEqualTo(getClass().getDeclaredField("STRING_LIST").getGenericType());
   }
 
   @Test public void tooManyBodies() throws Exception {
@@ -249,43 +242,47 @@ public class JAXRSContractTest {
     @GET @Path("/{param}") Response emptyPathParam(@PathParam("") String empty);
   }
 
-  @Test public void pathOnType() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("base"));
-    assertEquals("/base", md.template().url());
-    md = contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("get"));
-    assertEquals("/base/specific", md.template().url());
+  private MethodMetadata parsePathOnTypeMethod(String name) throws NoSuchMethodException {
+    return contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod(name));
+  }
+
+  @Test public void parsePathMethod() throws Exception {
+    assertThat(parsePathOnTypeMethod("base").template())
+        .hasUrl("/base");
+
+    assertThat(parsePathOnTypeMethod("get").template())
+        .hasUrl("/base/specific");
   }
 
   @Test public void emptyPathOnMethod() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Path.value() was empty on method emptyPath");
 
-    contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("emptyPath"));
+    parsePathOnTypeMethod("emptyPath");
   }
 
   @Test public void emptyPathParam() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("PathParam.value() was empty on parameter 0");
 
-    contract.parseAndValidatateMetadata(PathOnType.class.getDeclaredMethod("emptyPathParam", String.class));
+    contract.parseAndValidatateMetadata(
+        PathOnType.class.getDeclaredMethod("emptyPathParam", String.class));
   }
 
   interface WithURIParam {
     @GET @Path("/{1}/{2}") Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
   }
 
-  @Test public void methodCanHaveUriParam() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithURIParam.class.getDeclaredMethod("uriParam", String.class,
-        URI.class, String.class));
-    assertEquals(Integer.valueOf(1), md.urlIndex());
-  }
+  @Test public void withPathAndURIParams() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(
+        WithURIParam.class.getDeclaredMethod("uriParam", String.class, URI.class, String.class));
 
-  @Test public void pathParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithURIParam.class.getDeclaredMethod("uriParam", String.class,
-        URI.class, String.class));
-    assertEquals("/{1}/{2}", md.template().url());
-    assertEquals(Arrays.asList("1"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("2"), md.indexToName().get(2));
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("1")),
+        // Skips 1 as it is a url index!
+        entry(2, asList("2")));
+
+    assertThat(md.urlIndex()).isEqualTo(1);
   }
 
   interface WithPathAndQueryParams {
@@ -293,29 +290,25 @@ public class JAXRSContractTest {
     Response recordsByNameAndType(@PathParam("domainId") int id, @QueryParam("name") String nameFilter,
                                   @QueryParam("type") String typeFilter);
 
-    @GET Response emptyQueryParam(@QueryParam("") String empty);
+    @GET Response empty(@QueryParam("") String empty);
   }
 
-  @Test public void mixedRequestLineParams() throws Exception {
+  @Test public void pathAndQueryParams() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(WithPathAndQueryParams.class.getDeclaredMethod
         ("recordsByNameAndType", int.class, String.class, String.class));
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertTrue(md.template().headers().isEmpty());
-    assertEquals("/domains/{domainId}/records", md.template().url());
-    assertEquals(Arrays.asList("{name}"), md.template().queries().get("name"));
-    assertEquals(Arrays.asList("{type}"), md.template().queries().get("type"));
-    assertEquals(Arrays.asList("domainId"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("name"), md.indexToName().get(1));
-    assertEquals(Arrays.asList("type"), md.indexToName().get(2));
-    assertEquals("GET /domains/{domainId}/records?name={name}&type={type} HTTP/1.1\n", md.template().toString());
+
+    assertThat(md.template())
+        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("domainId")),
+        entry(1, asList("name")), entry(2, asList("type")));
   }
 
   @Test public void emptyQueryParam() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("QueryParam.value() was empty on parameter 0");
 
-    contract.parseAndValidatateMetadata(WithPathAndQueryParams.class.getDeclaredMethod("emptyQueryParam", String.class));
+    contract.parseAndValidatateMetadata(WithPathAndQueryParams.class.getDeclaredMethod("empty", String.class));
   }
 
   interface FormParams {
@@ -330,12 +323,14 @@ public class JAXRSContractTest {
     MethodMetadata md = contract.parseAndValidatateMetadata(FormParams.class.getDeclaredMethod("login", String.class,
         String.class, String.class));
 
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertEquals(Arrays.asList("customer_name", "user_name", "password"), md.formParams());
-    assertEquals(Arrays.asList("customer_name"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("user_name"), md.indexToName().get(1));
-    assertEquals(Arrays.asList("password"), md.indexToName().get(2));
+    assertThat(md.formParams())
+        .containsExactly("customer_name", "user_name", "password");
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("customer_name")),
+        entry(1, asList("user_name")),
+        entry(2, asList("password"))
+    );
   }
 
   @Test public void emptyFormParam() throws Exception {
@@ -352,10 +347,14 @@ public class JAXRSContractTest {
   }
 
   @Test public void headerParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("logout", String.class));
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("logout", String.class));
 
-    assertEquals(Arrays.asList("{Auth-Token}"), md.template().headers().get("Auth-Token"));
-    assertEquals(Arrays.asList("Auth-Token"), md.indexToName().get(0));
+    assertThat(md.template())
+        .hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
+
+    assertThat(md.indexToName())
+        .containsExactly(entry(0, asList("Auth-Token")));
   }
 
   @Test public void emptyHeaderParam() throws Exception {
@@ -371,8 +370,8 @@ public class JAXRSContractTest {
   }
 
   @Test public void pathsWithoutSlashesParseCorrectly() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithoutAnySlashes.class.getDeclaredMethod("get"));
-    assertEquals("/base/specific", md.template().url());
+    assertThat(contract.parseAndValidatateMetadata(PathsWithoutAnySlashes.class.getDeclaredMethod("get")).template())
+        .hasUrl("/base/specific");
   }
 
   @Path("/base")
@@ -381,8 +380,8 @@ public class JAXRSContractTest {
   }
 
   @Test public void pathsWithSomeSlashesParseCorrectly() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithSomeSlashes.class.getDeclaredMethod("get"));
-    assertEquals("/base/specific", md.template().url());
+    assertThat(contract.parseAndValidatateMetadata(PathsWithSomeSlashes.class.getDeclaredMethod("get")).template())
+        .hasUrl("/base/specific");
   }
 
   @Path("base")
@@ -391,7 +390,8 @@ public class JAXRSContractTest {
   }
 
   @Test public void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(PathsWithSomeOtherSlashes.class.getDeclaredMethod("get"));
-    assertEquals("/base/specific", md.template().url());
+    assertThat(contract.parseAndValidatateMetadata(PathsWithSomeOtherSlashes.class.getDeclaredMethod("get")).template())
+        .hasUrl("/base/specific");
+
   }
 }

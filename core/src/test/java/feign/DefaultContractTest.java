@@ -15,21 +15,17 @@
  */
 package feign;
 
-import com.google.common.collect.ImmutableList;
 import com.google.gson.reflect.TypeToken;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import javax.inject.Named;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 /**
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected {@link feign
@@ -52,14 +48,17 @@ public class DefaultContractTest {
   }
 
   @Test public void httpMethods() throws Exception {
-    assertEquals("POST",
-        contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("post")).template().method());
-    assertEquals("PUT",
-        contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("put")).template().method());
-    assertEquals("GET",
-        contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("get")).template().method());
-    assertEquals("DELETE",
-        contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("delete")).template().method());
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("post")).template())
+        .hasMethod("POST");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("put")).template())
+        .hasMethod("PUT");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("get")).template())
+        .hasMethod("GET");
+
+    assertThat(contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("delete")).template())
+        .hasMethod("DELETE");
   }
 
   interface BodyParams {
@@ -69,14 +68,12 @@ public class DefaultContractTest {
   }
 
   @Test public void bodyParamIsGeneric() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post",
-        List.class));
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertNull(md.urlIndex());
-    assertEquals(md.bodyIndex(), Integer.valueOf(0));
-    assertEquals(md.bodyType(), new TypeToken<List<String>>() {
-    }.getType());
+    MethodMetadata md = contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post", List.class));
+
+    assertThat(md.bodyIndex())
+        .isEqualTo(0);
+    assertThat(md.bodyType())
+        .isEqualTo(new TypeToken<List<String>>(){}.getType());
   }
 
   @Test public void tooManyBodies() throws Exception {
@@ -86,20 +83,14 @@ public class DefaultContractTest {
         BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
-  interface CustomMethodAndURIParam {
-    @RequestLine("PATCH") Response patch(URI nextLink);
+  interface CustomMethod {
+    @RequestLine("PATCH") Response patch();
   }
 
-  @Test public void requestLineOnlyRequiresMethod() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(CustomMethodAndURIParam.class.getDeclaredMethod("patch",
-        URI.class));
-    assertEquals("PATCH", md.template().method());
-    assertEquals("", md.template().url());
-    assertTrue(md.template().queries().isEmpty());
-    assertTrue(md.template().headers().isEmpty());
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertEquals(Integer.valueOf(0), md.urlIndex());
+  @Test public void customMethodWithoutPath() throws Exception {
+    assertThat(contract.parseAndValidatateMetadata(CustomMethod.class.getDeclaredMethod("patch")).template())
+        .hasMethod("PATCH")
+        .hasUrl("");
   }
 
   interface WithQueryParamsInPath {
@@ -115,41 +106,38 @@ public class DefaultContractTest {
   }
 
   @Test public void queryParamsInPathExtract() throws Exception {
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none"));
-      assertEquals("/", md.template().url());
-      assertTrue(md.template().queries().isEmpty());
-      assertEquals("GET / HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals("GET /?Action=GetUser HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals("GET /?Action=GetUser&Version=2010-05-08 HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three"));
-      assertEquals("/", md.template().url());
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals(Arrays.asList("1"), md.template().queries().get("limit"));
-      assertEquals("GET /?Action=GetUser&Version=2010-05-08&limit=1 HTTP/1.1\n", md.template().toString());
-    }
-    {
-      MethodMetadata md = contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty"));
-      assertEquals("/", md.template().url());
-      assertTrue(md.template().queries().containsKey("flag"));
-      assertEquals(Arrays.asList("GetUser"), md.template().queries().get("Action"));
-      assertEquals(Arrays.asList("2010-05-08"), md.template().queries().get("Version"));
-      assertEquals("GET /?flag&Action=GetUser&Version=2010-05-08 HTTP/1.1\n", md.template().toString());
-    }
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none")).template())
+        .hasUrl("/")
+        .hasQueries();
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08")),
+            entry("limit", asList("1"))
+        );
+
+    assertThat(contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty")).template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("flag", asList(new String[] { null })),
+            entry("Action", asList("GetUser")),
+            entry("Version", asList("2010-05-08"))
+        );
   }
 
   interface BodyWithoutParameters {
@@ -160,33 +148,37 @@ public class DefaultContractTest {
 
   @Test public void bodyWithoutParameters() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals("<v01:getAccountsListOfUser/>", new String(md.template().body(), UTF_8));
-    assertFalse(md.template().bodyTemplate() != null);
-    assertTrue(md.formParams().isEmpty());
-    assertTrue(md.indexToName().isEmpty());
+
+    assertThat(md.template())
+        .hasBody("<v01:getAccountsListOfUser/>");
   }
 
   @Test public void producesAddsContentTypeHeader() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
-    assertEquals(Arrays.asList("application/xml"), md.template().headers().get("Content-Type"));
+
+    assertThat(md.template())
+        .hasHeaders(
+            entry("Content-Type", asList("application/xml")),
+            entry("Content-Length", asList(String.valueOf(md.template().body().length)))
+        );
   }
 
   interface WithURIParam {
     @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
   }
 
-  @Test public void methodCanHaveUriParam() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithURIParam.class.getDeclaredMethod("uriParam", String.class,
-        URI.class, String.class));
-    assertEquals(Integer.valueOf(1), md.urlIndex());
-  }
+  @Test public void withPathAndURIParam() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(
+        WithURIParam.class.getDeclaredMethod("uriParam", String.class, URI.class, String.class));
 
-  @Test public void pathParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md = contract.parseAndValidatateMetadata(WithURIParam.class.getDeclaredMethod("uriParam", String.class,
-        URI.class, String.class));
-    assertEquals("/{1}/{2}", md.template().url());
-    assertEquals(Arrays.asList("1"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("2"), md.indexToName().get(2));
+    assertThat(md.indexToName())
+        .containsExactly(
+            entry(0, asList("1")),
+            // Skips 1 as it is a url index!
+            entry(2, asList("2"))
+        );
+
+    assertThat(md.urlIndex()).isEqualTo(1);
   }
 
   interface WithPathAndQueryParams {
@@ -195,19 +187,18 @@ public class DefaultContractTest {
                                   @Named("type") String typeFilter);
   }
 
-  @Test public void mixedRequestLineParams() throws Exception {
+  @Test public void pathAndQueryParams() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(WithPathAndQueryParams.class.getDeclaredMethod
         ("recordsByNameAndType", int.class, String.class, String.class));
-    assertNull(md.template().body());
-    assertNull(md.template().bodyTemplate());
-    assertTrue(md.template().headers().isEmpty());
-    assertEquals("/domains/{domainId}/records", md.template().url());
-    assertEquals(Arrays.asList("{name}"), md.template().queries().get("name"));
-    assertEquals(Arrays.asList("{type}"), md.template().queries().get("type"));
-    assertEquals(Arrays.asList("domainId"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("name"), md.indexToName().get(1));
-    assertEquals(Arrays.asList("type"), md.indexToName().get(2));
-    assertEquals("GET /domains/{domainId}/records?name={name}&type={type} HTTP/1.1\n", md.template().toString());
+
+    assertThat(md.template())
+        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("domainId")),
+        entry(1, asList("name")),
+        entry(2, asList("type"))
+    );
   }
 
   interface FormParams {
@@ -218,18 +209,26 @@ public class DefaultContractTest {
         @Named("user_name") String user, @Named("password") String password);
   }
 
+  @Test public void bodyWithTemplate() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(FormParams.class.getDeclaredMethod("login", String.class,
+        String.class, String.class));
+
+    assertThat(md.template())
+        .hasBodyTemplate("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+  }
+
   @Test public void formParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(FormParams.class.getDeclaredMethod("login", String.class,
         String.class, String.class));
 
-    assertFalse(md.template().body() != null);
-    assertEquals(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D",
-        md.template().bodyTemplate());
-    assertEquals(ImmutableList.of("customer_name", "user_name", "password"), md.formParams());
-    assertEquals(Arrays.asList("customer_name"), md.indexToName().get(0));
-    assertEquals(Arrays.asList("user_name"), md.indexToName().get(1));
-    assertEquals(Arrays.asList("password"), md.indexToName().get(2));
+    assertThat(md.formParams())
+        .containsExactly("customer_name", "user_name", "password");
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("customer_name")),
+        entry(1, asList("user_name")),
+        entry(2, asList("password"))
+    );
   }
 
   interface HeaderParams {
@@ -240,7 +239,9 @@ public class DefaultContractTest {
   @Test public void headerParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("logout", String.class));
 
-    assertEquals(Arrays.asList("{Auth-Token}"), md.template().headers().get("Auth-Token"));
-    assertEquals(Arrays.asList("Auth-Token"), md.indexToName().get(0));
+    assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
+
+    assertThat(md.indexToName())
+        .containsExactly(entry(0, asList("Auth-Token")));
   }
 }
