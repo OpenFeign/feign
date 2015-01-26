@@ -80,7 +80,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Resolves any templated variables in the requests path, query, or headers against the supplied
+   * Resolves any template parameters in the requests path, query, or headers against the supplied
    * unencoded arguments. <br>
    * <br>
    * <br>

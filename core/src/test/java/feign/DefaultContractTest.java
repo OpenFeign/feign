@@ -21,6 +21,7 @@ import static org.assertj.core.data.MapEntry.entry;
 
 import com.google.gson.reflect.TypeToken;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import javax.inject.Named;
 import org.junit.Rule;
@@ -295,6 +296,27 @@ public class DefaultContractTest {
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}", "Foo")));
 
     assertThat(md.indexToName()).containsExactly(entry(0, asList("Auth-Token")));
+  }
+
+  interface CustomExpander {
+    @RequestLine("POST /?date={date}")
+    void date(@Param(value = "date", expander = DateToMillis.class) Date date);
+  }
+
+  class DateToMillis implements Param.Expander {
+    @Override
+    public String expand(Object value) {
+      return String.valueOf(((Date) value).getTime());
+    }
+  }
+
+  @Test
+  public void customExpander() throws Exception {
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(
+            CustomExpander.class.getDeclaredMethod("date", Date.class));
+
+    assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
   }
 
   // TODO: remove all of below in 8.x

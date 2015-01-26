@@ -21,11 +21,27 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 
 /**
- * The name of a template variable applied to {@link Headers}, {@linkplain RequestLine} or
- * {@linkplain Body}
+ * A named template parameter applied to {@link Headers}, {@linkplain RequestLine} or {@linkplain
+ * Body}
  */
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
 public @interface Param {
+  /** The name of the template parameter. */
   String value();
+
+  /** How to expand the value of this parameter, if {@link ToStringExpander} isn't adequate. */
+  Class<? extends Expander> expander() default ToStringExpander.class;
+
+  interface Expander {
+    /** Expands the value into a string. Does not accept or return null. */
+    String expand(Object value);
+  }
+
+  final class ToStringExpander implements Expander {
+    @Override
+    public String expand(Object value) {
+      return value.toString();
+    }
+  }
 }
