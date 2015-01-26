@@ -15,13 +15,6 @@
  */
 package feign;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.io.Closer;
-import com.google.common.io.InputSupplier;
-import com.google.common.io.Resources;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -33,8 +26,8 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-
-import javax.inject.Provider;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -50,20 +43,17 @@ import static com.google.common.base.Throwables.propagate;
  */
 final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509TrustManager, X509KeyManager {
 
-  private static LoadingCache<String, SSLSocketFactory> sslSocketFactories =
-      CacheBuilder.newBuilder().build(new CacheLoader<String, SSLSocketFactory>() {
-    @Override
-    public SSLSocketFactory load(String serverAlias) throws Exception {
-      return new TrustingSSLSocketFactory(serverAlias);
-    }
-  });
+  private static final Map<String, SSLSocketFactory> sslSocketFactories = new LinkedHashMap<String, SSLSocketFactory>();
 
   public static SSLSocketFactory get() {
     return get("");
   }
 
-  public static SSLSocketFactory get(String serverAlias) {
-    return sslSocketFactories.getUnchecked(serverAlias);
+  public synchronized static SSLSocketFactory get(String serverAlias) {
+    if (!sslSocketFactories.containsKey(serverAlias)) {
+      sslSocketFactories.put(serverAlias, new TrustingSSLSocketFactory(serverAlias));
+    }
+    return sslSocketFactories.get(serverAlias);
   }
 
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
@@ -87,7 +77,7 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
       this.certificateChain = null;
     } else {
       try {
-        KeyStore keyStore = loadKeyStore(Resources.newInputStreamSupplier(Resources.getResource("keystore.jks")));
+        KeyStore keyStore = loadKeyStore(TrustingSSLSocketFactory.class.getResourceAsStream("/keystore.jks"));
         this.privateKey = (PrivateKey) keyStore.getKey(serverAlias, KEYSTORE_PASSWORD);
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
         this.certificateChain = Arrays.copyOf(rawChain, rawChain.length, X509Certificate[].class);
@@ -175,17 +165,15 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
     return privateKey;
   }
 
-  private static KeyStore loadKeyStore(InputSupplier<InputStream> inputStreamSupplier) throws IOException {
-    Closer closer = Closer.create();
+  private static KeyStore loadKeyStore(InputStream inputStream) throws IOException {
     try {
-      InputStream inputStream = closer.register(inputStreamSupplier.getInput());
       KeyStore keyStore = KeyStore.getInstance("JKS");
       keyStore.load(inputStream, KEYSTORE_PASSWORD);
       return keyStore;
-    } catch (Throwable e) {
-      throw closer.rethrow(e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     } finally {
-      closer.close();
+      inputStream.close();
     }
   }
 

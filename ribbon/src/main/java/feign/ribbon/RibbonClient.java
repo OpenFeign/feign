@@ -1,6 +1,5 @@
 package feign.ribbon;
 
-import com.google.common.base.Throwables;
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.IClientConfig;
@@ -61,7 +60,7 @@ public class RibbonClient implements Client {
         if (e.getCause() instanceof IOException) {
           throw IOException.class.cast(e.getCause());
         }
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
 
