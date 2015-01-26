@@ -332,28 +332,28 @@ public final class RequestTemplate implements Serializable {
    * template.query(&quot;X-Application-Version&quot;, &quot;{version}&quot;);
    * </pre>
    *
-   * @param configKey the configKey of the header
+   * @param name the name of the header
    * @param values    can be a single null to imply removing all values. Else no
    *                  values are expected to be null.
    * @see #headers()
    */
-  public RequestTemplate header(String configKey, String... values) {
-    checkNotNull(configKey, "header configKey");
+  public RequestTemplate header(String name, String... values) {
+    checkNotNull(name, "header name");
     if (values == null || (values.length == 1 && values[0] == null)) {
-      headers.remove(configKey);
+      headers.remove(name);
     } else {
       List<String> headers = new ArrayList<String>();
       headers.addAll(Arrays.asList(values));
-      this.headers.put(configKey, headers);
+      this.headers.put(name, headers);
     }
     return this;
   }
 
   /* @see #header(String, String...) */
-  public RequestTemplate header(String configKey, Iterable<String> values) {
+  public RequestTemplate header(String name, Iterable<String> values) {
     if (values != null)
-      return header(configKey, toArray(values, String.class));
-    return header(configKey, (String[]) null);
+      return header(name, toArray(values, String.class));
+    return header(name, (String[]) null);
   }
 
   /**
