@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
@@ -69,6 +70,14 @@ public class FeignTest {
     @RequestLine("GET /{1}/{2}") Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
 
     @RequestLine("GET /?1={1}&2={2}") Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
+
+    @RequestLine("POST /?date={date}") void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+
+    class DateToMillis implements Param.Expander {
+      @Override public String expand(Object value) {
+        return String.valueOf(((Date) value).getTime());
+      }
+    }
 
     @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
     static class Module {
@@ -222,6 +231,18 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
         .hasHeaders("X-Forwarded-For: origin.host.com", "User-Agent: Feign");
+  }
+
+  @Test public void customExpander() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api =
+        Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+
+    api.expand(new Date(1234l));
+
+    assertThat(server.takeRequest())
+        .hasPath("/?date=1234");
   }
 
   @Test public void toKeyMethodFormatsAsExpected() throws Exception {

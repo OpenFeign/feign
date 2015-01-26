@@ -38,7 +38,7 @@ public interface Contract {
    */
   List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring);
 
-  public static abstract class BaseContract implements Contract {
+  abstract class BaseContract implements Contract {
 
     @Override public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
       List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
@@ -119,7 +119,7 @@ public interface Contract {
     }
   }
 
-  static class Default extends BaseContract {
+  class Default extends BaseContract {
 
     @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {
@@ -173,6 +173,12 @@ public interface Contract {
           checkState(emptyToNull(name) != null,
               "%s annotation was empty on param %s.", annotationType.getSimpleName(), paramIndex);
           nameParam(data, name, paramIndex);
+          if (annotationType == Param.class) {
+            Class<? extends Param.Expander> expander = ((Param) annotation).expander();
+            if (expander != Param.ToStringExpander.class) {
+              data.indexToExpanderClass().put(paramIndex, expander);
+            }
+          }
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1 &&
