@@ -43,6 +43,7 @@ public class OkHttpClientTest {
     Response post(String body);
 
     @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
     String patch();
   }
 
@@ -68,7 +69,7 @@ public class OkHttpClientTest {
     assertThat(server.takeRequest())
         .hasMethod("POST")
         .hasPath("/?foo=bar&foo=baz&qux=")
-        .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Content-Length: 3")
+        .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Accept: */*", "Content-Length: 3")
         .hasBody("foo");
   }
 
@@ -100,7 +101,7 @@ public class OkHttpClientTest {
     assertEquals("foo", api.patch());
 
     assertThat(server.takeRequest())
-        .hasHeaders("Content-Length: 0") // Note: OkHttp adds content length.
+        .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
   }

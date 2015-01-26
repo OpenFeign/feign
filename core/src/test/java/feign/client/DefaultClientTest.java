@@ -52,6 +52,7 @@ public class DefaultClientTest {
     Response post(String body);
 
     @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
     String patch();
   }
 
@@ -75,7 +76,7 @@ public class DefaultClientTest {
     assertThat(server.takeRequest())
         .hasMethod("POST")
         .hasPath("/?foo=bar&foo=baz&qux=")
-        .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Content-Length: 3")
+        .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Accept: */*", "Content-Length: 3")
         .hasBody("foo");
   }
 
