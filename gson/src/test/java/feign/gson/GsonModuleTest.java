@@ -16,6 +16,7 @@
 package feign.gson;
 
 import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -64,8 +65,6 @@ public class GsonModuleTest {
 
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
-    String expectedBody = "" + "{\n" + "  \"foo\": 1\n" + "}";
-
     EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
 
@@ -74,20 +73,17 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(expectedBody, new String(template.body(), UTF_8));
+
+    assertThat(template)
+        .hasBody(
+            "" //
+                + "{\n" //
+                + "  \"foo\": 1\n" //
+                + "}");
   }
 
   @Test
   public void encodesFormParams() throws Exception {
-    String expectedBody =
-        "" //
-            + "{\n" //
-            + "  \"foo\": 1,\n" //
-            + "  \"bar\": [\n" //
-            + "    2,\n" //
-            + "    3\n" //
-            + "  ]\n" //
-            + "}";
 
     EncoderBindings bindings = new EncoderBindings();
     ObjectGraph.create(bindings).inject(bindings);
@@ -98,7 +94,17 @@ public class GsonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(expectedBody, new String(template.body(), UTF_8));
+
+    assertThat(template)
+        .hasBody(
+            "" //
+                + "{\n" //
+                + "  \"foo\": 1,\n" //
+                + "  \"bar\": [\n" //
+                + "    2,\n" //
+                + "    3\n" //
+                + "  ]\n" //
+                + "}");
   }
 
   static class Zone extends LinkedHashMap<String, Object> {

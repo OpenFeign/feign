@@ -16,54 +16,58 @@
 package feign;
 
 import static feign.RequestTemplate.expand;
-import static org.junit.Assert.assertEquals;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Test;
 
 public class RequestTemplateTest {
+
   @Test
   public void expandNotUrlEncoded() {
-    for (String val : ImmutableList.of("apples", "sp ace", "unic???de", "qu?stion"))
-      assertEquals("/users/" + val, expand("/users/{user}", ImmutableMap.of("user", val)));
+    for (String val : Arrays.asList("apples", "sp ace", "unic???de", "qu?stion")) {
+      assertThat(expand("/users/{user}", mapOf("user", val))).isEqualTo("/users/" + val);
+    }
   }
 
   @Test
   public void expandMultipleParams() {
-    assertEquals(
-        "/users/unic???de/foo",
-        expand("/users/{user}/{repo}", ImmutableMap.of("user", "unic???de", "repo", "foo")));
+    assertThat(expand("/users/{user}/{repo}", mapOf("user", "unic???de", "repo", "foo")))
+        .isEqualTo("/users/unic???de/foo");
   }
 
   @Test
   public void expandParamKeyHyphen() {
-    assertEquals("/foo", expand("/{user-dir}", ImmutableMap.of("user-dir", "foo")));
+    assertThat(expand("/{user-dir}", mapOf("user-dir", "foo"))).isEqualTo("/foo");
   }
 
   @Test
   public void expandMissingParamProceeds() {
-    assertEquals("/{user-dir}", expand("/{user-dir}", ImmutableMap.of("user_dir", "foo")));
+    assertThat(expand("/{user-dir}", mapOf("user_dir", "foo"))).isEqualTo("/{user-dir}");
   }
 
   @Test
   public void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
-
     RequestTemplate template = new RequestTemplate().method("GET").append("{zoneId}");
 
-    assertEquals("GET {zoneId} HTTP/1.1\n", template.toString());
+    template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
-    template.resolve(ImmutableMap.of("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
+    assertThat(template).hasUrl("/hostedzone/Z1PA6795UKMFR9");
+  }
 
-    assertEquals("GET /hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n", template.toString());
+  @Test
+  public void canInsertAbsoluteHref() {
+    RequestTemplate template =
+        new RequestTemplate().method("GET").append("/hostedzone/Z1PA6795UKMFR9");
 
     template.insert(0, "https://route53.amazonaws.com/2012-12-12");
 
-    assertEquals(
-        "GET https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9 HTTP/1.1\n",
-        template.request().toString());
+    assertThat(template)
+        .hasUrl("https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9");
   }
 
   @Test
@@ -74,25 +78,11 @@ public class RequestTemplateTest {
             .append("/?Action=DescribeRegions")
             .query("RegionName.1", "{region}");
 
-    assertEquals(
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "{region}").asMap(),
-        template.queries());
-    assertEquals(
-        "GET /?Action=DescribeRegions&RegionName.1={region} HTTP/1.1\n", template.toString());
+    template.resolve(mapOf("region", "eu-west-1"));
 
-    template.resolve(ImmutableMap.of("region", "eu-west-1"));
-    assertEquals(
-        ImmutableListMultimap.of("Action", "DescribeRegions", "RegionName.1", "eu-west-1").asMap(),
-        template.queries());
-
-    assertEquals(
-        "GET /?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n", template.toString());
-
-    template.insert(0, "https://iam.amazonaws.com");
-
-    assertEquals(
-        "GET https://iam.amazonaws.com/?Action=DescribeRegions&RegionName.1=eu-west-1 HTTP/1.1\n",
-        template.request().toString());
+    assertThat(template)
+        .hasQueries(
+            entry("Action", asList("DescribeRegions")), entry("RegionName.1", asList("eu-west-1")));
   }
 
   @Test
@@ -100,17 +90,11 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate().method("GET").append("/?Query=one").query("Queries", "{queries}");
 
-    template.resolve(ImmutableMap.of("queries", Arrays.asList("us-east-1", "eu-west-1")));
-    assertEquals(
-        template.queries(),
-        ImmutableListMultimap.<String, String>builder()
-            .put("Query", "one")
-            .putAll("Queries", "us-east-1", "eu-west-1")
-            .build()
-            .asMap());
+    template.resolve(mapOf("queries", Arrays.asList("us-east-1", "eu-west-1")));
 
-    assertEquals(
-        "GET /?Query=one&Queries=us-east-1&Queries=eu-west-1 HTTP/1.1\n", template.toString());
+    assertThat(template)
+        .hasQueries(
+            entry("Query", asList("one")), entry("Queries", asList("us-east-1", "eu-west-1")));
   }
 
   @Test
@@ -122,24 +106,11 @@ public class RequestTemplateTest {
             .query("name", "{name}") //
             .query("type", "{type}");
 
-    template =
-        template.resolve(
-            ImmutableMap.<String, Object>builder() //
-                .put("domainId", 1001) //
-                .put("name", "denominator.io") //
-                .put("type", "CNAME") //
-                .build());
+    template = template.resolve(mapOf("domainId", 1001, "name", "denominator.io", "type", "CNAME"));
 
-    assertEquals(
-        "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n", template.toString());
-
-    template.insert(0, "https://dns.api.rackspacecloud.com/v1.0/1234");
-
-    assertEquals(
-        "" //
-            + "GET https://dns.api.rackspacecloud.com/v1.0/1234" //
-            + "/domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n",
-        template.request().toString());
+    assertThat(template)
+        .hasUrl("/domains/1001/records")
+        .hasQueries(entry("name", asList("denominator.io")), entry("type", asList("CNAME")));
   }
 
   @Test
@@ -147,27 +118,18 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method("GET") //
-            .append("/domains/{domainId}/records") //
-            .query("name", "{name}") //
-            .query("type", "{type}");
-
-    template =
-        template.resolve(
-            ImmutableMap.<String, Object>builder() //
-                .put("domainId", 1001) //
-                .put("name", "denominator.io") //
-                .put("type", "CNAME") //
-                .build());
-
-    assertEquals(
-        "GET /domains/1001/records?name=denominator.io&type=CNAME HTTP/1.1\n", template.toString());
+            .append("/domains/1001/records") //
+            .query("name", "denominator.io") //
+            .query("type", "CNAME");
 
     template.insert(0, "https://host/v1.0/1234?provider=foo");
 
-    assertEquals(
-        "GET https://host/v1.0/1234/domains/1001/records?provider=foo&name=denominator.io&type=CNAME"
-            + " HTTP/1.1\n",
-        template.request().toString());
+    assertThat(template)
+        .hasUrl("https://host/v1.0/1234/domains/1001/records")
+        .hasQueries(
+            entry("provider", asList("foo")),
+            entry("name", asList("denominator.io")),
+            entry("type", asList("CNAME")));
   }
 
   @Test
@@ -181,31 +143,16 @@ public class RequestTemplateTest {
 
     template =
         template.resolve(
-            ImmutableMap.<String, Object>builder() //
-                .put("customer_name", "netflix") //
-                .put("user_name", "denominator") //
-                .put("password", "password") //
-                .build());
+            mapOf(
+                "customer_name", "netflix",
+                "user_name", "denominator",
+                "password", "password"));
 
-    assertEquals(
-        "" //
-            + "POST  HTTP/1.1\n" //
-            + "Content-Length: 80\n" //
-            + "\n" //
-            + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-            + " \"password\"}",
-        template.toString());
-
-    template.insert(0, "https://api2.dynect.net/REST");
-
-    assertEquals(
-        "" //
-            + "POST https://api2.dynect.net/REST HTTP/1.1\n" //
-            + "Content-Length: 80\n" //
-            + "\n" //
-            + "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-            + " \"password\"}",
-        template.request().toString());
+    assertThat(template)
+        .hasBody(
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
+                + " \"password\"}")
+        .hasHeaders(entry("Content-Length", asList(String.valueOf(template.body().length))));
   }
 
   @Test
@@ -217,14 +164,11 @@ public class RequestTemplateTest {
             .query("optional", "{optional}") //
             .query("name", "{nameVariable}");
 
-    template =
-        template.resolve(
-            ImmutableMap.<String, Object>builder() //
-                .put("domainId", 1001) //
-                .put("nameVariable", "denominator.io") //
-                .build());
+    template = template.resolve(mapOf("domainId", 1001, "nameVariable", "denominator.io"));
 
-    assertEquals("GET /domains/1001/records?name=denominator.io HTTP/1.1\n", template.toString());
+    assertThat(template)
+        .hasUrl("/domains/1001/records")
+        .hasQueries(entry("name", asList("denominator.io")));
   }
 
   @Test
@@ -236,12 +180,28 @@ public class RequestTemplateTest {
             .query("optional", "{optional}") //
             .query("optional2", "{optional2}");
 
-    template =
-        template.resolve(
-            ImmutableMap.<String, Object>builder() //
-                .put("domainId", 1001) //
-                .build());
+    template = template.resolve(mapOf("domainId", 1001));
 
-    assertEquals("GET /domains/1001/records HTTP/1.1\n", template.toString());
+    assertThat(template).hasUrl("/domains/1001/records").hasQueries();
+  }
+
+  /** Avoid depending on guava solely for map literals. */
+  private static Map<String, Object> mapOf(String key, Object val) {
+    Map<String, Object> result = new LinkedHashMap<String, Object>();
+    result.put(key, val);
+    return result;
+  }
+
+  private static Map<String, Object> mapOf(String k1, Object v1, String k2, Object v2) {
+    Map<String, Object> result = mapOf(k1, v1);
+    result.put(k2, v2);
+    return result;
+  }
+
+  private static Map<String, Object> mapOf(
+      String k1, Object v1, String k2, Object v2, String k3, Object v3) {
+    Map<String, Object> result = mapOf(k1, v1, k2, v2);
+    result.put(k3, v3);
+    return result;
   }
 }

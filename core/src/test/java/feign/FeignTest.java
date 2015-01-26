@@ -17,18 +17,13 @@ package feign;
 
 import static dagger.Provides.Type.SET;
 import static feign.Util.UTF_8;
-import static org.junit.Assert.assertArrayEquals;
+import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Joiner;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
+import com.google.gson.Gson;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import dagger.Module;
@@ -48,6 +43,7 @@ import java.util.concurrent.Executor;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import org.junit.Rule;
 import org.junit.Test;
@@ -107,7 +103,7 @@ public class FeignTest {
           @Override
           public void encode(Object object, RequestTemplate template) {
             if (object instanceof Map) {
-              template.body(Joiner.on(',').withKeyValueSeparator("=").join((Map) object));
+              template.body(new Gson().toJson(object));
             } else {
               template.body(object.toString());
             }
@@ -128,7 +124,8 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.queryParams("user", Arrays.asList("apple", "pear"));
-    assertEquals("GET /?1=user&2=apple&2=pear HTTP/1.1", server.takeRequest().getRequestLine());
+
+    assertThat(server.takeRequest()).hasPath("/?1=user&2=apple&2=pear");
   }
 
   interface OtherTestInterface {
@@ -168,10 +165,11 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.login("netflix", "denominator", "password");
-    assertEquals(
-        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-            + " \"password\"}",
-        server.takeRequest().getUtf8Body());
+
+    assertThat(server.takeRequest())
+        .hasBody(
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
+                + " \"password\"}");
   }
 
   @Test
@@ -200,9 +198,10 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.form("netflix", "denominator", "password");
-    assertEquals(
-        "customer_name=netflix,user_name=denominator,password=password",
-        server.takeRequest().getUtf8Body());
+
+    assertThat(server.takeRequest())
+        .hasBody(
+            "{\"customer_name\":\"netflix\",\"user_name\":\"denominator\",\"password\":\"password\"}");
   }
 
   @Test
@@ -216,9 +215,10 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.body(Arrays.asList("netflix", "denominator", "password"));
-    RecordedRequest request = server.takeRequest();
-    assertEquals("32", request.getHeader("Content-Length"));
-    assertEquals("[netflix, denominator, password]", request.getUtf8Body());
+
+    assertThat(server.takeRequest())
+        .hasHeaders("Content-Length: 32")
+        .hasBody("[netflix, denominator, password]");
   }
 
   @Test
@@ -232,16 +232,10 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.gzipBody(Arrays.asList("netflix", "denominator", "password"));
-    RecordedRequest request = server.takeRequest();
-    assertNull(request.getHeader("Content-Length"));
-    byte[] compressedBody = request.getBody();
-    String uncompressedBody =
-        CharStreams.toString(
-            CharStreams.newReaderSupplier(
-                GZIPStreams.newInputStreamSupplier(
-                    ByteStreams.newInputStreamSupplier(compressedBody)),
-                UTF_8));
-    assertEquals("[netflix, denominator, password]", uncompressedBody);
+
+    assertThat(server.takeRequest())
+        .hasNoHeaderNamed("Content-Length")
+        .hasGzippedBody("[netflix, denominator, password]".getBytes(UTF_8));
   }
 
   @Module(library = true)
@@ -269,7 +263,8 @@ public class FeignTest {
             new ForwardedForInterceptor());
 
     api.post();
-    assertEquals("origin.host.com", server.takeRequest().getHeader("X-Forwarded-For"));
+
+    assertThat(server.takeRequest()).hasHeaders("X-Forwarded-For: origin.host.com");
   }
 
   @Module(library = true)
@@ -298,9 +293,9 @@ public class FeignTest {
             new UserAgentInterceptor());
 
     api.post();
-    RecordedRequest request = server.takeRequest();
-    assertEquals("origin.host.com", request.getHeader("X-Forwarded-For"));
-    assertEquals("Feign", request.getHeader("User-Agent"));
+
+    assertThat(server.takeRequest())
+        .hasHeaders("X-Forwarded-For: origin.host.com", "User-Agent: Feign");
   }
 
   @Test
@@ -357,6 +352,7 @@ public class FeignTest {
             new TestInterface.Module());
 
     api.post();
+
     assertEquals(2, server.getRequestCount());
   }
 
@@ -373,6 +369,7 @@ public class FeignTest {
     }
   }
 
+  @Test
   public void overrideTypeSpecificDecoder() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("success!"));
 
@@ -380,7 +377,6 @@ public class FeignTest {
         Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new DecodeFail());
 
     assertEquals(api.post(), "fail");
-    assertEquals(1, server.getRequestCount());
   }
 
   @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
@@ -472,7 +468,12 @@ public class FeignTest {
   static class DisableHostnameVerification {
     @Provides
     HostnameVerifier acceptAllHostnameVerifier() {
-      return new AcceptAllHostnameVerifier();
+      return new HostnameVerifier() {
+        @Override
+        public boolean verify(String s, SSLSession sslSession) {
+          return true;
+        }
+      };
     }
   }
 
@@ -530,28 +531,23 @@ public class FeignTest {
     TestInterface i3 = Feign.builder().target(t2);
     OtherTestInterface i4 = Feign.builder().target(t3);
 
-    assertEquals(i1, i1);
-    assertEquals(i2, i1);
-    assertNotEquals(i3, i1);
-    assertNotEquals(i4, i1);
+    assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
-    assertEquals(i1.hashCode(), i1.hashCode());
-    assertEquals(i2.hashCode(), i1.hashCode());
-    assertNotEquals(i3.hashCode(), i1.hashCode());
-    assertNotEquals(i4.hashCode(), i1.hashCode());
+    assertThat(i1.hashCode())
+        .isEqualTo(i2.hashCode())
+        .isNotEqualTo(i3.hashCode())
+        .isNotEqualTo(i4.hashCode());
 
-    assertEquals(t1.hashCode(), i1.hashCode());
-    assertEquals(t2.hashCode(), i3.hashCode());
-    assertEquals(t3.hashCode(), i4.hashCode());
+    assertThat(i1.toString())
+        .isEqualTo(i2.toString())
+        .isNotEqualTo(i3.toString())
+        .isNotEqualTo(i4.toString());
 
-    assertEquals(i1.toString(), i1.toString());
-    assertEquals(i2.toString(), i1.toString());
-    assertNotEquals(i3.toString(), i1.toString());
-    assertNotEquals(i4.toString(), i1.toString());
+    assertThat(t1).isNotEqualTo(i1);
 
-    assertEquals(t1.toString(), i1.toString());
-    assertEquals(t2.toString(), i3.toString());
-    assertEquals(t3.toString(), i4.toString());
+    assertThat(t1.hashCode()).isEqualTo(i1.hashCode());
+
+    assertThat(t1.toString()).isEqualTo(i1.toString());
   }
 
   @Test
@@ -562,8 +558,7 @@ public class FeignTest {
     OtherTestInterface api =
         Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
 
-    byte[] actualResponse = api.binaryResponseBody();
-    assertArrayEquals(expectedResponse, actualResponse);
+    assertThat(api.binaryResponseBody()).containsExactly(expectedResponse);
   }
 
   @Test
@@ -575,7 +570,7 @@ public class FeignTest {
         Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
 
     api.binaryRequestBody(expectedRequest);
-    byte[] actualRequest = server.takeRequest().getBody();
-    assertArrayEquals(expectedRequest, actualRequest);
+
+    assertThat(server.takeRequest()).hasBody(expectedRequest);
   }
 }

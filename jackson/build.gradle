@@ -6,5 +6,6 @@ dependencies {
     compile project(':feign-core')
     compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
     testCompile 'junit:junit:4.12'
-    testCompile 'com.google.guava:guava:14.0.1'
+    testCompile 'org.assertj:assertj-core:1.7.1'
+    testCompile project(':feign-core').sourceSets.test.output // for assertions
 }

@@ -18,11 +18,12 @@ package feign.codec;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import feign.FeignException;
 import feign.Response;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -32,14 +33,14 @@ public class DefaultErrorDecoderTest {
 
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
+  Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+
   @Test
   public void throwsFeignException() throws Throwable {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading Service#foo()");
 
-    Response response =
-        Response.create(
-            500, "Internal server error", ImmutableMap.<String, Collection<String>>of(), null);
+    Response response = Response.create(500, "Internal server error", headers, null);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -50,12 +51,7 @@ public class DefaultErrorDecoderTest {
     thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
 
     Response response =
-        Response.create(
-            500,
-            "Internal server error",
-            ImmutableMap.<String, Collection<String>>of(),
-            "hello world",
-            UTF_8);
+        Response.create(500, "Internal server error", headers, "hello world", UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -65,12 +61,8 @@ public class DefaultErrorDecoderTest {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 503 reading Service#foo()");
 
-    Response response =
-        Response.create(
-            503,
-            "Service Unavailable",
-            ImmutableMultimap.of(RETRY_AFTER, "Sat, 1 Jan 2000 00:00:00 GMT").asMap(),
-            null);
+    headers.put(RETRY_AFTER, Arrays.asList("Sat, 1 Jan 2000 00:00:00 GMT"));
+    Response response = Response.create(503, "Service Unavailable", headers, null);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
