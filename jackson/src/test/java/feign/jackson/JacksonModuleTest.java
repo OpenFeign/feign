@@ -136,7 +136,8 @@ public class JacksonModuleTest {
     ObjectGraph.create(bindings).inject(bindings);
 
     Response response =
-        Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
+        Response.create(
+            204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
     assertNull(bindings.decoder.decode(response, String.class));
   }
 
