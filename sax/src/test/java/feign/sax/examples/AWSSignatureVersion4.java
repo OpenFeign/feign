@@ -15,29 +15,20 @@
  */
 package feign.sax.examples;
 
-import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.hash.Hashing.sha256;
-import static com.google.common.io.BaseEncoding.base16;
 import static feign.Util.UTF_8;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
 import feign.Request;
 import feign.RequestTemplate;
 import java.net.URI;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Map.Entry;
 import java.util.TimeZone;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 // http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
-public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> {
+public class AWSSignatureVersion4 {
 
   String region = "us-east-1";
   String service = "iam";
@@ -49,14 +40,12 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
     this.secretKey = secretKey;
   }
 
-  @Override
   public Request apply(RequestTemplate input) {
-    input.header("Host", URI.create(input.url()).getHost());
-    TreeMultimap<String, String> sortedLowercaseHeaders = TreeMultimap.create();
-    for (String key : input.headers().keySet()) {
-      sortedLowercaseHeaders.putAll(
-          trimToLowercase.apply(key), transform(input.headers().get(key), trimToLowercase));
-    }
+    if (!input.headers().isEmpty())
+      throw new UnsupportedOperationException("headers not supported");
+    if (input.body() != null) throw new UnsupportedOperationException("body not supported");
+
+    String host = URI.create(input.url()).getHost();
 
     String timestamp;
     synchronized (iso8601) {
@@ -64,18 +53,19 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
     }
 
     String credentialScope =
-        Joiner.on('/').join(timestamp.substring(0, 8), region, service, "aws4_request");
+        String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
 
     input.query("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
     input.query("X-Amz-Credential", accessKey + "/" + credentialScope);
     input.query("X-Amz-Date", timestamp);
-    input.query("X-Amz-SignedHeaders", Joiner.on(';').join(sortedLowercaseHeaders.keySet()));
+    input.query("X-Amz-SignedHeaders", "host");
+    input.header("Host", host);
 
-    String canonicalString = canonicalString(input, sortedLowercaseHeaders);
+    String canonicalString = canonicalString(input, host);
     String toSign = toSign(timestamp, credentialScope, canonicalString);
 
     byte[] signatureKey = signatureKey(secretKey, timestamp);
-    String signature = base16().lowerCase().encode(hmacSHA256(toSign, signatureKey));
+    String signature = hex(hmacSHA256(toSign, signatureKey));
 
     input.query("X-Amz-Signature", signature);
 
@@ -98,15 +88,14 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
       mac.init(new SecretKeySpec(key, algorithm));
       return mac.doFinal(data.getBytes(UTF_8));
     } catch (Exception e) {
-      throw propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
   private static final String EMPTY_STRING_HASH =
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-  private String canonicalString(
-      RequestTemplate input, Multimap<String, String> sortedLowercaseHeaders) {
+  private static String canonicalString(RequestTemplate input, String host) {
     StringBuilder canonicalRequest = new StringBuilder();
     // HTTPRequestMethod + '\n' +
     canonicalRequest.append(input.method()).append('\n');
@@ -119,17 +108,12 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
     canonicalRequest.append('\n');
 
     // CanonicalHeaders + '\n' +
-    for (Entry<String, Collection<String>> entry : sortedLowercaseHeaders.asMap().entrySet()) {
-      canonicalRequest
-          .append(entry.getKey())
-          .append(':')
-          .append(Joiner.on(',').join(entry.getValue()))
-          .append('\n');
-    }
+    canonicalRequest.append("host:").append(host).append('\n');
+
     canonicalRequest.append('\n');
 
     // SignedHeaders + '\n' +
-    canonicalRequest.append(Joiner.on(',').join(sortedLowercaseHeaders.keySet())).append('\n');
+    canonicalRequest.append("host").append('\n');
 
     // HexEncode(Hash(Payload))
     String bodyText =
@@ -137,22 +121,14 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
             ? new String(input.body(), input.charset())
             : null;
     if (bodyText != null) {
-      canonicalRequest.append(
-          base16().lowerCase().encode(sha256().hashString(bodyText, UTF_8).asBytes()));
+      canonicalRequest.append(hex(sha256(bodyText)));
     } else {
       canonicalRequest.append(EMPTY_STRING_HASH);
     }
     return canonicalRequest.toString();
   }
 
-  private static final Function<String, String> trimToLowercase =
-      new Function<String, String>() {
-        public String apply(String in) {
-          return in == null ? null : in.toLowerCase().trim();
-        }
-      };
-
-  private String toSign(String timestamp, String credentialScope, String canonicalRequest) {
+  private static String toSign(String timestamp, String credentialScope, String canonicalRequest) {
     StringBuilder toSign = new StringBuilder();
     // Algorithm + '\n' +
     toSign.append("AWS4-HMAC-SHA256").append('\n');
@@ -161,9 +137,25 @@ public class AWSSignatureVersion4 implements Function<RequestTemplate, Request> 
     // CredentialScope + '\n' +
     toSign.append(credentialScope).append('\n');
     // HexEncode(Hash(CanonicalRequest))
-    toSign.append(
-        base16().lowerCase().encode(sha256().hashString(canonicalRequest, UTF_8).asBytes()));
+    toSign.append(hex(sha256(canonicalRequest)));
     return toSign.toString();
+  }
+
+  private static String hex(byte[] data) {
+    StringBuilder result = new StringBuilder(data.length * 2);
+    for (byte b : data) {
+      result.append(String.format("%02x", b & 0xff));
+    }
+    return result.toString();
+  }
+
+  static byte[] sha256(String data) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      return digest.digest(data.getBytes(UTF_8));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static final SimpleDateFormat iso8601 = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");

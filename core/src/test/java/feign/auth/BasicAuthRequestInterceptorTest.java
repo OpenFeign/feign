@@ -15,38 +15,40 @@
  */
 package feign.auth;
 
-import static org.junit.Assert.assertEquals;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 import feign.RequestTemplate;
-import java.util.Collections;
 import org.junit.Test;
 
-/** Tests for {@link BasicAuthRequestInterceptor}. */
 public class BasicAuthRequestInterceptorTest {
-  /** Tests that request headers are added as expected. */
+
   @Test
-  public void testAuthentication() {
+  public void addsAuthorizationHeader() {
     RequestTemplate template = new RequestTemplate();
     BasicAuthRequestInterceptor interceptor =
         new BasicAuthRequestInterceptor("Aladdin", "open sesame");
     interceptor.apply(template);
-    assertEquals(
-        Collections.singletonList("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="),
-        template.headers().get("Authorization"));
+
+    assertThat(template)
+        .hasHeaders(entry("Authorization", asList("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==")));
   }
 
-  /** Tests that requests headers are added as expected when user and pass are too long */
   @Test
-  public void testAuthenticationWhenUserPassAreTooLong() {
+  public void addsAuthorizationHeader_longUserAndPassword() {
     RequestTemplate template = new RequestTemplate();
     BasicAuthRequestInterceptor interceptor =
         new BasicAuthRequestInterceptor(
             "IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO", "101010101010101010101010101010101010101010");
     interceptor.apply(template);
-    assertEquals(
-        Collections.singletonList(
-            "Basic"
-                + " SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw"),
-        template.headers().get("Authorization"));
+
+    assertThat(template)
+        .hasHeaders(
+            entry(
+                "Authorization",
+                asList(
+                    "Basic"
+                        + " SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw")));
   }
 }

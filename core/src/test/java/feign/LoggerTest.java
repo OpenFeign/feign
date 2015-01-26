@@ -15,11 +15,6 @@
  */
 package feign;
 
-import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import com.google.common.base.Joiner;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Logger.Level;
@@ -28,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import javax.inject.Named;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -120,11 +115,6 @@ public class LoggerTest {
               .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
 
       api.login("netflix", "denominator", "password");
-
-      assertEquals(
-          new String(server.takeRequest().getBody(), UTF_8),
-          "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
-              + " \"password\"}");
     }
   }
 
@@ -346,14 +336,11 @@ public class LoggerTest {
         @Override
         public void evaluate() throws Throwable {
           base.evaluate();
-          assertEquals(messages.size(), expectedMessages.size());
+          SoftAssertions softly = new SoftAssertions();
           for (int i = 0; i < messages.size(); i++) {
-            assertTrue(
-                "Didn't match at message " + (i + 1) + ":\n" + Joiner.on('\n').join(messages),
-                Pattern.compile(expectedMessages.get(i), Pattern.DOTALL)
-                    .matcher(messages.get(i))
-                    .matches());
+            softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
           }
+          softly.assertAll();
         }
       };
     }

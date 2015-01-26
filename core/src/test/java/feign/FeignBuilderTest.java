@@ -15,10 +15,10 @@
  */
 package feign;
 
+import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
@@ -57,8 +57,7 @@ public class FeignBuilderTest {
     Response response = api.codecPost("request data");
     assertEquals("response data", Util.toString(response.body().asReader()));
 
-    assertEquals(1, server.getRequestCount());
-    assertEquals("request data", server.takeRequest().getUtf8Body());
+    assertThat(server.takeRequest()).hasBody("request data");
   }
 
   @Test
@@ -77,8 +76,7 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
     api.encodedPost(Arrays.asList("This", "is", "my", "request"));
 
-    assertEquals(1, server.getRequestCount());
-    assertEquals("[This, is, my, request]", server.takeRequest().getUtf8Body());
+    assertThat(server.takeRequest()).hasBody("[This, is, my, request]");
   }
 
   @Test
@@ -118,10 +116,7 @@ public class FeignBuilderTest {
     Response response = api.codecPost("request data");
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
-    assertEquals(1, server.getRequestCount());
-    RecordedRequest request = server.takeRequest();
-    assertEquals("request data", request.getUtf8Body());
-    assertEquals("text/plain", request.getHeader("Content-Type"));
+    assertThat(server.takeRequest()).hasHeaders("Content-Type: text/plain").hasBody("request data");
   }
 
   @Test
@@ -148,8 +143,6 @@ public class FeignBuilderTest {
     assertEquals("response data", Util.toString(response.body().asReader()));
     assertEquals(1, callCount.get());
 
-    assertEquals(1, server.getRequestCount());
-    RecordedRequest request = server.takeRequest();
-    assertEquals("request data", request.getUtf8Body());
+    assertThat(server.takeRequest()).hasBody("request data");
   }
 }
