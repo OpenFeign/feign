@@ -142,7 +142,7 @@ public class SAXDecoderTest {
   }
 
   @Test public void nullBodyDecodesToNull() throws Exception {
-    Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), null);
+    Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
     assertNull(decoder.decode(response, String.class));
   }
 }
