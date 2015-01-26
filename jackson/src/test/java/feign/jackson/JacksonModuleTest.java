@@ -2,10 +2,10 @@ package feign.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.reflect.TypeToken;
 import dagger.Module;
 import dagger.ObjectGraph;
 import dagger.Provides;
@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import org.junit.Test;
 
 import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -60,10 +61,11 @@ public class JacksonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(map, template);
-    assertEquals(""//
+
+    assertThat(template).hasBody(""//
         + "{\n" //
         + "  \"foo\" : 1\n" //
-        + "}", new String(template.body(), UTF_8));
+        + "}");
   }
 
   @Test public void encodesFormParams() throws Exception {
@@ -76,11 +78,12 @@ public class JacksonModuleTest {
 
     RequestTemplate template = new RequestTemplate();
     bindings.encoder.encode(form, template);
-    assertEquals(""//
+
+    assertThat(template).hasBody(""//
         + "{\n" //
         + "  \"foo\" : 1,\n" //
         + "  \"bar\" : [ 2, 3 ]\n" //
-        + "}", new String(template.body(), UTF_8));
+        + "}");
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -117,7 +120,7 @@ public class JacksonModuleTest {
 
     Response response =
         Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
-    assertEquals(zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
+    assertEquals(zones, bindings.decoder.decode(response, new TypeReference<List<Zone>>() {
     }.getType()));
   }
 
@@ -186,7 +189,7 @@ public class JacksonModuleTest {
 
     Response response =
         Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
-    assertEquals(zones, bindings.decoder.decode(response, new TypeToken<List<Zone>>() {
+    assertEquals(zones, bindings.decoder.decode(response, new TypeReference<List<Zone>>() {
     }.getType()));
   }
 }
