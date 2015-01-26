@@ -34,7 +34,7 @@ public interface Contract {
   /** Called to parse the methods in the class that are linked to HTTP requests. */
   List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring);
 
-  public abstract static class BaseContract implements Contract {
+  abstract class BaseContract implements Contract {
 
     @Override
     public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
@@ -115,7 +115,7 @@ public interface Contract {
     }
   }
 
-  static class Default extends BaseContract {
+  class Default extends BaseContract {
 
     @Override
     protected void processAnnotationOnMethod(
@@ -188,6 +188,12 @@ public interface Contract {
               annotationType.getSimpleName(),
               paramIndex);
           nameParam(data, name, paramIndex);
+          if (annotationType == Param.class) {
+            Class<? extends Param.Expander> expander = ((Param) annotation).expander();
+            if (expander != Param.ToStringExpander.class) {
+              data.indexToExpanderClass().put(paramIndex, expander);
+            }
+          }
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1

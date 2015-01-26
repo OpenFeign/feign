@@ -75,7 +75,7 @@ public interface Encoder {
   void encode(Object object, RequestTemplate template) throws EncodeException;
 
   /** Default implementation of {@code Encoder}. */
-  public class Default implements Encoder {
+  class Default implements Encoder {
     @Override
     public void encode(Object object, RequestTemplate template) throws EncodeException {
       if (object instanceof String) {
