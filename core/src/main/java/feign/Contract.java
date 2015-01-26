@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Named;
@@ -156,10 +157,17 @@ public interface Contract {
             headersToParse.length > 0,
             "Headers annotation was empty on method %s.",
             method.getName());
+        Map<String, Collection<String>> headers =
+            new LinkedHashMap<String, Collection<String>>(headersToParse.length);
         for (String header : headersToParse) {
           int colon = header.indexOf(':');
-          data.template().header(header.substring(0, colon), header.substring(colon + 2));
+          String name = header.substring(0, colon);
+          if (!headers.containsKey(name)) {
+            headers.put(name, new ArrayList<String>(1));
+          }
+          headers.get(name).add(header.substring(colon + 2));
         }
+        data.template().headers(headers);
       }
     }
 

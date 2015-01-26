@@ -282,7 +282,7 @@ public class DefaultContractTest {
 
   interface HeaderParams {
     @RequestLine("POST /")
-    @Headers("Auth-Token: {Auth-Token}")
+    @Headers({"Auth-Token: {Auth-Token}", "Auth-Token: Foo"})
     void logout(@Param("Auth-Token") String token);
   }
 
@@ -292,7 +292,7 @@ public class DefaultContractTest {
         contract.parseAndValidatateMetadata(
             HeaderParams.class.getDeclaredMethod("logout", String.class));
 
-    assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
+    assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}", "Foo")));
 
     assertThat(md.indexToName()).containsExactly(entry(0, asList("Auth-Token")));
   }
