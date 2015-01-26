@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Named;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,8 +46,8 @@ public class LoggerTest {
     @Headers("Content-Type: application/json")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     String login(
-        @Named("customer_name") String customer,
-        @Named("user_name") String user, @Named("password") String password);
+        @Param("customer_name") String customer,
+        @Param("user_name") String user, @Param("password") String password);
   }
 
   @RunWith(Parameterized.class)

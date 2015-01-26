@@ -16,7 +16,7 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 ```java
 interface GitHub {
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
-  List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
 }
 
 static class Contributor {
@@ -44,7 +44,7 @@ Feign has several aspects that can be customized.  For simple cases, you can use
 ```java
 interface Bank {
   @RequestLine("POST /account/{id}")
-  Account getAccountInfo(@Named("id") String id);
+  Account getAccountInfo(@Param("id") String id);
 }
 ...
 Bank bank = Feign.builder().decoder(new AccountDecoder()).target(Bank.class, "https://api.examplebank.com");
