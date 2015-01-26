@@ -16,17 +16,17 @@
 package feign.gson.examples;
 
 import feign.Feign;
+import feign.Param;
 import feign.RequestLine;
 import feign.gson.GsonDecoder;
 import java.util.List;
-import javax.inject.Named;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
   }
 
   static class Contributor {

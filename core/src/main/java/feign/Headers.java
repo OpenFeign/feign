@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * &#64;Headers({
  *   "X-Foo: Bar",
  *   "X-Ping: {token}"
- * }) void post(&#64;Named("token") String token);
+ * }) void post(&#64;Param("token") String token);
  * ...
  * </pre>
  *

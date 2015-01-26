@@ -61,7 +61,7 @@ import feign.RequestTemplate;
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
- * Session login(@Named(&quot;username&quot;) String username, @Named(&quot;password&quot;) String password);
+ * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
  */
 public interface Encoder {

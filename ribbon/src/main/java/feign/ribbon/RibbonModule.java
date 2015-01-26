@@ -15,7 +15,6 @@
  */
 package feign.ribbon;
 
-
 import dagger.Provides;
 import feign.Client;
 import javax.inject.Named;
