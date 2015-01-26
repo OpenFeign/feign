@@ -84,8 +84,10 @@ public interface Client {
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
       boolean gzipEncodedRequest = contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
 
+      boolean hasAcceptHeader = false;
       Integer contentLength = null;
       for (String field : request.headers().keySet()) {
+        if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest) {
@@ -97,6 +99,8 @@ public interface Client {
           }
         }
       }
+      // Some servers choke on the default accept string.
+      if (!hasAcceptHeader) connection.addRequestProperty("Accept", "*/*");
 
       if (request.body() != null) {
         if (contentLength != null) {

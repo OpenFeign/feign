@@ -68,7 +68,10 @@ public final class OkHttpClient implements Client {
     requestBuilder.url(input.url());
 
     MediaType mediaType = null;
+    boolean hasAcceptHeader = false;
     for (String field : input.headers().keySet()) {
+      if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
+
       for (String value : input.headers().get(field)) {
         if (field.equalsIgnoreCase("Content-Type")) {
           mediaType = MediaType.parse(value);
@@ -78,6 +81,9 @@ public final class OkHttpClient implements Client {
         }
       }
     }
+    // Some servers choke on the default accept string.
+    if (!hasAcceptHeader) requestBuilder.addHeader("Accept", "*/*");
+
     RequestBody body = input.body() != null ? RequestBody.create(mediaType, input.body()) : null;
     requestBuilder.method(input.method(), body);
     return requestBuilder.build();

@@ -2,6 +2,7 @@
 * Introduces feign.@Param to annotate template parameters. Users must migrate from `javax.inject.@Named` to `feign.@Param` before updating to Feign 8.0.
 * Adds OkHttp integration
 * Allows multiple headers with the same name.
+* Ensures Accept headers default to `*/*`
 
 ### Version 7.0
 * Expose reflective dispatch hook: InvocationHandlerFactory
