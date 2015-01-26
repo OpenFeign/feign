@@ -39,7 +39,7 @@ public class DefaultErrorDecoderTest {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading Service#foo()");
 
-    Response response = Response.create(500, "Internal server error", headers, null);
+    Response response = Response.create(500, "Internal server error", headers, (byte[]) null);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -58,7 +58,7 @@ public class DefaultErrorDecoderTest {
     thrown.expectMessage("status 503 reading Service#foo()");
 
     headers.put(RETRY_AFTER, Arrays.asList("Sat, 1 Jan 2000 00:00:00 GMT"));
-    Response response = Response.create(503, "Service Unavailable", headers, null);
+    Response response = Response.create(503, "Service Unavailable", headers, (byte[]) null);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
