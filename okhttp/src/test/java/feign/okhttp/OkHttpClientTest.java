@@ -16,16 +16,12 @@
 package feign.okhttp;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
-import dagger.Lazy;
-import feign.Client;
 import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
 import feign.RequestLine;
 import feign.Response;
-import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import org.junit.Rule;
@@ -35,8 +31,6 @@ import org.junit.rules.ExpectedException;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
 public class OkHttpClientTest {
