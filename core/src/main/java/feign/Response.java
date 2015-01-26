@@ -63,6 +63,11 @@ public final class Response {
     return new Response(status, reason, headers, ByteArrayBody.orNull(text, charset));
   }
 
+  public static Response create(
+      int status, String reason, Map<String, Collection<String>> headers, Body body) {
+    return new Response(status, reason, headers, body);
+  }
+
   private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
     checkState(status >= 200, "Invalid status code: %s", status);
     this.status = status;
