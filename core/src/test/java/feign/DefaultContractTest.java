@@ -164,7 +164,7 @@ public class DefaultContractTest {
   }
 
   interface WithURIParam {
-    @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
+    @RequestLine("GET /{1}/{2}") Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
   }
 
   @Test public void withPathAndURIParam() throws Exception {
@@ -183,8 +183,8 @@ public class DefaultContractTest {
 
   interface WithPathAndQueryParams {
     @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
-    Response recordsByNameAndType(@Named("domainId") int id, @Named("name") String nameFilter,
-                                  @Named("type") String typeFilter);
+    Response recordsByNameAndType(@Param("domainId") int id, @Param("name") String nameFilter,
+                                  @Param("type") String typeFilter);
   }
 
   @Test public void pathAndQueryParams() throws Exception {
@@ -205,8 +205,8 @@ public class DefaultContractTest {
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     void login(
-        @Named("customer_name") String customer,
-        @Named("user_name") String user, @Named("password") String password);
+        @Param("customer_name") String customer,
+        @Param("user_name") String user, @Param("password") String password);
   }
 
   @Test public void bodyWithTemplate() throws Exception {
@@ -233,11 +233,77 @@ public class DefaultContractTest {
 
   interface HeaderParams {
     @RequestLine("POST /")
-    @Headers("Auth-Token: {Auth-Token}") void logout(@Named("Auth-Token") String token);
+    @Headers("Auth-Token: {Auth-Token}") void logout(@Param("Auth-Token") String token);
   }
 
   @Test public void headerParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md = contract.parseAndValidatateMetadata(HeaderParams.class.getDeclaredMethod("logout", String.class));
+
+    assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
+
+    assertThat(md.indexToName())
+        .containsExactly(entry(0, asList("Auth-Token")));
+  }
+
+  // TODO: remove all of below in 8.x
+
+  interface WithPathAndQueryParamsAnnotatedWithNamed {
+    @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
+    Response recordsByNameAndType(@Named("domainId") int id, @Named("name") String nameFilter,
+        @Named("type") String typeFilter);
+  }
+
+  @Test public void pathAndQueryParamsAnnotatedWithNamed() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(WithPathAndQueryParamsAnnotatedWithNamed.class.getDeclaredMethod
+        ("recordsByNameAndType", int.class, String.class, String.class));
+
+    assertThat(md.template())
+        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("domainId")),
+        entry(1, asList("name")),
+        entry(2, asList("type"))
+    );
+  }
+
+  interface FormParamsAnnotatedWithNamed {
+    @RequestLine("POST /")
+    @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
+    void login(
+        @Named("customer_name") String customer,
+        @Named("user_name") String user, @Named("password") String password);
+  }
+
+  @Test public void bodyWithTemplateAnnotatedWithNamed() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(FormParamsAnnotatedWithNamed.class.getDeclaredMethod("login", String.class,
+        String.class, String.class));
+
+    assertThat(md.template())
+        .hasBodyTemplate("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+  }
+
+  @Test public void formParamsAnnotatedWithNamedParseIntoIndexToName() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(FormParamsAnnotatedWithNamed.class.getDeclaredMethod("login", String.class,
+        String.class, String.class));
+
+    assertThat(md.formParams())
+        .containsExactly("customer_name", "user_name", "password");
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("customer_name")),
+        entry(1, asList("user_name")),
+        entry(2, asList("password"))
+    );
+  }
+
+  interface HeaderParamsAnnotatedWithNamed {
+    @RequestLine("POST /")
+    @Headers("Auth-Token: {Auth-Token}") void logout(@Named("Auth-Token") String token);
+  }
+
+  @Test public void headerParamsAnnotatedWithNamedParseIntoIndexToName() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(HeaderParamsAnnotatedWithNamed.class.getDeclaredMethod("logout", String.class));
 
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
 

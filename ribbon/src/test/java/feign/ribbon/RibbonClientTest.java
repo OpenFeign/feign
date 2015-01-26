@@ -20,6 +20,7 @@ import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import dagger.Provides;
 import feign.Feign;
+import feign.Param;
 import feign.RequestLine;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -30,7 +31,6 @@ import java.net.URL;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
-import javax.inject.Named;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class RibbonClientTest {
 
   interface TestInterface {
     @RequestLine("POST /") void post();
-    @RequestLine("GET /?a={a}") void getWithQueryParameters(@Named("a") String a);
+    @RequestLine("GET /?a={a}") void getWithQueryParameters(@Param("a") String a);
 
     @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class)
     static class Module {
@@ -63,7 +63,8 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+        new RibbonModule());
 
     api.post();
     api.post();
@@ -81,7 +82,8 @@ public class RibbonClientTest {
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
 
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+        new RibbonModule());
 
     api.post();
 
@@ -105,7 +107,8 @@ public class RibbonClientTest {
 
 		getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(), new RibbonModule());
+    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+        new RibbonModule());
 
     api.getWithQueryParameters(queryStringValue);
 

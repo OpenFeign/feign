@@ -1,3 +1,6 @@
+### Version 7.1
+* Introduces feign.@Param to annotate template parameters. Users must migrate from `javax.inject.@Named` to `feign.@Param` before updating to Feign 8.0.
+
 ### Version 7.0
 * Expose reflective dispatch hook: InvocationHandlerFactory
 * Add JAXB integration

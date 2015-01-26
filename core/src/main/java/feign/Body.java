@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <br>
  * <pre>
  * &#064;Body(&quot;&lt;v01:getResourceRecordsOfZone&gt;&lt;zoneName&gt;{zoneName}&lt;/zoneName&gt;&lt;rrType&gt;0&lt;/rrType&gt;&lt;/v01:getResourceRecordsOfZone&gt;&quot;)
- * List&lt;Record&gt; listByZone(&#64;Named(&quot;zoneName&quot;) String zoneName);
+ * List&lt;Record&gt; listByZone(&#64;Param(&quot;zoneName&quot;) String zoneName);
  * </pre>
  * <br>
  * Note that if you'd like curly braces literally in the body, urlencode

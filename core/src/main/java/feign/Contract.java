@@ -159,11 +159,12 @@ public interface Contract {
     @Override
     protected boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations, int paramIndex) {
       boolean isHttpAnnotation = false;
-      for (Annotation parameterAnnotation : annotations) {
-        Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-        if (annotationType == Named.class) {
-          String name = Named.class.cast(parameterAnnotation).value();
-          checkState(emptyToNull(name) != null, "Named annotation was empty on param %s.", paramIndex);
+      for (Annotation annotation : annotations) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        if (annotationType == Param.class || annotationType.getCanonicalName().equals("javax.inject.Named")) {
+          String name = annotationType == Named.class ? ((Named) annotation).value() : ((Param) annotation).value();
+          checkState(emptyToNull(name) != null,
+              "%s annotation was empty on param %s.", annotationType.getSimpleName(), paramIndex);
           nameParam(data, name, paramIndex);
           isHttpAnnotation = true;
           String varName = '{' + name + '}';

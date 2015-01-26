@@ -19,11 +19,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import feign.Feign;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
 
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -36,10 +36,10 @@ import static feign.Util.ensureClosed;
  */
 public class GitHubExample {
 
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
-  }
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+}
 
   static class Contributor {
     String login;

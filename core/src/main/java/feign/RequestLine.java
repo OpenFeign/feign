@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * ...
  *
  * &#64;RequestLine("GET /servers/{serverId}?count={count}")
- * void get(&#64;Named("serverId") String serverId, &#64;Named("count") int count);
+ * void get(&#64;Param("serverId") String serverId, &#64;Param("count") int count);
  * ...
  *
  * &#64;RequestLine("GET")
@@ -39,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Feign:
  * <pre>
  * &#64;RequestLine("GET /servers/{serverId}?count={count}")
- * void get(&#64;Named("serverId") String serverId, &#64;Named("count") int count);
+ * void get(&#64;Param("serverId") String serverId, &#64;Param("count") int count);
  * ...
  * </pre>
  * <br>
