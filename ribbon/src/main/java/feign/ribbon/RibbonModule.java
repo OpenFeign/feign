@@ -15,15 +15,10 @@
  */
 package feign.ribbon;
 
-import java.io.IOException;
-import java.net.URI;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import dagger.Provides;
 import feign.Client;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * Adding this module will override URL resolution of {@link feign.Client Feign's client},

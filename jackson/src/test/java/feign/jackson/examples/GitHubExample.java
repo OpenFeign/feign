@@ -1,10 +1,10 @@
 package feign.jackson.examples;
 
 import feign.Feign;
+import feign.Param;
 import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
 
-import javax.inject.Named;
 import java.util.List;
 
 /**
@@ -13,7 +13,7 @@ import java.util.List;
 public class GitHubExample {
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
   }
 
   static class Contributor {

@@ -33,8 +33,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -63,18 +61,18 @@ public class FeignTest {
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     void login(
-        @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
+        @Param("customer_name") String customer, @Param("user_name") String user, @Param("password") String password);
 
     @RequestLine("POST /") void body(List<String> contents);
 
     @RequestLine("POST /") @Headers("Content-Encoding: gzip") void gzipBody(List<String> contents);
 
     @RequestLine("POST /") void form(
-        @Named("customer_name") String customer, @Named("user_name") String user, @Named("password") String password);
+        @Param("customer_name") String customer, @Param("user_name") String user, @Param("password") String password);
 
-    @RequestLine("GET /{1}/{2}") Response uriParam(@Named("1") String one, URI endpoint, @Named("2") String two);
+    @RequestLine("GET /{1}/{2}") Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
 
-    @RequestLine("GET /?1={1}&2={2}") Response queryParams(@Named("1") String one, @Named("2") Iterable<String> twos);
+    @RequestLine("GET /?1={1}&2={2}") Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
 
     @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
     static class Module {
@@ -116,22 +114,12 @@ public class FeignTest {
     @RequestLine("POST /") void binaryRequestBody(byte[] contents);
   }
 
-  @Module(library = true, overrides = true)
-  static class RunSynchronous {
-    @Provides @Singleton @Named("http") Executor httpExecutor() {
-      return new Executor() {
-        @Override public void execute(Runnable command) {
-          command.run();
-        }
-      };
-    }
-  }
-
   @Test
   public void postTemplateParamsResolve() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+        new TestInterface.Module());
 
     api.login("netflix", "denominator", "password");
 
@@ -155,7 +143,8 @@ public class FeignTest {
   public void postFormParams() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+        new TestInterface.Module());
 
     api.form("netflix", "denominator", "password");
 
@@ -180,7 +169,8 @@ public class FeignTest {
   public void postGZIPEncodedBodyParam() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+        new TestInterface.Module());
 
     api.gzipBody(Arrays.asList("netflix", "denominator", "password"));
 
@@ -239,8 +229,8 @@ public class FeignTest {
 
   @Test public void toKeyMethodFormatsAsExpected() throws Exception {
     assertEquals("TestInterface#post()", Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
-    assertEquals("TestInterface#uriParam(String,URI,String)", Feign.configKey(
-        TestInterface.class.getDeclaredMethod("uriParam", String.class, URI.class, String.class)));
+    assertEquals("TestInterface#uriParam(String,URI,String)",
+        Feign.configKey(TestInterface.class.getDeclaredMethod("uriParam", String.class, URI.class, String.class)));
   }
 
   @dagger.Module(overrides = true, library = true, includes = TestInterface.Module.class)
@@ -266,7 +256,7 @@ public class FeignTest {
     thrown.expectMessage("zone not found");
 
     TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
-          new IllegalArgumentExceptionOn404());
+        new IllegalArgumentExceptionOn404());
 
     api.post();
   }
