@@ -167,12 +167,18 @@ public interface Contract {
     protected boolean processAnnotationsOnParameter(
         MethodMetadata data, Annotation[] annotations, int paramIndex) {
       boolean isHttpAnnotation = false;
-      for (Annotation parameterAnnotation : annotations) {
-        Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-        if (annotationType == Named.class) {
-          String name = Named.class.cast(parameterAnnotation).value();
+      for (Annotation annotation : annotations) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        if (annotationType == Param.class || annotationType == Named.class) {
+          String name =
+              annotationType == Param.class
+                  ? ((Param) annotation).value()
+                  : ((Named) annotation).value();
           checkState(
-              emptyToNull(name) != null, "Named annotation was empty on param %s.", paramIndex);
+              emptyToNull(name) != null,
+              "%s annotation was empty on param %s.",
+              annotationType.getSimpleName(),
+              paramIndex);
           nameParam(data, name, paramIndex);
           isHttpAnnotation = true;
           String varName = '{' + name + '}';

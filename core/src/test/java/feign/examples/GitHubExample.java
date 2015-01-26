@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import feign.Feign;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
@@ -28,14 +29,13 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
-import javax.inject.Named;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
   }
 
   static class Contributor {

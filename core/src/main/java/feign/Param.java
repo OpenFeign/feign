@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.assertj;
+package feign;
 
-import feign.RequestTemplate;
-import org.assertj.core.api.Assertions;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public class FeignAssertions extends Assertions {
-  public static RequestTemplateAssert assertThat(RequestTemplate actual) {
-    return new RequestTemplateAssert(actual);
-  }
+import java.lang.annotation.Retention;
+
+/**
+ * The name of a template variable applied to {@link Headers}, {@linkplain RequestLine} or
+ * {@linkplain Body}
+ */
+@Retention(RUNTIME)
+@java.lang.annotation.Target(PARAMETER)
+public @interface Param {
+  String value();
 }
