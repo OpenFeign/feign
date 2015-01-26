@@ -17,7 +17,6 @@ package feign;
 
 import com.google.gson.Gson;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import dagger.Module;
@@ -34,9 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Singleton;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -156,7 +152,8 @@ public class FeignTest {
   public void postBodyParam() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new TestInterface.Module());
+    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
+        new TestInterface.Module());
 
     api.body(Arrays.asList("netflix", "denominator", "password"));
 
@@ -341,79 +338,12 @@ public class FeignTest {
     thrown.expect(FeignException.class);
     thrown.expectMessage("error reading response POST http://");
 
-    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(),
-        new IOEOnDecode());
+    TestInterface api = Feign.create(TestInterface.class, "http://localhost:" + server.getPort(), new IOEOnDecode());
 
     try {
       api.post();
     } finally {
       assertEquals(1, server.getRequestCount());
-    }
-  }
-
-  @Module(overrides = true, includes = TestInterface.Module.class)
-  static class TrustSSLSockets {
-    @Provides SSLSocketFactory trustingSSLSocketFactory() {
-      return TrustingSSLSocketFactory.get();
-    }
-  }
-
-  @Test public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse().setBody("success!"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
-          new TrustSSLSockets());
-      api.post();
-    } finally {
-      server.shutdown();
-    }
-  }
-
-  @Module(overrides = true, includes = TrustSSLSockets.class)
-  static class DisableHostnameVerification {
-    @Provides HostnameVerifier acceptAllHostnameVerifier() {
-      return new HostnameVerifier() {
-        @Override
-        public boolean verify(String s, SSLSession sslSession) {
-          return true;
-        }
-      };
-    }
-  }
-
-  @Test public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
-    server.enqueue(new MockResponse().setBody("success!"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
-          new DisableHostnameVerification());
-      api.post();
-    } finally {
-      server.shutdown();
-    }
-  }
-
-  @Test public void retriesFailedHandshake() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
-    server.enqueue(new MockResponse().setBody("success!"));
-    server.play();
-
-    try {
-      TestInterface api = Feign.create(TestInterface.class, "https://localhost:" + server.getPort(),
-          new TestInterface.Module(), new TrustSSLSockets());
-      api.post();
-      assertEquals(2, server.getRequestCount());
-    } finally {
-      server.shutdown();
     }
   }
 
