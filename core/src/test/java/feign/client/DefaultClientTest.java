@@ -18,7 +18,6 @@ package feign.client;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
-import dagger.Lazy;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -29,9 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.ProtocolException;
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -98,15 +95,7 @@ public class DefaultClientTest {
     api.patch();
   }
 
-  Client trustSSLSockets = new Client.Default(new Lazy<SSLSocketFactory>() {
-    @Override public SSLSocketFactory get() {
-      return TrustingSSLSocketFactory.get();
-    }
-  }, new Lazy<HostnameVerifier>() {
-    @Override public HostnameVerifier get() {
-      return HttpsURLConnection.getDefaultHostnameVerifier();
-    }
-  });
+  Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
   
   @Test public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
@@ -119,18 +108,9 @@ public class DefaultClientTest {
     api.post("foo");
   }
 
-  Client disableHostnameVerification = new Client.Default(new Lazy<SSLSocketFactory>() {
-    @Override public SSLSocketFactory get() {
-      return TrustingSSLSocketFactory.get();
-    }
-  }, new Lazy<HostnameVerifier>() {
-    @Override public HostnameVerifier get() {
-      return new HostnameVerifier() {
-        @Override
-        public boolean verify(String s, SSLSession sslSession) {
-          return true;
-        }
-      };
+  Client disableHostnameVerification = new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
+    @Override public boolean verify(String s, SSLSession sslSession) {
+      return true;
     }
   });
 

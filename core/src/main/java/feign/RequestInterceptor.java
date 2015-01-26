@@ -33,19 +33,7 @@ package feign;
  * <br>
  * <br><b>Configuration</b><br>
  * <br>
- * {@code RequestInterceptors} are configured via Dagger
- * {@link dagger.Provides.Type#SET set} or
- * {@link dagger.Provides.Type#SET_VALUES set values}
- * {@link dagger.Provides provider} methods.
- * <br>
- * <br>
- * For example:
- * <br>
- * <pre>
- * {@literal @}Provides(Type = SET) RequestInterceptor addTimestamp(TimestampInterceptor in) {
- * return in;
- * }
- * </pre>
+ * {@code RequestInterceptors} are configured via {@link Feign.Builder#requestInterceptors}.
  * <br>
  * <br><b>Implementation notes</b><br>
  * <br>

@@ -44,14 +44,13 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 /**
- * Tests interfaces defined per {@link feign.jaxrs.JAXRSModule.JAXRSContract} are interpreted into expected {@link feign
+ * Tests interfaces defined per {@link feign.jaxrs.JAXRSContract} are interpreted into expected {@link feign
  * .RequestTemplate template}
  * instances.
  */
 public class JAXRSContractTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
-
-  JAXRSModule.JAXRSContract contract = new JAXRSModule.JAXRSContract();
+  JAXRSContract contract = new JAXRSContract();
 
   interface Methods {
     @POST void post();

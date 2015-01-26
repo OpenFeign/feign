@@ -21,6 +21,7 @@ import java.util.Map;
 
 /** Controls reflective method dispatch. */
 public interface InvocationHandlerFactory {
+
   /** Like {@link InvocationHandler#invoke(Object, java.lang.reflect.Method, Object[])}, except for a single method. */
   interface MethodHandler {
     Object invoke(Object[] argv) throws Throwable;

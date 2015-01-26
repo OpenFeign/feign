@@ -25,9 +25,3 @@ GitHub github = Feign.builder()
                      .decoder(new JacksonDecoder(mapper))
                      .target(GitHub.class, "https://api.github.com");
 ```
-
-Alternatively, you can add the encoder and decoder to your Dagger object graph using the provided `JacksonModule` like so:
-
-```java
-GitHub github = Feign.create(GitHub.class, "https://api.github.com", new JacksonModule());
-```

@@ -15,15 +15,11 @@
  */
 package feign.jaxb;
 
-import dagger.Module;
-import dagger.ObjectGraph;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.util.Collection;
 import java.util.Collections;
-import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -34,34 +30,7 @@ import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-public class JAXBModuleTest {
-    @Module(includes = JAXBModule.class, injects = EncoderAndDecoderBindings.class)
-    static class EncoderAndDecoderBindings {
-        @Inject
-        Encoder encoder;
-
-        @Inject
-        Decoder decoder;
-    }
-
-    @Module(includes = JAXBModule.class, injects = EncoderBindings.class)
-    static class EncoderBindings {
-        @Inject Encoder encoder;
-    }
-
-    @Module(includes = JAXBModule.class, injects = DecoderBindings.class)
-    static class DecoderBindings {
-        @Inject Decoder decoder;
-    }
-
-    @Test
-    public void providesEncoderDecoder() throws Exception {
-        EncoderAndDecoderBindings bindings = new EncoderAndDecoderBindings();
-        ObjectGraph.create(bindings).inject(bindings);
-
-        assertEquals(JAXBEncoder.class, bindings.encoder.getClass());
-        assertEquals(JAXBDecoder.class, bindings.decoder.getClass());
-    }
+public class JAXBCodecTest {
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -87,14 +56,11 @@ public class JAXBModuleTest {
 
     @Test
     public void encodesXml() throws Exception {
-        EncoderBindings bindings = new EncoderBindings();
-        ObjectGraph.create(bindings).inject(bindings);
-
         MockObject mock = new MockObject();
         mock.value = "Test";
 
         RequestTemplate template = new RequestTemplate();
-        bindings.encoder.encode(mock, template);
+        new JAXBEncoder(new JAXBContextFactory.Builder().build()).encode(mock, template);
 
         assertThat(template).hasBody(
             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
@@ -106,8 +72,7 @@ public class JAXBModuleTest {
                 .withMarshallerJAXBEncoding("UTF-16")
                 .build();
 
-        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
+        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
         MockObject mock = new MockObject();
         mock.value = "Test";
@@ -125,8 +90,7 @@ public class JAXBModuleTest {
                 .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
                 .build();
 
-        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
+        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
         MockObject mock = new MockObject();
         mock.value = "Test";
@@ -146,8 +110,7 @@ public class JAXBModuleTest {
                 .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
                 .build();
 
-        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
+        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
         MockObject mock = new MockObject();
         mock.value = "Test";
@@ -167,8 +130,7 @@ public class JAXBModuleTest {
                 .withMarshallerFormattedOutput(true)
                 .build();
 
-        JAXBModule jaxbModule = new JAXBModule(jaxbContextFactory);
-        Encoder encoder = jaxbModule.encoder(new JAXBEncoder(jaxbContextFactory));
+        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
         MockObject mock = new MockObject();
         mock.value = "Test";
@@ -187,9 +149,6 @@ public class JAXBModuleTest {
 
     @Test
     public void decodesXml() throws Exception {
-        DecoderBindings bindings = new DecoderBindings();
-        ObjectGraph.create(bindings).inject(bindings);
-
         MockObject mock = new MockObject();
         mock.value = "Test";
 
@@ -199,6 +158,8 @@ public class JAXBModuleTest {
         Response response =
                 Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), mockXml, UTF_8);
 
-        assertEquals(mock, bindings.decoder.decode(response, MockObject.class));
+        JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
+
+        assertEquals(mock, decoder.decode(response, MockObject.class));
     }
 }

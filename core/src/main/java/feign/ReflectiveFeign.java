@@ -15,7 +15,6 @@
  */
 package feign;
 
-import dagger.Provides;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
@@ -24,28 +23,24 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
-import javax.inject.Inject;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 
-@SuppressWarnings("rawtypes")
 public class ReflectiveFeign extends Feign {
 
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
 
-  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
+  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
   }
@@ -109,17 +104,6 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  @dagger.Module(complete = false, injects = {Feign.class, SynchronousMethodHandler.Factory.class}, library = true)
-  public static class Module {
-    @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> noRequestInterceptors() {
-      return Collections.emptySet();
-    }
-
-    @Provides Feign provideFeign(ReflectiveFeign in) {
-      return in;
-    }
-  }
-
   static final class ParseHandlersByName {
     private final Contract contract;
     private final Options options;
@@ -128,9 +112,8 @@ public class ReflectiveFeign extends Feign {
     private final ErrorDecoder errorDecoder;
     private final SynchronousMethodHandler.Factory factory;
 
-    @SuppressWarnings("unchecked")
-    @Inject ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                                ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
+    ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
+                        ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;

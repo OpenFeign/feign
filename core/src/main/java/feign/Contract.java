@@ -15,13 +15,12 @@
  */
 package feign;
 
-import java.util.LinkedHashMap;
-import javax.inject.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -168,10 +167,9 @@ public interface Contract {
       boolean isHttpAnnotation = false;
       for (Annotation annotation : annotations) {
         Class<? extends Annotation> annotationType = annotation.annotationType();
-        if (annotationType == Param.class || annotationType == Named.class) {
-          String name = annotationType == Param.class ? ((Param) annotation).value() : ((Named) annotation).value();
-          checkState(emptyToNull(name) != null,
-              "%s annotation was empty on param %s.", annotationType.getSimpleName(), paramIndex);
+        if (annotationType == Param.class) {
+          String name = ((Param) annotation).value();
+          checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.", paramIndex);
           nameParam(data, name, paramIndex);
           if (annotationType == Param.class) {
             Class<? extends Param.Expander> expander = ((Param) annotation).expander();
