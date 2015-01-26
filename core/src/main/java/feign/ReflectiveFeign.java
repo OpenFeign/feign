@@ -17,6 +17,7 @@ package feign;
 
 import dagger.Provides;
 import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
@@ -158,9 +159,20 @@ public class ReflectiveFeign extends Feign {
 
   private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
     protected final MethodMetadata metadata;
+    private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
+      if (metadata.indexToExpanderClass().isEmpty()) return;
+      for (Entry<Integer, Class<? extends Expander>> indexToExpanderClass : metadata.indexToExpanderClass().entrySet()) {
+        try {
+          indexToExpander.put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
+        } catch (InstantiationException e) {
+          throw new IllegalStateException(e);
+        } catch (IllegalAccessException e) {
+          throw new IllegalStateException(e);
+        }
+      }
     }
 
     @Override public RequestTemplate create(Object[] argv) {
@@ -172,8 +184,12 @@ public class ReflectiveFeign extends Feign {
       }
       Map<String, Object> varBuilder = new LinkedHashMap<String, Object>();
       for (Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
+        int i = entry.getKey();
         Object value = argv[entry.getKey()];
         if (value != null) { // Null values are skipped.
+          if (indexToExpander.containsKey(i)) {
+            value = indexToExpander.get(i).expand(value);
+          }
           for (String name : entry.getValue())
             varBuilder.put(name, value);
         }

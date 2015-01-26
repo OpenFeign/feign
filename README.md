@@ -228,6 +228,16 @@ Where possible, Feign configuration uses normal Dagger conventions.  For example
   };
 }
 ```
+
+#### Custom Parameter Expansion
+Parameters annotated with `Param` expand based on their `toString`. By
+specifying a custom `Param.Expander`, users can control this behavior,
+for example formatting dates.
+
+```java
+@RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
+```
+
 #### Logging
 You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
 ```java
