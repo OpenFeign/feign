@@ -15,31 +15,29 @@
  */
 package feign.example.wikipedia;
 
-import static dagger.Provides.Type.SET;
-
-import com.google.gson.TypeAdapter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import dagger.Module;
-import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
-import feign.gson.GsonModule;
+import feign.gson.GsonDecoder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import javax.inject.Named;
 
 public class WikipediaExample {
 
   public static interface Wikipedia {
     @RequestLine(
-        "GET /w/api.php?action=query&generator=search&prop=info&format=json&gsrsearch={search}")
-    Response<Page> search(@Named("search") String search);
+        "GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}")
+    Response<Page> search(@Param("search") String search);
 
     @RequestLine(
-        "GET /w/api.php?action=query&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
-    Response<Page> resumeSearch(@Named("search") String search, @Named("offset") long offset);
+        "GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
+    Response<Page> resumeSearch(@Param("search") String search, @Param("offset") long offset);
   }
 
   static class Page {
@@ -53,9 +51,17 @@ public class WikipediaExample {
   }
 
   public static void main(String... args) throws InterruptedException {
+    Gson gson =
+        new GsonBuilder()
+            .registerTypeAdapter(new TypeToken<Response<Page>>() {}.getType(), pagesAdapter)
+            .create();
+
     Wikipedia wikipedia =
-        Feign.create(
-            Wikipedia.class, "http://en.wikipedia.org", new WikipediaDecoder(), new LogToStderr());
+        Feign.builder()
+            .decoder(new GsonDecoder(gson))
+            .logger(new Logger.ErrorLogger())
+            .logLevel(Logger.Level.BASIC)
+            .target(Wikipedia.class, "http://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");
     Iterator<Page> pages = lazySearch(wikipedia, "PTAL");
@@ -100,13 +106,8 @@ public class WikipediaExample {
     };
   }
 
-  @Module(includes = GsonModule.class)
-  static class WikipediaDecoder {
-
-    /** registers a gson {@link TypeAdapter} for {@code Response<Page>}. */
-    @Provides(type = SET)
-    TypeAdapter pagesAdapter() {
-      return new ResponseAdapter<Page>() {
+  static ResponseAdapter<Page> pagesAdapter =
+      new ResponseAdapter<Page>() {
 
         @Override
         protected String query() {
@@ -129,20 +130,4 @@ public class WikipediaExample {
           return page;
         }
       };
-    }
-  }
-
-  @Module(overrides = true, library = true)
-  static class LogToStderr {
-
-    @Provides
-    Logger.Level loggingLevel() {
-      return Logger.Level.BASIC;
-    }
-
-    @Provides
-    Logger logger() {
-      return new Logger.ErrorLogger();
-    }
-  }
 }
