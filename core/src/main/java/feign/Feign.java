@@ -258,11 +258,15 @@ public abstract class Feign {
     }
 
     public <T> T target(Class<T> apiType, String url) {
-      return target(new HardCodedTarget<T>(apiType, url));
+      return build().newInstance(new HardCodedTarget<T>(apiType, url));
     }
 
     public <T> T target(Target<T> target) {
-      return ObjectGraph.create(this).get(Feign.class).newInstance(target);
+      return build().newInstance(target);
+    }
+
+    public Feign build() {
+      return ObjectGraph.create(this).get(Feign.class);
     }
 
     @Provides Logger.Level logLevel() {
