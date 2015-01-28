@@ -1,15 +1,19 @@
-plugins {
-  id 'nebula.provided-base' version '2.0.1'
-}
+// NOTE: This module is intended to be a stand-alone example which does depend on nebula.
+defaultTasks 'clean', 'fatJar'
 
 apply plugin: 'java'
 
-sourceCompatibility = 1.6
+repositories {
+  mavenCentral()
+}
+
+configurations {
+  compile
+}
 
 dependencies {
-  compile  'com.netflix.feign:feign-core:5.3.0'
-  compile  'com.netflix.feign:feign-gson:5.3.0'
-  provided 'com.squareup.dagger:dagger-compiler:1.2.2'
+  compile  'com.netflix.feign:feign-core:7.1.0'
+  compile  'com.netflix.feign:feign-gson:7.1.0'
 }
 
 // create a self-contained jar that is executable
@@ -48,8 +52,4 @@ task fatJar(dependsOn: classes, type: Jar) {
     srcFile << shortcutFile.bytes   
     srcFile.setExecutable(true, true)
   }
-}
-
-artifacts {
-    archives fatJar
 }

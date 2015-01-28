@@ -15,30 +15,27 @@
  */
 package feign.example.wikipedia;
 
-import com.google.gson.TypeAdapter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import dagger.Module;
-import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
-import feign.gson.GsonModule;
-
-import javax.inject.Named;
+import feign.gson.GsonDecoder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import static dagger.Provides.Type.SET;
-
 public class WikipediaExample {
 
   public static interface Wikipedia {
-    @RequestLine("GET /w/api.php?action=query&generator=search&prop=info&format=json&gsrsearch={search}")
-    Response<Page> search(@Named("search") String search);
+    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}")
+    Response<Page> search(@Param("search") String search);
 
-    @RequestLine("GET /w/api.php?action=query&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
-    Response<Page> resumeSearch(@Named("search") String search, @Named("offset") long offset);
+    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
+    Response<Page> resumeSearch(@Param("search") String search, @Param("offset") long offset);
   }
 
   static class Page {
@@ -47,15 +44,20 @@ public class WikipediaExample {
   }
 
   public static class Response<X> extends ArrayList<X> {
-    /**
-     * when present, the position to resume the list.
-     */
+    /** when present, the position to resume the list. */
     Long nextOffset;
   }
 
   public static void main(String... args) throws InterruptedException {
-    Wikipedia wikipedia = Feign.create(Wikipedia.class, "http://en.wikipedia.org",
-        new WikipediaDecoder(), new LogToStderr());
+    Gson gson = new GsonBuilder()
+        .registerTypeAdapter(new TypeToken<Response<Page>>(){}.getType(), pagesAdapter)
+        .create();
+
+    Wikipedia wikipedia = Feign.builder()
+        .decoder(new GsonDecoder(gson))
+        .logger(new Logger.ErrorLogger())
+        .logLevel(Logger.Level.BASIC)
+        .target(Wikipedia.class, "http://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");
     Iterator<Page> pages = lazySearch(wikipedia, "PTAL");
@@ -101,48 +103,25 @@ public class WikipediaExample {
     };
   }
 
-  @Module(includes = GsonModule.class)
-  static class WikipediaDecoder {
+  static ResponseAdapter<Page> pagesAdapter = new ResponseAdapter<Page>() {
 
-    /**
-     * registers a gson {@link TypeAdapter} for {@code Response<Page>}.
-     */
-    @Provides(type = SET) TypeAdapter pagesAdapter() {
-      return new ResponseAdapter<Page>() {
+    @Override protected String query() {
+      return "pages";
+    }
 
-        @Override
-        protected String query() {
-          return "pages";
+    @Override protected Page build(JsonReader reader) throws IOException {
+      Page page = new Page();
+      while (reader.hasNext()) {
+        String key = reader.nextName();
+        if (key.equals("pageid")) {
+          page.id = reader.nextLong();
+        } else if (key.equals("title")) {
+          page.title = reader.nextString();
+        } else {
+          reader.skipValue();
         }
-
-        @Override
-        protected Page build(JsonReader reader) throws IOException {
-          Page page = new Page();
-          while (reader.hasNext()) {
-            String key = reader.nextName();
-            if (key.equals("pageid")) {
-              page.id = reader.nextLong();
-            } else if (key.equals("title")) {
-              page.title = reader.nextString();
-            } else {
-              reader.skipValue();
-            }
-          }
-          return page;
-        }
-      };
+      }
+      return page;
     }
-  }
-
-  @Module(overrides = true, library = true)
-  static class LogToStderr {
-
-    @Provides Logger.Level loggingLevel() {
-      return Logger.Level.BASIC;
-    }
-
-    @Provides Logger logger() {
-      return new Logger.ErrorLogger();
-    }
-  }
+  };
 }
