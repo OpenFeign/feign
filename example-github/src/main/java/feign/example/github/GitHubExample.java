@@ -15,21 +15,19 @@
  */
 package feign.example.github;
 
-import dagger.Module;
-import dagger.Provides;
 import feign.Feign;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
-import feign.gson.GsonModule;
+import feign.gson.GsonDecoder;
 import java.util.List;
-import javax.inject.Named;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Named("owner") String owner, @Named("repo") String repo);
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
   }
 
   static class Contributor {
@@ -39,26 +37,16 @@ public class GitHubExample {
 
   public static void main(String... args) throws InterruptedException {
     GitHub github =
-        Feign.create(GitHub.class, "https://api.github.com", new GsonModule(), new LogToStderr());
+        Feign.builder()
+            .decoder(new GsonDecoder())
+            .logger(new Logger.ErrorLogger())
+            .logLevel(Logger.Level.BASIC)
+            .target(GitHub.class, "https://api.github.com");
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
-    }
-  }
-
-  @Module(overrides = true, library = true, includes = GsonModule.class)
-  static class LogToStderr {
-
-    @Provides
-    Logger.Level loggingLevel() {
-      return Logger.Level.BASIC;
-    }
-
-    @Provides
-    Logger logger() {
-      return new Logger.ErrorLogger();
     }
   }
 }

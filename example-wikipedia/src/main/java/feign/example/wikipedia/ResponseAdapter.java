@@ -58,17 +58,11 @@ abstract class ResponseAdapter<X> extends TypeAdapter<WikipediaExample.Response<
           }
         }
         reader.endObject();
-      } else if ("query-continue".equals(nextName)) {
+      } else if ("continue".equals(nextName)) {
         reader.beginObject();
         while (reader.hasNext()) {
-          if ("search".equals(reader.nextName())) {
-            reader.beginObject();
-            while (reader.hasNext()) {
-              if ("gsroffset".equals(reader.nextName())) {
-                pages.nextOffset = reader.nextLong();
-              }
-            }
-            reader.endObject();
+          if ("gsroffset".equals(reader.nextName())) {
+            pages.nextOffset = reader.nextLong();
           } else {
             reader.skipValue();
           }
@@ -79,7 +73,6 @@ abstract class ResponseAdapter<X> extends TypeAdapter<WikipediaExample.Response<
       }
     }
     reader.endObject();
-    reader.close();
     return pages;
   }
 
