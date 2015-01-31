@@ -44,7 +44,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 /**
- * Tests interfaces defined per {@link feign.jaxrs.JAXRSContract} are interpreted into expected {@link feign
+ * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected {@link feign
  * .RequestTemplate template}
  * instances.
  */
@@ -330,6 +330,14 @@ public class JAXRSContractTest {
         entry(1, asList("user_name")),
         entry(2, asList("password"))
     );
+  }
+
+  /** Body type is only for the body param. */
+  @Test public void formParamsDoesNotSetBodyType() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(FormParams.class.getDeclaredMethod("login", String.class,
+        String.class, String.class));
+
+    assertThat(md.bodyType()).isNull();
   }
 
   @Test public void emptyFormParam() throws Exception {

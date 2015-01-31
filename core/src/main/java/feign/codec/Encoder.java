@@ -16,6 +16,7 @@
 package feign.codec;
 
 import feign.RequestTemplate;
+import java.lang.reflect.Type;
 
 import static java.lang.String.format;
 
@@ -40,8 +41,8 @@ import static java.lang.String.format;
  *   }
  *
  *   &#064;Override
- *   public void encode(Object object, RequestTemplate template) {
- *     template.body(gson.toJson(object));
+ *   public void encode(Object object, Type bodyType, RequestTemplate template) {
+ *     template.body(gson.toJson(object, bodyType));
  *   }
  * }
  * </pre>
@@ -59,24 +60,25 @@ import static java.lang.String.format;
  * </pre>
  */
 public interface Encoder {
+
   /**
    * Converts objects to an appropriate representation in the template.
    *
    * @param object what to encode as the request body.
+   * @param bodyType the type the object should be encoded as. {@code Map<String, ?>}, if form encoding.
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
-  void encode(Object object, RequestTemplate template) throws EncodeException;
+  void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
 
   /**
    * Default implementation of {@code Encoder}.
    */
   class Default implements Encoder {
-    @Override
-    public void encode(Object object, RequestTemplate template) throws EncodeException {
-      if (object instanceof String) {
+    @Override public void encode(Object object, Type bodyType, RequestTemplate template) {
+      if (bodyType == String.class) {
         template.body(object.toString());
-      } else if (object instanceof byte[]) {
+      } else if (bodyType == byte[].class) {
         template.body((byte[]) object, null);
       } else if (object != null) {
         throw new EncodeException(format("%s is not a type supported by this encoder.", object.getClass()));

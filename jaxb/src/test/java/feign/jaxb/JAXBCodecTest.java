@@ -18,148 +18,170 @@ package feign.jaxb;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Encoder;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 public class JAXBCodecTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    static class MockObject {
+  @XmlRootElement @XmlAccessorType(XmlAccessType.FIELD) static class MockObject {
 
-        @XmlElement
-        private String value;
+    @XmlElement private String value;
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof MockObject) {
-                MockObject other = (MockObject) obj;
-                return value.equals(other.value);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return value != null ? value.hashCode() : 0;
-        }
+    @Override public boolean equals(Object obj) {
+      if (obj instanceof MockObject) {
+        MockObject other = (MockObject) obj;
+        return value.equals(other.value);
+      }
+      return false;
     }
 
-    @Test
-    public void encodesXml() throws Exception {
-        MockObject mock = new MockObject();
-        mock.value = "Test";
-
-        RequestTemplate template = new RequestTemplate();
-        new JAXBEncoder(new JAXBContextFactory.Builder().build()).encode(mock, template);
-
-        assertThat(template).hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+    @Override public int hashCode() {
+      return value != null ? value.hashCode() : 0;
     }
+  }
 
-    @Test
-    public void encodesXmlWithCustomJAXBEncoding() throws Exception {
-        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerJAXBEncoding("UTF-16")
-                .build();
+  @Test public void encodesXml() throws Exception {
+    MockObject mock = new MockObject();
+    mock.value = "Test";
 
-        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+    RequestTemplate template = new RequestTemplate();
+    new JAXBEncoder(new JAXBContextFactory.Builder().build()).encode(mock, MockObject.class, template);
 
-        MockObject mock = new MockObject();
-        mock.value = "Test";
+    assertThat(template).hasBody(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+  }
 
-        RequestTemplate template = new RequestTemplate();
-        encoder.encode(mock, template);
+  @Test public void doesntEncodeParameterizedTypes() throws Exception {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage("JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
 
-        assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-16\" "
-                + "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+    class ParameterizedHolder {
+      Map<String, ?> field;
     }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
-    @Test
-    public void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
-        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
-                .build();
+    RequestTemplate template = new RequestTemplate();
+    new JAXBEncoder(new JAXBContextFactory.Builder().build()).encode(Collections.emptyMap(), parameterized, template);
+  }
 
-        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+  @Test public void encodesXmlWithCustomJAXBEncoding() throws Exception {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
-        MockObject mock = new MockObject();
-        mock.value = "Test";
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
-        RequestTemplate template = new RequestTemplate();
-        encoder.encode(mock, template);
+    MockObject mock = new MockObject();
+    mock.value = "Test";
 
-        assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-            "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
-            "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-            "<value>Test</value></mockObject>");
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, MockObject.class, template);
+
+    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-16\" "
+        + "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+  }
+
+  @Test public void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
+            .build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, MockObject.class, template);
+
+    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+        "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
+        "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+        "<value>Test</value></mockObject>");
+  }
+
+  @Test public void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd").build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, MockObject.class, template);
+
+    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+        "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
+        "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+        "<value>Test</value></mockObject>");
+  }
+
+  @Test public void encodesXmlWithCustomJAXBFormattedOutput() {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, MockObject.class, template);
+
+    String NEWLINE = System.getProperty("line.separator");
+
+    assertThat(template).hasBody(
+        new StringBuilder().append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+            .append(NEWLINE)
+            .append("<mockObject>")
+            .append(NEWLINE)
+            .append("    <value>Test</value>")
+            .append(NEWLINE)
+            .append("</mockObject>")
+            .append(NEWLINE)
+            .toString());
+  }
+
+  @Test public void decodesXml() throws Exception {
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject>"
+        + "<value>Test</value></mockObject>";
+
+    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), mockXml, UTF_8);
+
+    JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
+
+    assertEquals(mock, decoder.decode(response, MockObject.class));
+  }
+
+  @Test public void doesntDecodeParameterizedTypes() throws Exception {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage("JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
+
+    class ParameterizedHolder {
+      Map<String, ?> field;
     }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
-    @Test
-    public void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
-        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
-                .build();
+    Response response = Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), "<foo/>", UTF_8);
 
-        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
-
-        MockObject mock = new MockObject();
-        mock.value = "Test";
-
-        RequestTemplate template = new RequestTemplate();
-        encoder.encode(mock, template);
-
-        assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-            "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
-            "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-            "<value>Test</value></mockObject>");
-    }
-
-    @Test
-    public void encodesXmlWithCustomJAXBFormattedOutput() {
-        JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
-                .withMarshallerFormattedOutput(true)
-                .build();
-
-        Encoder encoder = new JAXBEncoder(jaxbContextFactory);
-
-        MockObject mock = new MockObject();
-        mock.value = "Test";
-
-        RequestTemplate template = new RequestTemplate();
-        encoder.encode(mock, template);
-
-        String NEWLINE = System.getProperty("line.separator");
-
-        assertThat(template).hasBody(new StringBuilder()
-                .append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>").append(NEWLINE)
-                .append("<mockObject>").append(NEWLINE)
-                .append("    <value>Test</value>").append(NEWLINE)
-                .append("</mockObject>").append(NEWLINE).toString());
-    }
-
-    @Test
-    public void decodesXml() throws Exception {
-        MockObject mock = new MockObject();
-        mock.value = "Test";
-
-        String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject>" +
-                "<value>Test</value></mockObject>";
-
-        Response response =
-                Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), mockXml, UTF_8);
-
-        JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
-
-        assertEquals(mock, decoder.decode(response, MockObject.class));
-    }
+    new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+  }
 }

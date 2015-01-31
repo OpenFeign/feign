@@ -79,6 +79,7 @@ public final class MethodMetadata implements Serializable {
     return this;
   }
 
+  /** Type corresponding to {@link #bodyIndex()}. */
   public Type bodyType() {
     return bodyType;
   }

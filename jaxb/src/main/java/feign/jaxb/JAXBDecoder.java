@@ -15,7 +15,6 @@
  */
 package feign.jaxb;
 
-import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -45,23 +44,25 @@ import javax.xml.bind.Unmarshaller;
  * </p>
  */
 public class JAXBDecoder implements Decoder {
-    private final JAXBContextFactory jaxbContextFactory;
+  private final JAXBContextFactory jaxbContextFactory;
 
-    public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
-        this.jaxbContextFactory = jaxbContextFactory;
-    }
+  public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
+    this.jaxbContextFactory = jaxbContextFactory;
+  }
 
-    @Override
-    public Object decode(Response response, Type type) throws IOException, FeignException {
-        try {
-            Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
-            return unmarshaller.unmarshal(response.body().asInputStream());
-        } catch (JAXBException e) {
-            throw new DecodeException(e.toString(), e);
-        } finally {
-            if(response.body() != null) {
-                response.body().close();
-            }
-        }
+  @Override public Object decode(Response response, Type type) throws IOException {
+    if (!(type instanceof Class)) {
+      throw new UnsupportedOperationException("JAXB only supports decoding raw types. Found " + type);
     }
+    try {
+      Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
+      return unmarshaller.unmarshal(response.body().asInputStream());
+    } catch (JAXBException e) {
+      throw new DecodeException(e.toString(), e);
+    } finally {
+      if (response.body() != null) {
+        response.body().close();
+      }
+    }
+  }
 }
