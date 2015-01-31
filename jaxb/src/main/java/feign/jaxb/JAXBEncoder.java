@@ -19,6 +19,8 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.StringWriter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
@@ -43,21 +45,23 @@ import javax.xml.bind.Marshaller;
  * </p>
  */
 public class JAXBEncoder implements Encoder {
-    private final JAXBContextFactory jaxbContextFactory;
+  private final JAXBContextFactory jaxbContextFactory;
 
-    public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {
-        this.jaxbContextFactory = jaxbContextFactory;
-    }
+  public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {
+    this.jaxbContextFactory = jaxbContextFactory;
+  }
 
-    @Override
-    public void encode(Object object, RequestTemplate template) throws EncodeException {
-        try {
-            Marshaller marshaller = jaxbContextFactory.createMarshaller(object.getClass());
-            StringWriter stringWriter = new StringWriter();
-            marshaller.marshal(object, stringWriter);
-            template.body(stringWriter.toString());
-        } catch (JAXBException e) {
-            throw new EncodeException(e.toString(), e);
-        }
+  @Override public void encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!(bodyType instanceof Class)) {
+      throw new UnsupportedOperationException("JAXB only supports encoding raw types. Found " + bodyType);
     }
+    try {
+      Marshaller marshaller = jaxbContextFactory.createMarshaller((Class) bodyType);
+      StringWriter stringWriter = new StringWriter();
+      marshaller.marshal(object, stringWriter);
+      template.body(stringWriter.toString());
+    } catch (JAXBException e) {
+      throw new EncodeException(e.toString(), e);
+    }
+  }
 }

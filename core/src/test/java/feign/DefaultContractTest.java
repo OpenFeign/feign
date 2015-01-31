@@ -231,6 +231,14 @@ public class DefaultContractTest {
     );
   }
 
+  /** Body type is only for the body param. */
+  @Test public void formParamsDoesNotSetBodyType() throws Exception {
+    MethodMetadata md = contract.parseAndValidatateMetadata(FormParams.class.getDeclaredMethod("login", String.class,
+        String.class, String.class));
+
+    assertThat(md.bodyType()).isNull();
+  }
+
   interface HeaderParams {
     @RequestLine("POST /")
     @Headers({"Auth-Token: {Auth-Token}", "Auth-Token: Foo"})

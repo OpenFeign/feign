@@ -16,11 +16,13 @@
 package feign;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
+import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
@@ -31,6 +33,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -135,6 +138,26 @@ public class FeignTest {
     assertThat(server.takeRequest())
         .hasHeaders("Content-Length: 32")
         .hasBody("[netflix, denominator, password]");
+  }
+
+  /** The type of a parameter value may not be the desired type to encode as. Prefer the interface type. */
+  @Test public void bodyTypeCorrespondsWithParameterType() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    final AtomicReference<Type> encodedType = new AtomicReference<Type>();
+    TestInterface api = new TestInterfaceBuilder()
+        .encoder(new Encoder.Default() {
+          @Override public void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException {
+            encodedType.set(bodyType);
+          }
+        })
+        .target("http://localhost:" + server.getPort());
+
+    api.body(Arrays.asList("netflix", "denominator", "password"));
+
+    server.takeRequest();
+
+    assertThat(encodedType.get()).isEqualTo(new TypeToken<List<String>>(){}.getType());
   }
 
   @Test public void postGZIPEncodedBodyParam() throws IOException, InterruptedException {
@@ -348,7 +371,7 @@ public class FeignTest {
     private final Feign.Builder delegate = new Feign.Builder()
         .decoder(new Decoder.Default())
         .encoder(new Encoder() {
-          @Override public void encode(Object object, RequestTemplate template) {
+          @Override public void encode(Object object, Type bodyType, RequestTemplate template) {
             if (object instanceof Map) {
               template.body(new Gson().toJson(object));
             } else {
@@ -362,8 +385,8 @@ public class FeignTest {
       return this;
     }
 
-    TestInterfaceBuilder client(Client client) {
-      delegate.client(client);
+    TestInterfaceBuilder encoder(Encoder encoder) {
+      delegate.encoder(encoder);
       return this;
     }
 

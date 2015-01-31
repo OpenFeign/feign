@@ -18,10 +18,7 @@ package feign;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.codec.Decoder;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import org.junit.Rule;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -29,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -63,8 +61,7 @@ public class FeignBuilderTest {
 
     String url = "http://localhost:" + server.getPort();
     Encoder encoder = new Encoder() {
-      @Override
-      public void encode(Object object, RequestTemplate template) throws EncodeException {
+      @Override public void encode(Object object, Type bodyType, RequestTemplate template) {
         template.body(object.toString());
       }
     };

@@ -1,6 +1,7 @@
 ### Version 8.0
 * Removes Dagger 1.x Dependency
 * Removes support for parameters annotated with `javax.inject.@Named`. Use `feign.@Param` instead.
+* Makes body parameter type explicit.
 
 ### Version 7.1
 * Introduces feign.@Param to annotate template parameters. Users must migrate from `javax.inject.@Named` to `feign.@Param` before updating to Feign 8.0.
