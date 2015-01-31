@@ -35,7 +35,7 @@ public class DefaultEncoderTest {
   public void testEncodesStrings() throws Exception {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(content, template);
+    encoder.encode(content, String.class, template);
     assertEquals(content, new String(template.body(), UTF_8));
   }
 
@@ -43,7 +43,7 @@ public class DefaultEncoderTest {
   public void testEncodesByteArray() throws Exception {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(content, template);
+    encoder.encode(content, byte[].class, template);
     assertTrue(Arrays.equals(content, template.body()));
   }
 
@@ -52,6 +52,6 @@ public class DefaultEncoderTest {
     thrown.expect(EncodeException.class);
     thrown.expectMessage("is not a type supported by this encoder.");
 
-    encoder.encode(new Date(), new RequestTemplate());
+    encoder.encode(new Date(), Date.class, new RequestTemplate());
   }
 }

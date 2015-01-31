@@ -15,7 +15,6 @@
  */
 package feign.jaxb;
 
-import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -51,7 +50,11 @@ public class JAXBDecoder implements Decoder {
   }
 
   @Override
-  public Object decode(Response response, Type type) throws IOException, FeignException {
+  public Object decode(Response response, Type type) throws IOException {
+    if (!(type instanceof Class)) {
+      throw new UnsupportedOperationException(
+          "JAXB only supports decoding raw types. Found " + type);
+    }
     try {
       Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
       return unmarshaller.unmarshal(response.body().asInputStream());
