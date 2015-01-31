@@ -47,7 +47,12 @@ public final class RequestTemplateAssert
   }
 
   public RequestTemplateAssert hasBody(String utf8Expected) {
-    return hasBody(utf8Expected.getBytes(UTF_8));
+    isNotNull();
+    if (actual.bodyTemplate() != null) {
+      failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
+    }
+    objects.assertEqual(info, new String(actual.body(), UTF_8), utf8Expected);
+    return this;
   }
 
   public RequestTemplateAssert hasBody(byte[] expected) {

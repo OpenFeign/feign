@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -32,6 +33,14 @@ import java.util.NoSuchElementException;
  * @author Jesse Wilson
  */
 final class Types {
+  /** Type literal for {@code Map<String, ?>}. */
+  static final Type MAP_STRING_WILDCARD =
+      new ParameterizedTypeImpl(
+          null,
+          Map.class,
+          String.class,
+          new WildcardTypeImpl(new Type[] {Object.class}, new Type[] {}));
+
   private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Types() {

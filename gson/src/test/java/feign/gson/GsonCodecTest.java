@@ -44,7 +44,7 @@ public class GsonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
-    new GsonEncoder().encode(map, template);
+    new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
         .hasBody(
@@ -74,7 +74,7 @@ public class GsonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
-    new GsonEncoder().encode(form, template);
+    new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template)
         .hasBody(
@@ -144,7 +144,11 @@ public class GsonCodecTest {
 
         @Override
         public void write(JsonWriter out, Zone value) throws IOException {
-          throw new IllegalArgumentException();
+          out.beginObject();
+          for (Map.Entry<String, Object> entry : value.entrySet()) {
+            out.name(entry.getKey()).value(entry.getValue().toString().toUpperCase());
+          }
+          out.endObject();
         }
 
         @Override
@@ -171,5 +175,30 @@ public class GsonCodecTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
+  }
+
+  @Test
+  public void customEncoder() throws Exception {
+    GsonEncoder encoder = new GsonEncoder(Arrays.<TypeAdapter<?>>asList(upperZone));
+
+    List<Zone> zones = new LinkedList<Zone>();
+    zones.add(new Zone("denominator.io."));
+    zones.add(new Zone("denominator.io.", "abcd"));
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(zones, new TypeToken<List<Zone>>() {}.getType(), template);
+
+    assertThat(template)
+        .hasBody(
+            "" //
+                + "[\n" //
+                + "  {\n" //
+                + "    \"name\": \"DENOMINATOR.IO.\"\n" //
+                + "  },\n" //
+                + "  {\n" //
+                + "    \"name\": \"DENOMINATOR.IO.\",\n" //
+                + "    \"id\": \"ABCD\"\n" //
+                + "  }\n" //
+                + "]");
   }
 }

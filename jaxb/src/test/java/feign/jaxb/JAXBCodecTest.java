@@ -22,15 +22,20 @@ import static org.junit.Assert.assertEquals;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Encoder;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class JAXBCodecTest {
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   @XmlRootElement
   @XmlAccessorType(XmlAccessType.FIELD)
@@ -59,12 +64,29 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
-    new JAXBEncoder(new JAXBContextFactory.Builder().build()).encode(mock, template);
+    new JAXBEncoder(new JAXBContextFactory.Builder().build())
+        .encode(mock, MockObject.class, template);
 
     assertThat(template)
         .hasBody(
             "<?xml version=\"1.0\" encoding=\"UTF-8\""
                 + " standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+  }
+
+  @Test
+  public void doesntEncodeParameterizedTypes() throws Exception {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage(
+        "JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
+
+    class ParameterizedHolder {
+      Map<String, ?> field;
+    }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+    RequestTemplate template = new RequestTemplate();
+    new JAXBEncoder(new JAXBContextFactory.Builder().build())
+        .encode(Collections.emptyMap(), parameterized, template);
   }
 
   @Test
@@ -78,7 +100,7 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(mock, template);
+    encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
         .hasBody(
@@ -99,7 +121,7 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(mock, template);
+    encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
         .hasBody(
@@ -122,7 +144,7 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(mock, template);
+    encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
         .hasBody(
@@ -143,7 +165,7 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(mock, template);
+    encoder.encode(mock, MockObject.class, template);
 
     String NEWLINE = System.getProperty("line.separator");
 
@@ -177,5 +199,23 @@ public class JAXBCodecTest {
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
     assertEquals(mock, decoder.decode(response, MockObject.class));
+  }
+
+  @Test
+  public void doesntDecodeParameterizedTypes() throws Exception {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage(
+        "JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
+
+    class ParameterizedHolder {
+      Map<String, ?> field;
+    }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+    Response response =
+        Response.create(
+            200, "OK", Collections.<String, Collection<String>>emptyMap(), "<foo/>", UTF_8);
+
+    new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
 }

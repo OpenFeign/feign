@@ -44,8 +44,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 /**
- * Tests interfaces defined per {@link feign.jaxrs.JAXRSContract} are interpreted into expected
- * {@link feign .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected {@link feign
+ * .RequestTemplate template} instances.
  */
 public class JAXRSContractTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -423,6 +423,16 @@ public class JAXRSContractTest {
             entry(0, asList("customer_name")),
             entry(1, asList("user_name")),
             entry(2, asList("password")));
+  }
+
+  /** Body type is only for the body param. */
+  @Test
+  public void formParamsDoesNotSetBodyType() throws Exception {
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(
+            FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
+
+    assertThat(md.bodyType()).isNull();
   }
 
   @Test

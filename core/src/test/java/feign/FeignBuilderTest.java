@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.codec.Decoder;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -68,7 +67,7 @@ public class FeignBuilderTest {
     Encoder encoder =
         new Encoder() {
           @Override
-          public void encode(Object object, RequestTemplate template) throws EncodeException {
+          public void encode(Object object, Type bodyType, RequestTemplate template) {
             template.body(object.toString());
           }
         };

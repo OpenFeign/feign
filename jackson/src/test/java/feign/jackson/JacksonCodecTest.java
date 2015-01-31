@@ -5,13 +5,16 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import feign.RequestTemplate;
 import feign.Response;
 import java.io.IOException;
@@ -32,7 +35,7 @@ public class JacksonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
-    new JacksonEncoder().encode(map, template);
+    new JacksonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
         .hasBody(
@@ -49,7 +52,7 @@ public class JacksonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
-    new JacksonEncoder().encode(form, template);
+    new JacksonEncoder().encode(form, new TypeReference<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template)
         .hasBody(
@@ -132,15 +135,12 @@ public class JacksonCodecTest {
     }
   }
 
-  static class ZoneModule extends SimpleModule {
-    public ZoneModule() {
-      addDeserializer(Zone.class, new ZoneDeserializer());
-    }
-  }
-
   @Test
   public void customDecoder() throws Exception {
-    JacksonDecoder decoder = new JacksonDecoder(Arrays.<Module>asList(new ZoneModule()));
+    JacksonDecoder decoder =
+        new JacksonDecoder(
+            Arrays.<Module>asList(
+                new SimpleModule().addDeserializer(Zone.class, new ZoneDeserializer())));
 
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("DENOMINATOR.IO."));
@@ -150,5 +150,47 @@ public class JacksonCodecTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(zones, decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()));
+  }
+
+  static class ZoneSerializer extends StdSerializer<Zone> {
+    public ZoneSerializer() {
+      super(Zone.class);
+    }
+
+    @Override
+    public void serialize(Zone value, JsonGenerator jgen, SerializerProvider provider)
+        throws IOException {
+      jgen.writeStartObject();
+      for (Map.Entry<String, Object> entry : value.entrySet()) {
+        jgen.writeFieldName(entry.getKey());
+        jgen.writeString(entry.getValue().toString().toUpperCase());
+      }
+      jgen.writeEndObject();
+    }
+  }
+
+  @Test
+  public void customEncoder() throws Exception {
+    JacksonEncoder encoder =
+        new JacksonEncoder(
+            Arrays.<Module>asList(
+                new SimpleModule().addSerializer(Zone.class, new ZoneSerializer())));
+
+    List<Zone> zones = new LinkedList<Zone>();
+    zones.add(new Zone("denominator.io."));
+    zones.add(new Zone("denominator.io.", "abcd"));
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(zones, new TypeReference<List<Zone>>() {}.getType(), template);
+
+    assertThat(template)
+        .hasBody(
+            "" //
+                + "[ {\n"
+                + "  \"name\" : \"DENOMINATOR.IO.\"\n"
+                + "}, {\n"
+                + "  \"name\" : \"DENOMINATOR.IO.\",\n"
+                + "  \"id\" : \"ABCD\"\n"
+                + "} ]");
   }
 }

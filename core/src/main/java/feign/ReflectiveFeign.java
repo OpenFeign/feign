@@ -218,7 +218,7 @@ public class ReflectiveFeign extends Feign {
           formVariables.put(entry.getKey(), entry.getValue());
       }
       try {
-        encoder.encode(formVariables, mutable);
+        encoder.encode(formVariables, Types.MAP_STRING_WILDCARD, mutable);
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
@@ -242,7 +242,7 @@ public class ReflectiveFeign extends Feign {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       try {
-        encoder.encode(body, mutable);
+        encoder.encode(body, metadata.bodyType(), mutable);
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
