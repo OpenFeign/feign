@@ -15,19 +15,13 @@
  */
 package feign.jackson;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.Set;
 
@@ -81,20 +75,12 @@ import java.util.Set;
  */
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class JacksonModule {
-  @Provides Encoder encoder(ObjectMapper mapper) {
-    return new JacksonEncoder(mapper);
+  @Provides Encoder encoder(Set<Module> modules) {
+    return new JacksonEncoder(modules);
   }
 
-  @Provides Decoder decoder(ObjectMapper mapper) {
-    return new JacksonDecoder(mapper);
-  }
-
-  @Provides @Singleton ObjectMapper mapper(Set<Module> modules) {
-    return new ObjectMapper()
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        .configure(SerializationFeature.INDENT_OUTPUT, true)
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModules(modules);
+  @Provides Decoder decoder(Set<Module> modules) {
+    return new JacksonDecoder(modules);
   }
 
   @Provides(type = Provides.Type.SET_VALUES) Set<Module> noDefaultModules() {

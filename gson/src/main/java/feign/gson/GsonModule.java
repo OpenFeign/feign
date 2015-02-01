@@ -16,19 +16,14 @@
 package feign.gson;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-
-import javax.inject.Singleton;
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Set;
-
-import static feign.Util.resolveLastTypeParameter;
+import javax.inject.Singleton;
 
 /**
  * <h3>Custom type adapters</h3>
@@ -78,12 +73,7 @@ public final class GsonModule {
   }
 
   @Provides @Singleton Gson gson(Set<TypeAdapter> adapters) {
-    GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
-    for (TypeAdapter<?> adapter : adapters) {
-      Type type = resolveLastTypeParameter(adapter.getClass(), TypeAdapter.class);
-      builder.registerTypeAdapter(type, adapter);
-    }
-    return builder.create();
+    return GsonFactory.create((Iterable) adapters);
   }
 
   @Provides(type = Provides.Type.SET_VALUES) Set<TypeAdapter> noDefaultTypeAdapters() {
