@@ -4,6 +4,8 @@
 * Makes body parameter type explicit.
 
 ### Version 7.2
+* Adds `Feign.Builder.build()`
+* Opens constructor for Gson and Jackson codecs which accepts type adapters
 * Adds EmptyTarget for interfaces who exclusively declare URI methods
 
 ### Version 7.1
