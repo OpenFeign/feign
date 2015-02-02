@@ -37,11 +37,13 @@ import org.junit.runners.model.Statement;
 
 @RunWith(Enclosed.class)
 public class LoggerTest {
+
   @Rule public final MockWebServerRule server = new MockWebServerRule();
   @Rule public final RecordingLogger logger = new RecordingLogger();
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   interface SendsStuff {
+
     @RequestLine("POST /")
     @Headers("Content-Type: application/json")
     @Body(
@@ -55,7 +57,13 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class LogLevelEmitsTest extends LoggerTest {
+
     private final Level logLevel;
+
+    public LogLevelEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
 
     @Parameters
     public static Iterable<Object[]> data() {
@@ -98,11 +106,6 @@ public class LoggerTest {
           });
     }
 
-    public LogLevelEmitsTest(Level logLevel, List<String> expectedMessages) {
-      this.logLevel = logLevel;
-      logger.expectMessages(expectedMessages);
-    }
-
     @Test
     public void levelEmits() throws IOException, InterruptedException {
       server.enqueue(new MockResponse().setBody("foo"));
@@ -119,7 +122,13 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class ReadTimeoutEmitsTest extends LoggerTest {
+
     private final Level logLevel;
+
+    public ReadTimeoutEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
 
     @Parameters
     public static Iterable<Object[]> data() {
@@ -167,11 +176,6 @@ public class LoggerTest {
           });
     }
 
-    public ReadTimeoutEmitsTest(Level logLevel, List<String> expectedMessages) {
-      this.logLevel = logLevel;
-      logger.expectMessages(expectedMessages);
-    }
-
     @Test
     public void levelEmitsOnReadTimeout() throws IOException, InterruptedException {
       server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
@@ -190,7 +194,13 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class UnknownHostEmitsTest extends LoggerTest {
+
     private final Level logLevel;
+
+    public UnknownHostEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
 
     @Parameters
     public static Iterable<Object[]> data() {
@@ -232,11 +242,6 @@ public class LoggerTest {
           });
     }
 
-    public UnknownHostEmitsTest(Level logLevel, List<String> expectedMessages) {
-      this.logLevel = logLevel;
-      logger.expectMessages(expectedMessages);
-    }
-
     @Test
     public void unknownHostEmits() throws IOException, InterruptedException {
       SendsStuff api =
@@ -260,7 +265,13 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class RetryEmitsTest extends LoggerTest {
+
     private final Level logLevel;
+
+    public RetryEmitsTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
 
     @Parameters
     public static Iterable<Object[]> data() {
@@ -279,11 +290,6 @@ public class LoggerTest {
                       + " \\([0-9]+ms\\)")
             }
           });
-    }
-
-    public RetryEmitsTest(Level logLevel, List<String> expectedMessages) {
-      this.logLevel = logLevel;
-      logger.expectMessages(expectedMessages);
     }
 
     @Test
@@ -314,6 +320,7 @@ public class LoggerTest {
   }
 
   private static final class RecordingLogger extends Logger implements TestRule {
+
     private final List<String> messages = new ArrayList<String>();
     private final List<String> expectedMessages = new ArrayList<String>();
 

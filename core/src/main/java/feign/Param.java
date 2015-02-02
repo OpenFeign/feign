@@ -27,6 +27,7 @@ import java.lang.annotation.Retention;
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
 public @interface Param {
+
   /** The name of the template parameter. */
   String value();
 
@@ -34,11 +35,13 @@ public @interface Param {
   Class<? extends Expander> expander() default ToStringExpander.class;
 
   interface Expander {
+
     /** Expands the value into a string. Does not accept or return null. */
     String expand(Object value);
   }
 
   final class ToStringExpander implements Expander {
+
     @Override
     public String expand(Object value) {
       return value.toString();

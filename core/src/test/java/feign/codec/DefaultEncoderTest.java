@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class DefaultEncoderTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   private final Encoder encoder = new Encoder.Default();

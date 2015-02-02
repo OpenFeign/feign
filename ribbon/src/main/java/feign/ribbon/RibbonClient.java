@@ -15,7 +15,8 @@ import java.net.URI;
  * provided by Ribbon. Ex.
  *
  * <pre>
- * MyService api = Feign.builder.client(new RibbonClient()).target(MyService.class, "http://myAppProd");
+ * MyService api = Feign.builder.client(new RibbonClient()).target(MyService.class,
+ * "http://myAppProd");
  * </pre>
  *
  * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers}

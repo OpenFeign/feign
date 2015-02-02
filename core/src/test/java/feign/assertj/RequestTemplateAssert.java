@@ -26,6 +26,7 @@ import org.assertj.core.internal.Objects;
 
 public final class RequestTemplateAssert
     extends AbstractAssert<RequestTemplateAssert, RequestTemplate> {
+
   ByteArrays arrays = ByteArrays.instance();
   Objects objects = Objects.instance();
   Maps maps = Maps.instance();

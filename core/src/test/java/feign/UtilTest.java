@@ -26,20 +26,6 @@ import org.junit.Test;
 
 public class UtilTest {
 
-  interface LastTypeParameter {
-    final List<String> LIST_STRING = null;
-    final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
-    final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
-    final ParameterizedDecoder<List<String>> PARAMETERIZED_DECODER_LIST_STRING = null;
-    final ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
-  }
-
-  interface ParameterizedDecoder<T extends List<String>> extends Decoder {}
-
-  interface Parameterized<T> {}
-
-  static class ParameterizedSubtype implements Parameterized<String> {}
-
   @Test
   public void resolveLastTypeParameterWhenNotSubtype() throws Exception {
     Type context =
@@ -92,4 +78,19 @@ public class UtilTest {
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
     assertEquals(Object.class, last);
   }
+
+  interface LastTypeParameter {
+
+    final List<String> LIST_STRING = null;
+    final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
+    final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
+    final ParameterizedDecoder<List<String>> PARAMETERIZED_DECODER_LIST_STRING = null;
+    final ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
+  }
+
+  interface ParameterizedDecoder<T extends List<String>> extends Decoder {}
+
+  interface Parameterized<T> {}
+
+  static class ParameterizedSubtype implements Parameterized<String> {}
 }

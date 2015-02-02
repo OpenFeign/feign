@@ -33,16 +33,6 @@ import java.util.List;
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
-
   public static void main(String... args) {
     GitHub github =
         Feign.builder()
@@ -58,8 +48,21 @@ public class GitHubExample {
     }
   }
 
+  interface GitHub {
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
+  }
+
   /** Here's how it looks to write a decoder. Note: you can instead use {@code feign-gson}! */
   static class GsonDecoder implements Decoder {
+
     private final Gson gson = new Gson();
 
     @Override

@@ -30,6 +30,7 @@ import java.util.Map;
 
 /** Deals with scenario where Gson Object type treats all numbers as doubles. */
 public class DoubleToIntMapTypeAdapter extends TypeAdapter<Map<String, Object>> {
+
   static final TypeToken<Map<String, Object>> token = new TypeToken<Map<String, Object>>() {};
 
   private final TypeAdapter<Map<String, Object>> delegate =

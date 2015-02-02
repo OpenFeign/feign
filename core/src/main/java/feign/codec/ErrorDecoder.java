@@ -85,8 +85,9 @@ public interface ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
       FeignException exception = errorStatus(methodKey, response);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
-      if (retryAfter != null)
+      if (retryAfter != null) {
         return new RetryableException(exception.getMessage(), exception, retryAfter);
+      }
       return exception;
     }
 
@@ -103,6 +104,7 @@ public interface ErrorDecoder {
    * See <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */
   static class RetryAfterDecoder {
+
     static final DateFormat RFC822_FORMAT =
         new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", US);
     private final DateFormat rfc822Format;
@@ -111,12 +113,12 @@ public interface ErrorDecoder {
       this(RFC822_FORMAT);
     }
 
-    protected long currentTimeNanos() {
-      return System.currentTimeMillis();
-    }
-
     RetryAfterDecoder(DateFormat rfc822Format) {
       this.rfc822Format = checkNotNull(rfc822Format, "rfc822Format");
+    }
+
+    protected long currentTimeNanos() {
+      return System.currentTimeMillis();
     }
 
     /**
@@ -126,7 +128,9 @@ public interface ErrorDecoder {
      *     >Retry-After format</a>
      */
     public Date apply(String retryAfter) {
-      if (retryAfter == null) return null;
+      if (retryAfter == null) {
+        return null;
+      }
       if (retryAfter.matches("^[0-9]+$")) {
         long currentTimeMillis = NANOSECONDS.toMillis(currentTimeNanos());
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));

@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 
 public class GsonDecoder implements Decoder {
+
   private final Gson gson;
 
   public GsonDecoder(Iterable<TypeAdapter<?>> adapters) {

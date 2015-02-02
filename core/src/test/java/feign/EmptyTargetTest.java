@@ -24,12 +24,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class EmptyTargetTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  interface UriInterface {
-    @RequestLine("GET /")
-    Response get(URI endpoint);
-  }
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void whenNameNotSupplied() {
@@ -56,5 +52,11 @@ public class EmptyTargetTest {
 
     EmptyTarget.create(UriInterface.class)
         .apply(new RequestTemplate().method("GET").append("/relative"));
+  }
+
+  interface UriInterface {
+
+    @RequestLine("GET /")
+    Response get(URI endpoint);
   }
 }

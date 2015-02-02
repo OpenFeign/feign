@@ -21,6 +21,17 @@ import java.io.IOException;
 
 /** Origin exception type for all Http Apis. */
 public class FeignException extends RuntimeException {
+
+  private static final long serialVersionUID = 0;
+
+  protected FeignException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  protected FeignException(String message) {
+    super(message);
+  }
+
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
     return new FeignException(
         format("%s %s %s", cause.getMessage(), request.method(), request.url()), cause);
@@ -44,14 +55,4 @@ public class FeignException extends RuntimeException {
         cause,
         null);
   }
-
-  protected FeignException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  protected FeignException(String message) {
-    super(message);
-  }
-
-  private static final long serialVersionUID = 0;
 }

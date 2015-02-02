@@ -36,6 +36,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe. */
 public interface Client {
+
   /**
    * Executes a request against its {@link Request#url() url} and returns a response.
    *
@@ -47,6 +48,7 @@ public interface Client {
   Response execute(Request request, Options options) throws IOException;
 
   public static class Default implements Client {
+
     private final SSLSocketFactory sslContextFactory;
     private final HostnameVerifier hostnameVerifier;
 
@@ -87,7 +89,9 @@ public interface Client {
       boolean hasAcceptHeader = false;
       Integer contentLength = null;
       for (String field : request.headers().keySet()) {
-        if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
+        if (field.equalsIgnoreCase("Accept")) {
+          hasAcceptHeader = true;
+        }
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest) {
@@ -100,7 +104,9 @@ public interface Client {
         }
       }
       // Some servers choke on the default accept string.
-      if (!hasAcceptHeader) connection.addRequestProperty("Accept", "*/*");
+      if (!hasAcceptHeader) {
+        connection.addRequestProperty("Accept", "*/*");
+      }
 
       if (request.body() != null) {
         if (contentLength != null) {
@@ -132,11 +138,15 @@ public interface Client {
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
         // response message
-        if (field.getKey() != null) headers.put(field.getKey(), field.getValue());
+        if (field.getKey() != null) {
+          headers.put(field.getKey(), field.getValue());
+        }
       }
 
       Integer length = connection.getContentLength();
-      if (length == -1) length = null;
+      if (length == -1) {
+        length = null;
+      }
       InputStream stream;
       if (status >= 400) {
         stream = connection.getErrorStream();

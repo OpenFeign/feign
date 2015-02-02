@@ -62,6 +62,7 @@ import java.lang.reflect.Type;
  * List<Foo>}.
  */
 public interface Decoder {
+
   /**
    * Decodes an http response into an object corresponding to its {@link
    * java.lang.reflect.Method#getGenericReturnType() generic return type}. If you need to wrap
@@ -79,6 +80,7 @@ public interface Decoder {
 
   /** Default implementation of {@code Decoder}. */
   public class Default extends StringDecoder {
+
     @Override
     public Object decode(Response response, Type type) throws IOException {
       Response.Body body = response.body();

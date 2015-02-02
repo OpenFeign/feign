@@ -29,12 +29,13 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class LoadBalancingTargetTest {
+
   @Rule public final MockWebServerRule server1 = new MockWebServerRule();
   @Rule public final MockWebServerRule server2 = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /")
-    void post();
+  static String hostAndPort(URL url) {
+    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
+    return "localhost:" + url.getPort();
   }
 
   @Test
@@ -66,8 +67,9 @@ public class LoadBalancingTargetTest {
     }
   }
 
-  static String hostAndPort(URL url) {
-    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
-    return "localhost:" + url.getPort();
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    void post();
   }
 }

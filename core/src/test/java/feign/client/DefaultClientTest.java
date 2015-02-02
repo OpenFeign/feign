@@ -40,18 +40,19 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class DefaultClientTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Rule public final MockWebServerRule server = new MockWebServerRule();
-
-  interface TestInterface {
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
-    Response post(String body);
-
-    @RequestLine("PATCH /")
-    @Headers("Accept: text/plain")
-    String patch();
-  }
+  Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
+  Client disableHostnameVerification =
+      new Client.Default(
+          TrustingSSLSocketFactory.get(),
+          new HostnameVerifier() {
+            @Override
+            public boolean verify(String s, SSLSession sslSession) {
+              return true;
+            }
+          });
 
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
@@ -106,8 +107,6 @@ public class DefaultClientTest {
     api.patch();
   }
 
-  Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
-
   @Test
   public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
@@ -120,16 +119,6 @@ public class DefaultClientTest {
 
     api.post("foo");
   }
-
-  Client disableHostnameVerification =
-      new Client.Default(
-          TrustingSSLSocketFactory.get(),
-          new HostnameVerifier() {
-            @Override
-            public boolean verify(String s, SSLSession sslSession) {
-              return true;
-            }
-          });
 
   @Test
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
@@ -157,5 +146,16 @@ public class DefaultClientTest {
 
     api.post("foo");
     assertEquals(2, server.getRequestCount());
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    Response post(String body);
+
+    @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
+    String patch();
   }
 }

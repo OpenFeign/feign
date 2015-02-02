@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 
 public class JacksonDecoder implements Decoder {
+
   private final ObjectMapper mapper;
 
   public JacksonDecoder() {

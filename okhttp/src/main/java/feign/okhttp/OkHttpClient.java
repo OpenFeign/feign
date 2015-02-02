@@ -31,13 +31,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables
- * SPDY and better network control.
- * Ex.
+ * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>,
+ * which enables SPDY and better network control. Ex.
  * <pre>
- * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class, "https://api.github.com");
+ * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
+ * "https://api.github.com");
  */
 public final class OkHttpClient implements Client {
+
   private final com.squareup.okhttp.OkHttpClient delegate;
 
   public OkHttpClient() {
@@ -48,23 +49,6 @@ public final class OkHttpClient implements Client {
     this.delegate = delegate;
   }
 
-  @Override
-  public feign.Response execute(feign.Request input, feign.Request.Options options)
-      throws IOException {
-    com.squareup.okhttp.OkHttpClient requestScoped;
-    if (delegate.getConnectTimeout() != options.connectTimeoutMillis()
-        || delegate.getReadTimeout() != options.readTimeoutMillis()) {
-      requestScoped = delegate.clone();
-      requestScoped.setConnectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS);
-      requestScoped.setReadTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
-    } else {
-      requestScoped = delegate;
-    }
-    Request request = toOkHttpRequest(input);
-    Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response);
-  }
-
   static Request toOkHttpRequest(feign.Request input) {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(input.url());
@@ -72,19 +56,25 @@ public final class OkHttpClient implements Client {
     MediaType mediaType = null;
     boolean hasAcceptHeader = false;
     for (String field : input.headers().keySet()) {
-      if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
+      if (field.equalsIgnoreCase("Accept")) {
+        hasAcceptHeader = true;
+      }
 
       for (String value : input.headers().get(field)) {
         if (field.equalsIgnoreCase("Content-Type")) {
           mediaType = MediaType.parse(value);
-          if (input.charset() != null) mediaType.charset(input.charset());
+          if (input.charset() != null) {
+            mediaType.charset(input.charset());
+          }
         } else {
           requestBuilder.addHeader(field, value);
         }
       }
     }
     // Some servers choke on the default accept string.
-    if (!hasAcceptHeader) requestBuilder.addHeader("Accept", "*/*");
+    if (!hasAcceptHeader) {
+      requestBuilder.addHeader("Accept", "*/*");
+    }
 
     RequestBody body = input.body() != null ? RequestBody.create(mediaType, input.body()) : null;
     requestBuilder.method(input.method(), body);
@@ -142,5 +132,22 @@ public final class OkHttpClient implements Client {
         return input.charStream();
       }
     };
+  }
+
+  @Override
+  public feign.Response execute(feign.Request input, feign.Request.Options options)
+      throws IOException {
+    com.squareup.okhttp.OkHttpClient requestScoped;
+    if (delegate.getConnectTimeout() != options.connectTimeoutMillis()
+        || delegate.getReadTimeout() != options.readTimeoutMillis()) {
+      requestScoped = delegate.clone();
+      requestScoped.setConnectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS);
+      requestScoped.setReadTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
+    } else {
+      requestScoped = delegate;
+    }
+    Request request = toOkHttpRequest(input);
+    Response response = requestScoped.newCall(request).execute();
+    return toFeignResponse(response);
   }
 }

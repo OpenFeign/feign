@@ -34,18 +34,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class OkHttpClientTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Rule public final MockWebServerRule server = new MockWebServerRule();
-
-  interface TestInterface {
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
-    Response post(String body);
-
-    @RequestLine("PATCH /")
-    @Headers("Accept: text/plain")
-    String patch();
-  }
 
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
@@ -104,5 +95,16 @@ public class OkHttpClientTest {
         .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    Response post(String body);
+
+    @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
+    String patch();
   }
 }

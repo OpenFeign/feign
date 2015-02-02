@@ -33,12 +33,6 @@ import java.util.List;
  */
 public abstract class Feign {
 
-  /**
-   * Returns a new instance of an HTTP API, defined by annotations in the {@link Feign Contract},
-   * for the specified {@code target}. You should cache this result.
-   */
-  public abstract <T> T newInstance(Target<T> target);
-
   public static Builder builder() {
     return new Builder();
   }
@@ -67,13 +61,23 @@ public abstract class Feign {
     StringBuilder builder = new StringBuilder();
     builder.append(method.getDeclaringClass().getSimpleName());
     builder.append('#').append(method.getName()).append('(');
-    for (Class<?> param : method.getParameterTypes())
+    for (Class<?> param : method.getParameterTypes()) {
       builder.append(param.getSimpleName()).append(',');
-    if (method.getParameterTypes().length > 0) builder.deleteCharAt(builder.length() - 1);
+    }
+    if (method.getParameterTypes().length > 0) {
+      builder.deleteCharAt(builder.length() - 1);
+    }
     return builder.append(')').toString();
   }
 
+  /**
+   * Returns a new instance of an HTTP API, defined by annotations in the {@link Feign Contract},
+   * for the specified {@code target}. You should cache this result.
+   */
+  public abstract <T> T newInstance(Target<T> target);
+
   public static class Builder {
+
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
     private Logger.Level logLevel = Logger.Level.NONE;

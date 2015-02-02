@@ -32,6 +32,7 @@ import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 
 public class DefaultDecoderTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   private final Decoder decoder = new Decoder.Default();

@@ -27,14 +27,13 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 public class Slf4jLoggerTest {
-  @Rule public final RecordingSimpleLogger slf4j = new RecordingSimpleLogger();
 
   private static final String CONFIG_KEY = "someMethod()";
   private static final Request REQUEST =
       new RequestTemplate().method("GET").append("http://api.example.com").request();
   private static final Response RESPONSE =
       Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), new byte[0]);
-
+  @Rule public final RecordingSimpleLogger slf4j = new RecordingSimpleLogger();
   private Slf4jLogger logger;
 
   @Test

@@ -37,6 +37,7 @@ import javax.ws.rs.QueryParam;
  * JAX-RS README</a>.
  */
 public final class JAXRSContract extends Contract.BaseContract {
+
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
 

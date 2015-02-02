@@ -26,6 +26,8 @@ import feign.FeignException;
  */
 public class EncodeException extends FeignException {
 
+  private static final long serialVersionUID = 1L;
+
   /**
    * @param message the reason for the failure.
    */
@@ -40,6 +42,4 @@ public class EncodeException extends FeignException {
   public EncodeException(String message, Throwable cause) {
     super(checkNotNull(message, "message"), checkNotNull(cause, "cause"));
   }
-
-  private static final long serialVersionUID = 1L;
 }

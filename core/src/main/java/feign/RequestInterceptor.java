@@ -50,6 +50,7 @@ package feign;
  * can read, remove, or otherwise mutate any part of the request template.
  */
 public interface RequestInterceptor {
+
   /** Called for every request. Add data using methods on the supplied {@link RequestTemplate}. */
   void apply(RequestTemplate template);
 }

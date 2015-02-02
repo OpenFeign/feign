@@ -39,7 +39,9 @@ public interface Contract {
     public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
       List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
       for (Method method : declaring.getDeclaredMethods()) {
-        if (method.getDeclaringClass() == Object.class) continue;
+        if (method.getDeclaringClass() == Object.class) {
+          continue;
+        }
         metadata.add(parseAndValidatateMetadata(method));
       }
       return metadata;
@@ -100,7 +102,9 @@ public interface Contract {
         MethodMetadata data, Annotation[] annotations, int paramIndex);
 
     protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-      if (possiblyNull == null) possiblyNull = new ArrayList<String>();
+      if (possiblyNull == null) {
+        possiblyNull = new ArrayList<String>();
+      }
       possiblyNull.add(String.format("{%s}", name));
       return possiblyNull;
     }
@@ -201,10 +205,14 @@ public interface Contract {
 
     private <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
       Collection<Collection<V>> values = map.values();
-      if (values == null) return false;
+      if (values == null) {
+        return false;
+      }
 
       for (Collection<V> entry : values) {
-        if (entry.contains(search)) return true;
+        if (entry.contains(search)) {
+          return true;
+        }
       }
 
       return false;

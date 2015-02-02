@@ -32,23 +32,10 @@ import org.junit.rules.ExpectedException;
  * .RequestTemplate template} instances.
  */
 public class DefaultContractTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   Contract.Default contract = new Contract.Default();
-
-  interface Methods {
-    @RequestLine("POST /")
-    void post();
-
-    @RequestLine("PUT /")
-    void put();
-
-    @RequestLine("GET /")
-    void get();
-
-    @RequestLine("DELETE /")
-    void delete();
-  }
 
   @Test
   public void httpMethods() throws Exception {
@@ -71,14 +58,6 @@ public class DefaultContractTest {
         .hasMethod("DELETE");
   }
 
-  interface BodyParams {
-    @RequestLine("POST")
-    Response post(List<String> body);
-
-    @RequestLine("POST")
-    Response tooMany(List<String> body, List<String> body2);
-  }
-
   @Test
   public void bodyParamIsGeneric() throws Exception {
     MethodMetadata md =
@@ -96,11 +75,6 @@ public class DefaultContractTest {
         BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
-  interface CustomMethod {
-    @RequestLine("PATCH")
-    Response patch();
-  }
-
   @Test
   public void customMethodWithoutPath() throws Exception {
     assertThat(
@@ -109,23 +83,6 @@ public class DefaultContractTest {
                 .template())
         .hasMethod("PATCH")
         .hasUrl("");
-  }
-
-  interface WithQueryParamsInPath {
-    @RequestLine("GET /")
-    Response none();
-
-    @RequestLine("GET /?Action=GetUser")
-    Response one();
-
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
-    Response two();
-
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08&limit=1")
-    Response three();
-
-    @RequestLine("GET /?flag&Action=GetUser&Version=2010-05-08")
-    Response empty();
   }
 
   @Test
@@ -172,13 +129,6 @@ public class DefaultContractTest {
             entry("Version", asList("2010-05-08")));
   }
 
-  interface BodyWithoutParameters {
-    @RequestLine("POST /")
-    @Headers("Content-Type: application/xml")
-    @Body("<v01:getAccountsListOfUser/>")
-    Response post();
-  }
-
   @Test
   public void bodyWithoutParameters() throws Exception {
     MethodMetadata md =
@@ -198,11 +148,6 @@ public class DefaultContractTest {
             entry("Content-Length", asList(String.valueOf(md.template().body().length))));
   }
 
-  interface WithURIParam {
-    @RequestLine("GET /{1}/{2}")
-    Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
-  }
-
   @Test
   public void withPathAndURIParam() throws Exception {
     MethodMetadata md =
@@ -219,14 +164,6 @@ public class DefaultContractTest {
     assertThat(md.urlIndex()).isEqualTo(1);
   }
 
-  interface WithPathAndQueryParams {
-    @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
-    Response recordsByNameAndType(
-        @Param("domainId") int id,
-        @Param("name") String nameFilter,
-        @Param("type") String typeFilter);
-  }
-
   @Test
   public void pathAndQueryParams() throws Exception {
     MethodMetadata md =
@@ -240,17 +177,6 @@ public class DefaultContractTest {
     assertThat(md.indexToName())
         .containsExactly(
             entry(0, asList("domainId")), entry(1, asList("name")), entry(2, asList("type")));
-  }
-
-  interface FormParams {
-    @RequestLine("POST /")
-    @Body(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
-            + " \"{password}\"%7D")
-    void login(
-        @Param("customer_name") String customer,
-        @Param("user_name") String user,
-        @Param("password") String password);
   }
 
   @Test
@@ -290,12 +216,6 @@ public class DefaultContractTest {
     assertThat(md.bodyType()).isNull();
   }
 
-  interface HeaderParams {
-    @RequestLine("POST /")
-    @Headers({"Auth-Token: {Auth-Token}", "Auth-Token: Foo"})
-    void logout(@Param("Auth-Token") String token);
-  }
-
   @Test
   public void headerParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md =
@@ -307,18 +227,6 @@ public class DefaultContractTest {
     assertThat(md.indexToName()).containsExactly(entry(0, asList("Auth-Token")));
   }
 
-  interface CustomExpander {
-    @RequestLine("POST /?date={date}")
-    void date(@Param(value = "date", expander = DateToMillis.class) Date date);
-  }
-
-  class DateToMillis implements Param.Expander {
-    @Override
-    public String expand(Object value) {
-      return String.valueOf(((Date) value).getTime());
-    }
-  }
-
   @Test
   public void customExpander() throws Exception {
     MethodMetadata md =
@@ -326,5 +234,109 @@ public class DefaultContractTest {
             CustomExpander.class.getDeclaredMethod("date", Date.class));
 
     assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
+  }
+
+  interface Methods {
+
+    @RequestLine("POST /")
+    void post();
+
+    @RequestLine("PUT /")
+    void put();
+
+    @RequestLine("GET /")
+    void get();
+
+    @RequestLine("DELETE /")
+    void delete();
+  }
+
+  interface BodyParams {
+
+    @RequestLine("POST")
+    Response post(List<String> body);
+
+    @RequestLine("POST")
+    Response tooMany(List<String> body, List<String> body2);
+  }
+
+  interface CustomMethod {
+
+    @RequestLine("PATCH")
+    Response patch();
+  }
+
+  interface WithQueryParamsInPath {
+
+    @RequestLine("GET /")
+    Response none();
+
+    @RequestLine("GET /?Action=GetUser")
+    Response one();
+
+    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
+    Response two();
+
+    @RequestLine("GET /?Action=GetUser&Version=2010-05-08&limit=1")
+    Response three();
+
+    @RequestLine("GET /?flag&Action=GetUser&Version=2010-05-08")
+    Response empty();
+  }
+
+  interface BodyWithoutParameters {
+
+    @RequestLine("POST /")
+    @Headers("Content-Type: application/xml")
+    @Body("<v01:getAccountsListOfUser/>")
+    Response post();
+  }
+
+  interface WithURIParam {
+
+    @RequestLine("GET /{1}/{2}")
+    Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
+  }
+
+  interface WithPathAndQueryParams {
+
+    @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
+    Response recordsByNameAndType(
+        @Param("domainId") int id,
+        @Param("name") String nameFilter,
+        @Param("type") String typeFilter);
+  }
+
+  interface FormParams {
+
+    @RequestLine("POST /")
+    @Body(
+        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
+            + " \"{password}\"%7D")
+    void login(
+        @Param("customer_name") String customer,
+        @Param("user_name") String user,
+        @Param("password") String password);
+  }
+
+  interface HeaderParams {
+
+    @RequestLine("POST /")
+    @Headers({"Auth-Token: {Auth-Token}", "Auth-Token: Foo"})
+    void logout(@Param("Auth-Token") String token);
+  }
+
+  interface CustomExpander {
+
+    @RequestLine("POST /?date={date}")
+    void date(@Param(value = "date", expander = DateToMillis.class) Date date);
+  }
+
+  class DateToMillis implements Param.Expander {
+
+    @Override
+    public String expand(Object value) {
+      return String.valueOf(((Date) value).getTime());
+    }
   }
 }

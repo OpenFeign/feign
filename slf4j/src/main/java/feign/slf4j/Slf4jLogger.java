@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * feign.Logger}.
  */
 public class Slf4jLogger extends feign.Logger {
+
   private final Logger logger;
 
   public Slf4jLogger() {

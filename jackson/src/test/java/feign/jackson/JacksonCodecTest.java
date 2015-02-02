@@ -29,6 +29,18 @@ import org.junit.Test;
 
 public class JacksonCodecTest {
 
+  private String zonesJson =
+      "" //
+          + "[\n" //
+          + "  {\n" //
+          + "    \"name\": \"denominator.io.\"\n" //
+          + "  },\n" //
+          + "  {\n" //
+          + "    \"name\": \"denominator.io.\",\n" //
+          + "    \"id\": \"ABCD\"\n" //
+          + "  }\n" //
+          + "]\n";
+
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
     Map<String, Object> map = new LinkedHashMap<String, Object>();
@@ -63,25 +75,6 @@ public class JacksonCodecTest {
                 + "}");
   }
 
-  static class Zone extends LinkedHashMap<String, Object> {
-    Zone() {
-      // for reflective instantiation.
-    }
-
-    Zone(String name) {
-      this(name, null);
-    }
-
-    Zone(String name, String id) {
-      put("name", name);
-      if (id != null) {
-        put("id", id);
-      }
-    }
-
-    private static final long serialVersionUID = 1L;
-  }
-
   @Test
   public void decodes() throws Exception {
     List<Zone> zones = new LinkedList<Zone>();
@@ -103,38 +96,6 @@ public class JacksonCodecTest {
     assertNull(new JacksonDecoder().decode(response, String.class));
   }
 
-  private String zonesJson =
-      "" //
-          + "[\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\"\n" //
-          + "  },\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\",\n" //
-          + "    \"id\": \"ABCD\"\n" //
-          + "  }\n" //
-          + "]\n";
-
-  static class ZoneDeserializer extends StdDeserializer<Zone> {
-    public ZoneDeserializer() {
-      super(Zone.class);
-    }
-
-    @Override
-    public Zone deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-      Zone zone = new Zone();
-      jp.nextToken();
-      while (jp.nextToken() != JsonToken.END_OBJECT) {
-        String name = jp.getCurrentName();
-        String value = jp.getValueAsString();
-        if (value != null) {
-          zone.put(name, value.toUpperCase());
-        }
-      }
-      return zone;
-    }
-  }
-
   @Test
   public void customDecoder() throws Exception {
     JacksonDecoder decoder =
@@ -150,23 +111,6 @@ public class JacksonCodecTest {
         Response.create(
             200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
     assertEquals(zones, decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()));
-  }
-
-  static class ZoneSerializer extends StdSerializer<Zone> {
-    public ZoneSerializer() {
-      super(Zone.class);
-    }
-
-    @Override
-    public void serialize(Zone value, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException {
-      jgen.writeStartObject();
-      for (Map.Entry<String, Object> entry : value.entrySet()) {
-        jgen.writeFieldName(entry.getKey());
-        jgen.writeString(entry.getValue().toString().toUpperCase());
-      }
-      jgen.writeEndObject();
-    }
   }
 
   @Test
@@ -192,5 +136,64 @@ public class JacksonCodecTest {
                 + "  \"name\" : \"DENOMINATOR.IO.\",\n"
                 + "  \"id\" : \"ABCD\"\n"
                 + "} ]");
+  }
+
+  static class Zone extends LinkedHashMap<String, Object> {
+
+    private static final long serialVersionUID = 1L;
+
+    Zone() {
+      // for reflective instantiation.
+    }
+
+    Zone(String name) {
+      this(name, null);
+    }
+
+    Zone(String name, String id) {
+      put("name", name);
+      if (id != null) {
+        put("id", id);
+      }
+    }
+  }
+
+  static class ZoneDeserializer extends StdDeserializer<Zone> {
+
+    public ZoneDeserializer() {
+      super(Zone.class);
+    }
+
+    @Override
+    public Zone deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+      Zone zone = new Zone();
+      jp.nextToken();
+      while (jp.nextToken() != JsonToken.END_OBJECT) {
+        String name = jp.getCurrentName();
+        String value = jp.getValueAsString();
+        if (value != null) {
+          zone.put(name, value.toUpperCase());
+        }
+      }
+      return zone;
+    }
+  }
+
+  static class ZoneSerializer extends StdSerializer<Zone> {
+
+    public ZoneSerializer() {
+      super(Zone.class);
+    }
+
+    @Override
+    public void serialize(Zone value, JsonGenerator jgen, SerializerProvider provider)
+        throws IOException {
+      jgen.writeStartObject();
+      for (Map.Entry<String, Object> entry : value.entrySet()) {
+        jgen.writeFieldName(entry.getKey());
+        jgen.writeString(entry.getValue().toString().toUpperCase());
+      }
+      jgen.writeEndObject();
+    }
   }
 }

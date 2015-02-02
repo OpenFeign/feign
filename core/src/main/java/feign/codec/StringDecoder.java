@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 
 public class StringDecoder implements Decoder {
+
   @Override
   public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
