@@ -15,19 +15,16 @@
  */
 package feign.sax.examples;
 
+import org.xml.sax.helpers.DefaultHandler;
+
 import feign.Feign;
 import feign.Request;
 import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Target;
 import feign.sax.SAXDecoder;
-import org.xml.sax.helpers.DefaultHandler;
 
 public class IAMExample {
-
-  interface IAM {
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08") Long userId();
-  }
 
   public static void main(String... args) {
     IAM iam = Feign.builder()//
@@ -36,31 +33,42 @@ public class IAMExample {
     System.out.println(iam.userId());
   }
 
+  interface IAM {
+
+    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
+    Long userId();
+  }
+
   static class IAMTarget extends AWSSignatureVersion4 implements Target<IAM> {
-
-    @Override public Class<IAM> type() {
-      return IAM.class;
-    }
-
-    @Override public String name() {
-      return "iam";
-    }
-
-    @Override public String url() {
-      return "https://iam.amazonaws.com";
-    }
 
     private IAMTarget(String accessKey, String secretKey) {
       super(accessKey, secretKey);
     }
 
-    @Override public Request apply(RequestTemplate in) {
+    @Override
+    public Class<IAM> type() {
+      return IAM.class;
+    }
+
+    @Override
+    public String name() {
+      return "iam";
+    }
+
+    @Override
+    public String url() {
+      return "https://iam.amazonaws.com";
+    }
+
+    @Override
+    public Request apply(RequestTemplate in) {
       in.insert(0, url());
       return super.apply(in);
     }
   }
 
-  static class UserIdHandler extends DefaultHandler implements SAXDecoder.ContentHandlerWithResult<Long> {
+  static class UserIdHandler extends DefaultHandler
+      implements SAXDecoder.ContentHandlerWithResult<Long> {
 
     private StringBuilder currentText = new StringBuilder();
 

@@ -15,52 +15,54 @@
  */
 package feign.jaxb;
 
+import javax.inject.Singleton;
+
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 
-import javax.inject.Singleton;
-
 /**
- * Provides an Encoder and Decoder for handling XML responses with JAXB annotated classes.
- * <p>
- * <br>
- * Here is an example of configuring a custom JAXBContextFactory:
- * </p>
+ * Provides an Encoder and Decoder for handling XML responses with JAXB annotated classes. <p> <br>
+ * Here is an example of configuring a custom JAXBContextFactory: </p>
  * <pre>
  *    JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *               .withMarshallerJAXBEncoding("UTF-8")
  *               .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
  *               .build();
  *
- *    Response response = Feign.create(Response.class, "http://apihost", new JAXBModule(jaxbFactory));
+ *    Response response = Feign.create(Response.class, "http://apihost", new
+ * JAXBModule(jaxbFactory));
  * </pre>
- * <p>
- * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
- * </p>
+ * <p> The JAXBContextFactory should be reused across requests as it caches the created JAXB
+ * contexts. </p>
  */
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class JAXBModule {
-    private final JAXBContextFactory jaxbContextFactory;
 
-    public JAXBModule() {
-        this.jaxbContextFactory = new JAXBContextFactory.Builder().build();
-    }
+  private final JAXBContextFactory jaxbContextFactory;
 
-    public JAXBModule(JAXBContextFactory jaxbContextFactory) {
-        this.jaxbContextFactory = jaxbContextFactory;
-    }
+  public JAXBModule() {
+    this.jaxbContextFactory = new JAXBContextFactory.Builder().build();
+  }
 
-    @Provides Encoder encoder(JAXBEncoder jaxbEncoder) {
-        return jaxbEncoder;
-    }
+  public JAXBModule(JAXBContextFactory jaxbContextFactory) {
+    this.jaxbContextFactory = jaxbContextFactory;
+  }
 
-    @Provides Decoder decoder(JAXBDecoder jaxbDecoder) {
-        return jaxbDecoder;
-    }
+  @Provides
+  Encoder encoder(JAXBEncoder jaxbEncoder) {
+    return jaxbEncoder;
+  }
 
-    @Provides @Singleton JAXBContextFactory jaxbContextFactory() {
-        return this.jaxbContextFactory;
-    }
+  @Provides
+  Decoder decoder(JAXBDecoder jaxbDecoder) {
+    return jaxbDecoder;
+  }
+
+  @Provides
+  @Singleton
+  JAXBContextFactory jaxbContextFactory() {
+    return this.jaxbContextFactory;
+  }
 }

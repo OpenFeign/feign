@@ -15,23 +15,24 @@
  */
 package feign.auth;
 
+import java.nio.charset.Charset;
+
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
-import java.nio.charset.Charset;
-
-import static feign.Util.checkNotNull;
 import static feign.Util.ISO_8859_1;
+import static feign.Util.checkNotNull;
 
 /**
  * An interceptor that adds the request header needed to use HTTP basic authentication.
  */
 public class BasicAuthRequestInterceptor implements RequestInterceptor {
+
   private final String headerValue;
 
   /**
-   * Creates an interceptor that authenticates all requests with the specified username and password encoded using
-   * ISO-8859-1.
+   * Creates an interceptor that authenticates all requests with the specified username and password
+   * encoded using ISO-8859-1.
    *
    * @param username the username to use for authentication
    * @param password the password to use for authentication
@@ -41,21 +42,17 @@ public class BasicAuthRequestInterceptor implements RequestInterceptor {
   }
 
   /**
-   * Creates an interceptor that authenticates all requests with the specified username and password encoded using
-   * the specified charset.
+   * Creates an interceptor that authenticates all requests with the specified username and password
+   * encoded using the specified charset.
    *
    * @param username the username to use for authentication
    * @param password the password to use for authentication
-   * @param charset the charset to use when encoding the credentials
+   * @param charset  the charset to use when encoding the credentials
    */
   public BasicAuthRequestInterceptor(String username, String password, Charset charset) {
     checkNotNull(username, "username");
     checkNotNull(password, "password");
     this.headerValue = "Basic " + base64Encode((username + ":" + password).getBytes(charset));
-  }
-
-  @Override public void apply(RequestTemplate template) {
-    template.header("Authorization", headerValue);
   }
 
   /*
@@ -64,6 +61,11 @@ public class BasicAuthRequestInterceptor implements RequestInterceptor {
    */
   private static String base64Encode(byte[] bytes) {
     return Base64.encode(bytes);
+  }
+
+  @Override
+  public void apply(RequestTemplate template) {
+    template.header("Authorization", headerValue);
   }
 }
 

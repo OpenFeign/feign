@@ -17,16 +17,19 @@ package feign.okhttp;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
 import feign.RequestLine;
 import feign.Response;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -34,17 +37,14 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class OkHttpClientTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"}) Response post(String body);
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public final MockWebServerRule server = new MockWebServerRule();
 
-    @RequestLine("PATCH /") @Headers("Accept: text/plain") String patch();
-  }
-
-  @Test public void parsesRequestAndResponse() throws IOException, InterruptedException {
+  @Test
+  public void parsesRequestAndResponse() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
     TestInterface api = Feign.builder()
@@ -58,7 +58,8 @@ public class OkHttpClientTest {
     assertThat(response.headers())
         .containsEntry("Content-Length", asList("3"))
         .containsEntry("Foo", asList("Bar"));
-    assertThat(response.body().asInputStream()).hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+    assertThat(response.body().asInputStream())
+        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
     assertThat(server.takeRequest()).hasMethod("POST")
         .hasPath("/?foo=bar&foo=baz&qux=")
@@ -66,7 +67,8 @@ public class OkHttpClientTest {
         .hasBody("foo");
   }
 
-  @Test public void parsesErrorResponse() throws IOException, InterruptedException {
+  @Test
+  public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
 
@@ -79,7 +81,8 @@ public class OkHttpClientTest {
     api.post("foo");
   }
 
-  @Test public void patch() throws IOException, InterruptedException {
+  @Test
+  public void patch() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse());
 
@@ -93,5 +96,16 @@ public class OkHttpClientTest {
         .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    Response post(String body);
+
+    @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
+    String patch();
   }
 }

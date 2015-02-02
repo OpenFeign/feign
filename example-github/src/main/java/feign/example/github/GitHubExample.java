@@ -15,27 +15,18 @@
  */
 package feign.example.github;
 
+import java.util.List;
+
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.gson.GsonDecoder;
-import java.util.List;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
-
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
 
   public static void main(String... args) throws InterruptedException {
     GitHub github = Feign.builder()
@@ -49,5 +40,17 @@ public class GitHubExample {
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
+  }
+
+  interface GitHub {
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
   }
 }

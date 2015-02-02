@@ -18,6 +18,20 @@ package feign.client;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.ProtocolException;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+
 import dagger.Lazy;
 import feign.Client;
 import feign.Feign;
@@ -25,16 +39,6 @@ import feign.FeignException;
 import feign.Headers;
 import feign.RequestLine;
 import feign.Response;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.ProtocolException;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -43,20 +47,46 @@ import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
 public class DefaultClientTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"}) Response post(String body);
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public final MockWebServerRule server = new MockWebServerRule();
+  Client trustSSLSockets = new Client.Default(new Lazy<SSLSocketFactory>() {
+    @Override
+    public SSLSocketFactory get() {
+      return TrustingSSLSocketFactory.get();
+    }
+  }, new Lazy<HostnameVerifier>() {
+    @Override
+    public HostnameVerifier get() {
+      return HttpsURLConnection.getDefaultHostnameVerifier();
+    }
+  });
+  Client disableHostnameVerification = new Client.Default(new Lazy<SSLSocketFactory>() {
+    @Override
+    public SSLSocketFactory get() {
+      return TrustingSSLSocketFactory.get();
+    }
+  }, new Lazy<HostnameVerifier>() {
+    @Override
+    public HostnameVerifier get() {
+      return new HostnameVerifier() {
+        @Override
+        public boolean verify(String s, SSLSession sslSession) {
+          return true;
+        }
+      };
+    }
+  });
 
-    @RequestLine("PATCH /") @Headers("Accept: text/plain") String patch();
-  }
-
-  @Test public void parsesRequestAndResponse() throws IOException, InterruptedException {
+  @Test
+  public void parsesRequestAndResponse() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
-    TestInterface api = Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface
+        api =
+        Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.post("foo");
 
@@ -65,7 +95,8 @@ public class DefaultClientTest {
     assertThat(response.headers())
         .containsEntry("Content-Length", asList("3"))
         .containsEntry("Foo", asList("Bar"));
-    assertThat(response.body().asInputStream()).hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+    assertThat(response.body().asInputStream())
+        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
     assertThat(server.takeRequest()).hasMethod("POST")
         .hasPath("/?foo=bar&foo=baz&qux=")
@@ -73,42 +104,39 @@ public class DefaultClientTest {
         .hasBody("foo");
   }
 
-  @Test public void parsesErrorResponse() throws IOException, InterruptedException {
+  @Test
+  public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
-    TestInterface api = Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface
+        api =
+        Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.post("foo");
   }
 
   /**
-   * We currently don't include the <a href="http://java.net/jira/browse/JERSEY-639">60-line workaround</a>
-   * jersey uses to overcome the lack of support for PATCH. For now, prefer okhttp.
+   * We currently don't include the <a href="http://java.net/jira/browse/JERSEY-639">60-line
+   * workaround</a> jersey uses to overcome the lack of support for PATCH. For now, prefer okhttp.
    *
    * @see java.net.HttpURLConnection#setRequestMethod
    */
-  @Test public void patchUnsupported() throws IOException, InterruptedException {
+  @Test
+  public void patchUnsupported() throws IOException, InterruptedException {
     thrown.expectCause(isA(ProtocolException.class));
 
-    TestInterface api = Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface
+        api =
+        Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.patch();
   }
 
-  Client trustSSLSockets = new Client.Default(new Lazy<SSLSocketFactory>() {
-    @Override public SSLSocketFactory get() {
-      return TrustingSSLSocketFactory.get();
-    }
-  }, new Lazy<HostnameVerifier>() {
-    @Override public HostnameVerifier get() {
-      return HttpsURLConnection.getDefaultHostnameVerifier();
-    }
-  });
-  
-  @Test public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
+  @Test
+  public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
     server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
@@ -119,22 +147,8 @@ public class DefaultClientTest {
     api.post("foo");
   }
 
-  Client disableHostnameVerification = new Client.Default(new Lazy<SSLSocketFactory>() {
-    @Override public SSLSocketFactory get() {
-      return TrustingSSLSocketFactory.get();
-    }
-  }, new Lazy<HostnameVerifier>() {
-    @Override public HostnameVerifier get() {
-      return new HostnameVerifier() {
-        @Override
-        public boolean verify(String s, SSLSession sslSession) {
-          return true;
-        }
-      };
-    }
-  });
-
-  @Test public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
+  @Test
+  public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
     server.get().useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
@@ -145,7 +159,8 @@ public class DefaultClientTest {
     api.post("foo");
   }
 
-  @Test public void retriesFailedHandshake() throws IOException, InterruptedException {
+  @Test
+  public void retriesFailedHandshake() throws IOException, InterruptedException {
     server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
@@ -156,5 +171,16 @@ public class DefaultClientTest {
 
     api.post("foo");
     assertEquals(2, server.getRequestCount());
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    Response post(String body);
+
+    @RequestLine("PATCH /")
+    @Headers("Accept: text/plain")
+    String patch();
   }
 }

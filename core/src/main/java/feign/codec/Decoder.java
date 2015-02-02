@@ -15,20 +15,17 @@
  */
 package feign.codec;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
+
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-
 /**
- * Decodes an HTTP response into a single object of the given {@code type}. Invoked when
- * {@link Response#status()} is in the 2xx range and the return type is neither {@code void} nor {@code Response}.
- * <p/>
- * <p/>
- * Example Implementation:<br>
- * <p/>
+ * Decodes an HTTP response into a single object of the given {@code type}. Invoked when {@link
+ * Response#status()} is in the 2xx range and the return type is neither {@code void} nor {@code
+ * Response}. <p/> <p/> Example Implementation:<br> <p/>
  * <pre>
  * public class GsonDecoder implements Decoder {
  *   private final Gson gson = new Gson();
@@ -47,25 +44,22 @@ import java.lang.reflect.Type;
  *   }
  * }
  * </pre>
- * <br/>
- * <h3>Implementation Note</h3>
- * The {@code type} parameter will correspond to the
- * {@link java.lang.reflect.Method#getGenericReturnType() generic return type}
- * of an {@link feign.Target#type() interface} processed by
- * {@link feign.Feign#newInstance(feign.Target)}.  When writing your
- * implementation of Decoder, ensure you also test parameterized types such as
- * {@code List<Foo>}.
- *
+ * <br/> <h3>Implementation Note</h3> The {@code type} parameter will correspond to the {@link
+ * java.lang.reflect.Method#getGenericReturnType() generic return type} of an {@link
+ * feign.Target#type() interface} processed by {@link feign.Feign#newInstance(feign.Target)}.  When
+ * writing your implementation of Decoder, ensure you also test parameterized types such as {@code
+ * List<Foo>}.
  */
 public interface Decoder {
+
   /**
-   * Decodes an http response into an object corresponding to its
-   * {@link java.lang.reflect.Method#getGenericReturnType() generic return type}.
-   * If you need to wrap exceptions, please do so via {@link DecodeException}.
+   * Decodes an http response into an object corresponding to its {@link
+   * java.lang.reflect.Method#getGenericReturnType() generic return type}. If you need to wrap
+   * exceptions, please do so via {@link DecodeException}.
    *
    * @param response the response to decode
-   * @param type     {@link java.lang.reflect.Method#getGenericReturnType() generic return type}
-   *                 of the method corresponding to this {@code response}.
+   * @param type     {@link java.lang.reflect.Method#getGenericReturnType() generic return type} of
+   *                 the method corresponding to this {@code response}.
    * @return instance of {@code type}
    * @throws IOException     will be propagated safely to the caller.
    * @throws DecodeException when decoding failed due to a checked exception besides IOException.
@@ -77,6 +71,7 @@ public interface Decoder {
    * Default implementation of {@code Decoder}.
    */
   public class Default extends StringDecoder {
+
     @Override
     public Object decode(Response response, Type type) throws IOException {
       Response.Body body = response.body();

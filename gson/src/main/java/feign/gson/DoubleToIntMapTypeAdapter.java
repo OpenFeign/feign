@@ -33,16 +33,22 @@ import java.util.Map;
  * Deals with scenario where Gson Object type treats all numbers as doubles.
  */
 public class DoubleToIntMapTypeAdapter extends TypeAdapter<Map<String, Object>> {
-  final static TypeToken<Map<String, Object>> token = new TypeToken<Map<String, Object>>() {};
 
-  private final TypeAdapter<Map<String, Object>> delegate = new MapTypeAdapterFactory(new ConstructorConstructor(
-      Collections.<Type, InstanceCreator<?>>emptyMap()), false).create(new Gson(), token);
+  final static TypeToken<Map<String, Object>> token = new TypeToken<Map<String, Object>>() {
+  };
 
-  @Override public void write(JsonWriter out, Map<String, Object> value) throws IOException {
+  private final TypeAdapter<Map<String, Object>>
+      delegate =
+      new MapTypeAdapterFactory(new ConstructorConstructor(
+          Collections.<Type, InstanceCreator<?>>emptyMap()), false).create(new Gson(), token);
+
+  @Override
+  public void write(JsonWriter out, Map<String, Object> value) throws IOException {
     delegate.write(out, value);
   }
 
-  @Override public Map<String, Object> read(JsonReader in) throws IOException {
+  @Override
+  public Map<String, Object> read(JsonReader in) throws IOException {
     Map<String, Object> map = delegate.read(in);
     for (Map.Entry<String, Object> entry : map.entrySet()) {
       if (entry.getValue() instanceof Double) {

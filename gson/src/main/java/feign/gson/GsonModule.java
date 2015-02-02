@@ -17,26 +17,22 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
+
+import java.util.Collections;
+import java.util.Set;
+
+import javax.inject.Singleton;
+
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import java.util.Collections;
-import java.util.Set;
-import javax.inject.Singleton;
 
 /**
- * <h3>Custom type adapters</h3>
- * <br>
- * In order to specify custom json parsing,
- * {@code Gson} supports {@link TypeAdapter type adapters}. This module adds one
- * to read numbers in a {@code Map<String, Object>} as Integers. You can
- * customize further by adding additional set bindings to the raw type
- * {@code TypeAdapter}.
- * <p/>
- * <br>
- * Here's an example of adding a custom json type adapter.
- * <p/>
+ * <h3>Custom type adapters</h3> <br> In order to specify custom json parsing, {@code Gson} supports
+ * {@link TypeAdapter type adapters}. This module adds one to read numbers in a {@code Map<String,
+ * Object>} as Integers. You can customize further by adding additional set bindings to the raw type
+ * {@code TypeAdapter}. <p/> <br> Here's an example of adding a custom json type adapter. <p/>
  * <pre>
  * &#064;Provides(type = Provides.Type.SET)
  * TypeAdapter upperZone() {
@@ -64,19 +60,24 @@ import javax.inject.Singleton;
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class GsonModule {
 
-  @Provides Encoder encoder(Gson gson) {
+  @Provides
+  Encoder encoder(Gson gson) {
     return new GsonEncoder(gson);
   }
 
-  @Provides Decoder decoder(Gson gson) {
+  @Provides
+  Decoder decoder(Gson gson) {
     return new GsonDecoder(gson);
   }
 
-  @Provides @Singleton Gson gson(Set<TypeAdapter> adapters) {
+  @Provides
+  @Singleton
+  Gson gson(Set<TypeAdapter> adapters) {
     return GsonFactory.create((Iterable) adapters);
   }
 
-  @Provides(type = Provides.Type.SET_VALUES) Set<TypeAdapter> noDefaultTypeAdapters() {
+  @Provides(type = Provides.Type.SET_VALUES)
+  Set<TypeAdapter> noDefaultTypeAdapters() {
     return Collections.emptySet();
   }
 }

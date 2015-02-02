@@ -15,16 +15,6 @@
  */
 package feign;
 
-import dagger.Provides;
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Param.Expander;
-import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-
-import javax.inject.Inject;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -36,6 +26,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import dagger.Provides;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Param.Expander;
+import feign.Request.Options;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 
@@ -45,25 +46,30 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
 
-  @Inject ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
+  @Inject
+  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
   }
 
   /**
-   * creates an api binding to the {@code target}. As this invokes reflection,
-   * care should be taken to cache the result.
+   * creates an api binding to the {@code target}. As this invokes reflection, care should be taken
+   * to cache the result.
    */
-  @SuppressWarnings("unchecked") @Override public <T> T newInstance(Target<T> target) {
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
     for (Method method : target.type().getDeclaredMethods()) {
-      if (method.getDeclaringClass() == Object.class)
+      if (method.getDeclaringClass() == Object.class) {
         continue;
+      }
       methodToHandler.put(method, nameToHandler.get(Feign.configKey(method)));
     }
     InvocationHandler handler = factory.create(target, methodToHandler);
-    return (T) Proxy.newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
+    return (T) Proxy
+        .newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
   }
 
   static class FeignInvocationHandler implements InvocationHandler {
@@ -76,10 +82,13 @@ public class ReflectiveFeign extends Feign {
       this.dispatch = checkNotNull(dispatch, "dispatch for %s", target);
     }
 
-    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if ("equals".equals(method.getName())) {
         try {
-          Object otherHandler = args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+          Object
+              otherHandler =
+              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
           return equals(otherHandler);
         } catch (IllegalArgumentException e) {
           return false;
@@ -92,7 +101,8 @@ public class ReflectiveFeign extends Feign {
       return dispatch.get(method).invoke(args);
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
       if (obj instanceof FeignInvocationHandler) {
         FeignInvocationHandler other = (FeignInvocationHandler) obj;
         return target.equals(other.target);
@@ -100,27 +110,34 @@ public class ReflectiveFeign extends Feign {
       return false;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       return target.hashCode();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return target.toString();
     }
   }
 
-  @dagger.Module(complete = false, injects = {Feign.class, SynchronousMethodHandler.Factory.class}, library = true)
+  @dagger.Module(complete = false, injects = {Feign.class,
+                                              SynchronousMethodHandler.Factory.class}, library = true)
   public static class Module {
-    @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> noRequestInterceptors() {
+
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<RequestInterceptor> noRequestInterceptors() {
       return Collections.emptySet();
     }
 
-    @Provides Feign provideFeign(ReflectiveFeign in) {
+    @Provides
+    Feign provideFeign(ReflectiveFeign in) {
       return in;
     }
   }
 
   static final class ParseHandlersByName {
+
     private final Contract contract;
     private final Options options;
     private final Encoder encoder;
@@ -129,8 +146,9 @@ public class ReflectiveFeign extends Feign {
     private final SynchronousMethodHandler.Factory factory;
 
     @SuppressWarnings("unchecked")
-    @Inject ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                                ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
+    @Inject
+    ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
+                        ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -151,22 +169,28 @@ public class ReflectiveFeign extends Feign {
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
-        result.put(md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+        result.put(md.configKey(),
+                   factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
       }
       return result;
     }
   }
 
   private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
+
     protected final MethodMetadata metadata;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
-      if (metadata.indexToExpanderClass().isEmpty()) return;
-      for (Entry<Integer, Class<? extends Expander>> indexToExpanderClass : metadata.indexToExpanderClass().entrySet()) {
+      if (metadata.indexToExpanderClass().isEmpty()) {
+        return;
+      }
+      for (Entry<Integer, Class<? extends Expander>> indexToExpanderClass : metadata
+          .indexToExpanderClass().entrySet()) {
         try {
-          indexToExpander.put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
+          indexToExpander
+              .put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
         } catch (InstantiationException e) {
           throw new IllegalStateException(e);
         } catch (IllegalAccessException e) {
@@ -175,7 +199,8 @@ public class ReflectiveFeign extends Feign {
       }
     }
 
-    @Override public RequestTemplate create(Object[] argv) {
+    @Override
+    public RequestTemplate create(Object[] argv) {
       RequestTemplate mutable = new RequestTemplate(metadata.template());
       if (metadata.urlIndex() != null) {
         int urlIndex = metadata.urlIndex();
@@ -190,19 +215,22 @@ public class ReflectiveFeign extends Feign {
           if (indexToExpander.containsKey(i)) {
             value = indexToExpander.get(i).expand(value);
           }
-          for (String name : entry.getValue())
+          for (String name : entry.getValue()) {
             varBuilder.put(name, value);
+          }
         }
       }
       return resolve(argv, mutable, varBuilder);
     }
 
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
+                                      Map<String, Object> variables) {
       return mutable.resolve(variables);
     }
   }
 
   private static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
@@ -211,11 +239,13 @@ public class ReflectiveFeign extends Feign {
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
+                                      Map<String, Object> variables) {
       Map<String, Object> formVariables = new LinkedHashMap<String, Object>();
       for (Entry<String, Object> entry : variables.entrySet()) {
-        if (metadata.formParams().contains(entry.getKey()))
+        if (metadata.formParams().contains(entry.getKey())) {
           formVariables.put(entry.getKey(), entry.getValue());
+        }
       }
       try {
         encoder.encode(formVariables, mutable);
@@ -229,6 +259,7 @@ public class ReflectiveFeign extends Feign {
   }
 
   private static class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
@@ -237,7 +268,8 @@ public class ReflectiveFeign extends Feign {
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
+                                      Map<String, Object> variables) {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       try {

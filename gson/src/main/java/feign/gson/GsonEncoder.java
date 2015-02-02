@@ -17,11 +17,14 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
-import feign.RequestTemplate;
-import feign.codec.Encoder;
+
 import java.util.Collections;
 
+import feign.RequestTemplate;
+import feign.codec.Encoder;
+
 public class GsonEncoder implements Encoder {
+
   private final Gson gson;
 
   public GsonEncoder(Iterable<TypeAdapter<?>> adapters) {
@@ -36,7 +39,8 @@ public class GsonEncoder implements Encoder {
     this.gson = gson;
   }
 
-  @Override public void encode(Object object, RequestTemplate template) {
+  @Override
+  public void encode(Object object, RequestTemplate template) {
     template.body(gson.toJson(object));
   }
 }

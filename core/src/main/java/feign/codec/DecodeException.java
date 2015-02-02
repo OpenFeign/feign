@@ -20,11 +20,13 @@ import feign.FeignException;
 import static feign.Util.checkNotNull;
 
 /**
- * Similar to {@code javax.websocket.DecodeException}, raised when a problem
- * occurs decoding a message.  Note that {@code DecodeException} is not an
- * {@code IOException}, nor does it have one set as its cause.
+ * Similar to {@code javax.websocket.DecodeException}, raised when a problem occurs decoding a
+ * message.  Note that {@code DecodeException} is not an {@code IOException}, nor does it have one
+ * set as its cause.
  */
 public class DecodeException extends FeignException {
+
+  private static final long serialVersionUID = 1L;
 
   /**
    * @param message the reason for the failure.
@@ -40,6 +42,4 @@ public class DecodeException extends FeignException {
   public DecodeException(String message, Throwable cause) {
     super(checkNotNull(message, "message"), checkNotNull(cause, "cause"));
   }
-
-  private static final long serialVersionUID = 1L;
 }

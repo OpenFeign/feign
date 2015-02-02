@@ -17,36 +17,48 @@ package feign.ribbon;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
-import feign.Feign;
-import feign.RequestLine;
-import java.io.IOException;
-import java.net.URL;
+
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URL;
+
+import feign.Feign;
+import feign.RequestLine;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 public class LoadBalancingTargetTest {
-  @Rule public final MockWebServerRule server1 = new MockWebServerRule();
-  @Rule public final MockWebServerRule server2 = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /") void post();
+  @Rule
+  public final MockWebServerRule server1 = new MockWebServerRule();
+  @Rule
+  public final MockWebServerRule server2 = new MockWebServerRule();
+
+  static String hostAndPort(URL url) {
+    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
+    return "localhost:" + url.getPort();
   }
 
-  @Test public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  @Test
+  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
     server1.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
     server2.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
 
-    getConfigInstance().setProperty(serverListKey, hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
+    getConfigInstance().setProperty(serverListKey,
+                                    hostAndPort(server1.getUrl("")) + "," + hostAndPort(
+                                        server2.getUrl("")));
 
     try {
-      LoadBalancingTarget<TestInterface> target = LoadBalancingTarget.create(TestInterface.class, "http://" + name);
+      LoadBalancingTarget<TestInterface>
+          target =
+          LoadBalancingTarget.create(TestInterface.class, "http://" + name);
       TestInterface api = Feign.builder().target(target);
 
       api.post();
@@ -61,8 +73,9 @@ public class LoadBalancingTargetTest {
     }
   }
 
-  static String hostAndPort(URL url) {
-    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
-    return "localhost:" + url.getPort();
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    void post();
   }
 }

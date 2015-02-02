@@ -20,12 +20,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
+import java.util.Collections;
+
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import java.util.Collections;
 
 public class JacksonEncoder implements Encoder {
+
   private final ObjectMapper mapper;
 
   public JacksonEncoder() {
@@ -34,16 +37,17 @@ public class JacksonEncoder implements Encoder {
 
   public JacksonEncoder(Iterable<Module> modules) {
     this(new ObjectMapper()
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        .configure(SerializationFeature.INDENT_OUTPUT, true)
-        .registerModules(modules));
+             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+             .configure(SerializationFeature.INDENT_OUTPUT, true)
+             .registerModules(modules));
   }
 
   public JacksonEncoder(ObjectMapper mapper) {
     this.mapper = mapper;
   }
 
-  @Override public void encode(Object object, RequestTemplate template) {
+  @Override
+  public void encode(Object object, RequestTemplate template) {
     try {
       template.body(mapper.writeValueAsString(object));
     } catch (JsonProcessingException e) {

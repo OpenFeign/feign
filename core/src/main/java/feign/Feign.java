@@ -16,6 +16,17 @@
 package feign;
 
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+
 import dagger.ObjectGraph;
 import dagger.Provides;
 import feign.Logger.NoOpLogger;
@@ -25,31 +36,12 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
-import javax.inject.Inject;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
- * Feign's purpose is to ease development against http apis that feign
- * restfulness.
- * <br>
- * In implementation, Feign is a {@link Feign#newInstance factory} for
- * generating {@link Target targeted} http apis.
+ * Feign's purpose is to ease development against http apis that feign restfulness. <br> In
+ * implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
+ * targeted} http apis.
  */
 public abstract class Feign {
-
-  /**
-   * Returns a new instance of an HTTP API, defined by annotations in the
-   * {@link Feign Contract}, for the specified {@code target}. You should
-   * cache this result.
-   */
-  public abstract <T> T newInstance(Target<T> target);
 
   public static Builder builder() {
     return new Builder();
@@ -60,128 +52,150 @@ public abstract class Feign {
   }
 
   /**
-   * Shortcut to {@link #newInstance(Target) create} a single {@code targeted}
-   * http api using {@link ReflectiveFeign reflection}.
+   * Shortcut to {@link #newInstance(Target) create} a single {@code targeted} http api using {@link
+   * ReflectiveFeign reflection}.
    */
   public static <T> T create(Target<T> target, Object... modules) {
     return create(modules).newInstance(target);
   }
 
   /**
-   * Returns a {@link ReflectiveFeign reflective} factory for generating
-   * {@link Target targeted} http apis.
+   * Returns a {@link ReflectiveFeign reflective} factory for generating {@link Target targeted}
+   * http apis.
    */
   public static Feign create(Object... modules) {
     return ObjectGraph.create(modulesForGraph(modules).toArray()).get(Feign.class);
   }
 
-
   /**
-   * Returns an {@link ObjectGraph Dagger ObjectGraph} that can inject a
-   * {@link ReflectiveFeign reflective} Feign.
+   * Returns an {@link ObjectGraph Dagger ObjectGraph} that can inject a {@link ReflectiveFeign
+   * reflective} Feign.
    */
   public static ObjectGraph createObjectGraph(Object... modules) {
     return ObjectGraph.create(modulesForGraph(modules).toArray());
   }
 
-  @SuppressWarnings("rawtypes")
-  // incomplete as missing Encoder/Decoder
-  @dagger.Module(injects = {Feign.class, Builder.class}, complete = false, includes = ReflectiveFeign.Module.class)
-  public static class Defaults {
-    @Provides Contract contract() {
-      return new Contract.Default();
-    }
-
-    @Provides Logger.Level logLevel() {
-      return Logger.Level.NONE;
-    }
-
-    @Provides Logger noOp() {
-      return new NoOpLogger();
-    }
-
-    @Provides Retryer retryer() {
-      return new Retryer.Default();
-    }
-
-    @Provides ErrorDecoder errorDecoder() {
-      return new ErrorDecoder.Default();
-    }
-
-    @Provides Options options() {
-      return new Options();
-    }
-
-    @Provides SSLSocketFactory sslSocketFactory() {
-      return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
-    }
-
-    @Provides HostnameVerifier hostnameVerifier() {
-      return HttpsURLConnection.getDefaultHostnameVerifier();
-    }
-
-    @Provides Client httpClient(Client.Default client) {
-      return client;
-    }
-
-    @Provides InvocationHandlerFactory invocationHandlerFactory() {
-      return new InvocationHandlerFactory.Default();
-    }
-  }
-
   /**
-   * <br>
-   * Configuration keys are formatted as unresolved <a href=
-   * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
-   * >see tags</a>.
-   * <br>
-   * For example.
-   * <ul>
-   * <li>{@code Route53}: would match a class such as
-   * {@code denominator.route53.Route53}
-   * <li>{@code Route53#list()}: would match a method such as
-   * {@code denominator.route53.Route53#list()}
-   * <li>{@code Route53#listAt(Marker)}: would match a method such as
-   * {@code denominator.route53.Route53#listAt(denominator.route53.Marker)}
-   * <li>{@code Route53#listByNameAndType(String, String)}: would match a
-   * method such as {@code denominator.route53.Route53#listAt(String, String)}
-   * </ul>
-   * <br>
-   * Note that there is no whitespace expected in a key!
+   * <br> Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
+   * >see tags</a>. <br> For example. <ul> <li>{@code Route53}: would match a class such as {@code
+   * denominator.route53.Route53} <li>{@code Route53#list()}: would match a method such as {@code
+   * denominator.route53.Route53#list()} <li>{@code Route53#listAt(Marker)}: would match a method
+   * such as {@code denominator.route53.Route53#listAt(denominator.route53.Marker)} <li>{@code
+   * Route53#listByNameAndType(String, String)}: would match a method such as {@code
+   * denominator.route53.Route53#listAt(String, String)} </ul> <br> Note that there is no whitespace
+   * expected in a key!
    */
   public static String configKey(Method method) {
     StringBuilder builder = new StringBuilder();
     builder.append(method.getDeclaringClass().getSimpleName());
     builder.append('#').append(method.getName()).append('(');
-    for (Class<?> param : method.getParameterTypes())
+    for (Class<?> param : method.getParameterTypes()) {
       builder.append(param.getSimpleName()).append(',');
-    if (method.getParameterTypes().length > 0)
+    }
+    if (method.getParameterTypes().length > 0) {
       builder.deleteCharAt(builder.length() - 1);
+    }
     return builder.append(')').toString();
   }
 
   private static List<Object> modulesForGraph(Object... modules) {
     List<Object> modulesForGraph = new ArrayList<Object>(2);
     modulesForGraph.add(new Defaults());
-    if (modules != null)
-      for (Object module : modules)
+    if (modules != null) {
+      for (Object module : modules) {
         modulesForGraph.add(module);
+      }
+    }
     return modulesForGraph;
+  }
+
+  /**
+   * Returns a new instance of an HTTP API, defined by annotations in the {@link Feign Contract},
+   * for the specified {@code target}. You should cache this result.
+   */
+  public abstract <T> T newInstance(Target<T> target);
+
+  @SuppressWarnings("rawtypes")
+  // incomplete as missing Encoder/Decoder
+  @dagger.Module(injects = {Feign.class,
+                            Builder.class}, complete = false, includes = ReflectiveFeign.Module.class)
+  public static class Defaults {
+
+    @Provides
+    Contract contract() {
+      return new Contract.Default();
+    }
+
+    @Provides
+    Logger.Level logLevel() {
+      return Logger.Level.NONE;
+    }
+
+    @Provides
+    Logger noOp() {
+      return new NoOpLogger();
+    }
+
+    @Provides
+    Retryer retryer() {
+      return new Retryer.Default();
+    }
+
+    @Provides
+    ErrorDecoder errorDecoder() {
+      return new ErrorDecoder.Default();
+    }
+
+    @Provides
+    Options options() {
+      return new Options();
+    }
+
+    @Provides
+    SSLSocketFactory sslSocketFactory() {
+      return SSLSocketFactory.class.cast(SSLSocketFactory.getDefault());
+    }
+
+    @Provides
+    HostnameVerifier hostnameVerifier() {
+      return HttpsURLConnection.getDefaultHostnameVerifier();
+    }
+
+    @Provides
+    Client httpClient(Client.Default client) {
+      return client;
+    }
+
+    @Provides
+    InvocationHandlerFactory invocationHandlerFactory() {
+      return new InvocationHandlerFactory.Default();
+    }
   }
 
   @dagger.Module(injects = Feign.class, includes = ReflectiveFeign.Module.class)
   public static class Builder {
-    private final Set<RequestInterceptor> requestInterceptors = new LinkedHashSet<RequestInterceptor>();
-    @Inject Logger.Level logLevel;
-    @Inject Contract contract;
-    @Inject Client client;
-    @Inject Retryer retryer;
-    @Inject Logger logger;
+
+    private final Set<RequestInterceptor>
+        requestInterceptors =
+        new LinkedHashSet<RequestInterceptor>();
+    @Inject
+    Logger.Level logLevel;
+    @Inject
+    Contract contract;
+    @Inject
+    Client client;
+    @Inject
+    Retryer retryer;
+    @Inject
+    Logger logger;
     Encoder encoder = new Encoder.Default();
     Decoder decoder = new Decoder.Default();
-    @Inject ErrorDecoder errorDecoder;
-    @Inject Options options;
-    @Inject InvocationHandlerFactory invocationHandlerFactory;
+    @Inject
+    ErrorDecoder errorDecoder;
+    @Inject
+    Options options;
+    @Inject
+    InvocationHandlerFactory invocationHandlerFactory;
 
     Builder() {
       ObjectGraph.create(new Defaults()).inject(this);
@@ -241,7 +255,8 @@ public abstract class Feign {
     }
 
     /**
-     * Sets the full set of request interceptors for the builder, overwriting any previous interceptors.
+     * Sets the full set of request interceptors for the builder, overwriting any previous
+     * interceptors.
      */
     public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
       this.requestInterceptors.clear();
@@ -251,7 +266,9 @@ public abstract class Feign {
       return this;
     }
 
-    /** Allows you to override how reflective dispatch works inside of Feign. */
+    /**
+     * Allows you to override how reflective dispatch works inside of Feign.
+     */
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       this.invocationHandlerFactory = invocationHandlerFactory;
       return this;
@@ -269,47 +286,58 @@ public abstract class Feign {
       return ObjectGraph.create(this).get(Feign.class);
     }
 
-    @Provides Logger.Level logLevel() {
+    @Provides
+    Logger.Level logLevel() {
       return logLevel;
     }
 
-    @Provides Contract contract() {
+    @Provides
+    Contract contract() {
       return contract;
     }
 
-    @Provides Client client() {
+    @Provides
+    Client client() {
       return client;
     }
 
-    @Provides Retryer retryer() {
+    @Provides
+    Retryer retryer() {
       return retryer;
     }
 
-    @Provides Logger logger() {
+    @Provides
+    Logger logger() {
       return logger;
     }
 
-    @Provides Encoder encoder() {
+    @Provides
+    Encoder encoder() {
       return encoder;
     }
 
-    @Provides Decoder decoder() {
+    @Provides
+    Decoder decoder() {
       return decoder;
     }
 
-    @Provides ErrorDecoder errorDecoder() {
+    @Provides
+    ErrorDecoder errorDecoder() {
       return errorDecoder;
     }
 
-    @Provides Options options() {
+    @Provides
+    Options options() {
       return options;
     }
 
-    @Provides(type = Provides.Type.SET_VALUES) Set<RequestInterceptor> requestInterceptors() {
+    @Provides(type = Provides.Type.SET_VALUES)
+    Set<RequestInterceptor> requestInterceptors() {
       return requestInterceptors;
     }
 
-    @Provides InvocationHandlerFactory invocationHandlerFactory() {
+    @Provides
+    InvocationHandlerFactory invocationHandlerFactory() {
       return invocationHandlerFactory;
     }
   }

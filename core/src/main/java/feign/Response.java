@@ -28,20 +28,32 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static feign.Util.UTF_8;
-import static feign.Util.decodeOrDefault;
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
+import static feign.Util.decodeOrDefault;
 import static feign.Util.valuesOrEmpty;
 
 /**
- * An immutable response to an http invocation which only returns string
- * content.
+ * An immutable response to an http invocation which only returns string content.
  */
 public final class Response {
+
   private final int status;
   private final String reason;
   private final Map<String, Collection<String>> headers;
   private final Body body;
+
+  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
+    checkState(status >= 200, "Invalid status code: %s", status);
+    this.status = status;
+    this.reason = checkNotNull(reason, "reason");
+    LinkedHashMap<String, Collection<String>>
+        copyOf =
+        new LinkedHashMap<String, Collection<String>>();
+    copyOf.putAll(checkNotNull(headers, "headers"));
+    this.headers = Collections.unmodifiableMap(copyOf);
+    this.body = body; //nullable
+  }
 
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 InputStream inputStream, Integer length) {
@@ -58,18 +70,9 @@ public final class Response {
     return new Response(status, reason, headers, ByteArrayBody.orNull(text, charset));
   }
 
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers, Body body) {
+  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+                                Body body) {
     return new Response(status, reason, headers, body);
-  }
-
-  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
-    checkState(status >= 200, "Invalid status code: %s", status);
-    this.status = status;
-    this.reason = checkNotNull(reason, "reason");
-    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers"));
-    this.headers = Collections.unmodifiableMap(copyOf);
-    this.body = body; //nullable
   }
 
   /**
@@ -96,14 +99,27 @@ public final class Response {
     return body;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
+    }
+    if (body != null) {
+      builder.append('\n').append(body);
+    }
+    return builder.toString();
+  }
+
   public interface Body extends Closeable {
 
     /**
-     * length in bytes, if known. Null if not.
-     * <br>
-     * <br><br><b>Note</b><br> This is an integer as most implementations cannot do
-     * bodies greater than 2GB. Moreover, the scope of this interface doesn't include
-     * large bodies.
+     * length in bytes, if known. Null if not. <br> <br><br><b>Note</b><br> This is an integer as
+     * most implementations cannot do bodies greater than 2GB. Moreover, the scope of this interface
+     * doesn't include large bodies.
      */
     Integer length();
 
@@ -124,6 +140,14 @@ public final class Response {
   }
 
   private static final class InputStreamBody implements Response.Body {
+
+    private final InputStream inputStream;
+    private final Integer length;
+    private InputStreamBody(InputStream inputStream, Integer length) {
+      this.inputStream = inputStream;
+      this.length = length;
+    }
+
     private static Body orNull(InputStream inputStream, Integer length) {
       if (inputStream == null) {
         return null;
@@ -131,36 +155,40 @@ public final class Response {
       return new InputStreamBody(inputStream, length);
     }
 
-    private final InputStream inputStream;
-    private final Integer length;
-
-    private InputStreamBody(InputStream inputStream, Integer length) {
-      this.inputStream = inputStream;
-      this.length = length;
-    }
-
-    @Override public Integer length() {
+    @Override
+    public Integer length() {
       return length;
     }
 
-    @Override public boolean isRepeatable() {
+    @Override
+    public boolean isRepeatable() {
       return false;
     }
 
-    @Override public InputStream asInputStream() throws IOException {
+    @Override
+    public InputStream asInputStream() throws IOException {
       return inputStream;
     }
 
-    @Override public Reader asReader() throws IOException {
+    @Override
+    public Reader asReader() throws IOException {
       return new InputStreamReader(inputStream, UTF_8);
     }
 
-    @Override public void close() throws IOException {
+    @Override
+    public void close() throws IOException {
       inputStream.close();
     }
   }
 
   private static final class ByteArrayBody implements Response.Body {
+
+    private final byte[] data;
+
+    public ByteArrayBody(byte[] data) {
+      this.data = data;
+    }
+
     private static Body orNull(byte[] data) {
       if (data == null) {
         return null;
@@ -176,47 +204,33 @@ public final class Response {
       return new ByteArrayBody(text.getBytes(charset));
     }
 
-    private final byte[] data;
-
-    public ByteArrayBody(byte[] data) {
-      this.data = data;
-    }
-
-    @Override public Integer length() {
+    @Override
+    public Integer length() {
       return data.length;
     }
 
-    @Override public boolean isRepeatable() {
+    @Override
+    public boolean isRepeatable() {
       return true;
     }
 
-    @Override public InputStream asInputStream() throws IOException {
+    @Override
+    public InputStream asInputStream() throws IOException {
       return new ByteArrayInputStream(data);
     }
 
-    @Override public Reader asReader() throws IOException {
+    @Override
+    public Reader asReader() throws IOException {
       return new InputStreamReader(asInputStream(), UTF_8);
     }
 
-    @Override public void close() throws IOException {
+    @Override
+    public void close() throws IOException {
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return decodeOrDefault(data, UTF_8, "Binary data");
     }
-  }
-
-  @Override public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
-    }
-    if (body != null) {
-      builder.append('\n').append(body);
-    }
-    return builder.toString();
   }
 }

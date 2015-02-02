@@ -2,6 +2,7 @@
 * Adds `Feign.Builder.build()`
 * Opens constructor for Gson and Jackson codecs which accepts type adapters
 * Adds EmptyTarget for interfaces who exclusively declare URI methods
+* Reformats code according to [Google Java Style](https://google-styleguide.googlecode.com/svn/trunk/javaguide.html)
 
 ### Version 7.1
 * Introduces feign.@Param to annotate template parameters. Users must migrate from `javax.inject.@Named` to `feign.@Param` before updating to Feign 8.0.
