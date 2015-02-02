@@ -15,21 +15,26 @@
  */
 package feign.jaxb;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.PropertyException;
-import javax.xml.bind.Unmarshaller;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
+import javax.xml.bind.Unmarshaller;
+
 /**
- * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each context.
+ * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each
+ * context.
  */
 public final class JAXBContextFactory {
-  private final ConcurrentHashMap<Class, JAXBContext> jaxbContexts = new ConcurrentHashMap<Class, JAXBContext>(64);
+
+  private final ConcurrentHashMap<Class, JAXBContext>
+      jaxbContexts =
+      new ConcurrentHashMap<Class, JAXBContext>(64);
   private final Map<String, Object> properties;
 
   private JAXBContextFactory(Map<String, Object> properties) {
@@ -76,6 +81,7 @@ public final class JAXBContextFactory {
    * Creates instances of {@link feign.jaxb.JAXBContextFactory}
    */
   public static class Builder {
+
     private final Map<String, Object> properties = new HashMap<String, Object>(5);
 
     /**

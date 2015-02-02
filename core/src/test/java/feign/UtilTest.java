@@ -15,18 +15,77 @@
  */
 package feign;
 
-import feign.codec.Decoder;
+import org.junit.Test;
+
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
-import org.junit.Test;
+
+import feign.codec.Decoder;
 
 import static feign.Util.resolveLastTypeParameter;
 import static org.junit.Assert.assertEquals;
 
 public class UtilTest {
 
+  @Test
+  public void resolveLastTypeParameterWhenNotSubtype() throws Exception {
+    Type
+        context =
+        LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
+    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
+    Type last = resolveLastTypeParameter(context, Parameterized.class);
+    assertEquals(listStringType, last);
+  }
+
+  @Test
+  public void lastTypeFromInstance() throws Exception {
+    Parameterized instance = new ParameterizedSubtype();
+    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
+    assertEquals(String.class, last);
+  }
+
+  @Test
+  public void lastTypeFromAnonymous() throws Exception {
+    Parameterized instance = new Parameterized<Reader>() {
+    };
+    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
+    assertEquals(Reader.class, last);
+  }
+
+  @Test
+  public void resolveLastTypeParameterWhenWildcard() throws Exception {
+    Type
+        context =
+        LastTypeParameter.class.getDeclaredField("PARAMETERIZED_WILDCARD_LIST_STRING")
+            .getGenericType();
+    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
+    Type last = resolveLastTypeParameter(context, Parameterized.class);
+    assertEquals(listStringType, last);
+  }
+
+  @Test
+  public void resolveLastTypeParameterWhenParameterizedSubtype() throws Exception {
+    Type
+        context =
+        LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_LIST_STRING")
+            .getGenericType();
+    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
+    Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
+    assertEquals(listStringType, last);
+  }
+
+  @Test
+  public void unboundWildcardIsObject() throws Exception {
+    Type
+        context =
+        LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
+    Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
+    assertEquals(Object.class, last);
+  }
+
   interface LastTypeParameter {
+
     final List<String> LIST_STRING = null;
     final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
     final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
@@ -35,50 +94,14 @@ public class UtilTest {
   }
 
   interface ParameterizedDecoder<T extends List<String>> extends Decoder {
+
   }
 
   interface Parameterized<T> {
+
   }
 
   static class ParameterizedSubtype implements Parameterized<String> {
-  }
 
-  @Test public void resolveLastTypeParameterWhenNotSubtype() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
-    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
-    Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(listStringType, last);
-  }
-
-  @Test public void lastTypeFromInstance() throws Exception {
-    Parameterized instance = new ParameterizedSubtype();
-    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(String.class, last);
-  }
-
-  @Test public void lastTypeFromAnonymous() throws Exception {
-    Parameterized instance = new Parameterized<Reader>() {};
-    Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(Reader.class, last);
-  }
-
-  @Test public void resolveLastTypeParameterWhenWildcard() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_WILDCARD_LIST_STRING").getGenericType();
-    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
-    Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(listStringType, last);
-  }
-
-  @Test public void resolveLastTypeParameterWhenParameterizedSubtype() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_LIST_STRING").getGenericType();
-    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
-    Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(listStringType, last);
-  }
-
-  @Test public void unboundWildcardIsObject() throws Exception {
-    Type context = LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
-    Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(Object.class, last);
   }
 }

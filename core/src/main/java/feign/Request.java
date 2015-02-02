@@ -35,10 +35,13 @@ public final class Request {
   private final byte[] body;
   private final Charset charset;
 
-  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body, Charset charset) {
+  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
+          Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
-    LinkedHashMap<String, Collection<String>> copyOf = new LinkedHashMap<String, Collection<String>>();
+    LinkedHashMap<String, Collection<String>>
+        copyOf =
+        new LinkedHashMap<String, Collection<String>>();
     copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
     this.headers = Collections.unmodifiableMap(copyOf);
     this.body = body; // nullable
@@ -61,20 +64,37 @@ public final class Request {
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable.  When this is
-   * present, you can use {@code new String(req.body(), req.charset())} to access the body as a String.
+   * The character set with which the body is encoded, or null if unknown or not applicable.  When
+   * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
+   * as a String.
    */
   public Charset charset() {
     return charset;
   }
 
   /**
-   * If present, this is the replayable body to send to the server.  In some cases, this may be interpretable as text.
+   * If present, this is the replayable body to send to the server.  In some cases, this may be
+   * interpretable as text.
    *
    * @see #charset()
    */
   public byte[] body() {
     return body;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
+    }
+    if (body != null) {
+      builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
+    }
+    return builder.toString();
   }
 
   /* Controls the per-request settings currently required to be implemented by all {@link Client clients} */
@@ -109,19 +129,5 @@ public final class Request {
     public int readTimeoutMillis() {
       return readTimeoutMillis;
     }
-  }
-
-  @Override public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
-    }
-    if (body != null) {
-      builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
-    }
-    return builder.toString();
   }
 }

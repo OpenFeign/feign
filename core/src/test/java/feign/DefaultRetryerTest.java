@@ -18,15 +18,20 @@ package feign;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import java.util.Date;
+
 import feign.Retryer.Default;
 
 import static org.junit.Assert.assertEquals;
 
 public class DefaultRetryerTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  @Test public void only5TriesAllowedAndExponentialBackoff() throws Exception {
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void only5TriesAllowedAndExponentialBackoff() throws Exception {
     RetryableException e = new RetryableException(null, null, null);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
@@ -52,7 +57,8 @@ public class DefaultRetryerTest {
     retryer.continueOrPropagate(e);
   }
 
-  @Test public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
+  @Test
+  public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
     Default retryer = new Retryer.Default() {
       protected long currentTimeMillis() {
         return 0;

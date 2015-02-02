@@ -28,6 +28,7 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -39,28 +40,18 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Used for ssl tests to simplify setup.
  */
-final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509TrustManager, X509KeyManager {
+final class TrustingSSLSocketFactory extends SSLSocketFactory
+    implements X509TrustManager, X509KeyManager {
 
-  private static final Map<String, SSLSocketFactory> sslSocketFactories = new LinkedHashMap<String, SSLSocketFactory>();
-
-  public static SSLSocketFactory get() {
-    return get("");
-  }
-
-  public synchronized static SSLSocketFactory get(String serverAlias) {
-    if (!sslSocketFactories.containsKey(serverAlias)) {
-      sslSocketFactories.put(serverAlias, new TrustingSSLSocketFactory(serverAlias));
-    }
-    return sslSocketFactories.get(serverAlias);
-  }
-
+  private static final Map<String, SSLSocketFactory>
+      sslSocketFactories =
+      new LinkedHashMap<String, SSLSocketFactory>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
-
+  private final static String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_RC4_128_MD5"};
   private final SSLSocketFactory delegate;
   private final String serverAlias;
   private final PrivateKey privateKey;
   private final X509Certificate[] certificateChain;
-
   private TrustingSSLSocketFactory(String serverAlias) {
     try {
       SSLContext sc = SSLContext.getInstance("SSL");
@@ -75,7 +66,9 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
       this.certificateChain = null;
     } else {
       try {
-        KeyStore keyStore = loadKeyStore(TrustingSSLSocketFactory.class.getResourceAsStream("/keystore.jks"));
+        KeyStore
+            keyStore =
+            loadKeyStore(TrustingSSLSocketFactory.class.getResourceAsStream("/keystore.jks"));
         this.privateKey = (PrivateKey) keyStore.getKey(serverAlias, KEYSTORE_PASSWORD);
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
         this.certificateChain = Arrays.copyOf(rawChain, rawChain.length, X509Certificate[].class);
@@ -85,17 +78,15 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
     }
   }
 
-  @Override public String[] getDefaultCipherSuites() {
-    return ENABLED_CIPHER_SUITES;
+  public static SSLSocketFactory get() {
+    return get("");
   }
 
-  @Override public String[] getSupportedCipherSuites() {
-    return ENABLED_CIPHER_SUITES;
-  }
-
-  @Override
-  public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-    return setEnabledCipherSuites(delegate.createSocket(s, host, port, autoClose));
+  public synchronized static SSLSocketFactory get(String serverAlias) {
+    if (!sslSocketFactories.containsKey(serverAlias)) {
+      sslSocketFactories.put(serverAlias, new TrustingSSLSocketFactory(serverAlias));
+    }
+    return sslSocketFactories.get(serverAlias);
   }
 
   static Socket setEnabledCipherSuites(Socket socket) {
@@ -103,17 +94,47 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
     return socket;
   }
 
+  private static KeyStore loadKeyStore(InputStream inputStream) throws IOException {
+    try {
+      KeyStore keyStore = KeyStore.getInstance("JKS");
+      keyStore.load(inputStream, KEYSTORE_PASSWORD);
+      return keyStore;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    } finally {
+      inputStream.close();
+    }
+  }
+
+  @Override
+  public String[] getDefaultCipherSuites() {
+    return ENABLED_CIPHER_SUITES;
+  }
+
+  @Override
+  public String[] getSupportedCipherSuites() {
+    return ENABLED_CIPHER_SUITES;
+  }
+
+  @Override
+  public Socket createSocket(Socket s, String host, int port, boolean autoClose)
+      throws IOException {
+    return setEnabledCipherSuites(delegate.createSocket(s, host, port, autoClose));
+  }
+
   @Override
   public Socket createSocket(String host, int port) throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(host, port));
   }
 
-  @Override public Socket createSocket(InetAddress host, int port) throws IOException {
+  @Override
+  public Socket createSocket(InetAddress host, int port) throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(host, port));
   }
 
   @Override
-  public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+  public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+      throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(host, port, localHost, localPort));
   }
 
@@ -162,18 +183,4 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory implements X509Tru
   public PrivateKey getPrivateKey(String alias) {
     return privateKey;
   }
-
-  private static KeyStore loadKeyStore(InputStream inputStream) throws IOException {
-    try {
-      KeyStore keyStore = KeyStore.getInstance("JKS");
-      keyStore.load(inputStream, KEYSTORE_PASSWORD);
-      return keyStore;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    } finally {
-      inputStream.close();
-    }
-  }
-
-  private final static String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_RC4_128_MD5"};
 }

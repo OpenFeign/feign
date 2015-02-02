@@ -18,16 +18,19 @@ package feign.gson;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.TypeAdapter;
-import feign.Response;
-import feign.codec.Decoder;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
+import feign.Response;
+import feign.codec.Decoder;
+
 import static feign.Util.ensureClosed;
 
 public class GsonDecoder implements Decoder {
+
   private final Gson gson;
 
   public GsonDecoder(Iterable<TypeAdapter<?>> adapters) {
@@ -42,7 +45,8 @@ public class GsonDecoder implements Decoder {
     this.gson = gson;
   }
 
-  @Override public Object decode(Response response, Type type) throws IOException {
+  @Override
+  public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null) {
       return null;
     }

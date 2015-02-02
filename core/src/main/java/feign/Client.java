@@ -37,13 +37,12 @@ import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_GZIP;
 
 /**
- * Submits HTTP {@link Request requests}. Implementations are expected to be
- * thread-safe.
+ * Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe.
  */
 public interface Client {
+
   /**
-   * Executes a request against its {@link Request#url() url} and returns a
-   * response.
+   * Executes a request against its {@link Request#url() url} and returns a response.
    *
    * @param request safe to replay.
    * @param options options to apply to this request.
@@ -53,22 +52,28 @@ public interface Client {
   Response execute(Request request, Options options) throws IOException;
 
   public static class Default implements Client {
+
     private final SSLSocketFactory sslContextFactory;
     private final HostnameVerifier hostnameVerifier;
 
-    /** Null parameters imply platform defaults. */
+    /**
+     * Null parameters imply platform defaults.
+     */
     public Default(SSLSocketFactory sslContextFactory, HostnameVerifier hostnameVerifier) {
       this.sslContextFactory = sslContextFactory;
       this.hostnameVerifier = hostnameVerifier;
     }
 
-    @Override public Response execute(Request request, Options options) throws IOException {
+    @Override
+    public Response execute(Request request, Options options) throws IOException {
       HttpURLConnection connection = convertAndSend(request, options);
       return convertResponse(connection);
     }
 
     HttpURLConnection convertAndSend(Request request, Options options) throws IOException {
-      final HttpURLConnection connection = (HttpURLConnection) new URL(request.url()).openConnection();
+      final HttpURLConnection
+          connection =
+          (HttpURLConnection) new URL(request.url()).openConnection();
       if (connection instanceof HttpsURLConnection) {
         HttpsURLConnection sslCon = (HttpsURLConnection) connection;
         if (sslContextFactory != null) {
@@ -85,12 +90,16 @@ public interface Client {
       connection.setRequestMethod(request.method());
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
-      boolean gzipEncodedRequest = contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
+      boolean
+          gzipEncodedRequest =
+          contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
 
       boolean hasAcceptHeader = false;
       Integer contentLength = null;
       for (String field : request.headers().keySet()) {
-        if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
+        if (field.equalsIgnoreCase("Accept")) {
+          hasAcceptHeader = true;
+        }
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest) {
@@ -103,7 +112,9 @@ public interface Client {
         }
       }
       // Some servers choke on the default accept string.
-      if (!hasAcceptHeader) connection.addRequestProperty("Accept", "*/*");
+      if (!hasAcceptHeader) {
+        connection.addRequestProperty("Accept", "*/*");
+      }
 
       if (request.body() != null) {
         if (contentLength != null) {
@@ -135,13 +146,15 @@ public interface Client {
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
         // response message
-        if (field.getKey() != null)
+        if (field.getKey() != null) {
           headers.put(field.getKey(), field.getValue());
+        }
       }
 
       Integer length = connection.getContentLength();
-      if (length == -1)
+      if (length == -1) {
         length = null;
+      }
       InputStream stream;
       if (status >= 400) {
         stream = connection.getErrorStream();

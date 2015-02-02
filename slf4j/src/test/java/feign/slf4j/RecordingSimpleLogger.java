@@ -15,10 +15,6 @@
  */
 package feign.slf4j;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -26,19 +22,26 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.impl.SimpleLogger;
 import org.slf4j.impl.SimpleLoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 import static org.junit.Assert.assertEquals;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
 /**
- * A testing utility to allow control over {@link org.slf4j.impl.SimpleLogger}.
- * In some cases,   reflection is used to bypass access restrictions.
+ * A testing utility to allow control over {@link org.slf4j.impl.SimpleLogger}. In some cases,
+ * reflection is used to bypass access restrictions.
  */
 final class RecordingSimpleLogger implements TestRule {
 
   private String expectedMessages = "";
 
-  /** Resets {@link org.slf4j.impl.SimpleLogger} to the new log level. */
+  /**
+   * Resets {@link org.slf4j.impl.SimpleLogger} to the new log level.
+   */
   RecordingSimpleLogger logLevel(String logLevel) throws Exception {
     System.setProperty(SHOW_THREAD_NAME_KEY, "false");
     System.setProperty(DEFAULT_LOG_LEVEL_KEY, logLevel);
@@ -53,16 +56,22 @@ final class RecordingSimpleLogger implements TestRule {
     return this;
   }
 
-  /** Newline delimited output that would be sent to stderr. */
+  /**
+   * Newline delimited output that would be sent to stderr.
+   */
   RecordingSimpleLogger expectMessages(String expectedMessages) {
     this.expectedMessages = expectedMessages;
     return this;
   }
 
-  /** Steals the output of stderr as that's where the log events go. */
-  @Override public Statement apply(final Statement base, Description description) {
+  /**
+   * Steals the output of stderr as that's where the log events go.
+   */
+  @Override
+  public Statement apply(final Statement base, Description description) {
     return new Statement() {
-      @Override public void evaluate() throws Throwable {
+      @Override
+      public void evaluate() throws Throwable {
         ByteArrayOutputStream buff = new ByteArrayOutputStream();
         PrintStream stderr = System.err;
         try {

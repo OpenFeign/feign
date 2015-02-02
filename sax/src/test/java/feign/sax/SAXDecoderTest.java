@@ -15,39 +15,57 @@
  */
 package feign.sax;
 
-import feign.Response;
-import feign.codec.Decoder;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
+
+import feign.Response;
+import feign.codec.Decoder;
 
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class SAXDecoderTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
+  static String statusFailed = ""//
+                               + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+//
+                               + "  <soap:Body>\n"//
+                               + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
+//
+                               + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
+//
+                               + "    </ns1:getNeustarNetworkStatusResponse>\n"//
+                               + "  </soap:Body>\n"//
+                               + "</soap:Envelope>";
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
   Decoder decoder = SAXDecoder.builder() //
-      .registerContentHandler(NetworkStatus.class, new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
-            @Override public SAXDecoder.ContentHandlerWithResult<NetworkStatus> create() {
-              return new NetworkStatusHandler();
-            }
-          }) //
+      .registerContentHandler(NetworkStatus.class,
+                              new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
+                                @Override
+                                public SAXDecoder.ContentHandlerWithResult<NetworkStatus> create() {
+                                  return new NetworkStatusHandler();
+                                }
+                              }) //
       .registerContentHandler(NetworkStatusStringHandler.class) //
       .build();
 
-  @Test public void parsesConfiguredTypes() throws ParseException, IOException {
+  @Test
+  public void parsesConfiguredTypes() throws ParseException, IOException {
     assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
     assertEquals("Failed", decoder.decode(statusFailedResponse(), String.class));
   }
 
-  @Test public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+  @Test
+  public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("type int not in configured handlers");
 
@@ -55,24 +73,25 @@ public class SAXDecoderTest {
   }
 
   private Response statusFailedResponse() {
-    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
+    return Response
+        .create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
   }
 
-  static String statusFailed = ""//
-      + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"//
-      + "  <soap:Body>\n"//
-      + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"//
-      + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"//
-      + "    </ns1:getNeustarNetworkStatusResponse>\n"//
-      + "  </soap:Body>\n"//
-      + "</soap:Envelope>";
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    Response
+        response =
+        Response
+            .create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    assertNull(decoder.decode(response, String.class));
+  }
 
   static enum NetworkStatus {
     GOOD, FAILED;
   }
 
   static class NetworkStatusStringHandler extends DefaultHandler implements
-      SAXDecoder.ContentHandlerWithResult<String> {
+                                                                 SAXDecoder.ContentHandlerWithResult<String> {
 
     private StringBuilder currentText = new StringBuilder();
 
@@ -98,7 +117,7 @@ public class SAXDecoderTest {
   }
 
   static class NetworkStatusHandler extends DefaultHandler implements
-      SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
+                                                           SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
 
     private StringBuilder currentText = new StringBuilder();
 
@@ -121,10 +140,5 @@ public class SAXDecoderTest {
     public void characters(char ch[], int start, int length) {
       currentText.append(ch, start, length);
     }
-  }
-
-  @Test public void nullBodyDecodesToNull() throws Exception {
-    Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
-    assertNull(decoder.decode(response, String.class));
   }
 }

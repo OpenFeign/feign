@@ -19,8 +19,9 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import feign.RequestTemplate;
-import feign.Response;
+
+import org.junit.Test;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,7 +30,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
+
+import feign.RequestTemplate;
+import feign.Response;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
@@ -38,7 +41,8 @@ import static org.junit.Assert.assertNull;
 
 public class GsonCodecTest {
 
-  @Test public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
+  @Test
+  public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
     Map<String, Object> map = new LinkedHashMap<String, Object>();
     map.put("foo", 1);
 
@@ -46,41 +50,46 @@ public class GsonCodecTest {
     new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template).hasBody("" //
-            + "{\n" //
-            + "  \"foo\": 1\n" //
-            + "}");
+                                 + "{\n" //
+                                 + "  \"foo\": 1\n" //
+                                 + "}");
   }
 
-  @Test public void decodesMapObjectNumericalValuesAsInteger() throws Exception {
+  @Test
+  public void decodesMapObjectNumericalValuesAsInteger() throws Exception {
     Map<String, Object> map = new LinkedHashMap<String, Object>();
     map.put("foo", 1);
 
     Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), "{\"foo\": 1}", UTF_8);
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(),
+                        "{\"foo\": 1}", UTF_8);
     assertEquals(new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {
     }.getType()), map);
   }
 
-  @Test public void encodesFormParams() throws Exception {
+  @Test
+  public void encodesFormParams() throws Exception {
 
     Map<String, Object> form = new LinkedHashMap<String, Object>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
-    new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>(){}.getType(), template);
+    new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>() {
+    }.getType(), template);
 
     assertThat(template).hasBody("" // 
-        + "{\n" //
-        + "  \"foo\": 1,\n" //
-        + "  \"bar\": [\n" //
-        + "    2,\n" //
-        + "    3\n" //
-        + "  ]\n" //
-        + "}");
+                                 + "{\n" //
+                                 + "  \"foo\": 1,\n" //
+                                 + "  \"bar\": [\n" //
+                                 + "    2,\n" //
+                                 + "    3\n" //
+                                 + "  ]\n" //
+                                 + "}");
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
+
     Zone() {
       // for reflective instantiation.
     }
@@ -91,52 +100,60 @@ public class GsonCodecTest {
 
     Zone(String name, String id) {
       put("name", name);
-      if (id != null)
+      if (id != null) {
         put("id", id);
+      }
     }
 
     private static final long serialVersionUID = 1L;
   }
 
-  @Test public void decodes() throws Exception {
+  @Test
+  public void decodes() throws Exception {
 
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson,
+                        UTF_8);
     assertEquals(zones, new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {
     }.getType()));
   }
 
-  @Test public void nullBodyDecodesToNull() throws Exception {
-    Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    Response response = Response.create(204, "OK",
+                                        Collections.<String, Collection<String>>emptyMap(),
+                                        (byte[]) null);
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
   private String zonesJson = ""//
-      + "[\n"//
-      + "  {\n"//
-      + "    \"name\": \"denominator.io.\"\n"//
-      + "  },\n"//
-      + "  {\n"//
-      + "    \"name\": \"denominator.io.\",\n"//
-      + "    \"id\": \"ABCD\"\n"//
-      + "  }\n"//
-      + "]\n";
+                             + "[\n"//
+                             + "  {\n"//
+                             + "    \"name\": \"denominator.io.\"\n"//
+                             + "  },\n"//
+                             + "  {\n"//
+                             + "    \"name\": \"denominator.io.\",\n"//
+                             + "    \"id\": \"ABCD\"\n"//
+                             + "  }\n"//
+                             + "]\n";
 
   final TypeAdapter upperZone = new TypeAdapter<Zone>() {
 
-    @Override public void write(JsonWriter out, Zone value) throws IOException {
+    @Override
+    public void write(JsonWriter out, Zone value) throws IOException {
       out.beginObject();
-      for(Map.Entry<String, Object> entry : value.entrySet()) {
+      for (Map.Entry<String, Object> entry : value.entrySet()) {
         out.name(entry.getKey()).value(entry.getValue().toString().toUpperCase());
       }
       out.endObject();
     }
 
-    @Override public Zone read(JsonReader in) throws IOException {
+    @Override
+    public Zone read(JsonReader in) throws IOException {
       in.beginObject();
       Zone zone = new Zone();
       while (in.hasNext()) {
@@ -147,7 +164,8 @@ public class GsonCodecTest {
     }
   };
 
-  @Test public void customDecoder() throws Exception {
+  @Test
+  public void customDecoder() throws Exception {
     GsonDecoder decoder = new GsonDecoder(Arrays.<TypeAdapter<?>>asList(upperZone));
 
     List<Zone> zones = new LinkedList<Zone>();
@@ -155,12 +173,14 @@ public class GsonCodecTest {
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
     Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
+        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson,
+                        UTF_8);
     assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {
     }.getType()));
   }
 
-  @Test public void customEncoder() throws Exception {
+  @Test
+  public void customEncoder() throws Exception {
     GsonEncoder encoder = new GsonEncoder(Arrays.<TypeAdapter<?>>asList(upperZone));
 
     List<Zone> zones = new LinkedList<Zone>();
@@ -168,17 +188,18 @@ public class GsonCodecTest {
     zones.add(new Zone("denominator.io.", "abcd"));
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(zones, new TypeToken<List<Zone>>(){}.getType(), template);
+    encoder.encode(zones, new TypeToken<List<Zone>>() {
+    }.getType(), template);
 
     assertThat(template).hasBody("" //
-        + "[\n" //
-        + "  {\n" //
-        + "    \"name\": \"DENOMINATOR.IO.\"\n" //
-        + "  },\n" //
-        + "  {\n" //
-        + "    \"name\": \"DENOMINATOR.IO.\",\n" //
-        + "    \"id\": \"ABCD\"\n" //
-        + "  }\n" //
-        + "]");
+                                 + "[\n" //
+                                 + "  {\n" //
+                                 + "    \"name\": \"DENOMINATOR.IO.\"\n" //
+                                 + "  },\n" //
+                                 + "  {\n" //
+                                 + "    \"name\": \"DENOMINATOR.IO.\",\n" //
+                                 + "    \"id\": \"ABCD\"\n" //
+                                 + "  }\n" //
+                                 + "]");
   }
 }

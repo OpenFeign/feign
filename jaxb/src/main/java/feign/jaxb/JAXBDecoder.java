@@ -15,20 +15,18 @@
  */
 package feign.jaxb;
 
-import feign.Response;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+
 /**
- * Decodes responses using JAXB.
- * <br>
- * <p>
- * Basic example with with Feign.Builder:
- * </p>
+ * Decodes responses using JAXB. <br> <p> Basic example with with Feign.Builder: </p>
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *      .withMarshallerJAXBEncoding("UTF-8")
@@ -39,20 +37,22 @@ import javax.xml.bind.Unmarshaller;
  *            .decoder(new JAXBDecoder(jaxbFactory))
  *            .target(MyApi.class, "http://api");
  * </pre>
- * <p>
- * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
- * </p>
+ * <p> The JAXBContextFactory should be reused across requests as it caches the created JAXB
+ * contexts. </p>
  */
 public class JAXBDecoder implements Decoder {
+
   private final JAXBContextFactory jaxbContextFactory;
 
   public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
     this.jaxbContextFactory = jaxbContextFactory;
   }
 
-  @Override public Object decode(Response response, Type type) throws IOException {
+  @Override
+  public Object decode(Response response, Type type) throws IOException {
     if (!(type instanceof Class)) {
-      throw new UnsupportedOperationException("JAXB only supports decoding raw types. Found " + type);
+      throw new UnsupportedOperationException(
+          "JAXB only supports decoding raw types. Found " + type);
     }
     try {
       Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);

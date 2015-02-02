@@ -19,14 +19,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
- * Implementations may keep state to determine if retry operations should
- * continue or not.
+ * Implementations may keep state to determine if retry operations should continue or not.
  */
 public interface Retryer {
 
   /**
-   * if retry is permitted, return (possibly after sleeping). Otherwise
-   * propagate the exception.
+   * if retry is permitted, return (possibly after sleeping). Otherwise propagate the exception.
    */
   void continueOrPropagate(RetryableException e);
 
@@ -35,15 +33,8 @@ public interface Retryer {
     private final int maxAttempts;
     private final long period;
     private final long maxPeriod;
-
-    // visible for testing;
-    protected long currentTimeMillis() {
-      return System.currentTimeMillis();
-    }
-
     int attempt;
     long sleptForMillis;
-
     public Default() {
       this(100, SECONDS.toMillis(1), 5);
     }
@@ -55,17 +46,25 @@ public interface Retryer {
       this.attempt = 1;
     }
 
+    // visible for testing;
+    protected long currentTimeMillis() {
+      return System.currentTimeMillis();
+    }
+
     public void continueOrPropagate(RetryableException e) {
-      if (attempt++ >= maxAttempts)
+      if (attempt++ >= maxAttempts) {
         throw e;
+      }
 
       long interval;
       if (e.retryAfter() != null) {
         interval = e.retryAfter().getTime() - currentTimeMillis();
-        if (interval > maxPeriod)
+        if (interval > maxPeriod) {
           interval = maxPeriod;
-        if (interval < 0)
+        }
+        if (interval < 0) {
           return;
+        }
       } else {
         interval = nextMaxInterval();
       }
@@ -78,11 +77,9 @@ public interface Retryer {
     }
 
     /**
-     * Calculates the time interval to a retry attempt.
-     * <br>
-     * The interval increases exponentially with each attempt, at a rate of
-     * nextInterval *= 1.5 (where 1.5 is the backoff factor), to the maximum
-     * interval.
+     * Calculates the time interval to a retry attempt. <br> The interval increases exponentially
+     * with each attempt, at a rate of nextInterval *= 1.5 (where 1.5 is the backoff factor), to the
+     * maximum interval.
      *
      * @return time in nanoseconds from now until the next attempt.
      */

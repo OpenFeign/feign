@@ -15,20 +15,22 @@
  */
 package feign.auth;
 
-import feign.RequestTemplate;
-import java.util.Collections;
 import org.junit.Test;
+
+import feign.RequestTemplate;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.assertEquals;
 
 public class BasicAuthRequestInterceptorTest {
 
-  @Test public void addsAuthorizationHeader() {
+  @Test
+  public void addsAuthorizationHeader() {
     RequestTemplate template = new RequestTemplate();
-    BasicAuthRequestInterceptor interceptor = new BasicAuthRequestInterceptor("Aladdin", "open sesame");
+    BasicAuthRequestInterceptor
+        interceptor =
+        new BasicAuthRequestInterceptor("Aladdin", "open sesame");
     interceptor.apply(template);
 
     assertThat(template)
@@ -37,15 +39,19 @@ public class BasicAuthRequestInterceptorTest {
         );
   }
 
-  @Test public void addsAuthorizationHeader_longUserAndPassword() {
+  @Test
+  public void addsAuthorizationHeader_longUserAndPassword() {
     RequestTemplate template = new RequestTemplate();
-    BasicAuthRequestInterceptor interceptor = new BasicAuthRequestInterceptor("IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO",
-              "101010101010101010101010101010101010101010");
+    BasicAuthRequestInterceptor
+        interceptor =
+        new BasicAuthRequestInterceptor("IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO",
+                                        "101010101010101010101010101010101010101010");
     interceptor.apply(template);
 
     assertThat(template)
         .hasHeaders(
-            entry("Authorization", asList("Basic SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw"))
+            entry("Authorization", asList(
+                "Basic SU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU9JT0lPSU86MTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEw"))
         );
   }
 }

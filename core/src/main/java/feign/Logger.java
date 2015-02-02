@@ -22,8 +22,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
-import static feign.Util.decodeOrDefault;
 import static feign.Util.UTF_8;
+import static feign.Util.decodeOrDefault;
 import static feign.Util.valuesOrEmpty;
 
 /**
@@ -31,98 +31,14 @@ import static feign.Util.valuesOrEmpty;
  */
 public abstract class Logger {
 
-  /**
-   * Controls the level of logging.
-   */
-  public enum Level {
-    /**
-     * No logging.
-     */
-    NONE,
-    /**
-     * Log only the request method and URL and the response status code and execution time.
-     */
-    BASIC,
-    /**
-     * Log the basic information along with request and response headers.
-     */
-    HEADERS,
-    /**
-     * Log the headers, body, and metadata for both requests and responses.
-     */
-    FULL
+  protected static String methodTag(String configKey) {
+    return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('(')))
+        .append("] ").toString();
   }
 
   /**
-   * logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}.
-   */
-  public static class ErrorLogger extends Logger {
-    final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Logger.class.getName());
-
-    @Override protected void log(String configKey, String format, Object... args) {
-      System.err.printf(methodTag(configKey) + format + "%n", args);
-    }
-  }
-
-  /**
-   * logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}, if loggable.
-   */
-  public static class JavaLogger extends Logger {
-    final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Logger.class.getName());
-
-    @Override protected void logRequest(String configKey, Level logLevel, Request request) {
-      if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        super.logRequest(configKey, logLevel, request);
-      }
-    }
-
-    @Override protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
-      if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
-      }
-      return response;
-    }
-
-    @Override protected void log(String configKey, String format, Object... args) {
-      logger.fine(String.format(methodTag(configKey) + format, args));
-    }
-
-    /**
-     * helper that configures jul to sanely log messages at FINE level without additional formatting.
-     */
-    public JavaLogger appendToFile(String logfile) {
-      logger.setLevel(java.util.logging.Level.FINE);
-      try {
-        FileHandler handler = new FileHandler(logfile, true);
-        handler.setFormatter(new SimpleFormatter() {
-          @Override
-          public String format(LogRecord record) {
-            return String.format("%s%n", record.getMessage()); // NOPMD
-          }
-        });
-        logger.addHandler(handler);
-      } catch (IOException e) {
-        throw new IllegalStateException("Could not add file handler.", e);
-      }
-      return this;
-    }
-  }
-
-  public static class NoOpLogger extends Logger {
-    @Override protected void logRequest(String configKey, Level logLevel, Request request) {
-    }
-
-    @Override protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
-      return response;
-    }
-
-    @Override protected void log(String configKey, String format, Object... args) {
-    }
-  }
-
-  /**
-   * Override to log requests and responses using your own implementation.
-   * Messages will be http request and response text.
+   * Override to log requests and responses using your own implementation. Messages will be http
+   * request and response text.
    *
    * @param configKey value of {@link Feign#configKey(java.lang.reflect.Method)}
    * @param format    {@link java.util.Formatter format string}
@@ -144,7 +60,9 @@ public abstract class Logger {
       if (request.body() != null) {
         bodyLength = request.body().length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-          String bodyText = request.charset() != null ? new String(request.body(), request.charset()) : null;
+          String
+              bodyText =
+              request.charset() != null ? new String(request.body(), request.charset()) : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
         }
@@ -157,7 +75,8 @@ public abstract class Logger {
     log(configKey, "---> RETRYING");
   }
 
-  protected  Response logAndRebufferResponse(String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+  protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
+                                            long elapsedTime) throws IOException {
     log(configKey, "<--- HTTP/1.1 %s %s (%sms)", response.status(), response.reason(), elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
@@ -187,7 +106,8 @@ public abstract class Logger {
   }
 
   IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
-    log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(), elapsedTime);
+    log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
+        elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
       StringWriter sw = new StringWriter();
       ioe.printStackTrace(new PrintWriter(sw));
@@ -197,7 +117,109 @@ public abstract class Logger {
     return ioe;
   }
 
-  protected static String methodTag(String configKey) {
-    return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('('))).append("] ").toString();
+  /**
+   * Controls the level of logging.
+   */
+  public enum Level {
+    /**
+     * No logging.
+     */
+    NONE,
+    /**
+     * Log only the request method and URL and the response status code and execution time.
+     */
+    BASIC,
+    /**
+     * Log the basic information along with request and response headers.
+     */
+    HEADERS,
+    /**
+     * Log the headers, body, and metadata for both requests and responses.
+     */
+    FULL
+  }
+
+  /**
+   * logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}.
+   */
+  public static class ErrorLogger extends Logger {
+
+    final java.util.logging.Logger
+        logger =
+        java.util.logging.Logger.getLogger(Logger.class.getName());
+
+    @Override
+    protected void log(String configKey, String format, Object... args) {
+      System.err.printf(methodTag(configKey) + format + "%n", args);
+    }
+  }
+
+  /**
+   * logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}, if loggable.
+   */
+  public static class JavaLogger extends Logger {
+
+    final java.util.logging.Logger
+        logger =
+        java.util.logging.Logger.getLogger(Logger.class.getName());
+
+    @Override
+    protected void logRequest(String configKey, Level logLevel, Request request) {
+      if (logger.isLoggable(java.util.logging.Level.FINE)) {
+        super.logRequest(configKey, logLevel, request);
+      }
+    }
+
+    @Override
+    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
+                                              long elapsedTime) throws IOException {
+      if (logger.isLoggable(java.util.logging.Level.FINE)) {
+        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
+      }
+      return response;
+    }
+
+    @Override
+    protected void log(String configKey, String format, Object... args) {
+      logger.fine(String.format(methodTag(configKey) + format, args));
+    }
+
+    /**
+     * helper that configures jul to sanely log messages at FINE level without additional
+     * formatting.
+     */
+    public JavaLogger appendToFile(String logfile) {
+      logger.setLevel(java.util.logging.Level.FINE);
+      try {
+        FileHandler handler = new FileHandler(logfile, true);
+        handler.setFormatter(new SimpleFormatter() {
+          @Override
+          public String format(LogRecord record) {
+            return String.format("%s%n", record.getMessage()); // NOPMD
+          }
+        });
+        logger.addHandler(handler);
+      } catch (IOException e) {
+        throw new IllegalStateException("Could not add file handler.", e);
+      }
+      return this;
+    }
+  }
+
+  public static class NoOpLogger extends Logger {
+
+    @Override
+    protected void logRequest(String configKey, Level logLevel, Request request) {
+    }
+
+    @Override
+    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
+                                              long elapsedTime) throws IOException {
+      return response;
+    }
+
+    @Override
+    protected void log(String configKey, String format, Object... args) {
+    }
   }
 }

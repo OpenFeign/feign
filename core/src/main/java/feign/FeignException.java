@@ -15,16 +15,28 @@
  */
 package feign;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
+
+import static java.lang.String.format;
 
 /**
  * Origin exception type for all Http Apis.
  */
 public class FeignException extends RuntimeException {
+
+  private static final long serialVersionUID = 0;
+
+  protected FeignException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  protected FeignException(String message) {
+    super(message);
+  }
+
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
-    return new FeignException(format("%s %s %s", cause.getMessage(), request.method(), request.url()), cause);
+    return new FeignException(
+        format("%s %s %s", cause.getMessage(), request.method(), request.url()), cause);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
@@ -40,17 +52,8 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorExecuting(Request request, IOException cause) {
-    return new RetryableException(format("error %s executing %s %s", cause.getMessage(), request.method(),
-        request.url()), cause, null);
+    return new RetryableException(
+        format("error %s executing %s %s", cause.getMessage(), request.method(),
+               request.url()), cause, null);
   }
-
-  protected FeignException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  protected FeignException(String message) {
-    super(message);
-  }
-
-  private static final long serialVersionUID = 0;
 }

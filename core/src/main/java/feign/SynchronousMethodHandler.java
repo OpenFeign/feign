@@ -15,14 +15,15 @@
  */
 package feign;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -30,30 +31,6 @@ import static feign.Util.checkNotNull;
 import static feign.Util.ensureClosed;
 
 final class SynchronousMethodHandler implements MethodHandler {
-
-  static class Factory {
-
-    private final Client client;
-    private final Retryer retryer;
-    private final List<RequestInterceptor> requestInterceptors;
-    private final Logger logger;
-    private final Logger.Level logLevel;
-
-    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel) {
-      this.client = checkNotNull(client, "client");
-      this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.logger = checkNotNull(logger, "logger");
-      this.logLevel = checkNotNull(logLevel, "logLevel");
-    }
-
-    public MethodHandler create(Target<?> target, MethodMetadata md, RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger, logLevel, md,
-          buildTemplateFromArgs, options, decoder, errorDecoder);
-    }
-  }
 
   private final MethodMetadata metadata;
   private final Target<?> target;
@@ -66,7 +43,6 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Options options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
-
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
@@ -75,7 +51,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
-    this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
+    this.requestInterceptors =
+        checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
     this.logger = checkNotNull(logger, "logger for %s", target);
     this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
@@ -85,7 +62,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
   }
 
-  @Override public Object invoke(Object[] argv) throws Throwable {
+  @Override
+  public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
     Retryer retryer = this.retryer;
     while (true) {
@@ -122,7 +100,8 @@ final class SynchronousMethodHandler implements MethodHandler {
 
     try {
       if (logLevel != Logger.Level.NONE) {
-        response = logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
+        response =
+            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
       if (response.status() >= 200 && response.status() < 300) {
         if (Response.class == metadata.returnType()) {
@@ -131,7 +110,8 @@ final class SynchronousMethodHandler implements MethodHandler {
           }
           // Ensure the response body is disconnected
           byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-          return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+          return Response
+              .create(response.status(), response.reason(), response.headers(), bodyData);
         } else if (void.class == metadata.returnType()) {
           return null;
         } else {
@@ -168,6 +148,32 @@ final class SynchronousMethodHandler implements MethodHandler {
       throw e;
     } catch (RuntimeException e) {
       throw new DecodeException(e.getMessage(), e);
+    }
+  }
+
+  static class Factory {
+
+    private final Client client;
+    private final Retryer retryer;
+    private final List<RequestInterceptor> requestInterceptors;
+    private final Logger logger;
+    private final Logger.Level logLevel;
+
+    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
+            Logger logger, Logger.Level logLevel) {
+      this.client = checkNotNull(client, "client");
+      this.retryer = checkNotNull(retryer, "retryer");
+      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.logger = checkNotNull(logger, "logger");
+      this.logLevel = checkNotNull(logLevel, "logLevel");
+    }
+
+    public MethodHandler create(Target<?> target, MethodMetadata md,
+                                RequestTemplate.Factory buildTemplateFromArgs,
+                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
+      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
+                                          logLevel, md,
+                                          buildTemplateFromArgs, options, decoder, errorDecoder);
     }
   }
 }

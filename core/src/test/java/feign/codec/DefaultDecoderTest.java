@@ -15,46 +15,54 @@
  */
 package feign.codec;
 
-import feign.Response;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.w3c.dom.Document;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.w3c.dom.Document;
+
+import feign.Response;
 
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class DefaultDecoderTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
 
   private final Decoder decoder = new Decoder.Default();
 
-  @Test public void testDecodesToString() throws Exception {
+  @Test
+  public void testDecodesToString() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
     assertEquals(String.class, decodedObject.getClass());
     assertEquals("response body", decodedObject.toString());
   }
 
-  @Test public void testDecodesToByteArray() throws Exception {
+  @Test
+  public void testDecodesToByteArray() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, byte[].class);
     assertEquals(byte[].class, decodedObject.getClass());
     assertEquals("response body", new String((byte[]) decodedObject, UTF_8));
   }
 
-  @Test public void testDecodesNullBodyToNull() throws Exception {
+  @Test
+  public void testDecodesNullBodyToNull() throws Exception {
     assertNull(decoder.decode(nullBodyResponse(), Document.class));
   }
 
-  @Test public void testRefusesToDecodeOtherTypes() throws Exception {
+  @Test
+  public void testRefusesToDecodeOtherTypes() throws Exception {
     thrown.expect(DecodeException.class);
     thrown.expectMessage(" is not a type supported by this decoder.");
 
@@ -70,6 +78,7 @@ public class DefaultDecoderTest {
   }
 
   private Response nullBodyResponse() {
-    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    return Response
+        .create(200, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
   }
 }

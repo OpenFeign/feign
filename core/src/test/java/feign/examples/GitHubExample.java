@@ -17,17 +17,18 @@ package feign.examples;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.List;
+
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.List;
 
 import static feign.Util.ensureClosed;
 
@@ -36,22 +37,12 @@ import static feign.Util.ensureClosed;
  */
 public class GitHubExample {
 
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
-
   public static void main(String... args) {
     GitHub github = Feign.builder()
-                         .decoder(new GsonDecoder())
-                         .logger(new Logger.ErrorLogger())
-                         .logLevel(Logger.Level.BASIC)
-                         .target(GitHub.class, "https://api.github.com");
+        .decoder(new GsonDecoder())
+        .logger(new Logger.ErrorLogger())
+        .logLevel(Logger.Level.BASIC)
+        .target(GitHub.class, "https://api.github.com");
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
@@ -60,13 +51,27 @@ public class GitHubExample {
     }
   }
 
+  interface GitHub {
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
+  }
+
   /**
    * Here's how it looks to write a decoder.  Note: you can instead use {@code feign-gson}!
    */
   static class GsonDecoder implements Decoder {
+
     private final Gson gson = new Gson();
 
-    @Override public Object decode(Response response, Type type) throws IOException {
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
       if (void.class == type || response.body() == null) {
         return null;
       }

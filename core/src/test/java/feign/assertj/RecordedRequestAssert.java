@@ -16,21 +16,26 @@
 package feign.assertj;
 
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
-import feign.Util;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
+
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Iterables;
 import org.assertj.core.internal.Objects;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+
+import feign.Util;
+
 import static org.assertj.core.error.ShouldNotContain.shouldNotContain;
 
-public final class RecordedRequestAssert extends AbstractAssert<RecordedRequestAssert, RecordedRequest> {
+public final class RecordedRequestAssert
+    extends AbstractAssert<RecordedRequestAssert, RecordedRequest> {
+
   ByteArrays arrays = ByteArrays.instance();
   Objects objects = Objects.instance();
   Iterables iterables = Iterables.instance();
@@ -63,7 +68,8 @@ public final class RecordedRequestAssert extends AbstractAssert<RecordedRequestA
     byte[] compressedBody = actual.getBody();
     byte[] uncompressedBody;
     try {
-      uncompressedBody = Util.toByteArray(new GZIPInputStream(new ByteArrayInputStream(compressedBody)));
+      uncompressedBody =
+          Util.toByteArray(new GZIPInputStream(new ByteArrayInputStream(compressedBody)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
