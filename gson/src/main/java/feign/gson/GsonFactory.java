@@ -26,6 +26,8 @@ import java.util.Map;
 
 final class GsonFactory {
 
+  private GsonFactory() {}
+
   /**
    * Registers type adapters by implicit type. Adds one to read numbers in a {@code Map<String,
    * Object>} as Integers.
@@ -40,6 +42,4 @@ final class GsonFactory {
     }
     return builder.create();
   }
-
-  private GsonFactory() {}
 }

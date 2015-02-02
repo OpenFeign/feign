@@ -31,8 +31,22 @@ import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class SAXDecoderTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
+  static String statusFailed =
+      "" //
+          + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+          //
+          + "  <soap:Body>\n" //
+          + "    <ns1:getNeustarNetworkStatusResponse"
+          + " xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
+          //
+          + "      <NeustarNetworkStatus"
+          + " xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
+          //
+          + "    </ns1:getNeustarNetworkStatusResponse>\n" //
+          + "  </soap:Body>\n" //
+          + "</soap:Envelope>";
+  @Rule public final ExpectedException thrown = ExpectedException.none();
   Decoder decoder =
       SAXDecoder.builder() //
           .registerContentHandler(
@@ -65,17 +79,13 @@ public class SAXDecoderTest {
         200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
   }
 
-  static String statusFailed =
-      "" //
-          + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" //
-          + "  <soap:Body>\n" //
-          + "    <ns1:getNeustarNetworkStatusResponse"
-          + " xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n" //
-          + "      <NeustarNetworkStatus"
-          + " xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n" //
-          + "    </ns1:getNeustarNetworkStatusResponse>\n" //
-          + "  </soap:Body>\n" //
-          + "</soap:Envelope>";
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    Response response =
+        Response.create(
+            204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    assertNull(decoder.decode(response, String.class));
+  }
 
   static enum NetworkStatus {
     GOOD,
@@ -132,13 +142,5 @@ public class SAXDecoderTest {
     public void characters(char ch[], int start, int length) {
       currentText.append(ch, start, length);
     }
-  }
-
-  @Test
-  public void nullBodyDecodesToNull() throws Exception {
-    Response response =
-        Response.create(
-            204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
-    assertNull(decoder.decode(response, String.class));
   }
 }

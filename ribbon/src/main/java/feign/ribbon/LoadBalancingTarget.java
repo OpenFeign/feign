@@ -33,7 +33,8 @@ import java.net.URI;
  * Ex.
  *
  * <pre>
- * MyService api = Feign.builder().target(LoadBalancingTarget.create(MyService.class, "http://myAppProd"))
+ * MyService api = Feign.builder().target(LoadBalancingTarget.create(MyService.class,
+ * "http://myAppProd"))
  * </pre>
  *
  * Where {@code myAppProd} is the ribbon loadbalancer name and {@code
@@ -42,6 +43,18 @@ import java.net.URI;
  * @param <T> corresponds to {@link feign.Target#type()}
  */
 public class LoadBalancingTarget<T> implements Target<T> {
+
+  private final String name;
+  private final String scheme;
+  private final Class<T> type;
+  private final AbstractLoadBalancer lb;
+
+  protected LoadBalancingTarget(Class<T> type, String scheme, String name) {
+    this.type = checkNotNull(type, "type");
+    this.scheme = checkNotNull(scheme, "scheme");
+    this.name = checkNotNull(name, "name");
+    this.lb = AbstractLoadBalancer.class.cast(getNamedLoadBalancer(name()));
+  }
 
   /**
    * creates a target which dynamically derives urls from a {@link
@@ -54,18 +67,6 @@ public class LoadBalancingTarget<T> implements Target<T> {
   public static <T> LoadBalancingTarget<T> create(Class<T> type, String schemeName) {
     URI asUri = URI.create(schemeName);
     return new LoadBalancingTarget<T>(type, asUri.getScheme(), asUri.getHost());
-  }
-
-  private final String name;
-  private final String scheme;
-  private final Class<T> type;
-  private final AbstractLoadBalancer lb;
-
-  protected LoadBalancingTarget(Class<T> type, String scheme, String name) {
-    this.type = checkNotNull(type, "type");
-    this.scheme = checkNotNull(scheme, "scheme");
-    this.name = checkNotNull(name, "name");
-    this.lb = AbstractLoadBalancer.class.cast(getNamedLoadBalancer(name()));
   }
 
   @Override

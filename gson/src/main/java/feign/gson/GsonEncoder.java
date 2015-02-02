@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 
 public class GsonEncoder implements Encoder {
+
   private final Gson gson;
 
   public GsonEncoder(Iterable<TypeAdapter<?>> adapters) {

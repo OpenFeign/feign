@@ -26,8 +26,7 @@ import java.util.Map;
 
 public final class MethodMetadata implements Serializable {
 
-  MethodMetadata() {}
-
+  private static final long serialVersionUID = 1L;
   private String configKey;
   private transient Type returnType;
   private Integer urlIndex;
@@ -39,6 +38,8 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
+
+  MethodMetadata() {}
 
   /**
    * @see Feign#configKey(java.lang.reflect.Method)
@@ -104,6 +105,4 @@ public final class MethodMetadata implements Serializable {
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
     return indexToExpanderClass;
   }
-
-  private static final long serialVersionUID = 1L;
 }

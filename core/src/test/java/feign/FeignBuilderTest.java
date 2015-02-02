@@ -33,18 +33,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class FeignBuilderTest {
+
   @Rule public final MockWebServerRule server = new MockWebServerRule();
-
-  interface TestInterface {
-    @RequestLine("POST /")
-    Response codecPost(String data);
-
-    @RequestLine("POST /")
-    void encodedPost(List<String> data);
-
-    @RequestLine("POST /")
-    String decodedPost();
-  }
 
   @Test
   public void testDefaults() throws Exception {
@@ -143,5 +133,17 @@ public class FeignBuilderTest {
     assertEquals(1, callCount.get());
 
     assertThat(server.takeRequest()).hasBody("request data");
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    Response codecPost(String data);
+
+    @RequestLine("POST /")
+    void encodedPost(List<String> data);
+
+    @RequestLine("POST /")
+    String decodedPost();
   }
 }

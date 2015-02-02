@@ -44,54 +44,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class FeignTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
   @Rule public final MockWebServerRule server = new MockWebServerRule();
-
-  interface TestInterface {
-    @RequestLine("POST /")
-    Response response();
-
-    @RequestLine("POST /")
-    String post();
-
-    @RequestLine("POST /")
-    @Body(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
-            + " \"{password}\"%7D")
-    void login(
-        @Param("customer_name") String customer,
-        @Param("user_name") String user,
-        @Param("password") String password);
-
-    @RequestLine("POST /")
-    void body(List<String> contents);
-
-    @RequestLine("POST /")
-    @Headers("Content-Encoding: gzip")
-    void gzipBody(List<String> contents);
-
-    @RequestLine("POST /")
-    void form(
-        @Param("customer_name") String customer,
-        @Param("user_name") String user,
-        @Param("password") String password);
-
-    @RequestLine("GET /{1}/{2}")
-    Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
-
-    @RequestLine("GET /?1={1}&2={2}")
-    Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
-
-    @RequestLine("POST /?date={date}")
-    void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
-
-    class DateToMillis implements Param.Expander {
-      @Override
-      public String expand(Object value) {
-        return String.valueOf(((Date) value).getTime());
-      }
-    }
-  }
 
   @Test
   public void iterableQueryParams() throws IOException, InterruptedException {
@@ -102,17 +57,6 @@ public class FeignTest {
     api.queryParams("user", Arrays.asList("apple", "pear"));
 
     assertThat(server.takeRequest()).hasPath("/?1=user&2=apple&2=pear");
-  }
-
-  interface OtherTestInterface {
-    @RequestLine("POST /")
-    String post();
-
-    @RequestLine("POST /")
-    byte[] binaryResponseBody();
-
-    @RequestLine("POST /")
-    void binaryRequestBody(byte[] contents);
   }
 
   @Test
@@ -207,13 +151,6 @@ public class FeignTest {
         .hasGzippedBody("[netflix, denominator, password]".getBytes(UTF_8));
   }
 
-  static class ForwardedForInterceptor implements RequestInterceptor {
-    @Override
-    public void apply(RequestTemplate template) {
-      template.header("X-Forwarded-For", "origin.host.com");
-    }
-  }
-
   @Test
   public void singleInterceptor() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
@@ -226,13 +163,6 @@ public class FeignTest {
     api.post();
 
     assertThat(server.takeRequest()).hasHeaders("X-Forwarded-For: origin.host.com");
-  }
-
-  static class UserAgentInterceptor implements RequestInterceptor {
-    @Override
-    public void apply(RequestTemplate template) {
-      template.header("User-Agent", "Feign");
-    }
   }
 
   @Test
@@ -271,14 +201,6 @@ public class FeignTest {
         Feign.configKey(
             TestInterface.class.getDeclaredMethod(
                 "uriParam", String.class, URI.class, String.class)));
-  }
-
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
-    @Override
-    public Exception decode(String methodKey, Response response) {
-      if (response.status() == 404) return new IllegalArgumentException("zone not found");
-      return super.decode(methodKey, response);
-    }
   }
 
   @Test
@@ -338,7 +260,9 @@ public class FeignTest {
                   @Override
                   public Object decode(Response response, Type type) throws IOException {
                     String string = super.decode(response, type).toString();
-                    if ("retry!".equals(string)) throw new RetryableException(string, null);
+                    if ("retry!".equals(string)) {
+                      throw new RetryableException(string, null);
+                    }
                     return string;
                   }
                 })
@@ -428,7 +352,95 @@ public class FeignTest {
     assertThat(server.takeRequest()).hasBody(expectedRequest);
   }
 
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    Response response();
+
+    @RequestLine("POST /")
+    String post();
+
+    @RequestLine("POST /")
+    @Body(
+        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\":"
+            + " \"{password}\"%7D")
+    void login(
+        @Param("customer_name") String customer,
+        @Param("user_name") String user,
+        @Param("password") String password);
+
+    @RequestLine("POST /")
+    void body(List<String> contents);
+
+    @RequestLine("POST /")
+    @Headers("Content-Encoding: gzip")
+    void gzipBody(List<String> contents);
+
+    @RequestLine("POST /")
+    void form(
+        @Param("customer_name") String customer,
+        @Param("user_name") String user,
+        @Param("password") String password);
+
+    @RequestLine("GET /{1}/{2}")
+    Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
+
+    @RequestLine("GET /?1={1}&2={2}")
+    Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
+
+    @RequestLine("POST /?date={date}")
+    void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+
+    class DateToMillis implements Param.Expander {
+
+      @Override
+      public String expand(Object value) {
+        return String.valueOf(((Date) value).getTime());
+      }
+    }
+  }
+
+  interface OtherTestInterface {
+
+    @RequestLine("POST /")
+    String post();
+
+    @RequestLine("POST /")
+    byte[] binaryResponseBody();
+
+    @RequestLine("POST /")
+    void binaryRequestBody(byte[] contents);
+  }
+
+  static class ForwardedForInterceptor implements RequestInterceptor {
+
+    @Override
+    public void apply(RequestTemplate template) {
+      template.header("X-Forwarded-For", "origin.host.com");
+    }
+  }
+
+  static class UserAgentInterceptor implements RequestInterceptor {
+
+    @Override
+    public void apply(RequestTemplate template) {
+      template.header("User-Agent", "Feign");
+    }
+  }
+
+  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+
+    @Override
+    public Exception decode(String methodKey, Response response) {
+      if (response.status() == 404) {
+        return new IllegalArgumentException("zone not found");
+      }
+      return super.decode(methodKey, response);
+    }
+  }
+
   static final class TestInterfaceBuilder {
+
     private final Feign.Builder delegate =
         new Feign.Builder()
             .decoder(new Decoder.Default())

@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
  * @author Jesse Wilson
  */
 final class Types {
+
   /** Type literal for {@code Map<String, ?>}. */
   static final Type MAP_STRING_WILDCARD =
       new ParameterizedTypeImpl(
@@ -58,7 +59,9 @@ final class Types {
       // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
       // suspects some pathological case related to nested classes exists.
       Type rawType = parameterizedType.getRawType();
-      if (!(rawType instanceof Class)) throw new IllegalArgumentException();
+      if (!(rawType instanceof Class)) {
+        throw new IllegalArgumentException();
+      }
       return (Class<?>) rawType;
 
     } else if (type instanceof GenericArrayType) {
@@ -93,7 +96,9 @@ final class Types {
       return a.equals(b); // Class already specifies equals().
 
     } else if (a instanceof ParameterizedType) {
-      if (!(b instanceof ParameterizedType)) return false;
+      if (!(b instanceof ParameterizedType)) {
+        return false;
+      }
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
       return equal(pa.getOwnerType(), pb.getOwnerType())
@@ -101,20 +106,26 @@ final class Types {
           && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
     } else if (a instanceof GenericArrayType) {
-      if (!(b instanceof GenericArrayType)) return false;
+      if (!(b instanceof GenericArrayType)) {
+        return false;
+      }
       GenericArrayType ga = (GenericArrayType) a;
       GenericArrayType gb = (GenericArrayType) b;
       return equals(ga.getGenericComponentType(), gb.getGenericComponentType());
 
     } else if (a instanceof WildcardType) {
-      if (!(b instanceof WildcardType)) return false;
+      if (!(b instanceof WildcardType)) {
+        return false;
+      }
       WildcardType wa = (WildcardType) a;
       WildcardType wb = (WildcardType) b;
       return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
           && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
     } else if (a instanceof TypeVariable) {
-      if (!(b instanceof TypeVariable)) return false;
+      if (!(b instanceof TypeVariable)) {
+        return false;
+      }
       TypeVariable<?> va = (TypeVariable<?>) a;
       TypeVariable<?> vb = (TypeVariable<?>) b;
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
@@ -131,7 +142,9 @@ final class Types {
    * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
    */
   static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
-    if (toResolve == rawType) return context;
+    if (toResolve == rawType) {
+      return context;
+    }
 
     // We skip searching through interfaces if unknown is an interface.
     if (toResolve.isInterface()) {
@@ -164,7 +177,9 @@ final class Types {
 
   private static int indexOf(Object[] array, Object toFind) {
     for (int i = 0; i < array.length; i++) {
-      if (toFind.equals(array[i])) return i;
+      if (toFind.equals(array[i])) {
+        return i;
+      }
     }
     throw new NoSuchElementException();
   }
@@ -189,7 +204,9 @@ final class Types {
    * @param supertype a superclass of, or interface implemented by, this.
    */
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
-    if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
+    if (!supertype.isAssignableFrom(contextRawType)) {
+      throw new IllegalArgumentException();
+    }
     return resolve(
         context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
   }
@@ -271,7 +288,9 @@ final class Types {
     Class<?> declaredByRaw = declaringClassOf(unknown);
 
     // We can't reduce this further.
-    if (declaredByRaw == null) return unknown;
+    if (declaredByRaw == null) {
+      return unknown;
+    }
 
     Type declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw);
     if (declaredBy instanceof ParameterizedType) {
@@ -298,6 +317,7 @@ final class Types {
   }
 
   private static final class ParameterizedTypeImpl implements ParameterizedType {
+
     private final Type ownerType;
     private final Type rawType;
     private final Type[] typeArguments;
@@ -314,7 +334,9 @@ final class Types {
       this.typeArguments = typeArguments.clone();
 
       for (Type typeArgument : this.typeArguments) {
-        if (typeArgument == null) throw new NullPointerException();
+        if (typeArgument == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(typeArgument);
       }
     }
@@ -345,7 +367,9 @@ final class Types {
     public String toString() {
       StringBuilder result = new StringBuilder(30 * (typeArguments.length + 1));
       result.append(typeToString(rawType));
-      if (typeArguments.length == 0) return result.toString();
+      if (typeArguments.length == 0) {
+        return result.toString();
+      }
       result.append("<").append(typeToString(typeArguments[0]));
       for (int i = 1; i < typeArguments.length; i++) {
         result.append(", ").append(typeToString(typeArguments[i]));
@@ -355,6 +379,7 @@ final class Types {
   }
 
   private static final class GenericArrayTypeImpl implements GenericArrayType {
+
     private final Type componentType;
 
     GenericArrayTypeImpl(Type componentType) {
@@ -387,21 +412,32 @@ final class Types {
    * bound must be Object.class.
    */
   private static final class WildcardTypeImpl implements WildcardType {
+
     private final Type upperBound;
     private final Type lowerBound;
 
     WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
-      if (lowerBounds.length > 1) throw new IllegalArgumentException();
-      if (upperBounds.length != 1) throw new IllegalArgumentException();
+      if (lowerBounds.length > 1) {
+        throw new IllegalArgumentException();
+      }
+      if (upperBounds.length != 1) {
+        throw new IllegalArgumentException();
+      }
 
       if (lowerBounds.length == 1) {
-        if (lowerBounds[0] == null) throw new NullPointerException();
+        if (lowerBounds[0] == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(lowerBounds[0]);
-        if (upperBounds[0] != Object.class) throw new IllegalArgumentException();
+        if (upperBounds[0] != Object.class) {
+          throw new IllegalArgumentException();
+        }
         this.lowerBound = lowerBounds[0];
         this.upperBound = Object.class;
       } else {
-        if (upperBounds[0] == null) throw new NullPointerException();
+        if (upperBounds[0] == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(upperBounds[0]);
         this.lowerBound = null;
         this.upperBound = upperBounds[0];
@@ -429,8 +465,12 @@ final class Types {
 
     @Override
     public String toString() {
-      if (lowerBound != null) return "? super " + typeToString(lowerBound);
-      if (upperBound == Object.class) return "?";
+      if (lowerBound != null) {
+        return "? super " + typeToString(lowerBound);
+      }
+      if (upperBound == Object.class) {
+        return "?";
+      }
       return "? extends " + typeToString(upperBound);
     }
   }

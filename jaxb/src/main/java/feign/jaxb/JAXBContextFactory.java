@@ -30,6 +30,7 @@ import javax.xml.bind.Unmarshaller;
  * context.
  */
 public final class JAXBContextFactory {
+
   private final ConcurrentHashMap<Class, JAXBContext> jaxbContexts =
       new ConcurrentHashMap<Class, JAXBContext>(64);
   private final Map<String, Object> properties;
@@ -72,6 +73,7 @@ public final class JAXBContextFactory {
 
   /** Creates instances of {@link feign.jaxb.JAXBContextFactory} */
   public static class Builder {
+
     private final Map<String, Object> properties = new HashMap<String, Object>(5);
 
     /** Sets the jaxb.encoding property of any Marshaller created by this factory. */

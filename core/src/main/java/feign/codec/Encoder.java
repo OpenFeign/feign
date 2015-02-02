@@ -62,7 +62,8 @@ import java.lang.reflect.Type;
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
- * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
+ * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String
+ * password);
  * </pre>
  */
 public interface Encoder {
@@ -80,6 +81,7 @@ public interface Encoder {
 
   /** Default implementation of {@code Encoder}. */
   class Default implements Encoder {
+
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template) {
       if (bodyType == String.class) {

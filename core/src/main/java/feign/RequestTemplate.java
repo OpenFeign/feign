@@ -49,18 +49,14 @@ import java.util.Map.Entry;
  */
 public final class RequestTemplate implements Serializable {
 
-  interface Factory {
-    /** create a request template using args passed to a method invocation. */
-    RequestTemplate create(Object[] argv);
-  }
-
-  private String method;
-  /* final to encourage mutable use vs replacing the object. */
-  private StringBuilder url = new StringBuilder();
+  private static final long serialVersionUID = 1L;
   private final Map<String, Collection<String>> queries =
       new LinkedHashMap<String, Collection<String>>();
   private final Map<String, Collection<String>> headers =
       new LinkedHashMap<String, Collection<String>>();
+  private String method;
+  /* final to encourage mutable use vs replacing the object. */
+  private StringBuilder url = new StringBuilder();
   private transient Charset charset;
   private byte[] body;
   private String bodyTemplate;
@@ -77,6 +73,113 @@ public final class RequestTemplate implements Serializable {
     this.charset = toCopy.charset;
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
+  }
+
+  private static String urlDecode(String arg) {
+    try {
+      return URLDecoder.decode(arg, UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static String urlEncode(Object arg) {
+    try {
+      return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
+   * unresolved parameters will remain. <br>
+   * Note that if you'd like curly braces literally in the {@code template}, urlencode them first.
+   *
+   * @param template URI template that can be in level 1 <a
+   *     href="http://tools.ietf.org/html/rfc6570">RFC6570</a> form.
+   * @param variables to the URI template
+   * @return expanded template, leaving any unresolved parameters literal
+   */
+  public static String expand(String template, Map<String, ?> variables) {
+    // skip expansion if there's no valid variables set. ex. {a} is the
+    // first valid
+    if (checkNotNull(template, "template").length() < 3) {
+      return template.toString();
+    }
+    checkNotNull(variables, "variables for %s", template);
+
+    boolean inVar = false;
+    StringBuilder var = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
+    for (char c : template.toCharArray()) {
+      switch (c) {
+        case '{':
+          inVar = true;
+          break;
+        case '}':
+          inVar = false;
+          String key = var.toString();
+          Object value = variables.get(var.toString());
+          if (value != null) {
+            builder.append(value);
+          } else {
+            builder.append('{').append(key).append('}');
+          }
+          var = new StringBuilder();
+          break;
+        default:
+          if (inVar) {
+            var.append(c);
+          } else {
+            builder.append(c);
+          }
+      }
+    }
+    return builder.toString();
+  }
+
+  private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
+    Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
+    if (emptyToNull(queryLine) == null) {
+      return map;
+    }
+    if (queryLine.indexOf('&') == -1) {
+      if (queryLine.indexOf('=') != -1) {
+        putKV(queryLine, map);
+      } else {
+        map.put(queryLine, null);
+      }
+    } else {
+      char[] chars = queryLine.toCharArray();
+      int start = 0;
+      int i = 0;
+      for (; i < chars.length; i++) {
+        if (chars[i] == '&') {
+          putKV(queryLine.substring(start, i), map);
+          start = i + 1;
+        }
+      }
+      putKV(queryLine.substring(start, i), map);
+    }
+    return map;
+  }
+
+  private static void putKV(String stringToParse, Map<String, Collection<String>> map) {
+    String key;
+    String value;
+    // note that '=' can be a valid part of the value
+    int firstEq = stringToParse.indexOf('=');
+    if (firstEq == -1) {
+      key = urlDecode(stringToParse);
+      value = null;
+    } else {
+      key = urlDecode(stringToParse.substring(0, firstEq));
+      value = urlDecode(stringToParse.substring(firstEq + 1));
+    }
+    Collection<String> values = map.containsKey(key) ? map.get(key) : new ArrayList<String>();
+    values.add(value);
+    map.put(key, values);
   }
 
   /**
@@ -109,13 +212,17 @@ public final class RequestTemplate implements Serializable {
         } else {
           resolved = value;
         }
-        if (resolved != null) resolvedValues.add(resolved);
+        if (resolved != null) {
+          resolvedValues.add(resolved);
+        }
       }
       resolvedHeaders.put(field, resolvedValues);
     }
     headers.clear();
     headers.putAll(resolvedHeaders);
-    if (bodyTemplate != null) body(urlDecode(expand(bodyTemplate, unencoded)));
+    if (bodyTemplate != null) {
+      body(urlDecode(expand(bodyTemplate, unencoded)));
+    }
     return this;
   }
 
@@ -123,62 +230,6 @@ public final class RequestTemplate implements Serializable {
   public Request request() {
     return new Request(
         method, new StringBuilder(url).append(queryLine()).toString(), headers, body, charset);
-  }
-
-  private static String urlDecode(String arg) {
-    try {
-      return URLDecoder.decode(arg, UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static String urlEncode(Object arg) {
-    try {
-      return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
-   * unresolved parameters will remain. <br>
-   * Note that if you'd like curly braces literally in the {@code template}, urlencode them first.
-   *
-   * @param template URI template that can be in level 1 <a
-   *     href="http://tools.ietf.org/html/rfc6570">RFC6570</a> form.
-   * @param variables to the URI template
-   * @return expanded template, leaving any unresolved parameters literal
-   */
-  public static String expand(String template, Map<String, ?> variables) {
-    // skip expansion if there's no valid variables set. ex. {a} is the
-    // first valid
-    if (checkNotNull(template, "template").length() < 3) return template.toString();
-    checkNotNull(variables, "variables for %s", template);
-
-    boolean inVar = false;
-    StringBuilder var = new StringBuilder();
-    StringBuilder builder = new StringBuilder();
-    for (char c : template.toCharArray()) {
-      switch (c) {
-        case '{':
-          inVar = true;
-          break;
-        case '}':
-          inVar = false;
-          String key = var.toString();
-          Object value = variables.get(var.toString());
-          if (value != null) builder.append(value);
-          else builder.append('{').append(key).append('}');
-          var = new StringBuilder();
-          break;
-        default:
-          if (inVar) var.append(c);
-          else builder.append(c);
-      }
-    }
-    return builder.toString();
   }
 
   /* @see Request#method() */
@@ -244,12 +295,16 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #query(String, String...) */
   public RequestTemplate query(String configKey, Iterable<String> values) {
-    if (values != null) return query(configKey, toArray(values, String.class));
+    if (values != null) {
+      return query(configKey, toArray(values, String.class));
+    }
     return query(configKey, (String[]) null);
   }
 
   private String encodeIfNotVariable(String in) {
-    if (in == null || in.indexOf('{') == 0) return in;
+    if (in == null || in.indexOf('{') == 0) {
+      return in;
+    }
     return urlEncode(in);
   }
 
@@ -273,8 +328,9 @@ public final class RequestTemplate implements Serializable {
     if (queries == null || queries.isEmpty()) {
       this.queries.clear();
     } else {
-      for (Entry<String, Collection<String>> entry : queries.entrySet())
+      for (Entry<String, Collection<String>> entry : queries.entrySet()) {
         query(entry.getKey(), toArray(entry.getValue(), String.class));
+      }
     }
     return this;
   }
@@ -335,7 +391,9 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #header(String, String...) */
   public RequestTemplate header(String name, Iterable<String> values) {
-    if (values != null) return header(name, toArray(values, String.class));
+    if (values != null) {
+      return header(name, toArray(values, String.class));
+    }
     return header(name, (String[]) null);
   }
 
@@ -350,15 +408,19 @@ public final class RequestTemplate implements Serializable {
    * ex. <br>
    *
    * <pre>
-   * template.headers(ImmutableMultimap.of(&quot;X-Application-Version&quot;, &quot;{version}&quot;));
+   * template.headers(ImmutableMultimap.of(&quot;X-Application-Version&quot;,
+   * &quot;{version}&quot;));
    * </pre>
    *
    * @param headers if null, remove all headers. else value to replace all headers with.
    * @see #headers()
    */
   public RequestTemplate headers(Map<String, Collection<String>> headers) {
-    if (headers == null || headers.isEmpty()) this.headers.clear();
-    else this.headers.putAll(headers);
+    if (headers == null || headers.isEmpty()) {
+      this.headers.clear();
+    } else {
+      this.headers.putAll(headers);
+    }
     return this;
   }
 
@@ -466,49 +528,15 @@ public final class RequestTemplate implements Serializable {
   }
 
   private boolean allValuesAreNull(Collection<String> values) {
-    if (values.isEmpty()) return true;
+    if (values.isEmpty()) {
+      return true;
+    }
     for (String val : values) {
-      if (val != null) return false;
+      if (val != null) {
+        return false;
+      }
     }
     return true;
-  }
-
-  private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
-    Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
-    if (emptyToNull(queryLine) == null) return map;
-    if (queryLine.indexOf('&') == -1) {
-      if (queryLine.indexOf('=') != -1) putKV(queryLine, map);
-      else map.put(queryLine, null);
-    } else {
-      char[] chars = queryLine.toCharArray();
-      int start = 0;
-      int i = 0;
-      for (; i < chars.length; i++) {
-        if (chars[i] == '&') {
-          putKV(queryLine.substring(start, i), map);
-          start = i + 1;
-        }
-      }
-      putKV(queryLine.substring(start, i), map);
-    }
-    return map;
-  }
-
-  private static void putKV(String stringToParse, Map<String, Collection<String>> map) {
-    String key;
-    String value;
-    // note that '=' can be a valid part of the value
-    int firstEq = stringToParse.indexOf('=');
-    if (firstEq == -1) {
-      key = urlDecode(stringToParse);
-      value = null;
-    } else {
-      key = urlDecode(stringToParse.substring(0, firstEq));
-      value = urlDecode(stringToParse.substring(firstEq + 1));
-    }
-    Collection<String> values = map.containsKey(key) ? map.get(key) : new ArrayList<String>();
-    values.add(value);
-    map.put(key, values);
   }
 
   @Override
@@ -555,7 +583,9 @@ public final class RequestTemplate implements Serializable {
   }
 
   public String queryLine() {
-    if (queries.isEmpty()) return "";
+    if (queries.isEmpty()) {
+      return "";
+    }
     StringBuilder queryBuilder = new StringBuilder();
     for (String field : queries.keySet()) {
       for (String value : valuesOrEmpty(queries, field)) {
@@ -563,7 +593,9 @@ public final class RequestTemplate implements Serializable {
         queryBuilder.append(field);
         if (value != null) {
           queryBuilder.append('=');
-          if (!value.isEmpty()) queryBuilder.append(value);
+          if (!value.isEmpty()) {
+            queryBuilder.append(value);
+          }
         }
       }
     }
@@ -571,5 +603,9 @@ public final class RequestTemplate implements Serializable {
     return queryBuilder.insert(0, '?').toString();
   }
 
-  private static final long serialVersionUID = 1L;
+  interface Factory {
+
+    /** create a request template using args passed to a method invocation. */
+    RequestTemplate create(Object[] argv);
+  }
 }

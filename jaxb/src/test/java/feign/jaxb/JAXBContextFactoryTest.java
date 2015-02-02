@@ -22,6 +22,7 @@ import javax.xml.bind.Marshaller;
 import org.junit.Test;
 
 public class JAXBContextFactoryTest {
+
   @Test
   public void buildsMarshallerWithJAXBEncodingProperty() throws Exception {
     JAXBContextFactory factory =

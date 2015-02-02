@@ -35,28 +35,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class JAXBCodecTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
-
-  @XmlRootElement
-  @XmlAccessorType(XmlAccessType.FIELD)
-  static class MockObject {
-
-    @XmlElement private String value;
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof MockObject) {
-        MockObject other = (MockObject) obj;
-        return value.equals(other.value);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return value != null ? value.hashCode() : 0;
-    }
-  }
 
   @Test
   public void encodesXml() throws Exception {
@@ -80,6 +60,7 @@ public class JAXBCodecTest {
         "JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
 
     class ParameterizedHolder {
+
       Map<String, ?> field;
     }
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
@@ -208,6 +189,7 @@ public class JAXBCodecTest {
         "JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
 
     class ParameterizedHolder {
+
       Map<String, ?> field;
     }
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
@@ -217,5 +199,26 @@ public class JAXBCodecTest {
             200, "OK", Collections.<String, Collection<String>>emptyMap(), "<foo/>", UTF_8);
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+  }
+
+  @XmlRootElement
+  @XmlAccessorType(XmlAccessType.FIELD)
+  static class MockObject {
+
+    @XmlElement private String value;
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof MockObject) {
+        MockObject other = (MockObject) obj;
+        return value.equals(other.value);
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return value != null ? value.hashCode() : 0;
+    }
   }
 }

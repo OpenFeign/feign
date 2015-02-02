@@ -25,18 +25,6 @@ import javax.ws.rs.PathParam;
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
-  interface GitHub {
-    @GET
-    @Path("/repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(
-        @PathParam("owner") String owner, @PathParam("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
-
   public static void main(String... args) throws InterruptedException {
     GitHub github =
         Feign.builder()
@@ -48,5 +36,19 @@ public class GitHubExample {
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
+  }
+
+  interface GitHub {
+
+    @GET
+    @Path("/repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(
+        @PathParam("owner") String owner, @PathParam("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
   }
 }

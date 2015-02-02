@@ -89,6 +89,7 @@ public class GsonCodecTest {
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
+
     Zone() {
       // for reflective instantiation.
     }
@@ -99,7 +100,9 @@ public class GsonCodecTest {
 
     Zone(String name, String id) {
       put("name", name);
-      if (id != null) put("id", id);
+      if (id != null) {
+        put("id", id);
+      }
     }
 
     private static final long serialVersionUID = 1L;

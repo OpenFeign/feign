@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 
 public class JacksonEncoder implements Encoder {
+
   private final ObjectMapper mapper;
 
   public JacksonEncoder() {

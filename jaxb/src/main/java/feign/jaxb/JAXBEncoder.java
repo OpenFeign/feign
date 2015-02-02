@@ -43,6 +43,7 @@ import javax.xml.bind.Marshaller;
  * contexts.
  */
 public class JAXBEncoder implements Encoder {
+
   private final JAXBContextFactory jaxbContextFactory;
 
   public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {

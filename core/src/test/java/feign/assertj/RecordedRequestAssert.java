@@ -32,6 +32,7 @@ import org.assertj.core.internal.Objects;
 
 public final class RecordedRequestAssert
     extends AbstractAssert<RecordedRequestAssert, RecordedRequest> {
+
   ByteArrays arrays = ByteArrays.instance();
   Objects objects = Objects.instance();
   Iterables iterables = Iterables.instance();

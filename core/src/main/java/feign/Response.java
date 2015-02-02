@@ -35,10 +35,22 @@ import java.util.Map;
 
 /** An immutable response to an http invocation which only returns string content. */
 public final class Response {
+
   private final int status;
   private final String reason;
   private final Map<String, Collection<String>> headers;
   private final Body body;
+
+  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
+    checkState(status >= 200, "Invalid status code: %s", status);
+    this.status = status;
+    this.reason = checkNotNull(reason, "reason");
+    LinkedHashMap<String, Collection<String>> copyOf =
+        new LinkedHashMap<String, Collection<String>>();
+    copyOf.putAll(checkNotNull(headers, "headers"));
+    this.headers = Collections.unmodifiableMap(copyOf);
+    this.body = body; // nullable
+  }
 
   public static Response create(
       int status,
@@ -68,17 +80,6 @@ public final class Response {
     return new Response(status, reason, headers, body);
   }
 
-  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
-    checkState(status >= 200, "Invalid status code: %s", status);
-    this.status = status;
-    this.reason = checkNotNull(reason, "reason");
-    LinkedHashMap<String, Collection<String>> copyOf =
-        new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers"));
-    this.headers = Collections.unmodifiableMap(copyOf);
-    this.body = body; // nullable
-  }
-
   /**
    * status code. ex {@code 200}
    *
@@ -99,6 +100,21 @@ public final class Response {
   /** if present, the response had a body */
   public Body body() {
     return body;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
+    }
+    if (body != null) {
+      builder.append('\n').append(body);
+    }
+    return builder.toString();
   }
 
   public interface Body extends Closeable {
@@ -124,12 +140,6 @@ public final class Response {
   }
 
   private static final class InputStreamBody implements Response.Body {
-    private static Body orNull(InputStream inputStream, Integer length) {
-      if (inputStream == null) {
-        return null;
-      }
-      return new InputStreamBody(inputStream, length);
-    }
 
     private final InputStream inputStream;
     private final Integer length;
@@ -137,6 +147,13 @@ public final class Response {
     private InputStreamBody(InputStream inputStream, Integer length) {
       this.inputStream = inputStream;
       this.length = length;
+    }
+
+    private static Body orNull(InputStream inputStream, Integer length) {
+      if (inputStream == null) {
+        return null;
+      }
+      return new InputStreamBody(inputStream, length);
     }
 
     @Override
@@ -166,6 +183,13 @@ public final class Response {
   }
 
   private static final class ByteArrayBody implements Response.Body {
+
+    private final byte[] data;
+
+    public ByteArrayBody(byte[] data) {
+      this.data = data;
+    }
+
     private static Body orNull(byte[] data) {
       if (data == null) {
         return null;
@@ -179,12 +203,6 @@ public final class Response {
       }
       checkNotNull(charset, "charset");
       return new ByteArrayBody(text.getBytes(charset));
-    }
-
-    private final byte[] data;
-
-    public ByteArrayBody(byte[] data) {
-      this.data = data;
     }
 
     @Override
@@ -214,20 +232,5 @@ public final class Response {
     public String toString() {
       return decodeOrDefault(data, UTF_8, "Binary data");
     }
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
-    }
-    if (body != null) {
-      builder.append('\n').append(body);
-    }
-    return builder.toString();
   }
 }

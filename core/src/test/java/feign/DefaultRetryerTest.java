@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class DefaultRetryerTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   @Test

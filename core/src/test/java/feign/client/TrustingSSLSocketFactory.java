@@ -42,20 +42,8 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
 
   private static final Map<String, SSLSocketFactory> sslSocketFactories =
       new LinkedHashMap<String, SSLSocketFactory>();
-
-  public static SSLSocketFactory get() {
-    return get("");
-  }
-
-  public static synchronized SSLSocketFactory get(String serverAlias) {
-    if (!sslSocketFactories.containsKey(serverAlias)) {
-      sslSocketFactories.put(serverAlias, new TrustingSSLSocketFactory(serverAlias));
-    }
-    return sslSocketFactories.get(serverAlias);
-  }
-
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
-
+  private static final String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_RC4_128_MD5"};
   private final SSLSocketFactory delegate;
   private final String serverAlias;
   private final PrivateKey privateKey;
@@ -86,6 +74,34 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
     }
   }
 
+  public static SSLSocketFactory get() {
+    return get("");
+  }
+
+  public static synchronized SSLSocketFactory get(String serverAlias) {
+    if (!sslSocketFactories.containsKey(serverAlias)) {
+      sslSocketFactories.put(serverAlias, new TrustingSSLSocketFactory(serverAlias));
+    }
+    return sslSocketFactories.get(serverAlias);
+  }
+
+  static Socket setEnabledCipherSuites(Socket socket) {
+    SSLSocket.class.cast(socket).setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
+    return socket;
+  }
+
+  private static KeyStore loadKeyStore(InputStream inputStream) throws IOException {
+    try {
+      KeyStore keyStore = KeyStore.getInstance("JKS");
+      keyStore.load(inputStream, KEYSTORE_PASSWORD);
+      return keyStore;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    } finally {
+      inputStream.close();
+    }
+  }
+
   @Override
   public String[] getDefaultCipherSuites() {
     return ENABLED_CIPHER_SUITES;
@@ -100,11 +116,6 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
   public Socket createSocket(Socket s, String host, int port, boolean autoClose)
       throws IOException {
     return setEnabledCipherSuites(delegate.createSocket(s, host, port, autoClose));
-  }
-
-  static Socket setEnabledCipherSuites(Socket socket) {
-    SSLSocket.class.cast(socket).setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-    return socket;
   }
 
   @Override
@@ -166,18 +177,4 @@ final class TrustingSSLSocketFactory extends SSLSocketFactory
   public PrivateKey getPrivateKey(String alias) {
     return privateKey;
   }
-
-  private static KeyStore loadKeyStore(InputStream inputStream) throws IOException {
-    try {
-      KeyStore keyStore = KeyStore.getInstance("JKS");
-      keyStore.load(inputStream, KEYSTORE_PASSWORD);
-      return keyStore;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    } finally {
-      inputStream.close();
-    }
-  }
-
-  private static final String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_RC4_128_MD5"};
 }

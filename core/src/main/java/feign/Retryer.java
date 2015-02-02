@@ -31,12 +31,6 @@ public interface Retryer {
     private final int maxAttempts;
     private final long period;
     private final long maxPeriod;
-
-    // visible for testing;
-    protected long currentTimeMillis() {
-      return System.currentTimeMillis();
-    }
-
     int attempt;
     long sleptForMillis;
 
@@ -51,14 +45,25 @@ public interface Retryer {
       this.attempt = 1;
     }
 
+    // visible for testing;
+    protected long currentTimeMillis() {
+      return System.currentTimeMillis();
+    }
+
     public void continueOrPropagate(RetryableException e) {
-      if (attempt++ >= maxAttempts) throw e;
+      if (attempt++ >= maxAttempts) {
+        throw e;
+      }
 
       long interval;
       if (e.retryAfter() != null) {
         interval = e.retryAfter().getTime() - currentTimeMillis();
-        if (interval > maxPeriod) interval = maxPeriod;
-        if (interval < 0) return;
+        if (interval > maxPeriod) {
+          interval = maxPeriod;
+        }
+        if (interval < 0) {
+          return;
+        }
       } else {
         interval = nextMaxInterval();
       }

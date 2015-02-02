@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class DefaultErrorDecoderTest {
+
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();

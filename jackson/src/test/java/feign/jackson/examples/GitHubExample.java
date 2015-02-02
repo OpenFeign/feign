@@ -8,23 +8,6 @@ import java.util.List;
 
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-    private String login;
-    private int contributions;
-
-    void setLogin(String login) {
-      this.login = login;
-    }
-
-    void setContributions(int contributions) {
-      this.contributions = contributions;
-    }
-  }
 
   public static void main(String... args) {
     GitHub github =
@@ -36,6 +19,26 @@ public class GitHubExample {
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    }
+  }
+
+  interface GitHub {
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+
+    private String login;
+    private int contributions;
+
+    void setLogin(String login) {
+      this.login = login;
+    }
+
+    void setContributions(int contributions) {
+      this.contributions = contributions;
     }
   }
 }

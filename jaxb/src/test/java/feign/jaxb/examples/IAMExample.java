@@ -30,11 +30,6 @@ import javax.xml.bind.annotation.XmlType;
 
 public class IAMExample {
 
-  interface IAM {
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
-    GetUserResponse userResponse();
-  }
-
   public static void main(String... args) {
     IAM iam =
         Feign.builder()
@@ -45,7 +40,17 @@ public class IAMExample {
     System.out.println("UserId: " + response.result.user.id);
   }
 
+  interface IAM {
+
+    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
+    GetUserResponse userResponse();
+  }
+
   static class IAMTarget extends AWSSignatureVersion4 implements Target<IAM> {
+
+    private IAMTarget(String accessKey, String secretKey) {
+      super(accessKey, secretKey);
+    }
 
     @Override
     public Class<IAM> type() {
@@ -62,10 +67,6 @@ public class IAMExample {
       return "https://iam.amazonaws.com";
     }
 
-    private IAMTarget(String accessKey, String secretKey) {
-      super(accessKey, secretKey);
-    }
-
     @Override
     public Request apply(RequestTemplate in) {
       in.insert(0, url());
@@ -76,6 +77,7 @@ public class IAMExample {
   @XmlRootElement(name = "GetUserResponse", namespace = "https://iam.amazonaws.com/doc/2010-05-08/")
   @XmlAccessorType(XmlAccessType.FIELD)
   static class GetUserResponse {
+
     @XmlElement(name = "GetUserResult")
     private GetUserResult result;
   }
@@ -83,6 +85,7 @@ public class IAMExample {
   @XmlAccessorType(XmlAccessType.FIELD)
   @XmlType(name = "GetUserResult")
   static class GetUserResult {
+
     @XmlElement(name = "User")
     private User user;
   }
@@ -90,6 +93,7 @@ public class IAMExample {
   @XmlAccessorType(XmlAccessType.FIELD)
   @XmlType(name = "User")
   static class User {
+
     @XmlElement(name = "UserId")
     private String id;
   }

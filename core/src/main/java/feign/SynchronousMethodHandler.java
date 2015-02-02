@@ -31,49 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
-  static class Factory {
-
-    private final Client client;
-    private final Retryer retryer;
-    private final List<RequestInterceptor> requestInterceptors;
-    private final Logger logger;
-    private final Logger.Level logLevel;
-
-    Factory(
-        Client client,
-        Retryer retryer,
-        List<RequestInterceptor> requestInterceptors,
-        Logger logger,
-        Logger.Level logLevel) {
-      this.client = checkNotNull(client, "client");
-      this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.logger = checkNotNull(logger, "logger");
-      this.logLevel = checkNotNull(logLevel, "logLevel");
-    }
-
-    public MethodHandler create(
-        Target<?> target,
-        MethodMetadata md,
-        RequestTemplate.Factory buildTemplateFromArgs,
-        Options options,
-        Decoder decoder,
-        ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(
-          target,
-          client,
-          retryer,
-          requestInterceptors,
-          logger,
-          logLevel,
-          md,
-          buildTemplateFromArgs,
-          options,
-          decoder,
-          errorDecoder);
-    }
-  }
-
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
@@ -198,6 +155,49 @@ final class SynchronousMethodHandler implements MethodHandler {
       throw e;
     } catch (RuntimeException e) {
       throw new DecodeException(e.getMessage(), e);
+    }
+  }
+
+  static class Factory {
+
+    private final Client client;
+    private final Retryer retryer;
+    private final List<RequestInterceptor> requestInterceptors;
+    private final Logger logger;
+    private final Logger.Level logLevel;
+
+    Factory(
+        Client client,
+        Retryer retryer,
+        List<RequestInterceptor> requestInterceptors,
+        Logger logger,
+        Logger.Level logLevel) {
+      this.client = checkNotNull(client, "client");
+      this.retryer = checkNotNull(retryer, "retryer");
+      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.logger = checkNotNull(logger, "logger");
+      this.logLevel = checkNotNull(logLevel, "logLevel");
+    }
+
+    public MethodHandler create(
+        Target<?> target,
+        MethodMetadata md,
+        RequestTemplate.Factory buildTemplateFromArgs,
+        Options options,
+        Decoder decoder,
+        ErrorDecoder errorDecoder) {
+      return new SynchronousMethodHandler(
+          target,
+          client,
+          retryer,
+          requestInterceptors,
+          logger,
+          logLevel,
+          md,
+          buildTemplateFromArgs,
+          options,
+          decoder,
+          errorDecoder);
     }
   }
 }

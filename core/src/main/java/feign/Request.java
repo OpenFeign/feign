@@ -83,6 +83,21 @@ public final class Request {
     return body;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
+    }
+    if (body != null) {
+      builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
+    }
+    return builder.toString();
+  }
+
   /* Controls the per-request settings currently required to be implemented by all {@link Client clients} */
   public static class Options {
 
@@ -115,20 +130,5 @@ public final class Request {
     public int readTimeoutMillis() {
       return readTimeoutMillis;
     }
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
-        builder.append(field).append(": ").append(value).append('\n');
-      }
-    }
-    if (body != null) {
-      builder.append('\n').append(charset != null ? new String(body, charset) : "Binary data");
-    }
-    return builder.toString();
   }
 }

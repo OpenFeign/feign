@@ -29,6 +29,7 @@ import static feign.Util.emptyToNull;
  * @param <T> type of the interface this target applies to.
  */
 public interface Target<T> {
+
   /* The type of the interface this target applies to. ex. {@code Route53}. */
   Class<T> type();
 
@@ -63,6 +64,7 @@ public interface Target<T> {
   public Request apply(RequestTemplate input);
 
   public static class HardCodedTarget<T> implements Target<T> {
+
     private final Class<T> type;
     private final String name;
     private final String url;
@@ -95,7 +97,9 @@ public interface Target<T> {
     /* no authentication or other special activity. just insert the url. */
     @Override
     public Request apply(RequestTemplate input) {
-      if (input.url().indexOf("http") != 0) input.insert(0, url());
+      if (input.url().indexOf("http") != 0) {
+        input.insert(0, url());
+      }
       return input.request();
     }
 
@@ -133,6 +137,7 @@ public interface Target<T> {
   }
 
   public static final class EmptyTarget<T> implements Target<T> {
+
     private final Class<T> type;
     private final String name;
 

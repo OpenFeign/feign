@@ -25,11 +25,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class IAMExample {
 
-  interface IAM {
-    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
-    Long userId();
-  }
-
   public static void main(String... args) {
     IAM iam =
         Feign.builder() //
@@ -38,7 +33,17 @@ public class IAMExample {
     System.out.println(iam.userId());
   }
 
+  interface IAM {
+
+    @RequestLine("GET /?Action=GetUser&Version=2010-05-08")
+    Long userId();
+  }
+
   static class IAMTarget extends AWSSignatureVersion4 implements Target<IAM> {
+
+    private IAMTarget(String accessKey, String secretKey) {
+      super(accessKey, secretKey);
+    }
 
     @Override
     public Class<IAM> type() {
@@ -53,10 +58,6 @@ public class IAMExample {
     @Override
     public String url() {
       return "https://iam.amazonaws.com";
-    }
-
-    private IAMTarget(String accessKey, String secretKey) {
-      super(accessKey, secretKey);
     }
 
     @Override

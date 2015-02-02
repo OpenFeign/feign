@@ -43,6 +43,7 @@ import javax.xml.bind.Unmarshaller;
  * contexts.
  */
 public class JAXBDecoder implements Decoder {
+
   private final JAXBContextFactory jaxbContextFactory;
 
   public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {

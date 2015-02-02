@@ -54,90 +54,14 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class SAXDecoder implements Decoder {
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories =
-        new LinkedHashMap<Type, ContentHandlerWithResult.Factory<?>>();
-
-    /**
-     * Will call {@link Constructor#newInstance(Object...)} on {@code handlerClass} for each content
-     * stream.
-     *
-     * <p>
-     *
-     * <h3>Note</h3>
-     *
-     * <br>
-     * While this is costly vs {@code new}, it may not affect real performance due to the high cost
-     * of reading streams.
-     *
-     * @throws IllegalArgumentException if there's no no-arg constructor on {@code handlerClass}.
-     */
-    public <T extends ContentHandlerWithResult<?>> Builder registerContentHandler(
-        Class<T> handlerClass) {
-      Type type =
-          resolveLastTypeParameter(
-              checkNotNull(handlerClass, "handlerClass"), ContentHandlerWithResult.class);
-      return registerContentHandler(
-          type, new NewInstanceContentHandlerWithResultFactory(handlerClass));
-    }
-
-    private static class NewInstanceContentHandlerWithResultFactory<T>
-        implements ContentHandlerWithResult.Factory<T> {
-      private final Constructor<ContentHandlerWithResult<T>> ctor;
-
-      private NewInstanceContentHandlerWithResultFactory(Class<ContentHandlerWithResult<T>> clazz) {
-        try {
-          this.ctor = clazz.getDeclaredConstructor();
-          // allow private or package protected ctors
-          ctor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-          throw new IllegalArgumentException("ensure " + clazz + " has a no-args constructor", e);
-        }
-      }
-
-      @Override
-      public ContentHandlerWithResult<T> create() {
-        try {
-          return ctor.newInstance();
-        } catch (Exception e) {
-          throw new IllegalArgumentException("exception attempting to instantiate " + ctor, e);
-        }
-      }
-    }
-
-    /**
-     * Will call {@link ContentHandlerWithResult.Factory#create()} on {@code handler} for each
-     * content stream. The {@code handler} is expected to have a generic parameter of {@code type}.
-     */
-    public Builder registerContentHandler(Type type, ContentHandlerWithResult.Factory<?> handler) {
-      this.handlerFactories.put(checkNotNull(type, "type"), checkNotNull(handler, "handler"));
-      return this;
-    }
-
-    public SAXDecoder build() {
-      return new SAXDecoder(handlerFactories);
-    }
-  }
-
-  /** Implementations are not intended to be shared across requests. */
-  public interface ContentHandlerWithResult<T> extends ContentHandler {
-
-    public interface Factory<T> {
-      ContentHandlerWithResult<T> create();
-    }
-
-    /** expected to be set following a call to {@link XMLReader#parse(InputSource)} */
-    T result();
-  }
-
   private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories;
 
   private SAXDecoder(Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories) {
     this.handlerFactories = handlerFactories;
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   @Override
@@ -166,6 +90,85 @@ public class SAXDecoder implements Decoder {
       return handler.result();
     } catch (SAXException e) {
       throw new DecodeException(e.getMessage(), e);
+    }
+  }
+
+  /** Implementations are not intended to be shared across requests. */
+  public interface ContentHandlerWithResult<T> extends ContentHandler {
+
+    /** expected to be set following a call to {@link XMLReader#parse(InputSource)} */
+    T result();
+
+    public interface Factory<T> {
+
+      ContentHandlerWithResult<T> create();
+    }
+  }
+
+  public static class Builder {
+
+    private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories =
+        new LinkedHashMap<Type, ContentHandlerWithResult.Factory<?>>();
+
+    /**
+     * Will call {@link Constructor#newInstance(Object...)} on {@code handlerClass} for each content
+     * stream.
+     *
+     * <p>
+     *
+     * <h3>Note</h3>
+     *
+     * <br>
+     * While this is costly vs {@code new}, it may not affect real performance due to the high cost
+     * of reading streams.
+     *
+     * @throws IllegalArgumentException if there's no no-arg constructor on {@code handlerClass}.
+     */
+    public <T extends ContentHandlerWithResult<?>> Builder registerContentHandler(
+        Class<T> handlerClass) {
+      Type type =
+          resolveLastTypeParameter(
+              checkNotNull(handlerClass, "handlerClass"), ContentHandlerWithResult.class);
+      return registerContentHandler(
+          type, new NewInstanceContentHandlerWithResultFactory(handlerClass));
+    }
+
+    /**
+     * Will call {@link ContentHandlerWithResult.Factory#create()} on {@code handler} for each
+     * content stream. The {@code handler} is expected to have a generic parameter of {@code type}.
+     */
+    public Builder registerContentHandler(Type type, ContentHandlerWithResult.Factory<?> handler) {
+      this.handlerFactories.put(checkNotNull(type, "type"), checkNotNull(handler, "handler"));
+      return this;
+    }
+
+    public SAXDecoder build() {
+      return new SAXDecoder(handlerFactories);
+    }
+
+    private static class NewInstanceContentHandlerWithResultFactory<T>
+        implements ContentHandlerWithResult.Factory<T> {
+
+      private final Constructor<ContentHandlerWithResult<T>> ctor;
+
+      private NewInstanceContentHandlerWithResultFactory(Class<ContentHandlerWithResult<T>> clazz) {
+        try {
+          this.ctor = clazz.getDeclaredConstructor();
+          // allow private or package protected ctors
+          ctor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+          throw new IllegalArgumentException("ensure " + clazz + " has a no-args constructor", e);
+        }
+      }
+
+      @Override
+      public ContentHandlerWithResult<T> create() {
+        try {
+          return ctor.newInstance();
+        } catch (Exception e) {
+          throw new IllegalArgumentException("exception attempting to instantiate " + ctor, e);
+        }
+      }
     }
   }
 }

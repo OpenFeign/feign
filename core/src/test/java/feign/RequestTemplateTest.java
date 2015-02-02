@@ -27,6 +27,26 @@ import org.junit.Test;
 
 public class RequestTemplateTest {
 
+  /** Avoid depending on guava solely for map literals. */
+  private static Map<String, Object> mapOf(String key, Object val) {
+    Map<String, Object> result = new LinkedHashMap<String, Object>();
+    result.put(key, val);
+    return result;
+  }
+
+  private static Map<String, Object> mapOf(String k1, Object v1, String k2, Object v2) {
+    Map<String, Object> result = mapOf(k1, v1);
+    result.put(k2, v2);
+    return result;
+  }
+
+  private static Map<String, Object> mapOf(
+      String k1, Object v1, String k2, Object v2, String k3, Object v3) {
+    Map<String, Object> result = mapOf(k1, v1, k2, v2);
+    result.put(k3, v3);
+    return result;
+  }
+
   @Test
   public void expandNotUrlEncoded() {
     for (String val : Arrays.asList("apples", "sp ace", "unic???de", "qu?stion")) {
@@ -183,25 +203,5 @@ public class RequestTemplateTest {
     template = template.resolve(mapOf("domainId", 1001));
 
     assertThat(template).hasUrl("/domains/1001/records").hasQueries();
-  }
-
-  /** Avoid depending on guava solely for map literals. */
-  private static Map<String, Object> mapOf(String key, Object val) {
-    Map<String, Object> result = new LinkedHashMap<String, Object>();
-    result.put(key, val);
-    return result;
-  }
-
-  private static Map<String, Object> mapOf(String k1, Object v1, String k2, Object v2) {
-    Map<String, Object> result = mapOf(k1, v1);
-    result.put(k2, v2);
-    return result;
-  }
-
-  private static Map<String, Object> mapOf(
-      String k1, Object v1, String k2, Object v2, String k3, Object v3) {
-    Map<String, Object> result = mapOf(k1, v1, k2, v2);
-    result.put(k3, v3);
-    return result;
   }
 }

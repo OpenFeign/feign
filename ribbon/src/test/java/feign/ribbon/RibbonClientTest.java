@@ -32,16 +32,14 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 public class RibbonClientTest {
+
   @Rule public final TestName testName = new TestName();
   @Rule public final MockWebServerRule server1 = new MockWebServerRule();
   @Rule public final MockWebServerRule server2 = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /")
-    void post();
-
-    @RequestLine("GET /?a={a}")
-    void getWithQueryParameters(@Param("a") String a);
+  static String hostAndPort(URL url) {
+    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
+    return "localhost:" + url.getPort();
   }
 
   @Test
@@ -88,10 +86,10 @@ public class RibbonClientTest {
   }
 
   /*
-  This test-case replicates a bug that occurs when using RibbonRequest with a query string.
+         This test-case replicates a bug that occurs when using RibbonRequest with a query string.
 
-  The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
-  invalid characters (ex. space).
+         The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
+         invalid characters (ex. space).
   */
   @Test
   public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
@@ -134,11 +132,6 @@ public class RibbonClientTest {
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
-  static String hostAndPort(URL url) {
-    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
-    return "localhost:" + url.getPort();
-  }
-
   private String client() {
     return testName.getMethodName();
   }
@@ -150,5 +143,14 @@ public class RibbonClientTest {
   @After
   public void clearServerList() {
     getConfigInstance().clearProperty(serverListKey());
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    void post();
+
+    @RequestLine("GET /?a={a}")
+    void getWithQueryParameters(@Param("a") String a);
   }
 }

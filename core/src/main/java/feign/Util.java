@@ -38,8 +38,6 @@ import java.util.Map;
 
 /** Utilities, typically copied in from guava, so as to avoid dependency conflicts. */
 public class Util {
-  private Util() { // no instances
-  }
 
   /** The HTTP Content-Length header field name. */
   public static final String CONTENT_LENGTH = "Content-Length";
@@ -53,12 +51,17 @@ public class Util {
   /** Value for the Content-Encoding header that indicates that GZIP encoding is in use. */
   public static final String ENCODING_GZIP = "gzip";
 
-  // com.google.common.base.Charsets
   /** UTF-8: eight-bit UCS Transformation Format. */
   public static final Charset UTF_8 = Charset.forName("UTF-8");
 
+  // com.google.common.base.Charsets
   /** ISO-8859-1: ISO Latin Alphabet Number 1 (ISO-LATIN-1). */
   public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+
+  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
+
+  private Util() { // no instances
+  }
 
   /** Copy of {@code com.google.common.base.Preconditions#checkArgument}. */
   public static void checkArgument(
@@ -151,8 +154,6 @@ public class Util {
     }
     return types[types.length - 1];
   }
-
-  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
   /** Adapted from {@code com.google.common.io.CharStreams.toString()}. */
   public static String toString(Reader reader) throws IOException {

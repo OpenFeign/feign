@@ -24,16 +24,6 @@ import java.util.List;
 /** adapted from {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
-  interface GitHub {
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
-
   public static void main(String... args) {
     GitHub github =
         Feign.builder().decoder(new GsonDecoder()).target(GitHub.class, "https://api.github.com");
@@ -43,5 +33,17 @@ public class GitHubExample {
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
+  }
+
+  interface GitHub {
+
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
   }
 }

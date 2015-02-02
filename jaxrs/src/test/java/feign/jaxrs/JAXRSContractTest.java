@@ -48,22 +48,10 @@ import org.junit.rules.ExpectedException;
  * .RequestTemplate template} instances.
  */
 public class JAXRSContractTest {
+
+  private static final List<String> STRING_LIST = null;
   @Rule public final ExpectedException thrown = ExpectedException.none();
   JAXRSContract contract = new JAXRSContract();
-
-  interface Methods {
-    @POST
-    void post();
-
-    @PUT
-    void put();
-
-    @GET
-    void get();
-
-    @DELETE
-    void delete();
-  }
 
   @Test
   public void httpMethods() throws Exception {
@@ -86,16 +74,6 @@ public class JAXRSContractTest {
         .hasMethod("DELETE");
   }
 
-  interface CustomMethod {
-    @Target({ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
-    @HttpMethod("PATCH")
-    public @interface PATCH {}
-
-    @PATCH
-    Response patch();
-  }
-
   @Test
   public void customMethodWithoutPath() throws Exception {
     assertThat(
@@ -104,28 +82,6 @@ public class JAXRSContractTest {
                 .template())
         .hasMethod("PATCH")
         .hasUrl("");
-  }
-
-  interface WithQueryParamsInPath {
-    @GET
-    @Path("/")
-    Response none();
-
-    @GET
-    @Path("/?Action=GetUser")
-    Response one();
-
-    @GET
-    @Path("/?Action=GetUser&Version=2010-05-08")
-    Response two();
-
-    @GET
-    @Path("/?Action=GetUser&Version=2010-05-08&limit=1")
-    Response three();
-
-    @GET
-    @Path("/?flag&Action=GetUser&Version=2010-05-08")
-    Response empty();
   }
 
   @Test
@@ -170,32 +126,6 @@ public class JAXRSContractTest {
             entry("flag", asList(new String[] {null})),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
-  }
-
-  interface ProducesAndConsumes {
-    @GET
-    @Produces("application/xml")
-    Response produces();
-
-    @GET
-    @Produces({})
-    Response producesNada();
-
-    @GET
-    @Produces({""})
-    Response producesEmpty();
-
-    @POST
-    @Consumes("application/xml")
-    Response consumes();
-
-    @POST
-    @Consumes({})
-    Response consumesNada();
-
-    @POST
-    @Consumes({""})
-    Response consumesEmpty();
   }
 
   @Test
@@ -252,16 +182,6 @@ public class JAXRSContractTest {
         ProducesAndConsumes.class.getDeclaredMethod("consumesEmpty"));
   }
 
-  interface BodyParams {
-    @POST
-    Response post(List<String> body);
-
-    @POST
-    Response tooMany(List<String> body, List<String> body2);
-  }
-
-  private static final List<String> STRING_LIST = null;
-
   @Test
   public void bodyParamIsGeneric() throws Exception {
     MethodMetadata md =
@@ -281,36 +201,12 @@ public class JAXRSContractTest {
         BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
   }
 
-  @Path("")
-  interface EmptyPathOnType {
-    @GET
-    Response base();
-  }
-
   @Test
   public void emptyPathOnType() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Path.value() was empty on type ");
 
     contract.parseAndValidatateMetadata(EmptyPathOnType.class.getDeclaredMethod("base"));
-  }
-
-  @Path("/base")
-  interface PathOnType {
-    @GET
-    Response base();
-
-    @GET
-    @Path("/specific")
-    Response get();
-
-    @GET
-    @Path("")
-    Response emptyPath();
-
-    @GET
-    @Path("/{param}")
-    Response emptyPathParam(@PathParam("") String empty);
   }
 
   private MethodMetadata parsePathOnTypeMethod(String name) throws NoSuchMethodException {
@@ -341,12 +237,6 @@ public class JAXRSContractTest {
         PathOnType.class.getDeclaredMethod("emptyPathParam", String.class));
   }
 
-  interface WithURIParam {
-    @GET
-    @Path("/{1}/{2}")
-    Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
-  }
-
   @Test
   public void withPathAndURIParams() throws Exception {
     MethodMetadata md =
@@ -361,18 +251,6 @@ public class JAXRSContractTest {
             entry(2, asList("2")));
 
     assertThat(md.urlIndex()).isEqualTo(1);
-  }
-
-  interface WithPathAndQueryParams {
-    @GET
-    @Path("/domains/{domainId}/records")
-    Response recordsByNameAndType(
-        @PathParam("domainId") int id,
-        @QueryParam("name") String nameFilter,
-        @QueryParam("type") String typeFilter);
-
-    @GET
-    Response empty(@QueryParam("") String empty);
   }
 
   @Test
@@ -397,17 +275,6 @@ public class JAXRSContractTest {
 
     contract.parseAndValidatateMetadata(
         WithPathAndQueryParams.class.getDeclaredMethod("empty", String.class));
-  }
-
-  interface FormParams {
-    @POST
-    void login(
-        @FormParam("customer_name") String customer,
-        @FormParam("user_name") String user,
-        @FormParam("password") String password);
-
-    @GET
-    Response emptyFormParam(@FormParam("") String empty);
   }
 
   @Test
@@ -444,14 +311,6 @@ public class JAXRSContractTest {
         FormParams.class.getDeclaredMethod("emptyFormParam", String.class));
   }
 
-  interface HeaderParams {
-    @POST
-    void logout(@HeaderParam("Auth-Token") String token);
-
-    @GET
-    Response emptyHeaderParam(@HeaderParam("") String empty);
-  }
-
   @Test
   public void headerParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md =
@@ -472,13 +331,6 @@ public class JAXRSContractTest {
         HeaderParams.class.getDeclaredMethod("emptyHeaderParam", String.class));
   }
 
-  @Path("base")
-  interface PathsWithoutAnySlashes {
-    @GET
-    @Path("specific")
-    Response get();
-  }
-
   @Test
   public void pathsWithoutSlashesParseCorrectly() throws Exception {
     assertThat(
@@ -486,13 +338,6 @@ public class JAXRSContractTest {
                 .parseAndValidatateMetadata(PathsWithoutAnySlashes.class.getDeclaredMethod("get"))
                 .template())
         .hasUrl("/base/specific");
-  }
-
-  @Path("/base")
-  interface PathsWithSomeSlashes {
-    @GET
-    @Path("specific")
-    Response get();
   }
 
   @Test
@@ -504,13 +349,6 @@ public class JAXRSContractTest {
         .hasUrl("/base/specific");
   }
 
-  @Path("base")
-  interface PathsWithSomeOtherSlashes {
-    @GET
-    @Path("/specific")
-    Response get();
-  }
-
   @Test
   public void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
     assertThat(
@@ -519,5 +357,181 @@ public class JAXRSContractTest {
                     PathsWithSomeOtherSlashes.class.getDeclaredMethod("get"))
                 .template())
         .hasUrl("/base/specific");
+  }
+
+  interface Methods {
+
+    @POST
+    void post();
+
+    @PUT
+    void put();
+
+    @GET
+    void get();
+
+    @DELETE
+    void delete();
+  }
+
+  interface CustomMethod {
+
+    @PATCH
+    Response patch();
+
+    @Target({ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @HttpMethod("PATCH")
+    public @interface PATCH {}
+  }
+
+  interface WithQueryParamsInPath {
+
+    @GET
+    @Path("/")
+    Response none();
+
+    @GET
+    @Path("/?Action=GetUser")
+    Response one();
+
+    @GET
+    @Path("/?Action=GetUser&Version=2010-05-08")
+    Response two();
+
+    @GET
+    @Path("/?Action=GetUser&Version=2010-05-08&limit=1")
+    Response three();
+
+    @GET
+    @Path("/?flag&Action=GetUser&Version=2010-05-08")
+    Response empty();
+  }
+
+  interface ProducesAndConsumes {
+
+    @GET
+    @Produces("application/xml")
+    Response produces();
+
+    @GET
+    @Produces({})
+    Response producesNada();
+
+    @GET
+    @Produces({""})
+    Response producesEmpty();
+
+    @POST
+    @Consumes("application/xml")
+    Response consumes();
+
+    @POST
+    @Consumes({})
+    Response consumesNada();
+
+    @POST
+    @Consumes({""})
+    Response consumesEmpty();
+  }
+
+  interface BodyParams {
+
+    @POST
+    Response post(List<String> body);
+
+    @POST
+    Response tooMany(List<String> body, List<String> body2);
+  }
+
+  @Path("")
+  interface EmptyPathOnType {
+
+    @GET
+    Response base();
+  }
+
+  @Path("/base")
+  interface PathOnType {
+
+    @GET
+    Response base();
+
+    @GET
+    @Path("/specific")
+    Response get();
+
+    @GET
+    @Path("")
+    Response emptyPath();
+
+    @GET
+    @Path("/{param}")
+    Response emptyPathParam(@PathParam("") String empty);
+  }
+
+  interface WithURIParam {
+
+    @GET
+    @Path("/{1}/{2}")
+    Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
+  }
+
+  interface WithPathAndQueryParams {
+
+    @GET
+    @Path("/domains/{domainId}/records")
+    Response recordsByNameAndType(
+        @PathParam("domainId") int id,
+        @QueryParam("name") String nameFilter,
+        @QueryParam("type") String typeFilter);
+
+    @GET
+    Response empty(@QueryParam("") String empty);
+  }
+
+  interface FormParams {
+
+    @POST
+    void login(
+        @FormParam("customer_name") String customer,
+        @FormParam("user_name") String user,
+        @FormParam("password") String password);
+
+    @GET
+    Response emptyFormParam(@FormParam("") String empty);
+  }
+
+  interface HeaderParams {
+
+    @POST
+    void logout(@HeaderParam("Auth-Token") String token);
+
+    @GET
+    Response emptyHeaderParam(@HeaderParam("") String empty);
+  }
+
+  @Path("base")
+  interface PathsWithoutAnySlashes {
+
+    @GET
+    @Path("specific")
+    Response get();
+  }
+
+  @Path("/base")
+  interface PathsWithSomeSlashes {
+
+    @GET
+    @Path("specific")
+    Response get();
+  }
+
+  @Path("base")
+  interface PathsWithSomeOtherSlashes {
+
+    @GET
+    @Path("/specific")
+    Response get();
   }
 }
