@@ -15,16 +15,19 @@
  */
 package feign.assertj;
 
-import feign.RequestTemplate;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
 
+import feign.RequestTemplate;
+
 import static feign.Util.UTF_8;
 
-public final class RequestTemplateAssert extends AbstractAssert<RequestTemplateAssert, RequestTemplate> {
+public final class RequestTemplateAssert
+    extends AbstractAssert<RequestTemplateAssert, RequestTemplate> {
+
   ByteArrays arrays = ByteArrays.instance();
   Objects objects = Objects.instance();
   Maps maps = Maps.instance();

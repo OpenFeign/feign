@@ -15,15 +15,17 @@
  */
 package feign.sax.examples;
 
-import feign.Request;
-import feign.RequestTemplate;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import feign.Request;
+import feign.RequestTemplate;
 
 import static feign.Util.UTF_8;
 
@@ -41,8 +43,12 @@ public class AWSSignatureVersion4 {
   }
 
   public Request apply(RequestTemplate input) {
-    if (!input.headers().isEmpty()) throw new UnsupportedOperationException("headers not supported");
-    if (input.body() != null) throw new UnsupportedOperationException("body not supported");
+    if (!input.headers().isEmpty()) {
+      throw new UnsupportedOperationException("headers not supported");
+    }
+    if (input.body() != null) {
+      throw new UnsupportedOperationException("body not supported");
+    }
 
     String host = URI.create(input.url()).getHost();
 
@@ -51,7 +57,9 @@ public class AWSSignatureVersion4 {
       timestamp = iso8601.format(new Date());
     }
 
-    String credentialScope = String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
+    String
+        credentialScope =
+        String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
 
     input.query("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
     input.query("X-Amz-Credential", accessKey + "/" + credentialScope);
@@ -90,7 +98,9 @@ public class AWSSignatureVersion4 {
     }
   }
 
-  private static final String EMPTY_STRING_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  private static final String
+      EMPTY_STRING_HASH =
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
   private static String canonicalString(RequestTemplate input, String host) {
     StringBuilder canonicalRequest = new StringBuilder();
@@ -114,7 +124,8 @@ public class AWSSignatureVersion4 {
 
     // HexEncode(Hash(Payload))
     String bodyText =
-        input.charset() != null && input.body() != null ? new String(input.body(), input.charset()) : null;
+        input.charset() != null && input.body() != null ? new String(input.body(), input.charset())
+                                                        : null;
     if (bodyText != null) {
       canonicalRequest.append(hex(sha256(bodyText)));
     } else {

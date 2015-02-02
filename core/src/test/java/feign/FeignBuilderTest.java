@@ -17,10 +17,9 @@ package feign;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
+
 import org.junit.Rule;
+import org.junit.Test;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -29,23 +28,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.Test;
+
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 public class FeignBuilderTest {
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /") Response codecPost(String data);
+  @Rule
+  public final MockWebServerRule server = new MockWebServerRule();
 
-    @RequestLine("POST /") void encodedPost(List<String> data);
-
-    @RequestLine("POST /") String decodedPost();
-  }
-
-  @Test public void testDefaults() throws Exception {
+  @Test
+  public void testDefaults() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
@@ -58,7 +55,8 @@ public class FeignBuilderTest {
         .hasBody("request data");
   }
 
-  @Test public void testOverrideEncoder() throws Exception {
+  @Test
+  public void testOverrideEncoder() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
@@ -76,7 +74,8 @@ public class FeignBuilderTest {
         .hasBody("[This, is, my, request]");
   }
 
-  @Test public void testOverrideDecoder() throws Exception {
+  @Test
+  public void testOverrideDecoder() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
 
     String url = "http://localhost:" + server.getPort();
@@ -93,7 +92,8 @@ public class FeignBuilderTest {
     assertEquals(1, server.getRequestCount());
   }
 
-  @Test public void testProvideRequestInterceptors() throws Exception {
+  @Test
+  public void testProvideRequestInterceptors() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
@@ -104,7 +104,9 @@ public class FeignBuilderTest {
       }
     };
 
-    TestInterface api = Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
+    TestInterface
+        api =
+        Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
@@ -113,7 +115,8 @@ public class FeignBuilderTest {
         .hasBody("request data");
   }
 
-  @Test public void testProvideInvocationHandlerFactory() throws Exception {
+  @Test
+  public void testProvideInvocationHandlerFactory() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
@@ -121,18 +124,34 @@ public class FeignBuilderTest {
     final AtomicInteger callCount = new AtomicInteger();
     InvocationHandlerFactory factory = new InvocationHandlerFactory() {
       private final InvocationHandlerFactory delegate = new Default();
-      @Override public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+
+      @Override
+      public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
         callCount.incrementAndGet();
         return delegate.create(target, dispatch);
       }
     };
 
-    TestInterface api = Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
+    TestInterface
+        api =
+        Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
     assertEquals("response data", Util.toString(response.body().asReader()));
     assertEquals(1, callCount.get());
 
     assertThat(server.takeRequest())
         .hasBody("request data");
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    Response codecPost(String data);
+
+    @RequestLine("POST /")
+    void encodedPost(List<String> data);
+
+    @RequestLine("POST /")
+    String decodedPost();
   }
 }

@@ -40,8 +40,6 @@ import static java.lang.String.format;
  * Utilities, typically copied in from guava, so as to avoid dependency conflicts.
  */
 public class Util {
-  private Util() { // no instances
-  }
 
   /**
    * The HTTP Content-Length header field name.
@@ -59,16 +57,20 @@ public class Util {
    * Value for the Content-Encoding header that indicates that GZIP encoding is in use.
    */
   public static final String ENCODING_GZIP = "gzip";
-
-  // com.google.common.base.Charsets
   /**
    * UTF-8: eight-bit UCS Transformation Format.
    */
   public static final Charset UTF_8 = Charset.forName("UTF-8");
+
+  // com.google.common.base.Charsets
   /**
    * ISO-8859-1: ISO Latin Alphabet Number 1 (ISO-LATIN-1).
    */
   public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
+
+  private Util() { // no instances
+  }
 
   /**
    * Copy of {@code com.google.common.base.Preconditions#checkArgument}.
@@ -150,21 +152,24 @@ public class Util {
   }
 
   /**
-   * Resolves the last type parameter of the parameterized {@code supertype}, based on the {@code genericContext},
-   * into its upper bounds.
-   * <p/>
-   * Implementation copied from {@code retrofit.RestMethodInfo}.
+   * Resolves the last type parameter of the parameterized {@code supertype}, based on the {@code
+   * genericContext}, into its upper bounds. <p/> Implementation copied from {@code
+   * retrofit.RestMethodInfo}.
    *
    * @param genericContext Ex. {@link java.lang.reflect.Field#getGenericType()}
    * @param supertype      Ex. {@code Decoder.class}
    * @return in the example above, the type parameter of {@code Decoder}.
-   * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type using
-   * {@code context}.
+   * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type
+   *                               using {@code context}.
    */
-  public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype) throws IllegalStateException {
-    Type resolvedSuperType = Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
-    checkState(resolvedSuperType instanceof ParameterizedType, "could not resolve %s into a parameterized type %s",
-        genericContext, supertype);
+  public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
+      throws IllegalStateException {
+    Type
+        resolvedSuperType =
+        Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
+    checkState(resolvedSuperType instanceof ParameterizedType,
+               "could not resolve %s into a parameterized type %s",
+               genericContext, supertype);
     Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
     for (int i = 0; i < types.length; i++) {
       Type type = types[i];
@@ -174,8 +179,6 @@ public class Util {
     }
     return types[types.length - 1];
   }
-
-  private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
   /**
    * Adapted from {@code com.google.common.io.CharStreams.toString()}.

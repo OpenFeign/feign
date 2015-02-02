@@ -15,15 +15,16 @@
  */
 package feign.codec;
 
-import feign.Response;
-import feign.Util;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
+
+import feign.Response;
+import feign.Util;
 
 import static java.lang.String.format;
 
 public class StringDecoder implements Decoder {
+
   @Override
   public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();

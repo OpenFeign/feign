@@ -19,38 +19,47 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.gson.GsonDecoder;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class WikipediaExample {
 
-  public static interface Wikipedia {
-    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}")
-    Response<Page> search(@Param("search") String search);
+  static ResponseAdapter<Page> pagesAdapter = new ResponseAdapter<Page>() {
 
-    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
-    Response<Page> resumeSearch(@Param("search") String search, @Param("offset") long offset);
-  }
+    @Override
+    protected String query() {
+      return "pages";
+    }
 
-  static class Page {
-    long id;
-    String title;
-  }
-
-  public static class Response<X> extends ArrayList<X> {
-    /** when present, the position to resume the list. */
-    Long nextOffset;
-  }
+    @Override
+    protected Page build(JsonReader reader) throws IOException {
+      Page page = new Page();
+      while (reader.hasNext()) {
+        String key = reader.nextName();
+        if (key.equals("pageid")) {
+          page.id = reader.nextLong();
+        } else if (key.equals("title")) {
+          page.title = reader.nextString();
+        } else {
+          reader.skipValue();
+        }
+      }
+      return page;
+    }
+  };
 
   public static void main(String... args) throws InterruptedException {
     Gson gson = new GsonBuilder()
-        .registerTypeAdapter(new TypeToken<Response<Page>>(){}.getType(), pagesAdapter)
+        .registerTypeAdapter(new TypeToken<Response<Page>>() {
+        }.getType(), pagesAdapter)
         .create();
 
     Wikipedia wikipedia = Feign.builder()
@@ -74,8 +83,9 @@ public class WikipediaExample {
    */
   static Iterator<Page> lazySearch(final Wikipedia wikipedia, final String query) {
     final Response<Page> first = wikipedia.search(query);
-    if (first.nextOffset == null)
+    if (first.nextOffset == null) {
       return first.iterator();
+    }
     return new Iterator<Page>() {
       Iterator<Page> current = first.iterator();
       Long nextOffset = first.nextOffset;
@@ -103,25 +113,26 @@ public class WikipediaExample {
     };
   }
 
-  static ResponseAdapter<Page> pagesAdapter = new ResponseAdapter<Page>() {
+  public static interface Wikipedia {
 
-    @Override protected String query() {
-      return "pages";
-    }
+    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}")
+    Response<Page> search(@Param("search") String search);
 
-    @Override protected Page build(JsonReader reader) throws IOException {
-      Page page = new Page();
-      while (reader.hasNext()) {
-        String key = reader.nextName();
-        if (key.equals("pageid")) {
-          page.id = reader.nextLong();
-        } else if (key.equals("title")) {
-          page.title = reader.nextString();
-        } else {
-          reader.skipValue();
-        }
-      }
-      return page;
-    }
-  };
+    @RequestLine("GET /w/api.php?action=query&continue=&generator=search&prop=info&format=json&gsrsearch={search}&gsroffset={offset}")
+    Response<Page> resumeSearch(@Param("search") String search, @Param("offset") long offset);
+  }
+
+  static class Page {
+
+    long id;
+    String title;
+  }
+
+  public static class Response<X> extends ArrayList<X> {
+
+    /**
+     * when present, the position to resume the list.
+     */
+    Long nextOffset;
+  }
 }

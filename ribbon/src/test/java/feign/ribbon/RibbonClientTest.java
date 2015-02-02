@@ -18,6 +18,15 @@ package feign.ribbon;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+import java.io.IOException;
+import java.net.URL;
+
 import dagger.Provides;
 import feign.Feign;
 import feign.Param;
@@ -25,46 +34,36 @@ import feign.RequestLine;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 
-import java.io.IOException;
-import java.net.URL;
-
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
 public class RibbonClientTest {
-  @Rule public final TestName testName = new TestName();
-  @Rule public final MockWebServerRule server1 = new MockWebServerRule();
-  @Rule public final MockWebServerRule server2 = new MockWebServerRule();
 
-  interface TestInterface {
-    @RequestLine("POST /") void post();
-    @RequestLine("GET /?a={a}") void getWithQueryParameters(@Param("a") String a);
+  @Rule
+  public final TestName testName = new TestName();
+  @Rule
+  public final MockWebServerRule server1 = new MockWebServerRule();
+  @Rule
+  public final MockWebServerRule server2 = new MockWebServerRule();
 
-    @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class)
-    static class Module {
-      @Provides Decoder defaultDecoder() {
-        return new Decoder.Default();
-      }
-
-      @Provides Encoder defaultEncoder() {
-        return new Encoder.Default();
-      }
-    }
+  static String hostAndPort(URL url) {
+    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
+    return "localhost:" + url.getPort();
   }
 
-  @Test public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  @Test
+  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setBody("success!"));
     server2.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(),
+                                    hostAndPort(server1.getUrl("")) + "," + hostAndPort(
+                                        server2.getUrl("")));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
-        new RibbonModule());
+    TestInterface
+        api =
+        Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+                     new RibbonModule());
 
     api.post();
     api.post();
@@ -75,15 +74,17 @@ public class RibbonClientTest {
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
-  @Test public void ioExceptionRetry() throws IOException, InterruptedException {
+  @Test
+  public void ioExceptionRetry() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
-        new RibbonModule());
+    TestInterface
+        api =
+        Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+                     new RibbonModule());
 
     api.post();
 
@@ -92,32 +93,36 @@ public class RibbonClientTest {
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
-	/*
-		This test-case replicates a bug that occurs when using RibbonRequest with a query string.
+  /*
+          This test-case replicates a bug that occurs when using RibbonRequest with a query string.
 
-		The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
-		invalid characters (ex. space).
-	 */
-	@Test public void urlEncodeQueryStringParameters () throws IOException, InterruptedException {
-		String queryStringValue = "some string with space";
-		String expectedQueryStringValue = "some+string+with+space";
-		String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
+          The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
+          invalid characters (ex. space).
+   */
+  @Test
+  public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
+    String queryStringValue = "some string with space";
+    String expectedQueryStringValue = "some+string+with+space";
+    String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
 
-		server1.enqueue(new MockResponse().setBody("success!"));
+    server1.enqueue(new MockResponse().setBody("success!"));
 
-		getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-    TestInterface api = Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
-        new RibbonModule());
+    TestInterface
+        api =
+        Feign.create(TestInterface.class, "http://" + client(), new TestInterface.Module(),
+                     new RibbonModule());
 
     api.getWithQueryParameters(queryStringValue);
 
     final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
     assertEquals(recordedRequestLine, expectedRequestLine);
-	}
+  }
 
-  @Test public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
+  @Test
+  public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
@@ -134,11 +139,6 @@ public class RibbonClientTest {
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
-  static String hostAndPort(URL url) {
-    // our build slaves have underscores in their hostnames which aren't permitted by ribbon
-    return "localhost:" + url.getPort();
-  }
-
   private String client() {
     return testName.getMethodName();
   }
@@ -147,7 +147,31 @@ public class RibbonClientTest {
     return client() + ".ribbon.listOfServers";
   }
 
-  @After public void clearServerList() {
+  @After
+  public void clearServerList() {
     getConfigInstance().clearProperty(serverListKey());
+  }
+
+  interface TestInterface {
+
+    @RequestLine("POST /")
+    void post();
+
+    @RequestLine("GET /?a={a}")
+    void getWithQueryParameters(@Param("a") String a);
+
+    @dagger.Module(injects = Feign.class, overrides = true, addsTo = Feign.Defaults.class)
+    static class Module {
+
+      @Provides
+      Decoder defaultDecoder() {
+        return new Decoder.Default();
+      }
+
+      @Provides
+      Encoder defaultEncoder() {
+        return new Encoder.Default();
+      }
+    }
   }
 }

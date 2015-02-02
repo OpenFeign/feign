@@ -15,15 +15,16 @@
  */
 package feign;
 
-import java.util.LinkedHashMap;
-import javax.inject.Named;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Named;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
@@ -40,11 +41,13 @@ public interface Contract {
 
   abstract class BaseContract implements Contract {
 
-    @Override public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+    @Override
+    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
       List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
       for (Method method : declaring.getDeclaredMethods()) {
-        if (method.getDeclaringClass() == Object.class)
+        if (method.getDeclaringClass() == Object.class) {
           continue;
+        }
         metadata.add(parseAndValidatateMetadata(method));
       }
       return metadata;
@@ -61,8 +64,9 @@ public interface Contract {
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
-      checkState(data.template().method() != null, "Method %s not annotated with HTTP method type (ex. GET, POST)",
-          method.getName());
+      checkState(data.template().method() != null,
+                 "Method %s not annotated with HTTP method type (ex. GET, POST)",
+                 method.getName());
       Class<?>[] parameterTypes = method.getParameterTypes();
 
       Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -75,7 +79,8 @@ public interface Contract {
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
         } else if (!isHttpAnnotation) {
-          checkState(data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
+          checkState(data.formParams().isEmpty(),
+                     "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
           data.bodyIndex(i);
           data.bodyType(method.getGenericParameterTypes()[i]);
@@ -89,22 +94,26 @@ public interface Contract {
      * @param annotation annotations present on the current method annotation.
      * @param method     method currently being processed.
      */
-    protected abstract void processAnnotationOnMethod(MethodMetadata data, Annotation annotation, Method method);
+    protected abstract void processAnnotationOnMethod(MethodMetadata data, Annotation annotation,
+                                                      Method method);
 
     /**
      * @param data        metadata collected so far relating to the current java method.
      * @param annotations annotations present on the current parameter annotation.
-     * @param paramIndex  if you find a name in {@code annotations}, call {@link #nameParam(MethodMetadata, String,
-     *                    int)} with this as the last parameter.
-     * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an http-relevant
-     *         annotation.
+     * @param paramIndex  if you find a name in {@code annotations}, call {@link
+     *                    #nameParam(MethodMetadata, String, int)} with this as the last parameter.
+     * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
+     * http-relevant annotation.
      */
-    protected abstract boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations, int paramIndex);
+    protected abstract boolean processAnnotationsOnParameter(MethodMetadata data,
+                                                             Annotation[] annotations,
+                                                             int paramIndex);
 
 
     protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-      if (possiblyNull == null)
+      if (possiblyNull == null) {
         possiblyNull = new ArrayList<String>();
+      }
       possiblyNull.add(String.format("{%s}", name));
       return possiblyNull;
     }
@@ -113,7 +122,9 @@ public interface Contract {
      * links a parameter name to its index in the method signature.
      */
     protected void nameParam(MethodMetadata data, String name, int i) {
-      Collection<String> names = data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
+      Collection<String>
+          names =
+          data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
       names.add(name);
       data.indexToName().put(i, names);
     }
@@ -122,11 +133,13 @@ public interface Contract {
   class Default extends BaseContract {
 
     @Override
-    protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation, Method method) {
+    protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation,
+                                             Method method) {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
       if (annotationType == RequestLine.class) {
         String requestLine = RequestLine.class.cast(methodAnnotation).value();
-        checkState(emptyToNull(requestLine) != null, "RequestLine annotation was empty on method %s.", method.getName());
+        checkState(emptyToNull(requestLine) != null,
+                   "RequestLine annotation was empty on method %s.", method.getName());
         if (requestLine.indexOf(' ') == -1) {
           data.template().method(requestLine);
           return;
@@ -137,11 +150,13 @@ public interface Contract {
           data.template().append(requestLine.substring(requestLine.indexOf(' ') + 1));
         } else {
           // skip HTTP version
-          data.template().append(requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
+          data.template().append(
+              requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
         }
       } else if (annotationType == Body.class) {
         String body = Body.class.cast(methodAnnotation).value();
-        checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.", method.getName());
+        checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
+                   method.getName());
         if (body.indexOf('{') == -1) {
           data.template().body(body);
         } else {
@@ -149,8 +164,11 @@ public interface Contract {
         }
       } else if (annotationType == Headers.class) {
         String[] headersToParse = Headers.class.cast(methodAnnotation).value();
-        checkState(headersToParse.length > 0, "Headers annotation was empty on method %s.", method.getName());
-        Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>(headersToParse.length);
+        checkState(headersToParse.length > 0, "Headers annotation was empty on method %s.",
+                   method.getName());
+        Map<String, Collection<String>>
+            headers =
+            new LinkedHashMap<String, Collection<String>>(headersToParse.length);
         for (String header : headersToParse) {
           int colon = header.indexOf(':');
           String name = header.substring(0, colon);
@@ -164,14 +182,20 @@ public interface Contract {
     }
 
     @Override
-    protected boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations, int paramIndex) {
+    protected boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations,
+                                                    int paramIndex) {
       boolean isHttpAnnotation = false;
       for (Annotation annotation : annotations) {
         Class<? extends Annotation> annotationType = annotation.annotationType();
-        if (annotationType == Param.class || annotationType.getCanonicalName().equals("javax.inject.Named")) {
-          String name = annotationType == Named.class ? ((Named) annotation).value() : ((Param) annotation).value();
+        if (annotationType == Param.class || annotationType.getCanonicalName()
+            .equals("javax.inject.Named")) {
+          String
+              name =
+              annotationType == Named.class ? ((Named) annotation).value()
+                                            : ((Param) annotation).value();
           checkState(emptyToNull(name) != null,
-              "%s annotation was empty on param %s.", annotationType.getSimpleName(), paramIndex);
+                     "%s annotation was empty on param %s.", annotationType.getSimpleName(),
+                     paramIndex);
           nameParam(data, name, paramIndex);
           if (annotationType == Param.class) {
             Class<? extends Param.Expander> expander = ((Param) annotation).expander();
@@ -193,12 +217,14 @@ public interface Contract {
 
     private <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
       Collection<Collection<V>> values = map.values();
-      if (values == null)
+      if (values == null) {
         return false;
+      }
 
       for (Collection<V> entry : values) {
-        if (entry.contains(search))
+        if (entry.contains(search)) {
           return true;
+        }
       }
 
       return false;

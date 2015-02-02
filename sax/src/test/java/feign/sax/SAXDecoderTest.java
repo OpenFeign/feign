@@ -15,21 +15,24 @@
  */
 package feign.sax;
 
-import dagger.ObjectGraph;
-import dagger.Provides;
-import feign.Response;
-import feign.codec.Decoder;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.Collections;
-import javax.inject.Inject;
-import javax.inject.Provider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import dagger.ObjectGraph;
+import dagger.Provides;
+import feign.Response;
+import feign.codec.Decoder;
 
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -38,30 +41,36 @@ import static org.junit.Assert.assertNull;
 // unbound wildcards are not currently injectable in dagger.
 @SuppressWarnings("rawtypes")
 public class SAXDecoderTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  @dagger.Module(injects = SAXDecoderTest.class)
-  static class Module {
-    @Provides Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus) {
-      return SAXDecoder.builder() //
-          .registerContentHandler(NetworkStatus.class, networkStatus) //
-          .registerContentHandler(NetworkStatusStringHandler.class) //
-          .build();
-    }
-  }
+  static String statusFailed = ""//
+                               + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+//
+                               + "  <soap:Body>\n"//
+                               + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
+//
+                               + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
+//
+                               + "    </ns1:getNeustarNetworkStatusResponse>\n"//
+                               + "  </soap:Body>\n"//
+                               + "</soap:Envelope>";
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
+  @Inject
+  Decoder decoder;
 
-  @Inject Decoder decoder;
-
-  @Before public void inject() {
+  @Before
+  public void inject() {
     ObjectGraph.create(new Module()).inject(this);
   }
 
-  @Test public void parsesConfiguredTypes() throws ParseException, IOException {
+  @Test
+  public void parsesConfiguredTypes() throws ParseException, IOException {
     assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
     assertEquals("Failed", decoder.decode(statusFailedResponse(), String.class));
   }
 
-  @Test public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+  @Test
+  public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("type int not in configured handlers");
 
@@ -69,30 +78,44 @@ public class SAXDecoderTest {
   }
 
   private Response statusFailedResponse() {
-    return Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
+    return Response
+        .create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
   }
 
-  static String statusFailed = ""//
-      + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"//
-      + "  <soap:Body>\n"//
-      + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"//
-      + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"//
-      + "    </ns1:getNeustarNetworkStatusResponse>\n"//
-      + "  </soap:Body>\n"//
-      + "</soap:Envelope>";
+  @Test
+  public void nullBodyDecodesToNull() throws Exception {
+    Response
+        response =
+        Response
+            .create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    assertNull(decoder.decode(response, String.class));
+  }
 
   static enum NetworkStatus {
     GOOD, FAILED;
   }
 
-  static class NetworkStatusStringHandler extends DefaultHandler implements
-      SAXDecoder.ContentHandlerWithResult<String> {
-    @Inject NetworkStatusStringHandler() {
+  @dagger.Module(injects = SAXDecoderTest.class)
+  static class Module {
+
+    @Provides
+    Decoder saxDecoder(Provider<NetworkStatusHandler> networkStatus) {
+      return SAXDecoder.builder() //
+          .registerContentHandler(NetworkStatus.class, networkStatus) //
+          .registerContentHandler(NetworkStatusStringHandler.class) //
+          .build();
     }
+  }
+
+  static class NetworkStatusStringHandler extends DefaultHandler implements
+                                                                 SAXDecoder.ContentHandlerWithResult<String> {
 
     private StringBuilder currentText = new StringBuilder();
-
     private String status;
+
+    @Inject
+    NetworkStatusStringHandler() {
+    }
 
     @Override
     public String result() {
@@ -114,13 +137,14 @@ public class SAXDecoderTest {
   }
 
   static class NetworkStatusHandler extends DefaultHandler implements
-      SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
-    @Inject NetworkStatusHandler() {
-    }
+                                                           SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
 
     private StringBuilder currentText = new StringBuilder();
-
     private NetworkStatus status;
+
+    @Inject
+    NetworkStatusHandler() {
+    }
 
     @Override
     public NetworkStatus result() {
@@ -139,10 +163,5 @@ public class SAXDecoderTest {
     public void characters(char ch[], int start, int length) {
       currentText.append(ch, start, length);
     }
-  }
-
-  @Test public void nullBodyDecodesToNull() throws Exception {
-    Response response = Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
-    assertNull(decoder.decode(response, String.class));
   }
 }

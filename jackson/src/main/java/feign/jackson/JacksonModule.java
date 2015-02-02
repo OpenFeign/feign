@@ -18,22 +18,20 @@ package feign.jackson;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
+
+import java.util.Collections;
+import java.util.Set;
+
 import dagger.Provides;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import java.util.Collections;
-import java.util.Set;
 
 /**
- * <h3>Custom serializers/deserializers</h3>
- * <br>
- * In order to specify custom json parsing, Jackson's {@code ObjectMapper} supports {@link JsonSerializer serializers}
- * and {@link JsonDeserializer deserializers}, which can be bundled together in {@link Module modules}.
- * <p/>
- * <br>
- * Here's an example of adding a custom module.
- * <p/>
+ * <h3>Custom serializers/deserializers</h3> <br> In order to specify custom json parsing, Jackson's
+ * {@code ObjectMapper} supports {@link JsonSerializer serializers} and {@link JsonDeserializer
+ * deserializers}, which can be bundled together in {@link Module modules}. <p/> <br> Here's an
+ * example of adding a custom module. <p/>
  * <pre>
  * public class ObjectIdSerializer extends StdSerializer&lt;ObjectId&gt; {
  *     public ObjectIdSerializer() {
@@ -41,7 +39,8 @@ import java.util.Set;
  *     }
  *
  *     &#064;Override
- *     public void serialize(ObjectId value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+ *     public void serialize(ObjectId value, JsonGenerator jsonGenerator, SerializerProvider
+ * provider) throws IOException {
  *         jsonGenerator.writeString(value.toString());
  *     }
  * }
@@ -52,7 +51,8 @@ import java.util.Set;
  *     }
  *
  *     &#064;Override
- *     public ObjectId deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException {
+ *     public ObjectId deserialize(JsonParser jsonParser, DeserializationContext context) throws
+ * IOException {
  *         return ObjectId.massageToObjectId(jsonParser.getValueAsString());
  *     }
  * }
@@ -75,15 +75,19 @@ import java.util.Set;
  */
 @dagger.Module(injects = Feign.class, addsTo = Feign.Defaults.class)
 public final class JacksonModule {
-  @Provides Encoder encoder(Set<Module> modules) {
+
+  @Provides
+  Encoder encoder(Set<Module> modules) {
     return new JacksonEncoder(modules);
   }
 
-  @Provides Decoder decoder(Set<Module> modules) {
+  @Provides
+  Decoder decoder(Set<Module> modules) {
     return new JacksonDecoder(modules);
   }
 
-  @Provides(type = Provides.Type.SET_VALUES) Set<Module> noDefaultModules() {
+  @Provides(type = Provides.Type.SET_VALUES)
+  Set<Module> noDefaultModules() {
     return Collections.emptySet();
   }
 }

@@ -15,34 +15,36 @@
  */
 package feign.ribbon;
 
-import dagger.Provides;
-import feign.Client;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import dagger.Provides;
+import feign.Client;
+
 /**
- * Adding this module will override URL resolution of {@link feign.Client Feign's client},
- * adding smart routing and resiliency capabilities provided by Ribbon.
- * <br>
- * When using this, ensure the {@link feign.Target#url()} is set to as {@code http://clientName}
- * or {@code https://clientName}. {@link com.netflix.client.config.IClientConfig#getClientName() clientName}
- * will lookup the real url and port of your service dynamically.
- * <br>
- * Ex.
+ * Adding this module will override URL resolution of {@link feign.Client Feign's client}, adding
+ * smart routing and resiliency capabilities provided by Ribbon. <br> When using this, ensure the
+ * {@link feign.Target#url()} is set to as {@code http://clientName} or {@code https://clientName}.
+ * {@link com.netflix.client.config.IClientConfig#getClientName() clientName} will lookup the real
+ * url and port of your service dynamically. <br> Ex.
  * <pre>
  * MyService api = Feign.create(MyService.class, "http://myAppProd", new RibbonModule());
  * </pre>
- * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers} configuration
- * is set.
+ * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers}
+ * configuration is set.
  */
 @dagger.Module(overrides = true, library = true, complete = false)
 public class RibbonModule {
 
-  @Provides @Named("delegate") Client delegate(Client.Default delegate) {
+  @Provides
+  @Named("delegate")
+  Client delegate(Client.Default delegate) {
     return delegate;
   }
 
-  @Provides @Singleton Client httpClient(@Named("delegate") Client client) {
+  @Provides
+  @Singleton
+  Client httpClient(@Named("delegate") Client client) {
     return new RibbonClient(client);
   }
 }

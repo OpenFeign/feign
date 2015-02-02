@@ -15,7 +15,6 @@
  */
 package feign;
 
-import feign.Param.Expander;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -24,11 +23,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import feign.Param.Expander;
+
 public final class MethodMetadata implements Serializable {
 
-  MethodMetadata() {
-  }
-
+  private static final long serialVersionUID = 1L;
   private String configKey;
   private transient Type returnType;
   private Integer urlIndex;
@@ -36,9 +35,14 @@ public final class MethodMetadata implements Serializable {
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
-  private Map<Integer, Collection<String>> indexToName = new LinkedHashMap<Integer, Collection<String>>();
+  private Map<Integer, Collection<String>>
+      indexToName =
+      new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
+
+  MethodMetadata() {
+  }
 
   /**
    * @see Feign#configKey(java.lang.reflect.Method)
@@ -103,6 +107,4 @@ public final class MethodMetadata implements Serializable {
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
     return indexToExpanderClass;
   }
-
-  private static final long serialVersionUID = 1L;
 }

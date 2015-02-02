@@ -15,21 +15,18 @@
  */
 package feign.jaxb;
 
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
+import java.io.StringWriter;
 
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
+
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 
 /**
- * Encodes requests using JAXB.
- * <br>
- * <p>
- * Basic example with with Feign.Builder:
- * </p>
+ * Encodes requests using JAXB. <br> <p> Basic example with with Feign.Builder: </p>
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *      .withMarshallerJAXBEncoding("UTF-8")
@@ -40,27 +37,27 @@ import java.io.StringWriter;
  *            .encoder(new JAXBEncoder(jaxbFactory))
  *            .target(MyApi.class, "http://api");
  * </pre>
- * <p>
- * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
- * </p>
+ * <p> The JAXBContextFactory should be reused across requests as it caches the created JAXB
+ * contexts. </p>
  */
 public class JAXBEncoder implements Encoder {
-    private final JAXBContextFactory jaxbContextFactory;
 
-    @Inject
-    public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {
-        this.jaxbContextFactory = jaxbContextFactory;
-    }
+  private final JAXBContextFactory jaxbContextFactory;
 
-    @Override
-    public void encode(Object object, RequestTemplate template) throws EncodeException {
-        try {
-            Marshaller marshaller = jaxbContextFactory.createMarshaller(object.getClass());
-            StringWriter stringWriter = new StringWriter();
-            marshaller.marshal(object, stringWriter);
-            template.body(stringWriter.toString());
-        } catch (JAXBException e) {
-            throw new EncodeException(e.toString(), e);
-        }
+  @Inject
+  public JAXBEncoder(JAXBContextFactory jaxbContextFactory) {
+    this.jaxbContextFactory = jaxbContextFactory;
+  }
+
+  @Override
+  public void encode(Object object, RequestTemplate template) throws EncodeException {
+    try {
+      Marshaller marshaller = jaxbContextFactory.createMarshaller(object.getClass());
+      StringWriter stringWriter = new StringWriter();
+      marshaller.marshal(object, stringWriter);
+      template.body(stringWriter.toString());
+    } catch (JAXBException e) {
+      throw new EncodeException(e.toString(), e);
     }
+  }
 }

@@ -15,6 +15,12 @@
  */
 package feign.jaxrs.examples;
 
+import java.util.List;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+
 import dagger.Module;
 import dagger.Provides;
 import feign.Feign;
@@ -22,25 +28,10 @@ import feign.Logger;
 import feign.gson.GsonModule;
 import feign.jaxrs.JAXRSModule;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import java.util.List;
-
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
-
-  interface GitHub {
-    @GET @Path("/repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
-  }
-
-  static class Contributor {
-    String login;
-    int contributions;
-  }
 
   public static void main(String... args) throws InterruptedException {
     GitHub github = Feign.create(GitHub.class, "https://api.github.com", new GitHubModule());
@@ -52,17 +43,33 @@ public class GitHubExample {
     }
   }
 
+  interface GitHub {
+
+    @GET
+    @Path("/repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@PathParam("owner") String owner,
+                                   @PathParam("repo") String repo);
+  }
+
+  static class Contributor {
+
+    String login;
+    int contributions;
+  }
+
   /**
    * JAXRSModule tells us to process @GET etc annotations
    */
   @Module(overrides = true, library = true, includes = {JAXRSModule.class, GsonModule.class})
   static class GitHubModule {
 
-    @Provides Logger.Level loggingLevel() {
+    @Provides
+    Logger.Level loggingLevel() {
       return Logger.Level.BASIC;
     }
 
-    @Provides Logger logger() {
+    @Provides
+    Logger logger() {
       return new Logger.ErrorLogger();
     }
   }

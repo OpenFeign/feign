@@ -15,23 +15,20 @@
  */
 package feign.jaxb;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
+
+import javax.inject.Inject;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 
-import javax.inject.Inject;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.lang.reflect.Type;
-
 /**
- * Decodes responses using JAXB.
- * <br>
- * <p>
- * Basic example with with Feign.Builder:
- * </p>
+ * Decodes responses using JAXB. <br> <p> Basic example with with Feign.Builder: </p>
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *      .withMarshallerJAXBEncoding("UTF-8")
@@ -42,29 +39,29 @@ import java.lang.reflect.Type;
  *            .decoder(new JAXBDecoder(jaxbFactory))
  *            .target(MyApi.class, "http://api");
  * </pre>
- * <p>
- * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
- * </p>
+ * <p> The JAXBContextFactory should be reused across requests as it caches the created JAXB
+ * contexts. </p>
  */
 public class JAXBDecoder implements Decoder {
-    private final JAXBContextFactory jaxbContextFactory;
 
-    @Inject
-    public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
-        this.jaxbContextFactory = jaxbContextFactory;
-    }
+  private final JAXBContextFactory jaxbContextFactory;
 
-    @Override
-    public Object decode(Response response, Type type) throws IOException, FeignException {
-        try {
-            Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
-            return unmarshaller.unmarshal(response.body().asInputStream());
-        } catch (JAXBException e) {
-            throw new DecodeException(e.toString(), e);
-        } finally {
-            if(response.body() != null) {
-                response.body().close();
-            }
-        }
+  @Inject
+  public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
+    this.jaxbContextFactory = jaxbContextFactory;
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException, FeignException {
+    try {
+      Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
+      return unmarshaller.unmarshal(response.body().asInputStream());
+    } catch (JAXBException e) {
+      throw new DecodeException(e.toString(), e);
+    } finally {
+      if (response.body() != null) {
+        response.body().close();
+      }
     }
+  }
 }

@@ -20,17 +20,15 @@ import feign.RequestTemplate;
 import static java.lang.String.format;
 
 /**
- * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}.
- * {@code Encoder} is used when a method parameter has no {@code @Param} annotation.
- * For example: <br>
+ * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
+ * Encoder} is used when a method parameter has no {@code @Param} annotation. For example: <br>
  * <p/>
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
  * void create(User user);
  * </pre>
- * Example implementation: <br>
- * <p/>
+ * Example implementation: <br> <p/>
  * <pre>
  * public class GsonEncoder implements Encoder {
  *   private final Gson gson;
@@ -46,23 +44,22 @@ import static java.lang.String.format;
  * }
  * </pre>
  *
- * <p/>
- * <h3>Form encoding</h3>
- * <br>
- * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
- * collected and passed to the Encoder as a {@code Map<String, ?>}.
- * <br>
+ * <p/> <h3>Form encoding</h3> <br> If any parameters are found in {@link
+ * feign.MethodMetadata#formParams()}, they will be collected and passed to the Encoder as a {@code
+ * Map<String, ?>}. <br>
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
- * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
+ * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String
+ * password);
  * </pre>
  */
 public interface Encoder {
+
   /**
    * Converts objects to an appropriate representation in the template.
    *
-   * @param object what to encode as the request body.
+   * @param object   what to encode as the request body.
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
@@ -72,6 +69,7 @@ public interface Encoder {
    * Default implementation of {@code Encoder}.
    */
   class Default implements Encoder {
+
     @Override
     public void encode(Object object, RequestTemplate template) throws EncodeException {
       if (object instanceof String) {
@@ -79,7 +77,8 @@ public interface Encoder {
       } else if (object instanceof byte[]) {
         template.body((byte[]) object, null);
       } else if (object != null) {
-        throw new EncodeException(format("%s is not a type supported by this encoder.", object.getClass()));
+        throw new EncodeException(
+            format("%s is not a type supported by this encoder.", object.getClass()));
       }
     }
   }

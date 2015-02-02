@@ -24,17 +24,19 @@ import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-import feign.Client;
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Response;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
-class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
+import feign.Client;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
+
+class LBClient
+    extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
 
   private final Client delegate;
   private final int connectTimeout;
@@ -51,11 +53,14 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
   }
 
   @Override
-  public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride) throws IOException {
+  public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
+      throws IOException {
     Request.Options options;
     if (configOverride != null) {
-      options = new Request.Options(configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
-          (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)));
+      options =
+          new Request.Options(
+              configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+              (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)));
     } else {
       options = new Request.Options(connectTimeout, readTimeout);
     }
@@ -65,14 +70,14 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
 
   @Override
   public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
-          RibbonRequest request, IClientConfig requestConfig) {
+      RibbonRequest request, IClientConfig requestConfig) {
     if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
-        return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+      return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
     }
     if (!request.toRequest().method().equals("GET")) {
-        return new RequestSpecificRetryHandler(true, false, this.getRetryHandler(), requestConfig);
+      return new RequestSpecificRetryHandler(true, false, this.getRetryHandler(), requestConfig);
     } else {
-        return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
+      return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
     }
   }
 
@@ -109,23 +114,28 @@ class LBClient extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, L
       this.response = response;
     }
 
-    @Override public Object getPayload() throws ClientException {
+    @Override
+    public Object getPayload() throws ClientException {
       return response.body();
     }
 
-    @Override public boolean hasPayload() {
+    @Override
+    public boolean hasPayload() {
       return response.body() != null;
     }
 
-    @Override public boolean isSuccess() {
+    @Override
+    public boolean isSuccess() {
       return response.status() == 200;
     }
 
-    @Override public URI getRequestedURI() {
+    @Override
+    public URI getRequestedURI() {
       return uri;
     }
 
-    @Override public Map<String, Collection<String>> getHeaders() {
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
       return response.headers();
     }
 

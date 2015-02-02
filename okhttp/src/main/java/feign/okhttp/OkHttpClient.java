@@ -21,7 +21,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
-import feign.Client;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -30,14 +30,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import feign.Client;
+
 /**
- * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables
- * SPDY and better network control.
- * Ex.
+ * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>,
+ * which enables SPDY and better network control. Ex.
  * <pre>
- * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class, "https://api.github.com");
+ * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
+ * "https://api.github.com");
  */
 public final class OkHttpClient implements Client {
+
   private final com.squareup.okhttp.OkHttpClient delegate;
 
   public OkHttpClient() {
@@ -48,21 +51,6 @@ public final class OkHttpClient implements Client {
     this.delegate = delegate;
   }
 
-  @Override public feign.Response execute(feign.Request input, feign.Request.Options options) throws IOException {
-    com.squareup.okhttp.OkHttpClient requestScoped;
-    if (delegate.getConnectTimeout() != options.connectTimeoutMillis()
-        || delegate.getReadTimeout() != options.readTimeoutMillis()) {
-      requestScoped = delegate.clone();
-      requestScoped.setConnectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS);
-      requestScoped.setReadTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
-    } else {
-      requestScoped = delegate;
-    }
-    Request request = toOkHttpRequest(input);
-    Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response);
-  }
-
   static Request toOkHttpRequest(feign.Request input) {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(input.url());
@@ -70,19 +58,25 @@ public final class OkHttpClient implements Client {
     MediaType mediaType = null;
     boolean hasAcceptHeader = false;
     for (String field : input.headers().keySet()) {
-      if (field.equalsIgnoreCase("Accept")) hasAcceptHeader = true;
+      if (field.equalsIgnoreCase("Accept")) {
+        hasAcceptHeader = true;
+      }
 
       for (String value : input.headers().get(field)) {
         if (field.equalsIgnoreCase("Content-Type")) {
           mediaType = MediaType.parse(value);
-          if (input.charset() != null) mediaType.charset(input.charset());
+          if (input.charset() != null) {
+            mediaType.charset(input.charset());
+          }
         } else {
           requestBuilder.addHeader(field, value);
         }
       }
     }
     // Some servers choke on the default accept string.
-    if (!hasAcceptHeader) requestBuilder.addHeader("Accept", "*/*");
+    if (!hasAcceptHeader) {
+      requestBuilder.addHeader("Accept", "*/*");
+    }
 
     RequestBody body = input.body() != null ? RequestBody.create(mediaType, input.body()) : null;
     requestBuilder.method(input.method(), body);
@@ -90,11 +84,14 @@ public final class OkHttpClient implements Client {
   }
 
   private static feign.Response toFeignResponse(Response input) {
-    return feign.Response.create(input.code(), input.message(), toMap(input.headers()), toBody(input.body()));
+    return feign.Response
+        .create(input.code(), input.message(), toMap(input.headers()), toBody(input.body()));
   }
 
   private static Map<String, Collection<String>> toMap(Headers headers) {
-    Map<String, Collection<String>> result = new LinkedHashMap<String, Collection<String>>(headers.size());
+    Map<String, Collection<String>>
+        result =
+        new LinkedHashMap<String, Collection<String>>(headers.size());
     for (String name : headers.names()) {
       // TODO: this is very inefficient as headers.values iterate case insensitively.
       result.put(name, headers.values(name));
@@ -107,31 +104,53 @@ public final class OkHttpClient implements Client {
       return null;
     }
     if (input.contentLength() > Integer.MAX_VALUE) {
-      throw new UnsupportedOperationException("Length too long "+ input.contentLength());
+      throw new UnsupportedOperationException("Length too long " + input.contentLength());
     }
     final Integer length = input.contentLength() != -1 ? (int) input.contentLength() : null;
 
     return new feign.Response.Body() {
 
-      @Override public void close() throws IOException {
+      @Override
+      public void close() throws IOException {
         input.close();
       }
 
-      @Override public Integer length() {
+      @Override
+      public Integer length() {
         return length;
       }
 
-      @Override public boolean isRepeatable() {
+      @Override
+      public boolean isRepeatable() {
         return false;
       }
 
-      @Override public InputStream asInputStream() throws IOException {
+      @Override
+      public InputStream asInputStream() throws IOException {
         return input.byteStream();
       }
 
-      @Override public Reader asReader() throws IOException {
+      @Override
+      public Reader asReader() throws IOException {
         return input.charStream();
       }
     };
+  }
+
+  @Override
+  public feign.Response execute(feign.Request input, feign.Request.Options options)
+      throws IOException {
+    com.squareup.okhttp.OkHttpClient requestScoped;
+    if (delegate.getConnectTimeout() != options.connectTimeoutMillis()
+        || delegate.getReadTimeout() != options.readTimeoutMillis()) {
+      requestScoped = delegate.clone();
+      requestScoped.setConnectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS);
+      requestScoped.setReadTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
+    } else {
+      requestScoped = delegate;
+    }
+    Request request = toOkHttpRequest(input);
+    Response response = requestScoped.newCall(request).execute();
+    return toFeignResponse(response);
   }
 }
