@@ -33,9 +33,14 @@ import java.util.NoSuchElementException;
  * @author Jesse Wilson
  */
 final class Types {
-  /** Type literal for {@code Map<String, ?>}. */
+
+  /**
+   * Type literal for {@code Map<String, ?>}.
+   */
   static final Type MAP_STRING_WILDCARD = new ParameterizedTypeImpl(null, Map.class, String.class,
-      new WildcardTypeImpl(new Type[] { Object.class }, new Type[] { }));
+                                                                    new WildcardTypeImpl(
+                                                                        new Type[]{Object.class},
+                                                                        new Type[]{}));
 
   private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
@@ -54,7 +59,9 @@ final class Types {
       // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
       // suspects some pathological case related to nested classes exists.
       Type rawType = parameterizedType.getRawType();
-      if (!(rawType instanceof Class)) throw new IllegalArgumentException();
+      if (!(rawType instanceof Class)) {
+        throw new IllegalArgumentException();
+      }
       return (Class<?>) rawType;
 
     } else if (type instanceof GenericArrayType) {
@@ -72,11 +79,14 @@ final class Types {
     } else {
       String className = type == null ? "null" : type.getClass().getName();
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-          + "GenericArrayType, but <" + type + "> is of type " + className);
+                                         + "GenericArrayType, but <" + type + "> is of type "
+                                         + className);
     }
   }
 
-  /** Returns true if {@code a} and {@code b} are equal. */
+  /**
+   * Returns true if {@code a} and {@code b} are equal.
+   */
   static boolean equals(Type a, Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
@@ -85,32 +95,40 @@ final class Types {
       return a.equals(b); // Class already specifies equals().
 
     } else if (a instanceof ParameterizedType) {
-      if (!(b instanceof ParameterizedType)) return false;
+      if (!(b instanceof ParameterizedType)) {
+        return false;
+      }
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
       return equal(pa.getOwnerType(), pb.getOwnerType())
-          && pa.getRawType().equals(pb.getRawType())
-          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+             && pa.getRawType().equals(pb.getRawType())
+             && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
     } else if (a instanceof GenericArrayType) {
-      if (!(b instanceof GenericArrayType)) return false;
+      if (!(b instanceof GenericArrayType)) {
+        return false;
+      }
       GenericArrayType ga = (GenericArrayType) a;
       GenericArrayType gb = (GenericArrayType) b;
       return equals(ga.getGenericComponentType(), gb.getGenericComponentType());
 
     } else if (a instanceof WildcardType) {
-      if (!(b instanceof WildcardType)) return false;
+      if (!(b instanceof WildcardType)) {
+        return false;
+      }
       WildcardType wa = (WildcardType) a;
       WildcardType wb = (WildcardType) b;
       return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-          && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+             && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
     } else if (a instanceof TypeVariable) {
-      if (!(b instanceof TypeVariable)) return false;
+      if (!(b instanceof TypeVariable)) {
+        return false;
+      }
       TypeVariable<?> va = (TypeVariable<?>) a;
       TypeVariable<?> vb = (TypeVariable<?>) b;
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
-          && va.getName().equals(vb.getName());
+             && va.getName().equals(vb.getName());
 
     } else {
       return false; // This isn't a type we support!
@@ -123,7 +141,9 @@ final class Types {
    * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
    */
   static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
-    if (toResolve == rawType) return context;
+    if (toResolve == rawType) {
+      return context;
+    }
 
     // We skip searching through interfaces if unknown is an interface.
     if (toResolve.isInterface()) {
@@ -156,7 +176,9 @@ final class Types {
 
   private static int indexOf(Object[] array, Object toFind) {
     for (int i = 0; i < array.length; i++) {
-      if (toFind.equals(array[i])) return i;
+      if (toFind.equals(array[i])) {
+        return i;
+      }
     }
     throw new NoSuchElementException();
   }
@@ -181,9 +203,11 @@ final class Types {
    * @param supertype a superclass of, or interface implemented by, this.
    */
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
-    if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
+    if (!supertype.isAssignableFrom(contextRawType)) {
+      throw new IllegalArgumentException();
+    }
     return resolve(context, contextRawType,
-        getGenericSupertype(context, contextRawType, supertype));
+                   getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
@@ -229,8 +253,8 @@ final class Types {
         }
 
         return changed
-            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
-            : original;
+               ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
+               : original;
 
       } else if (toResolve instanceof WildcardType) {
         WildcardType original = (WildcardType) toResolve;
@@ -240,12 +264,12 @@ final class Types {
         if (originalLowerBound.length == 1) {
           Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
           if (lowerBound != originalLowerBound[0]) {
-            return new WildcardTypeImpl(new Type[] { Object.class }, new Type[] { lowerBound });
+            return new WildcardTypeImpl(new Type[]{Object.class}, new Type[]{lowerBound});
           }
         } else if (originalUpperBound.length == 1) {
           Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
           if (upperBound != originalUpperBound[0]) {
-            return new WildcardTypeImpl(new Type[] { upperBound }, EMPTY_TYPE_ARRAY);
+            return new WildcardTypeImpl(new Type[]{upperBound}, EMPTY_TYPE_ARRAY);
           }
         }
         return original;
@@ -261,7 +285,9 @@ final class Types {
     Class<?> declaredByRaw = declaringClassOf(unknown);
 
     // We can't reduce this further.
-    if (declaredByRaw == null) return unknown;
+    if (declaredByRaw == null) {
+      return unknown;
+    }
 
     Type declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw);
     if (declaredBy instanceof ParameterizedType) {
@@ -288,6 +314,7 @@ final class Types {
   }
 
   private static final class ParameterizedTypeImpl implements ParameterizedType {
+
     private final Type ownerType;
     private final Type rawType;
     private final Type[] typeArguments;
@@ -304,7 +331,9 @@ final class Types {
       this.typeArguments = typeArguments.clone();
 
       for (Type typeArgument : this.typeArguments) {
-        if (typeArgument == null) throw new NullPointerException();
+        if (typeArgument == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(typeArgument);
       }
     }
@@ -321,18 +350,23 @@ final class Types {
       return ownerType;
     }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
       return other instanceof ParameterizedType && Types.equals(this, (ParameterizedType) other);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       return Arrays.hashCode(typeArguments) ^ rawType.hashCode() ^ hashCodeOrZero(ownerType);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       StringBuilder result = new StringBuilder(30 * (typeArguments.length + 1));
       result.append(typeToString(rawType));
-      if (typeArguments.length == 0) return result.toString();
+      if (typeArguments.length == 0) {
+        return result.toString();
+      }
       result.append("<").append(typeToString(typeArguments[0]));
       for (int i = 1; i < typeArguments.length; i++) {
         result.append(", ").append(typeToString(typeArguments[i]));
@@ -342,6 +376,7 @@ final class Types {
   }
 
   private static final class GenericArrayTypeImpl implements GenericArrayType {
+
     private final Type componentType;
 
     GenericArrayTypeImpl(Type componentType) {
@@ -352,41 +387,55 @@ final class Types {
       return componentType;
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
       return o instanceof GenericArrayType
-          && Types.equals(this, (GenericArrayType) o);
+             && Types.equals(this, (GenericArrayType) o);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       return componentType.hashCode();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return typeToString(componentType) + "[]";
     }
   }
 
   /**
-   * The WildcardType interface supports multiple upper bounds and multiple
-   * lower bounds. We only support what the Java 6 language needs - at most one
-   * bound. If a lower bound is set, the upper bound must be Object.class.
+   * The WildcardType interface supports multiple upper bounds and multiple lower bounds. We only
+   * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
+   * bound must be Object.class.
    */
   private static final class WildcardTypeImpl implements WildcardType {
+
     private final Type upperBound;
     private final Type lowerBound;
 
     WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
-      if (lowerBounds.length > 1) throw new IllegalArgumentException();
-      if (upperBounds.length != 1) throw new IllegalArgumentException();
+      if (lowerBounds.length > 1) {
+        throw new IllegalArgumentException();
+      }
+      if (upperBounds.length != 1) {
+        throw new IllegalArgumentException();
+      }
 
       if (lowerBounds.length == 1) {
-        if (lowerBounds[0] == null) throw new NullPointerException();
+        if (lowerBounds[0] == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(lowerBounds[0]);
-        if (upperBounds[0] != Object.class) throw new IllegalArgumentException();
+        if (upperBounds[0] != Object.class) {
+          throw new IllegalArgumentException();
+        }
         this.lowerBound = lowerBounds[0];
         this.upperBound = Object.class;
       } else {
-        if (upperBounds[0] == null) throw new NullPointerException();
+        if (upperBounds[0] == null) {
+          throw new NullPointerException();
+        }
         checkNotPrimitive(upperBounds[0]);
         this.lowerBound = null;
         this.upperBound = upperBounds[0];
@@ -394,25 +443,32 @@ final class Types {
     }
 
     public Type[] getUpperBounds() {
-      return new Type[] { upperBound };
+      return new Type[]{upperBound};
     }
 
     public Type[] getLowerBounds() {
-      return lowerBound != null ? new Type[] { lowerBound } : EMPTY_TYPE_ARRAY;
+      return lowerBound != null ? new Type[]{lowerBound} : EMPTY_TYPE_ARRAY;
     }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
       return other instanceof WildcardType && Types.equals(this, (WildcardType) other);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       // This equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds()).
       return (lowerBound != null ? 31 + lowerBound.hashCode() : 1) ^ (31 + upperBound.hashCode());
     }
 
-    @Override public String toString() {
-      if (lowerBound != null) return "? super " + typeToString(lowerBound);
-      if (upperBound == Object.class) return "?";
+    @Override
+    public String toString() {
+      if (lowerBound != null) {
+        return "? super " + typeToString(lowerBound);
+      }
+      if (upperBound == Object.class) {
+        return "?";
+      }
       return "? extends " + typeToString(upperBound);
     }
   }

@@ -20,11 +20,13 @@ import feign.FeignException;
 import static feign.Util.checkNotNull;
 
 /**
- * Similar to {@code javax.websocket.EncodeException}, raised when a problem
- * occurs encoding a message.  Note that {@code EncodeException} is not an
- * {@code IOException}, nor does it have one set as its cause.
+ * Similar to {@code javax.websocket.EncodeException}, raised when a problem occurs encoding a
+ * message.  Note that {@code EncodeException} is not an {@code IOException}, nor does it have one
+ * set as its cause.
  */
 public class EncodeException extends FeignException {
+
+  private static final long serialVersionUID = 1L;
 
   /**
    * @param message the reason for the failure.
@@ -40,6 +42,4 @@ public class EncodeException extends FeignException {
   public EncodeException(String message, Throwable cause) {
     super(checkNotNull(message, "message"), checkNotNull(cause, "cause"));
   }
-
-  private static final long serialVersionUID = 1L;
 }

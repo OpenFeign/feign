@@ -15,21 +15,30 @@
  */
 package feign.jaxb.examples;
 
-import feign.Request;
-import feign.RequestTemplate;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import feign.Request;
+import feign.RequestTemplate;
 
 import static feign.Util.UTF_8;
 
 // http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 public class AWSSignatureVersion4 {
 
+  private static final String
+      EMPTY_STRING_HASH =
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  private static final SimpleDateFormat iso8601 = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+  static {
+    iso8601.setTimeZone(TimeZone.getTimeZone("GMT"));
+  }
   String region = "us-east-1";
   String service = "iam";
   String accessKey;
@@ -38,45 +47,6 @@ public class AWSSignatureVersion4 {
   public AWSSignatureVersion4(String accessKey, String secretKey) {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
-  }
-
-  public Request apply(RequestTemplate input) {
-    if (!input.headers().isEmpty()) throw new UnsupportedOperationException("headers not supported");
-    if (input.body() != null) throw new UnsupportedOperationException("body not supported");
-
-    String host = URI.create(input.url()).getHost();
-
-    String timestamp;
-    synchronized (iso8601) {
-      timestamp = iso8601.format(new Date());
-    }
-
-    String credentialScope = String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
-
-    input.query("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
-    input.query("X-Amz-Credential", accessKey + "/" + credentialScope);
-    input.query("X-Amz-Date", timestamp);
-    input.query("X-Amz-SignedHeaders", "host");
-    input.header("Host", host);
-
-    String canonicalString = canonicalString(input, host);
-    String toSign = toSign(timestamp, credentialScope, canonicalString);
-
-    byte[] signatureKey = signatureKey(secretKey, timestamp);
-    String signature = hex(hmacSHA256(toSign, signatureKey));
-
-    input.query("X-Amz-Signature", signature);
-
-    return input.request();
-  }
-
-  byte[] signatureKey(String secretKey, String timestamp) {
-    byte[] kSecret = ("AWS4" + secretKey).getBytes(UTF_8);
-    byte[] kDate = hmacSHA256(timestamp.substring(0, 8), kSecret);
-    byte[] kRegion = hmacSHA256(region, kDate);
-    byte[] kService = hmacSHA256(service, kRegion);
-    byte[] kSigning = hmacSHA256("aws4_request", kService);
-    return kSigning;
   }
 
   static byte[] hmacSHA256(String data, byte[] key) {
@@ -89,8 +59,6 @@ public class AWSSignatureVersion4 {
       throw new RuntimeException(e);
     }
   }
-
-  private static final String EMPTY_STRING_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
   private static String canonicalString(RequestTemplate input, String host) {
     StringBuilder canonicalRequest = new StringBuilder();
@@ -114,7 +82,8 @@ public class AWSSignatureVersion4 {
 
     // HexEncode(Hash(Payload))
     String bodyText =
-        input.charset() != null && input.body() != null ? new String(input.body(), input.charset()) : null;
+        input.charset() != null && input.body() != null ? new String(input.body(), input.charset())
+                                                        : null;
     if (bodyText != null) {
       canonicalRequest.append(hex(sha256(bodyText)));
     } else {
@@ -153,9 +122,48 @@ public class AWSSignatureVersion4 {
     }
   }
 
-  private static final SimpleDateFormat iso8601 = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+  public Request apply(RequestTemplate input) {
+    if (!input.headers().isEmpty()) {
+      throw new UnsupportedOperationException("headers not supported");
+    }
+    if (input.body() != null) {
+      throw new UnsupportedOperationException("body not supported");
+    }
 
-  static {
-    iso8601.setTimeZone(TimeZone.getTimeZone("GMT"));
+    String host = URI.create(input.url()).getHost();
+
+    String timestamp;
+    synchronized (iso8601) {
+      timestamp = iso8601.format(new Date());
+    }
+
+    String
+        credentialScope =
+        String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
+
+    input.query("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
+    input.query("X-Amz-Credential", accessKey + "/" + credentialScope);
+    input.query("X-Amz-Date", timestamp);
+    input.query("X-Amz-SignedHeaders", "host");
+    input.header("Host", host);
+
+    String canonicalString = canonicalString(input, host);
+    String toSign = toSign(timestamp, credentialScope, canonicalString);
+
+    byte[] signatureKey = signatureKey(secretKey, timestamp);
+    String signature = hex(hmacSHA256(toSign, signatureKey));
+
+    input.query("X-Amz-Signature", signature);
+
+    return input.request();
+  }
+
+  byte[] signatureKey(String secretKey, String timestamp) {
+    byte[] kSecret = ("AWS4" + secretKey).getBytes(UTF_8);
+    byte[] kDate = hmacSHA256(timestamp.substring(0, 8), kSecret);
+    byte[] kRegion = hmacSHA256(region, kDate);
+    byte[] kService = hmacSHA256(service, kRegion);
+    byte[] kSigning = hmacSHA256("aws4_request", kService);
+    return kSigning;
   }
 }

@@ -18,9 +18,8 @@ package feign;
 import java.util.Date;
 
 /**
- * This exception is raised when the {@link Response} is deemed to be retryable,
- * typically via an {@link feign.codec.ErrorDecoder} when the {@link Response#status()
- * status} is 503.
+ * This exception is raised when the {@link Response} is deemed to be retryable, typically via an
+ * {@link feign.codec.ErrorDecoder} when the {@link Response#status() status} is 503.
  */
 public class RetryableException extends FeignException {
 
@@ -29,8 +28,7 @@ public class RetryableException extends FeignException {
   private final Long retryAfter;
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER}
-   *                   header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(String message, Throwable cause, Date retryAfter) {
     super(message, cause);
@@ -38,8 +36,7 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER}
-   *                   header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(String message, Date retryAfter) {
     super(message);
@@ -47,9 +44,8 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * Sometimes corresponds to the {@link feign.Util#RETRY_AFTER} header
-   * present in {@code 503} status. Other times parsed from an
-   * application-specific response.  Null if unknown.
+   * Sometimes corresponds to the {@link feign.Util#RETRY_AFTER} header present in {@code 503}
+   * status. Other times parsed from an application-specific response.  Null if unknown.
    */
   public Date retryAfter() {
     return retryAfter != null ? new Date(retryAfter) : null;

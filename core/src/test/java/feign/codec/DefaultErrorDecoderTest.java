@@ -15,27 +15,32 @@
  */
 package feign.codec;
 
-import feign.FeignException;
-import feign.Response;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import feign.FeignException;
+import feign.Response;
 
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 
 public class DefaultErrorDecoderTest {
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
 
   ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
   Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
 
-  @Test public void throwsFeignException() throws Throwable {
+  @Test
+  public void throwsFeignException() throws Throwable {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading Service#foo()");
 
@@ -44,16 +49,20 @@ public class DefaultErrorDecoderTest {
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test public void throwsFeignExceptionIncludingBody() throws Throwable {
+  @Test
+  public void throwsFeignExceptionIncludingBody() throws Throwable {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
 
-    Response response = Response.create(500, "Internal server error", headers, "hello world", UTF_8);
+    Response
+        response =
+        Response.create(500, "Internal server error", headers, "hello world", UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
   }
 
-  @Test public void retryAfterHeaderThrowsRetryableException() throws Throwable {
+  @Test
+  public void retryAfterHeaderThrowsRetryableException() throws Throwable {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 503 reading Service#foo()");
 

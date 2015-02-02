@@ -35,10 +35,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
- * exception are examples of this in use.
- * <br>
- * Ex.
- * <br>
+ * exception are examples of this in use. <br> Ex. <br>
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder extends ErrorDecoder {
  *
@@ -51,30 +48,27 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * }
  * </pre>
- * <br>
- * <b>Error handling</b><br>
- * <br>
- * Responses where {@link Response#status()} is not in the 2xx range are
- * classified as errors, addressed by the {@link ErrorDecoder}. That said,
- * certain RPC apis return errors defined in the {@link Response#body()} even on
- * a 200 status. For example, in the DynECT api, a job still running condition
- * is returned with a 200 status, encoded in json. When scenarios like this
- * occur, you should raise an application-specific exception (which may be
+ * <br> <b>Error handling</b><br> <br> Responses where {@link Response#status()} is not in the 2xx
+ * range are classified as errors, addressed by the {@link ErrorDecoder}. That said, certain RPC
+ * apis return errors defined in the {@link Response#body()} even on a 200 status. For example, in
+ * the DynECT api, a job still running condition is returned with a 200 status, encoded in json.
+ * When scenarios like this occur, you should raise an application-specific exception (which may be
  * {@link feign.RetryableException retryable}).
  */
 public interface ErrorDecoder {
 
   /**
-   * Implement this method in order to decode an HTTP {@link Response} when
-   * {@link Response#status()} is not in the 2xx range. Please raise  application-specific exceptions where possible.
-   * If your exception is retryable, wrap or subclass {@link RetryableException}
+   * Implement this method in order to decode an HTTP {@link Response} when {@link
+   * Response#status()} is not in the 2xx range. Please raise  application-specific exceptions where
+   * possible. If your exception is retryable, wrap or subclass {@link RetryableException}
    *
-   * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request.  ex. {@code IAM#getUser()}
-   * @param response  HTTP response where {@link Response#status() status} is greater than or equal to {@code 300}.
-   * @return Exception IOException, if there was a network error reading the
-   *         response or an application-specific exception decoded by the
-   *         implementation. If the throwable is retryable, it should be
-   *         wrapped, or a subtype of {@link RetryableException}
+   * @param methodKey {@link feign.Feign#configKey} of the java method that invoked the request.
+   *                  ex. {@code IAM#getUser()}
+   * @param response  HTTP response where {@link Response#status() status} is greater than or equal
+   *                  to {@code 300}.
+   * @return Exception IOException, if there was a network error reading the response or an
+   * application-specific exception decoded by the implementation. If the throwable is retryable, it
+   * should be wrapped, or a subtype of {@link RetryableException}
    */
   public Exception decode(String methodKey, Response response);
 
@@ -86,8 +80,9 @@ public interface ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
       FeignException exception = errorStatus(methodKey, response);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
-      if (retryAfter != null)
+      if (retryAfter != null) {
         return new RetryableException(exception.getMessage(), exception, retryAfter);
+      }
       return exception;
     }
 
@@ -100,40 +95,38 @@ public interface ErrorDecoder {
   }
 
   /**
-   * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date,
-   * if possible.
-   * <br>
-   * See <a
-   * href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After
-   * format</a>
+   * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible. <br> See <a
+   * href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */
   static class RetryAfterDecoder {
-    static final DateFormat RFC822_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", US);
+
+    static final DateFormat
+        RFC822_FORMAT =
+        new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", US);
     private final DateFormat rfc822Format;
 
     RetryAfterDecoder() {
       this(RFC822_FORMAT);
     }
 
-    protected long currentTimeNanos() {
-      return System.currentTimeMillis();
-    }
-
     RetryAfterDecoder(DateFormat rfc822Format) {
       this.rfc822Format = checkNotNull(rfc822Format, "rfc822Format");
     }
 
+    protected long currentTimeNanos() {
+      return System.currentTimeMillis();
+    }
+
     /**
-     * returns a date that corresponds to the first time a request can be
-     * retried.
+     * returns a date that corresponds to the first time a request can be retried.
      *
-     * @param retryAfter String in <a
-     *                   href="https://tools.ietf.org/html/rfc2616#section-14.37"
+     * @param retryAfter String in <a href="https://tools.ietf.org/html/rfc2616#section-14.37"
      *                   >Retry-After format</a>
      */
     public Date apply(String retryAfter) {
-      if (retryAfter == null)
+      if (retryAfter == null) {
         return null;
+      }
       if (retryAfter.matches("^[0-9]+$")) {
         long currentTimeMillis = NANOSECONDS.toMillis(currentTimeNanos());
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));

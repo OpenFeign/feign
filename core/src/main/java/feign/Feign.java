@@ -15,6 +15,10 @@
  */
 package feign;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -22,63 +26,52 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Feign's purpose is to ease development against http apis that feign
- * restfulness.
- * <br>
- * In implementation, Feign is a {@link Feign#newInstance factory} for
- * generating {@link Target targeted} http apis.
+ * Feign's purpose is to ease development against http apis that feign restfulness. <br> In
+ * implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
+ * targeted} http apis.
  */
 public abstract class Feign {
-
-  /**
-   * Returns a new instance of an HTTP API, defined by annotations in the
-   * {@link Feign Contract}, for the specified {@code target}. You should
-   * cache this result.
-   */
-  public abstract <T> T newInstance(Target<T> target);
 
   public static Builder builder() {
     return new Builder();
   }
 
   /**
-   * <br>
-   * Configuration keys are formatted as unresolved <a href=
-   * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
-   * >see tags</a>.
-   * <br>
-   * For example.
-   * <ul>
-   * <li>{@code Route53}: would match a class such as
-   * {@code denominator.route53.Route53}
-   * <li>{@code Route53#list()}: would match a method such as
-   * {@code denominator.route53.Route53#list()}
-   * <li>{@code Route53#listAt(Marker)}: would match a method such as
-   * {@code denominator.route53.Route53#listAt(denominator.route53.Marker)}
-   * <li>{@code Route53#listByNameAndType(String, String)}: would match a
-   * method such as {@code denominator.route53.Route53#listAt(String, String)}
-   * </ul>
-   * <br>
-   * Note that there is no whitespace expected in a key!
+   * <br> Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
+   * >see tags</a>. <br> For example. <ul> <li>{@code Route53}: would match a class such as {@code
+   * denominator.route53.Route53} <li>{@code Route53#list()}: would match a method such as {@code
+   * denominator.route53.Route53#list()} <li>{@code Route53#listAt(Marker)}: would match a method
+   * such as {@code denominator.route53.Route53#listAt(denominator.route53.Marker)} <li>{@code
+   * Route53#listByNameAndType(String, String)}: would match a method such as {@code
+   * denominator.route53.Route53#listAt(String, String)} </ul> <br> Note that there is no whitespace
+   * expected in a key!
    */
   public static String configKey(Method method) {
     StringBuilder builder = new StringBuilder();
     builder.append(method.getDeclaringClass().getSimpleName());
     builder.append('#').append(method.getName()).append('(');
-    for (Class<?> param : method.getParameterTypes())
+    for (Class<?> param : method.getParameterTypes()) {
       builder.append(param.getSimpleName()).append(',');
-    if (method.getParameterTypes().length > 0)
+    }
+    if (method.getParameterTypes().length > 0) {
       builder.deleteCharAt(builder.length() - 1);
+    }
     return builder.append(')').toString();
   }
 
+  /**
+   * Returns a new instance of an HTTP API, defined by annotations in the {@link Feign Contract},
+   * for the specified {@code target}. You should cache this result.
+   */
+  public abstract <T> T newInstance(Target<T> target);
+
   public static class Builder {
-    private final List<RequestInterceptor> requestInterceptors = new ArrayList<RequestInterceptor>();
+
+    private final List<RequestInterceptor>
+        requestInterceptors =
+        new ArrayList<RequestInterceptor>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
@@ -88,7 +81,9 @@ public abstract class Feign {
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
-    private InvocationHandlerFactory invocationHandlerFactory = new InvocationHandlerFactory.Default();
+    private InvocationHandlerFactory
+        invocationHandlerFactory =
+        new InvocationHandlerFactory.Default();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -144,7 +139,8 @@ public abstract class Feign {
     }
 
     /**
-     * Sets the full set of request interceptors for the builder, overwriting any previous interceptors.
+     * Sets the full set of request interceptors for the builder, overwriting any previous
+     * interceptors.
      */
     public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
       this.requestInterceptors.clear();
@@ -154,7 +150,9 @@ public abstract class Feign {
       return this;
     }
 
-    /** Allows you to override how reflective dispatch works inside of Feign. */
+    /**
+     * Allows you to override how reflective dispatch works inside of Feign.
+     */
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       this.invocationHandlerFactory = invocationHandlerFactory;
       return this;
@@ -170,9 +168,12 @@ public abstract class Feign {
 
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger, logLevel);
-      ParseHandlersByName handlersByName = new ParseHandlersByName( contract,  options,  encoder,  decoder,
-          errorDecoder, synchronousMethodHandlerFactory);
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
+                                               logLevel);
+      ParseHandlersByName
+          handlersByName =
+          new ParseHandlersByName(contract, options, encoder, decoder,
+                                  errorDecoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
     }
   }

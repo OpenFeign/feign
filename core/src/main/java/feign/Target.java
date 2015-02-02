@@ -19,14 +19,14 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 
 /**
- * <br><br><b>relationship to JAXRS 2.0</b><br>
- * <br>
- * Similar to {@code javax.ws.rs.client.WebTarget}, as it produces requests.
- * However, {@link RequestTemplate} is a closer match to {@code WebTarget}.
+ * <br><br><b>relationship to JAXRS 2.0</b><br> <br> Similar to {@code
+ * javax.ws.rs.client.WebTarget}, as it produces requests. However, {@link RequestTemplate} is a
+ * closer match to {@code WebTarget}.
  *
  * @param <T> type of the interface this target applies to.
  */
 public interface Target<T> {
+
   /* The type of the interface this target applies to. ex. {@code Route53}. */
   Class<T> type();
 
@@ -37,12 +37,8 @@ public interface Target<T> {
   String url();
 
   /**
-   * Targets a template to this target, adding the {@link #url() base url} and
-   * any target-specific headers or query parameters.
-   * <br>
-   * <br>
-   * For example:
-   * <br>
+   * Targets a template to this target, adding the {@link #url() base url} and any target-specific
+   * headers or query parameters. <br> <br> For example: <br>
    * <pre>
    * public Request apply(RequestTemplate input) {
    *     input.insert(0, url());
@@ -50,16 +46,14 @@ public interface Target<T> {
    *     return input.asRequest();
    * }
    * </pre>
-   * <br>
-   * <br><br><b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * This call is similar to {@code javax.ws.rs.client.WebTarget.request()},
-   * except that we expect transient, but necessary decoration to be applied
-   * on invocation.
+   * <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> This call is similar to {@code
+   * javax.ws.rs.client.WebTarget.request()}, except that we expect transient, but necessary
+   * decoration to be applied on invocation.
    */
   public Request apply(RequestTemplate input);
 
   public static class HardCodedTarget<T> implements Target<T> {
+
     private final Class<T> type;
     private final String name;
     private final String url;
@@ -74,36 +68,43 @@ public interface Target<T> {
       this.url = checkNotNull(emptyToNull(url), "url");
     }
 
-    @Override public Class<T> type() {
+    @Override
+    public Class<T> type() {
       return type;
     }
 
-    @Override public String name() {
+    @Override
+    public String name() {
       return name;
     }
 
-    @Override public String url() {
+    @Override
+    public String url() {
       return url;
     }
 
     /* no authentication or other special activity. just insert the url. */
-    @Override public Request apply(RequestTemplate input) {
-      if (input.url().indexOf("http") != 0)
+    @Override
+    public Request apply(RequestTemplate input) {
+      if (input.url().indexOf("http") != 0) {
         input.insert(0, url());
+      }
       return input.request();
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
       if (obj instanceof HardCodedTarget) {
         HardCodedTarget<?> other = (HardCodedTarget) obj;
         return type.equals(other.type)
-            && name.equals(other.name)
-            && url.equals(other.url);
+               && name.equals(other.name)
+               && url.equals(other.url);
       }
       return false;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       int result = 17;
       result = 31 * result + type.hashCode();
       result = 31 * result + name.hashCode();
@@ -111,15 +112,18 @@ public interface Target<T> {
       return result;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       if (name.equals(url)) {
         return "HardCodedTarget(type=" + type.getSimpleName() + ", url=" + url + ")";
       }
-      return "HardCodedTarget(type=" + type.getSimpleName() + ", name=" + name + ", url=" + url + ")";
+      return "HardCodedTarget(type=" + type.getSimpleName() + ", name=" + name + ", url=" + url
+             + ")";
     }
   }
 
   public static final class EmptyTarget<T> implements Target<T> {
+
     private final Class<T> type;
     private final String name;
 
@@ -127,7 +131,7 @@ public interface Target<T> {
       this.type = checkNotNull(type, "type");
       this.name = checkNotNull(emptyToNull(name), "name");
     }
-    
+
     public static <T> EmptyTarget<T> create(Class<T> type) {
       return new EmptyTarget<T>(type, "empty:" + type.getSimpleName());
     }
@@ -136,42 +140,50 @@ public interface Target<T> {
       return new EmptyTarget<T>(type, name);
     }
 
-    @Override public Class<T> type() {
+    @Override
+    public Class<T> type() {
       return type;
     }
 
-    @Override public String name() {
+    @Override
+    public String name() {
       return name;
     }
 
-    @Override public String url() {
+    @Override
+    public String url() {
       throw new UnsupportedOperationException("Empty targets don't have URLs");
     }
 
-    @Override public Request apply(RequestTemplate input) {
+    @Override
+    public Request apply(RequestTemplate input) {
       if (input.url().indexOf("http") != 0) {
-        throw new UnsupportedOperationException("Request with non-absolute URL not supported with empty target");
+        throw new UnsupportedOperationException(
+            "Request with non-absolute URL not supported with empty target");
       }
       return input.request();
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
       if (obj instanceof EmptyTarget) {
         EmptyTarget<?> other = (EmptyTarget) obj;
         return type.equals(other.type)
-            && name.equals(other.name);
+               && name.equals(other.name);
       }
       return false;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
       int result = 17;
       result = 31 * result + type.hashCode();
       result = 31 * result + name.hashCode();
       return result;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       if (name.equals("empty:" + type.getSimpleName())) {
         return "EmptyTarget(type=" + type.getSimpleName() + ")";
       }
