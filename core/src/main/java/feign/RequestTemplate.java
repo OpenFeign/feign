@@ -205,7 +205,7 @@ public final class RequestTemplate implements Serializable {
       for (String value : valuesOrEmpty(headers, field)) {
         String resolved;
         if (value.indexOf('{') == 0) {
-          resolved = String.valueOf(unencoded.get(field));
+          resolved = expand(value, unencoded);
         } else {
           resolved = value;
         }

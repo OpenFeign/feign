@@ -245,10 +245,10 @@ public class DefaultContractTest {
             HeaderParams.class.getDeclaredMethod("logout", String.class));
 
     assertThat(md.template())
-        .hasHeaders(entry("Auth-Token", asList("{Auth-Token}", "Foo")));
+        .hasHeaders(entry("Auth-Token", asList("{authToken}", "Foo")));
 
     assertThat(md.indexToName())
-        .containsExactly(entry(0, asList("Auth-Token")));
+        .containsExactly(entry(0, asList("authToken")));
   }
 
   @Test
@@ -343,8 +343,8 @@ public class DefaultContractTest {
   interface HeaderParams {
 
     @RequestLine("POST /")
-    @Headers({"Auth-Token: {Auth-Token}", "Auth-Token: Foo"})
-    void logout(@Param("Auth-Token") String token);
+    @Headers({"Auth-Token: {authToken}", "Auth-Token: Foo"})
+    void logout(@Param("authToken") String token);
   }
 
   interface CustomExpander {
