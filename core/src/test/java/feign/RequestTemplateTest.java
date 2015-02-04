@@ -118,6 +118,16 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithHeaderSubstitutions() {
+    RequestTemplate template =
+        new RequestTemplate().method("GET").header("Auth-Token", "{authToken}");
+
+    template.resolve(mapOf("authToken", "1234"));
+
+    assertThat(template).hasHeaders(entry("Auth-Token", asList("1234")));
+  }
+
+  @Test
   public void resolveTemplateWithMixedRequestLineParams() throws Exception {
     RequestTemplate template =
         new RequestTemplate()
