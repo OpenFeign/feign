@@ -15,6 +15,8 @@
  */
 package feign.ribbon;
 
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.IClientConfig;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
@@ -29,8 +31,9 @@ import java.net.URL;
 
 import feign.Feign;
 import feign.Param;
+import feign.Request;
 import feign.RequestLine;
-
+import feign.ribbon.RibbonClient;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
@@ -134,6 +137,15 @@ public class RibbonClientTest {
     assertEquals(server1.getRequestCount(), 2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
+  
+  @Test
+  public void testFeignOptionsClientConfig() {
+    Request.Options options = new Request.Options(1111,22222);
+    IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
+    assertEquals(new Integer(1111),config.get(CommonClientConfigKey.ConnectTimeout));
+    assertEquals(new Integer(22222),config.get(CommonClientConfigKey.ReadTimeout));
+    assertEquals(2, config.getProperties().size());
   }
 
   private String client() {

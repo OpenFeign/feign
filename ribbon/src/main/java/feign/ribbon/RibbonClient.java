@@ -1,19 +1,21 @@
 package feign.ribbon;
 
-import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.IClientConfig;
-import com.netflix.loadbalancer.ILoadBalancer;
-
 import java.io.IOException;
 import java.net.URI;
+
+import com.netflix.client.ClientException;
+import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.client.config.IClientConfig;
+import com.netflix.loadbalancer.ILoadBalancer;
 
 import feign.Client;
 import feign.Request;
 import feign.Response;
 
 /**
- * RibbonClient can be used in Fiegn builder to activate smart routing and resiliency capabilities
+ * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
  * provided by Ribbon. Ex.
  * <pre>
  * MyService api = Feign.builder.client(new RibbonClient()).target(MyService.class,
@@ -45,7 +47,7 @@ public class RibbonClient implements Client {
       LBClient.RibbonRequest
           ribbonRequest =
           new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
-      return lbClient(clientName).executeWithLoadBalancer(ribbonRequest).toResponse();
+      return lbClient(clientName).executeWithLoadBalancer(ribbonRequest, new FeignOptionsClientConfig(options)).toResponse();
     } catch (ClientException e) {
       if (e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
@@ -59,4 +61,25 @@ public class RibbonClient implements Client {
     ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
     return new LBClient(delegate, lb, config);
   }
+  
+  protected static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
+
+	public FeignOptionsClientConfig(Request.Options options) {
+      setProperty(CommonClientConfigKey.ConnectTimeout, options.connectTimeoutMillis());
+      setProperty(CommonClientConfigKey.ReadTimeout, options.readTimeoutMillis());
+	}
+	  
+	@Override
+	public void loadProperties(String clientName) {
+		
+	}
+
+	@Override
+	public void loadDefaultValues() {
+		
+	}
+	  
+  }
+  
+  
 }
