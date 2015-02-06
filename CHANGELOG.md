@@ -1,3 +1,6 @@
+### Version 7.3
+* Adds Request.Options support to RibbonClient
+
 ### Version 7.2
 * Adds `Feign.Builder.build()`
 * Opens constructor for Gson and Jackson codecs which accepts type adapters
