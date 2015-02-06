@@ -3,6 +3,9 @@
 * Removes support for parameters annotated with `javax.inject.@Named`. Use `feign.@Param` instead.
 * Makes body parameter type explicit.
 
+### Version 7.3
+* Adds Request.Options support to RibbonClient
+
 ### Version 7.2
 * Adds `Feign.Builder.build()`
 * Opens constructor for Gson and Jackson codecs which accepts type adapters
