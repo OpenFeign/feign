@@ -6,6 +6,7 @@
 ### Version 7.3
 * Adds Request.Options support to RibbonClient
 * Updates to Ribbon 2.0-RC13
+* Updates to Jackson 2.5.1
 
 ### Version 7.2
 * Adds `Feign.Builder.build()`
