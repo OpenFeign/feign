@@ -5,6 +5,7 @@
 
 ### Version 7.3
 * Adds Request.Options support to RibbonClient
+* Updates to Ribbon 2.0-RC13
 
 ### Version 7.2
 * Adds `Feign.Builder.build()`
@@ -25,6 +26,9 @@
 * Add SLF4J integration
 * Upgrade to Dagger 1.2.2.
   * **Note:** Dagger-generated code prior to version 1.2.0 is incompatible with Dagger 1.2.0 and beyond. Dagger users should upgrade Dagger to at least version 1.2.0, and recompile any dependency-injected classes.
+
+### Version 6.1.3
+* Updates to Ribbon 2.0-RC5
 
 ### Version 6.1.1
 * Fix for #85
