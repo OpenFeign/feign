@@ -12,7 +12,7 @@
   <groupId>com.netflix.feign</groupId>
   <artifactId>feign-example-github</artifactId>
   <packaging>jar</packaging>
-  <version>7.1.0</version>
+  <version>7.2.1</version>
   <name>GitHub Example</name>
 
   <dependencies>
