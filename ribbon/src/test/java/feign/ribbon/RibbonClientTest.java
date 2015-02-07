@@ -15,24 +15,29 @@
  */
 package feign.ribbon;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import static com.netflix.config.ConfigurationManager.getConfigInstance;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import java.io.IOException;
+import java.net.URL;
 
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import java.io.IOException;
-import java.net.URL;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.IClientConfig;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.SocketPolicy;
+import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 
 import feign.Feign;
 import feign.Param;
+import feign.Request;
 import feign.RequestLine;
-
-import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static org.junit.Assert.assertEquals;
 
 public class RibbonClientTest {
 
@@ -134,6 +139,16 @@ public class RibbonClientTest {
     assertEquals(server1.getRequestCount(), 2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
+  
+  @Test
+  public void testFeignOptionsClientConfig() {
+    Request.Options options = new Request.Options(1111, 22222);
+    IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
+    assertThat(config.get(CommonClientConfigKey.ConnectTimeout),
+        equalTo(options.connectTimeoutMillis()));
+    assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
+    assertEquals(2, config.getProperties().size());
   }
 
   private String client() {
