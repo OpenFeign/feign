@@ -2,6 +2,8 @@ package feign.ribbon;
 
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 import feign.Client;
@@ -43,7 +45,9 @@ public class RibbonClient implements Client {
           URI.create(request.url().replace(asUri.getScheme() + "://" + asUri.getHost(), ""));
       LBClient.RibbonRequest ribbonRequest =
           new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
-      return lbClient(clientName).executeWithLoadBalancer(ribbonRequest).toResponse();
+      return lbClient(clientName)
+          .executeWithLoadBalancer(ribbonRequest, new FeignOptionsClientConfig(options))
+          .toResponse();
     } catch (ClientException e) {
       if (e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
@@ -56,5 +60,19 @@ public class RibbonClient implements Client {
     IClientConfig config = ClientFactory.getNamedConfig(clientName);
     ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
     return new LBClient(delegate, lb, config);
+  }
+
+  static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
+
+    public FeignOptionsClientConfig(Request.Options options) {
+      setProperty(CommonClientConfigKey.ConnectTimeout, options.connectTimeoutMillis());
+      setProperty(CommonClientConfigKey.ReadTimeout, options.readTimeoutMillis());
+    }
+
+    @Override
+    public void loadProperties(String clientName) {}
+
+    @Override
+    public void loadDefaultValues() {}
   }
 }
