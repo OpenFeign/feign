@@ -3,7 +3,9 @@ package feign.ribbon;
 import java.io.IOException;
 import java.net.URI;
 
-import com.netflix.client.ClientException;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
@@ -26,6 +28,16 @@ import feign.Response;
  */
 public class RibbonClient implements Client {
 
+  private static final LoadingCache<String, LBClient> LBCLIENT_CACHE = CacheBuilder.newBuilder()
+      .build(new CacheLoader<String, LBClient>() {
+        @Override
+        public LBClient load(String clientName) throws Exception {
+          IClientConfig config = ClientFactory.getNamedConfig(clientName);
+          ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
+          return new LBClient(lb, config);
+        }
+      });
+  
   private final Client delegate;
 
   public RibbonClient() {
@@ -42,21 +54,17 @@ public class RibbonClient implements Client {
       URI asUri = URI.create(request.url());
       String clientName = asUri.getHost();
       URI uriWithoutHost = URI.create(request.url().replace(asUri.getHost(), ""));
-      LBClient.RibbonRequest ribbonRequest = new LBClient.RibbonRequest(request, uriWithoutHost);
-      return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
-          new FeignOptionsClientConfig(options)).toResponse();
-    } catch (ClientException e) {
+      LBClient.RibbonRequest ribbonRequest =
+          new LBClient.RibbonRequest(request, uriWithoutHost, delegate);
+      return LBCLIENT_CACHE.get(clientName)
+          .executeWithLoadBalancer(ribbonRequest, new FeignOptionsClientConfig(options))
+          .toResponse();
+    } catch (Exception e) {
       if (e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
       }
       throw new RuntimeException(e);
     }
-  }
-
-  private LBClient lbClient(String clientName) {
-    IClientConfig config = ClientFactory.getNamedConfig(clientName);
-    ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
-    return new LBClient(delegate, lb, config);
   }
   
   static class FeignOptionsClientConfig extends DefaultClientConfigImpl {

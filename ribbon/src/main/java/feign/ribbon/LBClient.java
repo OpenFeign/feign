@@ -15,6 +15,11 @@
  */
 package feign.ribbon;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Map;
+
 import com.netflix.client.AbstractLoadBalancerAwareClient;
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
@@ -25,11 +30,6 @@ import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Collection;
-import java.util.Map;
-
 import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
@@ -38,16 +38,14 @@ import feign.Response;
 class LBClient
     extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
 
-  private final Client delegate;
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
 
-  LBClient(Client delegate, ILoadBalancer lb, IClientConfig clientConfig) {
+  LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
     super(lb, clientConfig);
     this.setRetryHandler(RetryHandler.DEFAULT);
     this.clientConfig = clientConfig;
-    this.delegate = delegate;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
   }
@@ -64,7 +62,7 @@ class LBClient
     } else {
       options = new Request.Options(connectTimeout, readTimeout);
     }
-    Response response = delegate.execute(request.toRequest(), options);
+    Response response = request.getDelegate().execute(request.toRequest(), options);
     return new RibbonResponse(request.getUri(), response);
   }
 
@@ -85,8 +83,11 @@ class LBClient
 
     private final Request request;
 
-    RibbonRequest(Request request, URI uri) {
+    private final Client delegate;
+
+    RibbonRequest(Request request, URI uri, Client delegate) {
       this.request = request;
+      this.delegate = delegate;
       setUri(uri);
     }
 
@@ -99,8 +100,12 @@ class LBClient
           .request();
     }
 
+    Client getDelegate() {
+      return delegate;
+    }
+
     public Object clone() {
-      return new RibbonRequest(request, getUri());
+      return new RibbonRequest(request, getUri(), delegate);
     }
   }
 
