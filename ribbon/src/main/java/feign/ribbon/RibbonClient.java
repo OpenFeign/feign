@@ -57,12 +57,8 @@ public class RibbonClient implements Client {
     try {
       URI asUri = URI.create(request.url());
       String clientName = asUri.getHost();
-      URI
-          uriWithoutSchemeAndPort =
-          URI.create(request.url().replace(asUri.getScheme() + "://" + asUri.getHost(), ""));
-      LBClient.RibbonRequest
-          ribbonRequest =
-          new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
+      URI uriWithoutHost = URI.create(request.url().replace(asUri.getHost(), ""));
+      LBClient.RibbonRequest ribbonRequest = new LBClient.RibbonRequest(request, uriWithoutHost);
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
           new FeignOptionsClientConfig(options)).toResponse();
     } catch (ClientException e) {

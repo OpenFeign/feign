@@ -15,32 +15,39 @@
  */
 package feign.ribbon;
 
-import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-import java.io.IOException;
-import java.net.URL;
-
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+import java.io.IOException;
+import java.net.URL;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+
+import dagger.Lazy;
 import dagger.Provides;
+import feign.Client;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
+import feign.client.TrustingSSLSocketFactory;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+
+import static com.netflix.config.ConfigurationManager.getConfigInstance;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class RibbonClientTest {
 
@@ -124,6 +131,36 @@ public class RibbonClientTest {
     final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
     assertEquals(recordedRequestLine, expectedRequestLine);
+  }
+
+
+  @Test
+  public void testHTTPSViaRibbon() {
+
+    Client trustSSLSockets = new Client.Default(
+        new Lazy<SSLSocketFactory>() {
+          public SSLSocketFactory get() {
+            return TrustingSSLSocketFactory.get();
+          }
+        },
+        new Lazy<HostnameVerifier>() {
+          public HostnameVerifier get() {
+            return HttpsURLConnection.getDefaultHostnameVerifier();
+          }
+        }
+    ); 
+
+    server1.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server1.enqueue(new MockResponse().setBody("success!"));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+
+    TestInterface api =
+        Feign.builder().client(new RibbonClient(trustSSLSockets))
+            .target(TestInterface.class, "https://" + client());
+    api.post();
+    assertEquals(1, server1.getRequestCount());
+
   }
 
   @Test
