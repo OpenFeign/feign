@@ -37,7 +37,7 @@ import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
 /** Used for ssl tests to simplify setup. */
-final class TrustingSSLSocketFactory extends SSLSocketFactory
+public final class TrustingSSLSocketFactory extends SSLSocketFactory
     implements X509TrustManager, X509KeyManager {
 
   private static final Map<String, SSLSocketFactory> sslSocketFactories =
