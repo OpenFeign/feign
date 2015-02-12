@@ -1,14 +1,14 @@
 package feign.ribbon;
 
+import java.io.IOException;
+import java.net.URI;
+
 import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-
-import java.io.IOException;
-import java.net.URI;
 
 import feign.Client;
 import feign.Request;
@@ -41,12 +41,8 @@ public class RibbonClient implements Client {
     try {
       URI asUri = URI.create(request.url());
       String clientName = asUri.getHost();
-      URI
-          uriWithoutSchemeAndPort =
-          URI.create(request.url().replace(asUri.getScheme() + "://" + asUri.getHost(), ""));
-      LBClient.RibbonRequest
-          ribbonRequest =
-          new LBClient.RibbonRequest(request, uriWithoutSchemeAndPort);
+      URI uriWithoutHost = URI.create(request.url().replace(asUri.getHost(), ""));
+      LBClient.RibbonRequest ribbonRequest = new LBClient.RibbonRequest(request, uriWithoutHost);
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
           new FeignOptionsClientConfig(options)).toResponse();
     } catch (ClientException e) {
