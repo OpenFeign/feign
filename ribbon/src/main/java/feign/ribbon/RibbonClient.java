@@ -1,11 +1,8 @@
 package feign.ribbon;
 
 import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.client.config.IClientConfig;
-import com.netflix.loadbalancer.ILoadBalancer;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,21 +17,37 @@ import feign.Request;
 import feign.Response;
 
 /**
- * RibbonClient can be used in Fiegn builder to activate smart routing and resiliency capabilities
+ * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
  * provided by Ribbon. Ex.
+ * 
  * <pre>
- * MyService api = Feign.builder.client(new RibbonClient()).target(MyService.class,
- * "http://myAppProd");
+ * MyService api = Feign.builder.client(RibbonClient.create()).target(MyService.class,
+ *     &quot;http://myAppProd&quot;);
  * </pre>
+ * 
  * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers}
  * configuration is set.
  */
 public class RibbonClient implements Client {
 
   private final Client delegate;
+  private final LBClientFactory lbClientFactory;
 
+
+  public static RibbonClient create() {
+    return builder().build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /**
+   * @deprecated Use the {@link RibbonClient#create()}
+   */
+  @Deprecated
   public RibbonClient() {
-    this.delegate = new Client.Default(
+    this(new Client.Default(
         new Lazy<SSLSocketFactory>() {
           public SSLSocketFactory get() {
             return (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -45,11 +58,20 @@ public class RibbonClient implements Client {
             return HttpsURLConnection.getDefaultHostnameVerifier();
           }
         }
-    );
+    ));
   }
 
+  /**
+   * @deprecated Use the {@link RibbonClient#create()}
+   */
+  @Deprecated
   public RibbonClient(Client delegate) {
+    this(delegate, new LBClientFactory.Default());
+  }
+
+  RibbonClient(Client delegate, LBClientFactory lbClientFactory) {
     this.delegate = delegate;
+    this.lbClientFactory = lbClientFactory;
   }
 
   @Override
@@ -58,7 +80,8 @@ public class RibbonClient implements Client {
       URI asUri = URI.create(request.url());
       String clientName = asUri.getHost();
       URI uriWithoutHost = URI.create(request.url().replace(asUri.getHost(), ""));
-      LBClient.RibbonRequest ribbonRequest = new LBClient.RibbonRequest(request, uriWithoutHost);
+      LBClient.RibbonRequest ribbonRequest =
+          new LBClient.RibbonRequest(delegate, request, uriWithoutHost);
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
           new FeignOptionsClientConfig(options)).toResponse();
     } catch (ClientException e) {
@@ -70,9 +93,7 @@ public class RibbonClient implements Client {
   }
 
   private LBClient lbClient(String clientName) {
-    IClientConfig config = ClientFactory.getNamedConfig(clientName);
-    ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
-    return new LBClient(delegate, lb, config);
+    return lbClientFactory.create(clientName);
   }
   
   static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
@@ -94,4 +115,40 @@ public class RibbonClient implements Client {
 
   }
   
+  public static final class Builder {
+
+    Builder() {
+    }
+
+    private Client delegate;
+    private LBClientFactory lbClientFactory;
+
+    public Builder delegate(Client delegate) {
+      this.delegate = delegate;
+      return this;
+    }
+
+    public Builder lbClientFactory(LBClientFactory lbClientFactory) {
+      this.lbClientFactory = lbClientFactory;
+      return this;
+    }
+
+    public RibbonClient build() {
+      return new RibbonClient(
+          delegate != null ? delegate : new Client.Default(
+              new Lazy<SSLSocketFactory>() {
+                public SSLSocketFactory get() {
+                  return (SSLSocketFactory) SSLSocketFactory.getDefault();
+                }
+              },
+              new Lazy<HostnameVerifier>() {
+                public HostnameVerifier get() {
+                  return HttpsURLConnection.getDefaultHostnameVerifier();
+                }
+              }
+          ),
+          lbClientFactory != null ? lbClientFactory : new LBClientFactory.Default()
+      );
+    }
+  }
 }

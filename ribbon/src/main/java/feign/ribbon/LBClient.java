@@ -35,19 +35,21 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
 
-class LBClient
-    extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
+public final class LBClient extends
+    AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
 
-  private final Client delegate;
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
 
-  LBClient(Client delegate, ILoadBalancer lb, IClientConfig clientConfig) {
+  public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
+    return new LBClient(lb, clientConfig);
+  }
+
+  LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
     super(lb, clientConfig);
     this.setRetryHandler(RetryHandler.DEFAULT);
     this.clientConfig = clientConfig;
-    this.delegate = delegate;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
   }
@@ -64,7 +66,7 @@ class LBClient
     } else {
       options = new Request.Options(connectTimeout, readTimeout);
     }
-    Response response = delegate.execute(request.toRequest(), options);
+    Response response = request.client().execute(request.toRequest(), options);
     return new RibbonResponse(request.getUri(), response);
   }
 
@@ -84,8 +86,10 @@ class LBClient
   static class RibbonRequest extends ClientRequest implements Cloneable {
 
     private final Request request;
+    private final Client client;
 
-    RibbonRequest(Request request, URI uri) {
+    RibbonRequest(Client client, Request request, URI uri) {
+      this.client = client;
       this.request = request;
       setUri(uri);
     }
@@ -99,8 +103,12 @@ class LBClient
           .request();
     }
 
+    Client client() {
+      return client;
+    }
+
     public Object clone() {
-      return new RibbonRequest(request, getUri());
+      return new RibbonRequest(client, request, getUri());
     }
   }
 

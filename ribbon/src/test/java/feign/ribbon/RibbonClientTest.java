@@ -156,7 +156,7 @@ public class RibbonClientTest {
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
     TestInterface api =
-        Feign.builder().client(new RibbonClient(trustSSLSockets))
+        Feign.builder().client(RibbonClient.builder().delegate(trustSSLSockets).build())
             .target(TestInterface.class, "https://" + client());
     api.post();
     assertEquals(1, server1.getRequestCount());
@@ -170,9 +170,9 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
 
-    TestInterface api = Feign.builder().
-        client(new RibbonClient()).
-        target(TestInterface.class, "http://" + client());
+    TestInterface api =
+        Feign.builder().client(RibbonClient.create())
+            .target(TestInterface.class, "http://" + client());
 
     api.post();
 

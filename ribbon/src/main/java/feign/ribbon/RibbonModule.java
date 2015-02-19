@@ -37,6 +37,11 @@ import feign.Client;
 public class RibbonModule {
 
   @Provides
+  LBClientFactory lbClientFactory() {
+    return new LBClientFactory.Default();
+  }
+
+  @Provides
   @Named("delegate")
   Client delegate(Client.Default delegate) {
     return delegate;
@@ -44,7 +49,7 @@ public class RibbonModule {
 
   @Provides
   @Singleton
-  Client httpClient(@Named("delegate") Client client) {
-    return new RibbonClient(client);
+  Client httpClient(@Named("delegate") Client client, LBClientFactory lbClientFactory) {
+    return new RibbonClient(client, lbClientFactory);
   }
 }
