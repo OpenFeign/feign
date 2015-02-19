@@ -34,10 +34,12 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 
+import feign.Client;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
+import feign.client.TrustingSSLSocketFactory;
 
 public class RibbonClientTest {
 
@@ -121,6 +123,25 @@ public class RibbonClientTest {
     final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
     assertEquals(recordedRequestLine, expectedRequestLine);
+  }
+
+
+  @Test
+  public void testHTTPSViaRibbon() {
+
+    Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
+
+    server1.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server1.enqueue(new MockResponse().setBody("success!"));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+
+    TestInterface api =
+        Feign.builder().client(new RibbonClient(trustSSLSockets))
+            .target(TestInterface.class, "https://" + client());
+    api.post();
+    assertEquals(1, server1.getRequestCount());
+
   }
 
   @Test
