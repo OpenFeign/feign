@@ -5,6 +5,7 @@
 
 ### Version 7.3
 * Adds Request.Options support to RibbonClient
+* Adds LBClientFactory to enable caching of Ribbon LBClients
 * Updates to Ribbon 2.0-RC13
 * Updates to Jackson 2.5.1
 * Supports query parameters without values

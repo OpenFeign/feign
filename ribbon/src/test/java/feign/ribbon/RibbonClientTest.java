@@ -61,7 +61,7 @@ public class RibbonClientTest {
 
     TestInterface api =
         Feign.builder()
-            .client(new RibbonClient())
+            .client(RibbonClient.create())
             .target(TestInterface.class, "http://" + client());
 
     api.post();
@@ -82,7 +82,7 @@ public class RibbonClientTest {
 
     TestInterface api =
         Feign.builder()
-            .client(new RibbonClient())
+            .client(RibbonClient.create())
             .target(TestInterface.class, "http://" + client());
 
     api.post();
@@ -110,7 +110,7 @@ public class RibbonClientTest {
 
     TestInterface api =
         Feign.builder()
-            .client(new RibbonClient())
+            .client(RibbonClient.create())
             .target(TestInterface.class, "http://" + client());
 
     api.getWithQueryParameters(queryStringValue);
@@ -132,7 +132,7 @@ public class RibbonClientTest {
 
     TestInterface api =
         Feign.builder()
-            .client(new RibbonClient(trustSSLSockets))
+            .client(RibbonClient.builder().delegate(trustSSLSockets).build())
             .target(TestInterface.class, "https://" + client());
     api.post();
     assertEquals(1, server1.getRequestCount());
@@ -147,7 +147,7 @@ public class RibbonClientTest {
 
     TestInterface api =
         Feign.builder()
-            .client(new RibbonClient())
+            .client(RibbonClient.create())
             .target(TestInterface.class, "http://" + client());
 
     api.post();

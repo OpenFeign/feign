@@ -104,7 +104,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof LoadBalancingTarget) {
-      LoadBalancingTarget<?> other = (LoadBalancingTarget) obj;
+      LoadBalancingTarget<?> other = (LoadBalancingTarget<?>) obj;
       return type.equals(other.type) && name.equals(other.name);
     }
     return false;

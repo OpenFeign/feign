@@ -145,7 +145,7 @@ GitHub github = Feign.builder()
 
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java
-MyService api = Feign.builder().client(new RibbonClient()).target(MyService.class, "https://myAppProd");
+MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.class, "https://myAppProd");
 
 ```
 
