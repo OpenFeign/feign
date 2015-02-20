@@ -504,7 +504,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   private boolean allValuesAreNull(Collection<String> values) {
-    if (values.isEmpty()) {
+    if (values == null || values.isEmpty()) {
       return true;
     }
     for (String val : values) {
