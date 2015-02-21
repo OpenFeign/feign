@@ -120,13 +120,32 @@ public class DefaultContractTest {
 
     assertThat(
             contract
-                .parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty"))
+                .parseAndValidatateMetadata(
+                    WithQueryParamsInPath.class.getDeclaredMethod("twoAndOneEmpty"))
                 .template())
         .hasUrl("/")
         .hasQueries(
             entry("flag", asList(new String[] {null})),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
+
+    assertThat(
+            contract
+                .parseAndValidatateMetadata(
+                    WithQueryParamsInPath.class.getDeclaredMethod("oneEmpty"))
+                .template())
+        .hasUrl("/")
+        .hasQueries(entry("flag", asList(new String[] {null})));
+
+    assertThat(
+            contract
+                .parseAndValidatateMetadata(
+                    WithQueryParamsInPath.class.getDeclaredMethod("twoEmpty"))
+                .template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("flag", asList(new String[] {null})),
+            entry("NoErrors", asList(new String[] {null})));
   }
 
   @Test
@@ -281,7 +300,13 @@ public class DefaultContractTest {
     Response three();
 
     @RequestLine("GET /?flag&Action=GetUser&Version=2010-05-08")
-    Response empty();
+    Response twoAndOneEmpty();
+
+    @RequestLine("GET /?flag")
+    Response oneEmpty();
+
+    @RequestLine("GET /?flag&NoErrors")
+    Response twoEmpty();
   }
 
   interface BodyWithoutParameters {
