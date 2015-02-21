@@ -2,6 +2,7 @@
 * Adds Request.Options support to RibbonClient
 * Updates to Ribbon 2.0-RC13
 * Updates to Jackson 2.5.1
+* Supports query parameters without values
 
 ### Version 7.2
 * Adds `Feign.Builder.build()`

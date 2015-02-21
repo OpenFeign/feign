@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -126,7 +127,7 @@ public class DefaultContractTest {
         );
 
     assertThat(
-        contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("empty"))
+        contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("twoAndOneEmpty"))
             .template())
         .hasUrl("/")
         .hasQueries(
@@ -134,6 +135,23 @@ public class DefaultContractTest {
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08"))
         );
+
+    assertThat(
+        contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("oneEmpty"))
+            .template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("flag", asList(new String[]{null}))
+        );
+
+    assertThat(
+        contract.parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("twoEmpty"))
+            .template())
+        .hasUrl("/")
+        .hasQueries(
+            entry("flag", asList(new String[]{null})),
+            entry("NoErrors", asList(new String[]{null}))
+        ); 
   }
 
   @Test
@@ -356,7 +374,13 @@ public class DefaultContractTest {
     Response three();
 
     @RequestLine("GET /?flag&Action=GetUser&Version=2010-05-08")
-    Response empty();
+    Response twoAndOneEmpty();
+
+    @RequestLine("GET /?flag")
+    Response oneEmpty();
+
+    @RequestLine("GET /?flag&NoErrors")
+    Response twoEmpty();
   }
 
   interface BodyWithoutParameters {
