@@ -145,11 +145,7 @@ public final class RequestTemplate implements Serializable {
       return map;
     }
     if (queryLine.indexOf('&') == -1) {
-      if (queryLine.indexOf('=') != -1) {
-        putKV(queryLine, map);
-      } else {
-        map.put(queryLine, null);
-      }
+      putKV(queryLine, map);
     } else {
       char[] chars = queryLine.toCharArray();
       int start = 0;
@@ -528,7 +524,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   private boolean allValuesAreNull(Collection<String> values) {
-    if (values.isEmpty()) {
+    if (values == null || values.isEmpty()) {
       return true;
     }
     for (String val : values) {
