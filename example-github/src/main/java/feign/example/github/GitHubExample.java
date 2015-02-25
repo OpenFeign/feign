@@ -23,12 +23,32 @@ import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
+import java.io.IOException;
 import java.util.List;
 
-/** adapted from {@code com.example.retrofit.GitHubClient} */
+/** Inspired by {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
 
-  public static void main(String... args) throws InterruptedException {
+  interface GitHub {
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  static class Contributor {
+    String login;
+    int contributions;
+  }
+
+  static class GitHubClientError extends RuntimeException {
+    private String message; // parsed from json
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+  }
+
+  public static void main(String... args) {
     Decoder decoder = new GsonDecoder();
     GitHub github =
         Feign.builder()
@@ -44,35 +64,12 @@ public class GitHubExample {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
 
+    System.out.println("Now, let's cause an error.");
     try {
-      contributors = github.contributors("netflix", "some-unknown-project");
+      github.contributors("netflix", "some-unknown-project");
     } catch (GitHubClientError e) {
-      System.out.println(e.error.message);
+      System.out.println(e.getMessage());
     }
-  }
-
-  interface GitHub {
-
-    @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  }
-
-  static class Contributor {
-
-    String login;
-    int contributions;
-  }
-
-  static class ClientError {
-
-    String message;
-    List<Error> errors;
-  }
-
-  static class Error {
-    String resource;
-    String field;
-    String code;
   }
 
   static class GitHubErrorDecoder implements ErrorDecoder {
@@ -80,32 +77,17 @@ public class GitHubExample {
     final Decoder decoder;
     final ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
 
-    public GitHubErrorDecoder(Decoder decoder) {
+    GitHubErrorDecoder(Decoder decoder) {
       this.decoder = decoder;
     }
 
+    @Override
     public Exception decode(String methodKey, Response response) {
-      if (response.status() >= 400 && response.status() < 500) {
-        try {
-          ClientError error = (ClientError) decoder.decode(response, ClientError.class);
-          return new GitHubClientError(response.status(), error);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
+      try {
+        return (Exception) decoder.decode(response, GitHubClientError.class);
+      } catch (IOException fallbackToDefault) {
+        return defaultDecoder.decode(methodKey, response);
       }
-      return defaultDecoder.decode(methodKey, response);
-    }
-  }
-
-  static class GitHubClientError extends RuntimeException {
-
-    private static final long serialVersionUID = 0;
-
-    ClientError error;
-
-    protected GitHubClientError(int status, ClientError error) {
-      super("client error " + status);
-      this.error = error;
     }
   }
 }
