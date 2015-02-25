@@ -21,6 +21,9 @@ import feign.Feign;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
+import feign.Response;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
 
 /**
@@ -29,8 +32,10 @@ import feign.gson.GsonDecoder;
 public class GitHubExample {
 
   public static void main(String... args) throws InterruptedException {
+    Decoder decoder = new GsonDecoder();
     GitHub github = Feign.builder()
-        .decoder(new GsonDecoder())
+        .decoder(decoder)
+        .errorDecoder(new GitHubErrorDecoder(decoder))
         .logger(new Logger.ErrorLogger())
         .logLevel(Logger.Level.BASIC)
         .target(GitHub.class, "https://api.github.com");
@@ -39,6 +44,12 @@ public class GitHubExample {
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    }
+
+    try {
+      contributors = github.contributors("netflix", "some-unknown-project");
+    } catch (GitHubClientError e) {
+      System.out.println(e.error.message);
     }
   }
 
@@ -52,5 +63,52 @@ public class GitHubExample {
 
     String login;
     int contributions;
+  }
+
+  static class ClientError {
+
+    String message;
+    List<Error> errors;
+  }
+
+  static class Error {
+    String resource;
+    String field;
+    String code;
+  }
+
+  static class GitHubErrorDecoder implements ErrorDecoder {
+
+    final Decoder decoder;
+    final ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
+
+    public GitHubErrorDecoder(Decoder decoder) {
+      this.decoder = decoder;
+    }
+
+    public Exception decode(String methodKey, Response response) {
+      if (response.status() >= 400 && response.status() < 500) {
+        try {
+          ClientError error = (ClientError) decoder.decode(response, ClientError.class );
+          return new GitHubClientError(response.status(), error);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+      return defaultDecoder.decode(methodKey, response);
+    }
+  }
+
+  static class GitHubClientError extends RuntimeException {
+
+    private static final long serialVersionUID = 0;
+
+    ClientError error;
+
+    protected GitHubClientError(int status, ClientError error) {
+      super("client error " + status);
+      this.error = error;
+    }
+
   }
 }
