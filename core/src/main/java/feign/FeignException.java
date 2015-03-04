@@ -34,7 +34,7 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
     return new FeignException(
-        format("%s %s %s", cause.getMessage(), request.method(), request.url()), cause);
+        format("%s reading %s %s", cause.getMessage(), request.method(), request.url()), cause);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
@@ -51,7 +51,7 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
-        format("error %s executing %s %s", cause.getMessage(), request.method(), request.url()),
+        format("%s executing %s %s", cause.getMessage(), request.method(), request.url()),
         cause,
         null);
   }
