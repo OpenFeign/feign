@@ -1,3 +1,6 @@
+### Version 7.4
+* Allows `@Headers` to be applied to a type
+
 ### Version 7.3
 * Adds Request.Options support to RibbonClient
 * Adds LBClientFactory to enable caching of Ribbon LBClients

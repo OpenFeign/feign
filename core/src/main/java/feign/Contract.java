@@ -133,6 +133,21 @@ public interface Contract {
   class Default extends BaseContract {
 
     @Override
+    public MethodMetadata parseAndValidatateMetadata(Method method) {
+      MethodMetadata data = super.parseAndValidatateMetadata(method);
+      if (method.getDeclaringClass().isAnnotationPresent(Headers.class)) {
+        String[] headersOnType = method.getDeclaringClass().getAnnotation(Headers.class).value();
+        checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
+                   method.getDeclaringClass().getName());
+        Map<String, Collection<String>> headers = toMap(headersOnType);
+        headers.putAll(data.template().headers());
+        data.template().headers(null); // to clear
+        data.template().headers(headers);
+      }
+      return data;
+    }
+
+    @Override
     protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation,
                                              Method method) {
       Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
@@ -163,21 +178,10 @@ public interface Contract {
           data.template().bodyTemplate(body);
         }
       } else if (annotationType == Headers.class) {
-        String[] headersToParse = Headers.class.cast(methodAnnotation).value();
-        checkState(headersToParse.length > 0, "Headers annotation was empty on method %s.",
+        String[] headersOnMethod = Headers.class.cast(methodAnnotation).value();
+        checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
                    method.getName());
-        Map<String, Collection<String>>
-            headers =
-            new LinkedHashMap<String, Collection<String>>(headersToParse.length);
-        for (String header : headersToParse) {
-          int colon = header.indexOf(':');
-          String name = header.substring(0, colon);
-          if (!headers.containsKey(name)) {
-            headers.put(name, new ArrayList<String>(1));
-          }
-          headers.get(name).add(header.substring(colon + 2));
-        }
-        data.template().headers(headers);
+        data.template().headers(toMap(headersOnMethod));
       }
     }
 
@@ -215,7 +219,7 @@ public interface Contract {
       return isHttpAnnotation;
     }
 
-    private <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
+    private static <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
       Collection<Collection<V>> values = map.values();
       if (values == null) {
         return false;
@@ -228,6 +232,21 @@ public interface Contract {
       }
 
       return false;
+    }
+
+    private static Map<String, Collection<String>> toMap(String[] input) {
+      Map<String, Collection<String>>
+          result =
+          new LinkedHashMap<String, Collection<String>>(input.length);
+      for (String header : input) {
+        int colon = header.indexOf(':');
+        String name = header.substring(0, colon);
+        if (!result.containsKey(name)) {
+          result.put(name, new ArrayList<String>(1));
+        }
+        result.get(name).add(header.substring(colon + 2));
+      }
+      return result;
     }
   }
 }
