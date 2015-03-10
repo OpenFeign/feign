@@ -1,10 +1,9 @@
 language: java
-
 jdk:
-  - oraclejdk7
-  
+- oraclejdk7
 sudo: false
-# as per http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/
-
-# script for build and release via Travis to Bintray
 script: buildViaTravis.sh
+env:
+  global:
+  - secure: Ps7+oTi5FfjwJ7tQ8G51wk30ZHqB1P4ZNXsGisn+r/8IJRxPs6VNIF/dPSkWLERs1tBvMG2sRz9nxaIwxXJwHXOkoBL/SXZHzOYwKTlsNcu72B6czxepIb0OAGWKAv6aCk9vAJkRzGX2Ogy+Hnn8AuQlPAPOplRjZm1AXj6smGM=
+  - secure: C/RoUcQGZ6wB1nHnLN7dGMCbpjOObaviuXFxv5ZtocKfALmOZg6gOye5/LyJwvLwMaKtI434dHFvY29FIO0ntclx48xPYCjg6GsmzJOwQcwlLqIV1HQMczFDiYlMFSUbHn9d+JbwXxdd13g98aHtEif73bI0SXevyiqv4n/XsVo=
