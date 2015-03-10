@@ -157,9 +157,20 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void producesAddsContentTypeHeader() throws Exception {
+  public void headersOnMethodAddsContentTypeHeader() throws Exception {
     MethodMetadata md =
         contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
+
+    assertThat(md.template())
+        .hasHeaders(
+            entry("Content-Type", asList("application/xml")),
+            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+  }
+
+  @Test
+  public void headersOnTypeAddsContentTypeHeader() throws Exception {
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(HeadersOnType.class.getDeclaredMethod("post"));
 
     assertThat(md.template())
         .hasHeaders(
@@ -313,6 +324,14 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     @Headers("Content-Type: application/xml")
+    @Body("<v01:getAccountsListOfUser/>")
+    Response post();
+  }
+
+  @Headers("Content-Type: application/xml")
+  interface HeadersOnType {
+
+    @RequestLine("POST /")
     @Body("<v01:getAccountsListOfUser/>")
     Response post();
   }

@@ -1,6 +1,7 @@
 package feign;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -10,6 +11,9 @@ import java.lang.annotation.Target;
  * Expands headers supplied in the {@code value}. Variables are permitted as values. <br>
  *
  * <pre>
+ * &#64;Headers("Content-Type: application/xml")
+ * interface SoapApi {
+ * ...
  * &#64;RequestLine("GET /")
  * &#64;Headers("Cache-Control: max-age=640000")
  * ...
@@ -48,7 +52,7 @@ import java.lang.annotation.Target;
  * ...
  * </pre>
  */
-@Target(METHOD)
+@Target({METHOD, TYPE})
 @Retention(RUNTIME)
 public @interface Headers {
 
