@@ -377,8 +377,7 @@ public final class RequestTemplate implements Serializable {
    * JAXRS 2.0</b><br> <br> Like {@code Invocation.Builder.headers(MultivaluedMap)}, except the
    * values can be templatized. <br> ex. <br>
    * <pre>
-   * template.headers(ImmutableMultimap.of(&quot;X-Application-Version&quot;,
-   * &quot;{version}&quot;));
+   * template.headers(mapOf(&quot;X-Application-Version&quot;, asList(&quot;{version}&quot;)));
    * </pre>
    *
    * @param headers if null, remove all headers. else value to replace all headers with.

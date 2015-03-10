@@ -1,7 +1,13 @@
+### Version 8.1
+* Allows `@Headers` to be applied to a type
+
 ### Version 8.0
 * Removes Dagger 1.x Dependency
 * Removes support for parameters annotated with `javax.inject.@Named`. Use `feign.@Param` instead.
 * Makes body parameter type explicit.
+
+### Version 7.4
+* Allows `@Headers` to be applied to a type
 
 ### Version 7.3
 * Adds Request.Options support to RibbonClient
