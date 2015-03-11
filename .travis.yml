@@ -1,8 +1,7 @@
 language: java
 jdk:
 - oraclejdk7
-sudo: false
-script: buildViaTravis.sh
+script: ./buildViaTravis.sh
 env:
   global:
   - secure: Ps7+oTi5FfjwJ7tQ8G51wk30ZHqB1P4ZNXsGisn+r/8IJRxPs6VNIF/dPSkWLERs1tBvMG2sRz9nxaIwxXJwHXOkoBL/SXZHzOYwKTlsNcu72B6czxepIb0OAGWKAv6aCk9vAJkRzGX2Ogy+Hnn8AuQlPAPOplRjZm1AXj6smGM=
