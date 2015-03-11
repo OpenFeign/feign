@@ -22,6 +22,7 @@
 // deprecated by: https://github.com/Netflix/gradle-template/issues/8
 //
 // original design: cfieber
+//
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
