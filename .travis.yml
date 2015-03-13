@@ -1,6 +1,7 @@
 language: java
 jdk:
 - oraclejdk7
+install: ./installViaTravis.sh
 script: ./buildViaTravis.sh
 env:
   global:
