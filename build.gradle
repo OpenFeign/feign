@@ -1,3 +1,10 @@
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath 'be.insaneprogramming.gradle:animalsniffer-gradle-plugin:1.4.0'
+    }
+}
+
 plugins {
     id 'nebula.netflixoss' version '2.2.9'
 }
@@ -13,4 +20,9 @@ subprojects {
         jcenter()
     }
     group = "com.netflix.${githubProjectName}" // TEMPLATE: Set to organization of project
+    apply plugin: 'be.insaneprogramming.gradle.animalsniffer'
+
+    animalsniffer { // Don't use apis that may not be available on Android
+        signature = "org.codehaus.mojo.signature:java16:+@signature"
+    }
 }

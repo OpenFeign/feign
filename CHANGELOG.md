@@ -1,3 +1,6 @@
+### Version 8.2
+* Enforces source compatibility with animal-sniffer
+
 ### Version 8.1
 * Allows `@Headers` to be applied to a type
 
