@@ -1,4 +1,5 @@
 ### Version 8.2
+* Adds JMH benchmark module
 * Enforces source compatibility with animal-sniffer
 
 ### Version 8.1
