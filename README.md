@@ -61,7 +61,7 @@ CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey)
 ```
 
 ### Examples
-Feign includes a working example [GitHub](https://github.com/Netflix/feign/tree/master/example-github) and [Wikipedia](https://github.com/Netflix/feign/tree/master/example-wikipedia) client. The denominator project can also be scraped Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
+Feign includes example [GitHub](https://github.com/Netflix/feign/tree/master/example-github) and [Wikipedia](https://github.com/Netflix/feign/tree/master/example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
 
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
