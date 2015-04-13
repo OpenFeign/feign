@@ -2,8 +2,6 @@ package feign.benchmark;
 
 import java.util.List;
 
-import javax.ws.rs.HeaderParam;
-
 import feign.Body;
 import feign.Headers;
 import feign.Param;
@@ -35,5 +33,5 @@ interface FeignTestInterface {
 
   @RequestLine("POST /")
   @Headers({"Happy: sad", "Auth-Token: {authToken}"})
-  void headers(@HeaderParam("authToken") String token);
+  void headers(@Param("authToken") String token);
 }
