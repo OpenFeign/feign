@@ -27,13 +27,34 @@
     </dependency>
     <dependency>
       <groupId>com.netflix.feign</groupId>
-      <artifactId>feign-jaxrs</artifactId>
+      <artifactId>feign-okhttp</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
-      <version>1.1.1</version>
+      <groupId>com.squareup.okhttp</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <version>2.3.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15on</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxnetty</artifactId>
+      <version>0.4.8</version>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+      <version>1.0.9</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>4.0.26.Final</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>

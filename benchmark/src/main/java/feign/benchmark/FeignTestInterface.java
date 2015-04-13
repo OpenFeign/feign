@@ -6,7 +6,6 @@ import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import java.util.List;
-import javax.ws.rs.HeaderParam;
 
 @Headers("Accept: application/json")
 interface FeignTestInterface {
@@ -38,5 +37,5 @@ interface FeignTestInterface {
 
   @RequestLine("POST /")
   @Headers({"Happy: sad", "Auth-Token: {authToken}"})
-  void headers(@HeaderParam("authToken") String token);
+  void headers(@Param("authToken") String token);
 }
