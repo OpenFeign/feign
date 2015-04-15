@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 
 import org.junit.After;
@@ -170,6 +171,18 @@ public class RibbonClientTest {
         equalTo(options.connectTimeoutMillis()));
     assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
     assertEquals(2, config.getProperties().size());
+  }
+
+  @Test
+  public void testCleanUrlWithMatchingHostAndPart() throws IOException {
+    URI uri = RibbonClient.cleanUrl("http://questions/questions/answer/123", "questions");
+    assertEquals("http:///questions/answer/123", uri.toString());
+  }
+
+  @Test
+  public void testCleanUrl() throws IOException {
+    URI uri = RibbonClient.cleanUrl("http://myservice/questions/answer/123", "myservice");
+    assertEquals("http:///questions/answer/123", uri.toString());
   }
 
   private String client() {
