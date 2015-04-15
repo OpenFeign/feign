@@ -32,6 +32,7 @@ import feign.Request;
 import feign.RequestLine;
 import feign.client.TrustingSSLSocketFactory;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import org.junit.After;
 import org.junit.Rule;
@@ -165,6 +166,18 @@ public class RibbonClientTest {
         config.get(CommonClientConfigKey.ConnectTimeout), equalTo(options.connectTimeoutMillis()));
     assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
     assertEquals(2, config.getProperties().size());
+  }
+
+  @Test
+  public void testCleanUrlWithMatchingHostAndPart() throws IOException {
+    URI uri = RibbonClient.cleanUrl("http://questions/questions/answer/123", "questions");
+    assertEquals("http:///questions/answer/123", uri.toString());
+  }
+
+  @Test
+  public void testCleanUrl() throws IOException {
+    URI uri = RibbonClient.cleanUrl("http://myservice/questions/answer/123", "myservice");
+    assertEquals("http:///questions/answer/123", uri.toString());
   }
 
   private String client() {
