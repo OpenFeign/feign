@@ -63,7 +63,7 @@ public class RibbonClient implements Client {
     try {
       URI asUri = URI.create(request.url());
       String clientName = asUri.getHost();
-      URI uriWithoutHost = URI.create(request.url().replace(asUri.getHost(), ""));
+      URI uriWithoutHost = cleanUrl(request.url(), clientName);
       LBClient.RibbonRequest ribbonRequest =
           new LBClient.RibbonRequest(delegate, request, uriWithoutHost);
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
@@ -74,6 +74,10 @@ public class RibbonClient implements Client {
       }
       throw new RuntimeException(e);
     }
+  }
+
+  static URI cleanUrl(String originalUrl, String host) {
+    return URI.create(originalUrl.replaceFirst(host, ""));
   }
 
   private LBClient lbClient(String clientName) {
