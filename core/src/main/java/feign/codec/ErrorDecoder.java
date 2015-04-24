@@ -113,7 +113,7 @@ public interface ErrorDecoder {
       this.rfc822Format = checkNotNull(rfc822Format, "rfc822Format");
     }
 
-    protected long currentTimeNanos() {
+    protected long currentTimeMillis() {
       return System.currentTimeMillis();
     }
 
@@ -128,9 +128,8 @@ public interface ErrorDecoder {
         return null;
       }
       if (retryAfter.matches("^[0-9]+$")) {
-        long currentTimeMillis = NANOSECONDS.toMillis(currentTimeNanos());
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
-        return new Date(currentTimeMillis + deltaMillis);
+        return new Date(currentTimeMillis() + deltaMillis);
       }
       synchronized (rfc822Format) {
         try {
