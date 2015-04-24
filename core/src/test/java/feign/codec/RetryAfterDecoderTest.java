@@ -16,7 +16,6 @@
 package feign.codec;
 
 import static feign.codec.ErrorDecoder.RetryAfterDecoder.RFC822_FORMAT;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -28,10 +27,9 @@ public class RetryAfterDecoderTest {
 
   private RetryAfterDecoder decoder =
       new RetryAfterDecoder(RFC822_FORMAT) {
-        protected long currentTimeNanos() {
+        protected long currentTimeMillis() {
           try {
-            return MILLISECONDS.toNanos(
-                RFC822_FORMAT.parse("Sat, 1 Jan 2000 00:00:00 GMT").getTime());
+            return RFC822_FORMAT.parse("Sat, 1 Jan 2000 00:00:00 GMT").getTime();
           } catch (ParseException e) {
             throw new RuntimeException(e);
           }
