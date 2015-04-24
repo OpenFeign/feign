@@ -19,7 +19,6 @@ import static feign.FeignException.errorStatus;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
 import static java.util.Locale.US;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import feign.FeignException;
@@ -117,7 +116,7 @@ public interface ErrorDecoder {
       this.rfc822Format = checkNotNull(rfc822Format, "rfc822Format");
     }
 
-    protected long currentTimeNanos() {
+    protected long currentTimeMillis() {
       return System.currentTimeMillis();
     }
 
@@ -132,9 +131,8 @@ public interface ErrorDecoder {
         return null;
       }
       if (retryAfter.matches("^[0-9]+$")) {
-        long currentTimeMillis = NANOSECONDS.toMillis(currentTimeNanos());
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
-        return new Date(currentTimeMillis + deltaMillis);
+        return new Date(currentTimeMillis() + deltaMillis);
       }
       synchronized (rfc822Format) {
         try {
