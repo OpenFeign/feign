@@ -17,8 +17,6 @@ package feign;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static feign.Util.checkNotNull;
@@ -28,6 +26,15 @@ import static feign.Util.valuesOrEmpty;
  * An immutable request to an http server.
  */
 public final class Request {
+
+  /**
+   * No parameters can be null except {@code body} and {@code charset}. All parameters must be
+   * effectively immutable, via safe copies, not mutating or otherwise.
+   */
+  public static Request create(String method, String url, Map<String, Collection<String>> headers,
+                               byte[] body, Charset charset) {
+    return new Request(method, url, headers, body, charset);
+  }
 
   private final String method;
   private final String url;
@@ -39,11 +46,7 @@ public final class Request {
           Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
-    LinkedHashMap<String, Collection<String>>
-        copyOf =
-        new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers of %s %s", method, url));
-    this.headers = Collections.unmodifiableMap(copyOf);
+    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
