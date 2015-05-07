@@ -1,4 +1,5 @@
 ### Version 8.2
+* Allows customized request construction by exposing `Request.create()`
 * Adds JMH benchmark module
 * Enforces source compatibility with animal-sniffer
 
