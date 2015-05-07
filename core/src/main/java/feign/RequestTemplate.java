@@ -224,8 +224,14 @@ public final class RequestTemplate implements Serializable {
 
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
-    return new Request(
-        method, new StringBuilder(url).append(queryLine()).toString(), headers, body, charset);
+    Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
+    safeCopy.putAll(headers);
+    return Request.create(
+        method,
+        new StringBuilder(url).append(queryLine()).toString(),
+        Collections.unmodifiableMap(safeCopy),
+        body,
+        charset);
   }
 
   /* @see Request#method() */
