@@ -46,11 +46,9 @@ import static feign.Util.valuesOrEmpty;
 public final class RequestTemplate implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  private final Map<String, Collection<String>>
-      queries =
+  private final Map<String, Collection<String>> queries =
       new LinkedHashMap<String, Collection<String>>();
-  private final Map<String, Collection<String>>
-      headers =
+  private final Map<String, Collection<String>> headers =
       new LinkedHashMap<String, Collection<String>>();
   private String method;
   /* final to encourage mutable use vs replacing the object. */
@@ -221,8 +219,14 @@ public final class RequestTemplate implements Serializable {
 
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
-    return new Request(method, new StringBuilder(url).append(queryLine()).toString(),
-                       headers, body, charset);
+    Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
+    safeCopy.putAll(headers);
+    return Request.create(
+        method,
+        new StringBuilder(url).append(queryLine()).toString(),
+        Collections.unmodifiableMap(safeCopy),
+        body, charset
+    );
   }
 
   /* @see Request#method() */
