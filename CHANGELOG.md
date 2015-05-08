@@ -1,3 +1,6 @@
+### Version 8.3
+* Adds client implementation for Apache Http Client 
+
 ### Version 8.2
 * Adds JMH benchmark module
 * Enforces source compatibility with animal-sniffer
