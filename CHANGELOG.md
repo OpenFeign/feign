@@ -1,3 +1,6 @@
+### Version 8.3
+* Adds client implementation for Apache Http Client 
+
 ### Version 8.2
 * Allows customized request construction by exposing `Request.create()`
 * Adds JMH benchmark module
