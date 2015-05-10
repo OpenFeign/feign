@@ -214,4 +214,16 @@ public class RequestTemplateTest {
 
     assertThat(template).hasUrl("/domains/1001/records").hasQueries();
   }
+
+  @Test
+  public void spaceEncodingInUrlParam() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method("GET") //
+            .append("/api/{value1}?key={value2}");
+
+    template = template.resolve(mapOf("value1", "ABC 123", "value2", "XYZ 123"));
+
+    assertThat(template.request().url()).isEqualTo("/api/ABC%20123?key=XYZ+123");
+  }
 }

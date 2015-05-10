@@ -194,7 +194,7 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/");
+    String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/").replace("+", "%20");
     url = new StringBuilder(resolvedUrl);
 
     Map<String, Collection<String>> resolvedHeaders =
