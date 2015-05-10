@@ -52,7 +52,7 @@ public class JacksonEncoder implements Encoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      template.body(mapper.writerWithType(javaType).writeValueAsString(object));
+      template.body(mapper.writerFor(javaType).writeValueAsString(object));
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }
