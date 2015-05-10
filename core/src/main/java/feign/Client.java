@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HostnameVerifier;
@@ -34,6 +35,7 @@ import feign.Request.Options;
 
 import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
 
 /**
@@ -93,6 +95,9 @@ public interface Client {
       boolean
           gzipEncodedRequest =
           contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
+      boolean
+          deflateEncodedRequest =
+          contentEncodingValues != null && contentEncodingValues.contains(ENCODING_DEFLATE);
 
       boolean hasAcceptHeader = false;
       Integer contentLength = null;
@@ -102,7 +107,7 @@ public interface Client {
         }
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
-            if (!gzipEncodedRequest) {
+            if (!gzipEncodedRequest && !deflateEncodedRequest) {
               contentLength = Integer.valueOf(value);
               connection.addRequestProperty(field, value);
             }
@@ -126,6 +131,8 @@ public interface Client {
         OutputStream out = connection.getOutputStream();
         if (gzipEncodedRequest) {
           out = new GZIPOutputStream(out);
+        } else if (deflateEncodedRequest) {
+          out = new DeflaterOutputStream(out);
         }
         try {
           out.write(request.body());
