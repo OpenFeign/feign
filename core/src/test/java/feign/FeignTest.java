@@ -152,6 +152,19 @@ public class FeignTest {
   }
 
   @Test
+  public void postDeflateEncodedBodyParam() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.deflateBody(Arrays.asList("netflix", "denominator", "password"));
+
+    assertThat(server.takeRequest())
+        .hasNoHeaderNamed("Content-Length")
+        .hasDeflatedBody("[netflix, denominator, password]".getBytes(UTF_8));
+  }
+
+  @Test
   public void singleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -409,6 +422,10 @@ public class FeignTest {
     @RequestLine("POST /")
     @Headers("Content-Encoding: gzip")
     void gzipBody(List<String> contents);
+
+    @RequestLine("POST /")
+    @Headers("Content-Encoding: deflate")
+    void deflateBody(List<String> contents);
 
     @RequestLine("POST /")
     void form(
