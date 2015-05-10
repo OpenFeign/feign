@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Failures;
@@ -67,6 +68,20 @@ public final class RecordedRequestAssert
     try {
       uncompressedBody =
           Util.toByteArray(new GZIPInputStream(new ByteArrayInputStream(compressedBody)));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    arrays.assertContains(info, uncompressedBody, expectedUncompressed);
+    return this;
+  }
+
+  public RecordedRequestAssert hasDeflatedBody(byte[] expectedUncompressed) {
+    isNotNull();
+    byte[] compressedBody = actual.getBody();
+    byte[] uncompressedBody;
+    try {
+      uncompressedBody =
+          Util.toByteArray(new InflaterInputStream(new ByteArrayInputStream(compressedBody)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
