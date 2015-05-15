@@ -55,6 +55,20 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testPreventDoubleSlash() throws Exception {
+    server.enqueue(new MockResponse().setBody("response data"));
+
+    String url = "http://localhost:" + server.getPort() + "/";
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+
+    Response response = api.codecPost("request data");
+    assertEquals("response data", Util.toString(response.body().asReader()));
+
+    assertThat(server.takeRequest())
+        .hasPath("/");
+  }
+
+  @Test
   public void testOverrideEncoder() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 

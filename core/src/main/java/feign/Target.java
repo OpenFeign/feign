@@ -17,6 +17,7 @@ package feign;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
+import static feign.Util.removeTrailingSlash;
 
 /**
  * <br><br><b>relationship to JAXRS 2.0</b><br> <br> Similar to {@code
@@ -65,7 +66,7 @@ public interface Target<T> {
     public HardCodedTarget(Class<T> type, String name, String url) {
       this.type = checkNotNull(type, "type");
       this.name = checkNotNull(emptyToNull(name), "name");
-      this.url = checkNotNull(emptyToNull(url), "url");
+      this.url = removeTrailingSlash(checkNotNull(emptyToNull(url), "url"));
     }
 
     @Override

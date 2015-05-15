@@ -139,6 +139,14 @@ public class Util {
     return collection.toArray(array);
   }
 
+  public static String removeTrailingSlash(String string) {
+      if(string != null && string.endsWith("/")) {
+          return string.substring(0, string.length() - 1);
+      } else {
+          return string;
+      }
+  }
+
   /**
    * Returns an unmodifiable collection which may be empty, but is never null.
    */
