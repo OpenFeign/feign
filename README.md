@@ -175,16 +175,63 @@ GitHub github = Feign.builder()
 ```
 
 ### Encoders
-`Feign.builder()` allows you to specify additional configuration such as how to encode a request.
-
-If any methods in your interface use parameters types besides `String` or `byte[]`, you'll need to configure a non-default `Encoder`.
-
-Here's how to configure JSON encoding (using the `feign-gson` extension):
+The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
 ```java
-GitHub github = Feign.builder()
-                     .encoder(new GsonEncoder())
-                     .target(GitHub.class, "https://api.github.com");
+interface LoginClient {
+  @RequestLine("POST /")
+  @Headers("Content-Type: application/json")
+  void login(String content);
+}
+...
+client.login("{\"user_name\": \"denominator\", \"password\": \"secret\"}");
+```
+
+By configuring an `Encoder`, you can send a type-safe request body. Here's an example using the `feign-gson` extension:
+
+```java
+static class Credentials {
+  final String user_name;
+  final String password;
+
+  Credentials(String user_name, String password) {
+    this.user_name = user_name;
+    this.password = password;
+  }
+}
+
+interface LoginClient {
+  @RequestLine("POST /")
+  void login(Credentials creds);
+}
+...
+LoginClient client = Feign.builder()
+                          .encoder(new GsonEncoder())
+                          .target(LoginClient.class, "https://foo.com");
+
+client.login(new Credentials("denominator", "secret"));
+```
+
+### @Body templates
+The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.
+
+```java
+interface LoginClient {
+
+  @RequestLine("POST /")
+  @Headers("Content-Type: application/xml")
+  @Body("<login \"user_name\"=\"{user_name}\" \"password\"=\"{password}\"/>")
+  void xml(@Param("user_name") String user, @Param("password") String password);
+
+  @RequestLine("POST /")
+  @Headers("Content-Type: application/json")
+  // json curly braces must be escaped!
+  @Body("%7B\"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
+  void json(@Param("user_name") String user, @Param("password") String password);
+}
+...
+client.xml("denominator", "secret"); // <login "user_name"="denominator" "password"="secret"/>
+client.json("denominator", "secret"); // {"user_name": "denominator", "password": "secret"}
 ```
 
 ### Advanced usage
@@ -228,7 +275,7 @@ Bank bank = Feign.builder()
                  .target(Bank.class, "https://api.examplebank.com");
 ```
 
-#### Custom Parameter Expansion
+#### Custom @Param Expansion
 Parameters annotated with `Param` expand based on their `toString`. By
 specifying a custom `Param.Expander`, users can control this behavior,
 for example formatting dates.
