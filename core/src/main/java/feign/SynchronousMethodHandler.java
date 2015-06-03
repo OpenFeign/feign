@@ -43,11 +43,12 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Options options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
+  private final StatusInterpreter statusInterpreter;
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder) {
+                                   Decoder decoder, ErrorDecoder errorDecoder, StatusInterpreter statusInterpreter) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -60,6 +61,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.options = checkNotNull(options, "options for %s", target);
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
+    this.statusInterpreter = checkNotNull(statusInterpreter, "statusInterpreter for %s", target);
   }
 
   @Override
@@ -103,7 +105,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
-      if (response.status() >= 200 && response.status() < 300) {
+      if (statusInterpreter.isInterpretableResponse(response.status())) {
         if (Response.class == metadata.returnType()) {
           if (response.body() == null) {
             return response;
@@ -158,14 +160,16 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final List<RequestInterceptor> requestInterceptors;
     private final Logger logger;
     private final Logger.Level logLevel;
+    private final StatusInterpreter statusInterpreter;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel) {
+            Logger logger, Logger.Level logLevel, StatusInterpreter statusInterpreter) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
+      this.statusInterpreter = checkNotNull(statusInterpreter, "statusInterpreter");
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md,
@@ -173,7 +177,8 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 Options options, Decoder decoder, ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
                                           logLevel, md,
-                                          buildTemplateFromArgs, options, decoder, errorDecoder);
+                                          buildTemplateFromArgs, options, decoder, errorDecoder,
+                                          statusInterpreter);
     }
   }
 }
