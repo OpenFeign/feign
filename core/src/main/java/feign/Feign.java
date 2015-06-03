@@ -84,6 +84,7 @@ public abstract class Feign {
     private InvocationHandlerFactory
         invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
+    private StatusInterpreter statusInterpreter = new StatusInterpreter.Default();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -157,6 +158,18 @@ public abstract class Feign {
       this.invocationHandlerFactory = invocationHandlerFactory;
       return this;
     }
+    /**
+     * Allows you to override the {@link StatusInterpreter}.
+     * The default interpreter treats any non-200 class status code
+     * as a reason to raise exception. Use this to provide alternative
+     * logic (like allowing 404 to gracefully return null).
+     * 
+     * @see StatusInterpreter.Include404
+     */
+    public Builder statusInterpreter(StatusInterpreter statusInterpreter) {
+      this.statusInterpreter = statusInterpreter;
+      return this;
+    }
 
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
@@ -169,7 +182,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel);
+                                               logLevel, statusInterpreter);
       ParseHandlersByName
           handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,
