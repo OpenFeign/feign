@@ -17,7 +17,6 @@ package feign;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
-import static feign.Util.removeTrailingSlash;
 
 /**
  * <br><br><b>relationship to JAXRS 2.0</b><br> <br> Similar to {@code
