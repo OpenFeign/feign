@@ -249,6 +249,12 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #url() */
   public RequestTemplate insert(int pos, CharSequence value) {
+    if(Util.isHttpUrl(value)) {
+      value = Util.removeTrailingSlash(value);
+      if(url.length() > 0 && url.charAt(0) != '/') {
+        url.insert(0, '/');
+      }
+    }
     url.insert(pos, pullAnyQueriesOutOfUrl(new StringBuilder(value)));
     return this;
   }

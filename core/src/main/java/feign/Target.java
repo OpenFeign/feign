@@ -66,7 +66,7 @@ public interface Target<T> {
     public HardCodedTarget(Class<T> type, String name, String url) {
       this.type = checkNotNull(type, "type");
       this.name = checkNotNull(emptyToNull(name), "name");
-      this.url = removeTrailingSlash(checkNotNull(emptyToNull(url), "url"));
+      this.url = checkNotNull(emptyToNull(url), "url");
     }
 
     @Override

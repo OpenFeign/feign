@@ -139,12 +139,16 @@ public class Util {
     return collection.toArray(array);
   }
 
-  public static String removeTrailingSlash(String string) {
-      if(string != null && string.endsWith("/")) {
-          return string.substring(0, string.length() - 1);
-      } else {
-          return string;
-      }
+  public static boolean isHttpUrl(CharSequence value) {
+    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0,  3));
+  }
+
+  public static CharSequence removeTrailingSlash(CharSequence charSequence) {
+    if (charSequence != null && charSequence.length() > 0 && charSequence.charAt(charSequence.length() - 1) == '/') {
+      return charSequence.subSequence(0, charSequence.length() - 1);
+    } else {
+      return charSequence;
+    }
   }
 
   /**
