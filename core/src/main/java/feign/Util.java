@@ -139,18 +139,6 @@ public class Util {
     return collection.toArray(array);
   }
 
-  public static boolean isHttpUrl(CharSequence value) {
-    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0,  3));
-  }
-
-  public static CharSequence removeTrailingSlash(CharSequence charSequence) {
-    if (charSequence != null && charSequence.length() > 0 && charSequence.charAt(charSequence.length() - 1) == '/') {
-      return charSequence.subSequence(0, charSequence.length() - 1);
-    } else {
-      return charSequence;
-    }
-  }
-
   /**
    * Returns an unmodifiable collection which may be empty, but is never null.
    */

@@ -89,6 +89,18 @@ public final class RequestTemplate implements Serializable {
     }
   }
 
+  private static boolean isHttpUrl(CharSequence value) {
+    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0,  3));
+  }
+
+  private static CharSequence removeTrailingSlash(CharSequence charSequence) {
+    if (charSequence != null && charSequence.length() > 0 && charSequence.charAt(charSequence.length() - 1) == '/') {
+      return charSequence.subSequence(0, charSequence.length() - 1);
+    } else {
+      return charSequence;
+    }
+  }
+
   /**
    * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
    * unresolved parameters will remain. <br> Note that if you'd like curly braces literally in the
@@ -249,8 +261,8 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #url() */
   public RequestTemplate insert(int pos, CharSequence value) {
-    if(Util.isHttpUrl(value)) {
-      value = Util.removeTrailingSlash(value);
+    if(isHttpUrl(value)) {
+      value = removeTrailingSlash(value);
       if(url.length() > 0 && url.charAt(0) != '/') {
         url.insert(0, '/');
       }
