@@ -65,7 +65,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   @Override
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
-    Retryer retryer = this.retryer;
+    Retryer retryer = this.retryer.clone();
     while (true) {
       try {
         return executeAndDecode(template);
