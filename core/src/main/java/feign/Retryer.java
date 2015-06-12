@@ -18,13 +18,15 @@ package feign;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
- * Created for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
+ * Cloned for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
  * Implementations may keep state to determine if retry operations should continue or not.
  */
-public interface Retryer {
+public interface Retryer extends Cloneable {
 
   /** if retry is permitted, return (possibly after sleeping). Otherwise propagate the exception. */
   void continueOrPropagate(RetryableException e);
+
+  Retryer clone();
 
   public static class Default implements Retryer {
 
@@ -85,6 +87,11 @@ public interface Retryer {
     long nextMaxInterval() {
       long interval = (long) (period * Math.pow(1.5, attempt - 1));
       return interval > maxPeriod ? maxPeriod : interval;
+    }
+
+    @Override
+    public Retryer clone() {
+      return new Default(period, maxPeriod, maxAttempts);
     }
   }
 }
