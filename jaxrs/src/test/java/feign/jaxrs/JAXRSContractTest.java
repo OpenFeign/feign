@@ -238,6 +238,16 @@ public class JAXRSContractTest {
   }
 
   @Test
+  public void regexPathOnMethod() throws Exception {
+    assertThat(
+            contract
+                .parseAndValidatateMetadata(
+                    PathOnType.class.getDeclaredMethod("pathParamWithRegex", String.class))
+                .template())
+        .hasUrl("/base/regex/{param}");
+  }
+
+  @Test
   public void withPathAndURIParams() throws Exception {
     MethodMetadata md =
         contract.parseAndValidatateMetadata(
@@ -468,6 +478,10 @@ public class JAXRSContractTest {
     @GET
     @Path("/{param}")
     Response emptyPathParam(@PathParam("") String empty);
+
+    @GET
+    @Path("regex/{param:.+}")
+    Response pathParamWithRegex(@PathParam("param") String path);
   }
 
   interface WithURIParam {
