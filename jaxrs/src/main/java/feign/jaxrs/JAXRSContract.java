@@ -54,6 +54,10 @@ public final class JAXRSContract extends Contract.BaseContract {
       if (!pathValue.startsWith("/")) {
         pathValue = "/" + pathValue;
       }
+      if (pathValue.endsWith("/")) {
+          // Strip off any trailing slashes, since the template has already had slashes appropriately added
+          pathValue = pathValue.substring(0, pathValue.length()-1);
+      }
       md.template().insert(0, pathValue);
     }
     return md;

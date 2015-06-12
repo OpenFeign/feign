@@ -381,6 +381,22 @@ public class JAXRSContractTest {
 
   }
 
+  @Test
+  public void classWithRootPathParsesCorrectly() throws Exception {
+      assertThat(
+              contract.parseAndValidatateMetadata(ClassRootPath.class.getDeclaredMethod("get"))
+                  .template())
+              .hasUrl("/specific");
+  }
+
+  @Test
+  public void classPathWithTrailingSlashParsesCorrectly() throws Exception {
+      assertThat(
+              contract.parseAndValidatateMetadata(ClassPathWithTrailingSlash.class.getDeclaredMethod("get"))
+                  .template())
+              .hasUrl("/base/specific");
+  }
+
   interface Methods {
 
     @POST
@@ -559,5 +575,19 @@ public class JAXRSContractTest {
     @GET
     @Path("/specific")
     Response get();
+  }
+
+  @Path("/")
+  interface ClassRootPath {
+      @GET
+      @Path("/specific")
+      Response get();
+  }
+
+  @Path("/base/")
+  interface ClassPathWithTrailingSlash {
+      @GET
+      @Path("/specific")
+      Response get();
   }
 }
