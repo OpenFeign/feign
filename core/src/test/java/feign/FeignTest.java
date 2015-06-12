@@ -302,6 +302,50 @@ public class FeignTest {
   }
 
   @Test
+  public void ensureRetryerClonesItself() {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 4"));
+
+    MockRetryer retryer = new MockRetryer();
+
+    TestInterface api = Feign.builder()
+      .retryer(retryer)
+      .errorDecoder(new ErrorDecoder()
+      {
+        @Override
+        public Exception decode(String methodKey, Response response)
+        {
+          return new RetryableException("play it again sam!", null);
+        }
+      }).target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.response();
+    api.response(); // if retryer instance was reused, this statement will throw an exception
+    assertEquals(4, server.getRequestCount());
+  }
+
+  private static class MockRetryer implements Retryer
+  {
+    boolean tripped;
+
+    @Override
+    public void continueOrPropagate(RetryableException e) {
+      if (tripped) {
+        throw new RuntimeException("retryer instance should never be reused");
+      }
+      tripped = true;
+      return;
+    }
+
+    @Override
+    public Retryer clone() {
+        return new MockRetryer();
+    }
+  }
+
+  @Test
   public void okIfDecodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(DecodeException.class);

@@ -214,6 +214,9 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
+            @Override public Retryer clone() {
+                return this;
+            }
           })
           .target(SendsStuff.class, "http://robofu.abc");
 
@@ -263,6 +266,11 @@ public class LoggerTest {
                 return;
               }
               throw e;
+            }
+
+            @Override
+            public Retryer clone() {
+                return this;
             }
           })
           .target(SendsStuff.class, "http://robofu.abc");
