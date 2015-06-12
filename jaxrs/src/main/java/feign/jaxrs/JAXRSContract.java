@@ -77,6 +77,11 @@ public final class JAXRSContract extends Contract.BaseContract {
       if (!methodAnnotationValue.startsWith("/") && !data.template().toString().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;
       }
+      int regexIndex = methodAnnotationValue.indexOf(":");
+      if (methodAnnotationValue.indexOf("{") != -1 && regexIndex != -1) {
+          // The method annotation includes a regex, which should be stripped to get the true path parameter name.
+          methodAnnotationValue = methodAnnotationValue.substring(0, regexIndex) + "}";
+      }
       data.template().append(methodAnnotationValue);
     } else if (annotationType == Produces.class) {
       String[] serverProduces = ((Produces) methodAnnotation).value();
