@@ -230,4 +230,16 @@ public class RequestTemplateTest {
         .hasUrl("/domains/1001/records")
         .hasQueries();
   }
+  
+  @Test
+  public void encodeSlashTest() throws Exception {
+    RequestTemplate template = new RequestTemplate().method("GET")
+	    .append("/api/{vhost}")
+	    .decodeSlash(false);
+
+    template.resolve(mapOf("vhost", "/"));
+
+    assertThat(template)
+        .hasUrl("/api/%2F");
+  }
 }
