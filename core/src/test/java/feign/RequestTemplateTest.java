@@ -241,4 +241,16 @@ public class RequestTemplateTest {
     assertThat(template.request().url())
         .isEqualTo("/api/ABC%20123?key=XYZ+123");
   }
+
+  @Test
+  public void encodeSlashTest() throws Exception {
+    RequestTemplate template = new RequestTemplate().method("GET")
+	    .append("/api/{vhost}")
+	    .decodeSlash(false);
+
+    template.resolve(mapOf("vhost", "/"));
+
+    assertThat(template)
+        .hasUrl("/api/%2F");
+  }
 }
