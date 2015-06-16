@@ -60,4 +60,6 @@ import java.lang.annotation.Retention;
 public @interface RequestLine {
 
   String value();
+
+  boolean decodeSlash() default true;
 }

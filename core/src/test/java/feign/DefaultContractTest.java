@@ -266,6 +266,21 @@ public class DefaultContractTest {
     assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
   }
 
+  @Test
+  public void slashAreEncodedWhenNeeded() throws Exception {
+    MethodMetadata md =
+        contract.parseAndValidatateMetadata(
+            SlashNeedToBeEncoded.class.getDeclaredMethod("getQueues", String.class));
+
+    assertThat(md.template().decodeSlash()).isFalse();
+
+    md =
+        contract.parseAndValidatateMetadata(
+            SlashNeedToBeEncoded.class.getDeclaredMethod("getZone", String.class));
+
+    assertThat(md.template().decodeSlash()).isTrue();
+  }
+
   interface Methods {
 
     @RequestLine("POST /")
@@ -382,5 +397,13 @@ public class DefaultContractTest {
     public String expand(Object value) {
       return String.valueOf(((Date) value).getTime());
     }
+  }
+
+  interface SlashNeedToBeEncoded {
+    @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
+    String getQueues(@Param("vhost") String vhost);
+
+    @RequestLine("GET /api/{zoneId}")
+    String getZone(@Param("ZoneId") String vhost);
   }
 }

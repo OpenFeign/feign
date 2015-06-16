@@ -179,6 +179,18 @@ public class FeignBuilderTest {
     assertThat(server.takeRequest()).hasBody("request data");
   }
 
+  @Test
+  public void testSlashIsEncodedInPathParams() throws Exception {
+    server.enqueue(new MockResponse().setBody("response data"));
+
+    String url = "http://localhost:" + server.getPort();
+
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+    api.getQueues("/");
+
+    assertThat(server.takeRequest()).hasPath("/api/queues/%2F");
+  }
+
   interface TestInterface {
     @RequestLine("GET")
     Response getNoPath();
@@ -194,5 +206,8 @@ public class FeignBuilderTest {
 
     @RequestLine("POST /")
     String decodedPost();
+
+    @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
+    String getQueues(@Param("vhost") String vhost);
   }
 }
