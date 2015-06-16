@@ -166,6 +166,9 @@ public interface Contract {
           data.template().append(
               requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
         }
+        
+        data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
+        
       } else if (annotationType == Body.class) {
         String body = Body.class.cast(methodAnnotation).value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",

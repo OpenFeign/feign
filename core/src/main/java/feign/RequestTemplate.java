@@ -56,6 +56,7 @@ public final class RequestTemplate implements Serializable {
   private transient Charset charset;
   private byte[] body;
   private String bodyTemplate;
+  private boolean decodeSlash = true;
 
   public RequestTemplate() {
 
@@ -71,6 +72,7 @@ public final class RequestTemplate implements Serializable {
     this.charset = toCopy.charset;
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
+    this.decodeSlash = toCopy.decodeSlash;
   }
 
   private static String urlDecode(String arg) {
@@ -200,7 +202,10 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    String resolvedUrl = expand(url.toString(), encoded).replace("%2F", "/").replace("+", "%20");
+    String resolvedUrl = expand(url.toString(), encoded).replace("+", "%20");
+    if (decodeSlash) {
+    	resolvedUrl = resolvedUrl.replace("%2F", "/");
+    }
     url = new StringBuilder(resolvedUrl);
 
     Map<String, Collection<String>>
@@ -246,12 +251,21 @@ public final class RequestTemplate implements Serializable {
     this.method = checkNotNull(method, "method");
     return this;
   }
-
+  
   /* @see Request#method() */
   public String method() {
     return method;
   }
 
+  public RequestTemplate decodeSlash(boolean decodeSlash) {
+	  this.decodeSlash = decodeSlash;
+	  return this;
+  }
+  
+  public boolean decodeSlash() {
+	  return decodeSlash;
+  }
+  
   /* @see #url() */
   public RequestTemplate append(CharSequence value) {
     url.append(value);
