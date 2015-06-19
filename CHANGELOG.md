@@ -1,3 +1,6 @@
+### Version 7.5
+* Added possibility to leave slash encoded in path parameters
+
 ### Version 7.4
 * Allows `@Headers` to be applied to a type
 
