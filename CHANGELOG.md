@@ -1,3 +1,6 @@
+### Version 7.5/8.5
+* Added possibility to leave slash encoded in path parameters
+
 ### Version 8.4
 * Correct Retryer bug that prevented it from retrying requests after the first 5 retry attempts.
   * **Note:** If you have a custom `feign.Retryer` implementation you now must now implement `public Retryer clone()`.
