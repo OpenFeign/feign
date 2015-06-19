@@ -47,4 +47,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface RequestLine {
 
   String value();
+  boolean decodeSlash() default true;
 }

@@ -341,6 +341,22 @@ public class DefaultContractTest {
     assertThat(md.indexToName())
         .containsExactly(entry(0, asList("Auth-Token")));
   }
+  
+  @Test
+  public void slashAreEncodedWhenNeeded() throws Exception {
+    MethodMetadata
+        md =
+        contract.parseAndValidatateMetadata(
+            SlashNeedToBeEncoded.class.getDeclaredMethod("getQueues", String.class));
+
+    assertThat(md.template().decodeSlash()).isFalse();
+    
+    md = contract.parseAndValidatateMetadata(
+    		SlashNeedToBeEncoded.class.getDeclaredMethod("getZone", String.class));
+
+    assertThat(md.template().decodeSlash()).isTrue();
+
+  }
 
   interface Methods {
 
@@ -471,12 +487,20 @@ public class DefaultContractTest {
     @Headers("Auth-Token: {Auth-Token}")
     void logout(@Named("Auth-Token") String token);
   }
-
+  
   class DateToMillis implements Param.Expander {
 
     @Override
     public String expand(Object value) {
       return String.valueOf(((Date) value).getTime());
     }
+  }
+  
+  interface SlashNeedToBeEncoded {
+	  @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
+	  String getQueues(@Param("vhost") String vhost);
+	  
+	  @RequestLine("GET /api/{zoneId}")
+	  String getZone(@Param("ZoneId") String vhost);
   }
 }
