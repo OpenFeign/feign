@@ -1,3 +1,6 @@
+### Version 8.6
+* Adds base api support via single-inheritance interfaces
+
 ### Version 7.5/8.5
 * Added possibility to leave slash encoded in path parameters
 

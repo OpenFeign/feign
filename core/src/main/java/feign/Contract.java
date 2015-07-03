@@ -34,30 +34,53 @@ public interface Contract {
 
   /**
    * Called to parse the methods in the class that are linked to HTTP requests.
+   *
+   * @param targetType {@link feign.Target#type() type} of the Feign interface.
    */
-  List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring);
+  // TODO: break this and correct spelling at some point
+  List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType);
 
   abstract class BaseContract implements Contract {
 
     @Override
-    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
-      List<MethodMetadata> metadata = new ArrayList<MethodMetadata>();
-      for (Method method : declaring.getDeclaredMethods()) {
+    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
+      checkState(targetType.getTypeParameters().length == 0, "Parameterized types unsupported: %s",
+                 targetType.getSimpleName());
+      checkState(targetType.getInterfaces().length <= 1, "Only single inheritance supported: %s",
+                 targetType.getSimpleName());
+      if (targetType.getInterfaces().length == 1) {
+        checkState(targetType.getInterfaces()[0].getInterfaces().length == 0,
+                   "Only single-level inheritance supported: %s",
+                   targetType.getSimpleName());
+      }
+      Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
+      for (Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class) {
           continue;
         }
-        metadata.add(parseAndValidatateMetadata(method));
+        MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
+        checkState(!result.containsKey(metadata.configKey()), "Overrides unsupported: %s",
+                   metadata.configKey());
+        result.put(metadata.configKey(), metadata);
       }
-      return metadata;
+      return new ArrayList<MethodMetadata>(result.values());
+    }
+
+    /**
+     * @deprecated use {@link #parseAndValidateMetadata(Class, Method)} instead.
+     */
+    @Deprecated
+    public MethodMetadata parseAndValidatateMetadata(Method method) {
+      return parseAndValidateMetadata(method.getDeclaringClass(), method);
     }
 
     /**
      * Called indirectly by {@link #parseAndValidatateMetadata(Class)}.
      */
-    public MethodMetadata parseAndValidatateMetadata(Method method) {
+    protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
       MethodMetadata data = new MethodMetadata();
-      data.returnType(method.getGenericReturnType());
-      data.configKey(Feign.configKey(method));
+      data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
+      data.configKey(Feign.configKey(targetType, method));
 
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
@@ -81,7 +104,7 @@ public interface Contract {
                      "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
           data.bodyIndex(i);
-          data.bodyType(method.getGenericParameterTypes()[i]);
+          data.bodyType(Types.resolve(targetType, targetType, method.getGenericParameterTypes()[i]));
         }
       }
       return data;
@@ -131,18 +154,25 @@ public interface Contract {
   class Default extends BaseContract {
 
     @Override
-    public MethodMetadata parseAndValidatateMetadata(Method method) {
-      MethodMetadata data = super.parseAndValidatateMetadata(method);
-      if (method.getDeclaringClass().isAnnotationPresent(Headers.class)) {
-        String[] headersOnType = method.getDeclaringClass().getAnnotation(Headers.class).value();
+    protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
+      MethodMetadata data = super.parseAndValidateMetadata(targetType, method);
+      headersFromAnnotation(method.getDeclaringClass(), data);
+      if (method.getDeclaringClass() != targetType) {
+        headersFromAnnotation(targetType, data);
+      }
+      return data;
+    }
+
+    private void headersFromAnnotation(Class<?> targetType, MethodMetadata data) {
+      if (targetType.isAnnotationPresent(Headers.class)) {
+        String[] headersOnType = targetType.getAnnotation(Headers.class).value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
-                   method.getDeclaringClass().getName());
+                   targetType.getName());
         Map<String, Collection<String>> headers = toMap(headersOnType);
         headers.putAll(data.template().headers());
         data.template().headers(null); // to clear
         data.template().headers(headers);
       }
-      return data;
     }
 
     @Override

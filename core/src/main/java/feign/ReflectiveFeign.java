@@ -54,11 +54,11 @@ public class ReflectiveFeign extends Feign {
   public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
-    for (Method method : target.type().getDeclaredMethods()) {
+    for (Method method : target.type().getMethods()) {
       if (method.getDeclaringClass() == Object.class) {
         continue;
       }
-      methodToHandler.put(method, nameToHandler.get(Feign.configKey(method)));
+      methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
     }
     InvocationHandler handler = factory.create(target, methodToHandler);
     return (T) Proxy
