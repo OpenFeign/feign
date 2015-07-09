@@ -52,6 +52,9 @@ public class JacksonDecoder implements Decoder {
     }
     InputStream inputStream = response.body().asInputStream();
     try {
+      if (inputStream.available() <= 0){
+        return null;
+      }
       return mapper.readValue(inputStream, mapper.constructType(type));
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
