@@ -130,6 +130,14 @@ public class GsonCodecTest {
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
+  @Test
+  public void emptyBodyDecodesToNull() throws Exception {
+    Response response = Response.create(204, "OK",
+                                        Collections.<String, Collection<String>>emptyMap(),
+                                        new byte[0]);
+    assertNull(new GsonDecoder().decode(response, String.class));
+  }
+
   private String zonesJson = ""//
                              + "[\n"//
                              + "  {\n"//
