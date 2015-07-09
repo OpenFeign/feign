@@ -97,6 +97,15 @@ public class JacksonCodecTest {
   }
 
   @Test
+  public void emptyBodyDecodesToNull() throws Exception {
+    Response
+        response =
+        Response
+            .create(204, "OK", Collections.<String, Collection<String>>emptyMap(), "".getBytes());
+    assertNull(new JacksonDecoder().decode(response, String.class));
+  }
+
+  @Test
   public void customDecoder() throws Exception {
     JacksonDecoder decoder = new JacksonDecoder(
         Arrays.<Module>asList(
