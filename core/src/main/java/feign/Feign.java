@@ -16,6 +16,7 @@
 package feign;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,18 +48,30 @@ public abstract class Feign {
    * Route53#listByNameAndType(String, String)}: would match a method such as {@code
    * denominator.route53.Route53#listAt(String, String)} </ul> <br> Note that there is no whitespace
    * expected in a key!
+   *
+   * @param targetType {@link feign.Target#type() type} of the Feign interface.
+   * @param method invoked method, present on {@code type} or its super.
    */
-  public static String configKey(Method method) {
+  public static String configKey(Class targetType, Method method) {
     StringBuilder builder = new StringBuilder();
-    builder.append(method.getDeclaringClass().getSimpleName());
+    builder.append(targetType.getSimpleName());
     builder.append('#').append(method.getName()).append('(');
-    for (Class<?> param : method.getParameterTypes()) {
-      builder.append(param.getSimpleName()).append(',');
+    for (Type param : method.getGenericParameterTypes()) {
+      param = Types.resolve(targetType, targetType, param);
+      builder.append(Types.getRawType(param).getSimpleName()).append(',');
     }
     if (method.getParameterTypes().length > 0) {
       builder.deleteCharAt(builder.length() - 1);
     }
     return builder.append(')').toString();
+  }
+
+  /**
+   * @deprecated use {@link #configKey(Class, Method)} instead.
+   */
+  @Deprecated
+  public static String configKey(Method method) {
+    return configKey(method.getDeclaringClass(), method);
   }
 
   /**

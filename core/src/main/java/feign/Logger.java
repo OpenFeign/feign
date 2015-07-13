@@ -40,7 +40,7 @@ public abstract class Logger {
    * Override to log requests and responses using your own implementation. Messages will be http
    * request and response text.
    *
-   * @param configKey value of {@link Feign#configKey(java.lang.reflect.Method)}
+   * @param configKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param format    {@link java.util.Formatter format string}
    * @param args      arguments applied to {@code format}
    */

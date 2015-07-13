@@ -35,8 +35,7 @@ public final class MethodMetadata implements Serializable {
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
-  private Map<Integer, Collection<String>>
-      indexToName =
+  private Map<Integer, Collection<String>> indexToName =
       new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
@@ -45,7 +44,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   /**
-   * @see Feign#configKey(java.lang.reflect.Method)
+   * @see Feign#configKey(Class, java.lang.reflect.Method)
    */
   public String configKey() {
     return configKey;
