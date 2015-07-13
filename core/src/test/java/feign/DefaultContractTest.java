@@ -22,7 +22,9 @@ import static org.assertj.core.data.MapEntry.entry;
 import com.google.gson.reflect.TypeToken;
 import java.net.URI;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,29 +41,18 @@ public class DefaultContractTest {
 
   @Test
   public void httpMethods() throws Exception {
-    assertThat(
-            contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("post")).template())
-        .hasMethod("POST");
+    assertThat(parseAndValidateMetadata(Methods.class, "post").template()).hasMethod("POST");
 
-    assertThat(
-            contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("put")).template())
-        .hasMethod("PUT");
+    assertThat(parseAndValidateMetadata(Methods.class, "put").template()).hasMethod("PUT");
 
-    assertThat(
-            contract.parseAndValidatateMetadata(Methods.class.getDeclaredMethod("get")).template())
-        .hasMethod("GET");
+    assertThat(parseAndValidateMetadata(Methods.class, "get").template()).hasMethod("GET");
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(Methods.class.getDeclaredMethod("delete"))
-                .template())
-        .hasMethod("DELETE");
+    assertThat(parseAndValidateMetadata(Methods.class, "delete").template()).hasMethod("DELETE");
   }
 
   @Test
   public void bodyParamIsGeneric() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(BodyParams.class.getDeclaredMethod("post", List.class));
+    MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
     assertThat(md.bodyIndex()).isEqualTo(0);
     assertThat(md.bodyType()).isEqualTo(new TypeToken<List<String>>() {}.getType());
@@ -71,77 +62,49 @@ public class DefaultContractTest {
   public void tooManyBodies() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Method has too many Body");
-    contract.parseAndValidatateMetadata(
-        BodyParams.class.getDeclaredMethod("tooMany", List.class, List.class));
+    parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
   }
 
   @Test
   public void customMethodWithoutPath() throws Exception {
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(CustomMethod.class.getDeclaredMethod("patch"))
-                .template())
+    assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
         .hasUrl("");
   }
 
   @Test
   public void queryParamsInPathExtract() throws Exception {
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("none"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
         .hasUrl("/")
         .hasQueries();
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("one"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
         .hasUrl("/")
         .hasQueries(entry("Action", asList("GetUser")));
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("two"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
         .hasUrl("/")
         .hasQueries(entry("Action", asList("GetUser")), entry("Version", asList("2010-05-08")));
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(WithQueryParamsInPath.class.getDeclaredMethod("three"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
         .hasUrl("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")),
             entry("limit", asList("1")));
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(
-                    WithQueryParamsInPath.class.getDeclaredMethod("twoAndOneEmpty"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoAndOneEmpty").template())
         .hasUrl("/")
         .hasQueries(
             entry("flag", asList(new String[] {null})),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(
-                    WithQueryParamsInPath.class.getDeclaredMethod("oneEmpty"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "oneEmpty").template())
         .hasUrl("/")
         .hasQueries(entry("flag", asList(new String[] {null})));
 
-    assertThat(
-            contract
-                .parseAndValidatateMetadata(
-                    WithQueryParamsInPath.class.getDeclaredMethod("twoEmpty"))
-                .template())
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoEmpty").template())
         .hasUrl("/")
         .hasQueries(
             entry("flag", asList(new String[] {null})),
@@ -150,16 +113,14 @@ public class DefaultContractTest {
 
   @Test
   public void bodyWithoutParameters() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
+    MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template()).hasBody("<v01:getAccountsListOfUser/>");
   }
 
   @Test
   public void headersOnMethodAddsContentTypeHeader() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(BodyWithoutParameters.class.getDeclaredMethod("post"));
+    MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template())
         .hasHeaders(
@@ -169,8 +130,7 @@ public class DefaultContractTest {
 
   @Test
   public void headersOnTypeAddsContentTypeHeader() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(HeadersOnType.class.getDeclaredMethod("post"));
+    MethodMetadata md = parseAndValidateMetadata(HeadersOnType.class, "post");
 
     assertThat(md.template())
         .hasHeaders(
@@ -181,9 +141,8 @@ public class DefaultContractTest {
   @Test
   public void withPathAndURIParam() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            WithURIParam.class.getDeclaredMethod(
-                "uriParam", String.class, URI.class, String.class));
+        parseAndValidateMetadata(
+            WithURIParam.class, "uriParam", String.class, URI.class, String.class);
 
     assertThat(md.indexToName())
         .containsExactly(
@@ -197,9 +156,12 @@ public class DefaultContractTest {
   @Test
   public void pathAndQueryParams() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            WithPathAndQueryParams.class.getDeclaredMethod(
-                "recordsByNameAndType", int.class, String.class, String.class));
+        parseAndValidateMetadata(
+            WithPathAndQueryParams.class,
+            "recordsByNameAndType",
+            int.class,
+            String.class,
+            String.class);
 
     assertThat(md.template())
         .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
@@ -212,8 +174,8 @@ public class DefaultContractTest {
   @Test
   public void bodyWithTemplate() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
+        parseAndValidateMetadata(
+            FormParams.class, "login", String.class, String.class, String.class);
 
     assertThat(md.template())
         .hasBodyTemplate(
@@ -224,8 +186,8 @@ public class DefaultContractTest {
   @Test
   public void formParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
+        parseAndValidateMetadata(
+            FormParams.class, "login", String.class, String.class, String.class);
 
     assertThat(md.formParams()).containsExactly("customer_name", "user_name", "password");
 
@@ -240,17 +202,15 @@ public class DefaultContractTest {
   @Test
   public void formParamsDoesNotSetBodyType() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            FormParams.class.getDeclaredMethod("login", String.class, String.class, String.class));
+        parseAndValidateMetadata(
+            FormParams.class, "login", String.class, String.class, String.class);
 
     assertThat(md.bodyType()).isNull();
   }
 
   @Test
   public void headerParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            HeaderParams.class.getDeclaredMethod("logout", String.class));
+    MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
 
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{authToken}", "Foo")));
 
@@ -259,9 +219,7 @@ public class DefaultContractTest {
 
   @Test
   public void customExpander() throws Exception {
-    MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            CustomExpander.class.getDeclaredMethod("date", Date.class));
+    MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "date", Date.class);
 
     assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
   }
@@ -269,14 +227,11 @@ public class DefaultContractTest {
   @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md =
-        contract.parseAndValidatateMetadata(
-            SlashNeedToBeEncoded.class.getDeclaredMethod("getQueues", String.class));
+        parseAndValidateMetadata(SlashNeedToBeEncoded.class, "getQueues", String.class);
 
     assertThat(md.template().decodeSlash()).isFalse();
 
-    md =
-        contract.parseAndValidatateMetadata(
-            SlashNeedToBeEncoded.class.getDeclaredMethod("getZone", String.class));
+    md = parseAndValidateMetadata(SlashNeedToBeEncoded.class, "getZone", String.class);
 
     assertThat(md.template().decodeSlash()).isTrue();
   }
@@ -405,5 +360,117 @@ public class DefaultContractTest {
 
     @RequestLine("GET /api/{zoneId}")
     String getZone(@Param("ZoneId") String vhost);
+  }
+
+  @Headers("Foo: Bar")
+  interface SimpleParameterizedBaseApi<M> {
+
+    @RequestLine("GET /api/{zoneId}")
+    M get(@Param("key") String key);
+  }
+
+  interface SimpleParameterizedApi extends SimpleParameterizedBaseApi<String> {}
+
+  @Test
+  public void simpleParameterizedBaseApi() throws Exception {
+    List<MethodMetadata> md = contract.parseAndValidatateMetadata(SimpleParameterizedApi.class);
+
+    assertThat(md).hasSize(1);
+
+    assertThat(md.get(0).configKey()).isEqualTo("SimpleParameterizedApi#get(String)");
+    assertThat(md.get(0).returnType()).isEqualTo(String.class);
+    assertThat(md.get(0).template()).hasHeaders(entry("Foo", asList("Bar")));
+  }
+
+  @Test
+  public void parameterizedApiUnsupported() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
+    contract.parseAndValidatateMetadata(SimpleParameterizedBaseApi.class);
+  }
+
+  interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
+
+    @Override
+    @RequestLine("GET /api/{zoneId}")
+    String get(@Param("key") String key);
+  }
+
+  @Test
+  public void overrideBaseApiUnsupported() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Overrides unsupported: OverrideParameterizedApi#get(String)");
+    contract.parseAndValidatateMetadata(OverrideParameterizedApi.class);
+  }
+
+  interface Child<T> extends SimpleParameterizedBaseApi<List<T>> {}
+
+  interface GrandChild extends Child<String> {}
+
+  @Test
+  public void onlySingleLevelInheritanceSupported() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Only single-level inheritance supported: GrandChild");
+    contract.parseAndValidatateMetadata(GrandChild.class);
+  }
+
+  @Headers("Foo: Bar")
+  interface ParameterizedBaseApi<K, M> {
+
+    @RequestLine("GET /api/{key}")
+    Entity<K, M> get(@Param("key") K key);
+
+    @RequestLine("POST /api")
+    Entities<K, M> getAll(Keys<K> keys);
+  }
+
+  static class Keys<K> {
+
+    List<K> keys;
+  }
+
+  static class Entity<K, M> {
+
+    K key;
+    M model;
+  }
+
+  static class Entities<K, M> {
+
+    private List<Entity<K, M>> entities;
+  }
+
+  @Headers("Version: 1")
+  interface ParameterizedApi extends ParameterizedBaseApi<String, Long> {}
+
+  @Test
+  public void parameterizedBaseApi() throws Exception {
+    List<MethodMetadata> md = contract.parseAndValidatateMetadata(ParameterizedApi.class);
+
+    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (MethodMetadata m : md) {
+      byConfigKey.put(m.configKey(), m);
+    }
+
+    assertThat(byConfigKey)
+        .containsOnlyKeys("ParameterizedApi#get(String)", "ParameterizedApi#getAll(Keys)");
+
+    assertThat(byConfigKey.get("ParameterizedApi#get(String)").returnType())
+        .isEqualTo(new TypeToken<Entity<String, Long>>() {}.getType());
+    assertThat(byConfigKey.get("ParameterizedApi#get(String)").template())
+        .hasHeaders(entry("Version", asList("1")), entry("Foo", asList("Bar")));
+
+    assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").returnType())
+        .isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());
+    assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").bodyType())
+        .isEqualTo(new TypeToken<Keys<String>>() {}.getType());
+    assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").template())
+        .hasHeaders(entry("Version", asList("1")), entry("Foo", asList("Bar")));
+  }
+
+  private MethodMetadata parseAndValidateMetadata(
+      Class<?> targetType, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
+    return contract.parseAndValidateMetadata(
+        targetType, targetType.getMethod(method, parameterTypes));
   }
 }

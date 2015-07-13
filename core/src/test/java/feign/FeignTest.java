@@ -206,7 +206,7 @@ public class FeignTest {
   }
 
   @Test
-  public void toKeyMethodFormatsAsExpected() throws Exception {
+  public void configKeyFormatsAsExpected() throws Exception {
     assertEquals(
         "TestInterface#post()", Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
     assertEquals(
@@ -214,6 +214,13 @@ public class FeignTest {
         Feign.configKey(
             TestInterface.class.getDeclaredMethod(
                 "uriParam", String.class, URI.class, String.class)));
+  }
+
+  @Test
+  public void configKeyUsesChildType() throws Exception {
+    assertEquals(
+        "List#iterator()",
+        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
   }
 
   @Test

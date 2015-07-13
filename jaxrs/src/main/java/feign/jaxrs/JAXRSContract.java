@@ -42,15 +42,12 @@ public final class JAXRSContract extends Contract.BaseContract {
   static final String CONTENT_TYPE = "Content-Type";
 
   @Override
-  public MethodMetadata parseAndValidatateMetadata(Method method) {
-    MethodMetadata md = super.parseAndValidatateMetadata(method);
-    Path path = method.getDeclaringClass().getAnnotation(Path.class);
+  protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
+    MethodMetadata md = super.parseAndValidateMetadata(targetType, method);
+    Path path = targetType.getAnnotation(Path.class);
     if (path != null) {
       String pathValue = emptyToNull(path.value());
-      checkState(
-          pathValue != null,
-          "Path.value() was empty on type %s",
-          method.getDeclaringClass().getName());
+      checkState(pathValue != null, "Path.value() was empty on type %s", targetType.getName());
       if (!pathValue.startsWith("/")) {
         pathValue = "/" + pathValue;
       }

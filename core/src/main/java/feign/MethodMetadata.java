@@ -42,7 +42,7 @@ public final class MethodMetadata implements Serializable {
   MethodMetadata() {}
 
   /**
-   * @see Feign#configKey(java.lang.reflect.Method)
+   * @see Feign#configKey(Class, java.lang.reflect.Method)
    */
   public String configKey() {
     return configKey;
