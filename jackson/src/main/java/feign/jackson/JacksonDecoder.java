@@ -20,8 +20,9 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
@@ -50,12 +51,18 @@ public class JacksonDecoder implements Decoder {
     if (response.body() == null) {
       return null;
     }
-    InputStream inputStream = response.body().asInputStream();
+    Reader reader = response.body().asReader();
+    if (!reader.markSupported()) {
+      reader = new BufferedReader(reader, 1);
+    }
     try {
-      if (inputStream.available() <= 0){
-        return null;
+      // Read the first byte to see if we have any data
+      reader.mark(1);
+      if (reader.read() == -1) {
+        return null; // Eagerly returning null avoids "No content to map due to end-of-input"
       }
-      return mapper.readValue(inputStream, mapper.constructType(type));
+      reader.reset();
+      return mapper.readValue(reader, mapper.constructType(type));
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
