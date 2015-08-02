@@ -1,3 +1,11 @@
+### Version 8.7
+* Bumps dependency versions for integrations
+ * OkHttp/MockWebServer 2.4.0
+ * Gson 2.3.1
+ * Jackson 2.6.0
+ * Ribbon 2.1.0
+ * SLF4J 1.7.12
+
 ### Version 8.6
 * Adds base api support via single-inheritance interfaces
 

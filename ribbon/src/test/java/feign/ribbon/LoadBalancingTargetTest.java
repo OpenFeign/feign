@@ -28,7 +28,6 @@ import feign.Feign;
 import feign.RequestLine;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 public class LoadBalancingTargetTest {
@@ -48,8 +47,8 @@ public class LoadBalancingTargetTest {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
-    server1.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
-    server2.enqueue(new MockResponse().setBody("success!".getBytes(UTF_8)));
+    server1.enqueue(new MockResponse().setBody("success!"));
+    server2.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey,
                                     hostAndPort(server1.getUrl("")) + "," + hostAndPort(

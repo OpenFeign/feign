@@ -22,6 +22,7 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 
+import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -426,7 +427,7 @@ public class FeignTest {
   @Test
   public void decodeLogicSupportsByteArray() throws Exception {
     byte[] expectedResponse = {12, 34, 56};
-    server.enqueue(new MockResponse().setBody(expectedResponse));
+    server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     OtherTestInterface
         api =
