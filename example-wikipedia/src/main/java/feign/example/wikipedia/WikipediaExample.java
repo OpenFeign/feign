@@ -66,7 +66,7 @@ public class WikipediaExample {
             .decoder(new GsonDecoder(gson))
             .logger(new Logger.ErrorLogger())
             .logLevel(Logger.Level.BASIC)
-            .target(Wikipedia.class, "http://en.wikipedia.org");
+            .target(Wikipedia.class, "https://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");
     Iterator<Page> pages = lazySearch(wikipedia, "PTAL");
