@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -429,7 +430,7 @@ public class FeignTest {
   @Test
   public void decodeLogicSupportsByteArray() throws Exception {
     byte[] expectedResponse = {12, 34, 56};
-    server.enqueue(new MockResponse().setBody(expectedResponse));
+    server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     OtherTestInterface api =
         Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());

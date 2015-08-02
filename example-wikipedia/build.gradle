@@ -12,8 +12,8 @@ configurations {
 }
 
 dependencies {
-  compile  'com.netflix.feign:feign-core:8.1.0'
-  compile  'com.netflix.feign:feign-gson:8.1.0'
+  compile  'com.netflix.feign:feign-core:8.6.0'
+  compile  'com.netflix.feign:feign-gson:8.6.0'
 }
 
 // create a self-contained jar that is executable

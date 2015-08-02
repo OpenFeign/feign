@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -81,22 +80,16 @@ public final class OkHttpClient implements Client {
     return requestBuilder.build();
   }
 
-  private static feign.Response toFeignResponse(Response input) {
+  private static feign.Response toFeignResponse(Response input) throws IOException {
     return feign.Response.create(
         input.code(), input.message(), toMap(input.headers()), toBody(input.body()));
   }
 
   private static Map<String, Collection<String>> toMap(Headers headers) {
-    Map<String, Collection<String>> result =
-        new LinkedHashMap<String, Collection<String>>(headers.size());
-    for (String name : headers.names()) {
-      // TODO: this is very inefficient as headers.values iterate case insensitively.
-      result.put(name, headers.values(name));
-    }
-    return result;
+    return (Map) headers.toMultimap();
   }
 
-  private static feign.Response.Body toBody(final ResponseBody input) {
+  private static feign.Response.Body toBody(final ResponseBody input) throws IOException {
     if (input == null || input.contentLength() == 0) {
       return null;
     }
