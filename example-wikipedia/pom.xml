@@ -12,7 +12,7 @@
   <groupId>com.netflix.feign</groupId>
   <artifactId>feign-example-wikipedia</artifactId>
   <packaging>jar</packaging>
-  <version>8.1.0</version>
+  <version>8.6.0</version>
   <name>Wikipedia Example</name>
 
   <dependencies>
@@ -39,7 +39,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.3</version>
+        <version>2.4.1</version>
         <executions>
           <execution>
             <phase>package</phase>

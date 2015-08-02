@@ -50,8 +50,7 @@ public class DefaultClientTest {
   @Rule
   public final MockWebServerRule server = new MockWebServerRule();
   Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
-  Client
-      disableHostnameVerification =
+  Client disableHostnameVerification =
       new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
         @Override
         public boolean verify(String s, SSLSession sslSession) {
