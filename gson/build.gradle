@@ -4,8 +4,8 @@ sourceCompatibility = 1.6
 
 dependencies {
     compile project(':feign-core')
-    compile 'com.google.code.gson:gson:2.2.4'
+    compile 'com.google.code.gson:gson:2.3.1'
     testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:1.7.1'
+    testCompile 'org.assertj:assertj-core:1.7.1' // last version supporting JDK 7
     testCompile project(':feign-core').sourceSets.test.output // for assertions
 }
