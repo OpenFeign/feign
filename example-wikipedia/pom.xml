@@ -12,7 +12,7 @@
   <groupId>com.netflix.feign</groupId>
   <artifactId>feign-example-wikipedia</artifactId>
   <packaging>jar</packaging>
-  <version>8.6.0</version>
+  <version>8.7.0</version>
   <name>Wikipedia Example</name>
 
   <dependencies>
