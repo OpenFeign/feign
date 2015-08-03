@@ -164,8 +164,7 @@ public class Util {
    */
   public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
       throws IllegalStateException {
-    Type
-        resolvedSuperType =
+    Type resolvedSuperType =
         Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
     checkState(resolvedSuperType instanceof ParameterizedType,
                "could not resolve %s into a parameterized type %s",

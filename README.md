@@ -207,6 +207,51 @@ GitHub github = Feign.builder()
 ```
 
 ### Advanced usage and Dagger
+
+#### Base Apis
+In many cases, apis for a service follow the same conventions. Feign supports this pattern via single-inheritance interfaces.
+
+Consider the example:
+```java
+interface BaseAPI {
+  @RequestLine("GET /health")
+  String health();
+
+  @RequestLine("GET /all")
+  List<Entity> all();
+}
+```
+
+You can define and target a specific api, inheriting the base methods.
+```java
+interface CustomAPI extends BaseAPI {
+  @RequestLine("GET /custom")
+  String custom();
+}
+```
+
+In many cases, resource representations are also consistent. For this reason, type parameters are supported on the base api interface.
+
+```java
+@Headers("Accept: application/json")
+interface BaseApi<V> {
+
+  @RequestLine("GET /api/{key}")
+  V get(@Param("key") String);
+
+  @RequestLine("GET /api")
+  List<V> list();
+
+  @Headers("Content-Type: application/json")
+  @RequestLine("PUT /api/{key}")
+  void put(@Param("key") String, V value);
+}
+
+interface FooApi extends BaseApi<Foo> { }
+
+interface BarApi extends BaseApi<Bar> { }
+```
+
 #### Dagger
 Feign can be directly wired into Dagger which keeps things at compile time and Android friendly.  As opposed to exposing builders for config, Feign intends users to embed their config in Dagger.
 

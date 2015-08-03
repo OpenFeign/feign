@@ -59,7 +59,7 @@ public final class JAXRSModule {
       if (path != null) {
         String pathValue = emptyToNull(path.value());
         checkState(pathValue != null, "Path.value() was empty on type %s",
-                   method.getDeclaringClass().getName());
+            method.getDeclaringClass().getName());
         if (!pathValue.startsWith("/")) {
           pathValue = "/" + pathValue;
         }
@@ -75,9 +75,9 @@ public final class JAXRSModule {
       HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
       if (http != null) {
         checkState(data.template().method() == null,
-                   "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
-                   data.template()
-                       .method(), http.value());
+            "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
+            data.template()
+                .method(), http.value());
         data.template().method(http.value());
       } else if (annotationType == Path.class) {
         String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
@@ -91,13 +91,13 @@ public final class JAXRSModule {
         String[] serverProduces = ((Produces) methodAnnotation).value();
         String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
         checkState(clientAccepts != null, "Produces.value() was empty on method %s",
-                   method.getName());
+            method.getName());
         data.template().header(ACCEPT, clientAccepts);
       } else if (annotationType == Consumes.class) {
         String[] serverConsumes = ((Consumes) methodAnnotation).value();
         String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
         checkState(clientProduces != null, "Consumes.value() was empty on method %s",
-                   method.getName());
+            method.getName());
         data.template().header(CONTENT_TYPE, clientProduces);
       }
     }
@@ -111,13 +111,13 @@ public final class JAXRSModule {
         if (annotationType == PathParam.class) {
           String name = PathParam.class.cast(parameterAnnotation).value();
           checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
-                     paramIndex);
+              paramIndex);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
         } else if (annotationType == QueryParam.class) {
           String name = QueryParam.class.cast(parameterAnnotation).value();
           checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s",
-                     paramIndex);
+              paramIndex);
           Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
           data.template().query(name, query);
           nameParam(data, name, paramIndex);
@@ -125,7 +125,7 @@ public final class JAXRSModule {
         } else if (annotationType == HeaderParam.class) {
           String name = HeaderParam.class.cast(parameterAnnotation).value();
           checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s",
-                     paramIndex);
+              paramIndex);
           Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
           data.template().header(name, header);
           nameParam(data, name, paramIndex);
@@ -133,7 +133,7 @@ public final class JAXRSModule {
         } else if (annotationType == FormParam.class) {
           String name = FormParam.class.cast(parameterAnnotation).value();
           checkState(emptyToNull(name) != null, "FormParam.value() was empty on parameter %s",
-                     paramIndex);
+              paramIndex);
           data.formParams().add(name);
           nameParam(data, name, paramIndex);
           isHttpParam = true;
