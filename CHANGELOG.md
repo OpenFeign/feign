@@ -1,5 +1,8 @@
-### Version 7.5
+### Version 7.6
 * Adds base api support via single-inheritance interfaces
+
+### Version 7.5
++* Added possibility to leave slash encoded in path parameters
 
 ### Version 7.4
 * Allows `@Headers` to be applied to a type
