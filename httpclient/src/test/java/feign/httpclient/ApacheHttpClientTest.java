@@ -20,6 +20,7 @@ import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
+import feign.Logger;
 import feign.RequestLine;
 import feign.Response;
 import org.junit.Rule;
@@ -94,6 +95,41 @@ public class ApacheHttpClientTest {
         .hasHeaders("Accept: text/plain")
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
+  }
+
+  @Test
+  public void safeRebuffering() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = Feign.builder()
+        .client(new ApacheHttpClient())
+        .logger(new Logger(){
+          @Override
+          protected void log(String configKey, String format, Object... args) {
+          }
+        })
+        .logLevel(Logger.Level.FULL) // rebuffers the body
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post("foo");
+  }
+
+  /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
+  @Test
+  public void safeRebuffering_noContent() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(204));
+
+    TestInterface api = Feign.builder()
+        .client(new ApacheHttpClient())
+        .logger(new Logger(){
+          @Override
+          protected void log(String configKey, String format, Object... args) {
+          }
+        })
+        .logLevel(Logger.Level.FULL) // rebuffers the body
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post("foo");
   }
 
   interface TestInterface {

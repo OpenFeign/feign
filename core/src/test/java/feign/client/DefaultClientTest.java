@@ -34,6 +34,7 @@ import feign.Client;
 import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
+import feign.Logger;
 import feign.RequestLine;
 import feign.Response;
 
@@ -149,6 +150,39 @@ public class DefaultClientTest {
 
     api.post("foo");
     assertEquals(2, server.getRequestCount());
+  }
+
+  @Test
+  public void safeRebuffering() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = Feign.builder()
+        .logger(new Logger(){
+          @Override
+          protected void log(String configKey, String format, Object... args) {
+          }
+        })
+        .logLevel(Logger.Level.FULL) // rebuffers the body
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post("foo");
+  }
+
+  /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
+  @Test
+  public void safeRebuffering_noContent() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(204));
+
+    TestInterface api = Feign.builder()
+        .logger(new Logger(){
+          @Override
+          protected void log(String configKey, String format, Object... args) {
+          }
+        })
+        .logLevel(Logger.Level.FULL) // rebuffers the body
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post("foo");
   }
 
   interface TestInterface {

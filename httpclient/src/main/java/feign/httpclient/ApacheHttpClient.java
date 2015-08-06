@@ -15,10 +15,6 @@
  */
 package feign.httpclient;
 
-import feign.Client;
-import feign.Request;
-import feign.Response;
-import feign.Util;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -35,7 +31,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,6 +44,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import feign.Util;
+
+import static feign.Util.UTF_8;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -165,43 +167,36 @@ public final class ApacheHttpClient implements Client {
   }
 
   Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
-    HttpEntity entity = httpResponse.getEntity();
-    final Integer length = entity != null && entity.getContentLength() != -1 ?
-            (int) entity.getContentLength() :
-            null;
-    final InputStream input = entity != null ?
-            new ByteArrayInputStream(EntityUtils.toByteArray(entity)) :
-            null;
-
+    final HttpEntity entity = httpResponse.getEntity();
+    if (entity == null) {
+      return null;
+    }
     return new Response.Body() {
 
       @Override
-      public void close() throws IOException {
-        if (input != null) {
-          input.close();
-        }
-      }
-
-      @Override
       public Integer length() {
-        return length;
+        return entity.getContentLength() < 0 ? (int) entity.getContentLength() : null;
       }
 
       @Override
       public boolean isRepeatable() {
-        return false;
+        return entity.isRepeatable();
       }
 
       @Override
       public InputStream asInputStream() throws IOException {
-        return input;
+        return entity.getContent();
       }
 
       @Override
       public Reader asReader() throws IOException {
-        return new InputStreamReader(input);
+        return new InputStreamReader(asInputStream(), UTF_8);
+      }
+
+      @Override
+      public void close() throws IOException {
+        EntityUtils.consume(entity);
       }
     };
   }
-
 }
