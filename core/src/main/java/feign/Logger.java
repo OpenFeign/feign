@@ -143,11 +143,6 @@ public abstract class Logger {
    * logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}.
    */
   public static class ErrorLogger extends Logger {
-
-    final java.util.logging.Logger
-        logger =
-        java.util.logging.Logger.getLogger(Logger.class.getName());
-
     @Override
     protected void log(String configKey, String format, Object... args) {
       System.err.printf(methodTag(configKey) + format + "%n", args);
