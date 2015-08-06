@@ -15,11 +15,12 @@
  */
 package feign.httpclient;
 
+import static feign.Util.UTF_8;
+
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import feign.Util;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -166,39 +167,35 @@ public final class ApacheHttpClient implements Client {
   }
 
   Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
-    HttpEntity entity = httpResponse.getEntity();
-    final Integer length =
-        entity != null && entity.getContentLength() != -1 ? (int) entity.getContentLength() : null;
-    final InputStream input =
-        entity != null ? new ByteArrayInputStream(EntityUtils.toByteArray(entity)) : null;
-
+    final HttpEntity entity = httpResponse.getEntity();
+    if (entity == null) {
+      return null;
+    }
     return new Response.Body() {
 
       @Override
-      public void close() throws IOException {
-        if (input != null) {
-          input.close();
-        }
-      }
-
-      @Override
       public Integer length() {
-        return length;
+        return entity.getContentLength() < 0 ? (int) entity.getContentLength() : null;
       }
 
       @Override
       public boolean isRepeatable() {
-        return false;
+        return entity.isRepeatable();
       }
 
       @Override
       public InputStream asInputStream() throws IOException {
-        return input;
+        return entity.getContent();
       }
 
       @Override
       public Reader asReader() throws IOException {
-        return new InputStreamReader(input);
+        return new InputStreamReader(asInputStream(), UTF_8);
+      }
+
+      @Override
+      public void close() throws IOException {
+        EntityUtils.consume(entity);
       }
     };
   }
