@@ -1,3 +1,6 @@
+### Version 8.8
+* Adds jackson-jaxb codec
+
 ### Version 8.7
 * Bumps dependency versions for integrations
  * OkHttp/MockWebServer 2.4.0
