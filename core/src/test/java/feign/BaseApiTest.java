@@ -18,7 +18,7 @@ package feign;
 import com.google.gson.reflect.TypeToken;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +34,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 public class BaseApiTest {
 
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   interface BaseApi<K, M> {
 

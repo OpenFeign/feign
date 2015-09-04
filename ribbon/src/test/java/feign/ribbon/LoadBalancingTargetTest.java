@@ -16,7 +16,7 @@
 package feign.ribbon;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,9 +33,9 @@ import static org.junit.Assert.assertEquals;
 public class LoadBalancingTargetTest {
 
   @Rule
-  public final MockWebServerRule server1 = new MockWebServerRule();
+  public final MockWebServer server1 = new MockWebServer();
   @Rule
-  public final MockWebServerRule server2 = new MockWebServerRule();
+  public final MockWebServer server2 = new MockWebServer();
 
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
