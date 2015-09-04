@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -48,7 +48,7 @@ import org.junit.rules.ExpectedException;
 public class FeignTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
 
   @Test
   public void iterableQueryParams() throws Exception {

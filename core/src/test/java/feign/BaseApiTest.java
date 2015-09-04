@@ -19,7 +19,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class BaseApiTest {
 
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
 
   interface BaseApi<K, M> {
 

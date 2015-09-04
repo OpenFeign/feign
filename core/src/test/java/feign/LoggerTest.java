@@ -16,7 +16,7 @@
 package feign;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.Logger.Level;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ import org.junit.runners.model.Statement;
 @RunWith(Enclosed.class)
 public class LoggerTest {
 
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
   @Rule public final RecordingLogger logger = new RecordingLogger();
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
