@@ -1,5 +1,10 @@
 ### Version 8.8
 * Adds jackson-jaxb codec
+* Bumps dependency versions for integrations
+ * OkHttp/MockWebServer 2.5.0
+ * Jackson 2.6.1
+ * Apache Http Client 4.5
+ * JMH 1.10.5
 
 ### Version 8.7
 * Bumps dependency versions for integrations

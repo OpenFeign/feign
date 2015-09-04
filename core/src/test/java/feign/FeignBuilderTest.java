@@ -16,7 +16,7 @@
 package feign;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 public class FeignBuilderTest {
 
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   @Test
   public void testDefaults() throws Exception {
