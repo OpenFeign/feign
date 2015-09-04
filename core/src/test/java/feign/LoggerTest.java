@@ -16,7 +16,7 @@
 package feign;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
@@ -42,7 +42,7 @@ import feign.Logger.Level;
 public class LoggerTest {
 
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
   @Rule
   public final RecordingLogger logger = new RecordingLogger();
   @Rule

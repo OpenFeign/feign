@@ -16,7 +16,7 @@
 package feign.okhttp;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -43,7 +43,7 @@ public class OkHttpClientTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {

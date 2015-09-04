@@ -17,7 +17,7 @@ package feign.client;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class DefaultClientTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
   Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
   Client disableHostnameVerification =
       new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
@@ -116,7 +116,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
@@ -128,7 +128,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
@@ -140,7 +140,7 @@ public class DefaultClientTest {
 
   @Test
   public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
