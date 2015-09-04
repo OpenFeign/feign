@@ -18,14 +18,14 @@ package feign;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.Target.HardCodedTarget;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class TargetTest {
 
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
 
   interface TestQuery {
 

@@ -19,7 +19,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.lang.reflect.InvocationHandler;
@@ -34,7 +34,7 @@ import org.junit.Test;
 
 public class FeignBuilderTest {
 
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
 
   @Test
   public void testDefaults() throws Exception {

@@ -22,8 +22,8 @@ import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -43,7 +43,7 @@ import org.junit.rules.ExpectedException;
 public class DefaultClientTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  @Rule public final MockWebServerRule server = new MockWebServerRule();
+  @Rule public final MockWebServer server = new MockWebServer();
   Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
   Client disableHostnameVerification =
       new Client.Default(
@@ -110,7 +110,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -123,7 +123,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -136,7 +136,7 @@ public class DefaultClientTest {
 
   @Test
   public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
