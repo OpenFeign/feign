@@ -41,13 +41,20 @@ public final class JAXRSContract extends Contract.BaseContract {
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
 
+  // Protected so unittest can call us
+  // XXX: Should parseAndValidateMetadata(Class, Method) be public instead? The old deprecated
+  // parseAndValidateMetadata(Method) was public..
   @Override
   protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
-    MethodMetadata md = super.parseAndValidateMetadata(targetType, method);
-    Path path = targetType.getAnnotation(Path.class);
+    return super.parseAndValidateMetadata(targetType, method);
+  }
+
+  @Override
+  protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
+    Path path = clz.getAnnotation(Path.class);
     if (path != null) {
       String pathValue = emptyToNull(path.value());
-      checkState(pathValue != null, "Path.value() was empty on type %s", targetType.getName());
+      checkState(pathValue != null, "Path.value() was empty on type %s", clz.getName());
       if (!pathValue.startsWith("/")) {
         pathValue = "/" + pathValue;
       }
@@ -56,9 +63,8 @@ public final class JAXRSContract extends Contract.BaseContract {
         // added
         pathValue = pathValue.substring(0, pathValue.length() - 1);
       }
-      md.template().insert(0, pathValue);
+      data.template().insert(0, pathValue);
     }
-    return md;
   }
 
   @Override

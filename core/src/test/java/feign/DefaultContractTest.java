@@ -468,6 +468,31 @@ public class DefaultContractTest {
         .hasHeaders(entry("Version", asList("1")), entry("Foo", asList("Bar")));
   }
 
+  @Headers("Authorization: {authHdr}")
+  interface ParameterizedHeaderExpandApi {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+  }
+
+  @Test
+  public void parameterizedHeaderExpandApi() throws Exception {
+    List<MethodMetadata> md =
+        contract.parseAndValidatateMetadata(ParameterizedHeaderExpandApi.class);
+
+    assertThat(md).hasSize(1);
+
+    assertThat(md.get(0).configKey())
+        .isEqualTo("ParameterizedHeaderExpandApi#getZone(String,String)");
+    assertThat(md.get(0).returnType()).isEqualTo(String.class);
+    assertThat(md.get(0).template())
+        .hasHeaders(
+            entry("Authorization", asList("{authHdr}")),
+            entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.get(0).formParams()).isEmpty();
+  }
+
   private MethodMetadata parseAndValidateMetadata(
       Class<?> targetType, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(
