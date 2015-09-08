@@ -82,6 +82,11 @@ public interface Contract {
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
       data.configKey(Feign.configKey(targetType, method));
 
+      processAnnotationOnClass(data, method.getDeclaringClass());
+      if (method.getDeclaringClass() != targetType) {
+        processAnnotationOnClass(data, targetType);
+      }
+
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
@@ -109,6 +114,15 @@ public interface Contract {
       }
       return data;
     }
+
+    /**
+     * Called by parseAndValidateMetadata twice, first on the declaring class, then on the
+     * target type (unless they are the same).
+     *
+     * @param data       metadata collected so far relating to the current java method.
+     * @param clz        the class to process
+     */
+    protected abstract void processAnnotationOnClass(MethodMetadata data, Class<?> clz);
 
     /**
      * @param data       metadata collected so far relating to the current java method.
@@ -152,18 +166,8 @@ public interface Contract {
   }
 
   class Default extends BaseContract {
-
     @Override
-    protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
-      MethodMetadata data = super.parseAndValidateMetadata(targetType, method);
-      headersFromAnnotation(method.getDeclaringClass(), data);
-      if (method.getDeclaringClass() != targetType) {
-        headersFromAnnotation(targetType, data);
-      }
-      return data;
-    }
-
-    private void headersFromAnnotation(Class<?> targetType, MethodMetadata data) {
+    protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       if (targetType.isAnnotationPresent(Headers.class)) {
         String[] headersOnType = targetType.getAnnotation(Headers.class).value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
@@ -196,9 +200,9 @@ public interface Contract {
           data.template().append(
               requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
         }
-        
+
         data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
-        
+
       } else if (annotationType == Body.class) {
         String body = Body.class.cast(methodAnnotation).value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
