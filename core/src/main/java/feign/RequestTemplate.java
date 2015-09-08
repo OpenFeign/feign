@@ -229,7 +229,7 @@ public final class RequestTemplate implements Serializable {
     headers.clear();
     headers.putAll(resolvedHeaders);
     if (bodyTemplate != null) {
-      body(urlDecode(expand(bodyTemplate, unencoded)));
+      body(urlDecode(expand(bodyTemplate, encoded)));
     }
     return this;
   }
