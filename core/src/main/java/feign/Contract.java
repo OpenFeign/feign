@@ -122,7 +122,8 @@ public interface Contract {
      * @param data       metadata collected so far relating to the current java method.
      * @param clz        the class to process
      */
-    protected abstract void processAnnotationOnClass(MethodMetadata data, Class<?> clz);
+    protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
+    }
 
     /**
      * @param data       metadata collected so far relating to the current java method.
