@@ -198,6 +198,26 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
+    RequestTemplate template = new RequestTemplate().method("POST")
+      .bodyTemplate(
+        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+
+    template = template.resolve(
+      mapOf(
+        "customer_name", "netflix",
+        "user_name", "denominator",
+        "password", "abc+123%25d8"
+      )
+    );
+
+    assertThat(template)
+      .hasBody(
+        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}"
+      );
+  }
+
+  @Test
   public void skipUnresolvedQueries() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")//
         .append("/domains/{domainId}/records")//
