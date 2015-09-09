@@ -110,16 +110,16 @@ final class SynchronousMethodHandler implements MethodHandler {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
+      if (Response.class == metadata.returnType()) {
+        if (response.body() == null) {
+          return response;
+        }
+        // Ensure the response body is disconnected
+        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+      }
       if (response.status() >= 200 && response.status() < 300) {
-        if (Response.class == metadata.returnType()) {
-          if (response.body() == null) {
-            return response;
-          }
-          // Ensure the response body is disconnected
-          byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-          return Response.create(
-              response.status(), response.reason(), response.headers(), bodyData);
-        } else if (void.class == metadata.returnType()) {
+        if (void.class == metadata.returnType()) {
           return null;
         } else {
           return decode(response);
