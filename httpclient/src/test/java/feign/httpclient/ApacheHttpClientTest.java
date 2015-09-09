@@ -69,7 +69,7 @@ public class ApacheHttpClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -77,7 +77,7 @@ public class ApacheHttpClientTest {
         .client(new ApacheHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   @Test
@@ -137,6 +137,10 @@ public class ApacheHttpClientTest {
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
+
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
 
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
