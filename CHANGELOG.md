@@ -1,3 +1,6 @@
+### Version 8.9
+* Skips error handling when return type is `Response`
+
 ### Version 8.8
 * Adds jackson-jaxb codec
 * Bumps dependency versions for integrations

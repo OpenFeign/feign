@@ -36,7 +36,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -334,9 +336,28 @@ public class FeignTest {
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.response();
-    api.response(); // if retryer instance was reused, this statement will throw an exception
+    api.post();
+    api.post(); // if retryer instance was reused, this statement will throw an exception
     assertEquals(4, server.getRequestCount());
+  }
+
+  @Test
+  public void whenReturnTypeIsResponseNoErrorHandling() {
+    Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+    headers.put("Location", Arrays.asList("http://bar.com"));
+    final Response response = Response.create(302, "Found", headers, new byte[0]);
+
+    TestInterface api =
+        Feign.builder()
+            .client(
+                new Client() { // fake client as Client.Default follows redirects.
+                  public Response execute(Request request, Request.Options options) {
+                    return response;
+                  }
+                })
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertEquals(api.response().headers().get("Location"), Arrays.asList("http://bar.com"));
   }
 
   private static class MockRetryer implements Retryer {
