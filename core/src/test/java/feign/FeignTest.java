@@ -22,6 +22,8 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
@@ -328,9 +330,26 @@ public class FeignTest {
         }
       }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.response();
-    api.response(); // if retryer instance was reused, this statement will throw an exception
+    api.post();
+    api.post(); // if retryer instance was reused, this statement will throw an exception
     assertEquals(4, server.getRequestCount());
+  }
+
+  @Test
+  public void whenReturnTypeIsResponseNoErrorHandling() {
+    Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+    headers.put("Location", Arrays.asList("http://bar.com"));
+    final Response response = Response.create(302, "Found", headers, new byte[0]);
+
+    TestInterface api = Feign.builder()
+        .client(new Client() { // fake client as Client.Default follows redirects.
+          public Response execute(Request request, Request.Options options) {
+            return response;
+          }
+        })
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertEquals(api.response().headers().get("Location"), Arrays.asList("http://bar.com"));
   }
 
   private static class MockRetryer implements Retryer

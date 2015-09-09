@@ -63,8 +63,7 @@ public class DefaultClientTest {
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.post("foo");
@@ -86,15 +85,14 @@ public class DefaultClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   /**
@@ -190,6 +188,10 @@ public class DefaultClientTest {
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
+
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
 
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")

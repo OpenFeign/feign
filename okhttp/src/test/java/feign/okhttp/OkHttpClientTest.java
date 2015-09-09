@@ -18,7 +18,6 @@ package feign.okhttp;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -72,7 +71,7 @@ public class OkHttpClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -80,11 +79,10 @@ public class OkHttpClientTest {
         .client(new OkHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   @Test
-  @Ignore // TODO: Remove on OkHttp 2.5 https://github.com/square/okhttp/issues/1778
   public void patch() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse());
@@ -93,7 +91,7 @@ public class OkHttpClientTest {
         .client(new OkHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals("foo", api.patch());
+    assertEquals("foo", api.patch(""));
 
     assertThat(server.takeRequest())
         .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
@@ -142,8 +140,12 @@ public class OkHttpClientTest {
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
 
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
+
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
-    String patch();
+    String patch(String body);
   }
 }
