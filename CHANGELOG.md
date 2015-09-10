@@ -1,5 +1,6 @@
 ### Version 8.10
 * Reads class-level @Produces/@Consumes JAX-RS annotations
+* Supports POST without a body parameter
 
 ### Version 8.9
 * Skips error handling when return type is `Response`

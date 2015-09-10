@@ -25,6 +25,7 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +78,14 @@ public final class OkHttpClient implements Client {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    RequestBody body = input.body() != null ? RequestBody.create(mediaType, input.body()) : null;
+    byte[] inputBody = input.body();
+    if ("POST".equals(input.method()) && inputBody == null) {
+      // write an empty BODY to conform with okhttp 2.4.0+
+      // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
+      inputBody = new byte[0];
+    }
+
+    RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
     requestBuilder.method(input.method(), body);
     return requestBuilder.build();
   }
