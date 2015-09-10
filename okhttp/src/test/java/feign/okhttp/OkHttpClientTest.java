@@ -134,6 +134,17 @@ public class OkHttpClientTest {
     api.post("foo");
   }
 
+  @Test
+  public void noResponseBody() {
+      server.enqueue(new MockResponse());
+
+      TestInterface api = Feign.builder()
+          .client(new OkHttpClient())
+          .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+      api.noPostBody();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -147,5 +158,8 @@ public class OkHttpClientTest {
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
     String patch(String body);
+
+    @RequestLine("POST")
+    String noPostBody();
   }
 }
