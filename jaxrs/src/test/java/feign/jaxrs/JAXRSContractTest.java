@@ -38,6 +38,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 import feign.MethodMetadata;
 import feign.Response;
@@ -120,7 +121,9 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
 
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("application/xml")));
+        .hasHeaders(
+                entry("Content-Type", asList("application/json")),
+                entry("Accept", asList("application/xml")));
   }
 
   @Test
@@ -144,7 +147,7 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
 
     assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/xml")));
+        .hasHeaders(entry("Accept", asList("text/html")), entry("Content-Type", asList("application/xml")));
   }
 
   @Test
@@ -161,6 +164,14 @@ public class JAXRSContractTest {
     thrown.expectMessage("Consumes.value() was empty on method consumesEmpty");
 
     parseAndValidateMetadata(ProducesAndConsumes.class, "consumesEmpty");
+  }
+
+  @Test
+  public void producesAndConsumesOnClassAddsHeader() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesAndConsumes");
+
+    assertThat(md.template())
+        .hasHeaders(entry("Content-Type", asList("application/json")), entry("Accept", asList("text/html")));
   }
 
   @Test
@@ -401,6 +412,8 @@ public class JAXRSContractTest {
     Response empty();
   }
 
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_HTML)
   interface ProducesAndConsumes {
 
     @GET
@@ -426,6 +439,9 @@ public class JAXRSContractTest {
     @POST
     @Consumes({""})
     Response consumesEmpty();
+
+    @POST
+    Response producesAndConsumes();
   }
 
   interface BodyParams {
