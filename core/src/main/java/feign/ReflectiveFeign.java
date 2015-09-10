@@ -18,6 +18,7 @@ package feign;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -143,7 +144,7 @@ public class ReflectiveFeign extends Feign {
         } else if (md.bodyIndex() != null) {
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md);
+          buildTemplate = new BuildTemplateByResolvingArgs(md, encoder);
         }
         result.put(md.configKey(),
                    factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
@@ -156,9 +157,11 @@ public class ReflectiveFeign extends Feign {
 
     protected final MethodMetadata metadata;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
+    private final Encoder encoder;
 
-    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata, Encoder encoder) {
       this.metadata = metadata;
+      this.encoder = encoder;
       if (metadata.indexToExpanderClass().isEmpty()) {
         return;
       }
@@ -201,6 +204,11 @@ public class ReflectiveFeign extends Feign {
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
                                       Map<String, Object> variables) {
+      if ("POST".equals(metadata.template().method()) && argv == null) {
+        // write an empty string for the BODY to conform with okhttp 2.4.0+
+        // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
+        encoder.encode("", String.class, mutable);
+      }
       return mutable.resolve(variables);
     }
   }
@@ -210,7 +218,7 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+      super(metadata, encoder);
       this.encoder = encoder;
     }
 
@@ -239,7 +247,7 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+      super(metadata, encoder);
       this.encoder = encoder;
     }
 
