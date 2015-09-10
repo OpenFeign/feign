@@ -65,6 +65,14 @@ public final class JAXRSContract extends Contract.BaseContract {
       }
       data.template().insert(0, pathValue);
     }
+    Consumes consumes = clz.getAnnotation(Consumes.class);
+    if (consumes != null) {
+      handleConsumesAnnotation(data, consumes, clz.getName());
+    }
+    Produces produces = clz.getAnnotation(Produces.class);
+    if (produces != null) {
+      handleProducesAnnotation(data, produces, clz.getName());
+    }
   }
 
   @Override
@@ -90,18 +98,26 @@ public final class JAXRSContract extends Contract.BaseContract {
       methodAnnotationValue = methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().append(methodAnnotationValue);
     } else if (annotationType == Produces.class) {
-      String[] serverProduces = ((Produces) methodAnnotation).value();
-      String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
-      checkState(clientAccepts != null, "Produces.value() was empty on method %s",
-                 method.getName());
-      data.template().header(ACCEPT, clientAccepts);
+      handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
     } else if (annotationType == Consumes.class) {
-      String[] serverConsumes = ((Consumes) methodAnnotation).value();
-      String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
-      checkState(clientProduces != null, "Consumes.value() was empty on method %s",
-                 method.getName());
-      data.template().header(CONTENT_TYPE, clientProduces);
+      handleConsumesAnnotation(data, (Consumes) methodAnnotation, "method " + method.getName());
     }
+  }
+
+  private void handleProducesAnnotation(MethodMetadata data, Produces produces, String name) {
+    String[] serverProduces = produces.value();
+    String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
+    checkState(clientAccepts != null, "Produces.value() was empty on %s", name);
+    data.template().header(ACCEPT, (String) null); // remove any previous produces
+    data.template().header(ACCEPT, clientAccepts);
+  }
+
+  private void handleConsumesAnnotation(MethodMetadata data, Consumes consumes, String name) {
+    String[] serverConsumes = consumes.value();
+    String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
+    checkState(clientProduces != null, "Consumes.value() was empty on %s", name);
+    data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
+    data.template().header(CONTENT_TYPE, clientProduces);
   }
 
   @Override
