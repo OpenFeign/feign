@@ -204,11 +204,6 @@ public class ReflectiveFeign extends Feign {
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
                                       Map<String, Object> variables) {
-      if ("POST".equals(metadata.template().method()) && argv == null) {
-        // write an empty string for the BODY to conform with okhttp 2.4.0+
-        // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
-        encoder.encode("", String.class, mutable);
-      }
       return mutable.resolve(variables);
     }
   }
