@@ -183,6 +183,16 @@ public class DefaultClientTest {
     api.post("foo");
   }
 
+  @Test
+  public void noResponseBody() {
+      server.enqueue(new MockResponse());
+
+      TestInterface api = Feign.builder()
+          .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+      api.noPostBody();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -196,5 +206,8 @@ public class DefaultClientTest {
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
     String patch();
+
+    @RequestLine("POST")
+    String noPostBody();
   }
 }

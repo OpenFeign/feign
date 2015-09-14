@@ -82,7 +82,7 @@ public final class OkHttpClient implements Client {
     if ("POST".equals(input.method()) && inputBody == null) {
       // write an empty BODY to conform with okhttp 2.4.0+
       // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
-      inputBody = new byte[] {};
+      inputBody = new byte[0];
     }
 
     RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;

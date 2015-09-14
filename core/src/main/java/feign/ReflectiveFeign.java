@@ -18,7 +18,6 @@ package feign;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -144,7 +143,7 @@ public class ReflectiveFeign extends Feign {
         } else if (md.bodyIndex() != null) {
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md, encoder);
+          buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
         result.put(md.configKey(),
                    factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
@@ -157,11 +156,9 @@ public class ReflectiveFeign extends Feign {
 
     protected final MethodMetadata metadata;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
-    private final Encoder encoder;
 
-    private BuildTemplateByResolvingArgs(MethodMetadata metadata, Encoder encoder) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
-      this.encoder = encoder;
       if (metadata.indexToExpanderClass().isEmpty()) {
         return;
       }
@@ -213,7 +210,7 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata, encoder);
+      super(metadata);
       this.encoder = encoder;
     }
 
@@ -242,7 +239,7 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata, encoder);
+      super(metadata);
       this.encoder = encoder;
     }
 

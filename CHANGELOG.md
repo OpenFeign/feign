@@ -1,3 +1,6 @@
+### Version 8.10
+* OkHttpClient sends an empty POST body to conform with okhttp 2.4+
+
 ### Version 8.9
 * Skips error handling when return type is `Response`
 
