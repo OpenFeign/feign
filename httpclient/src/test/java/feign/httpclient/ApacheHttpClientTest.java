@@ -17,12 +17,6 @@ package feign.httpclient;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
-import feign.Feign;
-import feign.FeignException;
-import feign.Headers;
-import feign.Logger;
-import feign.RequestLine;
-import feign.Response;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,6 +24,14 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import feign.Feign;
+import feign.FeignException;
+import feign.Headers;
+import feign.Logger;
+import feign.Param;
+import feign.RequestLine;
+import feign.Response;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -143,6 +145,20 @@ public class ApacheHttpClientTest {
 
       api.noPostBody();
   }
+    @Test
+    public void postWithSpacesInPath() throws IOException, InterruptedException {
+        server.enqueue(new MockResponse().setBody("foo"));
+
+        TestInterface api = Feign.builder()
+                .client(new ApacheHttpClient())
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.post("current documents", "foo");
+
+        assertThat(server.takeRequest()).hasMethod("POST")
+                .hasPath("/path/current%20documents/resource")
+                .hasBody("foo");
+    }
 
   interface TestInterface {
 
@@ -160,5 +176,9 @@ public class ApacheHttpClientTest {
 
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("POST /path/{to}/resource")
+    @Headers("Accept: text/plain")
+    Response post(@Param("to") String to, String body);
   }
 }

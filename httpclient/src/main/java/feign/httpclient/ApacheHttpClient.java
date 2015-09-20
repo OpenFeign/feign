@@ -27,6 +27,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -101,21 +102,12 @@ public final class ApacheHttpClient implements Client {
 
     URI uri = new URIBuilder(request.url()).build();
 
-    //request url
-    requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getPath());
+    requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
     //request query params
     List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
     for (NameValuePair queryParam: queryParams) {
       requestBuilder.addParameter(queryParam);
-    }
-
-    //request body
-    if (request.body() != null) {
-      HttpEntity entity = request.charset() != null ?
-              new StringEntity(new String(request.body(), request.charset())) :
-              new ByteArrayEntity(request.body());
-      requestBuilder.setEntity(entity);
     }
 
     //request headers
@@ -125,6 +117,7 @@ public final class ApacheHttpClient implements Client {
       if (headerName.equalsIgnoreCase(ACCEPT_HEADER_NAME)) {
         hasAcceptHeader = true;
       }
+
       if (headerName.equalsIgnoreCase(Util.CONTENT_LENGTH) &&
               requestBuilder.getHeaders(headerName) != null) {
         //if the 'Content-Length' header is already present, it's been set from HttpEntity, so we
@@ -141,7 +134,34 @@ public final class ApacheHttpClient implements Client {
       requestBuilder.addHeader(ACCEPT_HEADER_NAME, "*/*");
     }
 
+    //request body
+    if (request.body() != null) {
+      HttpEntity entity = null;
+      if (request.charset() != null) {
+        ContentType contentType = getContentType(request);
+        String content = new String(request.body(), request.charset());
+        entity = new StringEntity(content, contentType);
+      } else {
+        entity = new ByteArrayEntity(request.body());
+      }
+
+      requestBuilder.setEntity(entity);
+    }
+
     return requestBuilder.build();
+  }
+
+  private ContentType getContentType(Request request) {
+    ContentType contentType = ContentType.DEFAULT_TEXT;
+    for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
+    if (entry.getKey().equalsIgnoreCase("Content-Type")) {
+      Collection values = entry.getValue();
+      if (values != null && !values.isEmpty()) {
+        contentType = ContentType.create(entry.getValue().iterator().next(), request.charset());
+        break;
+      }
+    }
+    return contentType;
   }
 
   Response toFeignResponse(HttpResponse httpResponse) throws IOException {
