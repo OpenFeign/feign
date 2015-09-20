@@ -26,6 +26,7 @@ import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import java.io.ByteArrayInputStream;
@@ -147,6 +148,23 @@ public class ApacheHttpClientTest {
     api.noPostBody();
   }
 
+  @Test
+  public void postWithSpacesInPath() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api =
+        Feign.builder()
+            .client(new ApacheHttpClient())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.post("current documents", "foo");
+
+    assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasPath("/path/current%20documents/resource")
+        .hasBody("foo");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -163,5 +181,9 @@ public class ApacheHttpClientTest {
 
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("POST /path/{to}/resource")
+    @Headers("Accept: text/plain")
+    Response post(@Param("to") String to, String body);
   }
 }
