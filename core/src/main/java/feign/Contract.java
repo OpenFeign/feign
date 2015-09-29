@@ -82,10 +82,11 @@ public interface Contract {
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
       data.configKey(Feign.configKey(targetType, method));
 
-      processAnnotationOnClass(data, method.getDeclaringClass());
-      if (method.getDeclaringClass() != targetType) {
-        processAnnotationOnClass(data, targetType);
+      if(targetType.getInterfaces().length == 1) {
+        processAnnotationOnClass(data, targetType.getInterfaces()[0]);
       }
+      processAnnotationOnClass(data, targetType);
+
 
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
