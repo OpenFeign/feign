@@ -528,6 +528,50 @@ public class DefaultContractTest {
         .isEmpty();
   }
 
+  @Headers("Authorization: {authHdr}")
+  interface ParameterizedHeaderBase {
+  }
+
+  interface ParameterizedHeaderExpandInheritedApi extends ParameterizedHeaderBase {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZoneAccept(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+
+    @RequestLine("GET /api/{zoneId}")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+  }
+
+  @Test
+  public void parameterizedHeaderExpandApiBaseClass() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(ParameterizedHeaderExpandInheritedApi.class);
+
+    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (MethodMetadata m : mds) {
+      byConfigKey.put(m.configKey(), m);
+    }
+
+    assertThat(byConfigKey)
+        .containsOnlyKeys("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)",
+				  "ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
+
+	 MethodMetadata md = byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)");
+    assertThat(md.returnType())
+        .isEqualTo(String.class);
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("{authHdr}")), entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.formParams())
+        .isEmpty();
+
+	 md = byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
+    assertThat(md.returnType())
+        .isEqualTo(String.class);
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("{authHdr}")));
+    assertThat(md.formParams())
+        .isEmpty();
+  }
+
   private MethodMetadata parseAndValidateMetadata(Class<?> targetType, String method,
                                                   Class<?>... parameterTypes)
       throws NoSuchMethodException {
