@@ -25,6 +25,7 @@ import static java.lang.String.format;
 public class FeignException extends RuntimeException {
 
   private static final long serialVersionUID = 0;
+  private int status;
 
   protected FeignException(String message, Throwable cause) {
     super(message, cause);
@@ -32,6 +33,15 @@ public class FeignException extends RuntimeException {
 
   protected FeignException(String message) {
     super(message);
+  }
+
+  protected FeignException(int status, String message) {
+    super(message);
+    this.status = status;
+  }
+
+  public int status() {
+    return this.status;
   }
 
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
@@ -49,7 +59,7 @@ public class FeignException extends RuntimeException {
       }
     } catch (IOException ignored) { // NOPMD
     }
-    return new FeignException(message);
+    return new FeignException(response.status(), message);
   }
 
   static FeignException errorExecuting(Request request, IOException cause) {
