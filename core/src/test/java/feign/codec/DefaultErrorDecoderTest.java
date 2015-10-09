@@ -17,6 +17,7 @@ package feign.codec;
 
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.FeignException;
 import feign.Response;
@@ -55,6 +56,16 @@ public class DefaultErrorDecoderTest {
         Response.create(500, "Internal server error", headers, "hello world", UTF_8);
 
     throw errorDecoder.decode("Service#foo()", response);
+  }
+
+  @Test
+  public void testFeignExceptionIncludesStatus() throws Throwable {
+    Response response = Response.create(400, "Bad request", headers, (byte[]) null);
+
+    Exception exception = errorDecoder.decode("Service#foo()", response);
+
+    assertThat(exception).isInstanceOf(FeignException.class);
+    assertThat(((FeignException) exception).status()).isEqualTo(400);
   }
 
   @Test
