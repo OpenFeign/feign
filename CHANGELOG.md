@@ -1,7 +1,5 @@
-### Version 8.11
-* Adds HTTP status to FeignException for easier response handling
-
 ### Version 8.10
+* Adds HTTP status to FeignException for easier response handling
 * Reads class-level @Produces/@Consumes JAX-RS annotations
 * Supports POST without a body parameter
 
