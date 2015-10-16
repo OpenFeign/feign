@@ -1,3 +1,6 @@
+### Version 8.11
+* Adds support for Hystrix via a `HystrixFeign` builder.
+
 ### Version 8.10
 * Adds HTTP status to FeignException for easier response handling
 * Reads class-level @Produces/@Consumes JAX-RS annotations
