@@ -50,7 +50,7 @@ public final class MethodMetadata implements Serializable {
     return configKey;
   }
 
-  MethodMetadata configKey(String configKey) {
+  public MethodMetadata configKey(String configKey) {
     this.configKey = configKey;
     return this;
   }
@@ -59,7 +59,7 @@ public final class MethodMetadata implements Serializable {
     return returnType;
   }
 
-  MethodMetadata returnType(Type returnType) {
+  public MethodMetadata returnType(Type returnType) {
     this.returnType = returnType;
     return this;
   }
@@ -68,7 +68,7 @@ public final class MethodMetadata implements Serializable {
     return urlIndex;
   }
 
-  MethodMetadata urlIndex(Integer urlIndex) {
+  public MethodMetadata urlIndex(Integer urlIndex) {
     this.urlIndex = urlIndex;
     return this;
   }
@@ -77,7 +77,7 @@ public final class MethodMetadata implements Serializable {
     return bodyIndex;
   }
 
-  MethodMetadata bodyIndex(Integer bodyIndex) {
+  public MethodMetadata bodyIndex(Integer bodyIndex) {
     this.bodyIndex = bodyIndex;
     return this;
   }
@@ -89,7 +89,7 @@ public final class MethodMetadata implements Serializable {
     return bodyType;
   }
 
-  MethodMetadata bodyType(Type bodyType) {
+  public MethodMetadata bodyType(Type bodyType) {
     this.bodyType = bodyType;
     return this;
   }
