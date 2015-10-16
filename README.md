@@ -152,6 +152,16 @@ MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.c
 
 ```
 
+### Hystrix
+[HystrixFeign](https://github.com/Netflix/feign/tree/master/hystrix) configures circuit breaker support provided by [Hystrix](https://github.com/Netflix/Hystrix).
+
+To use Hystrix with Feign, add the Hystrix module to your classpath. Then use the `HystrixFeign` builder:
+
+```java
+MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd");
+
+```
+
 ### SLF4J
 [SLF4JModule](https://github.com/Netflix/feign/tree/master/slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
 

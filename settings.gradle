@@ -1,5 +1,5 @@
 rootProject.name='feign'
-include 'core', 'sax', 'gson', 'httpclient', 'jackson', 'jaxb', 'jaxrs', 'okhttp', 'ribbon', 'slf4j', 'jackson-jaxb'
+include 'core', 'sax', 'gson', 'httpclient', 'jackson', 'jaxb', 'jaxrs', 'okhttp', 'ribbon', 'slf4j', 'jackson-jaxb', 'hystrix'
 
 rootProject.children.each { childProject ->
     childProject.name = 'feign-' + childProject.name
