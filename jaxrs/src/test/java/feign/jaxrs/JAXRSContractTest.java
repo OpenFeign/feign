@@ -249,10 +249,21 @@ public class JAXRSContractTest {
   }
 
   @Test
+  public void pathParamWithSpaces() throws Exception {
+      assertThat(contract.parseAndValidatateMetadata(
+              PathOnType.class.getDeclaredMethod("pathParamWithSpaces", String.class)).template())
+          .hasUrl("/base/{param}");
+  }
+
+  @Test
   public void regexPathOnMethod() throws Exception {
       assertThat(contract.parseAndValidatateMetadata(
           PathOnType.class.getDeclaredMethod("pathParamWithRegex", String.class)).template())
       .hasUrl("/base/regex/{param}");
+
+      assertThat(contract.parseAndValidatateMetadata(
+              PathOnType.class.getDeclaredMethod("pathParamWithMultipleRegex", String.class, String.class)).template())
+      .hasUrl("/base/regex/{param1}/{param2}");
   }
 
   @Test
@@ -510,8 +521,16 @@ public class JAXRSContractTest {
     Response emptyPathParam(@PathParam("") String empty);
 
     @GET
+    @Path("/{   param   }")
+    Response pathParamWithSpaces(@PathParam("param") String path);
+
+    @GET
     @Path("regex/{param:.+}")
     Response pathParamWithRegex(@PathParam("param") String path);
+
+    @GET
+    @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
+    Response pathParamWithMultipleRegex(@PathParam("param1") String param1, @PathParam("param2") String param2);
   }
 
   interface WithURIParam {

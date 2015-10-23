@@ -81,11 +81,9 @@ public final class JAXRSContract extends Contract.BaseContract {
       if (!methodAnnotationValue.startsWith("/") && !data.template().toString().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;
       }
-      int regexIndex = methodAnnotationValue.indexOf(":");
-      if (methodAnnotationValue.indexOf("{") != -1 && regexIndex != -1) {
-          // The method annotation includes a regex, which should be stripped to get the true path parameter name.
-          methodAnnotationValue = methodAnnotationValue.substring(0, regexIndex) + "}";
-      }
+      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
+      // strip these out appropriately.
+      methodAnnotationValue = methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().append(methodAnnotationValue);
     } else if (annotationType == Produces.class) {
       String[] serverProduces = ((Produces) methodAnnotation).value();
