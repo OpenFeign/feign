@@ -119,18 +119,16 @@ public class ReflectiveFeign extends Feign {
     private final Contract contract;
     private final Options options;
     private final Encoder encoder;
-    private final Decoder decoder;
-    private final ErrorDecoder errorDecoder;
+    private final Iterable<ResponseHandler> responseHandlers;
     private final SynchronousMethodHandler.Factory factory;
 
-    ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                        ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
+    ParseHandlersByName(Contract contract, Options options, Encoder encoder,
+                        Iterable<ResponseHandler> responseHandlers, SynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
+      this.responseHandlers = checkNotNull(responseHandlers, "responseHandlers");
       this.factory = factory;
-      this.errorDecoder = errorDecoder;
       this.encoder = checkNotNull(encoder, "encoder");
-      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     public Map<String, MethodHandler> apply(Target key) {
@@ -146,7 +144,7 @@ public class ReflectiveFeign extends Feign {
           buildTemplate = new BuildTemplateByResolvingArgs(md);
         }
         result.put(md.configKey(),
-                   factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+                   factory.create(key, md, buildTemplate, options, responseHandlers));
       }
       return result;
     }
