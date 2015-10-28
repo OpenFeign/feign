@@ -91,8 +91,7 @@ public abstract class Feign {
     private Retryer retryer = new Retryer.Default();
     private Logger logger = new NoOpLogger();
     private Encoder encoder = new Encoder.Default();
-    private Decoder decoder = new Decoder.Default();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+    private Iterable<ResponseHandler> responseHandlers;
     private Options options = new Options();
     private InvocationHandlerFactory
         invocationHandlerFactory =
@@ -128,13 +127,8 @@ public abstract class Feign {
       return this;
     }
 
-    public Builder decoder(Decoder decoder) {
-      this.decoder = decoder;
-      return this;
-    }
-
-    public Builder errorDecoder(ErrorDecoder errorDecoder) {
-      this.errorDecoder = errorDecoder;
+    public Builder reponseHandlers(Iterable<ResponseHandler> responseHandlers) {
+      this.responseHandlers = responseHandlers;
       return this;
     }
 
@@ -181,12 +175,9 @@ public abstract class Feign {
 
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel);
-      ParseHandlersByName
-          handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder,
-                                  errorDecoder, synchronousMethodHandlerFactory);
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger, logLevel);
+      ParseHandlersByName handlersByName =
+          new ParseHandlersByName(contract, options, encoder, responseHandlers, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
     }
   }

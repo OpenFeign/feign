@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
@@ -41,13 +40,12 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
-  private final Decoder decoder;
-  private final ErrorDecoder errorDecoder;
+  private final Iterable<ResponseHandler> responseHandlers;
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder) {
+                                   Iterable<ResponseHandler> responseHandlers) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -58,8 +56,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
-    this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
-    this.decoder = checkNotNull(decoder, "decoder for %s", target);
+    this.responseHandlers = checkNotNull(responseHandlers, "responseHandlers for %s", target);
   }
 
   @Override
@@ -103,23 +100,16 @@ final class SynchronousMethodHandler implements MethodHandler {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
-      if (Response.class == metadata.returnType()) {
-        if (response.body() == null) {
-          return response;
+
+      // Return the result produced by the first accepting handler.
+      ResponseHandler.ResultHolder result = new ResponseHandler.ResultHolder();
+      for (ResponseHandler handler : responseHandlers) {
+        if (handler.handle(response, metadata, result)) {
+          return result.getResult();
         }
-        // Ensure the response body is disconnected
-        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
       }
-      if (response.status() >= 200 && response.status() < 300) {
-        if (void.class == metadata.returnType()) {
-          return null;
-        } else {
-          return decode(response);
-        }
-      } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
-      }
+      throw new FeignException("Failed to handle response, no applicable handler found.");
+
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
@@ -141,16 +131,6 @@ final class SynchronousMethodHandler implements MethodHandler {
     return target.apply(new RequestTemplate(template));
   }
 
-  Object decode(Response response) throws Throwable {
-    try {
-      return decoder.decode(response, metadata.returnType());
-    } catch (FeignException e) {
-      throw e;
-    } catch (RuntimeException e) {
-      throw new DecodeException(e.getMessage(), e);
-    }
-  }
-
   static class Factory {
 
     private final Client client;
@@ -170,10 +150,10 @@ final class SynchronousMethodHandler implements MethodHandler {
 
     public MethodHandler create(Target<?> target, MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
+                                Options options, Iterable<ResponseHandler> responseHandlers) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
                                           logLevel, md,
-                                          buildTemplateFromArgs, options, decoder, errorDecoder);
+                                          buildTemplateFromArgs, options, responseHandlers);
     }
   }
 }
