@@ -82,8 +82,7 @@ public abstract class Feign {
 
   public static class Builder {
 
-    private final List<RequestInterceptor>
-        requestInterceptors =
+    private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
@@ -94,9 +93,9 @@ public abstract class Feign {
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
-    private InvocationHandlerFactory
-        invocationHandlerFactory =
+    private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
+    private boolean decode404;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -130,6 +129,26 @@ public abstract class Feign {
 
     public Builder decoder(Decoder decoder) {
       this.decoder = decoder;
+      return this;
+    }
+
+    /**
+     * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
+     * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
+     *
+     * <p/> All first-party (ex gson) decoders return well-known empty values defined by
+     * {@link Util#emptyValueOf}. To customize further, wrap an existing
+     * {@link #decoder(Decoder) decoder} or make your own.
+     *
+     * <p/> This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
+     * fallback policy. If your server returns a different status for not-found, correct via a
+     * custom {@link #client(Client) client}.
+     *
+     * @since 8.12
+     */
+    public Builder decode404() {
+      this.decode404 = true;
       return this;
     }
 
@@ -182,9 +201,8 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel);
-      ParseHandlersByName
-          handlersByName =
+                                               logLevel, decode404);
+      ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,
                                   errorDecoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory);

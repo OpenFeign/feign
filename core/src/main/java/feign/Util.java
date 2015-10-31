@@ -32,7 +32,12 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import static java.lang.String.format;
 
@@ -181,6 +186,54 @@ public class Util {
       }
     }
     return types[types.length - 1];
+  }
+
+  /**
+   * This returns well known empty values for well-known java types. This returns null for types not
+   * in the following list.
+   *
+   * <ul>
+   *   <li>{@code [Bb]oolean}</li>
+   *   <li>{@code byte[]}</li>
+   *   <li>{@code Collection}</li>
+   *   <li>{@code Iterator}</li>
+   *   <li>{@code List}</li>
+   *   <li>{@code Map}</li>
+   *   <li>{@code Set}</li>
+   * </ul>
+   *
+   * <p/> When {@link Feign.Builder#decode404() decoding HTTP 404 status}, you'll need to teach
+   * decoders a default empty value for a type. This method cheaply supports typical types by only
+   * looking at the raw type (vs type hierarchy). Decorate for sophistication.
+   */
+  public static Object emptyValueOf(Type type) {
+    return EMPTIES.get(Types.getRawType(type));
+  }
+
+  private static final Map<Class<?>, Object> EMPTIES;
+  static {
+    Map<Class<?>, Object> empties = new LinkedHashMap<Class<?>, Object>();
+    empties.put(boolean.class, false);
+    empties.put(Boolean.class, false);
+    empties.put(byte[].class, new byte[0]);
+    empties.put(Collection.class, Collections.emptyList());
+    empties.put(Iterator.class, new Iterator<Object>() { // Collections.emptyIterator is a 1.7 api
+      public boolean hasNext() {
+        return false;
+      }
+
+      public Object next() {
+        throw new NoSuchElementException();
+      }
+
+      public void remove() {
+        throw new IllegalStateException();
+      }
+    });
+    empties.put(List.class, Collections.emptyList());
+    empties.put(Map.class, Collections.emptyMap());
+    empties.put(Set.class, Collections.emptySet());
+    EMPTIES = Collections.unmodifiableMap(empties);
   }
 
   /**
