@@ -16,6 +16,7 @@
 package feign.jaxb;
 
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.IOException;
@@ -52,6 +53,8 @@ public class JAXBDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
+    if (response.status() == 404) return Util.emptyValueOf(type);
+    if (response.body() == null) return null;
     if (!(type instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports decoding raw types. Found " + type);
