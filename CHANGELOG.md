@@ -1,3 +1,6 @@
+### Version 8.12
+* Adds `Feign.Builder.decode404()` to reduce boilerplate for empty semantics.
+
 ### Version 8.11
 * Adds support for Hystrix via a `HystrixFeign` builder.
 

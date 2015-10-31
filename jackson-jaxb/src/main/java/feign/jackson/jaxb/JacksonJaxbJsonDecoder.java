@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 
 import feign.FeignException;
 import feign.Response;
+import feign.Util;
 import feign.codec.Decoder;
 
 import static com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS;
@@ -26,6 +27,8 @@ public final class JacksonJaxbJsonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, FeignException {
+    if (response.status() == 404) return Util.emptyValueOf(type);
+    if (response.body() == null) return null;
     return jacksonJaxbJsonProvider.readFrom(Object.class, type, null, APPLICATION_JSON_TYPE, null, response.body().asInputStream());
   }
 }

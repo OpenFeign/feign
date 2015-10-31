@@ -29,6 +29,7 @@ import feign.Response;
 import feign.codec.Decoder;
 
 import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -79,11 +80,19 @@ public class SAXDecoderTest {
 
   @Test
   public void nullBodyDecodesToNull() throws Exception {
-    Response
-        response =
+    Response response =
         Response
             .create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
     assertNull(decoder.decode(response, String.class));
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmpty() throws Exception {
+    Response response = Response.create(404, "NOT FOUND",
+        Collections.<String, Collection<String>>emptyMap(),
+        (byte[]) null);
+    assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
   }
 
   static enum NetworkStatus {
