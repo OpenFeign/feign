@@ -67,19 +67,15 @@ public interface Decoder {
    */
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
-  /**
-   * Default implementation of {@code Decoder}.
-   */
+  /** Default implementation of {@code Decoder}. */
   public class Default extends StringDecoder {
 
     @Override
     public Object decode(Response response, Type type) throws IOException {
-      Response.Body body = response.body();
-      if (body == null) {
-        return null;
-      }
+      if (response.status() == 404) return Util.emptyValueOf(type);
+      if (response.body() == null) return null;
       if (byte[].class.equals(type)) {
-        return Util.toByteArray(body.asInputStream());
+        return Util.toByteArray(response.body().asInputStream());
       }
       return super.decode(response, type);
     }

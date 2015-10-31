@@ -33,7 +33,9 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class FeignBuilderTest {
 
@@ -52,6 +54,27 @@ public class FeignBuilderTest {
 
     assertThat(server.takeRequest())
         .hasBody("request data");
+  }
+
+  /** Shows exception handling isn't required to coerce 404 to null or empty */
+  @Test
+  public void testDecode404() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(400));
+
+    String url = "http://localhost:" + server.getPort();
+    TestInterface api = Feign.builder().decode404().target(TestInterface.class, url);
+
+    assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
+    assertThat(api.decodedPost()).isNull(); // null, not empty!
+
+    try { // ensure other 400 codes are not impacted.
+      api.decodedPost();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException e) {
+      assertThat(e.status()).isEqualTo(400);
+    }
   }
 
   @Test
@@ -147,8 +170,7 @@ public class FeignBuilderTest {
       }
     };
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
     assertEquals(Util.toString(response.body().asReader()), "response data");
@@ -175,8 +197,7 @@ public class FeignBuilderTest {
       }
     };
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
     assertEquals("response data", Util.toString(response.body().asReader()));
@@ -192,9 +213,7 @@ public class FeignBuilderTest {
 
     String url = "http://localhost:" + server.getPort();
 
-    TestInterface
-        api =
-        Feign.builder().target(TestInterface.class, url);
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
     api.getQueues("/");
 
     assertThat(server.takeRequest())
@@ -218,6 +237,6 @@ public class FeignBuilderTest {
     String decodedPost();
     
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
-    String getQueues(@Param("vhost") String vhost);
+    byte[] getQueues(@Param("vhost") String vhost);
   }
 }

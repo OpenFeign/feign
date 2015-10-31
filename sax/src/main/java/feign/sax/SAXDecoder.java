@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 
@@ -63,9 +64,8 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.body() == null) {
-      return null;
-    }
+    if (response.status() == 404) return Util.emptyValueOf(type);
+    if (response.body() == null) return null;
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(handlerFactory != null, "type %s not in configured handlers %s", type,
                handlerFactories.keySet());

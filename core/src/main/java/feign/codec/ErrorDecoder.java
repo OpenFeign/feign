@@ -35,25 +35,35 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
- * exception are examples of this in use. <br> Ex. <br>
+ * exception are examples of this in use.
+ *
+ * <p/>Ex:
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder extends ErrorDecoder {
  *
  *   &#064;Override
  *   public Exception decode(String methodKey, Response response) {
- *    if (response.status() == 404)
- *        throw new IllegalArgumentException(&quot;zone not found&quot;);
+ *    if (response.status() == 400)
+ *        throw new IllegalArgumentException(&quot;bad zone name&quot;);
  *    return ErrorDecoder.DEFAULT.decode(methodKey, request, response);
  *   }
  *
  * }
  * </pre>
- * <br> <b>Error handling</b><br> <br> Responses where {@link Response#status()} is not in the 2xx
+ *
+ * <p/><b>Error handling</b>
+ *
+ * <p/>Responses where {@link Response#status()} is not in the 2xx
  * range are classified as errors, addressed by the {@link ErrorDecoder}. That said, certain RPC
  * apis return errors defined in the {@link Response#body()} even on a 200 status. For example, in
  * the DynECT api, a job still running condition is returned with a 200 status, encoded in json.
  * When scenarios like this occur, you should raise an application-specific exception (which may be
  * {@link feign.RetryableException retryable}).
+ *
+ * <p/><b>Not Found Semantics</b>
+ * <p/> It is commonly the case that 404 (Not Found) status has semantic value in HTTP apis. While
+ * the default behavior is to raise exeception, users can alternatively enable 404 processing via
+ * {@link feign.Feign.Builder#decode404()}.
  */
 public interface ErrorDecoder {
 
