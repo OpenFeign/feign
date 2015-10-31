@@ -39,6 +39,15 @@ public class JacksonJaxbCodecTest {
     assertThat(decoder.decode(response, MockObject.class)).isEqualTo(new MockObject("Test"));
   }
 
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmpty() throws Exception {
+    Response response =
+        Response.create(
+            404, "NOT FOUND", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
+  }
+
   @XmlRootElement
   @XmlAccessorType(XmlAccessType.FIELD)
   static class MockObject {

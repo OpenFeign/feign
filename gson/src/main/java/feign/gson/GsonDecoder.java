@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.TypeAdapter;
 import feign.Response;
+import feign.Util;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.io.Reader;
@@ -45,9 +46,8 @@ public class GsonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.body() == null) {
-      return null;
-    }
+    if (response.status() == 404) return Util.emptyValueOf(type);
+    if (response.body() == null) return null;
     Reader reader = response.body().asReader();
     try {
       return gson.fromJson(reader, type);

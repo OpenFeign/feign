@@ -211,4 +211,13 @@ public class GsonCodecTest {
                 + "  }\n" //
                 + "]");
   }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmpty() throws Exception {
+    Response response =
+        Response.create(
+            404, "NOT FOUND", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
+  }
 }

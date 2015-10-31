@@ -16,6 +16,7 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -47,6 +48,27 @@ public class FeignBuilderTest {
     assertEquals("response data", Util.toString(response.body().asReader()));
 
     assertThat(server.takeRequest()).hasBody("request data");
+  }
+
+  /** Shows exception handling isn't required to coerce 404 to null or empty */
+  @Test
+  public void testDecode404() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(400));
+
+    String url = "http://localhost:" + server.getPort();
+    TestInterface api = Feign.builder().decode404().target(TestInterface.class, url);
+
+    assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
+    assertThat(api.decodedPost()).isNull(); // null, not empty!
+
+    try { // ensure other 400 codes are not impacted.
+      api.decodedPost();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException e) {
+      assertThat(e.status()).isEqualTo(400);
+    }
   }
 
   @Test
@@ -208,6 +230,6 @@ public class FeignBuilderTest {
     String decodedPost();
 
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
-    String getQueues(@Param("vhost") String vhost);
+    byte[] getQueues(@Param("vhost") String vhost);
   }
 }

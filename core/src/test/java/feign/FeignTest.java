@@ -228,13 +228,13 @@ public class FeignTest {
 
   @Test
   public void canOverrideErrorDecoder() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("foo"));
+    server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("zone not found");
+    thrown.expectMessage("bad zone name");
 
     TestInterface api =
         new TestInterfaceBuilder()
-            .errorDecoder(new IllegalArgumentExceptionOn404())
+            .errorDecoder(new IllegalArgumentExceptionOn400())
             .target("http://localhost:" + server.getPort());
 
     api.post();
@@ -552,12 +552,12 @@ public class FeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-      if (response.status() == 404) {
-        return new IllegalArgumentException("zone not found");
+      if (response.status() == 400) {
+        return new IllegalArgumentException("bad zone name");
       }
       return super.decode(methodKey, response);
     }
