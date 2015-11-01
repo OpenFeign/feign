@@ -13,7 +13,7 @@ Feign works by processing annotations into a templatized request.  Just before s
 
 ### Basics
 
-Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/samples/github-client/src/main/java/com/example/retrofit/GitHubClient.java).
+Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/samples/src/main/java/com/example/retrofit/SimpleService.java).
 
 ```java
 interface GitHub {
