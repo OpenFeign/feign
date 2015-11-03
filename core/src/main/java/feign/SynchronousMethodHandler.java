@@ -128,7 +128,7 @@ final class SynchronousMethodHandler implements MethodHandler {
           return decode(response);
         }
       } else if (decode404 && response.status() == 404) {
-        return decode(response);
+        return decoder.decode(response, metadata.returnType());
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);
       }
