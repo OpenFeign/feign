@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 import okio.Buffer;
 import org.junit.Rule;
@@ -398,6 +399,26 @@ public class FeignTest {
   }
 
   @Test
+  public void decoderCanThrowUnwrappedExceptionInDecode404Mode() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    thrown.expect(NoSuchElementException.class);
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decode404()
+            .decoder(
+                new Decoder() {
+                  @Override
+                  public Object decode(Response response, Type type) throws IOException {
+                    assertEquals(404, response.status());
+                    throw new NoSuchElementException();
+                  }
+                })
+            .target("http://localhost:" + server.getPort());
+    api.post();
+  }
+
+  @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(EncodeException.class);
@@ -597,6 +618,11 @@ public class FeignTest {
 
     TestInterfaceBuilder errorDecoder(ErrorDecoder errorDecoder) {
       delegate.errorDecoder(errorDecoder);
+      return this;
+    }
+
+    TestInterfaceBuilder decode404() {
+      delegate.decode404();
       return this;
     }
 

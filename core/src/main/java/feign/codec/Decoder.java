@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import feign.Feign;
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
@@ -59,7 +60,13 @@ import java.lang.reflect.Type;
  * java.lang.reflect.Method#getGenericReturnType() generic return type} of an {@link
  * feign.Target#type() interface} processed by {@link feign.Feign#newInstance(feign.Target)}. When
  * writing your implementation of Decoder, ensure you also test parameterized types such as {@code
- * List<Foo>}.
+ * List<Foo>}. <br>
+ *
+ * <h3>Note on exception propagation</h3>
+ *
+ * Exceptions thrown by {@link Decoder}s get wrapped in a {@link DecodeException} unless they are a
+ * subclass of {@link FeignException} already, and unless the client was configured with {@link
+ * Feign.Builder#decode404()}.
  */
 public interface Decoder {
 
