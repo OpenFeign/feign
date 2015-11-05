@@ -92,7 +92,7 @@ public final class JAXRSContract extends Contract.BaseContract {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
       checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
       String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
-      if (!methodAnnotationValue.startsWith("/") && !data.template().toString().endsWith("/")) {
+      if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;
       }
       // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
