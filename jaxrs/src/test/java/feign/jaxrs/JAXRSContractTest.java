@@ -353,6 +353,14 @@ public class JAXRSContractTest {
         .hasUrl("/base/specific");
   }
 
+  @Test
+  public void methodPathWithoutLeadingSlashParsesCorrectly() throws Exception {
+    assertThat(
+            parseAndValidateMetadata(MethodWithFirstPathThenGetWithoutLeadingSlash.class, "get")
+                .template())
+        .hasUrl("/base/specific");
+  }
+
   interface Methods {
 
     @POST
@@ -558,6 +566,13 @@ public class JAXRSContractTest {
   interface ClassPathWithTrailingSlash {
     @GET
     @Path("/specific")
+    Response get();
+  }
+
+  @Path("/base/")
+  interface MethodWithFirstPathThenGetWithoutLeadingSlash {
+    @Path("specific")
+    @GET
     Response get();
   }
 
