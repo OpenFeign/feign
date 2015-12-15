@@ -4,9 +4,9 @@ sourceCompatibility = 1.6
 
 dependencies {
     compile project(':feign-core')
-    compile 'com.netflix.ribbon:ribbon-loadbalancer:2.1.0'
+    compile 'com.netflix.ribbon:ribbon-loadbalancer:2.1.1'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:1.7.1' // last version supporting JDK 7
-    testCompile 'com.squareup.okhttp:mockwebserver:2.5.0'
+    testCompile 'com.squareup.okhttp:mockwebserver:2.7.0'
     testCompile project(':feign-core').sourceSets.test.output
 }

@@ -1,3 +1,7 @@
+### Version 8.13
+* Never expands >8kb responses into memory
+* Bumps dependency versions, most notably Gson 2.5 and OkHttp 2.7
+
 ### Version 8.12
 * Adds `Feign.Builder.decode404()` to reduce boilerplate for empty semantics.
 
