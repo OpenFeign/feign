@@ -194,7 +194,7 @@ public final class ApacheHttpClient implements Client {
 
       @Override
       public Integer length() {
-        return entity.getContentLength() < 0 ? (int) entity.getContentLength() : null;
+        return entity.getContentLength() >= 0 ? (int) entity.getContentLength() : null;
       }
 
       @Override

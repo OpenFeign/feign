@@ -61,6 +61,7 @@ public class ApacheHttpClientTest {
     assertThat(response.headers())
         .containsEntry("Content-Length", asList("3"))
         .containsEntry("Foo", asList("Bar"));
+    assertThat(response.body().length()).isEqualTo(3);
     assertThat(response.body().asInputStream())
         .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
@@ -68,6 +69,22 @@ public class ApacheHttpClientTest {
         .hasPath("/?foo=bar&foo=baz&qux=")
         .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Accept: */*", "Content-Length: 3")
         .hasBody("foo");
+  }
+
+  @Test
+  public void parsesResponseMissingLength() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setChunkedBody("foo", 1));
+
+    TestInterface api = Feign.builder()
+        .client(new ApacheHttpClient())
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.post("testing");
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isEqualTo("OK");
+    assertThat(response.body().length()).isNull();
+    assertThat(response.body().asInputStream())
+        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
   }
 
   @Test
