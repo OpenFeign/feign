@@ -34,7 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** An immutable response to an http invocation which only returns string content. */
-public final class Response {
+public final class Response implements Closeable {
 
   private final int status;
   private final String reason;
@@ -115,6 +115,11 @@ public final class Response {
       builder.append('\n').append(body);
     }
     return builder.toString();
+  }
+
+  @Override
+  public void close() {
+    Util.ensureClosed(body);
   }
 
   public interface Body extends Closeable {

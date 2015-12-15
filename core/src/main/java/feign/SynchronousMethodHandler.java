@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
+  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
+
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
@@ -108,6 +110,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
+    boolean shouldClose = true;
     try {
       if (logLevel != Logger.Level.NONE) {
         response =
@@ -115,6 +118,11 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
+          return response;
+        }
+        if (response.body().length() == null
+            || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+          shouldClose = false;
           return response;
         }
         // Ensure the response body is disconnected
@@ -138,7 +146,9 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       throw errorReading(request, response, e);
     } finally {
-      ensureClosed(response.body());
+      if (shouldClose) {
+        ensureClosed(response.body());
+      }
     }
   }
 
