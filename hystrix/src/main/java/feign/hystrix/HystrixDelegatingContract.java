@@ -11,7 +11,14 @@ import com.netflix.hystrix.HystrixCommand;
 import feign.Contract;
 import feign.MethodMetadata;
 
-final class HystrixDelegatingContract implements Contract {
+/**
+ * This special cases methods that return {@link HystrixCommand}, so that they
+ * are decoded properly.
+ * 
+ * <p>For example, {@literal HystrixCommand<Foo>} will decode {@code Foo}.
+ */
+// Visible for use in custom Hystrix invocation handlers
+public final class HystrixDelegatingContract implements Contract {
 
   private final Contract delegate;
 
