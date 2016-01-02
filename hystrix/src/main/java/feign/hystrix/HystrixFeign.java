@@ -6,7 +6,7 @@ import feign.Contract;
 import feign.Feign;
 
 /**
- * Allows Feign interfaces to return HystrixCommand objects.
+ * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects.
  * Also decorates normal Feign methods with circuit breakers, but calls {@link HystrixCommand#execute()} directly.
  */
 public final class HystrixFeign {
