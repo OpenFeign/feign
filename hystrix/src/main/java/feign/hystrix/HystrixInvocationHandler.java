@@ -26,6 +26,8 @@ import feign.Target;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
+import rx.Observable;
+import rx.Single;
 
 final class HystrixInvocationHandler implements InvocationHandler {
 
@@ -62,6 +64,12 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
     if (HystrixCommand.class.isAssignableFrom(method.getReturnType())) {
       return hystrixCommand;
+    } else if (Observable.class.isAssignableFrom(method.getReturnType())) {
+      // Create a cold Observable
+      return hystrixCommand.toObservable();
+    } else if (Single.class.isAssignableFrom(method.getReturnType())) {
+      // Create a cold Observable as a Single
+      return hystrixCommand.toObservable().toSingle();
     }
     return hystrixCommand.execute();
   }

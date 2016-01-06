@@ -10,15 +10,23 @@ GitHub github = HystrixFeign.builder()
         .target(GitHub.class, "https://api.github.com");
 ```
 
-Methods that do *not* return [`HystrixCommand`](https://netflix.github.io/Hystrix/javadoc/com/netflix/hystrix/HystrixCommand.html) are still wrapped in a `HystrixCommand`, but `execute()` is automatically called for you.
+For asynchronous or reactive use, return `HystrixCommand<YourType>`.
 
-For asynchronous or reactive use, return `HystrixCommand<YourType>` rather than just `YourType`.
+For RxJava compatibility, use `rx.Observable<YourType>` or `rx.Single<YourType>`. Rx types are <a href="http://reactivex.io/documentation/observable.html">cold</a>, which means a http call isn't made until there's a subscriber.
+
+Methods that do *not* return [`HystrixCommand`](https://netflix.github.io/Hystrix/javadoc/com/netflix/hystrix/HystrixCommand.html), [`rx.Observable`](http://reactivex.io/RxJava/javadoc/rx/Observable.html) or [`rx.Single`] are still wrapped in a `HystrixCommand`, but `execute()` is automatically called for you.
 
 ```java
 interface YourApi {
   @RequestLine("GET /yourtype/{id}")
   HystrixCommand<YourType> getYourType(@Param("id") String id);
-  
+
+  @RequestLine("GET /yourtype/{id}")
+  Observable<YourType> getYourTypeObservable(@Param("id") String id);
+
+  @RequestLine("GET /yourtype/{id}")
+  Single<YourType> getYourTypeSingle(@Param("id") String id);
+
   @RequestLine("GET /yourtype/{id}")
   YourType getYourTypeSynchronous(@Param("id") String id);
 }
@@ -27,7 +35,10 @@ YourApi api = HystrixFeign.builder()
                   .target(YourApi.class, "https://example.com");
 
 // for reactive
-api.getYourType("a").toObservable();
+api.getYourTypeObservable("a").toObservable
+
+// or apply hystrix to RxJava methods
+api.getYourTypeObservable("a")
 
 // for asynchronous
 api.getYourType("a").queue();
