@@ -1,13 +1,19 @@
 package feign.hystrix;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.hamcrest.core.Is.isA;
 
 import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import feign.FeignException;
 import feign.Headers;
+import feign.Param;
 import feign.RequestLine;
 import feign.gson.GsonDecoder;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
@@ -55,7 +61,76 @@ public class HystrixBuilderTest {
     HystrixCommand<List<String>> command = api.listCommand();
 
     assertThat(command).isNotNull();
-    assertThat(command.execute()).hasSize(2).contains("foo", "bar");
+    assertThat(command.execute()).containsExactly("foo", "bar");
+  }
+
+  // When dealing with fallbacks, it is less tedious to keep interfaces small.
+  interface GitHub {
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    List<String> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  @Test
+  public void fallbacksApplyOnError() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    GitHub fallback =
+        new GitHub() {
+          @Override
+          public List<String> contributors(String owner, String repo) {
+            if (owner.equals("Netflix") && repo.equals("feign")) {
+              return Arrays.asList("stuarthendren"); // inspired this approach!
+            } else {
+              return Collections.emptyList();
+            }
+          }
+        };
+
+    GitHub api =
+        HystrixFeign.builder()
+            .target(GitHub.class, "http://localhost:" + server.getPort(), fallback);
+
+    List<String> result = api.contributors("Netflix", "feign");
+
+    assertThat(result).containsExactly("stuarthendren");
+  }
+
+  @Test
+  public void errorInFallbackHasExpectedBehavior() {
+    thrown.expect(HystrixRuntimeException.class);
+    thrown.expectMessage("contributors failed and fallback failed.");
+    thrown.expectCause(
+        isA(FeignException.class)); // as opposed to RuntimeException (from the fallback)
+
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    GitHub fallback =
+        new GitHub() {
+          @Override
+          public List<String> contributors(String owner, String repo) {
+            throw new RuntimeException("oops");
+          }
+        };
+
+    GitHub api =
+        HystrixFeign.builder()
+            .target(GitHub.class, "http://localhost:" + server.getPort(), fallback);
+
+    api.contributors("Netflix", "feign");
+  }
+
+  @Test
+  public void hystrixRuntimeExceptionPropagatesOnException() {
+    thrown.expect(HystrixRuntimeException.class);
+    thrown.expectMessage("contributors failed and no fallback available.");
+    thrown.expectCause(isA(FeignException.class));
+
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    GitHub api =
+        HystrixFeign.builder().target(GitHub.class, "http://localhost:" + server.getPort());
+
+    api.contributors("Netflix", "feign");
   }
 
   @Test
@@ -106,7 +181,7 @@ public class HystrixBuilderTest {
     TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).hasSize(2).contains("foo", "bar");
+    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
   }
 
   @Test
@@ -157,7 +232,7 @@ public class HystrixBuilderTest {
     TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).hasSize(2).contains("foo", "bar");
+    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
   }
 
   @Test
@@ -179,7 +254,7 @@ public class HystrixBuilderTest {
 
     List<String> list = api.getList();
 
-    assertThat(list).isNotNull().hasSize(2).contains("foo", "bar");
+    assertThat(list).isNotNull().containsExactly("foo", "bar");
   }
 
   private TestInterface target() {
