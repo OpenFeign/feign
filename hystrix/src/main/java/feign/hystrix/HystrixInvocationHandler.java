@@ -31,10 +31,10 @@ import rx.Single;
 
 final class HystrixInvocationHandler implements InvocationHandler {
 
-  private final Target target;
+  private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
 
-  HystrixInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {
+  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
   }
