@@ -1,3 +1,6 @@
+### Version 8.14
+* Add support for RxJava Observable and Single return types via the `HystrixFeign` builder.
+
 ### Version 8.13
 * Never expands >8kb responses into memory
 * Bumps dependency versions, most notably Gson 2.5 and OkHttp 2.7
