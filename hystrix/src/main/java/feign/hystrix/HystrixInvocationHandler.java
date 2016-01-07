@@ -24,6 +24,7 @@ import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import rx.Observable;
@@ -33,10 +34,12 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
   private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
+  private final Object fallback; // Nullable
 
-  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch) {
+  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Object fallback) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
+    this.fallback = fallback;
   }
 
   @Override
@@ -60,6 +63,20 @@ final class HystrixInvocationHandler implements InvocationHandler {
               throw (Error) t;
             }
           }
+
+          @Override
+          protected Object getFallback() {
+            if (fallback == null) return super.getFallback();
+            try {
+              return method.invoke(fallback, args);
+            } catch (IllegalAccessException e) {
+              // shouldn't happen as method is public due to being an interface
+              throw new AssertionError(e);
+            } catch (InvocationTargetException e) {
+              // Exceptions on fallback are tossed by Hystrix
+              throw new AssertionError(e.getCause());
+            }
+          }
         };
 
     if (HystrixCommand.class.isAssignableFrom(method.getReturnType())) {
@@ -78,7 +95,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
     @Override
     public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-      return new HystrixInvocationHandler(target, dispatch);
+      return new HystrixInvocationHandler(target, dispatch, null);
     }
   }
 }
