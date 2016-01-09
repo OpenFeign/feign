@@ -15,11 +15,13 @@
  */
 package feign;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.junit.rules.ExpectedException;
 
 import static feign.RequestTemplate.expand;
 import static feign.assertj.FeignAssertions.assertThat;
@@ -27,6 +29,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 public class RequestTemplateTest {
+
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
 
   /**
    * Avoid depending on guava solely for map literals.
@@ -272,5 +277,14 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasUrl("/api/%2F");
+  }
+
+  /** Implementations have a bug if they pass junk as the http method. */
+  @Test
+  public void uriStuffedIntoMethod() throws Exception {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
+
+    new RequestTemplate().method("/path?queryParam={queryParam}");
   }
 }
