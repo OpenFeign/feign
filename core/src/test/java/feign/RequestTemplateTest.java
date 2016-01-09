@@ -23,9 +23,13 @@ import static org.assertj.core.data.MapEntry.entry;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RequestTemplateTest {
+
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   /** Avoid depending on guava solely for map literals. */
   private static Map<String, Object> mapOf(String key, Object val) {
@@ -257,5 +261,14 @@ public class RequestTemplateTest {
     template.resolve(mapOf("vhost", "/"));
 
     assertThat(template).hasUrl("/api/%2F");
+  }
+
+  /** Implementations have a bug if they pass junk as the http method. */
+  @Test
+  public void uriStuffedIntoMethod() throws Exception {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
+
+    new RequestTemplate().method("/path?queryParam={queryParam}");
   }
 }
