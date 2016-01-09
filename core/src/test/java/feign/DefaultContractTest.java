@@ -679,4 +679,18 @@ public class DefaultContractTest {
     return contract.parseAndValidateMetadata(targetType,
                                              targetType.getMethod(method, parameterTypes));
   }
+
+  interface MissingMethod {
+    @RequestLine("/path?queryParam={queryParam}")
+    Response updateSharing(@Param("queryParam") long queryParam, String bodyParam);
+  }
+
+  /** Let's help folks not lose time when they mistake request line for a URI! */
+  @Test
+  public void missingMethod() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("RequestLine annotation didn't start with an HTTP verb on method updateSharing");
+
+    contract.parseAndValidatateMetadata(MissingMethod.class);
+  }
 }
