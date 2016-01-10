@@ -17,6 +17,7 @@ package feign;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.UTF_8;
+import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 import static feign.Util.toArray;
@@ -256,6 +257,7 @@ public final class RequestTemplate implements Serializable {
   /* @see Request#method() */
   public RequestTemplate method(String method) {
     this.method = checkNotNull(method, "method");
+    checkArgument(method.matches("^[A-Z]+$"), "Invalid HTTP Method: %s", method);
     return this;
   }
 
