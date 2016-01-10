@@ -189,6 +189,9 @@ public interface Contract {
         checkState(emptyToNull(requestLine) != null,
                    "RequestLine annotation was empty on method %s.", method.getName());
         if (requestLine.indexOf(' ') == -1) {
+          checkState(requestLine.indexOf('/') == -1,
+              "RequestLine annotation didn't start with an HTTP verb on method %s.",
+              method.getName());
           data.template().method(requestLine);
           return;
         }
