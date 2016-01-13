@@ -74,7 +74,7 @@ GitHub fallback = (owner, repo) -> {
   }
 };
 
-GitHub github = HystrixFeign.builder()
-                            ...
-                            .target(GitHub.class, "https://api.github.com", fallback);
+HystrixFeign.Builder builder = HystrixFeign.builder();
+... 
+GitHub github = builder.target(GitHub.class, "https://api.github.com", fallback);
 ```
