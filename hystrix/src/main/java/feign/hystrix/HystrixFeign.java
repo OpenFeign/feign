@@ -28,26 +28,23 @@ public final class HystrixFeign {
     return new Builder();
   }
 
-  // Doesn't extend Feign.Builder for two reasons:
-  // * Hide invocationHandlerFactory - as this isn't customizable
-  // * Provide a path to the new fallback method w/o using covariant return types
-  public static final class Builder {
-    private final Feign.Builder delegate = new Feign.Builder();
+  public static final class Builder extends Feign.Builder {
+
     private Contract contract = new Contract.Default();
 
     /**
      * @see #target(Class, String, Object)
      */
     public <T> T target(Target<T> target, final T fallback) {
-      delegate.invocationHandlerFactory(
+      super.invocationHandlerFactory(
           new InvocationHandlerFactory() {
             @Override
             public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
               return new HystrixInvocationHandler(target, dispatch, fallback);
             }
           });
-      delegate.contract(new HystrixDelegatingContract(contract));
-      return delegate.build().newInstance(target);
+      super.contract(new HystrixDelegatingContract(contract));
+      return super.build().newInstance(target);
     }
 
     /**
@@ -88,126 +85,79 @@ public final class HystrixFeign {
       return target(new Target.HardCodedTarget<T>(apiType, url), fallback);
     }
 
-    /**
-     * @see feign.Feign.Builder#contract
-     */
+    @Override
+    public Feign.Builder invocationHandlerFactory(
+        InvocationHandlerFactory invocationHandlerFactory) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Builder contract(Contract contract) {
       this.contract = contract;
       return this;
     }
 
-    /**
-     * @see feign.Feign.Builder#build
-     */
+    @Override
     public Feign build() {
-      delegate.invocationHandlerFactory(new HystrixInvocationHandler.Factory());
-      delegate.contract(new HystrixDelegatingContract(contract));
-      return delegate.build();
+      super.invocationHandlerFactory(new HystrixInvocationHandler.Factory());
+      super.contract(new HystrixDelegatingContract(contract));
+      return super.build();
     }
 
-    // re-declaring methods in Feign.Builder is same work as covariant overrides,
-    // but results in less complex bytecode.
-
-    /**
-     * @see feign.Feign.Builder#target(Class, String)
-     */
-    public <T> T target(Class<T> apiType, String url) {
-      return target(new Target.HardCodedTarget<T>(apiType, url));
-    }
-
-    /**
-     * @see feign.Feign.Builder#target(Target)
-     */
-    public <T> T target(Target<T> target) {
-      return build().newInstance(target);
-    }
-
-    /**
-     * @see feign.Feign.Builder#logLevel
-     */
+    // Covariant overrides to support chaining to new fallback method.
+    @Override
     public Builder logLevel(Logger.Level logLevel) {
-      delegate.logLevel(logLevel);
-      return this;
+      return (Builder) super.logLevel(logLevel);
     }
 
-    /**
-     * @see feign.Feign.Builder#client
-     */
+    @Override
     public Builder client(Client client) {
-      delegate.client(client);
-      return this;
+      return (Builder) super.client(client);
     }
 
-    /**
-     * @see feign.Feign.Builder#retryer
-     */
+    @Override
     public Builder retryer(Retryer retryer) {
-      delegate.retryer(retryer);
-      return this;
+      return (Builder) super.retryer(retryer);
     }
 
-    /**
-     * @see feign.Feign.Builder#retryer
-     */
+    @Override
     public Builder logger(Logger logger) {
-      delegate.logger(logger);
-      return this;
+      return (Builder) super.logger(logger);
     }
 
-    /**
-     * @see feign.Feign.Builder#encoder
-     */
+    @Override
     public Builder encoder(Encoder encoder) {
-      delegate.encoder(encoder);
-      return this;
+      return (Builder) super.encoder(encoder);
     }
 
-    /**
-     * @see feign.Feign.Builder#decoder
-     */
+    @Override
     public Builder decoder(Decoder decoder) {
-      delegate.decoder(decoder);
-      return this;
+      return (Builder) super.decoder(decoder);
     }
 
-    /**
-     * @see feign.Feign.Builder#decode404
-     */
+    @Override
     public Builder decode404() {
-      delegate.decode404();
-      return this;
+      return (Builder) super.decode404();
     }
 
-    /**
-     * @see feign.Feign.Builder#errorDecoder
-     */
+    @Override
     public Builder errorDecoder(ErrorDecoder errorDecoder) {
-      delegate.errorDecoder(errorDecoder);
-      return this;
+      return (Builder) super.errorDecoder(errorDecoder);
     }
 
-    /**
-     * @see feign.Feign.Builder#options
-     */
+    @Override
     public Builder options(Request.Options options) {
-      delegate.options(options);
-      return this;
+      return (Builder) super.options(options);
     }
 
-    /**
-     * @see feign.Feign.Builder#requestInterceptor
-     */
+    @Override
     public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
-      delegate.requestInterceptor(requestInterceptor);
-      return this;
+      return (Builder) super.requestInterceptor(requestInterceptor);
     }
 
-    /**
-     * @see feign.Feign.Builder#requestInterceptors
-     */
+    @Override
     public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
-      delegate.requestInterceptors(requestInterceptors);
-      return this;
+      return (Builder) super.requestInterceptors(requestInterceptors);
     }
   }
 }
