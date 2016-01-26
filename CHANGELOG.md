@@ -1,3 +1,6 @@
+### Version 8.15
+* Supports PUT without a body parameter
+
 ### Version 8.14
 * Add support for RxJava Observable and Single return types via the `HystrixFeign` builder.
 * Adds fallback implementation configuration to the `HystrixFeign` builder

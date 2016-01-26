@@ -155,7 +155,7 @@ public class ApacheHttpClientTest {
   }
 
   @Test
-  public void noResponseBody() {
+  public void noResponseBodyForPost() {
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -164,6 +164,18 @@ public class ApacheHttpClientTest {
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.noPostBody();
+  }
+
+  @Test
+  public void noResponseBodyForPut() {
+    server.enqueue(new MockResponse());
+
+    TestInterface api =
+        Feign.builder()
+            .client(new ApacheHttpClient())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.noPutBody();
   }
 
   @Test
@@ -199,6 +211,9 @@ public class ApacheHttpClientTest {
 
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("PUT")
+    String noPutBody();
 
     @RequestLine("POST /path/{to}/resource")
     @Headers("Accept: text/plain")
