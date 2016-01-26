@@ -136,7 +136,7 @@ public class OkHttpClientTest {
   }
 
   @Test
-  public void noResponseBody() {
+  public void noResponseBodyForPost() {
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -145,6 +145,18 @@ public class OkHttpClientTest {
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.noPostBody();
+  }
+
+  @Test
+  public void noResponseBodyForPut() {
+    server.enqueue(new MockResponse());
+
+    TestInterface api =
+        Feign.builder()
+            .client(new OkHttpClient())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.noPutBody();
   }
 
   interface TestInterface {
@@ -163,5 +175,8 @@ public class OkHttpClientTest {
 
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("PUT")
+    String noPutBody();
   }
 }
