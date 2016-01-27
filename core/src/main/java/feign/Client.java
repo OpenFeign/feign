@@ -19,6 +19,7 @@ import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
+import static java.lang.String.format;
 
 import feign.Request.Options;
 import java.io.IOException;
@@ -140,6 +141,14 @@ public interface Client {
     Response convertResponse(HttpURLConnection connection) throws IOException {
       int status = connection.getResponseCode();
       String reason = connection.getResponseMessage();
+
+      if (status < 0 || reason == null) {
+        // invalid response
+        throw new IOException(
+            format(
+                "Invalid HTTP executing %s %s",
+                connection.getRequestMethod(), connection.getURL()));
+      }
 
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
