@@ -118,10 +118,9 @@ public final class ApacheHttpClient implements Client {
         hasAcceptHeader = true;
       }
 
-      if (headerName.equalsIgnoreCase(Util.CONTENT_LENGTH) &&
-              requestBuilder.getHeaders(headerName) != null) {
-        //if the 'Content-Length' header is already present, it's been set from HttpEntity, so we
-        //won't add it again
+      if (headerName.equalsIgnoreCase(Util.CONTENT_LENGTH)) {
+        // The 'Content-Length' header is always set by the Apache client and it
+        // doesn't like us to set it as well.
         continue;
       }
 
