@@ -222,15 +222,8 @@ public final class RequestTemplate implements Serializable {
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved;
-        if (value.indexOf('{') == 0) {
-          resolved = expand(value, unencoded);
-        } else {
-          resolved = value;
-        }
-        if (resolved != null) {
-          resolvedValues.add(resolved);
-        }
+        String resolved = urlDecode(expand(value, encoded));
+        resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
     }
