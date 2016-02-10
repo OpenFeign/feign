@@ -1,5 +1,7 @@
 ### Version 8.15
 * Supports PUT without a body parameter
+* Supports substitutions in `@Headers` like in `@Body`. (#326)
+  * **Note:** You might need to URL-encode literal values of `{` or `%` in your existing code.
 
 ### Version 8.14
 * Add support for RxJava Observable and Single return types via the `HystrixFeign` builder.
