@@ -8,7 +8,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Expands headers supplied in the {@code value}.  Variables are permitted as values. <br>
+ * Expands headers supplied in the {@code value}.  Variables to the the right of the colon are expanded. <br>
  * <pre>
  * &#64;Headers("Content-Type: application/xml")
  * interface SoapApi {
@@ -24,9 +24,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Param("token") String token);
  * ...
  * </pre>
- * <br> <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name
- * will be included in the request. <br><br><b>Relationship to JAXRS</b><br> <br> The following two
- * forms are identical. <br> Feign:
+ * <br> <strong>Notes:</strong>
+ * <ul>
+ *   <li>If you'd like curly braces literally in the header, urlencode them first.</li>
+ *   <li>Headers do not overwrite each other. All headers with the same name will be included
+ *   in the request.</li>
+ * </ul>
+ * <br><b>Relationship to JAXRS</b><br> <br> The following two forms are identical. <br><br> Feign:
  * <pre>
  * &#64;RequestLine("POST /")
  * &#64;Headers({

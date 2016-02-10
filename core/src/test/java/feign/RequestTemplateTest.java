@@ -138,6 +138,39 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithHeaderSubstitutionsNotAtStart() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Authorization", "Bearer {token}");
+
+    template.resolve(mapOf("token", "1234"));
+
+    assertThat(template)
+        .hasHeaders(entry("Authorization", asList("Bearer 1234")));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithURLEncodedElements() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Encoded", "%7Bvar%7D");
+
+    template.resolve(mapOf("var", "1234"));
+
+    assertThat(template)
+        .hasHeaders(entry("Encoded", asList("{var}")));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderEmptyResult() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Encoded", "{var}");
+
+    template.resolve(mapOf("var", ""));
+
+    assertThat(template)
+        .hasHeaders(entry("Encoded", asList("")));
+  }
+
+  @Test
   public void resolveTemplateWithMixedRequestLineParams() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")//
         .append("/domains/{domainId}/records")//

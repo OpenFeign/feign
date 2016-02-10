@@ -231,7 +231,7 @@ public interface Contract {
         if (annotationType == Param.class) {
           String name = ((Param) annotation).value();
           checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
-                     paramIndex);
+              paramIndex);
           nameParam(data, name, paramIndex);
           if (annotationType == Param.class) {
             Class<? extends Param.Expander> expander = ((Param) annotation).expander();
@@ -242,8 +242,8 @@ public interface Contract {
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1 &&
-              !searchMapValues(data.template().queries(), varName) &&
-              !searchMapValues(data.template().headers(), varName)) {
+              !searchMapValuesContainsExact(data.template().queries(), varName) &&
+              !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
         }
@@ -251,7 +251,8 @@ public interface Contract {
       return isHttpAnnotation;
     }
 
-    private static <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
+    private static <K, V> boolean searchMapValuesContainsExact(Map<K, Collection<V>> map,
+                                                               V search) {
       Collection<Collection<V>> values = map.values();
       if (values == null) {
         return false;
@@ -260,6 +261,24 @@ public interface Contract {
       for (Collection<V> entry : values) {
         if (entry.contains(search)) {
           return true;
+        }
+      }
+
+      return false;
+    }
+
+    private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,
+                                                                   String search) {
+      Collection<Collection<String>> values = map.values();
+      if (values == null) {
+        return false;
+      }
+
+      for (Collection<String> entry : values) {
+        for (String value : entry) {
+          if (value.indexOf(search) != -1) {
+            return true;
+          }
         }
       }
 

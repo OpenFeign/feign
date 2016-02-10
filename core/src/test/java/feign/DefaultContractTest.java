@@ -237,6 +237,19 @@ public class DefaultContractTest {
 
     assertThat(md.indexToName())
         .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.formParams()).isEmpty();
+  }
+
+  @Test
+  public void headerParamsParseIntoIndexToNameNotAtStart() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(HeaderParamsNotAtStart.class, "logout", String.class);
+
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("Bearer {authToken}", "Foo")));
+
+    assertThat(md.indexToName())
+        .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.formParams()).isEmpty();
   }
 
   @Test
@@ -355,6 +368,13 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     @Headers({"Auth-Token: {authToken}", "Auth-Token: Foo"})
+    void logout(@Param("authToken") String token);
+  }
+
+  interface HeaderParamsNotAtStart {
+
+    @RequestLine("POST /")
+    @Headers({"Authorization: Bearer {authToken}", "Authorization: Foo"})
     void logout(@Param("authToken") String token);
   }
 
@@ -526,6 +546,34 @@ public class DefaultContractTest {
     // Ensure that the authHdr expansion was properly detected and did not create a formParam
     assertThat(md.get(0).formParams())
         .isEmpty();
+  }
+
+  @Test
+  public void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
+    List<MethodMetadata>
+        md =
+        contract.parseAndValidatateMetadata(
+            ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
+
+    assertThat(md).hasSize(1);
+
+    assertThat(md.get(0).configKey())
+        .isEqualTo("ParameterizedHeaderNotStartingWithCurlyBraceExpandApi#getZone(String,String)");
+    assertThat(md.get(0).returnType())
+        .isEqualTo(String.class);
+    assertThat(md.get(0).template())
+        .hasHeaders(entry("Authorization", asList("Bearer {authHdr}")),
+            entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.get(0).formParams())
+        .isEmpty();
+  }
+
+  @Headers("Authorization: Bearer {authHdr}")
+  interface ParameterizedHeaderNotStartingWithCurlyBraceExpandApi {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
   }
 
   @Headers("Authorization: {authHdr}")
