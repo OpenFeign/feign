@@ -43,7 +43,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
   private static final Map<String, SSLSocketFactory> sslSocketFactories =
       new LinkedHashMap<String, SSLSocketFactory>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
-  private static final String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_RC4_128_MD5"};
+  private static final String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_3DES_EDE_CBC_SHA"};
   private final SSLSocketFactory delegate;
   private final String serverAlias;
   private final PrivateKey privateKey;
