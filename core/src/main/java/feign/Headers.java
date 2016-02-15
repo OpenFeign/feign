@@ -8,7 +8,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Expands headers supplied in the {@code value}. Variables are permitted as values. <br>
+ * Expands headers supplied in the {@code value}. Variables to the the right of the colon are
+ * expanded. <br>
  *
  * <pre>
  * &#64;Headers("Content-Type: application/xml")
@@ -27,12 +28,19 @@ import java.lang.annotation.Target;
  * </pre>
  *
  * <br>
- * <strong>Note:</strong> Headers do not overwrite each other. All headers with the same name will
- * be included in the request. <br>
+ * <strong>Notes:</strong>
+ *
+ * <ul>
+ *   <li>If you'd like curly braces literally in the header, urlencode them first.
+ *   <li>Headers do not overwrite each other. All headers with the same name will be included in the
+ *       request.
+ * </ul>
+ *
  * <br>
  * <b>Relationship to JAXRS</b><br>
  * <br>
  * The following two forms are identical. <br>
+ * <br>
  * Feign:
  *
  * <pre>
