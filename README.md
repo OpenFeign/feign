@@ -130,7 +130,7 @@ interface GitHub {
 ```java
 GitHub github = Feign.builder()
                      .contract(new JAXRSContract())
-                     .target(GitHub.class, "https://api.github.com");           
+                     .target(GitHub.class, "https://api.github.com");
 ```
 ### OkHttp
 [OkHttpClient](https://github.com/Netflix/feign/tree/master/okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
@@ -338,4 +338,12 @@ for example formatting dates.
 
 ```java
 @RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
+```
+
+#### Dynamic Query Parameters
+A Map parameter can be annotated with `QueryMap` to construct a query that uses the contents of the map as its query parameters.
+
+```java
+@RequestLine("GET /find")
+V find(@QueryMap Map<String, Object>);
 ```
