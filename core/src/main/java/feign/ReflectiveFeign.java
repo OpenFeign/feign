@@ -18,7 +18,9 @@ package feign;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import feign.codec.ErrorDecoder;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
+import static feign.Util.checkState;
 
 public class ReflectiveFeign extends Feign {
 
@@ -196,7 +199,39 @@ public class ReflectiveFeign extends Feign {
           }
         }
       }
-      return resolve(argv, mutable, varBuilder);
+
+      RequestTemplate template = resolve(argv, mutable, varBuilder);
+      if (metadata.queryMapIndex() != null) {
+        // add query map parameters after initial resolve so that they take
+        // precedence over any predefined values
+        template = addQueryMapQueryParameters(argv, template);
+      }
+
+      return template;
+    }
+
+    @SuppressWarnings("unchecked")
+    private RequestTemplate addQueryMapQueryParameters(Object[] argv, RequestTemplate mutable) {
+      Map<Object, Object> queryMap = (Map<Object, Object>) argv[metadata.queryMapIndex()];
+      for (Entry<Object, Object> currEntry : queryMap.entrySet()) {
+        checkState(currEntry.getKey().getClass() == String.class, "QueryMap key must be a String: %s", currEntry.getKey());
+
+        Collection<String> values = new ArrayList<String>();
+
+        Object currValue = currEntry.getValue();
+        if (currValue instanceof Iterable<?>) {
+          Iterator<?> iter = ((Iterable<?>) currValue).iterator();
+          while (iter.hasNext()) {
+            Object nextObject = iter.next();
+            values.add(nextObject == null ? null : nextObject.toString());
+          }
+        } else {
+          values.add(currValue == null ? null : currValue.toString());
+        }
+
+        mutable.query((String) currEntry.getKey(), values);
+      }
+      return mutable;
     }
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
