@@ -543,7 +543,7 @@ public final class RequestTemplate implements Serializable {
       for (String key : firstQueries.keySet()) {
         Collection<String> values = firstQueries.get(key);
         if (allValuesAreNull(values)) {
-          // Queryies where all values are null will
+          // Queries where all values are null will
           // be ignored by the query(key, value)-method
           // So we manually avoid this case here, to ensure that
           // we still fulfill the contract (ex. parameters without values)
