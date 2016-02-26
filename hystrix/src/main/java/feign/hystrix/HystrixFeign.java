@@ -32,19 +32,21 @@ public final class HystrixFeign {
   public static final class Builder extends Feign.Builder {
 
     private Contract contract = new Contract.Default();
-    private InvocationHandlerFactory invocationHandlerFactory =
-        new InvocationHandlerFactory.Default();
+    private InvocationHandlerFactory invocationHandlerFactory;
 
     /**
      * @see #target(Class, String, Object)
      */
     public <T> T target(Target<T> target, final T fallback) {
-      super.invocationHandlerFactory(new InvocationHandlerFactory() {
-        @Override
-        public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, fallback);
-        }
-      });
+      if (this.invocationHandlerFactory == null) {
+        this.invocationHandlerFactory = new InvocationHandlerFactory() {
+          @Override
+          public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+            return new HystrixInvocationHandler(target, dispatch, fallback);
+          }
+        };
+      }
+      super.invocationHandlerFactory(this.invocationHandlerFactory);
       super.contract(new HystrixDelegatingContract(contract));
       return super.build().newInstance(target);
     }
@@ -89,15 +91,19 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
-      this.invocationHandlerFactory = invocationHandlerFactory;
-      return this;
+    public <T> T target(Class<T> apiType, String url) {
+      return target(apiType, url, null);
     }
 
     @Override
-    public Builder contract(Contract contract) {
-      this.contract = contract;
-      return this;
+    public <T> T target(Target<T> target) {
+      return target(target, null);
+    }
+
+    @Override
+    public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      this.invocationHandlerFactory = invocationHandlerFactory;
+      return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
     @Override
