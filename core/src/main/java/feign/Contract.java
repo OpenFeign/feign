@@ -113,6 +113,12 @@ public interface Contract {
           data.bodyType(Types.resolve(targetType, targetType, method.getGenericParameterTypes()[i]));
         }
       }
+
+      if (data.queryMapIndex() != null) {
+        checkState(Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()]),
+                "QueryMap parameter must be a Map: %s", parameterTypes[data.queryMapIndex()]);
+      }
+
       return data;
     }
 
@@ -248,6 +254,10 @@ public interface Contract {
               !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
+        } else if (annotationType == QueryMap.class) {
+          checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
+          data.queryMapIndex(paramIndex);
+          isHttpAnnotation = true;
         }
       }
       return isHttpAnnotation;

@@ -1,3 +1,6 @@
+### Version 8.16
+* Adds `@QueryMap` annotation to support dynamic query parameters
+
 ### Version 8.15
 * Supports PUT without a body parameter
 * Supports substitutions in `@Headers` like in `@Body`. (#326)
@@ -53,7 +56,7 @@
   It is suggested that you simply return a new instance of your Retryer class.
 
 ### Version 8.3
-* Adds client implementation for Apache Http Client 
+* Adds client implementation for Apache Http Client
 
 ### Version 8.2
 * Allows customized request construction by exposing `Request.create()`
@@ -187,7 +190,7 @@
 * Default Encoder and Form Encoder is `Encoder.Text<Object>`
 * Default Decoder is `Decoder.TextStream<Object>`
 * ErrorDecoder now returns Exception, not fallback.
-* There can only be one `ErrorDecoder` and `Request.Options` binding now. 
+* There can only be one `ErrorDecoder` and `Request.Options` binding now.
 
 ### Version 2.0.0
 * removes guava and jax-rs dependencies
