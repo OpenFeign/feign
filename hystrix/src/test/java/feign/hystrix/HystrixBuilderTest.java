@@ -4,24 +4,27 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
-
+import feign.FeignException;
+import feign.Headers;
+import feign.InvocationHandlerFactory;
+import feign.Param;
+import feign.RequestLine;
+import feign.Target;
+import feign.gson.GsonDecoder;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import feign.FeignException;
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
-import feign.gson.GsonDecoder;
 import rx.Observable;
 import rx.Single;
 import rx.observers.TestSubscriber;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.hamcrest.core.Is.isA;
@@ -79,7 +82,7 @@ public class HystrixBuilderTest {
   public void fallbacksApplyOnError() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
-    GitHub fallback = new GitHub(){
+    GitHub fallback = new GitHub() {
       @Override
       public List<String> contributors(String owner, String repo) {
         if (owner.equals("Netflix") && repo.equals("feign")) {
@@ -106,7 +109,7 @@ public class HystrixBuilderTest {
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
-    GitHub fallback = new GitHub(){
+    GitHub fallback = new GitHub() {
       @Override
       public List<String> contributors(String owner, String repo) {
         throw new RuntimeException("oops");
@@ -258,11 +261,40 @@ public class HystrixBuilderTest {
     assertThat(list).isNotNull().containsExactly("foo", "bar");
   }
 
+  @Test
+  public void plainStringWithCustomInvocationHandler() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = targetWithCustomInvocationHandlerFactory();
+
+    String string = api.get();
+
+    assertThat(string).isEqualTo("hello custom invocation handler factory");
+  }
+
   private TestInterface target() {
     return HystrixFeign.builder()
         .decoder(new GsonDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
   }
+
+  private TestInterface targetWithCustomInvocationHandlerFactory() {
+    return HystrixFeign.builder()
+        .decoder(new GsonDecoder())
+        .invocationHandlerFactory(new InvocationHandlerFactory() {
+          @Override
+          public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+            return new InvocationHandler() {
+              @Override
+              public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                return "hello custom invocation handler factory";
+              }
+            };
+          }
+        })
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+  }
+
 
   interface TestInterface {
 

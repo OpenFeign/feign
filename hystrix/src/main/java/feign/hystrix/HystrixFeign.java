@@ -1,11 +1,6 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -18,6 +13,10 @@ import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects. Also
@@ -33,6 +32,8 @@ public final class HystrixFeign {
   public static final class Builder extends Feign.Builder {
 
     private Contract contract = new Contract.Default();
+    private InvocationHandlerFactory invocationHandlerFactory =
+        new InvocationHandlerFactory.Default();
 
     /**
      * @see #target(Class, String, Object)
@@ -88,8 +89,9 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
-      throw new UnsupportedOperationException();
+    public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      this.invocationHandlerFactory = invocationHandlerFactory;
+      return this;
     }
 
     @Override
@@ -100,7 +102,7 @@ public final class HystrixFeign {
 
     @Override
     public Feign build() {
-      super.invocationHandlerFactory(new HystrixInvocationHandler.Factory());
+      super.invocationHandlerFactory(this.invocationHandlerFactory);
       super.contract(new HystrixDelegatingContract(contract));
       return super.build();
     }
