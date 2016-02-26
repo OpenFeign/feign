@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -238,6 +240,44 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void queryMap() throws Exception {
+    MethodMetadata md =
+        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void queryMapMapSubclass() throws Exception {
+    MethodMetadata md =
+        parseAndValidateMetadata(
+            QueryMapTestInterface.class, "queryMapMapSubclass", SortedMap.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void onlyOneQueryMapAnnotationPermitted() throws Exception {
+    try {
+      parseAndValidateMetadata(
+          QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap annotation was present on multiple parameters.");
+    }
+  }
+
+  @Test
+  public void queryMapMustBeInstanceOfMap() throws Exception {
+    try {
+      parseAndValidateMetadata(QueryMapTestInterface.class, "nonMapQueryMap", String.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap parameter must be a Map: class java.lang.String");
+    }
+  }
+
+  @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md =
         parseAndValidateMetadata(SlashNeedToBeEncoded.class, "getQueues", String.class);
@@ -372,6 +412,24 @@ public class DefaultContractTest {
     public String expand(Object value) {
       return String.valueOf(((Date) value).getTime());
     }
+  }
+
+  interface QueryMapTestInterface {
+
+    @RequestLine("POST /")
+    void queryMap(@QueryMap Map<String, String> queryMap);
+
+    @RequestLine("POST /")
+    void queryMapMapSubclass(@QueryMap SortedMap<String, String> queryMap);
+
+    // invalid
+    @RequestLine("POST /")
+    void multipleQueryMap(
+        @QueryMap Map<String, String> mapOne, @QueryMap Map<String, String> mapTwo);
+
+    // invalid
+    @RequestLine("POST /")
+    void nonMapQueryMap(@QueryMap String notAMap);
   }
 
   interface SlashNeedToBeEncoded {

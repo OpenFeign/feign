@@ -35,6 +35,7 @@ import feign.codec.StringDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 import okio.Buffer;
+import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -207,6 +209,80 @@ public class FeignTest {
     api.expand(new Date(1234l));
 
     assertThat(server.takeRequest()).hasPath("/?date=1234");
+  }
+
+  @Test
+  public void queryMap() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", "fooValue");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey=fooValue");
+  }
+
+  @Test
+  public void queryMapIterableValuesExpanded() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", Arrays.asList("Alice", "Bob"));
+    queryMap.put("fooKey", "fooValue");
+    queryMap.put("emptyListKey", new ArrayList<String>());
+    queryMap.put("emptyStringKey", "");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey=");
+  }
+
+  @Test
+  public void queryMapWithQueryParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("fooKey", "fooValue");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // query map should be expanded after built-in parameters
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey=fooValue");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "bob");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // query map keys take precedence over built-in parameters
+    assertThat(server.takeRequest()).hasPath("/?name=bob");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", null);
+    api.queryMapWithQueryParams("alice", queryMap);
+    // null value for a query map key removes query parameter
+    assertThat(server.takeRequest()).hasPath("/");
+  }
+
+  @Test
+  public void queryMapKeysMustBeStrings() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<Object, String> queryMap = new LinkedHashMap<Object, String>();
+    queryMap.put(Integer.valueOf(42), "alice");
+
+    try {
+      api.queryMap((Map) queryMap);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap key must be a String: 42");
+    }
   }
 
   @Test
@@ -535,6 +611,13 @@ public class FeignTest {
 
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+
+    @RequestLine("GET /")
+    void queryMap(@QueryMap Map<String, Object> queryMap);
+
+    @RequestLine("GET /?name={name}")
+    void queryMapWithQueryParams(
+        @Param("name") String name, @QueryMap Map<String, Object> queryMap);
 
     class DateToMillis implements Param.Expander {
 

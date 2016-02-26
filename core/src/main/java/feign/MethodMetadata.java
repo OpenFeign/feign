@@ -31,6 +31,7 @@ public final class MethodMetadata implements Serializable {
   private transient Type returnType;
   private Integer urlIndex;
   private Integer bodyIndex;
+  private Integer queryMapIndex;
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
@@ -77,6 +78,15 @@ public final class MethodMetadata implements Serializable {
 
   public MethodMetadata bodyIndex(Integer bodyIndex) {
     this.bodyIndex = bodyIndex;
+    return this;
+  }
+
+  public Integer queryMapIndex() {
+    return queryMapIndex;
+  }
+
+  public MethodMetadata queryMapIndex(Integer queryMapIndex) {
+    this.queryMapIndex = queryMapIndex;
     return this;
   }
 
