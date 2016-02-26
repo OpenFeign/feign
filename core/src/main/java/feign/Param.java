@@ -44,6 +44,15 @@ public @interface Param {
      * Expands the value into a string. Does not accept or return null.
      */
     String expand(Object value);
+
+    interface Factory {
+      /**
+       * Called to create an instance of {@link feign.Param.Expander}.
+       * @param expanderType requested expander type
+       * @return E
+       */
+      <E extends Expander> E getInstance(Class<E> expanderType);
+    }
   }
 
   final class ToStringExpander implements Expander {
@@ -51,6 +60,21 @@ public @interface Param {
     @Override
     public String expand(Object value) {
       return value.toString();
+    }
+  }
+
+  final class DefaultExpanderFactory implements Expander.Factory {
+    public static final DefaultExpanderFactory INSTANCE = new DefaultExpanderFactory();
+
+    @Override
+    public <E extends Expander> E getInstance(Class<E> expanderType) {
+      try {
+        return expanderType.newInstance();
+      } catch (InstantiationException e) {
+        throw new IllegalStateException(e);
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException(e);
+      }
     }
   }
 }
