@@ -35,7 +35,7 @@ YourApi api = HystrixFeign.builder()
                   .target(YourApi.class, "https://example.com");
 
 // for reactive
-api.getYourTypeObservable("a").toObservable
+api.getYourType("a").toObservable
 
 // or apply hystrix to RxJava methods
 api.getYourTypeObservable("a")
