@@ -1,11 +1,6 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -18,6 +13,10 @@ import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects. Also
@@ -33,17 +32,21 @@ public final class HystrixFeign {
   public static final class Builder extends Feign.Builder {
 
     private Contract contract = new Contract.Default();
+    private InvocationHandlerFactory invocationHandlerFactory;
 
     /**
      * @see #target(Class, String, Object)
      */
     public <T> T target(Target<T> target, final T fallback) {
-      super.invocationHandlerFactory(new InvocationHandlerFactory() {
-        @Override
-        public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, fallback);
-        }
-      });
+      if (this.invocationHandlerFactory == null) {
+        this.invocationHandlerFactory = new InvocationHandlerFactory() {
+          @Override
+          public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+            return new HystrixInvocationHandler(target, dispatch, fallback);
+          }
+        };
+      }
+      super.invocationHandlerFactory(this.invocationHandlerFactory);
       super.contract(new HystrixDelegatingContract(contract));
       return super.build().newInstance(target);
     }
@@ -88,19 +91,24 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
-      throw new UnsupportedOperationException();
+    public <T> T target(Class<T> apiType, String url) {
+      return target(apiType, url, null);
     }
 
     @Override
-    public Builder contract(Contract contract) {
-      this.contract = contract;
-      return this;
+    public <T> T target(Target<T> target) {
+      return target(target, null);
+    }
+
+    @Override
+    public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      this.invocationHandlerFactory = invocationHandlerFactory;
+      return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
     @Override
     public Feign build() {
-      super.invocationHandlerFactory(new HystrixInvocationHandler.Factory());
+      super.invocationHandlerFactory(this.invocationHandlerFactory);
       super.contract(new HystrixDelegatingContract(contract));
       return super.build();
     }
