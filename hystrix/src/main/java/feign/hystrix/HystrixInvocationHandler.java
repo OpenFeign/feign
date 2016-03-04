@@ -46,7 +46,8 @@ final class HystrixInvocationHandler implements InvocationHandler {
   }
 
   @Override
-  public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+  public Object invoke(final Object proxy, final Method method, final Object[] args)
+      throws Throwable {
     String groupKey = this.target.name();
     String commandKey = method.getName();
     HystrixCommand.Setter setter = HystrixCommand.Setter
@@ -61,26 +62,28 @@ final class HystrixInvocationHandler implements InvocationHandler {
         } catch (Exception e) {
           throw e;
         } catch (Throwable t) {
-          throw (Error)t;
+          throw (Error) t;
         }
       }
 
       @Override
       protected Object getFallback() {
-        if (fallback == null) return super.getFallback();
+        if (fallback == null) {
+          return super.getFallback();
+        }
         try {
-			Object result = method.invoke(fallback, args);
-			if (isReturnsHystrixCommand(method)) {
-				return ((HystrixCommand) result).execute();
-			} else if (isReturnsObservable(method)) {
-				// Create a cold Observable
-				return ((Observable) result).toBlocking().first();
-			} else if (isReturnsSingle(method)) {
-				// Create a cold Observable as a Single
-				return ((Single) result).toObservable().toBlocking().first();
-			} else {
-				return result;
-			}
+          Object result = method.invoke(fallback, args);
+          if (isReturnsHystrixCommand(method)) {
+            return ((HystrixCommand) result).execute();
+          } else if (isReturnsObservable(method)) {
+            // Create a cold Observable
+            return ((Observable) result).toBlocking().first();
+          } else if (isReturnsSingle(method)) {
+            // Create a cold Observable as a Single
+            return ((Single) result).toObservable().toBlocking().first();
+          } else {
+            return result;
+          }
         } catch (IllegalAccessException e) {
           // shouldn't happen as method is public due to being an interface
           throw new AssertionError(e);
@@ -103,17 +106,17 @@ final class HystrixInvocationHandler implements InvocationHandler {
     return hystrixCommand.execute();
   }
 
-	private boolean isReturnsHystrixCommand(Method method) {
-		return HystrixCommand.class.isAssignableFrom(method.getReturnType());
-	}
+  private boolean isReturnsHystrixCommand(Method method) {
+    return HystrixCommand.class.isAssignableFrom(method.getReturnType());
+  }
 
-	private boolean isReturnsObservable(Method method) {
-		return Observable.class.isAssignableFrom(method.getReturnType());
-	}
+  private boolean isReturnsObservable(Method method) {
+    return Observable.class.isAssignableFrom(method.getReturnType());
+  }
 
-	private boolean isReturnsSingle(Method method) {
-		return Single.class.isAssignableFrom(method.getReturnType());
-	}
+  private boolean isReturnsSingle(Method method) {
+    return Single.class.isAssignableFrom(method.getReturnType());
+  }
 
   static final class Factory implements InvocationHandlerFactory {
 
