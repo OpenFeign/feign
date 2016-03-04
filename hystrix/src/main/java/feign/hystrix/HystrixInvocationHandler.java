@@ -68,7 +68,18 @@ final class HystrixInvocationHandler implements InvocationHandler {
           protected Object getFallback() {
             if (fallback == null) return super.getFallback();
             try {
-              return method.invoke(fallback, args);
+              Object result = method.invoke(fallback, args);
+              if (isReturnsHystrixCommand(method)) {
+                return ((HystrixCommand) result).execute();
+              } else if (isReturnsObservable(method)) {
+                // Create a cold Observable
+                return ((Observable) result).toBlocking().first();
+              } else if (isReturnsSingle(method)) {
+                // Create a cold Observable as a Single
+                return ((Single) result).toObservable().toBlocking().first();
+              } else {
+                return result;
+              }
             } catch (IllegalAccessException e) {
               // shouldn't happen as method is public due to being an interface
               throw new AssertionError(e);
@@ -79,16 +90,28 @@ final class HystrixInvocationHandler implements InvocationHandler {
           }
         };
 
-    if (HystrixCommand.class.isAssignableFrom(method.getReturnType())) {
+    if (isReturnsHystrixCommand(method)) {
       return hystrixCommand;
-    } else if (Observable.class.isAssignableFrom(method.getReturnType())) {
+    } else if (isReturnsObservable(method)) {
       // Create a cold Observable
       return hystrixCommand.toObservable();
-    } else if (Single.class.isAssignableFrom(method.getReturnType())) {
+    } else if (isReturnsSingle(method)) {
       // Create a cold Observable as a Single
       return hystrixCommand.toObservable().toSingle();
     }
     return hystrixCommand.execute();
+  }
+
+  private boolean isReturnsHystrixCommand(Method method) {
+    return HystrixCommand.class.isAssignableFrom(method.getReturnType());
+  }
+
+  private boolean isReturnsObservable(Method method) {
+    return Observable.class.isAssignableFrom(method.getReturnType());
+  }
+
+  private boolean isReturnsSingle(Method method) {
+    return Single.class.isAssignableFrom(method.getReturnType());
   }
 
   static final class Factory implements InvocationHandlerFactory {

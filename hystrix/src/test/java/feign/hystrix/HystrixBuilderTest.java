@@ -4,6 +4,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 
 import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -12,6 +13,7 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.gson.GsonDecoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +43,18 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void hystrixCommandFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.command();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("fallback");
+  }
+
+  @Test
   public void hystrixCommandInt() {
     server.enqueue(new MockResponse().setBody("1"));
 
@@ -50,6 +64,18 @@ public class HystrixBuilderTest {
 
     assertThat(command).isNotNull();
     assertThat(command.execute()).isEqualTo(new Integer(1));
+  }
+
+  @Test
+  public void hystrixCommandIntFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    HystrixCommand<Integer> command = api.intCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo(new Integer(0));
   }
 
   @Test
@@ -64,10 +90,28 @@ public class HystrixBuilderTest {
     assertThat(command.execute()).containsExactly("foo", "bar");
   }
 
+  @Test
+  public void hystrixCommandListFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    HystrixCommand<List<String>> command = api.listCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).containsExactly("fallback");
+  }
+
   // When dealing with fallbacks, it is less tedious to keep interfaces small.
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<String> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  }
+
+  interface GitHubHystrix {
+    @RequestLine("GET /repos/{owner}/{repo}/contributors")
+    HystrixCommand<List<String>> contributorsHystrixCommand(
+        @Param("owner") String owner, @Param("repo") String repo);
   }
 
   @Test
@@ -151,6 +195,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxObservableFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Observable<String> observable = api.observable();
+
+    assertThat(observable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    observable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
+  }
+
+  @Test
   public void rxObservableInt() {
     server.enqueue(new MockResponse().setBody("1"));
 
@@ -165,6 +226,23 @@ public class HystrixBuilderTest {
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(1));
+  }
+
+  @Test
+  public void rxObservableIntFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Observable<Integer> observable = api.intObservable();
+
+    assertThat(observable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    observable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(0));
   }
 
   @Test
@@ -185,6 +263,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxObservableListFall() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Observable<List<String>> observable = api.listObservable();
+
+    assertThat(observable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    observable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
+  }
+
+  @Test
   public void rxSingle() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -199,6 +294,23 @@ public class HystrixBuilderTest {
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
+  }
+
+  @Test
+  public void rxSingleFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Single<String> single = api.single();
+
+    assertThat(single).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    single.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
   }
 
   @Test
@@ -219,6 +331,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxSingleIntFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Single<Integer> single = api.intSingle();
+
+    assertThat(single).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    single.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(0));
+  }
+
+  @Test
   public void rxSingleList() {
     server.enqueue(new MockResponse().setBody("[\"foo\",\"bar\"]"));
 
@@ -236,6 +365,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxSingleListFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Single<List<String>> single = api.listSingle();
+
+    assertThat(single).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    single.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
+  }
+
+  @Test
   public void plainString() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -244,6 +390,17 @@ public class HystrixBuilderTest {
     String string = api.get();
 
     assertThat(string).isEqualTo("foo");
+  }
+
+  @Test
+  public void plainStringFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    String string = api.get();
+
+    assertThat(string).isEqualTo("fallback");
   }
 
   @Test
@@ -257,10 +414,24 @@ public class HystrixBuilderTest {
     assertThat(list).isNotNull().containsExactly("foo", "bar");
   }
 
+  @Test
+  public void plainListFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    List<String> list = api.getList();
+
+    assertThat(list).isNotNull().containsExactly("fallback");
+  }
+
   private TestInterface target() {
     return HystrixFeign.builder()
         .decoder(new GsonDecoder())
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
+        .target(
+            TestInterface.class,
+            "http://localhost:" + server.getPort(),
+            new FallbackTestInterface());
   }
 
   interface TestInterface {
@@ -308,5 +479,85 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     List<String> getList();
+  }
+
+  class FallbackTestInterface implements TestInterface {
+    @Override
+    public HystrixCommand<String> command() {
+      return new HystrixCommand<String>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+        @Override
+        protected String run() throws Exception {
+          return "fallback";
+        }
+      };
+    }
+
+    @Override
+    public HystrixCommand<List<String>> listCommand() {
+      return new HystrixCommand<List<String>>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+        @Override
+        protected List<String> run() throws Exception {
+          List<String> fallbackResult = new ArrayList<String>();
+          fallbackResult.add("fallback");
+          return fallbackResult;
+        }
+      };
+    }
+
+    @Override
+    public HystrixCommand<Integer> intCommand() {
+      return new HystrixCommand<Integer>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+        @Override
+        protected Integer run() throws Exception {
+          return 0;
+        }
+      };
+    }
+
+    @Override
+    public Observable<List<String>> listObservable() {
+      List<String> fallbackResult = new ArrayList<String>();
+      fallbackResult.add("fallback");
+      return Observable.just(fallbackResult);
+    }
+
+    @Override
+    public Observable<String> observable() {
+      return Observable.just("fallback");
+    }
+
+    @Override
+    public Single<Integer> intSingle() {
+      return Single.just(0);
+    }
+
+    @Override
+    public Single<List<String>> listSingle() {
+      List<String> fallbackResult = new ArrayList<String>();
+      fallbackResult.add("fallback");
+      return Single.just(fallbackResult);
+    }
+
+    @Override
+    public Single<String> single() {
+      return Single.just("fallback");
+    }
+
+    @Override
+    public Observable<Integer> intObservable() {
+      return Observable.just(0);
+    }
+
+    @Override
+    public String get() {
+      return "fallback";
+    }
+
+    @Override
+    public List<String> getList() {
+      List<String> fallbackResult = new ArrayList<String>();
+      fallbackResult.add("fallback");
+      return fallbackResult;
+    }
   }
 }
