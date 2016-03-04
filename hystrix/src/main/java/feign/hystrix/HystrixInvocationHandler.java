@@ -66,7 +66,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
           @Override
           protected Object getFallback() {
-            if (fallback == null) return super.getFallback();
+            if (fallback == null) {
+              return super.getFallback();
+            }
             try {
               Object result = method.invoke(fallback, args);
               if (isReturnsHystrixCommand(method)) {
