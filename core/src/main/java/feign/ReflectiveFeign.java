@@ -162,6 +162,10 @@ public class ReflectiveFeign extends Feign {
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
       this.metadata = metadata;
+      if (metadata.indexToExpander() != null) {
+        indexToExpander.putAll(metadata.indexToExpander());
+        return;
+      }
       if (metadata.indexToExpanderClass().isEmpty()) {
         return;
       }

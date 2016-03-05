@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import feign.Param.Expander;
 
@@ -42,6 +40,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
+  private transient Map<Integer, Expander> indexToExpander;
 
   MethodMetadata() {
   }
@@ -118,7 +117,26 @@ public final class MethodMetadata implements Serializable {
     return indexToName;
   }
 
+  /**
+   * If {@link #indexToExpander} is null, classes here will be instantiated by newInstance.
+   */
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
     return indexToExpanderClass;
+  }
+
+  /**
+   * After {@link #indexToExpanderClass} is populated, this is set by contracts that support
+   * runtime injection.
+   */
+  public MethodMetadata indexToExpander(Map<Integer, Expander> indexToExpander) {
+    this.indexToExpander = indexToExpander;
+    return this;
+  }
+
+  /**
+   * When not null, this value will be used instead of {@link #indexToExpander()}.
+   */
+  public Map<Integer, Expander> indexToExpander() {
+    return indexToExpander;
   }
 }
