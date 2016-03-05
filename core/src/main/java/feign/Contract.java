@@ -24,6 +24,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import feign.Param.Expander;
+
+import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 
@@ -312,4 +315,27 @@ public interface Contract {
       return result;
     }
   }
+
+  class DelegatingContract implements Contract, Param.Expander.Factory {
+    protected final Contract delegate;
+
+    public DelegatingContract(Contract delegate) {
+      super();
+      this.delegate = checkNotNull(delegate, "delegate");
+    }
+
+    @Override
+    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
+      return this.delegate.parseAndValidatateMetadata(targetType);
+    }
+
+    @Override
+    public <E extends Expander> E getInstance(Class<E> expanderType) {
+      if (delegate instanceof Param.Expander.Factory) {
+          return ((Param.Expander.Factory) delegate).getInstance(expanderType);
+      }
+      return Param.DefaultExpanderFactory.INSTANCE.getInstance(expanderType);
+    }
+  }
+
 }

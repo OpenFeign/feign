@@ -16,21 +16,19 @@ import rx.Single;
 /**
  * This special cases methods that return {@link HystrixCommand}, {@link Observable}, or {@link Single} so that they
  * are decoded properly.
- * 
+ *
  * <p>For example, {@literal HystrixCommand<Foo>} and {@literal Observable<Foo>} will decode {@code Foo}.
  */
 // Visible for use in custom Hystrix invocation handlers
-public final class HystrixDelegatingContract implements Contract {
-
-  private final Contract delegate;
+public final class HystrixDelegatingContract extends Contract.DelegatingContract {
 
   public HystrixDelegatingContract(Contract delegate) {
-    this.delegate = delegate;
+    super(delegate);
   }
 
   @Override
   public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
-    List<MethodMetadata> metadatas = this.delegate.parseAndValidatateMetadata(targetType);
+    List<MethodMetadata> metadatas = super.parseAndValidatateMetadata(targetType);
 
     for (MethodMetadata metadata : metadatas) {
       Type type = metadata.returnType();
@@ -49,4 +47,5 @@ public final class HystrixDelegatingContract implements Contract {
 
     return metadatas;
   }
+
 }

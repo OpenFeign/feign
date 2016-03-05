@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
+import feign.Param.Expander.Factory;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;
@@ -141,12 +142,18 @@ public class ReflectiveFeign extends Feign {
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;
-        if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder);
-        } else if (md.bodyIndex() != null) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
+        Param.Expander.Factory paramExpanderFactory;
+        if (contract instanceof Param.Expander.Factory) {
+          paramExpanderFactory = (Param.Expander.Factory) contract;
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md);
+          paramExpanderFactory = Param.DefaultExpanderFactory.INSTANCE;
+        }
+        if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder, paramExpanderFactory);
+        } else if (md.bodyIndex() != null) {
+          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, paramExpanderFactory);
+        } else {
+          buildTemplate = new BuildTemplateByResolvingArgs(md, paramExpanderFactory);
         }
         result.put(md.configKey(),
                    factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
@@ -160,21 +167,16 @@ public class ReflectiveFeign extends Feign {
     protected final MethodMetadata metadata;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
 
-    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata, Factory paramExpanderFactory) {
       this.metadata = metadata;
+      checkNotNull(paramExpanderFactory, "paramExpanderFactory");
       if (metadata.indexToExpanderClass().isEmpty()) {
         return;
       }
       for (Entry<Integer, Class<? extends Expander>> indexToExpanderClass : metadata
           .indexToExpanderClass().entrySet()) {
-        try {
           indexToExpander
-              .put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
-        } catch (InstantiationException e) {
-          throw new IllegalStateException(e);
-        } catch (IllegalAccessException e) {
-          throw new IllegalStateException(e);
-        }
+              .put(indexToExpanderClass.getKey(), paramExpanderFactory.getInstance(indexToExpanderClass.getValue()));
       }
     }
 
@@ -244,8 +246,8 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, Factory paramExpanderFactory) {
+      super(metadata, paramExpanderFactory);
       this.encoder = encoder;
     }
 
@@ -273,8 +275,8 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, Factory paramExpanderFactory) {
+      super(metadata, paramExpanderFactory);
       this.encoder = encoder;
     }
 
