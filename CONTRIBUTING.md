@@ -1,4 +1,5 @@
 # Contributing to Feign
+Please read [HACKING](./HACKING.md] prior to raising change.
 
 If you would like to contribute code you can do so through GitHub by forking the repository and sending a pull request (on a branch other than `master` or `gh-pages`).
 
@@ -6,7 +7,7 @@ When submitting code, please ensure you follow the [Google Style Guide](http://g
 
 ## License
 
-By contributing your code, you agree to license your contribution under the terms of the APLv2: https://github.com/Netflix/Feign/blob/master/LICENSE
+By contributing your code, you agree to license your contribution under the terms of the [APLv2](./LICENSE]
 
 All files are released with the Apache 2.0 license.
 
