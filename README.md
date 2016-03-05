@@ -63,13 +63,13 @@ CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey)
 ```
 
 ### Examples
-Feign includes example [GitHub](https://github.com/Netflix/feign/tree/master/example-github) and [Wikipedia](https://github.com/Netflix/feign/tree/master/example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
+Feign includes example [GitHub](./example-github) and [Wikipedia](./example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
 
 ### Integrations
 Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
 
 ### Gson
-[Gson](https://github.com/Netflix/feign/tree/master/gson) includes an encoder and decoder you can use with a JSON API.
+[Gson](./gson) includes an encoder and decoder you can use with a JSON API.
 
 Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
 
@@ -82,7 +82,7 @@ GitHub github = Feign.builder()
 ```
 
 ### Jackson
-[Jackson](https://github.com/Netflix/feign/tree/master/jackson) includes an encoder and decoder you can use with a JSON API.
+[Jackson](./jackson) includes an encoder and decoder you can use with a JSON API.
 
 Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
 
@@ -94,7 +94,7 @@ GitHub github = Feign.builder()
 ```
 
 ### Sax
-[SaxDecoder](https://github.com/Netflix/feign/tree/master/sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
+[SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 
 Here's an example of how to configure Sax response parsing:
 ```java
@@ -106,7 +106,7 @@ api = Feign.builder()
 ```
 
 ### JAXB
-[JAXB](https://github.com/Netflix/feign/tree/master/jaxb) includes an encoder and decoder you can use with an XML API.
+[JAXB](./jaxb) includes an encoder and decoder you can use with an XML API.
 
 Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
 
@@ -118,7 +118,7 @@ api = Feign.builder()
 ```
 
 ### JAX-RS
-[JAXRSContract](https://github.com/Netflix/feign/tree/master/jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+[JAXRSContract](./jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
 
 Here's the example above re-written to use JAX-RS:
 ```java
@@ -133,7 +133,7 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 ### OkHttp
-[OkHttpClient](https://github.com/Netflix/feign/tree/master/okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
+[OkHttpClient](./okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
 
 To use OkHttp with Feign, add the OkHttp module to your classpath. Then, configure Feign to use the OkHttpClient:
 
@@ -144,7 +144,7 @@ GitHub github = Feign.builder()
 ```
 
 ### Ribbon
-[RibbonClient](https://github.com/Netflix/feign/tree/master/ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
+[RibbonClient](./ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
 
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java
@@ -153,7 +153,7 @@ MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.c
 ```
 
 ### Hystrix
-[HystrixFeign](https://github.com/Netflix/feign/tree/master/hystrix) configures circuit breaker support provided by [Hystrix](https://github.com/Netflix/Hystrix).
+[HystrixFeign](./hystrix) configures circuit breaker support provided by [Hystrix](https://github.com/Netflix/Hystrix).
 
 To use Hystrix with Feign, add the Hystrix module to your classpath. Then use the `HystrixFeign` builder:
 
@@ -163,7 +163,7 @@ MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppPro
 ```
 
 ### SLF4J
-[SLF4JModule](https://github.com/Netflix/feign/tree/master/slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
+[SLF4JModule](./slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
 
 To use SLF4J with Feign, add both the SLF4J module and an SLF4J binding of your choice to your classpath.  Then, configure Feign to use the Slf4jLogger:
 
