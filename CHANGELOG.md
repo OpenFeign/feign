@@ -1,9 +1,7 @@
-### Version 8.16
+### Version 8.15
 * Adds `@QueryMap` annotation to support dynamic query parameters
 * Supports runtime injection of `Param.Expander` via `MethodMetadata.indexToExpander`
 * Adds fallback support for HystrixCommand, Observable, and Single results
-
-### Version 8.15
 * Supports PUT without a body parameter
 * Supports substitutions in `@Headers` like in `@Body`. (#326)
   * **Note:** You might need to URL-encode literal values of `{` or `%` in your existing code.
