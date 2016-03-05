@@ -1,5 +1,6 @@
 ### Version 8.16
 * Adds `@QueryMap` annotation to support dynamic query parameters
+* Supports runtime injection of `Param.Expander` via `MethodMetadata.indexToExpander`
 * Adds fallback support for HystrixCommand, Observable, and Single results
 
 ### Version 8.15
