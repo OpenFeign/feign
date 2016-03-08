@@ -162,15 +162,15 @@ public class ApacheHttpClientTest {
 
       api.noPostBody();
   }
-  
+
   @Test
   public void noResponseBodyForPut() {
       server.enqueue(new MockResponse());
-      
+
       TestInterface api = Feign.builder()
               .client(new ApacheHttpClient())
               .target(TestInterface.class, "http://localhost:" + server.getPort());
-      
+
       api.noPutBody();
   }
     @Test
@@ -186,6 +186,20 @@ public class ApacheHttpClientTest {
         assertThat(server.takeRequest()).hasMethod("POST")
                 .hasPath("/path/current%20documents/resource")
                 .hasBody("foo");
+    }
+
+    @Test
+    public void getWithVndHeader() throws IOException, InterruptedException {
+        server.enqueue(new MockResponse().setBody("foo"));
+
+        TestInterface api = Feign.builder()
+                .client(new ApacheHttpClient())
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        String response = api.vnd();
+
+        assertThat(server.takeRequest()).hasMethod("GET")
+                .hasHeaders("Accept: application/vnd.github.v3+json");
     }
 
   interface TestInterface {
@@ -204,12 +218,16 @@ public class ApacheHttpClientTest {
 
     @RequestLine("POST")
     String noPostBody();
-    
+
     @RequestLine("PUT")
     String noPutBody();
 
     @RequestLine("POST /path/{to}/resource")
     @Headers("Accept: text/plain")
     Response post(@Param("to") String to, String body);
+
+    @RequestLine("GET /vnd")
+    @Headers("Accept: application/vnd.github.v3+json")
+    String vnd();
   }
 }

@@ -215,7 +215,8 @@ public final class RequestTemplate implements Serializable {
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved = urlDecode(expand(value, encoded));
+        String expandedValueWithEncodedPlus = expand(value.replace("+", "%2B"), encoded); // special case + as that's commonly used in vnd media types.
+        String resolved = urlDecode(expandedValueWithEncodedPlus);
         resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
