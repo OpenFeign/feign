@@ -44,6 +44,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest {
 
   @Rule
