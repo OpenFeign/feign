@@ -132,9 +132,19 @@ public final class RequestTemplate implements Serializable {
     for (char c : template.toCharArray()) {
       switch (c) {
         case '{':
+          if (inVar) {
+            // '{{' is an escape: write the brace and don't interpret as a variable
+            builder.append("{");
+            inVar = false;
+            break;
+          }
           inVar = true;
           break;
         case '}':
+          if (!inVar) { // then write the brace literally
+            builder.append('}');
+            break;
+          }
           inVar = false;
           String key = var.toString();
           Object value = variables.get(var.toString());
@@ -222,7 +232,7 @@ public final class RequestTemplate implements Serializable {
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved = urlDecode(expand(value, encoded));
+        String resolved = expand(value, unencoded);
         resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
@@ -292,8 +302,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces queries with the specified {@code configKey} with url decoded {@code values} supplied.
-   * <br>
+   * Replaces queries with the specified {@code name} with url decoded {@code values} supplied. <br>
    * When the {@code value} is {@code null}, all queries with the {@code configKey} are removed.
    * <br>
    * <br>
@@ -307,29 +316,29 @@ public final class RequestTemplate implements Serializable {
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
    * </pre>
    *
-   * @param configKey the configKey of the query
+   * @param name the name of the query
    * @param values can be a single null to imply removing all values. Else no values are expected to
    *     be null.
    * @see #queries()
    */
-  public RequestTemplate query(String configKey, String... values) {
-    queries.remove(checkNotNull(configKey, "configKey"));
+  public RequestTemplate query(String name, String... values) {
+    queries.remove(checkNotNull(name, "name"));
     if (values != null && values.length > 0 && values[0] != null) {
       ArrayList<String> encoded = new ArrayList<String>();
       for (String value : values) {
         encoded.add(encodeIfNotVariable(value));
       }
-      this.queries.put(encodeIfNotVariable(configKey), encoded);
+      this.queries.put(encodeIfNotVariable(name), encoded);
     }
     return this;
   }
 
   /* @see #query(String, String...) */
-  public RequestTemplate query(String configKey, Iterable<String> values) {
+  public RequestTemplate query(String name, Iterable<String> values) {
     if (values != null) {
-      return query(configKey, toArray(values, String.class));
+      return query(name, toArray(values, String.class));
     }
-    return query(configKey, (String[]) null);
+    return query(name, (String[]) null);
   }
 
   private String encodeIfNotVariable(String in) {
