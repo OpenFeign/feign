@@ -1,15 +1,13 @@
 package feign.ribbon;
 
-import java.io.IOException;
-import java.net.URI;
-
 import com.netflix.client.ClientException;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
@@ -69,10 +67,17 @@ public class RibbonClient implements Client {
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
           new FeignOptionsClientConfig(options)).toResponse();
     } catch (ClientException e) {
-      if (e.getCause() instanceof IOException) {
-        throw IOException.class.cast(e.getCause());
-      }
+      propagateFirstIOException(e);
       throw new RuntimeException(e);
+    }
+  }
+
+  static void propagateFirstIOException(Throwable throwable) throws IOException {
+    while (throwable != null) {
+      if (throwable instanceof IOException) {
+        throw (IOException) throwable;
+      }
+      throwable = throwable.getCause();
     }
   }
 
