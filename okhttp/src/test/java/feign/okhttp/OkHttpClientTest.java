@@ -37,6 +37,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest {
 
   @Rule
