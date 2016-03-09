@@ -142,12 +142,24 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderWithURLEncodedElements() {
-    RequestTemplate template = new RequestTemplate().method("GET").header("Encoded", "%7Bvar%7D");
+  public void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
+    RequestTemplate template =
+        new RequestTemplate().method("GET").header("Encoded", "{{{{dont_expand_me}}");
 
-    template.resolve(mapOf("var", "1234"));
+    template.resolve(mapOf("dont_expand_me", "1234"));
 
-    assertThat(template).hasHeaders(entry("Encoded", asList("{var}")));
+    assertThat(template).hasHeaders(entry("Encoded", asList("{{dont_expand_me}}")));
+  }
+
+  /** This ensures we don't mess up vnd types */
+  @Test
+  public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
+    RequestTemplate template =
+        new RequestTemplate().method("GET").header("Accept", "application/vnd.github.v3+{type}");
+
+    template.resolve(mapOf("type", "json"));
+
+    assertThat(template).hasHeaders(entry("Accept", asList("application/vnd.github.v3+json")));
   }
 
   @Test
