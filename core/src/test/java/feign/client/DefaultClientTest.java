@@ -40,6 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
