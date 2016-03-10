@@ -693,4 +693,21 @@ public class DefaultContractTest {
 
     contract.parseAndValidatateMetadata(MissingMethod.class);
   }
+
+  interface StaticMethodOnInterface {
+    @RequestLine("GET /api/{key}")
+    String get(@Param("key") String key);
+
+    static String staticMethod() {
+      return "value";
+    }
+  }
+
+  @Test
+  public void staticMethodsOnInterfaceIgnored() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(StaticMethodOnInterface.class);
+    assertThat(mds).hasSize(1);
+    MethodMetadata md = mds.get(0);
+    assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
+  }
 }
