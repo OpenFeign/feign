@@ -9,3 +9,8 @@ dependencies {
     testCompile 'com.google.code.gson:gson:2.5' // for example
     testCompile 'org.springframework:spring-context:4.2.5.RELEASE' // for example
 }
+
+configure(compileTestJava) {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
