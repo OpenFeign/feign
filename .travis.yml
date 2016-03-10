@@ -8,7 +8,7 @@ notifications:
     on_failure: always  # options: [always|never|change] default: always
     on_start: false     # default: false
 jdk:
-- oraclejdk7
+- oraclejdk8
 install: ./installViaTravis.sh
 script: ./buildViaTravis.sh
 cache:
