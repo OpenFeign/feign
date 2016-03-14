@@ -68,6 +68,14 @@ public class Util {
 
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
+  /** Type literal for {@code Map<String, ?>}. */
+  public static final Type MAP_STRING_WILDCARD =
+      new Types.ParameterizedTypeImpl(
+          null,
+          Map.class,
+          String.class,
+          new Types.WildcardTypeImpl(new Type[] {Object.class}, new Type[0]));
+
   private Util() { // no instances
   }
 
