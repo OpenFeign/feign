@@ -34,14 +34,6 @@ import java.util.NoSuchElementException;
  */
 final class Types {
 
-  /**
-   * Type literal for {@code Map<String, ?>}.
-   */
-  static final Type MAP_STRING_WILDCARD = new ParameterizedTypeImpl(null, Map.class, String.class,
-                                                                    new WildcardTypeImpl(
-                                                                        new Type[]{Object.class},
-                                                                        new Type[]{}));
-
   private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Types() {
@@ -313,7 +305,7 @@ final class Types {
     }
   }
 
-  private static final class ParameterizedTypeImpl implements ParameterizedType {
+  static final class ParameterizedTypeImpl implements ParameterizedType {
 
     private final Type ownerType;
     private final Type rawType;
@@ -409,7 +401,7 @@ final class Types {
    * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
    * bound must be Object.class.
    */
-  private static final class WildcardTypeImpl implements WildcardType {
+  static final class WildcardTypeImpl implements WildcardType {
 
     private final Type upperBound;
     private final Type lowerBound;

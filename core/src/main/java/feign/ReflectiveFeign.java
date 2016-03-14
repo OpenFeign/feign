@@ -263,7 +263,7 @@ public class ReflectiveFeign extends Feign {
         }
       }
       try {
-        encoder.encode(formVariables, Types.MAP_STRING_WILDCARD, mutable);
+        encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable);
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
