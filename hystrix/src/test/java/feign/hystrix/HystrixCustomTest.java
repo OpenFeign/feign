@@ -1,38 +1,44 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.RequestLine;
-import feign.gson.GsonDecoder;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
-import org.junit.Rule;
 import org.junit.Test;
 
 public final class HystrixCustomTest {
-    @Rule
-    public final MockWebServer server = new MockWebServer();
-
+    private static final String URL = "http://localhost";
     @Test
     public void testKey() {
-        this.server.enqueue(new MockResponse().setBody("OK"));
-
-        final HystrixCommand<String> status = this.target().status();
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.GroupKey.class, HystrixCustomTest.URL)
+            .status();
         MatcherAssert.assertThat(
-            status.getCommandKey().name(),
+            status.getCommandGroup().name(),
             CoreMatchers.equalTo("MyKey")
         );
     }
 
-    private Testable target() {
-        return HystrixFeign.builder()
-            .decoder(new GsonDecoder())
-            .target(Testable.class, "http://localhost:" + server.getPort());
+    @Test
+    public void testEmptyKey() {
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.EmptyGroupKey.class, HystrixCustomTest.URL)
+            .status();
+        MatcherAssert.assertThat(
+            status.getCommandGroup().name(),
+            CoreMatchers.equalTo(HystrixCustomTest.URL)
+        );
     }
 
-    @HystrixKey("MyKey")
-    interface Testable {
+
+    @HystrixGroupKey("MyKey")
+    interface GroupKey {
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+    }
+
+    @HystrixGroupKey("")
+    interface EmptyGroupKey {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }

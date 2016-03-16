@@ -18,20 +18,16 @@ package feign.hystrix;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
-
+import feign.InvocationHandlerFactory;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Target;
+import static feign.Util.checkNotNull;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
-
-import feign.InvocationHandlerFactory;
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Target;
 import rx.Observable;
 import rx.Single;
-import rx.functions.Action1;
-
-import static feign.Util.checkNotNull;
 
 final class HystrixInvocationHandler implements InvocationHandler {
 
@@ -48,7 +44,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
   @Override
   public Object invoke(final Object proxy, final Method method, final Object[] args)
       throws Throwable {
-    String groupKey = this.target.name();
+    String groupKey = this.groupKey();
     String commandKey = method.getName();
     HystrixCommand.Setter setter = HystrixCommand.Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
@@ -104,6 +100,16 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return hystrixCommand.toObservable().toSingle();
     }
     return hystrixCommand.execute();
+  }
+
+  private String groupKey() {
+    if (this.target.type().isAnnotationPresent(HystrixGroupKey.class)) {
+      final String key = this.target.type().getAnnotation(HystrixGroupKey.class).value();
+      if (!key.isEmpty()) {
+        return key;
+      }
+    }
+    return this.target.name();
   }
 
   private boolean isReturnsHystrixCommand(Method method) {
