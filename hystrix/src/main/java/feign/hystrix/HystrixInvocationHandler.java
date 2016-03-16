@@ -15,19 +15,24 @@
  */
 package feign.hystrix;
 
+
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
-import feign.InvocationHandlerFactory;
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Target;
-import static feign.Util.checkNotNull;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+
+import feign.InvocationHandlerFactory;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Target;
 import rx.Observable;
 import rx.Single;
+import rx.functions.Action1;
+
+import static feign.Util.checkNotNull;
 
 final class HystrixInvocationHandler implements InvocationHandler {
 
