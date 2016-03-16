@@ -18,6 +18,7 @@ package feign.codec;
 import static java.lang.String.format;
 
 import feign.RequestTemplate;
+import feign.Util;
 import java.lang.reflect.Type;
 
 /**
@@ -55,25 +56,29 @@ import java.lang.reflect.Type;
  *
  * <h3>Form encoding</h3>
  *
- * <br>
- * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be collected
- * and passed to the Encoder as a {@code Map<String, ?>}. <br>
+ * <p>If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be
+ * collected and passed to the Encoder as a map.
+ *
+ * <p>Ex. The following is a form. Notice the parameters aren't consumed in the request line. A map
+ * including "username" and "password" keys will passed to the encoder, and the body type will be
+ * {@link #MAP_STRING_WILDCARD}.
  *
  * <pre>
- * &#064;POST
- * &#064;Path(&quot;/&quot;)
+ * &#064;RequestLine(&quot;POST /&quot;)
  * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String
  * password);
  * </pre>
  */
 public interface Encoder {
+  /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */
+  Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
 
   /**
    * Converts objects to an appropriate representation in the template.
    *
    * @param object what to encode as the request body.
-   * @param bodyType the type the object should be encoded as. {@code Map<String, ?>}, if form
-   *     encoding.
+   * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
+   *     indicates form encoding.
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
