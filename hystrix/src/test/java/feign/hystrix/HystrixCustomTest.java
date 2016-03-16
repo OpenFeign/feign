@@ -30,6 +30,16 @@ public final class HystrixCustomTest {
         );
     }
 
+    @Test
+    public void testNoCustomKey() {
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.NoCustomGroupKey.class, HystrixCustomTest.URL)
+            .status();
+        MatcherAssert.assertThat(
+            status.getCommandGroup().name(),
+            CoreMatchers.equalTo(HystrixCustomTest.URL)
+        );
+    }
 
     @HystrixGroupKey("MyKey")
     interface GroupKey {
@@ -39,6 +49,11 @@ public final class HystrixCustomTest {
 
     @HystrixGroupKey("")
     interface EmptyGroupKey {
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+    }
+
+    interface NoCustomGroupKey {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
