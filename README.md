@@ -273,9 +273,18 @@ Methods can specify dynamic content for static headers using using variable expa
  void post(@Param("token") String token);
 ```
 
-These approaches specify specific header entries as part of the api without requiring any customizations
-when buildling Feing clients. It is not currently possible to customize the header entries themselves
-on a per-request basis at the api level.
+In cases where both the header field keys and values are dynamic and the range of possible keys cannot
+be known ahead of time and may vary between different method calls in the same api/client (e.g. custom
+metadata header fields such as "x-amz-meta-\*" or "x-goog-meta-\*"), a Map parameter can be annotated
+with `HeaderMap` to construct a query that uses the contents of the map as its header parameters.
+
+```java
+ @RequestLine("POST /")
+ void post(@HeaderMap Map<String, Object> headerMap);
+```
+
+These approaches specify header entries as part of the api and do not require any customizations
+when building the Feign client.
 
 #### Setting headers per target
 In cases where headers should differ for the same api based on different endpoints or where per-request
@@ -417,5 +426,5 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 
 ```java
 @RequestLine("GET /find")
-V find(@QueryMap Map<String, Object>);
+V find(@QueryMap Map<String, Object> queryMap);
 ```
