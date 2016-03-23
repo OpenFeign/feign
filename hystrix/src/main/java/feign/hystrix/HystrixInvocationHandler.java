@@ -22,6 +22,7 @@ import com.netflix.hystrix.HystrixCommandKey;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 import feign.InvocationHandlerFactory;
@@ -29,7 +30,6 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import rx.Observable;
 import rx.Single;
-import rx.functions.Action1;
 
 import static feign.Util.checkNotNull;
 
@@ -38,11 +38,30 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
   private final Object fallback; // Nullable
+  private final Map<Method, Method> fallbackMethodMap;
 
   HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Object fallback) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallback = fallback;
+    this.fallbackMethodMap = toFallbackMethod(dispatch);
+  }
+
+  /**
+   * If the method param of InvocationHandler.invoke is not accessible, i.e in a package-private
+   * interface, the fallback call in hystrix command will fail cause of access restrictions.
+   * But methods in dispatch are copied methods. So setting access to dispatch method doesn't take
+   * effect to the method in InvocationHandler.invoke. Use map to store a copy of method
+   * to invoke the fallback to bypass this and reducing the count of reflection calls.
+   * @return cached methods map for fallback invoking
+   */
+  private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
+    Map<Method, Method> result = new HashMap<Method, Method>();
+    for (Method method : dispatch.keySet()) {
+      method.setAccessible(true);
+      result.put(method, method);
+    }
+    return result;
   }
 
   @Override
@@ -72,7 +91,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object result = method.invoke(fallback, args);
+          Object result = fallbackMethodMap.get(method).invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
           } else if (isReturnsObservable(method)) {
