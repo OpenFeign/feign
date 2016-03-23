@@ -41,11 +41,21 @@ public final class HystrixFeign {
       super.invocationHandlerFactory(new InvocationHandlerFactory() {
         @Override
         public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+          setAccess(dispatch);
           return new HystrixInvocationHandler(target, dispatch, fallback);
         }
       });
       super.contract(new HystrixDelegatingContract(contract));
       return super.build().newInstance(target);
+    }
+
+    /**
+     * set accessibility for invoking fallback method with package access
+     */
+    private void setAccess(Map<Method, InvocationHandlerFactory.MethodHandler> dispatch) {
+      for (Map.Entry<Method, InvocationHandlerFactory.MethodHandler> entry : dispatch.entrySet()) {
+        entry.getKey().setAccessible(true);
+      }
     }
 
     /**
