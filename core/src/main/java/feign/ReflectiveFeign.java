@@ -211,7 +211,35 @@ public class ReflectiveFeign extends Feign {
         template = addQueryMapQueryParameters(argv, template);
       }
 
+      if (metadata.headerMapIndex() != null) {
+        template = addHeaderMapHeaders(argv, template);
+      }
+
       return template;
+    }
+
+    @SuppressWarnings("unchecked")
+    private RequestTemplate addHeaderMapHeaders(Object[] argv, RequestTemplate mutable) {
+      Map<Object, Object> headerMap = (Map<Object, Object>) argv[metadata.headerMapIndex()];
+      for (Entry<Object, Object> currEntry : headerMap.entrySet()) {
+        checkState(currEntry.getKey().getClass() == String.class, "HeaderMap key must be a String: %s", currEntry.getKey());
+
+        Collection<String> values = new ArrayList<String>();
+
+        Object currValue = currEntry.getValue();
+        if (currValue instanceof Iterable<?>) {
+          Iterator<?> iter = ((Iterable<?>) currValue).iterator();
+          while (iter.hasNext()) {
+            Object nextObject = iter.next();
+            values.add(nextObject == null ? null : nextObject.toString());
+          }
+        } else {
+          values.add(currValue == null ? null : currValue.toString());
+        }
+
+        mutable.header((String) currEntry.getKey(), values);
+      }
+      return mutable;
     }
 
     @SuppressWarnings("unchecked")
