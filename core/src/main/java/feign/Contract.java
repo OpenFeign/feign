@@ -118,6 +118,13 @@ public interface Contract {
         }
       }
 
+      if (data.headerMapIndex() != null) {
+        checkState(
+            Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()]),
+            "HeaderMap parameter must be a Map: %s",
+            parameterTypes[data.headerMapIndex()]);
+      }
+
       if (data.queryMapIndex() != null) {
         checkState(
             Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()]),
@@ -269,6 +276,12 @@ public interface Contract {
               data.queryMapIndex() == null,
               "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
+          isHttpAnnotation = true;
+        } else if (annotationType == HeaderMap.class) {
+          checkState(
+              data.queryMapIndex() == null,
+              "HeaderMap annotation was present on multiple parameters.");
+          data.headerMapIndex(paramIndex);
           isHttpAnnotation = true;
         }
       }
