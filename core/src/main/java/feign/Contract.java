@@ -20,6 +20,7 @@ import static feign.Util.emptyToNull;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +59,8 @@ public interface Contract {
       }
       Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (Method method : targetType.getMethods()) {
-        if (method.getDeclaringClass() == Object.class) {
+        if (method.getDeclaringClass() == Object.class
+            || (method.getModifiers() & Modifier.STATIC) != 0) {
           continue;
         }
         MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
