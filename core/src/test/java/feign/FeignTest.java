@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import okio.Buffer;
 import org.assertj.core.api.Fail;
+import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -214,6 +215,52 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
         .hasPath("/?date=1234");
+  }
+
+  @Test
+  public void headerMap() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    headerMap.put("Content-Type", "myContent");
+    headerMap.put("Custom-Header", "fooValue");
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Type", Arrays.asList("myContent")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+  }
+
+  @Test
+  public void headerMapWithHeaderAnnotations() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    headerMap.put("Custom-Header", "fooValue");
+    api.headerMapWithHeaderAnnotations(headerMap);
+
+    // header map should be additive for headers provided by annotations
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Encoding", Arrays.asList("deflate")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+
+    server.enqueue(new MockResponse());
+    headerMap.put("Content-Encoding", "overrideFromMap");
+
+    api.headerMapWithHeaderAnnotations(headerMap);
+
+    // if header map has entry that collides with annotation, value specified
+    // by header map should be used
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Encoding", Arrays.asList("overrideFromMap")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
   }
 
   @Test
@@ -608,6 +655,13 @@ public class FeignTest {
 
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+
+    @RequestLine("GET /")
+    void headerMap(@HeaderMap Map<String, Object> headerMap);
+
+    @RequestLine("GET /")
+    @Headers("Content-Encoding: deflate")
+    void headerMapWithHeaderAnnotations(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
     void queryMap(@QueryMap Map<String, Object> queryMap);

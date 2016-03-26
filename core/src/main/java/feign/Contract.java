@@ -17,6 +17,7 @@ package feign;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +56,8 @@ public interface Contract {
       }
       Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (Method method : targetType.getMethods()) {
-        if (method.getDeclaringClass() == Object.class) {
+        if (method.getDeclaringClass() == Object.class ||
+            (method.getModifiers() & Modifier.STATIC) != 0) {
           continue;
         }
         MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
@@ -112,6 +114,11 @@ public interface Contract {
           data.bodyIndex(i);
           data.bodyType(Types.resolve(targetType, targetType, method.getGenericParameterTypes()[i]));
         }
+      }
+
+      if (data.headerMapIndex() != null) {
+        checkState(Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()]),
+                "HeaderMap parameter must be a Map: %s", parameterTypes[data.headerMapIndex()]);
       }
 
       if (data.queryMapIndex() != null) {
@@ -257,6 +264,10 @@ public interface Contract {
         } else if (annotationType == QueryMap.class) {
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
+          isHttpAnnotation = true;
+        } else if (annotationType == HeaderMap.class) {
+          checkState(data.queryMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");
+          data.headerMapIndex(paramIndex);
           isHttpAnnotation = true;
         }
       }

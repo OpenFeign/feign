@@ -246,6 +246,87 @@ client.xml("denominator", "secret"); // <login "user_name"="denominator" "passwo
 client.json("denominator", "secret"); // {"user_name": "denominator", "password": "secret"}
 ```
 
+### Headers
+Feign supports settings headers on requests either as part of the api or as part of the client
+dending on the use case.
+
+#### Set headers using apis
+In cases where specific interfaces or calls should always have certain header values set, it
+makes sense to define headers as part of the api.
+
+Static headers can be set on an api interface or method using the `@Headers` annotation.
+
+```java
+@Headers("Accept: application/json")
+interface BaseApi<V> {
+  @Headers("Content-Type: application/json")
+  @RequestLine("PUT /api/{key}")
+  void put(@Param("key") String, V value);
+}
+```
+
+Methods can specify dynamic content for static headers using using variable expansion in `@Headers`.
+
+```java
+ @RequestLine("POST /")
+ @Headers("X-Ping: {token}")
+ void post(@Param("token") String token);
+```
+
+In cases where both the header field keys and values are dynamic and the range of possible keys cannot
+be known ahead of time and may vary between different method calls in the same api/client (e.g. custom
+metadata header fields such as "x-amz-meta-\*" or "x-goog-meta-\*"), a Map parameter can be annotated
+with `HeaderMap` to construct a query that uses the contents of the map as its header parameters.
+
+```java
+ @RequestLine("POST /")
+ void post(@HeaderMap Map<String, Object> headerMap);
+```
+
+These approaches specify header entries as part of the api and do not require any customizations
+when building the Feign client.
+
+#### Setting headers per target
+In cases where headers should differ for the same api based on different endpoints or where per-request
+customization is required, headers can be set as part of the client using a `RequestInterceptor` or a
+`Target`.
+
+For an example of setting headers using a `RequestInterceptor`, see the `Request Interceptors` section.
+
+Headers can be set as part of a custom `Target`.
+
+```java
+  static class DynamicAuthTokenTarget<T> implements Target<T> {
+    public DynamicAuthTokenTarget(Class<T> clazz,
+                                  UrlAndTokenProvider provider,
+                                  ThreadLocal<String> requestIdProvider);
+    ...
+    @Override
+    public Request apply(RequestTemplate input) {
+      TokenIdAndPublicURL urlAndToken = provider.get();
+      if (input.url().indexOf("http") != 0) {
+        input.insert(0, urlAndToken.publicURL);
+      }
+      input.header("X-Auth-Token", urlAndToken.tokenId);
+      input.header("X-Request-ID", requestIdProvider.get());
+
+      return input.request();
+    }
+  }
+  ...
+  Bank bank = Feign.builder()
+          .target(new DynamicAuthTokenTarget(Bank.class, provider, requestIdProvider));
+```
+
+These approaches depend on the custom `RequestInterceptor` or `Target` being set on the Feign
+client when it is built and can be used as a way to set headers on all api calls on a per-client
+basis. This can be useful for doing things such as setting an authentication token in the header
+of all api requests on a per-client basis. The methods are run when the api call is made on the
+thread that invokes the api call, which allows the headers to be set dynamically at call time and
+in a context-specific manner -- for example, thread-local storage can be used to set different
+header values depending on the invoking thread, which can be useful for things such as setting
+thread-specific trace identifiers for requests.
+
 ### Advanced usage
 
 #### Base Apis
@@ -345,5 +426,5 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 
 ```java
 @RequestLine("GET /find")
-V find(@QueryMap Map<String, Object>);
+V find(@QueryMap Map<String, Object> queryMap);
 ```
