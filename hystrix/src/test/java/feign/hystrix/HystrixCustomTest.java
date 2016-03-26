@@ -26,7 +26,7 @@ public final class HystrixCustomTest {
             .target(HystrixCustomTest.TypeTimeout.class, HystrixCustomTest.URL)
             .status();
         MatcherAssert.assertThat(
-            status.getExecutionTimeInMilliseconds(),
+            status.getProperties().executionTimeoutInMilliseconds().get(),
             CoreMatchers.equalTo(2000)
         );
     }
