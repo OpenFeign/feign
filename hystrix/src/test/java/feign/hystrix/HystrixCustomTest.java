@@ -21,9 +21,31 @@ public final class HystrixCustomTest {
     }
 
     @Test
+    public void testCommandKey() {
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.CommandKey.class, HystrixCustomTest.URL)
+            .status();
+        MatcherAssert.assertThat(
+            status.getCommandKey().name(),
+            CoreMatchers.equalTo("MyKey")
+        );
+    }
+
+    @Test
     public void testTimeout() {
         final HystrixCommand<String> status = HystrixFeign.builder()
             .target(HystrixCustomTest.TypeTimeout.class, HystrixCustomTest.URL)
+            .status();
+        MatcherAssert.assertThat(
+            status.getProperties().executionTimeoutInMilliseconds().get(),
+            CoreMatchers.equalTo(2000)
+        );
+    }
+
+    @Test
+    public void testCommandTimeout() {
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.CommandTimeout.class, HystrixCustomTest.URL)
             .status();
         MatcherAssert.assertThat(
             status.getProperties().executionTimeoutInMilliseconds().get(),
@@ -59,8 +81,20 @@ public final class HystrixCustomTest {
         HystrixCommand<String> status();
     }
 
+    interface CommandKey {
+        @HystrixCommandConfig(key = "MyKey")
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+    }
+
     @HystrixConfig(timeout = 2000)
     interface TypeTimeout {
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+    }
+
+    interface CommandTimeout {
+        @HystrixCommandConfig(timeout = 2000)
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
