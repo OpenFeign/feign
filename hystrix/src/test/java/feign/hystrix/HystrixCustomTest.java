@@ -8,6 +8,7 @@ import org.junit.Test;
 
 public final class HystrixCustomTest {
     private static final String URL = "http://localhost";
+
     @Test
     public void testKey() {
         final HystrixCommand<String> status = HystrixFeign.builder()
@@ -16,6 +17,17 @@ public final class HystrixCustomTest {
         MatcherAssert.assertThat(
             status.getCommandGroup().name(),
             CoreMatchers.equalTo("MyKey")
+        );
+    }
+
+    @Test
+    public void testTimeout() {
+        final HystrixCommand<String> status = HystrixFeign.builder()
+            .target(HystrixCustomTest.TypeTimeout.class, HystrixCustomTest.URL)
+            .status();
+        MatcherAssert.assertThat(
+            status.getExecutionTimeInMilliseconds(),
+            CoreMatchers.equalTo(2000)
         );
     }
 
@@ -31,9 +43,9 @@ public final class HystrixCustomTest {
     }
 
     @Test
-    public void testNoCustomKey() {
+    public void testNoCustomConfig() {
         final HystrixCommand<String> status = HystrixFeign.builder()
-            .target(HystrixCustomTest.NoCustomGroupKey.class, HystrixCustomTest.URL)
+            .target(NoCustomConfig.class, HystrixCustomTest.URL)
             .status();
         MatcherAssert.assertThat(
             status.getCommandGroup().name(),
@@ -41,19 +53,25 @@ public final class HystrixCustomTest {
         );
     }
 
-    @HystrixGroupKey("MyKey")
+    @HystrixConfig(key = "MyKey")
     interface GroupKey {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
 
-    @HystrixGroupKey("")
+    @HystrixConfig(timeout = 2000)
+    interface TypeTimeout {
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+    }
+
+    @HystrixConfig(key = "")
     interface EmptyGroupKey {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
 
-    interface NoCustomGroupKey {
+    interface NoCustomConfig {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }

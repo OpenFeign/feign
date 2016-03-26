@@ -6,10 +6,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
- * Adds the ability to define a custom hystrix key name:
+ * * Adds the ability to customize hystrix's settings:
  * <blockquote>
  * <pre>
- *     @HystrixGroupKey("MyCustomKey")
+ *     @HystrixConfig(key = "MyCustomKey", timeout = 2000)
  *     interface MyService {
  *         // methods...
  *     }
@@ -18,6 +18,8 @@ import java.lang.annotation.Target;
  */
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface HystrixGroupKey {
-    String value();
+public @interface HystrixConfig {
+    String key() default "";
+
+    int timeout() default -1;
 }
