@@ -68,7 +68,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object result = method.invoke(fallback, args);
+          final Object result = method.invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
           } else if (isReturnsObservable(method)) {

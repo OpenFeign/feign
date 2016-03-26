@@ -16,7 +16,7 @@ public final class HystrixCustomTest {
             .status();
         MatcherAssert.assertThat(
             status.getCommandGroup().name(),
-            CoreMatchers.equalTo("MyKey")
+            CoreMatchers.equalTo("MyKey1")
         );
     }
 
@@ -27,7 +27,7 @@ public final class HystrixCustomTest {
             .status();
         MatcherAssert.assertThat(
             status.getCommandKey().name(),
-            CoreMatchers.equalTo("MyKey")
+            CoreMatchers.equalTo("MyKey2")
         );
     }
 
@@ -38,7 +38,7 @@ public final class HystrixCustomTest {
             .status();
         MatcherAssert.assertThat(
             status.getProperties().executionTimeoutInMilliseconds().get(),
-            CoreMatchers.equalTo(2000)
+            CoreMatchers.equalTo(200)
         );
     }
 
@@ -49,7 +49,7 @@ public final class HystrixCustomTest {
             .status();
         MatcherAssert.assertThat(
             status.getProperties().executionTimeoutInMilliseconds().get(),
-            CoreMatchers.equalTo(2000)
+            CoreMatchers.equalTo(200)
         );
     }
 
@@ -81,7 +81,7 @@ public final class HystrixCustomTest {
             .target(HystrixCustomTest.ComplexService.class, HystrixCustomTest.URL);
         MatcherAssert.assertThat(
             service.status().getCommandGroup().name(),
-            CoreMatchers.equalTo("MyKey")
+            CoreMatchers.equalTo("MyKey3")
         );
         MatcherAssert.assertThat(
             service.status().getProperties().executionTimeoutInMilliseconds().get(),
@@ -93,7 +93,7 @@ public final class HystrixCustomTest {
         );
         MatcherAssert.assertThat(
             service.slower().getCommandGroup().name(),
-            CoreMatchers.equalTo("MyKey")
+            CoreMatchers.equalTo("MyKey3")
         );
         MatcherAssert.assertThat(
             service.slower().getProperties().executionTimeoutInMilliseconds().get(),
@@ -105,26 +105,26 @@ public final class HystrixCustomTest {
         );
     }
 
-    @HystrixConfig(key = "MyKey")
+    @HystrixConfig(key = "MyKey1")
     interface GroupKey {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
 
     interface CommandKey {
-        @HystrixCommandConfig(key = "MyKey")
+        @HystrixCommandConfig(key = "MyKey2")
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
 
-    @HystrixConfig(timeout = 2000)
+    @HystrixConfig(timeout = 200)
     interface TypeTimeout {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
 
     interface CommandTimeout {
-        @HystrixCommandConfig(timeout = 2000)
+        @HystrixCommandConfig(timeout = 1200)
         @RequestLine("GET /status")
         HystrixCommand<String> status();
     }
@@ -140,7 +140,7 @@ public final class HystrixCustomTest {
         HystrixCommand<String> status();
     }
 
-    @HystrixConfig(key = "MyKey", timeout = 150)
+    @HystrixConfig(key = "MyKey3", timeout = 150)
     interface ComplexService {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
