@@ -67,11 +67,41 @@ public final class HystrixCustomTest {
     @Test
     public void testNoCustomConfig() {
         final HystrixCommand<String> status = HystrixFeign.builder()
-            .target(NoCustomConfig.class, HystrixCustomTest.URL)
+            .target(HystrixCustomTest.NoCustomConfig.class, HystrixCustomTest.URL)
             .status();
         MatcherAssert.assertThat(
             status.getCommandGroup().name(),
             CoreMatchers.equalTo(HystrixCustomTest.URL)
+        );
+    }
+
+    @Test
+    public void testMixedAnnotations() {
+        final HystrixCustomTest.ComplexService service = HystrixFeign.builder()
+            .target(HystrixCustomTest.ComplexService.class, HystrixCustomTest.URL);
+        MatcherAssert.assertThat(
+            service.status().getCommandGroup().name(),
+            CoreMatchers.equalTo("MyKey")
+        );
+        MatcherAssert.assertThat(
+            service.status().getProperties().executionTimeoutInMilliseconds().get(),
+            CoreMatchers.equalTo(150)
+        );
+        MatcherAssert.assertThat(
+            service.status().getCommandKey().name(),
+            CoreMatchers.equalTo("status")
+        );
+        MatcherAssert.assertThat(
+            service.slower().getCommandGroup().name(),
+            CoreMatchers.equalTo("MyKey")
+        );
+        MatcherAssert.assertThat(
+            service.slower().getProperties().executionTimeoutInMilliseconds().get(),
+            CoreMatchers.equalTo(15000)
+        );
+        MatcherAssert.assertThat(
+            service.slower().getCommandKey().name(),
+            CoreMatchers.equalTo("Slow")
         );
     }
 
@@ -108,5 +138,15 @@ public final class HystrixCustomTest {
     interface NoCustomConfig {
         @RequestLine("GET /status")
         HystrixCommand<String> status();
+    }
+
+    @HystrixConfig(key = "MyKey", timeout = 150)
+    interface ComplexService {
+        @RequestLine("GET /status")
+        HystrixCommand<String> status();
+
+        @HystrixCommandConfig(key = "Slow", timeout = 15000)
+        @RequestLine("GET /slower")
+        HystrixCommand<String> slower();
     }
 }
