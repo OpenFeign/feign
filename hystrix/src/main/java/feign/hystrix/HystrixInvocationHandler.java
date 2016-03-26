@@ -19,6 +19,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 
+import com.netflix.hystrix.HystrixCommandProperties;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +30,6 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import rx.Observable;
 import rx.Single;
-import rx.functions.Action1;
 
 import static feign.Util.checkNotNull;
 
@@ -48,11 +48,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
   @Override
   public Object invoke(final Object proxy, final Method method, final Object[] args)
       throws Throwable {
-    String groupKey = this.target.name();
-    String commandKey = method.getName();
-    HystrixCommand.Setter setter = HystrixCommand.Setter
-        .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-        .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
+    HystrixCommand.Setter setter = this.config(proxy, method);
 
     HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setter) {
       @Override
@@ -72,7 +68,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object result = method.invoke(fallback, args);
+          final Object result = method.invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
           } else if (isReturnsObservable(method)) {
@@ -104,6 +100,34 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return hystrixCommand.toObservable().toSingle();
     }
     return hystrixCommand.execute();
+  }
+
+  private HystrixCommand.Setter config(final Object proxy, final Method method) {
+    final HystrixCommandProperties.Setter command = HystrixCommandProperties.Setter();
+    String groupKey = this.target.name();
+    String commandKey = method.getName();
+    if (this.target.type().isAnnotationPresent(HystrixConfig.class)) {
+      final HystrixConfig ann = this.target.type().getAnnotation(HystrixConfig.class);
+      if (!ann.key().isEmpty()) {
+        groupKey = ann.key();
+      }
+      if (ann.timeout() > -1) {
+        command.withExecutionTimeoutInMilliseconds(ann.timeout());
+      }
+    }
+    if (method.isAnnotationPresent(HystrixCommandConfig.class)) {
+        final HystrixCommandConfig ann = method.getAnnotation(HystrixCommandConfig.class);
+        if (!ann.key().isEmpty()) {
+            commandKey = ann.key();
+        }
+        if (ann.timeout() > -1) {
+            command.withExecutionTimeoutInMilliseconds(ann.timeout());
+        }
+    }
+    return HystrixCommand.Setter
+        .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+        .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
+        .andCommandPropertiesDefaults(command);
   }
 
   private boolean isReturnsHystrixCommand(Method method) {
