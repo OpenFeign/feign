@@ -29,12 +29,7 @@ import feign.codec.ErrorDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class ReflectiveFeign extends Feign {
@@ -56,16 +51,29 @@ public class ReflectiveFeign extends Feign {
   public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
+    List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
+
     for (Method method : target.type().getMethods()) {
       if (method.getDeclaringClass() == Object.class) {
         continue;
+      } else if (Util.isDefault(method)) {
+        DefaultMethodHandler handler = new DefaultMethodHandler(method);
+        defaultMethodHandlers.add(handler);
+        methodToHandler.put(method, handler);
+      } else {
+        methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
       }
-      methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
     }
     InvocationHandler handler = factory.create(target, methodToHandler);
-    return (T)
-        Proxy.newProxyInstance(
-            target.type().getClassLoader(), new Class<?>[] {target.type()}, handler);
+    T proxy =
+        (T)
+            Proxy.newProxyInstance(
+                target.type().getClassLoader(), new Class<?>[] {target.type()}, handler);
+
+    for (DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
+      defaultMethodHandler.bindTo(proxy);
+    }
+    return proxy;
   }
 
   static class FeignInvocationHandler implements InvocationHandler {

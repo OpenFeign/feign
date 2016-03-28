@@ -60,7 +60,8 @@ public interface Contract {
       Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class
-            || (method.getModifiers() & Modifier.STATIC) != 0) {
+            || (method.getModifiers() & Modifier.STATIC) != 0
+            || Util.isDefault(method)) {
           continue;
         }
         MethodMetadata metadata = parseAndValidateMetadata(targetType, method);

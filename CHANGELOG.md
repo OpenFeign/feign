@@ -1,5 +1,6 @@
 ### Version 8.16
 * Adds `@HeaderMap` annotation to support dynamic header fields and values
+* Add support for default and static methods on interfaces
 
 ### Version 8.15
 * Adds `@QueryMap` annotation to support dynamic query parameters
