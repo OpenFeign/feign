@@ -710,4 +710,21 @@ public class DefaultContractTest {
     MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
   }
+
+  interface DefaultMethodOnInterface {
+    @RequestLine("GET /api/{key}")
+    String get(@Param("key") String key);
+
+    default String defaultGet(String key) {
+      return get(key);
+    }
+  }
+
+  @Test
+  public void defaultMethodsOnInterfaceIgnored() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(DefaultMethodOnInterface.class);
+    assertThat(mds).hasSize(1);
+    MethodMetadata md = mds.get(0);
+    assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
+  }
 }

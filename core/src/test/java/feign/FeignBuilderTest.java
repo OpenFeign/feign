@@ -220,6 +220,28 @@ public class FeignBuilderTest {
         .hasPath("/api/queues/%2F");
   }
 
+  @Test
+  public void testBasicDefaultMethod() throws Exception {
+    String url = "http://localhost:" + server.getPort();
+
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+    String result = api.independentDefaultMethod();
+
+    assertThat(result.equals("default result"));
+  }
+
+  @Test
+  public void testDefaultCallingProxiedMethod() throws Exception {
+    server.enqueue(new MockResponse().setBody("response data"));
+
+    String url = "http://localhost:" + server.getPort();
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+
+    Response response = api.defaultMethodPassthrough();
+    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertThat(server.takeRequest()).hasPath("/");
+  }
+
   interface TestInterface {
     @RequestLine("GET")
     Response getNoPath();
@@ -238,5 +260,13 @@ public class FeignBuilderTest {
     
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     byte[] getQueues(@Param("vhost") String vhost);
+
+    default String independentDefaultMethod() {
+      return "default result";
+    }
+
+    default Response defaultMethodPassthrough() {
+      return getNoPath();
+    }
   }
 }
