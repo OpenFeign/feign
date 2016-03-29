@@ -48,6 +48,14 @@ final class HystrixInvocationHandler implements InvocationHandler {
     this.toFallback = toFallbackMethod(dispatch);
   }
 
+  /**
+   * If the method param of InvocationHandler.invoke is not accessible, i.e in a package-private
+   * interface, the fallback call in hystrix command will fail cause of access restrictions.
+   * But methods in dispatch are copied methods. So setting access to dispatch method doesn't take
+   * effect to the method in InvocationHandler.invoke. Use map to store a copy of method
+   * to invoke the fallback to bypass this and reducing the count of reflection calls.
+   * @return cached methods map for fallback invoking
+   */
   private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
     Map<Method, Method> result = new HashMap<Method, Method>();
     for (Map.Entry<Method, MethodHandler> entry : dispatch.entrySet()) {
