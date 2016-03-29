@@ -30,7 +30,6 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import rx.Observable;
 import rx.Single;
-import rx.functions.Action1;
 
 import static feign.Util.checkNotNull;
 
@@ -39,13 +38,13 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
   private final Object fallback; // Nullable
-  private final Map<Method, Method> toFallback;
+  private final Map<Method, Method> fallbackMethodMap;
 
   HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Object fallback) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallback = fallback;
-    this.toFallback = toFallbackMethod(dispatch);
+    this.fallbackMethodMap = toFallbackMethod(dispatch);
   }
 
   /**
@@ -58,10 +57,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
    */
   private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
     Map<Method, Method> result = new HashMap<Method, Method>();
-    for (Map.Entry<Method, MethodHandler> entry : dispatch.entrySet()) {
-      Method key = entry.getKey();
-      key.setAccessible(true);
-      result.put(key, key);
+    for (Method method : dispatch.keySet()) {
+      method.setAccessible(true);
+      result.put(method, method);
     }
     return result;
   }
@@ -93,7 +91,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object result = toFallback.get(method).invoke(fallback, args);
+          Object result = fallbackMethodMap.get(method).invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
           } else if (isReturnsObservable(method)) {
