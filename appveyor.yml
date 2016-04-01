@@ -1,0 +1,18 @@
+version: '{build}'
+
+environment:
+  matrix:
+    - JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+
+os: Windows Server 2012
+
+install:
+  - cmd: choco install maven -y -f
+  - cmd: choco install sbt -y -f
+  - cmd: refreshenv
+  - cmd: mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+  
+
+build_script:
+  - mvn install -Pci -B
+
