@@ -3,6 +3,7 @@ apply plugin: 'java'
 sourceCompatibility = 1.6
 
 dependencies {
+    compile 'org.jvnet:animal-sniffer-annotation:1.0'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:1.7.1' // last version supporting JDK 7
     testCompile 'com.squareup.okhttp:mockwebserver:2.7.5'
