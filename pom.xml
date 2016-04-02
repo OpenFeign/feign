@@ -144,6 +144,7 @@
           <keepBlankLines>true</keepBlankLines>
           <lineSeparator>\n</lineSeparator>
           <predefinedSortOrder>custom_1</predefinedSortOrder>
+          <createBackupFile>false</createBackupFile>
         </configuration>
         <executions>
           <execution>
