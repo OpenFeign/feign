@@ -428,3 +428,39 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 @RequestLine("GET /find")
 V find(@QueryMap Map<String, Object> queryMap);
 ```
+
+#### Static and Default Methods
+Interfaces targeted by Feign may have static or default methods (if using Java 8+).
+These allows Feign clients to contain logic that is not expressly defined by the underlying API.
+For example, static methods make it easy to specify common client build configurations; default methods can be used to compose queries or define default parameters.
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @RequestLine("GET /users/{username}/repos?sort={sort}")
+  List<Repo> repos(@Param("username") String owner, @Param("sort") String sort);
+
+  default List<Repo> repos(String owner) {
+    return repos(owner, "full_name");
+  }
+
+  /**
+   * Lists all contributors for all repos owned by a user.
+   */
+  default List<Contributor> contributors(String user) {
+    MergingContributorList contributors = new MergingContributorList();
+    for(Repo repo : this.repos(owner)) {
+      contributors.addAll(this.contributors(user, repo.getName()));
+    }
+    return contributors.mergeResult();
+  }
+
+  static GitHub connect() {
+    return Feign.builder()
+                .decoder(new GsonDecoder())
+                .target(GitHub.class, "https://api.github.com");
+  }
+}
+```
