@@ -324,29 +324,6 @@
         </plugins>
       </build>
     </profile>
-
-    <profile>
-
-      <id>disabled-coveralls</id>
-
-      <activation>
-        <property>
-          <name>!${coveralls.token}</name>
-        </property>
-      </activation>
-
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 
 </project>
