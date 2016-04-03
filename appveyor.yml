@@ -26,8 +26,7 @@ install:
   - cmd: choco install maven -y -f
   - cmd: choco install sbt -y -f
   - cmd: refreshenv
-  - cmd: mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
-  
+  - cmd: mvn dependency:go-offline -Pci -Pskip-formatter -DskipTests=true -q
 
 build_script:
   - mvn install -Pci -B
