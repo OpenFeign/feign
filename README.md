@@ -8,3 +8,11 @@
 [![Stars](https://img.shields.io/github/stars/${owner}/${name}.svg)](https://github.com/${owner}/${name}/stargazers)
 
 maven.boilerplate contains a set of configuration files for CI(travis, appveyor), coverage(coveralls+jacoco), code format(eclipse+maven), licensing, other maven plugins and all other things I think I will need accross multiple projects
+
+# Why?
+![image](https://cloud.githubusercontent.com/assets/136590/14231013/3752c72a-f9c6-11e5-9372-af23df11d18d.png)
+
+
+I wanna all my projects share what I think makes life easier without having to remember copy and pasting all.
+
+This way, a script can remember to copy and paste for me.
