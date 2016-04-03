@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2016 Marvin H Froeder (marvin@marvinformatics.com)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -158,6 +175,33 @@
       </plugin>
 
       <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>2.11</version>
+        <configuration>
+          <header>LICENSE.txt</header>
+          <properties>
+            <owner>Marvin Herman Froeder</owner>
+            <email>marvin@marvinformatics.com</email>
+          </properties>
+          <excludes>
+            <exclude>**/README</exclude>
+            <exclude>src/test/resources/**</exclude>
+            <exclude>src/main/resources/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>format</id>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
@@ -173,10 +217,13 @@
           </execution>
         </executions>
       </plugin>
+
     </plugins>
   </build>
 
   <url>https://github.com/${owner}/${name}/</url>
+
+  <inceptionYear>${year}</inceptionYear>
 
   <licenses>
     <license>
@@ -236,7 +283,6 @@
           <plugin>
             <groupId>com.github.ekryd.sortpom</groupId>
             <artifactId>sortpom-maven-plugin</artifactId>
-            <version>2.4.0</version>
             <executions>
               <execution>
                 <id>validate</id>
@@ -251,6 +297,20 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>validate</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <phase>initialize</phase>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
@@ -326,6 +386,28 @@
                 <phase>verify</phase>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>license</id>
+      <activation>
+        <file>
+          <missing>LICENSE.txt</missing>
+        </file>
+      </activation>
+
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
       </build>
