@@ -6,7 +6,7 @@ jdk:
   - oraclejdk8
 
 install:
-  - mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+  - mvn dependency:go-offline -Pci -Pskip-formatter -DskipTests=true -q
 
 script:
   - mvn install -Pci -B
