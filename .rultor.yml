@@ -34,7 +34,7 @@ env:
 
 release:
   script: |-
-    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+    mvn install dependency:go-offline -Pskip-formatter -Pci -Prelease -DskipTests=true -q
     mvn versions:set "-DnewVersion=${tag}"
     git commit -am "${tag}"
     mvn deploy -Pci -B -Prelease --settings ../settings.xml -Dgpg.homedir=..
