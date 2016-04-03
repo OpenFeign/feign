@@ -1,0 +1,26 @@
+architect:
+- velo
+
+assets:
+  secring.gpg: velo/.assets#maven/secring.gpg
+  settings.xml: velo/.assets#maven/settings.xml
+  pubring.gpg: velo/.assets#maven/pubring.gpg
+
+merge:
+  commanders:
+  - velo
+  script: |-
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+    mvn install -Pci -B --settings ../settings.xml
+
+env:
+  MAVEN_OPTS: -XX:MaxPermSize=256m -Xmx1g
+
+release:
+  script: |-
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+    mvn versions:set "-DnewVersion=${tag}"
+    git commit -am "${tag}"
+    mvn deploy -Pci -B -Prelease --settings ../settings.xml -Dgpg.homedir=..
+  commanders:
+  - velo
