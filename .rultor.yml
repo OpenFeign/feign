@@ -26,7 +26,7 @@ merge:
   commanders:
   - velo
   script: |-
-    mvn dependency:go-offline -Pskip-formatter -Pci -Prelease -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
     mvn install -Pci -B --settings ../settings.xml
 
 env:
@@ -34,7 +34,7 @@ env:
 
 release:
   script: |-
-    mvn dependency:go-offline -Pskip-formatter -Pci -Prelease -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
     mvn versions:set "-DnewVersion=${tag}"
     git commit -am "${tag}"
     mvn deploy -Pci -B -Prelease --settings ../settings.xml -Dgpg.homedir=..
