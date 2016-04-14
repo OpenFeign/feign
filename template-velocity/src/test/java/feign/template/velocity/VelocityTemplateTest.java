@@ -19,7 +19,7 @@ public class VelocityTemplateTest {
         VelocityTemplate velocityTemplate = new VelocityTemplate();
         Map<String,String> variables = new HashMap<String, String>();
         variables.put("name","World");
-        String result = velocityTemplate.translate("test.vm",variables);
+        String result = velocityTemplate.translate("Hello ${name}!  Welcome to Velocity!",variables);
         Assert.assertEquals("Hello World!  Welcome to Velocity!",result);
     }
 
