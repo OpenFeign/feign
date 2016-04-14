@@ -16,13 +16,8 @@
 package feign.httpclient;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
-import feign.Feign;
-import feign.FeignException;
-import feign.Headers;
-import feign.Logger;
-import feign.RequestLine;
-import feign.Response;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,17 +25,26 @@ import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import feign.Feign;
+import feign.FeignException;
+import feign.Headers;
+import feign.Logger;
+import feign.Param;
+import feign.RequestLine;
+import feign.Response;
+
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class ApacheHttpClientTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
@@ -69,7 +73,7 @@ public class ApacheHttpClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -77,7 +81,7 @@ public class ApacheHttpClientTest {
         .client(new ApacheHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   @Test
@@ -132,14 +136,64 @@ public class ApacheHttpClientTest {
     api.post("foo");
   }
 
+  @Test
+  public void noResponseBodyForPost() {
+      server.enqueue(new MockResponse());
+
+      TestInterface api = Feign.builder()
+          .client(new ApacheHttpClient())
+          .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+      api.noPostBody();
+  }
+  
+  @Test
+  public void noResponseBodyForPut() {
+      server.enqueue(new MockResponse());
+      
+      TestInterface api = Feign.builder()
+              .client(new ApacheHttpClient())
+              .target(TestInterface.class, "http://localhost:" + server.getPort());
+      
+      api.noPutBody();
+  }
+    @Test
+    public void postWithSpacesInPath() throws IOException, InterruptedException {
+        server.enqueue(new MockResponse().setBody("foo"));
+
+        TestInterface api = Feign.builder()
+                .client(new ApacheHttpClient())
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.post("current documents", "foo");
+
+        assertThat(server.takeRequest()).hasMethod("POST")
+                .hasPath("/path/current%20documents/resource")
+                .hasBody("foo");
+    }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
 
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
+
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
     String patch();
+
+    @RequestLine("POST")
+    String noPostBody();
+    
+    @RequestLine("PUT")
+    String noPutBody();
+
+    @RequestLine("POST /path/{to}/resource")
+    @Headers("Accept: text/plain")
+    Response post(@Param("to") String to, String body);
   }
 }

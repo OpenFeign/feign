@@ -20,6 +20,7 @@ import feign.translate.DefaultTemplate;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -59,7 +60,9 @@ public interface Contract {
       }
       Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (Method method : targetType.getMethods()) {
-        if (method.getDeclaringClass() == Object.class) {
+        if (method.getDeclaringClass() == Object.class ||
+            (method.getModifiers() & Modifier.STATIC) != 0 ||
+            Util.isDefault(method)) {
           continue;
         }
         MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
@@ -86,6 +89,12 @@ public interface Contract {
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
       data.configKey(Feign.configKey(targetType, method));
 
+      if(targetType.getInterfaces().length == 1) {
+        processAnnotationOnClass(data, targetType.getInterfaces()[0]);
+      }
+      processAnnotationOnClass(data, targetType);
+
+
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
@@ -111,7 +120,28 @@ public interface Contract {
           data.bodyType(Types.resolve(targetType, targetType, method.getGenericParameterTypes()[i]));
         }
       }
+
+      if (data.headerMapIndex() != null) {
+        checkState(Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()]),
+                "HeaderMap parameter must be a Map: %s", parameterTypes[data.headerMapIndex()]);
+      }
+
+      if (data.queryMapIndex() != null) {
+        checkState(Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()]),
+                "QueryMap parameter must be a Map: %s", parameterTypes[data.queryMapIndex()]);
+      }
+
       return data;
+    }
+
+    /**
+     * Called by parseAndValidateMetadata twice, first on the declaring class, then on the
+     * target type (unless they are the same).
+     *
+     * @param data       metadata collected so far relating to the current java method.
+     * @param clz        the class to process
+     */
+    protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
     }
 
     /**
@@ -156,18 +186,8 @@ public interface Contract {
   }
 
   class Default extends BaseContract {
-
     @Override
-    protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
-      MethodMetadata data = super.parseAndValidateMetadata(targetType, method);
-      headersFromAnnotation(method.getDeclaringClass(), data);
-      if (method.getDeclaringClass() != targetType) {
-        headersFromAnnotation(targetType, data);
-      }
-      return data;
-    }
-
-    private void headersFromAnnotation(Class<?> targetType, MethodMetadata data) {
+    protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       if (targetType.isAnnotationPresent(Headers.class)) {
         String[] headersOnType = targetType.getAnnotation(Headers.class).value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
@@ -188,6 +208,9 @@ public interface Contract {
         checkState(emptyToNull(requestLine) != null,
                    "RequestLine annotation was empty on method %s.", method.getName());
         if (requestLine.indexOf(' ') == -1) {
+          checkState(requestLine.indexOf('/') == -1,
+              "RequestLine annotation didn't start with an HTTP verb on method %s.",
+              method.getName());
           data.template().method(requestLine);
           return;
         }
@@ -200,9 +223,9 @@ public interface Contract {
           data.template().append(
               requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
         }
-        
+
         data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
-        
+
       } else if (annotationType == Body.class) {
         String body = Body.class.cast(methodAnnotation).value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
@@ -235,7 +258,7 @@ public interface Contract {
         if (annotationType == Param.class) {
           String name = ((Param) annotation).value();
           checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
-                     paramIndex);
+              paramIndex);
           nameParam(data, name, paramIndex);
           if (annotationType == Param.class) {
             Class<? extends Param.Expander> expander = ((Param) annotation).expander();
@@ -246,16 +269,25 @@ public interface Contract {
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1 &&
-              !searchMapValues(data.template().queries(), varName) &&
-              !searchMapValues(data.template().headers(), varName)) {
+              !searchMapValuesContainsExact(data.template().queries(), varName) &&
+              !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
+        } else if (annotationType == QueryMap.class) {
+          checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
+          data.queryMapIndex(paramIndex);
+          isHttpAnnotation = true;
+        } else if (annotationType == HeaderMap.class) {
+          checkState(data.queryMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");
+          data.headerMapIndex(paramIndex);
+          isHttpAnnotation = true;
         }
       }
       return isHttpAnnotation;
     }
 
-    private static <K, V> boolean searchMapValues(Map<K, Collection<V>> map, V search) {
+    private static <K, V> boolean searchMapValuesContainsExact(Map<K, Collection<V>> map,
+                                                               V search) {
       Collection<Collection<V>> values = map.values();
       if (values == null) {
         return false;
@@ -264,6 +296,24 @@ public interface Contract {
       for (Collection<V> entry : values) {
         if (entry.contains(search)) {
           return true;
+        }
+      }
+
+      return false;
+    }
+
+    private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,
+                                                                   String search) {
+      Collection<Collection<String>> values = map.values();
+      if (values == null) {
+        return false;
+      }
+
+      for (Collection<String> entry : values) {
+        for (String value : entry) {
+          if (value.indexOf(search) != -1) {
+            return true;
+          }
         }
       }
 

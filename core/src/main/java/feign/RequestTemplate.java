@@ -23,11 +23,19 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.UTF_8;
+import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 import static feign.Util.toArray;
@@ -200,21 +208,12 @@ public final class RequestTemplate implements Serializable {
     }
     url = new StringBuilder(resolvedUrl);
 
-    Map<String, Collection<String>>
-        resolvedHeaders =
-        new LinkedHashMap<String, Collection<String>>();
+    Map<String, Collection<String>> resolvedHeaders = new LinkedHashMap<String, Collection<String>>();
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved;
-        if (value.indexOf('{') == 0) {
-          resolved = expand(value, unencoded, templateEngineClass);
-        } else {
-          resolved = value;
-        }
-        if (resolved != null) {
-          resolvedValues.add(resolved);
-        }
+        String resolved = expand(value, unencoded, templateEngineClass);
+        resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
     }
@@ -241,6 +240,7 @@ public final class RequestTemplate implements Serializable {
   /* @see Request#method() */
   public RequestTemplate method(String method) {
     this.method = checkNotNull(method, "method");
+    checkArgument(method.matches("^[A-Z]+$"), "Invalid HTTP Method: %s", method);
     return this;
   }
   
@@ -282,7 +282,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces queries with the specified {@code configKey} with url decoded {@code values} supplied.
+   * Replaces queries with the specified {@code name} with url decoded {@code values} supplied.
    * <br> When the {@code value} is {@code null}, all queries with the {@code configKey} are
    * removed. <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> Like {@code WebTarget.query},
    * except the values can be templatized. <br> ex. <br>
@@ -290,29 +290,29 @@ public final class RequestTemplate implements Serializable {
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
    * </pre>
    *
-   * @param configKey the configKey of the query
+   * @param name the name of the query
    * @param values    can be a single null to imply removing all values. Else no values are expected
    *                  to be null.
    * @see #queries()
    */
-  public RequestTemplate query(String configKey, String... values) {
-    queries.remove(checkNotNull(configKey, "configKey"));
+  public RequestTemplate query(String name, String... values) {
+    queries.remove(checkNotNull(name, "name"));
     if (values != null && values.length > 0 && values[0] != null) {
       ArrayList<String> encoded = new ArrayList<String>();
       for (String value : values) {
         encoded.add(encodeIfNotVariable(value));
       }
-      this.queries.put(encodeIfNotVariable(configKey), encoded);
+      this.queries.put(encodeIfNotVariable(name), encoded);
     }
     return this;
   }
 
   /* @see #query(String, String...) */
-  public RequestTemplate query(String configKey, Iterable<String> values) {
+  public RequestTemplate query(String name, Iterable<String> values) {
     if (values != null) {
-      return query(configKey, toArray(values, String.class));
+      return query(name, toArray(values, String.class));
     }
-    return query(configKey, (String[]) null);
+    return query(name, (String[]) null);
   }
 
   private String encodeIfNotVariable(String in) {
@@ -485,7 +485,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * @see Request#body()
-   * @see #expand(String, Map, Class)
+   * @see #expand(String, Map)
    */
   public String bodyTemplate() {
     return bodyTemplate;
@@ -526,7 +526,7 @@ public final class RequestTemplate implements Serializable {
       for (String key : firstQueries.keySet()) {
         Collection<String> values = firstQueries.get(key);
         if (allValuesAreNull(values)) {
-          //Queryies where all values are null will
+          //Queries where all values are null will
           //be ignored by the query(key, value)-method
           //So we manually avoid this case here, to ensure that
           //we still fulfill the contract (ex. parameters without values)

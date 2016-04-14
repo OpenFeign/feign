@@ -32,6 +32,8 @@ public final class MethodMetadata implements Serializable {
   private transient Type returnType;
   private Integer urlIndex;
   private Integer bodyIndex;
+  private Integer headerMapIndex;
+  private Integer queryMapIndex;
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
@@ -39,6 +41,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
+  private transient Map<Integer, Expander> indexToExpander;
 
   MethodMetadata() {
   }
@@ -50,7 +53,7 @@ public final class MethodMetadata implements Serializable {
     return configKey;
   }
 
-  MethodMetadata configKey(String configKey) {
+  public MethodMetadata configKey(String configKey) {
     this.configKey = configKey;
     return this;
   }
@@ -59,7 +62,7 @@ public final class MethodMetadata implements Serializable {
     return returnType;
   }
 
-  MethodMetadata returnType(Type returnType) {
+  public MethodMetadata returnType(Type returnType) {
     this.returnType = returnType;
     return this;
   }
@@ -68,7 +71,7 @@ public final class MethodMetadata implements Serializable {
     return urlIndex;
   }
 
-  MethodMetadata urlIndex(Integer urlIndex) {
+  public MethodMetadata urlIndex(Integer urlIndex) {
     this.urlIndex = urlIndex;
     return this;
   }
@@ -77,8 +80,26 @@ public final class MethodMetadata implements Serializable {
     return bodyIndex;
   }
 
-  MethodMetadata bodyIndex(Integer bodyIndex) {
+  public MethodMetadata bodyIndex(Integer bodyIndex) {
     this.bodyIndex = bodyIndex;
+    return this;
+  }
+
+  public Integer headerMapIndex() {
+    return headerMapIndex;
+  }
+
+  public MethodMetadata headerMapIndex(Integer headerMapIndex) {
+    this.headerMapIndex = headerMapIndex;
+    return this;
+  }
+
+  public Integer queryMapIndex() {
+    return queryMapIndex;
+  }
+
+  public MethodMetadata queryMapIndex(Integer queryMapIndex) {
+    this.queryMapIndex = queryMapIndex;
     return this;
   }
 
@@ -89,7 +110,7 @@ public final class MethodMetadata implements Serializable {
     return bodyType;
   }
 
-  MethodMetadata bodyType(Type bodyType) {
+  public MethodMetadata bodyType(Type bodyType) {
     this.bodyType = bodyType;
     return this;
   }
@@ -106,7 +127,26 @@ public final class MethodMetadata implements Serializable {
     return indexToName;
   }
 
+  /**
+   * If {@link #indexToExpander} is null, classes here will be instantiated by newInstance.
+   */
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
     return indexToExpanderClass;
+  }
+
+  /**
+   * After {@link #indexToExpanderClass} is populated, this is set by contracts that support
+   * runtime injection.
+   */
+  public MethodMetadata indexToExpander(Map<Integer, Expander> indexToExpander) {
+    this.indexToExpander = indexToExpander;
+    return this;
+  }
+
+  /**
+   * When not null, this value will be used instead of {@link #indexToExpander()}.
+   */
+  public Map<Integer, Expander> indexToExpander() {
+    return indexToExpander;
   }
 }

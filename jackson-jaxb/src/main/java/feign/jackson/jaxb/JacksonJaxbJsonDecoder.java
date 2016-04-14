@@ -12,23 +12,29 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/**
- * Created by u6028487 on 01/09/2015.
- */
-public class JacksonJaxbJsonDecoder implements Decoder{
+import feign.FeignException;
+import feign.Response;
+import feign.Util;
+import feign.codec.Decoder;
 
-    private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
+import static com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
-    public JacksonJaxbJsonDecoder() {
-        this.jacksonJaxbJsonProvider = new JacksonJaxbJsonProvider();
-    }
+public final class JacksonJaxbJsonDecoder implements Decoder {
+  private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
-    public JacksonJaxbJsonDecoder(ObjectMapper objectMapper) {
-        this.jacksonJaxbJsonProvider = new JacksonJaxbJsonProvider(objectMapper,JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
-    }
+  public JacksonJaxbJsonDecoder() {
+    this.jacksonJaxbJsonProvider = new JacksonJaxbJsonProvider();
+  }
 
-    @Override
-    public Object decode(Response response, Type type) throws IOException, DecodeException, FeignException {
-        return jacksonJaxbJsonProvider.readFrom(Object.class, type, null, MediaType.APPLICATION_JSON_TYPE, null, response.body().asInputStream());
-    }
+  public JacksonJaxbJsonDecoder(ObjectMapper objectMapper) {
+    this.jacksonJaxbJsonProvider = new JacksonJaxbJsonProvider(objectMapper, DEFAULT_ANNOTATIONS);
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException, FeignException {
+    if (response.status() == 404) return Util.emptyValueOf(type);
+    if (response.body() == null) return null;
+    return jacksonJaxbJsonProvider.readFrom(Object.class, type, null, APPLICATION_JSON_TYPE, null, response.body().asInputStream());
+  }
 }

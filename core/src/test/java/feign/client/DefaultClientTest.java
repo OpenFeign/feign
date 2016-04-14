@@ -17,7 +17,7 @@ package feign.client;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,12 +44,13 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
   Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
   Client disableHostnameVerification =
       new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
@@ -63,8 +64,7 @@ public class DefaultClientTest {
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.post("foo");
@@ -86,15 +86,14 @@ public class DefaultClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
-    TestInterface
-        api =
+    TestInterface api =
         Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   /**
@@ -116,7 +115,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
@@ -128,7 +127,7 @@ public class DefaultClientTest {
 
   @Test
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
@@ -140,7 +139,7 @@ public class DefaultClientTest {
 
   @Test
   public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
@@ -185,14 +184,44 @@ public class DefaultClientTest {
     api.post("foo");
   }
 
+  @Test
+  public void noResponseBodyForPost() {
+      server.enqueue(new MockResponse());
+
+      TestInterface api = Feign.builder()
+          .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+      api.noPostBody();
+  }
+  
+  @Test
+  public void noResponseBodyForPut() {
+      server.enqueue(new MockResponse());
+      
+      TestInterface api = Feign.builder()
+              .target(TestInterface.class, "http://localhost:" + server.getPort());
+      
+      api.noPutBody();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
 
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
+
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
     String patch();
+
+    @RequestLine("POST")
+    String noPostBody();
+    
+    @RequestLine("PUT")
+    String noPutBody();
   }
 }

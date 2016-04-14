@@ -1,4 +1,7 @@
 apply plugin: 'java'
+apply plugin: 'osgi'
+
+sourceCompatibility = 1.6
 
 dependencies {
     compile project(':feign-core')

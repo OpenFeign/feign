@@ -20,9 +20,13 @@ import com.google.gson.reflect.TypeToken;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import okio.Buffer;
+import org.assertj.core.api.Fail;
+import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,10 +34,12 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import feign.Target.HardCodedTarget;
@@ -54,7 +60,7 @@ public class FeignTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   @Test
   public void iterableQueryParams() throws Exception {
@@ -212,6 +218,131 @@ public class FeignTest {
   }
 
   @Test
+  public void headerMap() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    headerMap.put("Content-Type", "myContent");
+    headerMap.put("Custom-Header", "fooValue");
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Type", Arrays.asList("myContent")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+  }
+
+  @Test
+  public void headerMapWithHeaderAnnotations() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    headerMap.put("Custom-Header", "fooValue");
+    api.headerMapWithHeaderAnnotations(headerMap);
+
+    // header map should be additive for headers provided by annotations
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Encoding", Arrays.asList("deflate")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+
+    server.enqueue(new MockResponse());
+    headerMap.put("Content-Encoding", "overrideFromMap");
+
+    api.headerMapWithHeaderAnnotations(headerMap);
+
+    // if header map has entry that collides with annotation, value specified
+    // by header map should be used
+    assertThat(server.takeRequest())
+            .hasHeaders(
+                    MapEntry.entry("Content-Encoding", Arrays.asList("overrideFromMap")),
+                    MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+  }
+
+  @Test
+  public void queryMap() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", "fooValue");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+            .hasPath("/?name=alice&fooKey=fooValue");
+  }
+
+  @Test
+  public void queryMapIterableValuesExpanded() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", Arrays.asList("Alice", "Bob"));
+    queryMap.put("fooKey", "fooValue");
+    queryMap.put("emptyListKey", new ArrayList<String>());
+    queryMap.put("emptyStringKey", "");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+            .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey=");
+  }
+
+  @Test
+  public void queryMapWithQueryParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder()
+            .target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("fooKey", "fooValue");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // query map should be expanded after built-in parameters
+    assertThat(server.takeRequest())
+            .hasPath("/?name=alice&fooKey=fooValue");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "bob");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // query map keys take precedence over built-in parameters
+    assertThat(server.takeRequest())
+            .hasPath("/?name=bob");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", null);
+    api.queryMapWithQueryParams("alice", queryMap);
+    // null value for a query map key removes query parameter
+    assertThat(server.takeRequest())
+            .hasPath("/");
+  }
+
+  @Test
+  public void queryMapKeysMustBeStrings() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<Object, String> queryMap = new LinkedHashMap<Object, String>();
+    queryMap.put(Integer.valueOf(42), "alice");
+
+    try {
+      api.queryMap((Map) queryMap);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap key must be a String: 42");
+    }
+  }
+
+  @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals("TestInterface#post()",
                  Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
@@ -229,12 +360,12 @@ public class FeignTest {
 
   @Test
   public void canOverrideErrorDecoder() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("foo"));
+    server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("zone not found");
+    thrown.expectMessage("bad zone name");
 
     TestInterface api = new TestInterfaceBuilder()
-        .errorDecoder(new IllegalArgumentExceptionOn404())
+        .errorDecoder(new IllegalArgumentExceptionOn400())
         .target("http://localhost:" + server.getPort());
 
     api.post();
@@ -328,9 +459,26 @@ public class FeignTest {
         }
       }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.response();
-    api.response(); // if retryer instance was reused, this statement will throw an exception
+    api.post();
+    api.post(); // if retryer instance was reused, this statement will throw an exception
     assertEquals(4, server.getRequestCount());
+  }
+
+  @Test
+  public void whenReturnTypeIsResponseNoErrorHandling() {
+    Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+    headers.put("Location", Arrays.asList("http://bar.com"));
+    final Response response = Response.create(302, "Found", headers, new byte[0]);
+
+    TestInterface api = Feign.builder()
+        .client(new Client() { // fake client as Client.Default follows redirects.
+          public Response execute(Request request, Request.Options options) {
+            return response;
+          }
+        })
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertEquals(api.response().headers().get("Location"), Arrays.asList("http://bar.com"));
   }
 
   private static class MockRetryer implements Retryer
@@ -369,6 +517,23 @@ public class FeignTest {
   }
 
   @Test
+  public void decoderCanThrowUnwrappedExceptionInDecode404Mode() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    thrown.expect(NoSuchElementException.class);
+
+    TestInterface api = new TestInterfaceBuilder()
+        .decode404()
+        .decoder(new Decoder() {
+          @Override
+          public Object decode(Response response, Type type) throws IOException {
+            assertEquals(404, response.status());
+            throw new NoSuchElementException();
+          }
+        }).target("http://localhost:" + server.getPort());
+    api.post();
+  }
+
+  @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(EncodeException.class);
@@ -383,7 +548,7 @@ public class FeignTest {
 
     api.body(Arrays.asList("foo"));
   }
-  
+
   @Test
   public void equalsHashCodeAndToStringWork() {
     Target<TestInterface>
@@ -491,6 +656,19 @@ public class FeignTest {
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
 
+    @RequestLine("GET /")
+    void headerMap(@HeaderMap Map<String, Object> headerMap);
+
+    @RequestLine("GET /")
+    @Headers("Content-Encoding: deflate")
+    void headerMapWithHeaderAnnotations(@HeaderMap Map<String, Object> headerMap);
+
+    @RequestLine("GET /")
+    void queryMap(@QueryMap Map<String, Object> queryMap);
+
+    @RequestLine("GET /?name={name}")
+    void queryMapWithQueryParams(@Param("name") String name, @QueryMap Map<String, Object> queryMap);
+
     class DateToMillis implements Param.Expander {
 
       @Override
@@ -499,7 +677,6 @@ public class FeignTest {
       }
     }
   }
-
 
   interface OtherTestInterface {
 
@@ -529,12 +706,12 @@ public class FeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-      if (response.status() == 404) {
-        return new IllegalArgumentException("zone not found");
+      if (response.status() == 400) {
+        return new IllegalArgumentException("bad zone name");
       }
       return super.decode(methodKey, response);
     }
@@ -572,6 +749,11 @@ public class FeignTest {
 
     TestInterfaceBuilder errorDecoder(ErrorDecoder errorDecoder) {
       delegate.errorDecoder(errorDecoder);
+      return this;
+    }
+
+    TestInterfaceBuilder decode404() {
+      delegate.decode404();
       return this;
     }
 

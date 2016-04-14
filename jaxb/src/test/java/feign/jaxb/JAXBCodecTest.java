@@ -198,6 +198,16 @@ public class JAXBCodecTest {
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
 
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmpty() throws Exception {
+    Response response = Response.create(404, "NOT FOUND",
+        Collections.<String, Collection<String>>emptyMap(),
+        (byte[]) null);
+    assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
+        .decode(response, byte[].class)).isEmpty();
+  }
+
   @XmlRootElement
   @XmlAccessorType(XmlAccessType.FIELD)
   static class MockObject {

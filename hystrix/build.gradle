@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply plugin: 'osgi'
+
+sourceCompatibility = 1.6
+
+dependencies {
+    compile project(':feign-core')
+    compile 'com.netflix.hystrix:hystrix-core:1.4.21'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:1.7.1' // last version supporting JDK 7
+    testCompile 'com.squareup.okhttp:mockwebserver:2.7.5'
+    testCompile project(':feign-gson')
+    testCompile project(':feign-core').sourceSets.test.output // for assertions
+}

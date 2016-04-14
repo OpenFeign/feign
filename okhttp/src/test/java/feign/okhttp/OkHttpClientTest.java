@@ -16,9 +16,8 @@
 package feign.okhttp;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,12 +37,13 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
-  public final MockWebServerRule server = new MockWebServerRule();
+  public final MockWebServer server = new MockWebServer();
 
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
@@ -72,7 +72,7 @@ public class OkHttpClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#post(String); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -80,11 +80,10 @@ public class OkHttpClientTest {
         .client(new OkHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post("foo");
+    api.get();
   }
 
   @Test
-  @Ignore // TODO: Remove on OkHttp 2.5 https://github.com/square/okhttp/issues/1778
   public void patch() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse());
@@ -93,7 +92,7 @@ public class OkHttpClientTest {
         .client(new OkHttpClient())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals("foo", api.patch());
+    assertEquals("foo", api.patch(""));
 
     assertThat(server.takeRequest())
         .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
@@ -136,14 +135,46 @@ public class OkHttpClientTest {
     api.post("foo");
   }
 
+  @Test
+  public void noResponseBodyForPost() {
+      server.enqueue(new MockResponse());
+
+      TestInterface api = Feign.builder()
+          .client(new OkHttpClient())
+          .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+      api.noPostBody();
+  }
+  
+  @Test
+  public void noResponseBodyForPut() {
+      server.enqueue(new MockResponse());
+      
+      TestInterface api = Feign.builder()
+              .client(new OkHttpClient())
+              .target(TestInterface.class, "http://localhost:" + server.getPort());
+      
+      api.noPutBody();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
     Response post(String body);
 
+    @RequestLine("GET /")
+    @Headers("Accept: text/plain")
+    String get();
+
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
-    String patch();
+    String patch(String body);
+
+    @RequestLine("POST")
+    String noPostBody();
+    
+    @RequestLine("PUT")
+    String noPutBody();
   }
 }

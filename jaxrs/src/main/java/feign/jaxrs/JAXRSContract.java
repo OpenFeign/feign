@@ -43,13 +43,19 @@ public final class JAXRSContract extends Contract.BaseContract {
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
 
+  // Protected so unittest can call us
+  // XXX: Should parseAndValidateMetadata(Class, Method) be public instead? The old deprecated parseAndValidateMetadata(Method) was public..
   @Override
   protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
-    MethodMetadata md = super.parseAndValidateMetadata(targetType, method);
-    Path path = targetType.getAnnotation(Path.class);
+    return super.parseAndValidateMetadata(targetType, method);
+  }
+
+  @Override
+  protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
+    Path path = clz.getAnnotation(Path.class);
     if (path != null) {
       String pathValue = emptyToNull(path.value());
-      checkState(pathValue != null, "Path.value() was empty on type %s", targetType.getName());
+      checkState(pathValue != null, "Path.value() was empty on type %s", clz.getName());
       if (!pathValue.startsWith("/")) {
         pathValue = "/" + pathValue;
       }
@@ -57,9 +63,16 @@ public final class JAXRSContract extends Contract.BaseContract {
           // Strip off any trailing slashes, since the template has already had slashes appropriately added
           pathValue = pathValue.substring(0, pathValue.length()-1);
       }
-      md.template().insert(0, pathValue);
+      data.template().insert(0, pathValue);
     }
-    return md;
+    Consumes consumes = clz.getAnnotation(Consumes.class);
+    if (consumes != null) {
+      handleConsumesAnnotation(data, consumes, clz.getName());
+    }
+    Produces produces = clz.getAnnotation(Produces.class);
+    if (produces != null) {
+      handleProducesAnnotation(data, produces, clz.getName());
+    }
   }
 
   @Override
@@ -77,7 +90,7 @@ public final class JAXRSContract extends Contract.BaseContract {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
       checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
       String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
-      if (!methodAnnotationValue.startsWith("/") && !data.template().toString().endsWith("/")) {
+      if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;
       }
       // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
@@ -85,18 +98,26 @@ public final class JAXRSContract extends Contract.BaseContract {
       methodAnnotationValue = methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().append(methodAnnotationValue);
     } else if (annotationType == Produces.class) {
-      String[] serverProduces = ((Produces) methodAnnotation).value();
-      String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
-      checkState(clientAccepts != null, "Produces.value() was empty on method %s",
-                 method.getName());
-      data.template().header(ACCEPT, clientAccepts);
+      handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
     } else if (annotationType == Consumes.class) {
-      String[] serverConsumes = ((Consumes) methodAnnotation).value();
-      String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
-      checkState(clientProduces != null, "Consumes.value() was empty on method %s",
-                 method.getName());
-      data.template().header(CONTENT_TYPE, clientProduces);
+      handleConsumesAnnotation(data, (Consumes) methodAnnotation, "method " + method.getName());
     }
+  }
+
+  private void handleProducesAnnotation(MethodMetadata data, Produces produces, String name) {
+    String[] serverProduces = produces.value();
+    String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
+    checkState(clientAccepts != null, "Produces.value() was empty on %s", name);
+    data.template().header(ACCEPT, (String) null); // remove any previous produces
+    data.template().header(ACCEPT, clientAccepts);
+  }
+
+  private void handleConsumesAnnotation(MethodMetadata data, Consumes consumes, String name) {
+    String[] serverConsumes = consumes.value();
+    String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
+    checkState(clientProduces != null, "Consumes.value() was empty on %s", name);
+    data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
+    data.template().header(CONTENT_TYPE, clientProduces);
   }
 
   @Override

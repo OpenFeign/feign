@@ -33,7 +33,7 @@ import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.rule.MockWebServerRule;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import feign.Client;
 import feign.Feign;
@@ -47,9 +47,9 @@ public class RibbonClientTest {
   @Rule
   public final TestName testName = new TestName();
   @Rule
-  public final MockWebServerRule server1 = new MockWebServerRule();
+  public final MockWebServer server1 = new MockWebServer();
   @Rule
-  public final MockWebServerRule server2 = new MockWebServerRule();
+  public final MockWebServer server2 = new MockWebServer();
 
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
@@ -132,7 +132,7 @@ public class RibbonClientTest {
 
     Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
 
-    server1.get().useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server1.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server1.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));

@@ -15,11 +15,13 @@
  */
 package feign;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.junit.rules.ExpectedException;
 
 import static feign.RequestTemplate.expand;
 import static feign.assertj.FeignAssertions.assertThat;
@@ -27,6 +29,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 public class RequestTemplateTest {
+
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
 
   /**
    * Avoid depending on guava solely for map literals.
@@ -138,6 +143,51 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithHeaderSubstitutionsNotAtStart() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Authorization", "Bearer {token}");
+
+    template.resolve(mapOf("token", "1234"));
+
+    assertThat(template)
+        .hasHeaders(entry("Authorization", asList("Bearer 1234")));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Encoded", "{{{{dont_expand_me}}");
+
+    template.resolve(mapOf("dont_expand_me", "1234"));
+
+    assertThat(template)
+        .hasHeaders(entry("Encoded", asList("{{dont_expand_me}}")));
+  }
+
+  /** This ensures we don't mess up vnd types */
+  @Test
+  public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Accept", "application/vnd.github.v3+{type}");
+
+    template.resolve(mapOf("type", "json"));
+
+    assertThat(template)
+        .hasHeaders(entry("Accept", asList("application/vnd.github.v3+json")));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderEmptyResult() {
+    RequestTemplate template = new RequestTemplate().method("GET")
+        .header("Encoded", "{var}");
+
+    template.resolve(mapOf("var", ""));
+
+    assertThat(template)
+        .hasHeaders(entry("Encoded", asList("")));
+  }
+
+  @Test
   public void resolveTemplateWithMixedRequestLineParams() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")//
         .append("/domains/{domainId}/records")//
@@ -198,6 +248,26 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
+    RequestTemplate template = new RequestTemplate().method("POST")
+      .bodyTemplate(
+        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+
+    template = template.resolve(
+      mapOf(
+        "customer_name", "netflix",
+        "user_name", "denominator",
+        "password", "abc+123%25d8"
+      )
+    );
+
+    assertThat(template)
+      .hasBody(
+        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}"
+      );
+  }
+
+  @Test
   public void skipUnresolvedQueries() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")//
         .append("/domains/{domainId}/records")//
@@ -252,5 +322,14 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasUrl("/api/%2F");
+  }
+
+  /** Implementations have a bug if they pass junk as the http method. */
+  @Test
+  public void uriStuffedIntoMethod() throws Exception {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
+
+    new RequestTemplate().method("/path?queryParam={queryParam}");
   }
 }

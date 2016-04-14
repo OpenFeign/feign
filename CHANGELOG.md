@@ -1,3 +1,45 @@
+### Version 8.16
+* Adds `@HeaderMap` annotation to support dynamic header fields and values
+* Add support for default and static methods on interfaces
+
+### Version 8.15
+* Adds `@QueryMap` annotation to support dynamic query parameters
+* Supports runtime injection of `Param.Expander` via `MethodMetadata.indexToExpander`
+* Adds fallback support for HystrixCommand, Observable, and Single results
+* Supports PUT without a body parameter
+* Supports substitutions in `@Headers` like in `@Body`. (#326)
+  * **Note:** You might need to URL-encode literal values of `{` or `%` in your existing code.
+
+### Version 8.14
+* Add support for RxJava Observable and Single return types via the `HystrixFeign` builder.
+* Adds fallback implementation configuration to the `HystrixFeign` builder
+* Bumps dependency versions, most notably Gson 2.5 and OkHttp 2.7
+
+### Version 8.13
+* Never expands >8kb responses into memory
+
+### Version 8.12
+* Adds `Feign.Builder.decode404()` to reduce boilerplate for empty semantics.
+
+### Version 8.11
+* Adds support for Hystrix via a `HystrixFeign` builder.
+
+### Version 8.10
+* Adds HTTP status to FeignException for easier response handling
+* Reads class-level @Produces/@Consumes JAX-RS annotations
+* Supports POST without a body parameter
+
+### Version 8.9
+* Skips error handling when return type is `Response`
+
+### Version 8.8
+* Adds jackson-jaxb codec
+* Bumps dependency versions for integrations
+ * OkHttp/MockWebServer 2.5.0
+ * Jackson 2.6.1
+ * Apache Http Client 4.5
+ * JMH 1.10.5
+
 ### Version 8.7
 * Bumps dependency versions for integrations
  * OkHttp/MockWebServer 2.4.0
@@ -18,7 +60,7 @@
   It is suggested that you simply return a new instance of your Retryer class.
 
 ### Version 8.3
-* Adds client implementation for Apache Http Client 
+* Adds client implementation for Apache Http Client
 
 ### Version 8.2
 * Allows customized request construction by exposing `Request.create()`
@@ -152,7 +194,7 @@
 * Default Encoder and Form Encoder is `Encoder.Text<Object>`
 * Default Decoder is `Decoder.TextStream<Object>`
 * ErrorDecoder now returns Exception, not fallback.
-* There can only be one `ErrorDecoder` and `Request.Options` binding now. 
+* There can only be one `ErrorDecoder` and `Request.Options` binding now.
 
 ### Version 2.0.0
 * removes guava and jax-rs dependencies

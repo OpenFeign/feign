@@ -17,6 +17,7 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 
+import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,6 +27,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
@@ -128,7 +130,7 @@ public class DefaultContractTest {
         .hasQueries(
             entry("flag", asList(new String[]{null})),
             entry("NoErrors", asList(new String[]{null}))
-        ); 
+        );
   }
 
   @Test
@@ -237,6 +239,19 @@ public class DefaultContractTest {
 
     assertThat(md.indexToName())
         .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.formParams()).isEmpty();
+  }
+
+  @Test
+  public void headerParamsParseIntoIndexToNameNotAtStart() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(HeaderParamsNotAtStart.class, "logout", String.class);
+
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("Bearer {authToken}", "Foo")));
+
+    assertThat(md.indexToName())
+        .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.formParams()).isEmpty();
   }
 
   @Test
@@ -245,6 +260,40 @@ public class DefaultContractTest {
 
     assertThat(md.indexToExpanderClass())
         .containsExactly(entry(0, DateToMillis.class));
+  }
+
+  @Test
+  public void queryMap() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void queryMapMapSubclass() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapMapSubclass", SortedMap.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void onlyOneQueryMapAnnotationPermitted() throws Exception {
+    try {
+      parseAndValidateMetadata(QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap annotation was present on multiple parameters.");
+    }
+  }
+
+  @Test
+  public void queryMapMustBeInstanceOfMap() throws Exception {
+    try {
+      parseAndValidateMetadata(QueryMapTestInterface.class, "nonMapQueryMap", String.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap parameter must be a Map: class java.lang.String");
+    }
   }
 
   @Test
@@ -358,6 +407,13 @@ public class DefaultContractTest {
     void logout(@Param("authToken") String token);
   }
 
+  interface HeaderParamsNotAtStart {
+
+    @RequestLine("POST /")
+    @Headers({"Authorization: Bearer {authToken}", "Authorization: Foo"})
+    void logout(@Param("authToken") String token);
+  }
+
   interface CustomExpander {
 
     @RequestLine("POST /?date={date}")
@@ -370,6 +426,23 @@ public class DefaultContractTest {
     public String expand(Object value) {
       return String.valueOf(((Date) value).getTime());
     }
+  }
+
+  interface QueryMapTestInterface {
+
+    @RequestLine("POST /")
+    void queryMap(@QueryMap Map<String, String> queryMap);
+
+    @RequestLine("POST /")
+    void queryMapMapSubclass(@QueryMap SortedMap<String, String> queryMap);
+
+    // invalid
+    @RequestLine("POST /")
+    void multipleQueryMap(@QueryMap Map<String, String> mapOne, @QueryMap Map<String, String> mapTwo);
+
+    // invalid
+    @RequestLine("POST /")
+    void nonMapQueryMap(@QueryMap String notAMap);
   }
 
   interface SlashNeedToBeEncoded {
@@ -504,10 +577,154 @@ public class DefaultContractTest {
     );
   }
 
+  @Headers("Authorization: {authHdr}")
+  interface ParameterizedHeaderExpandApi  {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+  }
+
+  @Test
+  public void parameterizedHeaderExpandApi() throws Exception {
+    List<MethodMetadata> md = contract.parseAndValidatateMetadata(ParameterizedHeaderExpandApi.class);
+
+    assertThat(md).hasSize(1);
+
+    assertThat(md.get(0).configKey())
+        .isEqualTo("ParameterizedHeaderExpandApi#getZone(String,String)");
+    assertThat(md.get(0).returnType())
+        .isEqualTo(String.class);
+    assertThat(md.get(0).template())
+        .hasHeaders(entry("Authorization", asList("{authHdr}")), entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.get(0).formParams())
+        .isEmpty();
+  }
+
+  @Test
+  public void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
+    List<MethodMetadata>
+        md =
+        contract.parseAndValidatateMetadata(
+            ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
+
+    assertThat(md).hasSize(1);
+
+    assertThat(md.get(0).configKey())
+        .isEqualTo("ParameterizedHeaderNotStartingWithCurlyBraceExpandApi#getZone(String,String)");
+    assertThat(md.get(0).returnType())
+        .isEqualTo(String.class);
+    assertThat(md.get(0).template())
+        .hasHeaders(entry("Authorization", asList("Bearer {authHdr}")),
+            entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.get(0).formParams())
+        .isEmpty();
+  }
+
+  @Headers("Authorization: Bearer {authHdr}")
+  interface ParameterizedHeaderNotStartingWithCurlyBraceExpandApi {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+  }
+
+  @Headers("Authorization: {authHdr}")
+  interface ParameterizedHeaderBase {
+  }
+
+  interface ParameterizedHeaderExpandInheritedApi extends ParameterizedHeaderBase {
+    @RequestLine("GET /api/{zoneId}")
+    @Headers("Accept: application/json")
+    String getZoneAccept(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+
+    @RequestLine("GET /api/{zoneId}")
+    String getZone(@Param("zoneId") String vhost, @Param("authHdr") String authHdr);
+  }
+
+  @Test
+  public void parameterizedHeaderExpandApiBaseClass() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(ParameterizedHeaderExpandInheritedApi.class);
+
+    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (MethodMetadata m : mds) {
+      byConfigKey.put(m.configKey(), m);
+    }
+
+    assertThat(byConfigKey)
+        .containsOnlyKeys("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)",
+				  "ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
+
+	 MethodMetadata md = byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)");
+    assertThat(md.returnType())
+        .isEqualTo(String.class);
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("{authHdr}")), entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a formParam
+    assertThat(md.formParams())
+        .isEmpty();
+
+	 md = byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
+    assertThat(md.returnType())
+        .isEqualTo(String.class);
+    assertThat(md.template())
+        .hasHeaders(entry("Authorization", asList("{authHdr}")));
+    assertThat(md.formParams())
+        .isEmpty();
+  }
+
   private MethodMetadata parseAndValidateMetadata(Class<?> targetType, String method,
                                                   Class<?>... parameterTypes)
       throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(targetType,
                                              targetType.getMethod(method, parameterTypes));
+  }
+
+  interface MissingMethod {
+    @RequestLine("/path?queryParam={queryParam}")
+    Response updateSharing(@Param("queryParam") long queryParam, String bodyParam);
+  }
+
+  /** Let's help folks not lose time when they mistake request line for a URI! */
+  @Test
+  public void missingMethod() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("RequestLine annotation didn't start with an HTTP verb on method updateSharing");
+
+    contract.parseAndValidatateMetadata(MissingMethod.class);
+  }
+
+  interface StaticMethodOnInterface {
+    @RequestLine("GET /api/{key}")
+    String get(@Param("key") String key);
+
+    static String staticMethod() {
+      return "value";
+    }
+  }
+
+  @Test
+  public void staticMethodsOnInterfaceIgnored() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(StaticMethodOnInterface.class);
+    assertThat(mds).hasSize(1);
+    MethodMetadata md = mds.get(0);
+    assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
+  }
+
+  interface DefaultMethodOnInterface {
+    @RequestLine("GET /api/{key}")
+    String get(@Param("key") String key);
+
+    default String defaultGet(String key) {
+      return get(key);
+    }
+  }
+
+  @Test
+  public void defaultMethodsOnInterfaceIgnored() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(DefaultMethodOnInterface.class);
+    assertThat(mds).hasSize(1);
+    MethodMetadata md = mds.get(0);
+    assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
   }
 }

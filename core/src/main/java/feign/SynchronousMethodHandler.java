@@ -43,11 +43,13 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Options options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
+  private final boolean decode404;
+
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder) {
+                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -60,6 +62,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.options = checkNotNull(options, "options for %s", target);
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
+    this.decode404 = decode404;
   }
 
   @Override
@@ -103,20 +106,22 @@ final class SynchronousMethodHandler implements MethodHandler {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
       }
+      if (Response.class == metadata.returnType()) {
+        if (response.body() == null) {
+          return response;
+        }
+        // Ensure the response body is disconnected
+        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+      }
       if (response.status() >= 200 && response.status() < 300) {
-        if (Response.class == metadata.returnType()) {
-          if (response.body() == null) {
-            return response;
-          }
-          // Ensure the response body is disconnected
-          byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-          return Response
-              .create(response.status(), response.reason(), response.headers(), bodyData);
-        } else if (void.class == metadata.returnType()) {
+        if (void.class == metadata.returnType()) {
           return null;
         } else {
           return decode(response);
         }
+      } else if (decode404 && response.status() == 404) {
+        return decoder.decode(response, metadata.returnType());
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);
       }
@@ -158,22 +163,24 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final List<RequestInterceptor> requestInterceptors;
     private final Logger logger;
     private final Logger.Level logLevel;
+    private final boolean decode404;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel) {
+            Logger logger, Logger.Level logLevel, boolean decode404) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
+      this.decode404 = decode404;
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options, Decoder decoder, ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-                                          logLevel, md,
-                                          buildTemplateFromArgs, options, decoder, errorDecoder);
+                                          logLevel, md, buildTemplateFromArgs, options, decoder,
+                                          errorDecoder, decode404);
     }
   }
 }
