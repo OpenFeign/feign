@@ -15,9 +15,13 @@
  */
 package feign;
 
+
+import feign.translate.DefaultTemplate;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -213,6 +217,12 @@ public interface Contract {
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
                    method.getName());
         data.template().headers(toMap(headersOnMethod));
+      } else if (annotationType == TemplateEngine.class) {
+        Class<? extends feign.translate.TemplateEngine> engine = TemplateEngine.class.cast(methodAnnotation).value();
+        if(data.template().body() != null && !engine.getClass().equals(DefaultTemplate.class)){
+          data.template().bodyTemplate(new String(data.template().body(), Charset.forName("UTF-8")));
+        }
+        data.template().templateEngineClass(engine);
       }
     }
 
