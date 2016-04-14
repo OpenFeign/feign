@@ -11,6 +11,8 @@ public class DefaultTemplate implements TemplateEngine{
 
     @Override
     public String translate(String template, Map<String, ?> variables) {
+        // skip expansion if there's no valid variables set. ex. {a} is the
+        // first valid
         if (checkNotNull(template, "template").length() < 3) {
             return template.toString();
         }
@@ -22,9 +24,19 @@ public class DefaultTemplate implements TemplateEngine{
         for (char c : template.toCharArray()) {
             switch (c) {
                 case '{':
+                    if (inVar) {
+                        // '{{' is an escape: write the brace and don't interpret as a variable
+                        builder.append("{");
+                        inVar = false;
+                        break;
+                    }
                     inVar = true;
                     break;
                 case '}':
+                    if (!inVar) { // then write the brace literally
+                        builder.append('}');
+                        break;
+                    }
                     inVar = false;
                     String key = var.toString();
                     Object value = variables.get(var.toString());
