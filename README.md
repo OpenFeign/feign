@@ -429,6 +429,22 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 V find(@QueryMap Map<String, Object> queryMap);
 ```
 
+#### TemplateEngine annotation
+You can specify which template engine you want to transform de request, if not specified, it choose the default behaviour.
+
+You can create your own template engine by implementing __feign.translate.TemplateEngine__ and adding it as a ServiceLoader class in META-INF/services
+
+#### VelocityTemplate
+You can take profit of [Apache Velocity](http://velocity.apache.org/), to transform your request. You need to import __feign-template-velocity__ dependency
+
+ ```java
+ interface GitHub {
+   @RequestLine("GET /repos/${owner}/${!repo}/contributors")
+   @TemplateEngine(VelocityTemplate.class)
+   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+ }
+```
+
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
 These allows Feign clients to contain logic that is not expressly defined by the underlying API.
