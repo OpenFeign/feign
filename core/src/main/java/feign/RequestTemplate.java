@@ -195,9 +195,9 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    String resolvedUrl = expand(url.toString(), encoded, templateEngineClass).replace("+", "%20");
+    String resolvedUrl = expand(url.toString(), encoded,templateEngineClass).replace("+", "%20");
     if (decodeSlash) {
-    	resolvedUrl = resolvedUrl.replace("%2F", "/");
+      resolvedUrl = resolvedUrl.replace("%2F", "/");
     }
     url = new StringBuilder(resolvedUrl);
 
@@ -205,7 +205,7 @@ public final class RequestTemplate implements Serializable {
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved = expand(value, unencoded, templateEngineClass);
+        String resolved = expand(value, unencoded,templateEngineClass);
         resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
@@ -213,7 +213,7 @@ public final class RequestTemplate implements Serializable {
     headers.clear();
     headers.putAll(resolvedHeaders);
     if (bodyTemplate != null) {
-      body(urlDecode(expand(bodyTemplate, unencoded, templateEngineClass)));
+      body(urlDecode(expand(bodyTemplate, encoded,templateEngineClass)));
     }
     return this;
   }
