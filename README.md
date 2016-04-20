@@ -16,3 +16,8 @@ maven.boilerplate contains a set of configuration files for CI(travis, appveyor)
 I wanna all my projects share what I think makes life easier without having to remember copy and pasting all.
 
 This way, a script can remember to copy and paste for me.
+
+As a preparation step, it's really wise to run
+````
+$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:2.4.0:sort -Dsort.keepBlankLines=true "-Dsort.lineSeparator=\n" -Dsort.predefinedSortOrder=custom_1 -Dsort.createBackupFile=false
+````
