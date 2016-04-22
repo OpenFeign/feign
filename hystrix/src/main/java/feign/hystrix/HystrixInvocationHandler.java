@@ -26,7 +26,8 @@ import feign.Target;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.lang.reflect.Proxy;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import rx.Observable;
 import rx.Single;
@@ -55,7 +56,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
    * @return cached methods map for fallback invoking
    */
   private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
-    Map<Method, Method> result = new HashMap<Method, Method>();
+    Map<Method, Method> result = new LinkedHashMap<Method, Method>();
     for (Method method : dispatch.keySet()) {
       method.setAccessible(true);
       result.put(method, method);
@@ -66,6 +67,22 @@ final class HystrixInvocationHandler implements InvocationHandler {
   @Override
   public Object invoke(final Object proxy, final Method method, final Object[] args)
       throws Throwable {
+    // early exit if the invoked method is from java.lang.Object
+    // code is the same as ReflectiveFeign.FeignInvocationHandler
+    if ("equals".equals(method.getName())) {
+      try {
+        Object otherHandler =
+            args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+        return equals(otherHandler);
+      } catch (IllegalArgumentException e) {
+        return false;
+      }
+    } else if ("hashCode".equals(method.getName())) {
+      return hashCode();
+    } else if ("toString".equals(method.getName())) {
+      return toString();
+    }
+
     String groupKey = this.target.name();
     String commandKey = method.getName();
     HystrixCommand.Setter setter =
@@ -135,6 +152,25 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
   private boolean isReturnsSingle(Method method) {
     return Single.class.isAssignableFrom(method.getReturnType());
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof HystrixInvocationHandler) {
+      HystrixInvocationHandler other = (HystrixInvocationHandler) obj;
+      return target.equals(other.target);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return target.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return target.toString();
   }
 
   static final class Factory implements InvocationHandlerFactory {
