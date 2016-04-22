@@ -20,6 +20,8 @@ import feign.FeignException;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
+import feign.Target;
+import feign.Target.HardCodedTarget;
 import feign.gson.GsonDecoder;
 import rx.Observable;
 import rx.Single;
@@ -426,11 +428,56 @@ public class HystrixBuilderTest {
     assertThat(list).isNotNull().containsExactly("fallback");
   }
 
+  @Test
+  public void equalsHashCodeAndToStringWork() {
+    Target<TestInterface> t1 =
+        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8080");
+    Target<TestInterface> t2 =
+        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
+    Target<OtherTestInterface> t3 =
+        new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
+    TestInterface i1 = HystrixFeign.builder().target(t1);
+    TestInterface i2 = HystrixFeign.builder().target(t1);
+    TestInterface i3 = HystrixFeign.builder().target(t2);
+    OtherTestInterface i4 = HystrixFeign.builder().target(t3);
+
+    assertThat(i1)
+        .isEqualTo(i2)
+        .isNotEqualTo(i3)
+        .isNotEqualTo(i4);
+
+    assertThat(i1.hashCode())
+        .isEqualTo(i2.hashCode())
+        .isNotEqualTo(i3.hashCode())
+        .isNotEqualTo(i4.hashCode());
+
+    assertThat(i1.toString())
+        .isEqualTo(i2.toString())
+        .isNotEqualTo(i3.toString())
+        .isNotEqualTo(i4.toString());
+
+    assertThat(t1)
+        .isNotEqualTo(i1);
+
+    assertThat(t1.hashCode())
+        .isEqualTo(i1.hashCode());
+
+    assertThat(t1.toString())
+        .isEqualTo(i1.toString());
+  }
+
   private TestInterface target() {
     return HystrixFeign.builder()
         .decoder(new GsonDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort(),
             new FallbackTestInterface());
+  }
+
+  interface OtherTestInterface {
+
+    @RequestLine("GET /")
+    @Headers("Accept: application/json")
+    HystrixCommand<List<String>> listCommand();
   }
 
   interface TestInterface {
