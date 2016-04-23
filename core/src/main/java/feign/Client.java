@@ -152,10 +152,9 @@ public interface Client {
       int status = connection.getResponseCode();
       String reason = connection.getResponseMessage();
 
-      if (status < 0 || reason == null) {
-        // invalid response
-        throw new IOException(format("Invalid HTTP executing %s %s", connection.getRequestMethod(),
-            connection.getURL()));
+      if (status < 0) {
+        throw new IOException(format("Invalid status(%s) executing %s %s", status,
+            connection.getRequestMethod(), connection.getURL()));
       }
 
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();

@@ -84,6 +84,19 @@ public class DefaultClientTest {
   }
 
   @Test
+  public void reasonPhraseIsOptional() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+
+    TestInterface api =
+        Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.post("foo");
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isNull();
+  }
+
+  @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
