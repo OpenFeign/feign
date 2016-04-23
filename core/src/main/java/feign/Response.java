@@ -44,7 +44,7 @@ public final class Response implements Closeable {
   private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
     checkState(status >= 200, "Invalid status code: %s", status);
     this.status = status;
-    this.reason = checkNotNull(reason, "reason");
+    this.reason = reason; // nullable
     LinkedHashMap<String, Collection<String>> copyOf =
         new LinkedHashMap<String, Collection<String>>();
     copyOf.putAll(checkNotNull(headers, "headers"));
@@ -89,6 +89,11 @@ public final class Response implements Closeable {
     return status;
   }
 
+  /**
+   * Nullable and not set when using http/2
+   *
+   * <p>See https://github.com/http2/http2-spec/issues/202
+   */
   public String reason() {
     return reason;
   }
@@ -104,16 +109,15 @@ public final class Response implements Closeable {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("HTTP/1.1 ").append(status).append(' ').append(reason).append('\n');
+    StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
+    if (reason != null) builder.append(' ').append(reason);
+    builder.append('\n');
     for (String field : headers.keySet()) {
       for (String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) {
-      builder.append('\n').append(body);
-    }
+    if (body != null) builder.append('\n').append(body);
     return builder.toString();
   }
 

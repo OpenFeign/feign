@@ -69,6 +69,19 @@ public class ApacheHttpClientTest {
   }
 
   @Test
+  public void reasonPhraseIsOptional() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+
+    TestInterface api =
+        Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.post("foo");
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isNull();
+  }
+
+  @Test
   public void parsesResponseMissingLength() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
