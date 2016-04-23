@@ -77,7 +77,9 @@ public abstract class Logger {
 
   protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
                                             long elapsedTime) throws IOException {
-    log(configKey, "<--- HTTP/1.1 %s %s (%sms)", response.status(), response.reason(), elapsedTime);
+    String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ?
+        " " + response.reason() : "";
+    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", response.status(), reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
