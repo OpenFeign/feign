@@ -112,6 +112,38 @@ public class LoggerTest {
   }
 
   @RunWith(Parameterized.class)
+  public static class ReasonPhraseOptional extends LoggerTest {
+
+    private final Level logLevel;
+
+    public ReasonPhraseOptional(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][]{
+          {Level.BASIC, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
+      });
+    }
+
+    @Test
+    public void reasonPhraseOptional() throws IOException, InterruptedException {
+      server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+
+      SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  @RunWith(Parameterized.class)
   public static class ReadTimeoutEmitsTest extends LoggerTest {
 
     private final Level logLevel;
