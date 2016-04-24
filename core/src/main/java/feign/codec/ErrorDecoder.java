@@ -44,7 +44,7 @@ import java.util.Map;
  *   public Exception decode(String methodKey, Response response) {
  *    if (response.status() == 400)
  *        throw new IllegalArgumentException(&quot;bad zone name&quot;);
- *    return ErrorDecoder.DEFAULT.decode(methodKey, request, response);
+ *    return new ErrorDecoder.Default().decode(methodKey, request, response);
  *   }
  *
  * }
