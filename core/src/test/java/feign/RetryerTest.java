@@ -25,7 +25,7 @@ import feign.Retryer.Default;
 
 import static org.junit.Assert.assertEquals;
 
-public class DefaultRetryerTest {
+public class RetryerTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
@@ -68,5 +68,10 @@ public class DefaultRetryerTest {
     retryer.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
     assertEquals(2, retryer.attempt);
     assertEquals(1000, retryer.sleptForMillis);
+  }
+
+  @Test(expected = RetryableException.class)
+  public void neverRetryAlwaysPropagates() {
+    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
   }
 }
