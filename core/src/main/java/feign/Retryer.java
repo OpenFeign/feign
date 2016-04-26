@@ -94,4 +94,19 @@ public interface Retryer extends Cloneable {
       return new Default(period, maxPeriod, maxAttempts);
     }
   }
+
+  /** Implementation that never retries request. It propagates the RetryableException. */
+  Retryer NEVER_RETRY =
+      new Retryer() {
+
+        @Override
+        public void continueOrPropagate(RetryableException e) {
+          throw e;
+        }
+
+        @Override
+        public Retryer clone() {
+          return this;
+        }
+      };
 }
