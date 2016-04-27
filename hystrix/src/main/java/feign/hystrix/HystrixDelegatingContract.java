@@ -10,6 +10,7 @@ import com.netflix.hystrix.HystrixCommand;
 
 import feign.Contract;
 import feign.MethodMetadata;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -44,6 +45,8 @@ public final class HystrixDelegatingContract implements Contract {
       } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(Single.class)) {
         Type actualType = resolveLastTypeParameter(type, Single.class);
         metadata.returnType(actualType);
+      } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(Completable.class)) {
+        metadata.returnType(void.class);
       }
     }
 
