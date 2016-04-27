@@ -8,6 +8,7 @@ import feign.MethodMetadata;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -46,6 +47,9 @@ public final class HystrixDelegatingContract implements Contract {
           && ((ParameterizedType) type).getRawType().equals(Single.class)) {
         Type actualType = resolveLastTypeParameter(type, Single.class);
         metadata.returnType(actualType);
+      } else if (type instanceof ParameterizedType
+          && ((ParameterizedType) type).getRawType().equals(Completable.class)) {
+        metadata.returnType(void.class);
       }
     }
 
