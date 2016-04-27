@@ -29,6 +29,7 @@ import java.util.Map;
 import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
@@ -117,6 +118,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
           } else if (isReturnsSingle(method)) {
             // Create a cold Observable as a Single
             return ((Single) result).toObservable().toBlocking().first();
+          } else if (isReturnsCompletable(method)) {
+            ((Completable) result).await();
+            return null;
           } else {
             return result;
           }
@@ -138,8 +142,14 @@ final class HystrixInvocationHandler implements InvocationHandler {
     } else if (isReturnsSingle(method)) {
       // Create a cold Observable as a Single
       return hystrixCommand.toObservable().toSingle();
+    } else if(isReturnsCompletable(method)) {
+      return hystrixCommand.toObservable().toCompletable();
     }
     return hystrixCommand.execute();
+  }
+
+  private boolean isReturnsCompletable(Method method) {
+    return Completable.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsHystrixCommand(Method method) {
