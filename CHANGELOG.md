@@ -1,3 +1,7 @@
+### Version 8.17
+* Adds support to RxJava Completable via `HystrixFeign` builder with fallback support
+* Upgraded hystrix-core to 1.4.26
+
 ### Version 8.16
 * Adds `@HeaderMap` annotation to support dynamic header fields and values
 * Add support for default and static methods on interfaces
