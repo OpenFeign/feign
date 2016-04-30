@@ -23,6 +23,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.observers.TestSubscriber;
@@ -384,6 +385,81 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxCompletableEmptyBody() {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = target();
+
+    Completable completable = api.completable();
+
+    assertThat(completable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    completable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    testSubscriber.assertCompleted();
+    testSubscriber.assertNoErrors();
+  }
+
+  @Test
+  public void rxCompletableWithBody() {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = target();
+
+    Completable completable = api.completable();
+
+    assertThat(completable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    completable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    testSubscriber.assertCompleted();
+    testSubscriber.assertNoErrors();
+  }
+
+  @Test
+  public void rxCompletableFailWithoutFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api =
+        HystrixFeign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Completable completable = api.completable();
+
+    assertThat(completable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    completable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    testSubscriber.assertError(HystrixRuntimeException.class);
+  }
+
+  @Test
+  public void rxCompletableFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    Completable completable = api.completable();
+
+    assertThat(completable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    completable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    testSubscriber.assertCompleted();
+  }
+
+  @Test
   public void plainString() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -520,6 +596,9 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     List<String> getList();
+
+    @RequestLine("GET /")
+    Completable completable();
   }
 
   class FallbackTestInterface implements TestInterface {
@@ -599,6 +678,11 @@ public class HystrixBuilderTest {
       List<String> fallbackResult = new ArrayList<String>();
       fallbackResult.add("fallback");
       return fallbackResult;
+    }
+
+    @Override
+    public Completable completable() {
+      return Completable.complete();
     }
   }
 }
