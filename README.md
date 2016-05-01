@@ -2,6 +2,36 @@
 
 This module adds support for encoding **application/x-www-form-urlencoded** and **multipart/form-data** forms.
 
+## Add dependency
+
+Add the following snippet to any project's pom that depends on **feign-form** project:
+```xml
+<repositories>
+    <repository>
+        <id>feign-form</id>
+        <url>https://raw.github.com/xxlabaza/feign-form/mvn-repo/</url>
+        <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+        </snapshots>
+    </repository>
+</repositories>
+```
+Then, include dependency to your project:
+```xml
+<dependencies>
+    ...
+    <dependency>
+        <groupId>ru.xxlabaza</groupId>
+        <artifactId>feign-form</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+    ...
+</dependencies>
+```
+
+## Usage
+
 Add `FormEncoder` to your `Feign.Builder` like so:
 
 ```java
