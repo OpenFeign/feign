@@ -18,12 +18,12 @@ package feign.ribbon;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.Feign;
 import feign.RequestLine;
 import java.io.IOException;
 import java.net.URL;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,7 +47,8 @@ public class LoadBalancingTargetTest {
 
     getConfigInstance()
         .setProperty(
-            serverListKey, hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
+            serverListKey,
+            hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
 
     try {
       LoadBalancingTarget<TestInterface> target =

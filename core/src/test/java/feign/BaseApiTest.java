@@ -18,12 +18,12 @@ package feign;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import java.util.List;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public class BaseApiTest {
   public void resolvesParameterizedResult() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
 
     Feign.builder()
         .decoder(
@@ -83,7 +83,7 @@ public class BaseApiTest {
   public void resolvesBodyParameter() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
 
     Feign.builder()
         .encoder(

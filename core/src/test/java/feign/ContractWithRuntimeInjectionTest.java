@@ -17,11 +17,11 @@ package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
