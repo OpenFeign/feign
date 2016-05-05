@@ -15,8 +15,8 @@
  */
 package feign.assertj;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import okhttp3.Headers;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
