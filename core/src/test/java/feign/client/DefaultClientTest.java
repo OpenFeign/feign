@@ -15,9 +15,9 @@
  */
 package feign.client;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.SocketPolicy;
+import okhttp3.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;

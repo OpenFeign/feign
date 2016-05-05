@@ -15,8 +15,8 @@
  */
 package feign;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
@@ -105,7 +105,7 @@ public class LoggerTest {
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
-          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+          .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }
@@ -137,7 +137,7 @@ public class LoggerTest {
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
-          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+          .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }
@@ -194,7 +194,7 @@ public class LoggerTest {
           .logger(logger)
           .logLevel(logLevel)
           .options(new Request.Options(10 * 1000, 50))
-          .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+          .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }

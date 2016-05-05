@@ -18,9 +18,9 @@ package feign;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.SocketPolicy;
+import okhttp3.mockwebserver.MockWebServer;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
