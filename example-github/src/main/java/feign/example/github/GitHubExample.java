@@ -15,9 +15,6 @@
  */
 package feign.example.github;
 
-import java.io.IOException;
-import java.util.List;
-
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
@@ -26,6 +23,9 @@ import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Inspired by {@code com.example.retrofit.GitHubClient}
@@ -33,14 +33,41 @@ import feign.gson.GsonDecoder;
 public class GitHubExample {
 
   interface GitHub {
+
+    class Repository {
+      String name;
+    }
+
+    class Contributor {
+      String login;
+    }
+
+    @RequestLine("GET /users/{username}/repos?sort=full_name")
+    List<Repository> repos(@Param("username") String owner);
+
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+    /** Lists all contributors for all repos owned by a user. */
+    default List<String> contributors(String owner) {
+      return repos(owner).stream()
+                         .flatMap(repo -> contributors(owner, repo.name).stream())
+                         .map(c -> c.login)
+                         .distinct()
+                         .collect(Collectors.toList());
+    }
+
+    static GitHub connect() {
+      Decoder decoder = new GsonDecoder();
+      return Feign.builder()
+          .decoder(decoder)
+          .errorDecoder(new GitHubErrorDecoder(decoder))
+          .logger(new Logger.ErrorLogger())
+          .logLevel(Logger.Level.BASIC)
+          .target(GitHub.class, "https://api.github.com");
+    }
   }
 
-  static class Contributor {
-    String login;
-    int contributions;
-  }
 
   static class GitHubClientError extends RuntimeException {
     private String message; // parsed from json
@@ -52,18 +79,12 @@ public class GitHubExample {
   }
 
   public static void main(String... args) {
-    Decoder decoder = new GsonDecoder();
-    GitHub github = Feign.builder()
-        .decoder(decoder)
-        .errorDecoder(new GitHubErrorDecoder(decoder))
-        .logger(new Logger.ErrorLogger())
-        .logLevel(Logger.Level.BASIC)
-        .target(GitHub.class, "https://api.github.com");
+    GitHub github = GitHub.connect();
 
-    System.out.println("Let's fetch and print a list of the contributors to this library.");
-    List<Contributor> contributors = github.contributors("netflix", "feign");
-    for (Contributor contributor : contributors) {
-      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    System.out.println("Let's fetch and print a list of the contributors to this org.");
+    List<String> contributors = github.contributors("netflix");
+    for (String contributor : contributors) {
+      System.out.println(contributor);
     }
 
     System.out.println("Now, let's cause an error.");
