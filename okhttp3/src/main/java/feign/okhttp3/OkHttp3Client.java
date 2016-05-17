@@ -13,40 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.okhttp;
+package feign.okhttp3;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import feign.Client;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
- * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp 2.x</a>,
+ * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp 3.x</a>,
  * which enables SPDY and better network control. Ex.
  * <pre>
- * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
+ * GitHub github = Feign.builder().client(new OkHttp3Client()).target(GitHub.class,
  * "https://api.github.com");
  */
-public final class OkHttpClient implements Client {
+public final class OkHttp3Client implements Client {
 
-  private final com.squareup.okhttp.OkHttpClient delegate;
+  private final okhttp3.OkHttpClient delegate;
 
-  public OkHttpClient() {
-    this(new com.squareup.okhttp.OkHttpClient());
+  public OkHttp3Client() {
+    this(new okhttp3.OkHttpClient.Builder().build());
   }
 
-  public OkHttpClient(com.squareup.okhttp.OkHttpClient delegate) {
+  public OkHttp3Client(okhttp3.OkHttpClient delegate) {
     this.delegate = delegate;
   }
 
@@ -140,12 +141,13 @@ public final class OkHttpClient implements Client {
   @Override
   public feign.Response execute(feign.Request input, feign.Request.Options options)
       throws IOException {
-    com.squareup.okhttp.OkHttpClient requestScoped;
-    if (delegate.getConnectTimeout() != options.connectTimeoutMillis()
-        || delegate.getReadTimeout() != options.readTimeoutMillis()) {
-      requestScoped = delegate.clone();
-      requestScoped.setConnectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS);
-      requestScoped.setReadTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
+    okhttp3.OkHttpClient requestScoped;
+    if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
+        || delegate.readTimeoutMillis() != options.readTimeoutMillis()) {
+      okhttp3.OkHttpClient.Builder builder = delegate.newBuilder()
+              .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
+              .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS);
+      requestScoped = builder.build();
     } else {
       requestScoped = delegate;
     }
