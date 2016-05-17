@@ -22,9 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.SocketPolicy;
 import feign.Client;
 import feign.Feign;
 import feign.Param;
@@ -34,6 +31,9 @@ import feign.client.TrustingSSLSocketFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class RibbonClientTest {
     getConfigInstance()
         .setProperty(
             serverListKey(),
-            hostAndPort(server1.getUrl("")) + "," + hostAndPort(server2.getUrl("")));
+            hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
 
     TestInterface api =
         Feign.builder()
@@ -79,7 +79,7 @@ public class RibbonClientTest {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api =
         Feign.builder()
@@ -107,7 +107,7 @@ public class RibbonClientTest {
 
     server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api =
         Feign.builder()
@@ -129,7 +129,7 @@ public class RibbonClientTest {
     server1.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api =
         Feign.builder()
@@ -144,7 +144,7 @@ public class RibbonClientTest {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.getUrl("")));
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api =
         Feign.builder()

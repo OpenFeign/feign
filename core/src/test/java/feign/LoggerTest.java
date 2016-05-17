@@ -15,14 +15,14 @@
  */
 package feign;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.Logger.Level;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,7 +114,7 @@ public class LoggerTest {
           Feign.builder()
               .logger(logger)
               .logLevel(logLevel)
-              .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+              .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }
@@ -151,7 +151,7 @@ public class LoggerTest {
           Feign.builder()
               .logger(logger)
               .logLevel(logLevel)
-              .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+              .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }
@@ -223,7 +223,7 @@ public class LoggerTest {
               .logger(logger)
               .logLevel(logLevel)
               .options(new Request.Options(10 * 1000, 50))
-              .target(SendsStuff.class, "http://localhost:" + server.getUrl("").getPort());
+              .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
     }

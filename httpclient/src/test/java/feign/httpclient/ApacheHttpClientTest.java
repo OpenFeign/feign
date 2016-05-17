@@ -20,8 +20,6 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import feign.Feign;
 import feign.FeignException;
 import feign.Headers;
@@ -31,6 +29,8 @@ import feign.RequestLine;
 import feign.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
