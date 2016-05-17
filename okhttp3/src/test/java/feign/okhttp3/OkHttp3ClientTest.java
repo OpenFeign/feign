@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.okhttp;
+package feign.okhttp3;
 
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -38,7 +38,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
-public class OkHttpClientTest {
+public class OkHttp3ClientTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
@@ -50,7 +50,7 @@ public class OkHttpClientTest {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
     TestInterface api = Feign.builder()
-        .client(new OkHttpClient())
+        .client(new OkHttp3Client())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.post("foo");
@@ -90,7 +90,7 @@ public class OkHttpClientTest {
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
     TestInterface api = Feign.builder()
-        .client(new OkHttpClient())
+        .client(new OkHttp3Client())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.get();
@@ -102,7 +102,7 @@ public class OkHttpClientTest {
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
-        .client(new OkHttpClient())
+        .client(new OkHttp3Client())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     assertEquals("foo", api.patch(""));
@@ -118,7 +118,7 @@ public class OkHttpClientTest {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = Feign.builder()
-        .client(new OkHttpClient())
+        .client(new OkHttp3Client())
         .logger(new Logger(){
           @Override
           protected void log(String configKey, String format, Object... args) {
@@ -136,7 +136,7 @@ public class OkHttpClientTest {
     server.enqueue(new MockResponse().setResponseCode(204));
 
     TestInterface api = Feign.builder()
-        .client(new OkHttpClient())
+        .client(new OkHttp3Client())
         .logger(new Logger(){
           @Override
           protected void log(String configKey, String format, Object... args) {
@@ -153,7 +153,7 @@ public class OkHttpClientTest {
       server.enqueue(new MockResponse());
 
       TestInterface api = Feign.builder()
-          .client(new OkHttpClient())
+          .client(new OkHttp3Client())
           .target(TestInterface.class, "http://localhost:" + server.getPort());
 
       api.noPostBody();
@@ -164,7 +164,7 @@ public class OkHttpClientTest {
       server.enqueue(new MockResponse());
       
       TestInterface api = Feign.builder()
-              .client(new OkHttpClient())
+              .client(new OkHttp3Client())
               .target(TestInterface.class, "http://localhost:" + server.getPort());
       
       api.noPutBody();
