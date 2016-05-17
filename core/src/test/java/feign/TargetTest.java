@@ -15,8 +15,8 @@
  */
 package feign;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class TargetTest {
   public void baseCaseQueryParamsArePercentEncoded() throws InterruptedException {
     server.enqueue(new MockResponse());
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
 
     Feign.builder().target(TestQuery.class, baseUrl).get("slash/foo", "slash/bar");
 
@@ -55,7 +55,7 @@ public class TargetTest {
   public void targetCanCreateCustomRequest() throws InterruptedException {
     server.enqueue(new MockResponse());
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
     Target<TestQuery> custom = new HardCodedTarget<TestQuery>(TestQuery.class, baseUrl) {
 
       @Override

@@ -15,7 +15,7 @@
  */
 package feign.assertj;
 
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import org.assertj.core.api.Assertions;
 

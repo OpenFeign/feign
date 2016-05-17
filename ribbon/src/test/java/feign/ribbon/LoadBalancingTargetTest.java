@@ -15,8 +15,8 @@
  */
 package feign.ribbon;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,8 +51,8 @@ public class LoadBalancingTargetTest {
     server2.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey,
-                                    hostAndPort(server1.getUrl("")) + "," + hostAndPort(
-                                        server2.getUrl("")));
+                                    hostAndPort(server1.url("").url()) + "," + hostAndPort(
+                                        server2.url("").url()));
 
     try {
       LoadBalancingTarget<TestInterface>

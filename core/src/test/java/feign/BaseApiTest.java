@@ -17,8 +17,8 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +69,7 @@ public class BaseApiTest {
   public void resolvesParameterizedResult() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
 
     Feign.builder()
         .decoder(new Decoder() {
@@ -90,7 +90,7 @@ public class BaseApiTest {
   public void resolvesBodyParameter() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    String baseUrl = server.getUrl("/default").toString();
+    String baseUrl = server.url("/default").toString();
 
     Feign.builder()
         .encoder(new Encoder() {
