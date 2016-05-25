@@ -248,7 +248,7 @@ client.json("denominator", "secret"); // {"user_name": "denominator", "password"
 
 ### Headers
 Feign supports settings headers on requests either as part of the api or as part of the client
-dending on the use case.
+depending on the use case.
 
 #### Set headers using apis
 In cases where specific interfaces or calls should always have certain header values set, it
@@ -265,7 +265,7 @@ interface BaseApi<V> {
 }
 ```
 
-Methods can specify dynamic content for static headers using using variable expansion in `@Headers`.
+Methods can specify dynamic content for static headers using variable expansion in `@Headers`.
 
 ```java
  @RequestLine("POST /")
