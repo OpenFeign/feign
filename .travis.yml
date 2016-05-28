@@ -3,10 +3,10 @@ sudo: false
 notifications:
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/16d58dd73250fde3ce60
-    on_success: change  # options: [always|never|change] default: always
-    on_failure: always  # options: [always|never|change] default: always
-    on_start: false     # default: false
+    - https://webhooks.gitter.im/e/110a7c0daf817ba48ccc
+    on_success: change
+    on_failure: always
+    on_start: false
 jdk:
 - oraclejdk8
 install: true
@@ -17,7 +17,7 @@ cache:
   - $HOME/.gradle/wrapper/
 env:
   global:
-  - secure: Ps7+oTi5FfjwJ7tQ8G51wk30ZHqB1P4ZNXsGisn+r/8IJRxPs6VNIF/dPSkWLERs1tBvMG2sRz9nxaIwxXJwHXOkoBL/SXZHzOYwKTlsNcu72B6czxepIb0OAGWKAv6aCk9vAJkRzGX2Ogy+Hnn8AuQlPAPOplRjZm1AXj6smGM=
-  - secure: C/RoUcQGZ6wB1nHnLN7dGMCbpjOObaviuXFxv5ZtocKfALmOZg6gOye5/LyJwvLwMaKtI434dHFvY29FIO0ntclx48xPYCjg6GsmzJOwQcwlLqIV1HQMczFDiYlMFSUbHn9d+JbwXxdd13g98aHtEif73bI0SXevyiqv4n/XsVo=
-  - secure: LfLmAImQdX2LksJNJvo5R2tX/VEmBSudVgkZBIUhcTObmxcNvBzue0QyLa6w107s9U5G6PxfPOv4BB3qZogC3FmsY/qQus2JV9/0eP/hGVNZER1FlAe5mgHgzaoa39qNLQYdyb0jAmIR0r0X0DcF6yR+IAgj4rbN/wzXLc1Cw+s=
-  - secure: XYdDt7fPTpIX2qvBbin4VR3ndfQ00xyebokpw0eXYQ6yvbS2H3lhFqBKuVnN40MTJXNL8ZBIm/wVe67QdAP0uJNlq6YhOf35XY45TfLTSZ0zJd+nJZMDIi8P0zrKDxv6vxnceaZwTrJy8Q1JiUrG4VA4Hb/T4zqftzvad9RT7lc=
+  - secure: YIuMCulUHkCrZDzrIZj+ni+QoQYT3H5C6z32FDeRb4HD9GQzuYQ/+dLWZ6p/X2vkPv1FBlXYb6hpw9PvRLPkGqic0oKX3kMj5LmaXw6nmrq5jvmB0qAjoQ0ukhSUzQVK+43A9aNrAEsHRdrESjleeR1ISeQsUdkikaSs2D1+gQI=
+  - secure: l/1XVG7NHsVwQONy/NF4PlFOFEC2QzE54wFdrTvQzMi6fZrit4C27NW9v0NUohtHjLOVQyx0uLfatt/ZV8gtS+fzfaJj4g9G6Gigv2JdRI5aFn+RPCzU5dioZNBaLB5y4pLkMTnbhLa9wLZxCsmbmG1unY18pF5fHgt/nXzFf4w=
+  - secure: QaEFxVi7lEef0bE8gUWdA7sHT7GJtpiQKOp6UwRdrPQADz+Xg47D2aBr15HmPyo/Ldn6Vm+QSCia+JrRZFCb8NTcBR7u8ZvNzY7I4RXdxTRt54eiyNT4EsqG7vLIECBoKE2CJf1XYv8PO+2Cxsd7D5STzpgtKM3z59h+J0wPmHw=
+  - secure: VFv9NqL3mGQnIjLRZkTmMlnNCtWu2co8V54oQYSTgYT3HmR6ootn/vd6YL4p48abHlBbS3chGefrfaoY5SkOD6oewwNimOPBn+u2uIsBKfL3E6ROrO6Enf0YdIPHBmhXT8Lasmc0ZMqkGx32n0JwCou6Md8c04i/wCp62QsKXbk=
