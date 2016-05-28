@@ -9,7 +9,7 @@ notifications:
     on_start: false     # default: false
 jdk:
 - oraclejdk8
-install: ./installViaTravis.sh
+install: true
 script: ./buildViaTravis.sh
 cache:
   directories:
