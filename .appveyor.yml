@@ -25,7 +25,7 @@ os: Windows Server 2012
 install:
   - cmd: choco install maven -y -f
   - cmd: refreshenv
-  - cmd: mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q
+  - cmd: mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -fn -q
 
 build_script:
   - mvn install -Pci -B
