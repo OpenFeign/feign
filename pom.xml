@@ -64,7 +64,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.6.201602180812</version>
+        <version>0.7.7.201606060606</version>
         <executions>
           <execution>
             <goals>
@@ -78,7 +78,7 @@
       <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.1.0</version>
+        <version>4.2.0</version>
         <configuration>
           <skip>${skipTests}</skip>
           <repoToken>${coveralls.token}</repoToken>
@@ -124,7 +124,8 @@
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
         <artifactId>formatter-maven-plugin</artifactId>
-        <version>1.6.0.RC4</version>
+        <version>1.6.0</version>
+        <inherited>false</inherited>
         <configuration>
           <sourceDirectory>${project.basedir}</sourceDirectory>
           <excludes>
@@ -139,7 +140,7 @@
           <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.22</version>
+            <version>3.0.24</version>
           </dependency>
         </dependencies>
         <executions>
