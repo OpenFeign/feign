@@ -4,15 +4,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
+    <groupId>io.github.feigntown</groupId>
+    <artifactId>feign</artifactId>
+    <version>9.0.0-SNAPSHOT</version>
+    <relativePath>..</relativePath> <!-- lookup parent from repository -->
   </parent>
 
-  <groupId>com.netflix.feign</groupId>
+  <groupId>io.github.feigntown</groupId>
   <artifactId>feign-benchmark</artifactId>
   <packaging>jar</packaging>
-  <version>8.1.0-SNAPSHOT</version>
+  <version>9.0.0-SNAPSHOT</version>
   <name>Feign Benchmark (JMH)</name>
 
   <properties>
@@ -21,14 +22,12 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>io.github.feigntown</groupId>
       <artifactId>feign-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>io.github.feigntown</groupId>
       <artifactId>feign-okhttp</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
