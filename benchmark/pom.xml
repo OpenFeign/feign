@@ -9,6 +9,7 @@
     <version>9</version>
   </parent>
 
+  <!-- TODO: change group id when 9.0 is released -->
   <groupId>com.netflix.feign</groupId>
   <artifactId>feign-benchmark</artifactId>
   <packaging>jar</packaging>

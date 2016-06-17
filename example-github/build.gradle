@@ -12,6 +12,7 @@ configurations {
 }
 
 dependencies {
+  // TODO: change group id when 9.0 is released
   compile  'com.netflix.feign:feign-core:8.16.2'
   compile  'com.netflix.feign:feign-gson:8.16.2'
 }
