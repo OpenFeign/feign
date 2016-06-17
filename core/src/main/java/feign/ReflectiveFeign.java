@@ -202,7 +202,7 @@ public class ReflectiveFeign extends Feign {
         Object value = argv[entry.getKey()];
         if (value != null) { // Null values are skipped.
           if (indexToExpander.containsKey(i)) {
-            value = indexToExpander.get(i).expand(value);
+            value = expandElements(indexToExpander.get(i), value);
           }
           for (String name : entry.getValue()) {
             varBuilder.put(name, value);
@@ -222,6 +222,27 @@ public class ReflectiveFeign extends Feign {
       }
 
       return template;
+    }
+
+    private Object expandElements(Expander expander, Object value) {
+      if (value instanceof Collection) {
+        return expandCollection(expander, (Collection) value);
+      } else if (value.getClass().isArray()) {
+        return expandCollection(expander, Arrays.asList((Object[])value));
+      }
+      return expander.expand(value);
+    }
+
+    private List<String> expandCollection(Expander expander, Collection value) {
+      List<String> values = new ArrayList<String>();
+      for (Object element : (Collection) value) {
+        if (element==null) {
+          values.add("");
+        } else {
+          values.add(expander.expand(element));
+        }
+      }
+      return values;
     }
 
     @SuppressWarnings("unchecked")

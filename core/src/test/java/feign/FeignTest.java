@@ -218,6 +218,18 @@ public class FeignTest {
   }
 
   @Test
+  public void customExpanderListParam() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.expandList(Arrays.asList(new Date(1234l)));
+
+    assertThat(server.takeRequest())
+        .hasPath("/?date=1234");
+  }
+
+  @Test
   public void headerMap() throws Exception {
     server.enqueue(new MockResponse());
 
@@ -655,6 +667,9 @@ public class FeignTest {
 
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+
+    @RequestLine("GET /?date={date}")
+    void expandList(@Param(value = "date", expander = DateToMillis.class) List<Date> dates);
 
     @RequestLine("GET /")
     void headerMap(@HeaderMap Map<String, Object> headerMap);
