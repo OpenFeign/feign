@@ -282,7 +282,7 @@ public interface Contract {
           isHttpAnnotation = true;
         } else if (annotationType == HeaderMap.class) {
           checkState(
-              data.queryMapIndex() == null,
+              data.headerMapIndex() == null,
               "HeaderMap annotation was present on multiple parameters.");
           data.headerMapIndex(paramIndex);
           isHttpAnnotation = true;
