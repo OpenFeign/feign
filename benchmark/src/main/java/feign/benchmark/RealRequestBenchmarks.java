@@ -50,8 +50,7 @@ public class RealRequestBenchmarks {
       }
     });
     server.start();
-    client = new OkHttpClient();
-// FIXME openfeign   client.setRetryOnConnectionFailure(false); method is missing in on okhttp3.OkHttpClient
+    client = new OkHttpClient.Builder().retryOnConnectionFailure(false).build();
     okFeign = Feign.builder()
         .client(new feign.okhttp.OkHttpClient(client))
         .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
