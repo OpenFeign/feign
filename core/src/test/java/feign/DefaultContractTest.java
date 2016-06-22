@@ -308,6 +308,16 @@ public class DefaultContractTest {
     assertThat(md.template().decodeSlash()).isTrue();
   }
 
+  @Test
+  public void onlyOneHeaderMapAnnotationPermitted() throws Exception {
+    try {
+      parseAndValidateMetadata(HeaderMapInterface.class, "multipleHeaderMap", Map.class, Map.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("HeaderMap annotation was present on multiple parameters.");
+    }
+  }
+
   interface Methods {
 
     @RequestLine("POST /")
@@ -398,6 +408,12 @@ public class DefaultContractTest {
     void login(
         @Param("customer_name") String customer,
         @Param("user_name") String user, @Param("password") String password);
+  }
+
+  interface HeaderMapInterface {
+
+    @RequestLine("POST /")
+    void multipleHeaderMap(@HeaderMap Map<String, String> headers, @HeaderMap Map<String,String> queries);
   }
 
   interface HeaderParams {
