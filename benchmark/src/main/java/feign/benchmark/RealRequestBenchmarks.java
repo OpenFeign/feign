@@ -51,7 +51,7 @@ public class RealRequestBenchmarks {
     });
     server.start();
     client = new OkHttpClient();
-// FIXME feigntown   client.setRetryOnConnectionFailure(false);
+// FIXME openfeign   client.setRetryOnConnectionFailure(false);
     okFeign = Feign.builder()
         .client(new feign.okhttp.OkHttpClient(client))
         .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);

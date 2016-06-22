@@ -2,20 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.github.feigntown</groupId>
+    <groupId>io.github.openfeign</groupId>
     <artifactId>feign</artifactId>
     <version>9.0.0-SNAPSHOT</version>
     <relativePath>..</relativePath> <!-- lookup parent from repository -->
   </parent>
 
-  <groupId>io.github.feigntown</groupId>
+  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-okhttp</artifactId>
   <version>9.0.0-SNAPSHOT</version>
   <name>feign-okhttp</name>
   <description>feign-okhttp</description>
   <dependencies>
     <dependency>
-      <groupId>io.github.feigntown</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
     </dependency>
     <dependency>
@@ -39,7 +39,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.github.feigntown</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>

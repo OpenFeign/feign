@@ -1,6 +1,6 @@
 ### Version 9.0
 * Migrates to maven from gradle
-* Changes maven groupId to `io.github.feigntown`
+* Changes maven groupId to `io.github.openfeign`
 
 ### Version 8.17
 * Adds support to RxJava Completable via `HystrixFeign` builder with fallback support
