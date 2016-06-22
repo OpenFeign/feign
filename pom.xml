@@ -181,9 +181,13 @@
   </profiles>
   <developers>
     <developer>
-      <id>netflixgithub</id>
-      <name>Netflix Open Source Development</name>
-      <email>talent@netflix.com</email>
+      <id>adriancole</id>
+      <name>Adrian Cole</name>
+    </developer>
+    <developer>
+      <id>spencergibb</id>
+      <name>Spencer Gibb</name>
+      <email>spencer@gibb.us</email>
     </developer>
   </developers>
   <licenses>
