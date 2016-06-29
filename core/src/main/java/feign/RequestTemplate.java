@@ -322,13 +322,14 @@ public final class RequestTemplate implements Serializable {
    * @see #queries()
    */
   public RequestTemplate query(String name, String... values) {
-    queries.remove(checkNotNull(name, "name"));
+    String encodedName = encodeIfNotVariable(checkNotNull(name, "name"));
+    queries.remove(encodedName);
     if (values != null && values.length > 0 && values[0] != null) {
       ArrayList<String> encoded = new ArrayList<String>();
       for (String value : values) {
         encoded.add(encodeIfNotVariable(value));
       }
-      this.queries.put(encodeIfNotVariable(name), encoded);
+      this.queries.put(encodedName, encoded);
     }
     return this;
   }

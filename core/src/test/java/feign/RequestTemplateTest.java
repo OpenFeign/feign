@@ -311,4 +311,15 @@ public class RequestTemplateTest {
 
     new RequestTemplate().method("/path?queryParam={queryParam}");
   }
+
+  @Test
+  public void encodedQueryClearedOnNull() throws Exception {
+    RequestTemplate template = new RequestTemplate();
+
+    template.query("param[]", "value");
+    assertThat(template).hasQueries(entry("param[]", asList("value")));
+
+    template.query("param[]", (String[]) null);
+    assertThat(template.queries()).isEmpty();
+  }
 }
