@@ -16,15 +16,24 @@
 package feign.jaxb;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.sax.SAXSource;
 
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 
 /**
  * Decodes responses using JAXB. <br> <p> Basic example with with Feign.Builder: </p>
@@ -57,10 +66,27 @@ public class JAXBDecoder implements Decoder {
       throw new UnsupportedOperationException(
           "JAXB only supports decoding raw types. Found " + type);
     }
+
+
     try {
+      SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+      saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      saxParserFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
+      saxParserFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+
+      Source source = new SAXSource(saxParserFactory.newSAXParser().getXMLReader(), new InputSource(response.body().asInputStream()));
       Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
-      return unmarshaller.unmarshal(response.body().asInputStream());
+      return unmarshaller.unmarshal(source);
     } catch (JAXBException e) {
+      throw new DecodeException(e.toString(), e);
+    } catch (ParserConfigurationException e) {
+      throw new DecodeException(e.toString(), e);
+    } catch (SAXNotRecognizedException e) {
+      throw new DecodeException(e.toString(), e);
+    } catch (SAXNotSupportedException e) {
+      throw new DecodeException(e.toString(), e);
+    } catch (SAXException e) {
       throw new DecodeException(e.toString(), e);
     } finally {
       if (response.body() != null) {
