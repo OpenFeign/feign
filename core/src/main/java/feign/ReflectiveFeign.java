@@ -225,17 +225,17 @@ public class ReflectiveFeign extends Feign {
     }
 
     private Object expandElements(Expander expander, Object value) {
-      if (value instanceof Collection) {
-        return expandCollection(expander, (Collection) value);
+      if (value instanceof Iterable) {
+        return expandIterable(expander, (Iterable) value);
       } else if (value.getClass().isArray()) {
-        return expandCollection(expander, Arrays.asList((Object[])value));
+        return expandIterable(expander, Arrays.asList((Object[])value));
       }
       return expander.expand(value);
     }
 
-    private List<String> expandCollection(Expander expander, Collection value) {
+    private List<String> expandIterable(Expander expander, Iterable value) {
       List<String> values = new ArrayList<String>();
-      for (Object element : (Collection) value) {
+      for (Object element : (Iterable) value) {
         if (element==null) {
           values.add("");
         } else {
