@@ -15,36 +15,16 @@
  */
 package feign.okhttp;
 
-import feign.Client;
+import feign.Feign.Builder;
 import feign.client.AbstractClientTest;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import feign.Feign;
-import feign.FeignException;
-import feign.Headers;
-import feign.Logger;
-import feign.RequestLine;
-import feign.Response;
-
-import static feign.Util.UTF_8;
-import static feign.assertj.MockWebServerAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest extends AbstractClientTest {
 
   @Override
-  public Client getClient() {
-    return new OkHttpClient();
+  public Builder newBuilder() {
+    return Feign.builder().client(new OkHttpClient());
   }
-
 }

@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import feign.Client;
-import feign.Feign;
+import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Headers;
 import feign.Logger;
@@ -36,7 +36,10 @@ public abstract class AbstractClientTest {
     @Rule
     public final MockWebServer server = new MockWebServer();
 
-    public abstract Client getClient();
+    /**
+     * Create a Feign {@link Builder} with a client configured
+     */
+    public abstract Builder newBuilder();
 
     /**
      * Some client implementation tests should override this
@@ -47,8 +50,7 @@ public abstract class AbstractClientTest {
         server.enqueue(new MockResponse().setBody("foo"));
         server.enqueue(new MockResponse());
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         assertEquals("foo", api.patch(""));
@@ -63,8 +65,7 @@ public abstract class AbstractClientTest {
     public void parsesRequestAndResponse() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Response response = api.post("foo");
@@ -87,13 +88,13 @@ public abstract class AbstractClientTest {
     public void reasonPhraseIsOptional() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
-        TestInterface api =
-                Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Response response = api.post("foo");
 
         assertThat(response.status()).isEqualTo(200);
-        assertThat(response.reason()).isNull();
+        assertThat(response.reason()).isNullOrEmpty();
     }
 
     @Test
@@ -103,8 +104,7 @@ public abstract class AbstractClientTest {
 
         server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         api.get();
@@ -114,8 +114,7 @@ public abstract class AbstractClientTest {
     public void safeRebuffering() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setBody("foo"));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .logger(new Logger(){
                     @Override
                     protected void log(String configKey, String format, Object... args) {
@@ -132,8 +131,7 @@ public abstract class AbstractClientTest {
     public void safeRebuffering_noContent() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setResponseCode(204));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .logger(new Logger(){
                     @Override
                     protected void log(String configKey, String format, Object... args) {
@@ -149,8 +147,7 @@ public abstract class AbstractClientTest {
     public void noResponseBodyForPost() {
         server.enqueue(new MockResponse());
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         api.noPostBody();
@@ -160,8 +157,7 @@ public abstract class AbstractClientTest {
     public void noResponseBodyForPut() {
         server.enqueue(new MockResponse());
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         api.noPutBody();
@@ -171,8 +167,7 @@ public abstract class AbstractClientTest {
     public void parsesResponseMissingLength() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Response response = api.post("testing");
@@ -187,8 +182,7 @@ public abstract class AbstractClientTest {
     public void postWithSpacesInPath() throws IOException, InterruptedException {
         server.enqueue(new MockResponse().setBody("foo"));
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Response response = api.post("current documents", "foo");
@@ -203,8 +197,7 @@ public abstract class AbstractClientTest {
         server.enqueue(new MockResponse()
                 .setBody("AAAAAAAA")
                 .addHeader("Content-Length", Long.MAX_VALUE));
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Response response = api.post("foo");
@@ -216,8 +209,7 @@ public abstract class AbstractClientTest {
     public void testResponseLength() throws Exception {
         server.enqueue(new MockResponse()
                 .setBody("test"));
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
         Integer expected = 4;

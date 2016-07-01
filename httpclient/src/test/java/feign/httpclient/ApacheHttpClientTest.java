@@ -15,7 +15,8 @@
  */
 package feign.httpclient;
 
-import feign.Client;
+import feign.Feign;
+import feign.Feign.Builder;
 import feign.client.AbstractClientTest;
 
 /**
@@ -24,8 +25,7 @@ import feign.client.AbstractClientTest;
 public class ApacheHttpClientTest extends AbstractClientTest {
 
     @Override
-    public Client getClient() {
-        return new ApacheHttpClient();
+    public Builder newBuilder() {
+        return Feign.builder().client(new ApacheHttpClient());
     }
-
 }

@@ -15,7 +15,6 @@
  */
 package feign.client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.ProtocolException;
 
@@ -26,18 +25,13 @@ import org.junit.Test;
 
 import feign.Client;
 import feign.Feign;
-import feign.Response;
-import feign.assertj.MockWebServerAssertions;
+import feign.Feign.Builder;
+import feign.RetryableException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
 
-import static java.util.Arrays.asList;
-
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-
-import static feign.Util.UTF_8;
-import static feign.assertj.MockWebServerAssertions.assertThat;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -53,8 +47,8 @@ public class DefaultClientTest extends AbstractClientTest {
             });
 
     @Override
-    public Client getClient() {
-        return new Client.Default(TrustingSSLSocketFactory.get(), null);
+    public Builder newBuilder() {
+        return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null));
     }
 
     @Test
@@ -63,8 +57,7 @@ public class DefaultClientTest extends AbstractClientTest {
         server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
         server.enqueue(new MockResponse());
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "https://localhost:" + server.getPort());
 
         api.post("foo");
@@ -76,34 +69,10 @@ public class DefaultClientTest extends AbstractClientTest {
         server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
         server.enqueue(new MockResponse());
 
-        TestInterface api = Feign.builder()
-                .client(getClient())
+        TestInterface api = newBuilder()
                 .target(TestInterface.class, "https://localhost:" + server.getPort());
 
         api.post("foo");
-    }
-
-    @Test
-    public void parsesRequestAndResponseDefault() throws IOException, InterruptedException {
-        server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
-
-        TestInterface api =
-                Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-        Response response = api.post("foo");
-
-        assertThat(response.status()).isEqualTo(200);
-        assertThat(response.reason()).isEqualTo("OK");
-        assertThat(response.headers())
-                .containsEntry("Content-Length", asList("3"))
-                .containsEntry("Foo", asList("Bar"));
-        assertThat(response.body().asInputStream())
-                .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
-
-        MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-                .hasPath("/?foo=bar&foo=baz&qux=")
-                .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Accept: */*", "Content-Length: 3")
-                .hasBody("foo");
     }
 
     /**
@@ -114,14 +83,10 @@ public class DefaultClientTest extends AbstractClientTest {
      */
     @Test
     @Override
-    public void testPatch() throws IOException, InterruptedException {
+    public void testPatch() throws Exception {
+        thrown.expect(RetryableException.class);
         thrown.expectCause(isA(ProtocolException.class));
-
-        TestInterface
-                api =
-                Feign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-        api.patch("foo");
+        super.testPatch();
     }
 
 
