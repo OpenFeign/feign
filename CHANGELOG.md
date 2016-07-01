@@ -1,3 +1,8 @@
+### Version 8.18
+* Content-Length response bodies with lengths greater than Integer.MAX_VALUE report null length
+  * Previously the OkhttpClient would throw an exception, and ApacheHttpClient
+    would report a wrong, possibly negative value
+
 ### Version 8.17
 * Adds support to RxJava Completable via `HystrixFeign` builder with fallback support
 * Upgraded hystrix-core to 1.4.26
