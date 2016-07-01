@@ -242,6 +242,18 @@ public class FeignTest {
   }
 
   @Test
+  public void customExpanderNullParam() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.expandArray(new Date[] {new Date(1234l), null});
+
+    assertThat(server.takeRequest())
+        .hasPath("/?date=1234&date=");
+  }
+
+  @Test
   public void headerMap() throws Exception {
     server.enqueue(new MockResponse());
 
