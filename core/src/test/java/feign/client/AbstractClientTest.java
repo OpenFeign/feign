@@ -198,6 +198,34 @@ public abstract class AbstractClientTest {
                 .hasBody("foo");
     }
 
+    @Test
+    public void testVeryLongResponseNullLength() throws Exception {
+        server.enqueue(new MockResponse()
+                .setBody("AAAAAAAA")
+                .addHeader("Content-Length", Long.MAX_VALUE));
+        TestInterface api = Feign.builder()
+                .client(getClient())
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.post("foo");
+        // Response length greater than Integer.MAX_VALUE should be null
+        assertThat(response.body().length()).isNull();
+    }
+
+    @Test
+    public void testResponseLength() throws Exception {
+        server.enqueue(new MockResponse()
+                .setBody("test"));
+        TestInterface api = Feign.builder()
+                .client(getClient())
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Integer expected = 4;
+        Response response = api.post("");
+        Integer actual = response.body().length();
+        assertEquals(expected, actual);
+    }
+
     public interface TestInterface {
 
         @RequestLine("POST /?foo=bar&foo=baz&qux=")
