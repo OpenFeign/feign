@@ -104,10 +104,8 @@ public final class OkHttpClient implements Client {
     if (input == null || input.contentLength() == 0) {
       return null;
     }
-    if (input.contentLength() > Integer.MAX_VALUE) {
-      throw new UnsupportedOperationException("Length too long " + input.contentLength());
-    }
-    final Integer length = input.contentLength() != -1 ? (int) input.contentLength() : null;
+    final Integer length = input.contentLength() >= 0 && input.contentLength() <= Integer.MAX_VALUE ?
+            (int) input.contentLength() : null;
 
     return new feign.Response.Body() {
 

@@ -125,9 +125,10 @@ public final class Response implements Closeable {
   public interface Body extends Closeable {
 
     /**
-     * length in bytes, if known. Null if not. <br> <br><br><b>Note</b><br> This is an integer as
-     * most implementations cannot do bodies greater than 2GB. Moreover, the scope of this interface
-     * doesn't include large bodies.
+     * length in bytes, if known. Null if unknown or greater than {@link Integer#MAX_VALUE}.
+     *
+     * <br><br><br><b>Note</b><br> This is an integer as
+     * most implementations cannot do bodies greater than 2GB.
      */
     Integer length();
 
