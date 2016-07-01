@@ -16,7 +16,6 @@
 package feign.jaxb;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.reflect.Type;
 
 import javax.xml.bind.JAXBException;
@@ -32,8 +31,6 @@ import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
 
 /**
  * Decodes responses using JAXB. <br> <p> Basic example with with Feign.Builder: </p>
