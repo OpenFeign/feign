@@ -70,6 +70,7 @@ public class JAXBDecoder implements Decoder {
 
     try {
       SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+      /* Explicitly control sax configuration to prevent XXE attacks */
       saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
       saxParserFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
       saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
@@ -81,10 +82,6 @@ public class JAXBDecoder implements Decoder {
     } catch (JAXBException e) {
       throw new DecodeException(e.toString(), e);
     } catch (ParserConfigurationException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (SAXNotRecognizedException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (SAXNotSupportedException e) {
       throw new DecodeException(e.toString(), e);
     } catch (SAXException e) {
       throw new DecodeException(e.toString(), e);

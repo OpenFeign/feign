@@ -74,6 +74,7 @@ public class SAXDecoder implements Decoder {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
       xmlReader.setFeature("http://xml.org/sax/features/namespaces", false);
       xmlReader.setFeature("http://xml.org/sax/features/validation", false);
+      /* Explicitly control sax configuration to prevent XXE attacks */
       xmlReader.setFeature("http://xml.org/sax/features/external-general-entities", false);
       xmlReader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
       xmlReader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
