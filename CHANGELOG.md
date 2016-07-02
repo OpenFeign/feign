@@ -1,3 +1,7 @@
+### Version 9.0
+* Migrates to maven from gradle
+* Changes maven groupId to `io.github.openfeign`
+
 ### Version 8.18
 * Content-Length response bodies with lengths greater than Integer.MAX_VALUE report null length
   * Previously the OkhttpClient would throw an exception, and ApacheHttpClient
