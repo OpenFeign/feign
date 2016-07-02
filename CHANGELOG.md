@@ -1,4 +1,5 @@
 ### Version 8.18
+* Adds support for expansion of @Param lists
 * Content-Length response bodies with lengths greater than Integer.MAX_VALUE report null length
   * Previously the OkhttpClient would throw an exception, and ApacheHttpClient
     would report a wrong, possibly negative value
