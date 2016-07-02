@@ -1,52 +1,57 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>io.github.openfeign</groupId>
-    <artifactId>feign</artifactId>
+    <artifactId>parent</artifactId>
     <version>9.0.0-SNAPSHOT</version>
-    <relativePath>..</relativePath> <!-- lookup parent from repository -->
   </parent>
 
-  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-jackson-jaxb</artifactId>
-  <version>9.0.0-SNAPSHOT</version>
-  <name>feign-jackson-jaxb</name>
-  <description>feign-jackson-jaxb</description>
+  <name>Feign Jackson JAXB</name>
+  <description>Feign Jackson JAXB</description>
+
+  <properties>
+    <main.basedir>${project.basedir}/..</main.basedir>
+  </properties>
+
   <dependencies>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>javax.ws.rs</groupId>
       <artifactId>jsr311-api</artifactId>
       <version>1.1.1</version>
     </dependency>
+
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
       <version>2.6.4</version>
     </dependency>
+
+    <!-- RuntimeDelegateImpl -->
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
       <version>1.19</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
-      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
