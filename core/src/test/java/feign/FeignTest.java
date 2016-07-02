@@ -230,27 +230,15 @@ public class FeignTest {
   }
 
   @Test
-  public void customExpanderArrayParam() throws Exception {
-    server.enqueue(new MockResponse());
-
-    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
-
-    api.expandArray(new Date[] {new Date(1234l), new Date(12345l)});
-
-    assertThat(server.takeRequest())
-        .hasPath("/?date=1234&date=12345");
-  }
-
-  @Test
   public void customExpanderNullParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expandArray(new Date[] {new Date(1234l), null});
+    api.expandList(Arrays.asList(new Date(1234l), null));
 
     assertThat(server.takeRequest())
-        .hasPath("/?date=1234&date=");
+        .hasPath("/?date=1234");
   }
 
   @Test

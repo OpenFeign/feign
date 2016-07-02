@@ -227,8 +227,6 @@ public class ReflectiveFeign extends Feign {
     private Object expandElements(Expander expander, Object value) {
       if (value instanceof Iterable) {
         return expandIterable(expander, (Iterable) value);
-      } else if (value.getClass().isArray()) {
-        return expandIterable(expander, Arrays.asList((Object[])value));
       }
       return expander.expand(value);
     }
@@ -236,9 +234,7 @@ public class ReflectiveFeign extends Feign {
     private List<String> expandIterable(Expander expander, Iterable value) {
       List<String> values = new ArrayList<String>();
       for (Object element : (Iterable) value) {
-        if (element==null) {
-          values.add("");
-        } else {
+        if (element!=null) {
           values.add(expander.expand(element));
         }
       }
