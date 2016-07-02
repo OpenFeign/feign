@@ -202,7 +202,7 @@ public class ReflectiveFeign extends Feign {
         Object value = argv[entry.getKey()];
         if (value != null) { // Null values are skipped.
           if (indexToExpander.containsKey(i)) {
-            value = indexToExpander.get(i).expand(value);
+            value = expandElements(indexToExpander.get(i), value);
           }
           for (String name : entry.getValue()) {
             varBuilder.put(name, value);
@@ -222,6 +222,23 @@ public class ReflectiveFeign extends Feign {
       }
 
       return template;
+    }
+
+    private Object expandElements(Expander expander, Object value) {
+      if (value instanceof Iterable) {
+        return expandIterable(expander, (Iterable) value);
+      }
+      return expander.expand(value);
+    }
+
+    private List<String> expandIterable(Expander expander, Iterable value) {
+      List<String> values = new ArrayList<String>();
+      for (Object element : (Iterable) value) {
+        if (element!=null) {
+          values.add(expander.expand(element));
+        }
+      }
+      return values;
     }
 
     @SuppressWarnings("unchecked")
