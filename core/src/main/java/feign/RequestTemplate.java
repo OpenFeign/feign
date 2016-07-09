@@ -260,14 +260,14 @@ public final class RequestTemplate implements Serializable {
   }
 
   public RequestTemplate decodeSlash(boolean decodeSlash) {
-	  this.decodeSlash = decodeSlash;
-	  return this;
+    this.decodeSlash = decodeSlash;
+    return this;
   }
   
   public boolean decodeSlash() {
-	  return decodeSlash;
+    return decodeSlash;
   }
-  
+
   /* @see #url() */
   public RequestTemplate append(CharSequence value) {
     url.append(value);
@@ -292,41 +292,76 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces queries with the specified {@code name} with url decoded {@code values} supplied.
+   * Replaces queries with the specified {@code name} with the {@code values} supplied.
+   * <br> Values can be passed in decoded or in url-encoded form depending on the value of the
+   * {@code encoded} parameter.
    * <br> When the {@code value} is {@code null}, all queries with the {@code configKey} are
    * removed. <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> Like {@code WebTarget.query},
    * except the values can be templatized. <br> ex. <br>
    * <pre>
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
    * </pre>
+   * <br> <b>Note:</b> behavior of RequestTemplate is not consistent if a query parameter with
+   * unsafe characters is passed as both encoded and unencoded, although no validation is performed.
+   * <br> ex. <br>
+   * <pre>
+   * template.query(true, &quot;param[]&quot;, &quot;value&quot;);
+   * template.query(false, &quot;param[]&quot;, &quot;value&quot;);
+   * </pre>
    *
-   * @param name the name of the query
+   * @param encoded   whether name and values are already url-encoded
+   * @param name      the name of the query
    * @param values    can be a single null to imply removing all values. Else no values are expected
    *                  to be null.
    * @see #queries()
    */
+  public RequestTemplate query(boolean encoded, String name, String... values) {
+    return doQuery(encoded, name, values);
+  }
+
+  /* @see #query(boolean, String, String...) */
+  public RequestTemplate query(boolean encoded, String name, Iterable<String> values) {
+    return doQuery(encoded, name, values);
+  }
+
+  /**
+   * Shortcut for {@code query(false, String, String...)}
+   * @see #query(boolean, String, String...)
+   */
   public RequestTemplate query(String name, String... values) {
-    String encodedName = encodeIfNotVariable(checkNotNull(name, "name"));
-    queries.remove(encodedName);
+    return doQuery(false, name, values);
+  }
+
+  /**
+   * Shortcut for {@code query(false, String, Iterable<String>)}
+   * @see #query(boolean, String, String...)
+   */
+  public RequestTemplate query(String name, Iterable<String> values) {
+    return doQuery(false, name, values);
+  }
+
+  private RequestTemplate doQuery(boolean encoded, String name, String... values) {
+    checkNotNull(name, "name");
+    String paramName = encoded ? name : encodeIfNotVariable(name);
+    queries.remove(paramName);
     if (values != null && values.length > 0 && values[0] != null) {
-      ArrayList<String> encoded = new ArrayList<String>();
+      ArrayList<String> paramValues = new ArrayList<String>();
       for (String value : values) {
-        encoded.add(encodeIfNotVariable(value));
+        paramValues.add(encoded ? value : encodeIfNotVariable(value));
       }
-      this.queries.put(encodedName, encoded);
+      this.queries.put(paramName, paramValues);
     }
     return this;
   }
 
-  /* @see #query(String, String...) */
-  public RequestTemplate query(String name, Iterable<String> values) {
+  private RequestTemplate doQuery(boolean encoded, String name, Iterable<String> values) {
     if (values != null) {
-      return query(name, toArray(values, String.class));
+      return doQuery(encoded, name, toArray(values, String.class));
     }
-    return query(name, (String[]) null);
+    return doQuery(encoded, name, (String[]) null);
   }
 
-  private String encodeIfNotVariable(String in) {
+  private static String encodeIfNotVariable(String in) {
     if (in == null || in.indexOf('{') == 0) {
       return in;
     }

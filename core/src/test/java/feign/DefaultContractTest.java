@@ -270,6 +270,27 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void queryMapEncodedDefault() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
+
+    assertThat(md.queryMapEncoded()).isFalse();
+  }
+
+  @Test
+  public void queryMapEncodedTrue() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapEncoded", Map.class);
+
+    assertThat(md.queryMapEncoded()).isTrue();
+  }
+
+  @Test
+  public void queryMapEncodedFalse() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapNotEncoded", Map.class);
+
+    assertThat(md.queryMapEncoded()).isFalse();
+  }
+
+  @Test
   public void queryMapMapSubclass() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapMapSubclass", SortedMap.class);
 
@@ -451,6 +472,12 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void queryMapMapSubclass(@QueryMap SortedMap<String, String> queryMap);
+
+    @RequestLine("POST /")
+    void queryMapEncoded(@QueryMap(encoded = true) Map<String, String> queryMap);
+
+    @RequestLine("POST /")
+    void queryMapNotEncoded(@QueryMap(encoded = false) Map<String, String> queryMap);
 
     // invalid
     @RequestLine("POST /")

@@ -7,6 +7,7 @@
 * Content-Length response bodies with lengths greater than Integer.MAX_VALUE report null length
   * Previously the OkhttpClient would throw an exception, and ApacheHttpClient
     would report a wrong, possibly negative value
+* Adds support for encoded query parameters in `@QueryMap` via `@QueryMap(encoded = true)`
 
 ### Version 8.17
 * Adds support to RxJava Completable via `HystrixFeign` builder with fallback support
