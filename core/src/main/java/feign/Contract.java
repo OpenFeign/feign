@@ -266,6 +266,7 @@ public interface Contract {
         } else if (annotationType == QueryMap.class) {
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
+          data.queryMapEncoded(QueryMap.class.cast(annotation).encoded());
           isHttpAnnotation = true;
         } else if (annotationType == HeaderMap.class) {
           checkState(data.headerMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");
