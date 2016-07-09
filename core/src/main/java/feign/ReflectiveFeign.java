@@ -296,7 +296,7 @@ public class ReflectiveFeign extends Feign {
           values.add(currValue == null ? null : currValue.toString());
         }
 
-        mutable.query((String) currEntry.getKey(), values);
+        mutable.query(metadata.queryMapEncoded(), (String) currEntry.getKey(), values);
       }
       return mutable;
     }

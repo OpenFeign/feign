@@ -60,4 +60,7 @@ import java.util.Map;
  */
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
-public @interface QueryMap {}
+public @interface QueryMap {
+  /** Specifies whether parameter names and values are already encoded. */
+  boolean encoded() default false;
+}
