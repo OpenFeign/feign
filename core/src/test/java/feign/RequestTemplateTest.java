@@ -17,11 +17,11 @@ package feign;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.rules.ExpectedException;
 
 import static feign.RequestTemplate.expand;
 import static feign.assertj.FeignAssertions.assertThat;
@@ -342,5 +342,25 @@ public class RequestTemplateTest {
 
     template.query("param[]", (String[]) null);
     assertThat(template.queries()).isEmpty();
+  }
+
+  @Test
+  public void encodedQuery() throws Exception {
+    RequestTemplate template = new RequestTemplate().query(true, "params[]", "foo%20bar");
+
+    assertThat(template.queryLine()).isEqualTo("?params[]=foo%20bar");
+    assertThat(template).hasQueries(entry("params[]", asList("foo bar")));
+  }
+
+  @Test
+  public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() throws Exception {
+    RequestTemplate template = new RequestTemplate()
+            .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
+            .query(true, "params[]", "encoded"); // stored as "param[]"
+
+    // We can't ensure consistent behavior, because decode("param[]") == decode("param%5B%5D")
+    assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not+encoded&params[]=encoded");
+    assertThat(template.queries()).doesNotContain(entry("params[]", asList("not encoded")));
+    assertThat(template.queries()).contains(entry("params[]", asList("encoded")));
   }
 }
