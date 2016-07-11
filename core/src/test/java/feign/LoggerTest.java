@@ -84,7 +84,7 @@ public class LoggerTest {
                   "\\[SendsStuff#login\\] Content-Length: 80",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] Content-Length: 3",
+                  "\\[SendsStuff#login\\] content-length: 3",
                   "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")
             },
             {
@@ -98,7 +98,7 @@ public class LoggerTest {
                       + " \"denominator\", \"password\": \"password\"\\}",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] Content-Length: 3",
+                  "\\[SendsStuff#login\\] content-length: 3",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] foo",
                   "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")
@@ -188,7 +188,7 @@ public class LoggerTest {
                   "\\[SendsStuff#login\\] Content-Length: 80",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] Content-Length: 3",
+                  "\\[SendsStuff#login\\] content-length: 3",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)")
             },
@@ -203,7 +203,7 @@ public class LoggerTest {
                       + " \"denominator\", \"password\": \"password\"\\}",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] Content-Length: 3",
+                  "\\[SendsStuff#login\\] content-length: 3",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)",
