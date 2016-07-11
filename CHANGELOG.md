@@ -4,6 +4,10 @@
   * Previously the OkhttpClient would throw an exception, and ApacheHttpClient
     would report a wrong, possibly negative value
 * Adds support for encoded query parameters in `@QueryMap` via `@QueryMap(encoded = true)`
+* Keys in `Response.headers` are now lower-cased. This map is now case-insensitive with regards to keys,
+  and iterates in lexicographic order.
+  * This is a step towards supporting http2, as header names in http1 are treated as case-insensitive
+    and http2 down-cases header names.
 
 ### Version 8.17
 * Adds support to RxJava Completable via `HystrixFeign` builder with fallback support

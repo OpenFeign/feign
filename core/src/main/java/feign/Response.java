@@ -24,8 +24,10 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
@@ -47,10 +49,7 @@ public final class Response implements Closeable {
     checkState(status >= 200, "Invalid status code: %s", status);
     this.status = status;
     this.reason = reason; //nullable
-    LinkedHashMap<String, Collection<String>> copyOf =
-        new LinkedHashMap<String, Collection<String>>();
-    copyOf.putAll(checkNotNull(headers, "headers"));
-    this.headers = Collections.unmodifiableMap(copyOf);
+    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(headers));
     this.body = body; //nullable
   }
 
@@ -92,6 +91,9 @@ public final class Response implements Closeable {
     return reason;
   }
 
+  /**
+   * Returns a case-insensitive mapping of header names to their values.
+   */
   public Map<String, Collection<String>> headers() {
     return headers;
   }
@@ -241,5 +243,18 @@ public final class Response implements Closeable {
     public String toString() {
       return decodeOrDefault(data, UTF_8, "Binary data");
     }
+  }
+
+  private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
+    Map<String, Collection<String>> result = new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
+
+    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+      String headerName = entry.getKey();
+      if (!result.containsKey(headerName)) {
+        result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
+      }
+      result.get(headerName).addAll(entry.getValue());
+    }
+    return result;
   }
 }
