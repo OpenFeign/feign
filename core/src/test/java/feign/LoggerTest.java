@@ -81,7 +81,7 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
@@ -91,7 +91,7 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] foo",
               "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")}
@@ -167,7 +167,7 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
@@ -177,7 +177,7 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-              "\\[SendsStuff#login\\] Content-Length: 3",
+              "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)",
               "\\[SendsStuff#login\\] java.net.SocketTimeoutException: Read timed out.*",
