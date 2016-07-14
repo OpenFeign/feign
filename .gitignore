@@ -36,11 +36,6 @@ Thumbs.db
 *~
 *.swp
 
-# Gradle Files #
-################
-.gradle
-local.properties
-
 # Build output directies
 /target
 **/test-output
