@@ -126,12 +126,6 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>feign-gradle</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>${project.groupId}</groupId>
         <artifactId>feign-gson</artifactId>
         <version>${project.version}</version>
       </dependency>
