@@ -90,7 +90,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
     String commandKey = method.getName();
     HystrixCommand.Setter setter = HystrixCommand.Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-        .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
+        .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
+        .andCommandPropertiesDefaults(
+            HystrixCommandProperties.Setter().withFallbackEnabled(fallback != null));
 
     HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setter) {
       @Override
