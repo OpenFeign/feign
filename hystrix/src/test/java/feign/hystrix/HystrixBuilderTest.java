@@ -301,7 +301,7 @@ public class HystrixBuilderTest {
     assertThat(testSubscriber.getOnNextEvents()).isEmpty();
     assertThat(testSubscriber.getOnErrorEvents().get(0))
         .isInstanceOf(HystrixRuntimeException.class)
-        .hasMessage("listObservable failed and no fallback available.");
+        .hasMessage("listObservable failed and fallback disabled.");
   }
 
   @Test
