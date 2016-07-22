@@ -284,6 +284,27 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void rxObservableListFall_noFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = targetWithoutFallback();
+
+    Observable<List<String>> observable = api.listObservable();
+
+    assertThat(observable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    observable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    assertThat(testSubscriber.getOnNextEvents()).isEmpty();
+    assertThat(testSubscriber.getOnErrorEvents().get(0))
+        .isInstanceOf(HystrixRuntimeException.class)
+        .hasMessage("listObservable failed and no fallback available.");
+  }
+
+  @Test
   public void rxSingle() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -547,6 +568,12 @@ public class HystrixBuilderTest {
         .decoder(new GsonDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort(),
             new FallbackTestInterface());
+  }
+
+  private TestInterface targetWithoutFallback() {
+    return HystrixFeign.builder()
+        .decoder(new GsonDecoder())
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
   }
 
   interface OtherTestInterface {
