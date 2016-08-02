@@ -15,27 +15,26 @@
  */
 package feign;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
-import org.junit.Rule;
-import org.junit.Test;
-
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import feign.codec.Decoder;
-import feign.codec.Encoder;
+import java.util.concurrent.atomic.AtomicReference;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class FeignBuilderTest {
 
@@ -181,6 +180,64 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testProvideRequestPreProcessors() throws Exception {
+    server.enqueue(new MockResponse().setBody("response data"));
+
+    String url = "http://localhost:" + server.getPort();
+    RequestPreProcessor requestPreProcessor = new RequestPreProcessor() {
+      @Override
+      public void apply(RequestTemplate template) {
+        template.header("Content-Type", "text/plain");
+      }
+    };
+
+    TestInterface api =
+        Feign.builder().requestPreProcessor(requestPreProcessor).target(TestInterface.class, url);
+    Response response = api.codecPost("request data");
+    assertEquals(Util.toString(response.body().asReader()), "response data");
+
+    assertThat(server.takeRequest())
+        .hasHeaders("Content-Type: text/plain")
+        .hasBody("request data");
+  }
+
+  @Test
+  public void testProvideRequestPostProcessors() throws Exception {
+    Client client = new Client() {
+      @Override public Response execute(Request request, Request.Options options)
+          throws IOException {
+        throw new IOException();
+      }
+    };
+
+    String url = "http://localhost:" + server.getPort();
+    final AtomicBoolean executed = new AtomicBoolean();
+    final AtomicReference<RetryableException> reference = new AtomicReference<RetryableException>();
+    RequestPostProcessor requestPostProcessor = new RequestPostProcessor() {
+      @Override
+      public void apply(RequestTemplate template, RetryableException exception) {
+        executed.set(true);
+        reference.set(exception);
+      }
+    };
+
+    TestInterface api =
+        Feign.builder()
+            .client(client)
+            .requestPostProcessor(requestPostProcessor)
+            .target(TestInterface.class, url);
+
+    try {
+      api.decodedPost();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException e) {
+    }
+
+    assertThat(executed.get()).isTrue();
+    assertThat(reference.get()).isNotNull();
+  }
+
+  @Test
   public void testProvideInvocationHandlerFactory() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
@@ -206,7 +263,7 @@ public class FeignBuilderTest {
     assertThat(server.takeRequest())
         .hasBody("request data");
   }
-  
+
   @Test
   public void testSlashIsEncodedInPathParams() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
@@ -257,7 +314,7 @@ public class FeignBuilderTest {
 
     @RequestLine("POST /")
     String decodedPost();
-    
+
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     byte[] getQueues(@Param("vhost") String vhost);
 

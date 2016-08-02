@@ -13,6 +13,8 @@ import feign.InvocationHandlerFactory;
 import feign.Logger;
 import feign.Request;
 import feign.RequestInterceptor;
+import feign.RequestPostProcessor;
+import feign.RequestPreProcessor;
 import feign.Retryer;
 import feign.Target;
 import feign.codec.Decoder;
@@ -154,6 +156,16 @@ public final class HystrixFeign {
     @Override
     public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
       return (Builder) super.requestInterceptor(requestInterceptor);
+    }
+
+    @Override public Builder requestPreProcessors(
+            Iterable<RequestPreProcessor> requestPreProcessors) {
+      return (Builder) super.requestPreProcessors(requestPreProcessors);
+    }
+
+    @Override public Builder requestPostProcessors(
+            Iterable<RequestPostProcessor> requestPostProcessors) {
+      return (Builder) super.requestPostProcessors(requestPostProcessors);
     }
 
     @Override
