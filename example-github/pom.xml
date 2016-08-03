@@ -3,27 +3,20 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-
-  <!-- TODO: change group id when 9.0 is released -->
-  <groupId>com.netflix.feign</groupId>
+  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-example-github</artifactId>
   <packaging>jar</packaging>
-  <version>8.16.2</version>
+  <version>9.0.0</version>
   <name>GitHub Example</name>
 
   <dependencies>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-gson</artifactId>
       <version>${project.version}</version>
     </dependency>
