@@ -1,3 +1,6 @@
+### Version 9.1
+* Allows query parameters to match on a substring. Ex `q=body:{body}`
+
 ### Version 9.0
 * Migrates to maven from gradle
 * Changes maven groupId to `io.github.openfeign`
