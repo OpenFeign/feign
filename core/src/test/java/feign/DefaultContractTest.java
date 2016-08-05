@@ -770,4 +770,19 @@ public class DefaultContractTest {
     MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
   }
+
+  interface SubstringQuery {
+    @RequestLine("GET /_search?q=body:{body}")
+    String paramIsASubstringOfAQuery(@Param("body") String body);
+  }
+
+  @Test
+  public void paramIsASubstringOfAQuery() throws Exception {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(SubstringQuery.class);
+
+    assertThat(mds.get(0).template().queries()).containsExactly(
+        entry("q", asList("body:{body}"))
+    );
+    assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
+  }
 }
