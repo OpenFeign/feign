@@ -270,7 +270,7 @@ public interface Contract {
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
           if (data.template().url().indexOf(varName) == -1
-              && !searchMapValuesContainsExact(data.template().queries(), varName)
+              && !searchMapValuesContainsSubstring(data.template().queries(), varName)
               && !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
@@ -290,22 +290,6 @@ public interface Contract {
         }
       }
       return isHttpAnnotation;
-    }
-
-    private static <K, V> boolean searchMapValuesContainsExact(
-        Map<K, Collection<V>> map, V search) {
-      Collection<Collection<V>> values = map.values();
-      if (values == null) {
-        return false;
-      }
-
-      for (Collection<V> entry : values) {
-        if (entry.contains(search)) {
-          return true;
-        }
-      }
-
-      return false;
     }
 
     private static <K, V> boolean searchMapValuesContainsSubstring(
