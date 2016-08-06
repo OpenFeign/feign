@@ -84,8 +84,6 @@ public abstract class Feign {
 
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
-    private final List<RequestPreProcessor> requestPreProcessors =
-        new ArrayList<RequestPreProcessor>();
     private final List<RequestPostProcessor> requestPostProcessors =
         new ArrayList<RequestPostProcessor>();
     private Logger.Level logLevel = Logger.Level.NONE;
@@ -187,26 +185,6 @@ public abstract class Feign {
     }
 
     /**
-     * Adds a single request preprocessors to the builder.
-     */
-    public Builder requestPreProcessor(RequestPreProcessor requestPreProcessor) {
-      this.requestPreProcessors.add(requestPreProcessor);
-      return this;
-    }
-
-    /**
-     * Sets the full set of request post interceptors for the builder, overwriting any previous
-     * interceptors.
-     */
-    public Builder requestPreProcessors(Iterable<RequestPreProcessor> requestPreProcessors) {
-      this.requestPreProcessors.clear();
-      for (RequestPreProcessor requestPreProcessor : requestPreProcessors) {
-        this.requestPreProcessors.add(requestPreProcessor);
-      }
-      return this;
-    }
-
-    /**
      * Adds a single request postprocessors to the builder.
      */
     public Builder requestPostProcessor(RequestPostProcessor requestPostProcessor) {
@@ -245,7 +223,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-                  requestPreProcessors, requestPostProcessors, logLevel, logger, decode404);
+                  requestPostProcessors, logLevel, logger, decode404);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,
                                   errorDecoder, synchronousMethodHandlerFactory);

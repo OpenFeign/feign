@@ -1,11 +1,6 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -14,12 +9,14 @@ import feign.Logger;
 import feign.Request;
 import feign.RequestInterceptor;
 import feign.RequestPostProcessor;
-import feign.RequestPreProcessor;
 import feign.Retryer;
 import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects. Also
@@ -156,11 +153,6 @@ public final class HystrixFeign {
     @Override
     public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
       return (Builder) super.requestInterceptor(requestInterceptor);
-    }
-
-    @Override public Builder requestPreProcessors(
-            Iterable<RequestPreProcessor> requestPreProcessors) {
-      return (Builder) super.requestPreProcessors(requestPreProcessors);
     }
 
     @Override public Builder requestPostProcessors(

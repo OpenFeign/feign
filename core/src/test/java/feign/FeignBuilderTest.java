@@ -180,28 +180,6 @@ public class FeignBuilderTest {
   }
 
   @Test
-  public void testProvideRequestPreProcessors() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
-
-    String url = "http://localhost:" + server.getPort();
-    RequestPreProcessor requestPreProcessor = new RequestPreProcessor() {
-      @Override
-      public void apply(RequestTemplate template) {
-        template.header("Content-Type", "text/plain");
-      }
-    };
-
-    TestInterface api =
-        Feign.builder().requestPreProcessor(requestPreProcessor).target(TestInterface.class, url);
-    Response response = api.codecPost("request data");
-    assertEquals(Util.toString(response.body().asReader()), "response data");
-
-    assertThat(server.takeRequest())
-        .hasHeaders("Content-Type: text/plain")
-        .hasBody("request data");
-  }
-
-  @Test
   public void testProvideRequestPostProcessors() throws Exception {
     Client client = new Client() {
       @Override public Response execute(Request request, Request.Options options)
