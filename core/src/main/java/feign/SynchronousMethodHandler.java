@@ -80,10 +80,14 @@ final class SynchronousMethodHandler implements MethodHandler {
     RetryableException exception = null;
     while (true) {
       try {
+        exception = null;
         return executeAndDecode(template);
       } catch (RetryableException e) {
         exception = e;
+        template.retried(false);
         retryer.continueOrPropagate(e);
+        // exception wasn't propagated so the request got successfully retried
+        template.retried(true);
         if (logLevel != Logger.Level.NONE) {
           logger.logRetry(metadata.configKey(), logLevel);
         }

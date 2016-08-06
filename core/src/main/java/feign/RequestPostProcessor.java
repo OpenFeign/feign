@@ -21,9 +21,14 @@ package feign;
  * This processor will be executed after all processing of the {@link RequestTemplate} took place and
  * the response has been received (or an exception took place).
  *
+ * Example of usage might be distributed tracing. You want to be sure that some operations are taking
+ * place when the request was successfully sent. You might want to perform other actions if the request
+ * failed and wasn't retried. On the other hand you might act differently when the request failed
+ * and retry will take place.
+ *
  * For example: <br>
  * <pre>
- * public void apply(RequestTemplate input) {
+ * public void apply(RequestTemplate input, RetryableException e) {
  *     // do sth meaningful after the response was received
  * }
  * </pre>
@@ -33,9 +38,17 @@ package feign;
 public interface RequestPostProcessor {
 
   /**
-   * Called for every request. Add data using methods on the supplied {@link RequestTemplate}.
+   * Called for every request. Can support the following states of {@link RequestTemplate#retried} and
+   * values of {@link RetryableException}.
    *
-   * @param e - RetryableException if the request is to be retried. Can be null if there was no exception.
+   * <li>
+   *   <ul>retried set to {@code false} and {@link RetryableException} null - request sent successfully</ul>
+   *   <ul>retried set to {@code true} and {@link RetryableException} not null - request failed to be sent and retry has been successful</ul>
+   *   <ul>retried set to {@code false} and {@link RetryableException} not null - request failed to be sent and exceeded number of possible retries</ul>
+   * </li>
+   *
+   * Depending on values of {@link RequestTemplate} and state of {@link RetryableException} you can
+   * perform different decisions after the response has been received / exception was thrown.
    */
   void apply(RequestTemplate template, RetryableException e);
 }
