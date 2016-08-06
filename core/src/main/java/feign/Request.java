@@ -101,7 +101,8 @@ public final class Request {
   }
 
   /**
-   * If the request has been retried at least once will return true.
+   * {@code true} - if the request has been successfully retried
+   * {@code false} - if the request hasn't been retried or number of retries was exceeded
    */
   public boolean retried() {
     return retried;
