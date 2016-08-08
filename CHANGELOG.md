@@ -1,5 +1,6 @@
 ### Version 9.1
 * Allows query parameters to match on a substring. Ex `q=body:{body}`
+* Prefer method with Throwable argument for fallbacks if such method exists
 
 ### Version 9.0
 * Migrates to maven from gradle

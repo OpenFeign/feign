@@ -24,7 +24,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import feign.InvocationHandlerFactory;
@@ -110,7 +113,31 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object result = fallbackMethodMap.get(method).invoke(fallback, args);
+          Method fallbackMethod = fallbackMethodMap.get(method);
+          Method enhancedFallbackMethod = null;
+          Class<?>[] getEnhancedArgsClasses = getEnhancedArgsClasses(args);
+          try {
+            enhancedFallbackMethod = fallback.getClass().getMethod(fallbackMethod.getName(), getEnhancedArgsClasses);
+          } catch (NoSuchMethodException e) {
+            // no such method
+          } catch (SecurityException e) {
+            throw new AssertionError(e);
+          }
+          
+          Object result;
+          if (enhancedFallbackMethod != null) {
+            Object[] argsPlusException;
+            if (args == null) {
+              argsPlusException = new Object[] { getFailedExecutionException() };
+            } else {
+              argsPlusException = Arrays.copyOf(args, args.length + 1);
+              argsPlusException[argsPlusException.length - 1] = getFailedExecutionException();
+            }
+            result = enhancedFallbackMethod.invoke(fallback, argsPlusException);
+          } else {
+            result = fallbackMethod.invoke(fallback, args);
+          }
+          
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
           } else if (isReturnsObservable(method)) {
@@ -147,6 +174,18 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return hystrixCommand.toObservable().toCompletable();
     }
     return hystrixCommand.execute();
+  }
+  
+  protected Class<?>[] getEnhancedArgsClasses(Object[] args) {  
+    List<Class<?>> classes = new ArrayList<Class<?>>();
+     
+    if(args != null) {
+      for (int i = 0; i < args.length; i++) {
+        classes.add(args[i].getClass());
+      }
+    }
+    classes.add(Throwable.class);
+    return classes.toArray(new Class<?>[]{});
   }
 
   private boolean isReturnsCompletable(Method method) {

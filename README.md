@@ -164,6 +164,36 @@ MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppPro
 
 ```
 
+#### Fallbacks
+Hystrix supports the notion of a fallback: a default code path that is executed when they circuit is open or there is an error.
+
+```java
+class MyServiceFallback implements MyService {
+   @Override
+   String myMethod() {
+     return "fallback value";
+   }
+}
+
+MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd", new MyServiceFallback());
+
+```
+
+If you want to get access to exception which triggered fallback execution in fallback method you can provide method with additional `Throwable` argument:
+
+```java
+class MyEnhancedServiceFallback implements MyService {
+   @Override
+   String myMethod() {
+     throw new IllegalStateException("Will be never executed");
+   }
+   
+   String myMethod(Throwable t) {
+     return "fallback value plus exception message: " + t.getMessage();
+   }
+}
+```
+
 ### SLF4J
 [SLF4JModule](./slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
 
