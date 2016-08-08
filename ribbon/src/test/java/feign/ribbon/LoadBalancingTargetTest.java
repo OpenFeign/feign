@@ -71,10 +71,38 @@ public class LoadBalancingTargetTest {
       getConfigInstance().clearProperty(serverListKey);
     }
   }
+  
+  @Test
+  public void loadBalancingTargetPath() throws InterruptedException {
+    String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
+    String serverListKey = name + ".ribbon.listOfServers";
+  
+    server1.enqueue(new MockResponse().setBody("success!"));
+  
+    getConfigInstance().setProperty(serverListKey,
+            hostAndPort(server1.url("").url()));
+  
+    try {
+      LoadBalancingTarget<TestInterface>
+              target =
+              LoadBalancingTarget.create(TestInterface.class, "http://" + name + "/context-path");
+      TestInterface api = Feign.builder().target(target);
+    
+      api.get();
+      
+      assertEquals("http:///context-path", target.url());
+      assertEquals("/context-path/servers", server1.takeRequest().getPath());
+    } finally {
+      getConfigInstance().clearProperty(serverListKey);
+    }
+  }
 
   interface TestInterface {
 
     @RequestLine("POST /")
     void post();
+    
+    @RequestLine("GET /servers")
+    void get();
   }
 }
