@@ -15,6 +15,7 @@
  */
 package feign.slf4j;
 
+import com.sun.org.apache.regexp.internal.RE;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class Slf4jLoggerTest {
     logger = new Slf4jLogger();
     logger.log(CONFIG_KEY, "A message with %d formatting %s.", 2, "tokens");
     logger.logRequest(CONFIG_KEY, Logger.Level.BASIC, REQUEST);
-    logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.BASIC, RESPONSE, 273);
+    logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.BASIC, REQUEST, RESPONSE, 273);
   }
 
   @Test
@@ -96,6 +97,6 @@ public class Slf4jLoggerTest {
     logger = new Slf4jLogger();
     logger.log(CONFIG_KEY, "A message with %d formatting %s.", 2, "tokens");
     logger.logRequest(CONFIG_KEY, Logger.Level.BASIC, REQUEST);
-    logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.BASIC, RESPONSE, 273);
+    logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.BASIC, REQUEST, RESPONSE, 273);
   }
 }

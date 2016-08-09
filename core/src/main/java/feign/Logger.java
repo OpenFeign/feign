@@ -75,8 +75,8 @@ public abstract class Logger {
     log(configKey, "---> RETRYING");
   }
 
-  protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                            long elapsedTime) throws IOException {
+  protected Response logAndRebufferResponse(String configKey, Level logLevel, Request request,
+                                            Response response, long elapsedTime) throws IOException {
     String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ?
         " " + response.reason() : "";
     log(configKey, "<--- HTTP/1.1 %s%s (%sms)", response.status(), reason, elapsedTime);
@@ -168,10 +168,10 @@ public abstract class Logger {
     }
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+    protected Response logAndRebufferResponse(String configKey, Level logLevel, Request request,
+                                              Response response, long elapsedTime) throws IOException {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
+        return super.logAndRebufferResponse(configKey, logLevel, request, response, elapsedTime);
       }
       return response;
     }
@@ -210,8 +210,8 @@ public abstract class Logger {
     }
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+    protected Response logAndRebufferResponse(String configKey, Level logLevel, Request request,
+                                              Response response, long elapsedTime) throws IOException {
       return response;
     }
 
