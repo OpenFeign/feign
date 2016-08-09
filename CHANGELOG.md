@@ -1,3 +1,6 @@
+### Version 9.2
+* Adds support for logging HTTP request only on error response
+
 ### Version 9.1
 * Allows query parameters to match on a substring. Ex `q=body:{body}`
 

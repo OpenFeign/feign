@@ -107,7 +107,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     try {
       if (logLevel != Logger.Level.NONE) {
         response =
-            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
+            logger.logAndRebufferResponse(metadata.configKey(), logLevel, request, response, elapsedTime);
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
