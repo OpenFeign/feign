@@ -15,19 +15,15 @@
  */
 package feign;
 
+import feign.translate.DefaultTemplate;
+import feign.translate.TemplateEngine;
+
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import static feign.Util.CONTENT_LENGTH;
@@ -46,6 +42,8 @@ import static feign.Util.valuesOrEmpty;
  */
 public final class RequestTemplate implements Serializable {
 
+  private final static ServiceLoader<TemplateEngine> templateEngines = ServiceLoader.load(TemplateEngine.class);
+
   private static final long serialVersionUID = 1L;
   private final Map<String, Collection<String>> queries =
       new LinkedHashMap<String, Collection<String>>();
@@ -58,12 +56,15 @@ public final class RequestTemplate implements Serializable {
   private byte[] body;
   private String bodyTemplate;
   private boolean decodeSlash = true;
+  private Class<? extends TemplateEngine> templateEngineClass = DefaultTemplate.class;
 
   public RequestTemplate() {
+
   }
 
   /* Copy constructor. Use this when making templates. */
   public RequestTemplate(RequestTemplate toCopy) {
+    this();
     checkNotNull(toCopy, "toCopy");
     this.method = toCopy.method;
     this.url.append(toCopy.url);
@@ -73,6 +74,7 @@ public final class RequestTemplate implements Serializable {
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
+    this.templateEngineClass = toCopy.templateEngineClass;
   }
 
   private static String urlDecode(String arg) {
@@ -103,6 +105,23 @@ public final class RequestTemplate implements Serializable {
     }
   }
 
+    /**
+     * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
+     * unresolved parameters will remain. <br> Note that if you'd like curly braces literally in the
+     * {@code template}, urlencode them first.
+     *
+     * @param template  URI template that can be in level 1 <a href="http://tools.ietf.org/html/rfc6570">RFC6570</a>
+     *                  form.
+     * @param variables to the URI template
+     * @return expanded template, leaving any unresolved parameters literal
+     * @see @see #expand(String, Map, Class)
+     */
+    public static String expand(String template, Map<String, ?> variables) {
+        return expand(template,variables,DefaultTemplate.class);
+    }
+
+
+
   /**
    * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
    * unresolved parameters will remain. <br> Note that if you'd like curly braces literally in the
@@ -111,54 +130,18 @@ public final class RequestTemplate implements Serializable {
    * @param template  URI template that can be in level 1 <a href="http://tools.ietf.org/html/rfc6570">RFC6570</a>
    *                  form.
    * @param variables to the URI template
+   * @param templateEngineClass Template Engine to transform
    * @return expanded template, leaving any unresolved parameters literal
    */
-  public static String expand(String template, Map<String, ?> variables) {
-    // skip expansion if there's no valid variables set. ex. {a} is the
-    // first valid
-    if (checkNotNull(template, "template").length() < 3) {
-      return template.toString();
-    }
-    checkNotNull(variables, "variables for %s", template);
-
-    boolean inVar = false;
-    StringBuilder var = new StringBuilder();
-    StringBuilder builder = new StringBuilder();
-    for (char c : template.toCharArray()) {
-      switch (c) {
-        case '{':
-          if (inVar) {
-            // '{{' is an escape: write the brace and don't interpret as a variable
-            builder.append("{");
-            inVar = false;
-            break;
-          }
-          inVar = true;
-          break;
-        case '}':
-          if (!inVar) { // then write the brace literally
-            builder.append('}');
-            break;
-          }
-          inVar = false;
-          String key = var.toString();
-          Object value = variables.get(var.toString());
-          if (value != null) {
-            builder.append(value);
-          } else {
-            builder.append('{').append(key).append('}');
-          }
-          var = new StringBuilder();
-          break;
-        default:
-          if (inVar) {
-            var.append(c);
-          } else {
-            builder.append(c);
+  public static String expand(String template, Map<String, ?> variables,Class<? extends TemplateEngine> templateEngineClass) {
+      Iterator<TemplateEngine> iterator = templateEngines.iterator();
+      while (iterator.hasNext()){
+          TemplateEngine templateEngine = iterator.next();
+          if(templateEngine.getClass().equals(templateEngineClass)){
+              return templateEngine.translate(template,variables);
           }
       }
-    }
-    return builder.toString();
+    return template;
   }
 
   private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
@@ -212,9 +195,9 @@ public final class RequestTemplate implements Serializable {
     for (Entry<String, ?> entry : unencoded.entrySet()) {
       encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
     }
-    String resolvedUrl = expand(url.toString(), encoded).replace("+", "%20");
+    String resolvedUrl = expand(url.toString(), encoded,templateEngineClass).replace("+", "%20");
     if (decodeSlash) {
-    	resolvedUrl = resolvedUrl.replace("%2F", "/");
+      resolvedUrl = resolvedUrl.replace("%2F", "/");
     }
     url = new StringBuilder(resolvedUrl);
 
@@ -222,7 +205,7 @@ public final class RequestTemplate implements Serializable {
     for (String field : headers.keySet()) {
       Collection<String> resolvedValues = new ArrayList<String>();
       for (String value : valuesOrEmpty(headers, field)) {
-        String resolved = expand(value, unencoded);
+        String resolved = expand(value, unencoded,templateEngineClass);
         resolvedValues.add(resolved);
       }
       resolvedHeaders.put(field, resolvedValues);
@@ -230,7 +213,7 @@ public final class RequestTemplate implements Serializable {
     headers.clear();
     headers.putAll(resolvedHeaders);
     if (bodyTemplate != null) {
-      body(urlDecode(expand(bodyTemplate, encoded)));
+      body(urlDecode(expand(bodyTemplate, encoded,templateEngineClass)));
     }
     return this;
   }
@@ -536,6 +519,21 @@ public final class RequestTemplate implements Serializable {
   public String bodyTemplate() {
     return bodyTemplate;
   }
+
+    /**
+     * @see #expand(String, Map, Class)
+     */
+    public Class<? extends TemplateEngine> templateEngineClass() {
+        return templateEngineClass;
+    }
+
+    /**
+     * @see #expand(String, Map, Class)
+     */
+    public RequestTemplate templateEngineClass(Class<? extends TemplateEngine> clazz) {
+        this.templateEngineClass = clazz;
+        return this;
+    }
 
   /**
    * if there are any query params in the URL, this will extract them out.
