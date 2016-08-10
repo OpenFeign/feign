@@ -95,6 +95,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     long start = System.nanoTime();
     try {
       response = client.execute(request, options);
+      // ensure the request is set. TODO: remove in Feign 10
+      response.toBuilder().request(request).build();
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
@@ -108,6 +110,8 @@ final class SynchronousMethodHandler implements MethodHandler {
       if (logLevel != Logger.Level.NONE) {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
+        // ensure the request is set. TODO: remove in Feign 10
+        response.toBuilder().request(request).build();
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
@@ -120,7 +124,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         }
         // Ensure the response body is disconnected
         byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+        return response.toBuilder().body(bodyData).build();
       }
       if (response.status() >= 200 && response.status() < 300) {
         if (void.class == metadata.returnType()) {

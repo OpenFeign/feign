@@ -31,41 +31,41 @@ public class ResponseTest {
 
   @Test
   public void reasonPhraseIsOptional() {
-    Response response = Response.create(200, null /* reason phrase */, Collections.
-        <String, Collection<String>>emptyMap(), new byte[0]);
+    Response response = Response.builder()
+            .status(200)
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(new byte[0])
+            .build();
 
     assertThat(response.reason()).isNull();
     assertThat(response.toString()).isEqualTo("HTTP/1.1 200\n\n");
   }
 
   @Test
-  public void lowerCasesNamesOfHeaders() {
-    Response response = Response.create(200,
-                                        null,
-                                        Collections.singletonMap("Content-Type",
-                                                                 Collections.singletonList("application/json")),
-                                        new byte[0]);
-    assertThat(response.headers()).containsOnly(entry(("content-type"), Collections.singletonList("application/json")));
-  }
-
-  @Test
   public void canAccessHeadersCaseInsensitively() {
+    Map<String, Collection<String>> headersMap = new LinkedHashMap();
     List<String> valueList = Collections.singletonList("application/json");
-    Response response = Response.create(200,
-                                        null,
-                                        Collections.singletonMap("Content-Type", valueList),
-                                        new byte[0]);
+    headersMap.put("Content-Type", valueList);
+    Response response = Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .body(new byte[0])
+            .build();
     assertThat(response.headers().get("content-type")).isEqualTo(valueList);
     assertThat(response.headers().get("Content-Type")).isEqualTo(valueList);
   }
 
   @Test
   public void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
-    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
+    Map<String, Collection<String>> headersMap = new LinkedHashMap();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
     headersMap.put("set-cookie", Arrays.asList("Cookie-C=Value"));
 
-    Response response = Response.create(200, null, headersMap, new byte[0]);
+    Response response = Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .body(new byte[0])
+            .build();
 
     List<String> expectedHeaderValue = Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
     assertThat(response.headers()).containsOnly(entry(("set-cookie"), expectedHeaderValue));

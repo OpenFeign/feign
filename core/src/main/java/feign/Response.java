@@ -44,33 +44,154 @@ public final class Response implements Closeable {
   private final String reason;
   private final Map<String, Collection<String>> headers;
   private final Body body;
+  private final Request request;
 
-  private Response(int status, String reason, Map<String, Collection<String>> headers, Body body) {
-    checkState(status >= 200, "Invalid status code: %s", status);
-    this.status = status;
-    this.reason = reason; //nullable
-    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(headers));
-    this.body = body; //nullable
+  private Response(Builder builder) {
+    checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
+    this.status = builder.status;
+    this.reason = builder.reason; //nullable
+    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
+    this.body = builder.body; //nullable
+    this.request = builder.request; //nullable
   }
 
+  /**
+   * @deprecated  To be removed in Feign 10
+   */
+  @Deprecated
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 InputStream inputStream, Integer length) {
-    return new Response(status, reason, headers, InputStreamBody.orNull(inputStream, length));
+    return Response.builder()
+            .status(status)
+            .reason(reason)
+            .headers(headers)
+            .body(InputStreamBody.orNull(inputStream, length))
+            .build();
   }
 
+  /**
+   * @deprecated  To be removed in Feign 10
+   */
+  @Deprecated
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 byte[] data) {
-    return new Response(status, reason, headers, ByteArrayBody.orNull(data));
+    return Response.builder()
+            .status(status)
+            .reason(reason)
+            .headers(headers)
+            .body(ByteArrayBody.orNull(data))
+            .build();
   }
 
+  /**
+   * @deprecated  To be removed in Feign 10
+   */
+  @Deprecated
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 String text, Charset charset) {
-    return new Response(status, reason, headers, ByteArrayBody.orNull(text, charset));
+    return Response.builder()
+            .status(status)
+            .reason(reason)
+            .headers(headers)
+            .body(ByteArrayBody.orNull(text, charset))
+            .build();
   }
 
+  /**
+   * @deprecated  To be removed in Feign 10
+   */
+  @Deprecated
   public static Response create(int status, String reason, Map<String, Collection<String>> headers,
                                 Body body) {
-    return new Response(status, reason, headers, body);
+    return Response.builder()
+            .status(status)
+            .reason(reason)
+            .headers(headers)
+            .body(body)
+            .build();
+  }
+
+  public Builder toBuilder(){
+    return new Builder(this);
+  }
+
+  public static Builder builder(){
+    return new Builder();
+  }
+
+  public static final class Builder {
+    int status;
+    String reason;
+    Map<String, Collection<String>> headers;
+    Body body;
+    Request request;
+
+    Builder() {
+    }
+
+    Builder(Response source) {
+      this.status = source.status;
+      this.reason = source.reason;
+      this.headers = source.headers;
+      this.body = source.body;
+      this.request = source.request;
+    }
+
+    /** @see Response#status*/
+    public Builder status(int status) {
+      this.status = status;
+      return this;
+    }
+
+    /** @see Response#reason */
+    public Builder reason(String reason) {
+      this.reason = reason;
+      return this;
+    }
+
+    /** @see Response#headers */
+    public Builder headers(Map<String, Collection<String>> headers) {
+      this.headers = headers;
+      return this;
+    }
+
+    /** @see Response#body */
+    public Builder body(Body body) {
+      this.body = body;
+      return this;
+    }
+
+    /** @see Response#body */
+    public Builder body(InputStream inputStream, Integer length) {
+      this.body = InputStreamBody.orNull(inputStream, length);
+      return this;
+    }
+
+    /** @see Response#body */
+    public Builder body(byte[] data) {
+      this.body = ByteArrayBody.orNull(data);
+      return this;
+    }
+
+    /** @see Response#body */
+    public Builder body(String text, Charset charset) {
+      this.body = ByteArrayBody.orNull(text, charset);
+      return this;
+    }
+
+    /** @see Response#request
+    *
+    * NOTE: will add null check in version 10 which may require changes
+    * to custom feign.Client or loggers
+    */
+    public Builder request(Request request) {
+      this.request = request;
+      return this;
+    }
+
+    public Response build() {
+      return new Response(this);
+    }
   }
 
   /**
@@ -103,6 +224,13 @@ public final class Response implements Closeable {
    */
   public Body body() {
     return body;
+  }
+
+  /**
+   * if present, the request that generated this response
+   */
+  public Request request() {
+    return request;
   }
 
   @Override

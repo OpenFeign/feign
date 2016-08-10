@@ -34,7 +34,12 @@ public class Slf4jLoggerTest {
   private static final Request REQUEST =
       new RequestTemplate().method("GET").append("http://api.example.com").request();
   private static final Response RESPONSE =
-      Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), new byte[0]);
+          Response.builder()
+                  .status(200)
+                  .reason("OK")
+                  .headers(Collections.<String, Collection<String>>emptyMap())
+                  .body(new byte[0])
+                  .build();
   @Rule
   public final RecordingSimpleLogger slf4j = new RecordingSimpleLogger();
   private Slf4jLogger logger;

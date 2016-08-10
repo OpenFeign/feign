@@ -1,5 +1,8 @@
 ### Version 9.2
 * Supports context path when using Ribbon `LoadBalancingTarget`
+* Adds builder methods for the Response object
+* Deprecates Response factory methods
+* Adds nullable Request field to the Response object
 
 ### Version 9.1
 * Allows query parameters to match on a substring. Ex `q=body:{body}`
