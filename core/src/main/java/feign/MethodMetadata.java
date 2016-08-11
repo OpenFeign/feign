@@ -48,6 +48,9 @@ public final class MethodMetadata implements Serializable {
   }
 
   /**
+   * Used as a reference to this method. For example, {@link Logger#log(String, String, Object...)
+   * logging} or {@link ReflectiveFeign reflective dispatch}.
+   *
    * @see Feign#configKey(Class, java.lang.reflect.Method)
    */
   public String configKey() {
@@ -145,8 +148,8 @@ public final class MethodMetadata implements Serializable {
   }
 
   /**
-   * After {@link #indexToExpanderClass} is populated, this is set by contracts that support
-   * runtime injection.
+   * After {@link #indexToExpanderClass} is populated, this is set by contracts that support runtime
+   * injection.
    */
   public MethodMetadata indexToExpander(Map<Integer, Expander> indexToExpander) {
     this.indexToExpander = indexToExpander;
