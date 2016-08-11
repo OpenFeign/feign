@@ -1,3 +1,6 @@
+### Version 9.2
+* Supports context path when using Ribbon `LoadBalancingTarget`
+
 ### Version 9.1
 * Allows query parameters to match on a substring. Ex `q=body:{body}`
 
