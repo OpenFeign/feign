@@ -60,8 +60,12 @@ public class GsonCodecTest {
     map.put("foo", 1);
 
     Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), "{\"foo\": 1}", UTF_8);
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body("{\"foo\": 1}", UTF_8)
+            .build();
     assertEquals(
         new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()), map);
   }
@@ -116,8 +120,12 @@ public class GsonCodecTest {
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(zonesJson, UTF_8)
+            .build();
     assertEquals(
         zones, new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
@@ -125,15 +133,23 @@ public class GsonCodecTest {
   @Test
   public void nullBodyDecodesToNull() throws Exception {
     Response response =
-        Response.create(
-            204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+        Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
   @Test
   public void emptyBodyDecodesToNull() throws Exception {
     Response response =
-        Response.create(204, "OK", Collections.<String, Collection<String>>emptyMap(), new byte[0]);
+        Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(new byte[0])
+            .build();
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
@@ -182,8 +198,12 @@ public class GsonCodecTest {
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
     Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), zonesJson, UTF_8);
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(zonesJson, UTF_8)
+            .build();
     assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
@@ -216,8 +236,11 @@ public class GsonCodecTest {
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response =
-        Response.create(
-            404, "NOT FOUND", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+        Response.builder()
+            .status(404)
+            .reason("NOT FOUND")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 }

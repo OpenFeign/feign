@@ -174,8 +174,12 @@ public class JAXBCodecTest {
             + "<value>Test</value></mockObject>";
 
     Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), mockXml, UTF_8);
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(mockXml, UTF_8)
+            .build();
 
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
@@ -195,8 +199,12 @@ public class JAXBCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     Response response =
-        Response.create(
-            200, "OK", Collections.<String, Collection<String>>emptyMap(), "<foo/>", UTF_8);
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body("<foo/>", UTF_8)
+            .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
@@ -205,8 +213,11 @@ public class JAXBCodecTest {
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response =
-        Response.create(
-            404, "NOT FOUND", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+        Response.builder()
+            .status(404)
+            .reason("NOT FOUND")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertThat(
             (byte[])
                 new JAXBDecoder(new JAXBContextFactory.Builder().build())
