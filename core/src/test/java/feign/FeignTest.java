@@ -492,7 +492,12 @@ public class FeignTest {
   public void whenReturnTypeIsResponseNoErrorHandling() {
     Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
     headers.put("Location", Arrays.asList("http://bar.com"));
-    final Response response = Response.create(302, "Found", headers, new byte[0]);
+    final Response response = Response.builder()
+            .status(302)
+            .reason("Found")
+            .headers(headers)
+            .body(new byte[0])
+            .build();
 
     TestInterface api = Feign.builder()
         .client(new Client() { // fake client as Client.Default follows redirects.

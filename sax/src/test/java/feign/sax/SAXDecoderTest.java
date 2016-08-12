@@ -74,24 +74,32 @@ public class SAXDecoderTest {
   }
 
   private Response statusFailedResponse() {
-    return Response
-        .create(200, "OK", Collections.<String, Collection<String>>emptyMap(), statusFailed, UTF_8);
+    return Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(statusFailed, UTF_8)
+            .build();
   }
 
   @Test
   public void nullBodyDecodesToNull() throws Exception {
-    Response response =
-        Response
-            .create(204, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    Response response = Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertNull(decoder.decode(response, String.class));
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
-    Response response = Response.create(404, "NOT FOUND",
-        Collections.<String, Collection<String>>emptyMap(),
-        (byte[]) null);
+    Response response = Response.builder()
+            .status(404)
+            .reason("NOT FOUND")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
   }
 

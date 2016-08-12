@@ -74,11 +74,19 @@ public class DefaultDecoderTest {
     InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
-    return Response.create(200, "OK", headers, inputStream, content.length());
+    return Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(headers)
+            .body(inputStream, content.length())
+            .build();
   }
 
   private Response nullBodyResponse() {
-    return Response
-        .create(200, "OK", Collections.<String, Collection<String>>emptyMap(), (byte[]) null);
+    return Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
   }
 }

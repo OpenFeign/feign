@@ -71,7 +71,7 @@ public interface Client {
     @Override
     public Response execute(Request request, Options options) throws IOException {
       HttpURLConnection connection = convertAndSend(request, options);
-      return convertResponse(connection);
+      return convertResponse(connection).toBuilder().request(request).build();
     }
 
     HttpURLConnection convertAndSend(Request request, Options options) throws IOException {
@@ -175,7 +175,12 @@ public interface Client {
       } else {
         stream = connection.getInputStream();
       }
-      return Response.create(status, reason, headers, stream, length);
+      return Response.builder()
+              .status(status)
+              .reason(reason)
+              .headers(headers)
+              .body(stream, length)
+              .build();
     }
   }
 }
