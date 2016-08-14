@@ -40,17 +40,28 @@ public abstract class Feign {
   }
 
   /**
-   * <br> Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
-   * >see tags</a>. <br> For example. <ul> <li>{@code Route53}: would match a class such as {@code
-   * denominator.route53.Route53} <li>{@code Route53#list()}: would match a method such as {@code
-   * denominator.route53.Route53#list()} <li>{@code Route53#listAt(Marker)}: would match a method
-   * such as {@code denominator.route53.Route53#listAt(denominator.route53.Marker)} <li>{@code
-   * Route53#listByNameAndType(String, String)}: would match a method such as {@code
-   * denominator.route53.Route53#listAt(String, String)} </ul> <br> Note that there is no whitespace
-   * expected in a key!
+   * Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
+   * >see tags</a>. This method exposes that format, in case you need to create the same value as
+   * {@link MethodMetadata#configKey()} for correlation purposes.
+   *
+   * <p>Here are some sample encodings:
+   *
+   * <pre>
+   * <ul>
+   *   <li>{@code Route53}: would match a class {@code route53.Route53}</li>
+   *   <li>{@code Route53#list()}: would match a method {@code route53.Route53#list()}</li>
+   *   <li>{@code Route53#listAt(Marker)}: would match a method {@code
+   * route53.Route53#listAt(Marker)}</li>
+   *   <li>{@code Route53#listByNameAndType(String, String)}: would match a method {@code
+   * route53.Route53#listAt(String, String)}</li>
+   * </ul>
+   * </pre>
+   *
+   * Note that there is no whitespace expected in a key!
    *
    * @param targetType {@link feign.Target#type() type} of the Feign interface.
    * @param method invoked method, present on {@code type} or its super.
+   * @see MethodMetadata#configKey()
    */
   public static String configKey(Class targetType, Method method) {
     StringBuilder builder = new StringBuilder();
@@ -136,9 +147,9 @@ public abstract class Feign {
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
-     * <p/> All first-party (ex gson) decoders return well-known empty values defined by
-     * {@link Util#emptyValueOf}. To customize further, wrap an existing
-     * {@link #decoder(Decoder) decoder} or make your own.
+     * <p/> All first-party (ex gson) decoders return well-known empty values defined by {@link
+     * Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder) decoder}
+     * or make your own.
      *
      * <p/> This flag only works with 404, as opposed to all or arbitrary status codes. This was an
      * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
