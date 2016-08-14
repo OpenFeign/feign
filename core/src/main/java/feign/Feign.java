@@ -39,27 +39,29 @@ public abstract class Feign {
   }
 
   /**
-   * <br>
    * Configuration keys are formatted as unresolved <a href=
    * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html" >see
-   * tags</a>. <br>
-   * For example.
+   * tags</a>. This method exposes that format, in case you need to create the same value as {@link
+   * MethodMetadata#configKey()} for correlation purposes.
    *
+   * <p>Here are some sample encodings:
+   *
+   * <pre>
    * <ul>
-   *   <li>{@code Route53}: would match a class such as {@code denominator.route53.Route53}
-   *   <li>{@code Route53#list()}: would match a method such as {@code
-   *       denominator.route53.Route53#list()}
-   *   <li>{@code Route53#listAt(Marker)}: would match a method such as {@code
-   *       denominator.route53.Route53#listAt(denominator.route53.Marker)}
-   *   <li>{@code Route53#listByNameAndType(String, String)}: would match a method such as {@code
-   *       denominator.route53.Route53#listAt(String, String)}
+   *   <li>{@code Route53}: would match a class {@code route53.Route53}</li>
+   *   <li>{@code Route53#list()}: would match a method {@code route53.Route53#list()}</li>
+   *   <li>{@code Route53#listAt(Marker)}: would match a method {@code
+   * route53.Route53#listAt(Marker)}</li>
+   *   <li>{@code Route53#listByNameAndType(String, String)}: would match a method {@code
+   * route53.Route53#listAt(String, String)}</li>
    * </ul>
+   * </pre>
    *
-   * <br>
    * Note that there is no whitespace expected in a key!
    *
    * @param targetType {@link feign.Target#type() type} of the Feign interface.
    * @param method invoked method, present on {@code type} or its super.
+   * @see MethodMetadata#configKey()
    */
   public static String configKey(Class targetType, Method method) {
     StringBuilder builder = new StringBuilder();

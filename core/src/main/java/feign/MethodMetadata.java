@@ -46,6 +46,9 @@ public final class MethodMetadata implements Serializable {
   MethodMetadata() {}
 
   /**
+   * Used as a reference to this method. For example, {@link Logger#log(String, String, Object...)
+   * logging} or {@link ReflectiveFeign reflective dispatch}.
+   *
    * @see Feign#configKey(Class, java.lang.reflect.Method)
    */
   public String configKey() {
