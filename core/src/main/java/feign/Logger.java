@@ -178,7 +178,9 @@ public abstract class Logger {
 
     @Override
     protected void log(String configKey, String format, Object... args) {
-      logger.fine(String.format(methodTag(configKey) + format, args));
+      if (logger.isLoggable(java.util.logging.Level.FINE)) {
+        logger.fine(String.format(methodTag(configKey) + format, args));
+      }
     }
 
     /**
