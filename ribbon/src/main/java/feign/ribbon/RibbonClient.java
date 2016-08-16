@@ -67,10 +67,17 @@ public class RibbonClient implements Client {
           .executeWithLoadBalancer(ribbonRequest, new FeignOptionsClientConfig(options))
           .toResponse();
     } catch (ClientException e) {
-      if (e.getCause() instanceof IOException) {
-        throw IOException.class.cast(e.getCause());
-      }
+      propagateFirstIOException(e);
       throw new RuntimeException(e);
+    }
+  }
+
+  static void propagateFirstIOException(Throwable throwable) throws IOException {
+    while (throwable != null) {
+      if (throwable instanceof IOException) {
+        throw (IOException) throwable;
+      }
+      throwable = throwable.getCause();
     }
   }
 
