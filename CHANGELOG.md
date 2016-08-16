@@ -1,3 +1,6 @@
+### Version 9.3
+* Adds `FallbackFactory`, allowing access to the cause of a Hystrix fallback
+
 ### Version 9.2
 * Adds Hystrix `SetterFactory` to customize group and command keys
 * Supports context path when using Ribbon `LoadBalancingTarget`
