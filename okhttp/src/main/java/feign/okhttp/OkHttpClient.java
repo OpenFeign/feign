@@ -92,8 +92,12 @@ public final class OkHttpClient implements Client {
   }
 
   private static feign.Response toFeignResponse(Response input) throws IOException {
-    return feign.Response
-        .create(input.code(), input.message(), toMap(input.headers()), toBody(input.body()));
+    return feign.Response.builder()
+            .status(input.code())
+            .reason(input.message())
+            .headers(toMap(input.headers()))
+            .body(toBody(input.body()))
+            .build();
   }
 
   private static Map<String, Collection<String>> toMap(Headers headers) {
@@ -151,6 +155,6 @@ public final class OkHttpClient implements Client {
     }
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response);
+    return toFeignResponse(response).toBuilder().request(input).build();
   }
 }

@@ -4,7 +4,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>9.0.1-SNAPSHOT</version>
+  <version>9.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>

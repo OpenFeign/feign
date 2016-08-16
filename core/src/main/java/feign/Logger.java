@@ -99,7 +99,7 @@ public abstract class Logger {
           log(configKey, "%s", decodeOrDefault(bodyData, UTF_8, "Binary data"));
         }
         log(configKey, "<--- END HTTP (%s-byte body)", bodyLength);
-        return Response.create(response.status(), response.reason(), response.headers(), bodyData);
+        return response.toBuilder().body(bodyData).build();
       } else {
         log(configKey, "<--- END HTTP (%s-byte body)", bodyLength);
       }
@@ -178,7 +178,9 @@ public abstract class Logger {
 
     @Override
     protected void log(String configKey, String format, Object... args) {
-      logger.fine(String.format(methodTag(configKey) + format, args));
+      if (logger.isLoggable(java.util.logging.Level.FINE)) {
+        logger.fine(String.format(methodTag(configKey) + format, args));
+      }
     }
 
     /**

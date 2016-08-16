@@ -30,8 +30,12 @@ public class JacksonJaxbCodecTest {
 
   @Test
   public void decodeTest() throws Exception {
-    Response response =
-        Response.create(200, "OK", Collections.<String, Collection<String>>emptyMap(), "{\"value\":\"Test\"}", UTF_8);
+    Response response = Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body("{\"value\":\"Test\"}", UTF_8)
+            .build();
     JacksonJaxbJsonDecoder decoder = new JacksonJaxbJsonDecoder();
 
     assertThat(decoder.decode(response, MockObject.class))
@@ -41,9 +45,11 @@ public class JacksonJaxbCodecTest {
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
-    Response response = Response.create(404, "NOT FOUND",
-        Collections.<String, Collection<String>>emptyMap(),
-        (byte[]) null);
+    Response response = Response.builder()
+            .status(404)
+            .reason("NOT FOUND")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
