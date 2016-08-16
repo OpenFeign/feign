@@ -109,6 +109,30 @@ public class HystrixBuilderTest {
     assertThat(command).isNotNull();
     assertThat(command.execute()).containsExactly("fallback");
   }
+  
+  @Test
+  public void hystrixEnhancedFallback() {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.enhanced();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("fallback with exception");
+  }
+  
+  @Test
+  public void hystrixEnhancedWithArgFallback() {
+	server.enqueue(new MockResponse().setResponseCode(500));
+	  
+	TestInterface api = target();
+	  
+	HystrixCommand<String> command = api.enhancedWithArg("sample text");
+	  
+	assertThat(command).isNotNull();
+	assertThat(command.execute()).isEqualTo("fallback with exception");
+  }
 
   // When dealing with fallbacks, it is less tedious to keep interfaces small.
   interface GitHub {
@@ -592,6 +616,14 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     HystrixCommand<String> command();
+    
+    @RequestLine("GET /")
+    @Headers("Accept: application/json")
+    HystrixCommand<String> enhanced();
+    
+    @RequestLine("GET /{strParam}")
+    @Headers("Accept: application/json")
+    HystrixCommand<String> enhancedWithArg(@Param("strParam") String strParam);
 
     @RequestLine("GET /")
     @Headers("Accept: application/json")
@@ -716,6 +748,34 @@ public class HystrixBuilderTest {
     @Override
     public Completable completable() {
       return Completable.complete();
+    }
+
+    @Override
+    public HystrixCommand<String> enhanced() {
+      throw new IllegalStateException("Should be never executed");
+    }
+    
+    public HystrixCommand<String> enhanced(Throwable t) {
+      return new HystrixCommand<String>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+        @Override
+        protected String run() throws Exception {
+          return "fallback with exception";
+        }
+      };
+    }
+
+    @Override
+    public HystrixCommand<String> enhancedWithArg(String strParam) {
+      throw new IllegalStateException("Should be never executed");
+    }
+
+    public HystrixCommand<String> enhancedWithArg(String strParam, Throwable t) {
+      return new HystrixCommand<String>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+        @Override
+        protected String run() throws Exception {
+          return "fallback with exception";
+        }
+      };
     }
   }
 }
