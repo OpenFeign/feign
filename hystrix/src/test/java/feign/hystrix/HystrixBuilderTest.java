@@ -148,7 +148,7 @@ public class HystrixBuilderTest {
   @Test
   public void errorInFallbackHasExpectedBehavior() {
     thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("contributors failed and fallback failed.");
+    thrown.expectMessage("feign#public abstract java.util.List feign.hystrix.HystrixBuilderTest$GitHub.contributors(java.lang.String,java.lang.String) failed and fallback failed.");
     thrown.expectCause(
         isA(FeignException.class)); // as opposed to RuntimeException (from the fallback)
 
@@ -170,7 +170,7 @@ public class HystrixBuilderTest {
   @Test
   public void hystrixRuntimeExceptionPropagatesOnException() {
     thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("contributors failed and no fallback available.");
+    thrown.expectMessage("feign#public abstract java.util.List feign.hystrix.HystrixBuilderTest$GitHub.contributors(java.lang.String,java.lang.String) failed and no fallback available.");
     thrown.expectCause(isA(FeignException.class));
 
     server.enqueue(new MockResponse().setResponseCode(500));
@@ -301,7 +301,7 @@ public class HystrixBuilderTest {
     assertThat(testSubscriber.getOnNextEvents()).isEmpty();
     assertThat(testSubscriber.getOnErrorEvents().get(0))
         .isInstanceOf(HystrixRuntimeException.class)
-        .hasMessage("listObservable failed and no fallback available.");
+        .hasMessage("feign#public abstract rx.Observable feign.hystrix.HystrixBuilderTest$TestInterface.listObservable() failed and no fallback available.");
   }
 
   @Test
