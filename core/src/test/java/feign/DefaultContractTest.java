@@ -71,6 +71,17 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void bodyParamWithPathParam() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
+
+    assertThat(md.bodyIndex())
+        .isEqualTo(1);
+    assertThat(md.indexToName()).containsOnly(
+        entry(0, asList("id"))
+    );
+  }
+
+  @Test
   public void tooManyBodies() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Method has too many Body");
@@ -358,6 +369,9 @@ public class DefaultContractTest {
 
     @RequestLine("POST")
     Response post(List<String> body);
+
+    @RequestLine("PUT /offers/{id}")
+    void post(@Param("id") int id, List<String> body);
 
     @RequestLine("POST")
     Response tooMany(List<String> body, List<String> body2);
