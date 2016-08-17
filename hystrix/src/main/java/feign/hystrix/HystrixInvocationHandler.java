@@ -20,7 +20,6 @@ import static feign.Util.checkNotNull;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
-import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.InvocationHandler;
@@ -181,13 +180,5 @@ final class HystrixInvocationHandler implements InvocationHandler {
   @Override
   public String toString() {
     return target.toString();
-  }
-
-  static final class Factory implements InvocationHandlerFactory {
-
-    @Override
-    public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-      return new HystrixInvocationHandler(target, dispatch, null);
-    }
   }
 }
