@@ -33,6 +33,15 @@ public final class HystrixFeign {
   public static final class Builder extends Feign.Builder {
 
     private Contract contract = new Contract.Default();
+    private SetterFactory setterFactory = new SetterFactory.Default();
+
+    /**
+     * Allows you to override hystrix properties such as thread pools and command keys.
+     */
+    public Builder setterFactory(SetterFactory setterFactory) {
+      this.setterFactory = setterFactory;
+      return this;
+    }
 
     /**
      * @see #target(Class, String, Object)
@@ -101,7 +110,7 @@ public final class HystrixFeign {
       super.invocationHandlerFactory(new InvocationHandlerFactory() {
         @Override public InvocationHandler create(Target target,
             Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, nullableFallback);
+          return new HystrixInvocationHandler(target, dispatch, setterFactory, nullableFallback);
         }
       });
       super.contract(new HystrixDelegatingContract(contract));

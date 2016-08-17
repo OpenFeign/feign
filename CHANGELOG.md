@@ -1,4 +1,5 @@
 ### Version 9.2
+* Adds Hystrix `SetterFactory` to customize group and command keys
 * Supports context path when using Ribbon `LoadBalancingTarget`
 * Adds builder methods for the Response object
 * Deprecates Response factory methods
