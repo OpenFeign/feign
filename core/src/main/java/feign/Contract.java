@@ -166,6 +166,11 @@ public interface Contract {
     protected abstract boolean processAnnotationsOnParameter(
         MethodMetadata data, Annotation[] annotations, int paramIndex);
 
+    /**
+     * @deprecated dead-code will remove in feign 10
+     */
+    @Deprecated
+    // deprecated as only used in a sub-type
     protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
       if (possiblyNull == null) {
         possiblyNull = new ArrayList<String>();

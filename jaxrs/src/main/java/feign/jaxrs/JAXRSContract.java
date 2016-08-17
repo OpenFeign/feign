@@ -22,6 +22,7 @@ import feign.Contract;
 import feign.MethodMetadata;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -162,5 +163,14 @@ public final class JAXRSContract extends Contract.BaseContract {
       }
     }
     return isHttpParam;
+  }
+
+  // Not using override as the super-type's method is deprecated and will be removed.
+  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
+    if (possiblyNull == null) {
+      possiblyNull = new ArrayList<String>();
+    }
+    possiblyNull.add(String.format("{%s}", name));
+    return possiblyNull;
   }
 }
