@@ -19,7 +19,6 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 
-import com.netflix.hystrix.HystrixCommandProperties;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,7 +26,6 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import rx.Completable;
@@ -182,13 +180,5 @@ final class HystrixInvocationHandler implements InvocationHandler {
   @Override
   public String toString() {
     return target.toString();
-  }
-
-  static final class Factory implements InvocationHandlerFactory {
-
-    @Override
-    public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-      return new HystrixInvocationHandler(target, dispatch, null);
-    }
   }
 }
