@@ -85,7 +85,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
     }
 
     String groupKey = this.target.name();
-    String commandKey = method.getName();
+    String commandKey = generateCommandKey(method);
     HystrixCommand.Setter setter = HystrixCommand.Setter
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
         .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
@@ -101,6 +101,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           throw (Error) t;
         }
       }
+      
 
       @Override
       protected Object getFallback() {
@@ -145,6 +146,16 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return hystrixCommand.toObservable().toCompletable();
     }
     return hystrixCommand.execute();
+  }
+  
+  /**
+   * Generates the key for the Hystrix command.  This key is used by
+   * Hystrix in a cache, so we try and make the key as unique as possible.
+   * @param method The fallback method.
+   * @return A unique key to be used to cache the Hystrix command.
+   */
+  private String generateCommandKey(Method method) {
+	  return "feign#" + method.toString();
   }
 
   private boolean isReturnsCompletable(Method method) {
