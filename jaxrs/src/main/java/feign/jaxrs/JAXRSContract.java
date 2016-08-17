@@ -17,6 +17,7 @@ package feign.jaxrs;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.ws.rs.Consumes;
@@ -61,7 +62,7 @@ public final class JAXRSContract extends Contract.BaseContract {
       }
       if (pathValue.endsWith("/")) {
           // Strip off any trailing slashes, since the template has already had slashes appropriately added
-          pathValue = pathValue.substring(0, pathValue.length()-1);
+          pathValue = pathValue.substring(0, pathValue.length() - 1);
       }
       data.template().insert(0, pathValue);
     }
@@ -83,8 +84,7 @@ public final class JAXRSContract extends Contract.BaseContract {
     if (http != null) {
       checkState(data.template().method() == null,
                  "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
-                 data.template()
-                     .method(), http.value());
+                 data.template().method(), http.value());
       data.template().method(http.value());
     } else if (annotationType == Path.class) {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
@@ -158,5 +158,14 @@ public final class JAXRSContract extends Contract.BaseContract {
       }
     }
     return isHttpParam;
+  }
+
+  // Not using override as the super-type's method is deprecated and will be removed.
+  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
+    if (possiblyNull == null) {
+      possiblyNull = new ArrayList<String>();
+    }
+    possiblyNull.add(String.format("{%s}", name));
+    return possiblyNull;
   }
 }
