@@ -18,8 +18,7 @@ package feign.hystrix;
 import static feign.Util.checkNotNull;
 
 import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommand.Setter;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.InvocationHandler;
@@ -28,6 +27,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -38,12 +38,18 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Map<Method, MethodHandler> dispatch;
   private final Object fallback; // Nullable
   private final Map<Method, Method> fallbackMethodMap;
+  private final Map<Method, Setter> setterMethodMap;
 
-  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Object fallback) {
+  HystrixInvocationHandler(
+      Target<?> target,
+      Map<Method, MethodHandler> dispatch,
+      SetterFactory setterFactory,
+      Object fallback) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallback = fallback;
     this.fallbackMethodMap = toFallbackMethod(dispatch);
+    this.setterMethodMap = toSetters(setterFactory, target, dispatch.keySet());
   }
 
   /**
@@ -55,11 +61,22 @@ final class HystrixInvocationHandler implements InvocationHandler {
    *
    * @return cached methods map for fallback invoking
    */
-  private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
+  static Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
     Map<Method, Method> result = new LinkedHashMap<Method, Method>();
     for (Method method : dispatch.keySet()) {
       method.setAccessible(true);
       result.put(method, method);
+    }
+    return result;
+  }
+
+  /** Process all methods in the target so that appropriate setters are created. */
+  static Map<Method, Setter> toSetters(
+      SetterFactory setterFactory, Target<?> target, Set<Method> methods) {
+    Map<Method, Setter> result = new LinkedHashMap<Method, Setter>();
+    for (Method method : methods) {
+      method.setAccessible(true);
+      result.put(method, setterFactory.create(target, method));
     }
     return result;
   }
@@ -83,14 +100,8 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return toString();
     }
 
-    String groupKey = this.target.name();
-    String commandKey = method.getName();
-    HystrixCommand.Setter setter =
-        HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-            .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
-
     HystrixCommand<Object> hystrixCommand =
-        new HystrixCommand<Object>(setter) {
+        new HystrixCommand<Object>(setterMethodMap.get(method)) {
           @Override
           protected Object run() throws Exception {
             try {

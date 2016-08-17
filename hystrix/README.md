@@ -50,6 +50,34 @@ api.getYourType("a").execute();
 api.getYourTypeSynchronous("a");
 ```
 
+### Group and Command keys
+
+By default, Hystrix group keys match the target name, and the target name is usually the base url.
+Hystrix command keys are the same as logging keys, which are equivalent to javadoc references.
+
+For example, for the canonical GitHub example...
+
+* the group key would be "https://api.github.com" and
+* the command key would be "GitHub#contributors(String,String)"
+
+You can use `HystrixFeign.Builder#setterFactory(SetterFactory)` to customize this, for example, to
+read key mappings from configuration or annotations.
+
+Ex.
+```java
+SetterFactory commandKeyIsRequestLine = (target, method) -> {
+  String groupKey = target.name();
+  String commandKey = method.getAnnotation(RequestLine.class).value();
+  return HystrixCommand.Setter
+      .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+      .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
+};
+
+api = HystrixFeign.builder()
+                  .setterFactory(commandKeyIsRequestLine)
+                  ...
+```
+
 ### Fallback support
 
 Fallbacks are known values, which you return when there's an error invoking an http method.
