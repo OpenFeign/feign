@@ -16,8 +16,7 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommand.Setter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -25,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
@@ -40,27 +40,44 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Map<Method, MethodHandler> dispatch;
   private final Object fallback; // Nullable
   private final Map<Method, Method> fallbackMethodMap;
+  private final Map<Method, Setter> setterMethodMap;
 
-  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Object fallback) {
+  HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
+                           SetterFactory setterFactory, Object fallback) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallback = fallback;
     this.fallbackMethodMap = toFallbackMethod(dispatch);
+    this.setterMethodMap = toSetters(setterFactory, target, dispatch.keySet());
   }
 
   /**
    * If the method param of InvocationHandler.invoke is not accessible, i.e in a package-private
-   * interface, the fallback call in hystrix command will fail cause of access restrictions.
-   * But methods in dispatch are copied methods. So setting access to dispatch method doesn't take
-   * effect to the method in InvocationHandler.invoke. Use map to store a copy of method
-   * to invoke the fallback to bypass this and reducing the count of reflection calls.
+   * interface, the fallback call in hystrix command will fail cause of access restrictions. But
+   * methods in dispatch are copied methods. So setting access to dispatch method doesn't take
+   * effect to the method in InvocationHandler.invoke. Use map to store a copy of method to invoke
+   * the fallback to bypass this and reducing the count of reflection calls.
+   *
    * @return cached methods map for fallback invoking
    */
-  private Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
+  static Map<Method, Method> toFallbackMethod(Map<Method, MethodHandler> dispatch) {
     Map<Method, Method> result = new LinkedHashMap<Method, Method>();
     for (Method method : dispatch.keySet()) {
       method.setAccessible(true);
       result.put(method, method);
+    }
+    return result;
+  }
+
+  /**
+   * Process all methods in the target so that appropriate setters are created.
+   */
+  static Map<Method, Setter> toSetters(SetterFactory setterFactory, Target<?> target,
+                                       Set<Method> methods) {
+    Map<Method, Setter> result = new LinkedHashMap<Method, Setter>();
+    for (Method method : methods) {
+      method.setAccessible(true);
+      result.put(method, setterFactory.create(target, method));
     }
     return result;
   }
@@ -84,13 +101,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return toString();
     }
 
-    String groupKey = this.target.name();
-    String commandKey = method.getName();
-    HystrixCommand.Setter setter = HystrixCommand.Setter
-        .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-        .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
-
-    HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setter) {
+    HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setterMethodMap.get(method)) {
       @Override
       protected Object run() throws Exception {
         try {
@@ -141,7 +152,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
     } else if (isReturnsSingle(method)) {
       // Create a cold Observable as a Single
       return hystrixCommand.toObservable().toSingle();
-    } else if(isReturnsCompletable(method)) {
+    } else if (isReturnsCompletable(method)) {
       return hystrixCommand.toObservable().toCompletable();
     }
     return hystrixCommand.execute();
