@@ -38,14 +38,7 @@ public final class HystrixFeign {
      * @see #target(Class, String, Object)
      */
     public <T> T target(Target<T> target, final T fallback) {
-      super.invocationHandlerFactory(new InvocationHandlerFactory() {
-        @Override
-        public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, fallback);
-        }
-      });
-      super.contract(new HystrixDelegatingContract(contract));
-      return super.build().newInstance(target);
+      return buildWithFallback(fallback).newInstance(target);
     }
 
     /**
@@ -100,7 +93,17 @@ public final class HystrixFeign {
 
     @Override
     public Feign build() {
-      super.invocationHandlerFactory(new HystrixInvocationHandler.Factory());
+      return buildWithFallback(null);
+    }
+
+    /** Configures components needed for hystrix integration. */
+    Feign buildWithFallback(final Object nullableFallback) {
+      super.invocationHandlerFactory(new InvocationHandlerFactory() {
+        @Override public InvocationHandler create(Target target,
+            Map<Method, MethodHandler> dispatch) {
+          return new HystrixInvocationHandler(target, dispatch, nullableFallback);
+        }
+      });
       super.contract(new HystrixDelegatingContract(contract));
       return super.build();
     }
