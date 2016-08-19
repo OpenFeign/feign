@@ -106,3 +106,26 @@ GitHub github = HystrixFeign.builder()
                             ...
                             .target(GitHub.class, "https://api.github.com", fallback);
 ```
+
+#### Considering the cause
+
+The cause of the fallback is logged by default to FINE level. You can programmatically inspect
+the cause by making your own `FallbackFactory`. In many cases, the cause will be a `FeignException`,
+which includes the http status.
+
+Here's an example of using `FallbackFactory`:
+
+```java
+// This instance will be invoked if there are errors of any kind.
+FallbackFactory<GitHub> fallbackFactory = cause -> (owner, repo) -> {
+  if (cause instanceof FeignException && ((FeignException) cause).status() == 403) {
+    return Collections.emptyList();
+  } else {
+    return Arrays.asList("yogi");
+  }
+};
+
+GitHub github = HystrixFeign.builder()
+                            ...
+                            .target(GitHub.class, "https://api.github.com", fallbackFactory);
+```
