@@ -38,15 +38,15 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
   private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
-  private final Object fallback; // Nullable
+  private final FallbackFactory<?> fallbackFactory; // Nullable
   private final Map<Method, Method> fallbackMethodMap;
   private final Map<Method, Setter> setterMethodMap;
 
   HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
-                           SetterFactory setterFactory, Object fallback) {
+                           SetterFactory setterFactory, FallbackFactory<?> fallbackFactory) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
-    this.fallback = fallback;
+    this.fallbackFactory = fallbackFactory;
     this.fallbackMethodMap = toFallbackMethod(dispatch);
     this.setterMethodMap = toSetters(setterFactory, target, dispatch.keySet());
   }
@@ -115,10 +115,11 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
       @Override
       protected Object getFallback() {
-        if (fallback == null) {
+        if (fallbackFactory == null) {
           return super.getFallback();
         }
         try {
+          Object fallback = fallbackFactory.create(getFailedExecutionException());
           Object result = fallbackMethodMap.get(method).invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();
