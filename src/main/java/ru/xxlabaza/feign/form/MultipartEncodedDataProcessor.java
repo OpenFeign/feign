@@ -15,19 +15,24 @@
  */
 package ru.xxlabaza.feign.form;
 
-import feign.RequestTemplate;
+import static feign.Util.UTF_8;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
-
-import static feign.Util.UTF_8;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -48,19 +53,21 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     public void process (Map<String, Object> data, RequestTemplate template) {
         val boundary = createBoundary();
         val outputStream = new ByteArrayOutputStream();
-        val writer = new PrintWriter(outputStream);
+        
+        try (val writer = new PrintWriter(outputStream)) {
 
-        data.entrySet().stream().forEach(it -> {
-            writer.append("--" + boundary).append(CRLF);
-            if (isFile(it.getValue())) {
-                writeFile(outputStream, writer, it.getKey(), it.getValue());
-            } else {
-                writeParameter(writer, it.getKey(), it.getValue().toString());
-            }
-            writer.append(CRLF).flush();
-        });
-
-        writer.append("--" + boundary + "--").append(CRLF).flush();
+            data.entrySet().stream().forEach(it -> {
+                writer.append("--" + boundary).append(CRLF);
+                if (isFile(it.getValue())) {
+                    writeFile(outputStream, writer, it.getKey(), it.getValue());
+                } else {
+                    writeParameter(writer, it.getKey(), it.getValue().toString());
+                }
+                writer.append(CRLF).flush();
+            });
+    
+            writer.append("--" + boundary + "--").append(CRLF).flush();
+        }
 
         val contentType = new StringBuilder()
                 .append(CONTENT_TYPE)
@@ -82,7 +89,8 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     }
 
     private boolean isFile (Object value) {
-        return value != null && (value instanceof Path || value instanceof File || value instanceof byte[]);
+        return value != null && (value instanceof Path || value instanceof File || value instanceof byte[]
+                || value instanceof MultipartFile);
     }
 
     private void writeParameter (PrintWriter writer, String name, String value) {
@@ -94,6 +102,15 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     private void writeFile (OutputStream output, PrintWriter writer, String name, Object value) {
         if (value instanceof byte[]) {
             writeFile(output, writer, name, (byte[]) value);
+            return;
+        }
+        
+        if (value instanceof MultipartFile) {
+            try {
+                writeFile(output, writer, name, ((MultipartFile) value).getBytes());
+            } catch (IOException e) {
+                throw new EncodeException("Can't encode MultipartFile", e);
+            }
             return;
         }
 
@@ -117,7 +134,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
         output.write(bytes);
         output.flush();
     }
-
+    
     private void writeFileMeta (PrintWriter writer, String name, String fileName) {
         val contentDesposition = new StringBuilder()
                 .append("Content-Disposition: form-data; name=\"").append(name).append("\"; ")

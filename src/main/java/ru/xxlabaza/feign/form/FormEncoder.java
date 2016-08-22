@@ -18,10 +18,14 @@ package ru.xxlabaza.feign.form;
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -37,15 +41,15 @@ public class FormEncoder implements Encoder {
         this(new Encoder.Default());
     }
 
-    public FormEncoder (Encoder deligate) {
-        this.deligate = deligate;
+    public FormEncoder (Encoder delegate) {
+        this.deligate = delegate;
         processors = Stream.of(new FormEncodedDataProcessor(), new MultipartEncodedDataProcessor())
                 .collect(Collectors.toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
     }
 
     @Override
     public void encode (Object object, Type bodyType, RequestTemplate template) {
-        if (bodyType != MAP_STRING_WILDCARD) {
+        if (bodyType != MAP_STRING_WILDCARD && !bodyType.equals(MultipartFile.class)) {
             deligate.encode(object, bodyType, template);
             return;
         }
@@ -57,13 +61,44 @@ public class FormEncoder implements Encoder {
                 .findFirst()
                 .orElse("");
 
+        
+        if (formType.isEmpty()) {
+            formType = detectFormType(object, bodyType);
+        }
+        
         if (formType.isEmpty()) {
             deligate.encode(object, bodyType, template);
             return;
         }
+        
+        if (object instanceof MultipartFile) {
+            MultipartFile file = (MultipartFile) object;
+            Map<String, Object> data = new HashMap<>();
+            data.put(file.getName(), object);
+            processors.get(formType).process(data, template);
+        } else {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) object;
+            processors.get(formType).process(data, template);
+        }
+    }
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) object;
-        processors.get(formType).process(data, template);
+    private String detectFormType(Object object, Type bodyType) {
+        if (bodyType == MultipartFile.class) {
+            return MultipartEncodedDataProcessor.CONTENT_TYPE;
+        }
+        if (bodyType == MAP_STRING_WILDCARD) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) object;
+            Optional<Object> multipartFile = map.values().stream()
+                        .filter(o -> o instanceof MultipartFile)
+                        .findFirst();
+            
+            if(multipartFile.isPresent()) {
+                return MultipartEncodedDataProcessor.CONTENT_TYPE;
+            }
+        }
+        
+        return "";
     }
 }

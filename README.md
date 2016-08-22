@@ -101,3 +101,24 @@ interface SomeApi {
 In example above, we send file in parameter named **photo** with additional field in form **is_public**.
 
 > **IMPORTANT:** You can specify your files in API method by declaring type **Path**, **File** or even **byte[]**.
+
+### Spring Cloud Netflix @FeingClient support
+
+You can also use Form Encoder with `@FeingClient`:
+
+```java
+@FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
+public interface FileUploadServiceClient extends IFileUploadServiceClient {
+
+    @Configuration
+    public class MultipartSupportConfig {
+
+        @Bean
+        @Primary
+        @Scope("prototype")
+        public Encoder feignFormEncoder() {
+            return new FormEncoder();
+        }
+    }
+}
+```
