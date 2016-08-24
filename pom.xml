@@ -7,13 +7,45 @@
 
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx</artifactId>
-    <version>0.0.1-alpha</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
+
     <name>feign-vertx</name>
-    <description>
-        Use Feign client on Vert.x
-    </description>
+    <description>Use Feign client on Vert.x</description>
     <url>https://github.com/OpenFeign/feign-vertx</url>
+
+    <organization>
+        <name>OpenFeign</name>
+        <url>https://github.com/openfeign</url>
+    </organization>
+
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/OpenFeign/feign-vertx/issues</url>
+    </issueManagement>
+
+    <scm>
+        <url>https://github.com/OpenFeign/feign-vertx</url>
+        <connection>scm:git:https://github.com/OpenFeign/feign-vertx.git</connection>
+        <developerConnection>scm:git:https://github.com/OpenFeign/feign-vertx.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>hosuaby</id>
+            <name>Alexei KLENIN</name>
+            <email>alexei.klenin@gmail.com</email>
+        </developer>
+    </developers>
 
     <properties>
         <java.version>1.8</java.version>
@@ -189,5 +221,9 @@
             <id>bintray</id>
             <url>https://api.bintray.com/maven/hosuaby/OpenFeign/feign-vertx;publish=1</url>
         </repository>
+        <snapshotRepository>
+            <id>jfrog-snapshots</id>
+            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>

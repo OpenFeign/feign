@@ -305,7 +305,7 @@ public class VertxFeign extends Feign {
     }
 
     @Override
-    public Feign build() {
+    public VertxFeign build() {
       checkNotNull(this.vertx,
           "Vertx instance wasn't provided in VertxFeign builder");
 
