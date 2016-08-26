@@ -17,6 +17,8 @@ package feign;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import static feign.Util.checkNotNull;
@@ -32,21 +34,29 @@ public final class Request {
    * effectively immutable, via safe copies, not mutating or otherwise.
    */
   public static Request create(String method, String url, Map<String, Collection<String>> headers,
+                               Map<String, Object> properties, byte[] body, Charset charset) {
+    return new Request(method, url, headers, properties, body, charset);
+  }
+
+  public static Request create(String method, String url, Map<String, Collection<String>> headers,
                                byte[] body, Charset charset) {
-    return new Request(method, url, headers, body, charset);
+    Map<String, Object> emptyUnmodifiableMap = Collections.unmodifiableMap(new HashMap<String, Object>(0));
+    return new Request(method, url, headers, emptyUnmodifiableMap, body, charset);
   }
 
   private final String method;
   private final String url;
   private final Map<String, Collection<String>> headers;
+  private final Map<String, Object> properties;
   private final byte[] body;
   private final Charset charset;
 
-  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
-          Charset charset) {
+  Request(String method, String url, Map<String, Collection<String>> headers,
+          Map<String, Object> properties, byte[] body, Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
+    this.properties = checkNotNull(properties, "properties of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
@@ -65,6 +75,12 @@ public final class Request {
   public Map<String, Collection<String>> headers() {
     return headers;
   }
+
+  /* List of properties that will be kept in the current client request response exchange context
+   * A property allows interceptors to exchange additional custom information not already provided
+    by this interface.
+  */
+  public Map<String, Object> properties() { return properties; }
 
   /**
    * The character set with which the body is encoded, or null if unknown or not applicable.  When

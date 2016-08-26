@@ -95,6 +95,8 @@ public abstract class Feign {
 
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
+    private final List<ResponseInterceptor> responseInterceptors =
+            new ArrayList<ResponseInterceptor>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
@@ -194,6 +196,26 @@ public abstract class Feign {
     }
 
     /**
+     * Adds a single response interceptor to the builder.
+     */
+    public Builder responseInterceptor(ResponseInterceptor responseInterceptor) {
+      this.responseInterceptors.add(responseInterceptor);
+      return this;
+    }
+
+    /**
+     * Sets the full set of response interceptors for the builder, overwriting any previous
+     * interceptors.
+     */
+    public Builder responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
+      this.responseInterceptors.clear();
+      for (ResponseInterceptor responseInterceptor : responseInterceptors) {
+        this.responseInterceptors.add(responseInterceptor);
+      }
+      return this;
+    }
+
+    /**
      * Allows you to override how reflective dispatch works inside of Feign.
      */
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
@@ -211,7 +233,7 @@ public abstract class Feign {
 
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, responseInterceptors, logger,
                                                logLevel, decode404);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,

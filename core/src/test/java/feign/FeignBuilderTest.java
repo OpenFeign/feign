@@ -181,6 +181,35 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testProvideResponseInterceptors() throws Exception {
+    server.enqueue(new MockResponse().setBody("response data"));
+    final Object[] interceptedRequestProperties = new Object[1];
+    final Response[] interceptedResponse = new Response[1];
+    String url = "http://localhost:" + server.getPort();
+
+    RequestInterceptor requestInterceptor = new RequestInterceptor() {
+      @Override
+      public void apply(RequestTemplate template) {
+        template.properties().put("key1", "value1");
+      }
+    };
+    ResponseInterceptor responseInterceptor = new ResponseInterceptor() {
+      @Override
+      public void apply(Request request, Response response, MethodMetadata methodMetadata) {
+        interceptedResponse[0] = response;
+        interceptedRequestProperties[0] = request.properties().get("key1");
+      }
+    };
+    TestInterface api = Feign.builder()
+                    .requestInterceptor(requestInterceptor)
+                    .responseInterceptor(responseInterceptor).target(TestInterface.class, url);
+    Response response = api.codecPost("request data");
+    assertEquals(interceptedResponse[0].toString(), response.toString());
+    assertEquals(interceptedRequestProperties[1], "value1");
+    assertThat(server.takeRequest()).hasBody("request data");
+  }
+
+  @Test
   public void testProvideInvocationHandlerFactory() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
