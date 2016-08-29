@@ -11,3 +11,11 @@ GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
+
+### Map<String, Object> and Numbers
+The default constructors of `GsonEncoder` and `GsonDecoder` decoder numbers in
+`Map<String, Object>` as Integer type. This prevents reading `{"counter", "1"}`
+as `Map.of("counter", 1.0)`. This uses an internal class in gson.
+
+If you want the default behavior, or cannot use gson internal classes (ex in
+OSGi), please use the constructors that accept a Gson object.
