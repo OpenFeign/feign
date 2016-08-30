@@ -16,31 +16,20 @@
 package feign.gson;
 
 import com.google.gson.Gson;
-import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapter;
-import com.google.gson.internal.ConstructorConstructor;
-import com.google.gson.internal.bind.MapTypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.Map;
 
 /**
  * Deals with scenario where Gson Object type treats all numbers as doubles.
  */
 public class DoubleToIntMapTypeAdapter extends TypeAdapter<Map<String, Object>> {
-
-  final static TypeToken<Map<String, Object>> token = new TypeToken<Map<String, Object>>() {
-  };
-
-  private final TypeAdapter<Map<String, Object>>
-      delegate =
-      new MapTypeAdapterFactory(new ConstructorConstructor(
-          Collections.<Type, InstanceCreator<?>>emptyMap()), false).create(new Gson(), token);
+  private final TypeAdapter<Map<String, Object>> delegate =
+      new Gson().getAdapter(new TypeToken<Map<String, Object>>() {
+      });
 
   @Override
   public void write(JsonWriter out, Map<String, Object> value) throws IOException {
