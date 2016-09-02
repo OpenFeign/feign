@@ -15,6 +15,7 @@ import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
+import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -218,6 +219,18 @@ public abstract class AbstractClientTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testContentTypeWithCharset() throws Exception {
+        server.enqueue(new MockResponse()
+                .setBody("AAAAAAAA"));
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.postContentTypeWithCharset("foo");
+        // Response length should not be null
+        assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    }
+
     public interface TestInterface {
 
         @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -241,6 +254,10 @@ public abstract class AbstractClientTest {
 
         @RequestLine("PUT")
         String noPutBody();
+
+        @RequestLine("POST /?foo=bar&foo=baz&qux=")
+        @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain;charset=utf-8"})
+        Response postContentTypeWithCharset(String body);
     }
 
 }

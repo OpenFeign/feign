@@ -153,13 +153,19 @@ public final class ApacheHttpClient implements Client {
   private ContentType getContentType(Request request) {
     ContentType contentType = ContentType.DEFAULT_TEXT;
     for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
-    if (entry.getKey().equalsIgnoreCase("Content-Type")) {
-      Collection values = entry.getValue();
-      if (values != null && !values.isEmpty()) {
-        contentType = ContentType.create(entry.getValue().iterator().next(), request.charset());
-        break;
+      if (entry.getKey().equalsIgnoreCase("Content-Type")) {
+        Collection<String> values = entry.getValue();
+        if (values != null && !values.isEmpty()) {
+          String mimeType = values.iterator().next();
+          try {
+            contentType = ContentType.create(mimeType, request.charset());
+          } catch (IllegalArgumentException e) {
+            // MIME type may not contain reserved characters, so try to parse content type
+            contentType = ContentType.parse(mimeType);
+          }
+          break;
+        }
       }
-    }
     return contentType;
   }
 
