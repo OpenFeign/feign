@@ -226,7 +226,19 @@ public abstract class AbstractClientTest {
         TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-        Response response = api.postContentTypeWithCharset("foo");
+        Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
+        // Response length should not be null
+        assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    }
+
+    @Test
+    public void testContentTypeWithoutCharset() throws Exception {
+        server.enqueue(new MockResponse()
+                .setBody("AAAAAAAA"));
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.postWithContentType("foo", "text/plain");
         // Response length should not be null
         assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
     }
@@ -256,8 +268,8 @@ public abstract class AbstractClientTest {
         String noPutBody();
 
         @RequestLine("POST /?foo=bar&foo=baz&qux=")
-        @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain;charset=utf-8"})
-        Response postContentTypeWithCharset(String body);
+        @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
+        Response postWithContentType(String body, @Param("contentType") String contentType);
     }
 
 }
