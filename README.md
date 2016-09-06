@@ -71,7 +71,7 @@ Future<Collection<Mixin>> mixinsFuture = icecreamApi.getAvailableMixins();
     <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-vertx</artifactId>
-        <version>0.0.1-alpha</version>
+        <version>0.0.1</version>
     </dependency>
     ...
 </dependencies>
