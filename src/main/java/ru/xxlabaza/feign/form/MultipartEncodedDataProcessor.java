@@ -114,7 +114,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
       return;
     }
 
-    Path pathValue = value instanceof Path ? (Path) value : ((File) value).toPath();
+    val pathValue = value instanceof Path ? (Path) value : ((File) value).toPath();
 
     writeFile(output, writer, name, pathValue);
   }

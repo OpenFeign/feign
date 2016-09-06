@@ -15,14 +15,15 @@
  */
 package ru.xxlabaza.feign.form;
 
+import static java.util.stream.Collectors.toMap;
+
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +45,7 @@ public class FormEncoder implements Encoder {
     this.deligate = delegate;
     processors =
         Stream.of(new FormEncodedDataProcessor(), new MultipartEncodedDataProcessor())
-            .collect(
-                Collectors.toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
+            .collect(toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
   }
 
   @Override
@@ -74,8 +74,7 @@ public class FormEncoder implements Encoder {
 
     if (object instanceof MultipartFile) {
       MultipartFile file = (MultipartFile) object;
-      Map<String, Object> data = new HashMap<>();
-      data.put(file.getName(), object);
+      Map<String, Object> data = Collections.singletonMap(file.getName(), object);
       processors.get(formType).process(data, template);
     } else {
       @SuppressWarnings("unchecked")
