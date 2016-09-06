@@ -18,8 +18,10 @@ package ru.xxlabaza.feign.form;
 import static feign.Util.UTF_8;
 
 import feign.RequestTemplate;
+import feign.codec.EncodeException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URLConnection;
@@ -28,6 +30,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -48,21 +51,23 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
   public void process(Map<String, Object> data, RequestTemplate template) {
     val boundary = createBoundary();
     val outputStream = new ByteArrayOutputStream();
-    val writer = new PrintWriter(outputStream);
 
-    data.entrySet().stream()
-        .forEach(
-            it -> {
-              writer.append("--" + boundary).append(CRLF);
-              if (isFile(it.getValue())) {
-                writeFile(outputStream, writer, it.getKey(), it.getValue());
-              } else {
-                writeParameter(writer, it.getKey(), it.getValue().toString());
-              }
-              writer.append(CRLF).flush();
-            });
+    try (val writer = new PrintWriter(outputStream)) {
 
-    writer.append("--" + boundary + "--").append(CRLF).flush();
+      data.entrySet().stream()
+          .forEach(
+              it -> {
+                writer.append("--" + boundary).append(CRLF);
+                if (isFile(it.getValue())) {
+                  writeFile(outputStream, writer, it.getKey(), it.getValue());
+                } else {
+                  writeParameter(writer, it.getKey(), it.getValue().toString());
+                }
+                writer.append(CRLF).flush();
+              });
+
+      writer.append("--" + boundary + "--").append(CRLF).flush();
+    }
 
     val contentType =
         new StringBuilder().append(CONTENT_TYPE).append("; boundary=").append(boundary).toString();
@@ -82,7 +87,10 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
 
   private boolean isFile(Object value) {
     return value != null
-        && (value instanceof Path || value instanceof File || value instanceof byte[]);
+        && (value instanceof Path
+            || value instanceof File
+            || value instanceof byte[]
+            || value instanceof MultipartFile);
   }
 
   private void writeParameter(PrintWriter writer, String name, String value) {
@@ -94,6 +102,15 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
   private void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof byte[]) {
       writeFile(output, writer, name, (byte[]) value);
+      return;
+    }
+
+    if (value instanceof MultipartFile) {
+      try {
+        writeFile(output, writer, name, ((MultipartFile) value).getBytes());
+      } catch (IOException e) {
+        throw new EncodeException("Can't encode MultipartFile", e);
+      }
       return;
     }
 
