@@ -24,7 +24,7 @@ Then, include dependency to your project:
     <dependency>
         <groupId>ru.xxlabaza</groupId>
         <artifactId>feign-form</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </dependency>
     ...
 </dependencies>
