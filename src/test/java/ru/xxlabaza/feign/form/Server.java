@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Artem Labazin <xxlabaza@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,15 @@
  */
 package ru.xxlabaza.feign.form;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
+import static org.springframework.http.HttpStatus.LOCKED;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 import java.util.List;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -28,15 +37,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
-import static org.springframework.http.HttpStatus.LOCKED;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
@@ -47,7 +47,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class Server {
 
     @RequestMapping(value = "/form", method = POST)
-    public ResponseEntity<Void> form (@RequestParam("key1") String key1, @RequestParam("key2") String key2) {
+    public ResponseEntity<Void> form (@RequestParam("key1") String key1,
+                                      @RequestParam("key2") String key2
+    ) {
         HttpStatus status = !key1.equals(key2)
                             ? BAD_REQUEST
                             : OK;
@@ -56,8 +58,10 @@ public class Server {
 
     @RequestMapping(value = "/upload/{id}", method = POST)
     @ResponseStatus(OK)
-    public ResponseEntity<Long> upload (@PathVariable("id") Integer id, @RequestParam("public") Boolean isPublic,
-                                        @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Long> upload (@PathVariable("id") Integer id,
+                                        @RequestParam("public") Boolean isPublic,
+                                        @RequestParam("file") MultipartFile file
+    ) {
         HttpStatus status;
         if (id == null || id != 10) {
             status = LOCKED;

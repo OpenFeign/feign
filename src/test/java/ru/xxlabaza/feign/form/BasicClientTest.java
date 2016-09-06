@@ -28,22 +28,30 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import static feign.Logger.Level.FULL;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */
-public class TestClient {
-
-    private static ConfigurableApplicationContext context;
+@RunWith(SpringRunner.class)
+@SpringBootTest(
+    webEnvironment = DEFINED_PORT,
+    classes = Server.class,
+    properties = {
+      "server.port=8080",
+      "feign.hystrix.enabled=false"
+    }
+)
+public class BasicClientTest {
 
     private static final TestApi api;
 
@@ -53,18 +61,6 @@ public class TestClient {
                 .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
                 .logLevel(FULL)
                 .target(TestApi.class, "http://localhost:8080");
-    }
-
-    @BeforeClass
-    public static void beforeClass () {
-        context = SpringApplication.run(Server.class);
-    }
-
-    @AfterClass
-    public static void afterClass () {
-        if (context != null) {
-            context.close();
-        }
     }
 
     @Test

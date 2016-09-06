@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Artem Labazin <xxlabaza@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,8 @@ package ru.xxlabaza.feign.form;
 
 import static feign.Util.UTF_8;
 
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -26,13 +28,9 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-
-import org.springframework.web.multipart.MultipartFile;
-
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -53,7 +51,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     public void process (Map<String, Object> data, RequestTemplate template) {
         val boundary = createBoundary();
         val outputStream = new ByteArrayOutputStream();
-        
+
         try (val writer = new PrintWriter(outputStream)) {
 
             data.entrySet().stream().forEach(it -> {
@@ -65,7 +63,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
                 }
                 writer.append(CRLF).flush();
             });
-    
+
             writer.append("--" + boundary + "--").append(CRLF).flush();
         }
 
@@ -89,8 +87,9 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     }
 
     private boolean isFile (Object value) {
-        return value != null && (value instanceof Path || value instanceof File || value instanceof byte[]
-                || value instanceof MultipartFile);
+        return value != null
+               && (value instanceof Path || value instanceof File || value instanceof byte[]
+                   || value instanceof MultipartFile);
     }
 
     private void writeParameter (PrintWriter writer, String name, String value) {
@@ -104,7 +103,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
             writeFile(output, writer, name, (byte[]) value);
             return;
         }
-        
+
         if (value instanceof MultipartFile) {
             try {
                 writeFile(output, writer, name, ((MultipartFile) value).getBytes());
@@ -114,9 +113,9 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
             return;
         }
 
-        Path pathValue = value instanceof Path
-                         ? (Path) value
-                         : ((File) value).toPath();
+        val pathValue = value instanceof Path
+                        ? (Path) value
+                        : ((File) value).toPath();
 
         writeFile(output, writer, name, pathValue);
     }
@@ -134,7 +133,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
         output.write(bytes);
         output.flush();
     }
-    
+
     private void writeFileMeta (PrintWriter writer, String name, String fileName) {
         val contentDesposition = new StringBuilder()
                 .append("Content-Disposition: form-data; name=\"").append(name).append("\"; ")

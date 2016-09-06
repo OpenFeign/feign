@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Artem Labazin <xxlabaza@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,16 @@
  */
 package ru.xxlabaza.feign.form;
 
+import static java.util.stream.Collectors.toMap;
+
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -44,7 +44,7 @@ public class FormEncoder implements Encoder {
     public FormEncoder (Encoder delegate) {
         this.deligate = delegate;
         processors = Stream.of(new FormEncodedDataProcessor(), new MultipartEncodedDataProcessor())
-                .collect(Collectors.toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
+                .collect(toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
     }
 
     @Override
@@ -61,20 +61,19 @@ public class FormEncoder implements Encoder {
                 .findFirst()
                 .orElse("");
 
-        
+
         if (formType.isEmpty()) {
             formType = detectFormType(object, bodyType);
         }
-        
+
         if (formType.isEmpty()) {
             deligate.encode(object, bodyType, template);
             return;
         }
-        
+
         if (object instanceof MultipartFile) {
             MultipartFile file = (MultipartFile) object;
-            Map<String, Object> data = new HashMap<>();
-            data.put(file.getName(), object);
+            Map<String, Object> data = Collections.singletonMap(file.getName(), object);
             processors.get(formType).process(data, template);
         } else {
             @SuppressWarnings("unchecked")
@@ -93,12 +92,12 @@ public class FormEncoder implements Encoder {
             Optional<Object> multipartFile = map.values().stream()
                         .filter(o -> o instanceof MultipartFile)
                         .findFirst();
-            
+
             if(multipartFile.isPresent()) {
                 return MultipartEncodedDataProcessor.CONTENT_TYPE;
             }
         }
-        
+
         return "";
     }
 }
