@@ -157,11 +157,9 @@ public final class ApacheHttpClient implements Client {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           String mimeType = values.iterator().next();
-          try {
-            contentType = ContentType.create(mimeType, request.charset());
-          } catch (IllegalArgumentException e) {
-            // MIME type may not contain reserved characters, so try to parse content type
-            contentType = ContentType.parse(mimeType);
+          contentType = ContentType.parse(mimeType);
+          if (contentType.getCharset() == null) {
+            contentType = ContentType.create(contentType.getMimeType(), request.charset());
           }
           break;
         }
