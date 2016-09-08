@@ -13,6 +13,7 @@ import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
+import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -213,6 +214,28 @@ public abstract class AbstractClientTest {
     assertEquals(expected, actual);
   }
 
+  @Test
+  public void testContentTypeWithCharset() throws Exception {
+    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
+    // Response length should not be null
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+  }
+
+  @Test
+  public void testContentTypeWithoutCharset() throws Exception {
+    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.postWithContentType("foo", "text/plain");
+    // Response length should not be null
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+  }
+
   public interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -236,5 +259,9 @@ public abstract class AbstractClientTest {
 
     @RequestLine("PUT")
     String noPutBody();
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
+    Response postWithContentType(String body, @Param("contentType") String contentType);
   }
 }

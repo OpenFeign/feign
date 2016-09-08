@@ -153,9 +153,9 @@ public final class ApacheHttpClient implements Client {
     ContentType contentType = ContentType.DEFAULT_TEXT;
     for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
-        Collection values = entry.getValue();
+        Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
-          contentType = ContentType.create(entry.getValue().iterator().next(), request.charset());
+          contentType = ContentType.parse(values.iterator().next());
           break;
         }
       }
