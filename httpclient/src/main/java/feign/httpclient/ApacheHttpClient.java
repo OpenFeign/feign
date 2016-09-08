@@ -156,11 +156,7 @@ public final class ApacheHttpClient implements Client {
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
-          String mimeType = values.iterator().next();
-          contentType = ContentType.parse(mimeType);
-          if (contentType.getCharset() == null) {
-            contentType = ContentType.create(contentType.getMimeType(), request.charset());
-          }
+          contentType = ContentType.parse(values.iterator().next());
           break;
         }
       }
