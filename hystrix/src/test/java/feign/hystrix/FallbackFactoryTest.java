@@ -110,7 +110,6 @@ public class FallbackFactoryTest {
   public void fallbackFactory_example_retro() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
-    // method reference
     TestInterface api = target(new FallbackApiRetro());
 
     assertThat(api.invoke()).isEqualTo("status 500 reading TestInterface#invoke()");
