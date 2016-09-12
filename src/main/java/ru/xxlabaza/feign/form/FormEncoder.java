@@ -15,16 +15,14 @@
  */
 package ru.xxlabaza.feign.form;
 
-import static java.util.stream.Collectors.toMap;
-
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -43,8 +41,15 @@ public class FormEncoder implements Encoder {
 
     public FormEncoder (Encoder delegate) {
         this.deligate = delegate;
-        processors = Stream.of(new FormEncodedDataProcessor(), new MultipartEncodedDataProcessor())
-                .collect(toMap(FormDataProcessor::getSupportetContentType, Function.identity()));
+        processors = new HashMap<String, FormDataProcessor>(2, 1.F);
+
+        val formEncodedDataProcessor = new FormEncodedDataProcessor();
+        processors.put(formEncodedDataProcessor.getSupportetContentType(),
+                       formEncodedDataProcessor);
+
+        val multipartEncodedDataProcessor = new MultipartEncodedDataProcessor();
+        processors.put(multipartEncodedDataProcessor.getSupportetContentType(),
+                       multipartEncodedDataProcessor);
     }
 
     @Override
@@ -54,13 +59,21 @@ public class FormEncoder implements Encoder {
             return;
         }
 
-        String formType = template.headers().entrySet().stream()
-                .filter(entry -> entry.getKey().equals("Content-Type"))
-                .flatMap(it -> it.getValue().stream())
-                .filter(it -> processors.containsKey(it))
-                .findFirst()
-                .orElse("");
-
+        String formType = "";
+        for (Map.Entry<String, Collection<String>> entry : template.headers().entrySet()) {
+            if (!entry.getKey().equals("Content-Type")) {
+                continue;
+            }
+            for (String contentType : entry.getValue()) {
+                if (processors.containsKey(contentType)) {
+                    formType = contentType;
+                    break;
+                }
+            }
+            if (!formType.isEmpty()) {
+                break;
+            }
+        }
 
         if (formType.isEmpty()) {
             formType = detectFormType(object, bodyType);
@@ -82,19 +95,16 @@ public class FormEncoder implements Encoder {
         }
     }
 
-    private String detectFormType(Object object, Type bodyType) {
+    @SuppressWarnings("unchecked")
+    private String detectFormType (Object object, Type bodyType) {
         if (bodyType == MultipartFile.class) {
             return MultipartEncodedDataProcessor.CONTENT_TYPE;
         }
         if (bodyType == MAP_STRING_WILDCARD) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) object;
-            Optional<Object> multipartFile = map.values().stream()
-                        .filter(o -> o instanceof MultipartFile)
-                        .findFirst();
-
-            if(multipartFile.isPresent()) {
-                return MultipartEncodedDataProcessor.CONTENT_TYPE;
+            for (Object value : ((Map<String, Object>) object).values()) {
+                if (value instanceof MultipartFile) {
+                    return MultipartEncodedDataProcessor.CONTENT_TYPE;
+                }
             }
         }
 

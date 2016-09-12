@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Artem Labazin <xxlabaza@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,5 @@ public class Dto implements Serializable {
     private static final long serialVersionUID = 4743133513526293872L;
 
     private String name;
-
     private Integer age;
-
 }
