@@ -25,12 +25,13 @@ import feign.QueryMap;
 import feign.RequestLine;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
+import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,7 +62,7 @@ public class BasicClientTest {
 
   @Test
   public void testForm() {
-    Response response = api.form("1", "1");
+    val response = api.form("1", "1");
 
     Assert.assertNotNull(response);
     Assert.assertEquals(200, response.status());
@@ -69,7 +70,7 @@ public class BasicClientTest {
 
   @Test
   public void testFormException() {
-    Response response = api.form("1", "2");
+    val response = api.form("1", "2");
 
     Assert.assertNotNull(response);
     Assert.assertEquals(400, response.status());
@@ -77,19 +78,19 @@ public class BasicClientTest {
 
   @Test
   public void testUpload() throws Exception {
-    Path path = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
-    String response = api.upload(10, Boolean.TRUE, path);
-    Assert.assertEquals(Files.size(path), Long.parseLong(response));
+    val stringResponse = api.upload(10, Boolean.TRUE, path.toFile());
+    Assert.assertEquals(Files.size(path), Long.parseLong(stringResponse));
   }
 
   @Test
   public void testJson() {
-    Dto dto = new Dto("Artem", 11);
-    String response = api.json(dto);
+    val dto = new Dto("Artem", 11);
+    val stringResponse = api.json(dto);
 
-    Assert.assertEquals("ok", response);
+    Assert.assertEquals("ok", stringResponse);
   }
 
   @Test
@@ -97,9 +98,8 @@ public class BasicClientTest {
     Map<String, Object> value =
         Collections.singletonMap("filter", Arrays.asList("one", "two", "three", "four"));
 
-    String response = api.queryMap(value);
-
-    Assert.assertEquals("4", response);
+    val stringResponse = api.queryMap(value);
+    Assert.assertEquals("4", stringResponse);
   }
 
   interface TestApi {
@@ -111,7 +111,7 @@ public class BasicClientTest {
     @RequestLine("POST /upload/{id}")
     @Headers("Content-Type: multipart/form-data")
     String upload(
-        @Param("id") Integer id, @Param("public") Boolean isPublic, @Param("file") Path file);
+        @Param("id") Integer id, @Param("public") Boolean isPublic, @Param("file") File file);
 
     @RequestLine("POST /json")
     @Headers("Content-Type: application/json")

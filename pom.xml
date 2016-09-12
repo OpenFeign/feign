@@ -11,12 +11,21 @@
 
   <groupId>ru.xxlabaza</groupId>
   <artifactId>feign-form</artifactId>
-  <version>1.0.1</version>
+  <version>2.0.0</version>
   <packaging>jar</packaging>
 
-  <name>Netflix Feign Forms</name>
+  <name>Open Feign Forms</name>
   <description>Simple encoder for Netflix Feign project, which adds forms support (urlencoded and multipart)</description>
+  <url>https://github.com/xxlabaza/feign-form</url>
   <inceptionYear>2016</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <developers>
     <developer>
@@ -29,6 +38,11 @@
     </developer>
   </developers>
 
+  <issueManagement>
+    <system>Github</system>
+    <url>https://github.com/xxlabaza/feign-form/issues</url>
+  </issueManagement>
+
   <distributionManagement>
     <repository>
       <id>internal.repo</id>
@@ -39,8 +53,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.testTarget>1.8</maven.compiler.testTarget>
+    <maven.compiler.testSource>1.8</maven.compiler.testSource>
     <github.global.server>github</github.global.server>
   </properties>
 
@@ -78,17 +94,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
     </dependency>
-
-    <!--        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <scope>test</scope>
-        </dependency>-->
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-feign</artifactId>
@@ -156,6 +161,27 @@
               <goal>site</goal>
             </goals>
             <phase>deploy</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.15</version>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java16</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
+        <executions>
+          <execution>
+            <id>signature-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>

@@ -21,12 +21,12 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -48,25 +48,30 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
   }
 
   @Override
+  @SneakyThrows
   public void process(Map<String, Object> data, RequestTemplate template) {
     val boundary = createBoundary();
     val outputStream = new ByteArrayOutputStream();
 
-    try (val writer = new PrintWriter(outputStream)) {
-
-      data.entrySet().stream()
-          .forEach(
-              it -> {
-                writer.append("--" + boundary).append(CRLF);
-                if (isFile(it.getValue())) {
-                  writeFile(outputStream, writer, it.getKey(), it.getValue());
-                } else {
-                  writeParameter(writer, it.getKey(), it.getValue().toString());
-                }
-                writer.append(CRLF).flush();
-              });
+    try {
+      val writer = new PrintWriter(outputStream);
+      for (Map.Entry<String, Object> entry : data.entrySet()) {
+        writer.append("--" + boundary).append(CRLF);
+        if (isFile(entry.getValue())) {
+          writeFile(outputStream, writer, entry.getKey(), entry.getValue());
+        } else {
+          writeParameter(writer, entry.getKey(), entry.getValue().toString());
+        }
+        writer.append(CRLF).flush();
+      }
 
       writer.append("--" + boundary + "--").append(CRLF).flush();
+    } catch (Throwable throwable) {
+      try {
+        outputStream.close();
+      } catch (IOException ex) {
+      }
+      throw throwable;
     }
 
     val contentType =
@@ -74,6 +79,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
 
     template.header("Content-Type", contentType);
     template.body(outputStream.toByteArray(), UTF_8);
+    outputStream.close();
   }
 
   @Override
@@ -87,10 +93,7 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
 
   private boolean isFile(Object value) {
     return value != null
-        && (value instanceof Path
-            || value instanceof File
-            || value instanceof byte[]
-            || value instanceof MultipartFile);
+        && (value instanceof File || value instanceof byte[] || value instanceof MultipartFile);
   }
 
   private void writeParameter(PrintWriter writer, String name, String value) {
@@ -114,23 +117,34 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
       return;
     }
 
-    val pathValue = value instanceof Path ? (Path) value : ((File) value).toPath();
-
-    writeFile(output, writer, name, pathValue);
+    writeFile(output, writer, name, (File) value);
   }
 
   @SneakyThrows
-  private void writeFile(OutputStream output, PrintWriter writer, String name, Path value) {
-    writeFileMeta(writer, name, value.getFileName().toString());
-    Files.copy(value, output);
-    output.flush();
+  private void writeFile(OutputStream output, PrintWriter writer, String name, File file) {
+    writeFileMeta(writer, name, file.getName());
+
+    InputStream input = null;
+    try {
+      input = new FileInputStream(file);
+      byte[] buffer = new byte[1024];
+      int length;
+      while ((length = input.read(buffer)) > 0) {
+        output.write(buffer, 0, length);
+      }
+    } finally {
+      if (input != null) {
+        input.close();
+      }
+    }
+    writer.flush();
   }
 
   @SneakyThrows
   private void writeFile(OutputStream output, PrintWriter writer, String name, byte[] bytes) {
     writeFileMeta(writer, name, "");
     output.write(bytes);
-    output.flush();
+    writer.flush();
   }
 
   private void writeFileMeta(PrintWriter writer, String name, String fileName) {

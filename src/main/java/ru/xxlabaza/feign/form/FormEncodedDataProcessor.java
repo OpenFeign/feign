@@ -15,13 +15,13 @@
  */
 package ru.xxlabaza.feign.form;
 
-import static java.util.stream.Collectors.joining;
+import static feign.Util.UTF_8;
 
 import feign.RequestTemplate;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import lombok.SneakyThrows;
+import lombok.val;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -37,10 +37,16 @@ class FormEncodedDataProcessor implements FormDataProcessor {
 
   @Override
   public void process(Map<String, Object> data, RequestTemplate template) {
-    String body = data.entrySet().stream().map(this::createKeyValuePair).collect(joining("&"));
+    val body = new StringBuilder();
+    for (Map.Entry<String, Object> entry : data.entrySet()) {
+      if (body.length() > 0) {
+        body.append('&');
+      }
+      body.append(createKeyValuePair(entry));
+    }
 
     template.header("Content-Type", CONTENT_TYPE);
-    template.body(body);
+    template.body(body.toString());
   }
 
   @Override
@@ -51,9 +57,9 @@ class FormEncodedDataProcessor implements FormDataProcessor {
   @SneakyThrows
   private String createKeyValuePair(Map.Entry<String, Object> entry) {
     return new StringBuilder()
-        .append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name()))
+        .append(URLEncoder.encode(entry.getKey(), UTF_8.name()))
         .append('=')
-        .append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8.name()))
+        .append(URLEncoder.encode(entry.getValue().toString(), UTF_8.name()))
         .toString();
   }
 }

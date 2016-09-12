@@ -24,7 +24,7 @@ Then, include dependency to your project:
     <dependency>
         <groupId>ru.xxlabaza</groupId>
         <artifactId>feign-form</artifactId>
-        <version>1.0.1</version>
+        <version>2.0.0</version>
     </dependency>
     ...
 </dependencies>
@@ -91,7 +91,7 @@ interface SomeApi {
 
     @RequestLine("POST /send_photo")
     @Headers("Content-Type: multipart/form-data")
-    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") Path photo);
+    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") File photo);
 
     ...
 
@@ -100,7 +100,7 @@ interface SomeApi {
 
 In example above, we send file in parameter named **photo** with additional field in form **is_public**.
 
-> **IMPORTANT:** You can specify your files in API method by declaring type **Path**, **File** or even **byte[]**.
+> **IMPORTANT:** You can specify your files in API method by declaring type **File** or **byte[]**.
 
 ### Spring Cloud Netflix @FeingClient support
 

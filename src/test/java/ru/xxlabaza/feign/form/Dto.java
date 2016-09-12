@@ -32,6 +32,5 @@ public class Dto implements Serializable {
   private static final long serialVersionUID = 4743133513526293872L;
 
   private String name;
-
   private Integer age;
 }
