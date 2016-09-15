@@ -48,7 +48,6 @@ public final class LBClient extends
 
   LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
     super(lb, clientConfig);
-    this.setRetryHandler(RetryHandler.DEFAULT);
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);

@@ -19,12 +19,16 @@ import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -40,6 +44,8 @@ import feign.Feign;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
+import feign.RetryableException;
+import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
 
 public class RibbonClientTest {
@@ -50,6 +56,26 @@ public class RibbonClientTest {
   public final MockWebServer server1 = new MockWebServer();
   @Rule
   public final MockWebServer server2 = new MockWebServer();
+
+  private static String oldRetryConfig = null;
+
+  private static final String SUN_RETRY_PROPERTY = "sun.net.http.retryPost";
+
+  @BeforeClass
+  public static void disableSunRetry() throws Exception {
+    // The Sun HTTP Client retries all requests once on an IOException, which makes testing retry code harder than would
+    // be ideal. We can only disable it for post, so lets at least do that.
+    oldRetryConfig = System.setProperty(SUN_RETRY_PROPERTY, "false");
+  }
+
+  @AfterClass
+  public static void resetSunRetry() throws Exception {
+    if (oldRetryConfig == null) {
+      System.clearProperty(SUN_RETRY_PROPERTY);
+    } else {
+      System.setProperty(SUN_RETRY_PROPERTY, oldRetryConfig);
+    }
+  }
 
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
@@ -94,6 +120,83 @@ public class RibbonClientTest {
     api.post();
 
     assertEquals(2, server1.getRequestCount());
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
+
+  @Test
+  public void ioExceptionFailsAfterTooManyFailures() throws IOException, InterruptedException {
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setBody("success!"));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
+
+    TestInterface
+            api =
+            Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
+                    .target(TestInterface.class, "http://" + client());
+
+    try {
+      api.post();
+      fail("No exception thrown");
+    } catch (RetryableException ignored) {
+
+    }
+    assertEquals(1, server1.getRequestCount());
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
+
+  @Test
+  public void ribbonRetryConfigurationOnSameServer() throws IOException, InterruptedException {
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetries", 1);
+
+    TestInterface
+            api =
+            Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
+                    .target(TestInterface.class, "http://" + client());
+
+    try {
+      api.post();
+      fail("No exception thrown");
+    } catch (RetryableException ignored) {
+
+    }
+    assertTrue(server1.getRequestCount() == 2 || server2.getRequestCount() == 2);
+    assertEquals(2, server1.getRequestCount() + server2.getRequestCount());
+    // TODO: verify ribbon stats match
+    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+  }
+
+  @Test
+  public void ribbonRetryConfigurationOnMultipleServers() throws IOException, InterruptedException {
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetriesNextServer", 1);
+
+    TestInterface
+            api =
+            Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
+                    .target(TestInterface.class, "http://" + client());
+
+    try {
+      api.post();
+      fail("No exception thrown");
+    } catch (RetryableException ignored) {
+
+    }
+    assertEquals(1, server1.getRequestCount());
+    assertEquals(1, server2.getRequestCount());
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
