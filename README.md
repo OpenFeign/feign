@@ -9,7 +9,7 @@ Add the following snippet to any project's pom that depends on **feign-form** pr
 <repositories>
     <repository>
         <id>feign-form</id>
-        <url>https://raw.github.com/xxlabaza/feign-form/mvn-repo/</url>
+        <url>https://raw.github.com/OpenFeign/feign-form/mvn-repo/</url>
         <snapshots>
             <enabled>true</enabled>
             <updatePolicy>always</updatePolicy>
