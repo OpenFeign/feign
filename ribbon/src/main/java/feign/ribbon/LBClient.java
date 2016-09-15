@@ -20,7 +20,6 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
 import com.netflix.client.RequestSpecificRetryHandler;
-import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -46,7 +45,6 @@ public final class LBClient
 
   LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
     super(lb, clientConfig);
-    this.setRetryHandler(RetryHandler.DEFAULT);
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
