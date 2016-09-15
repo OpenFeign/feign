@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ru.xxlabaza.feign.form;
+package feign.form;
 
+import feign.form.FormEncoder;
 import feign.codec.Encoder;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.context.annotation.Bean;
