@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ru.xxlabaza.feign.form;
+package feign.form;
 
-import feign.RequestTemplate;
-import java.util.Map;
+import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
- * @since 30.04.2016
+ * @since 01.05.2016
  */
-interface FormDataProcessor {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Dto implements Serializable {
 
-  void process(Map<String, Object> data, RequestTemplate template);
+  private static final long serialVersionUID = 4743133513526293872L;
 
-  String getSupportetContentType();
+  private String name;
+  private Integer age;
 }

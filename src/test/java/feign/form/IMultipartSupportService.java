@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ru.xxlabaza.feign.form;
+package feign.form;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
