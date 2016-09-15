@@ -16,7 +16,7 @@
 
   <name>Open Feign Forms</name>
   <description>Simple encoder for Netflix Feign project, which adds forms support (urlencoded and multipart)</description>
-  <url>https://github.com/xxlabaza/feign-form</url>
+  <url>https://github.com/OpenFeign/feign-form</url>
   <inceptionYear>2016</inceptionYear>
 
   <licenses>
@@ -40,7 +40,7 @@
 
   <issueManagement>
     <system>Github</system>
-    <url>https://github.com/xxlabaza/feign-form/issues</url>
+    <url>https://github.com/OpenFeign/feign-form/issues</url>
   </issueManagement>
 
   <distributionManagement>
