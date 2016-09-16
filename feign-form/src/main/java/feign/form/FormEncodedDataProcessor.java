@@ -27,7 +27,7 @@ import lombok.val;
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */
-class FormEncodedDataProcessor implements FormDataProcessor {
+public class FormEncodedDataProcessor implements FormDataProcessor {
 
     public static final String CONTENT_TYPE;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.form;
+package feign.form.feign.spring;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
@@ -34,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
-    classes = Server.class,
+    classes = MultipartSupportService.class,
     properties = {
       "server.port=8080",
       "feign.hystrix.enabled=false"
