@@ -108,10 +108,10 @@ You can also use Form Encoder with `@FeingClient`:
 
 ```xml
 <dependency>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form-spring</artifactId>
-        <version>2.0.1</version>
-    </dependency>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form-spring</artifactId>
+    <version>2.0.1</version>
+</dependency>
 ```
 
 ```java
