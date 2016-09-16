@@ -24,7 +24,7 @@ Then, include dependency to your project:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.1</version>
     </dependency>
     ...
 </dependencies>
@@ -106,6 +106,14 @@ In example above, we send file in parameter named **photo** with additional fiel
 
 You can also use Form Encoder with `@FeingClient`:
 
+```xml
+<dependency>
+        <groupId>io.github.openfeign.form</groupId>
+        <artifactId>feign-form-spring</artifactId>
+        <version>2.0.1</version>
+    </dependency>
+```
+
 ```java
 @FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
 public interface FileUploadServiceClient extends IFileUploadServiceClient {
@@ -117,7 +125,7 @@ public interface FileUploadServiceClient extends IFileUploadServiceClient {
         @Primary
         @Scope("prototype")
         public Encoder feignFormEncoder() {
-            return new FormEncoder();
+            return new SpringFormEncoder();
         }
     }
 }
