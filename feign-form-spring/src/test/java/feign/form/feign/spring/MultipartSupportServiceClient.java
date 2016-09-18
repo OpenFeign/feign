@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.form;
+package feign.form.feign.spring;
 
-import feign.form.FormEncoder;
 import feign.codec.Encoder;
+import feign.form.spring.SpringFormEncoder;
+
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,8 +41,8 @@ public interface MultipartSupportServiceClient extends IMultipartSupportService 
         @Bean
         @Primary
         @Scope("prototype")
-        public Encoder feignFormEncoder () {
-            return new FormEncoder();
+        public Encoder feignSpringFormEncoder () {
+            return new SpringFormEncoder();
         }
     }
 }

@@ -6,9 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
     
     <groupId>io.github.openfeign.form</groupId>
-    <artifactId>feign-form</artifactId>
+    <artifactId>feign-form-parent</artifactId>
     <version>2.0.1</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -16,7 +16,7 @@
         <version>1.4.0.RELEASE</version>
     </parent>
     
-    <name>Open Feign Forms</name>
+    <name>Open Feign Forms Parent</name>
     <description>
         Simple encoder for Netflix Feign project, which adds forms support (urlencoded and multipart)
     </description>
@@ -164,11 +164,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-             <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <scope>test</scope>
@@ -179,16 +174,15 @@
             <version>8.18.0</version>
             <scope>test</scope>
         </dependency>
-        
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-feign</artifactId>
             <scope>test</scope>
-            <version>1.1.5.RELEASE</version>
         </dependency>
     </dependencies>
+    
+    <modules>
+        <module>feign-form</module>
+        <module>feign-form-spring</module>
+    </modules>
 </project>

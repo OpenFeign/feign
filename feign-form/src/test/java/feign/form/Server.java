@@ -26,7 +26,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.util.List;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -43,7 +42,6 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Controller
 @SpringBootApplication
-@EnableFeignClients
 public class Server {
 
     @RequestMapping(value = "/form", method = POST)

@@ -15,13 +15,13 @@
  */
 package feign.form;
 
-import feign.form.FormEncoder;
 import feign.Feign;
 import feign.Headers;
 import feign.Param;
 import feign.QueryMap;
 import feign.RequestLine;
 import feign.Response;
+import feign.form.FormEncoder;
 import feign.jackson.JacksonEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -47,11 +47,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
-    classes = Server.class,
-    properties = {
-        "server.port=8080",
-        "feign.hystrix.enabled=false"
-    }
+    classes = Server.class
 )
 public class BasicClientTest {
 
