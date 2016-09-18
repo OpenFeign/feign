@@ -18,7 +18,6 @@ package feign.form;
 import static feign.Util.UTF_8;
 
 import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,13 +29,12 @@ import java.net.URLConnection;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */
-class MultipartEncodedDataProcessor implements FormDataProcessor {
+public class MultipartEncodedDataProcessor implements FormDataProcessor {
 
   public static final String CONTENT_TYPE;
 
@@ -91,9 +89,8 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     return Long.toHexString(System.currentTimeMillis());
   }
 
-  private boolean isFile(Object value) {
-    return value != null
-        && (value instanceof File || value instanceof byte[] || value instanceof MultipartFile);
+  protected boolean isFile(Object value) {
+    return value != null && (value instanceof File || value instanceof byte[]);
   }
 
   private void writeParameter(PrintWriter writer, String name, String value) {
@@ -102,21 +99,11 @@ class MultipartEncodedDataProcessor implements FormDataProcessor {
     writer.append(CRLF).append(value);
   }
 
-  private void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
+  protected void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof byte[]) {
       writeFile(output, writer, name, (byte[]) value);
       return;
     }
-
-    if (value instanceof MultipartFile) {
-      try {
-        writeFile(output, writer, name, ((MultipartFile) value).getBytes());
-      } catch (IOException e) {
-        throw new EncodeException("Can't encode MultipartFile", e);
-      }
-      return;
-    }
-
     writeFile(output, writer, name, (File) value);
   }
 

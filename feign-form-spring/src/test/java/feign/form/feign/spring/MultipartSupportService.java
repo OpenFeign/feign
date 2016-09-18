@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.form;
+package feign.form.feign.spring;
 
 import java.io.IOException;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +25,9 @@ import org.springframework.web.multipart.MultipartFile;
  * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
  * @since 22.08.2016
  */
+@SpringBootApplication
 @RestController
+@EnableFeignClients
 public class MultipartSupportService implements IMultipartSupportService {
 
   @Override

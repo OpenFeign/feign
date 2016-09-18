@@ -22,7 +22,7 @@ import java.util.Map;
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */
-interface FormDataProcessor {
+public interface FormDataProcessor {
 
   void process(Map<String, Object> data, RequestTemplate template);
 

@@ -19,11 +19,9 @@ import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.val;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
@@ -53,7 +51,7 @@ public class FormEncoder implements Encoder {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
-    if (bodyType != MAP_STRING_WILDCARD && !bodyType.equals(MultipartFile.class)) {
+    if (bodyType != MAP_STRING_WILDCARD) {
       deligate.encode(object, bodyType, template);
       return;
     }
@@ -75,38 +73,12 @@ public class FormEncoder implements Encoder {
     }
 
     if (formType.isEmpty()) {
-      formType = detectFormType(object, bodyType);
-    }
-
-    if (formType.isEmpty()) {
       deligate.encode(object, bodyType, template);
       return;
     }
 
-    if (object instanceof MultipartFile) {
-      MultipartFile file = (MultipartFile) object;
-      Map<String, Object> data = Collections.singletonMap(file.getName(), object);
-      processors.get(formType).process(data, template);
-    } else {
-      @SuppressWarnings("unchecked")
-      Map<String, Object> data = (Map<String, Object>) object;
-      processors.get(formType).process(data, template);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private String detectFormType(Object object, Type bodyType) {
-    if (bodyType == MultipartFile.class) {
-      return MultipartEncodedDataProcessor.CONTENT_TYPE;
-    }
-    if (bodyType == MAP_STRING_WILDCARD) {
-      for (Object value : ((Map<String, Object>) object).values()) {
-        if (value instanceof MultipartFile) {
-          return MultipartEncodedDataProcessor.CONTENT_TYPE;
-        }
-      }
-    }
-
-    return "";
+    @SuppressWarnings("unchecked")
+    Map<String, Object> data = (Map<String, Object>) object;
+    processors.get(formType).process(data, template);
   }
 }

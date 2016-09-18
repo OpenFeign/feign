@@ -43,10 +43,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @since 30.04.2016
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-    webEnvironment = DEFINED_PORT,
-    classes = Server.class,
-    properties = {"server.port=8080", "feign.hystrix.enabled=false"})
+@SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 public class BasicClientTest {
 
   private static final TestApi api;
