@@ -31,6 +31,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
+ * Multipart form data implementation of {@link feign.form.FormDataProcessor}.
+ *
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */
@@ -85,26 +87,39 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
     return CONTENT_TYPE;
   }
 
-  private String createBoundary() {
-    return Long.toHexString(System.currentTimeMillis());
-  }
-
+  /**
+   * Checks is passed object a supported file's type or not.
+   *
+   * @param value form file parameter.
+   */
   protected boolean isFile(Object value) {
     return value != null && (value instanceof File || value instanceof byte[]);
   }
 
-  private void writeParameter(PrintWriter writer, String name, String value) {
-    writer.append("Content-Disposition: form-data; name=\"" + name + "\"").append(CRLF);
-    writer.append("Content-Type: text/plain; charset=UTF-8").append(CRLF);
-    writer.append(CRLF).append(value);
-  }
-
+  /**
+   * Writes file's content to output stream.
+   *
+   * @param output output stream to remote destination.
+   * @param writer wrapped output stream.
+   * @param name file's name.
+   * @param value file's content.
+   */
   protected void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof byte[]) {
       writeFile(output, writer, name, (byte[]) value);
       return;
     }
     writeFile(output, writer, name, (File) value);
+  }
+
+  private String createBoundary() {
+    return Long.toHexString(System.currentTimeMillis());
+  }
+
+  private void writeParameter(PrintWriter writer, String name, String value) {
+    writer.append("Content-Disposition: form-data; name=\"" + name + "\"").append(CRLF);
+    writer.append("Content-Type: text/plain; charset=UTF-8").append(CRLF);
+    writer.append(CRLF).append(value);
   }
 
   @SneakyThrows
