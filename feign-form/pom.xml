@@ -5,8 +5,8 @@
 
   <parent>
     <groupId>io.github.openfeign.form</groupId>
-    <artifactId>feign-form-parent</artifactId>
-    <version>2.0.1</version>
+    <artifactId>parent</artifactId>
+    <version>2.0.2</version>
   </parent>
 
   <artifactId>feign-form</artifactId>

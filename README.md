@@ -4,27 +4,14 @@ This module adds support for encoding **application/x-www-form-urlencoded** and 
 
 ## Add dependency
 
-Add the following snippet to any project's pom that depends on **feign-form** project:
-```xml
-<repositories>
-    <repository>
-        <id>feign-form</id>
-        <url>https://raw.github.com/OpenFeign/feign-form/mvn-repo/</url>
-        <snapshots>
-            <enabled>true</enabled>
-            <updatePolicy>always</updatePolicy>
-        </snapshots>
-    </repository>
-</repositories>
-```
-Then, include dependency to your project:
+Include the dependency to your project's pom.xml file:
 ```xml
 <dependencies>
     ...
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.2</version>
     </dependency>
     ...
 </dependencies>
@@ -104,14 +91,24 @@ In example above, we send file in parameter named **photo** with additional fiel
 
 ### Spring MultipartFile and Spring Cloud Netflix @FeingClient support
 
-You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`:
+You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`.
 
+Include the dependencies to your project's pom.xml file:
 ```xml
-<dependency>
-    <groupId>io.github.openfeign.form</groupId>
-    <artifactId>feign-form-spring</artifactId>
-    <version>2.0.1</version>
-</dependency>
+<dependencies>
+    ...
+    <dependency>
+        <groupId>io.github.openfeign.form</groupId>
+        <artifactId>feign-form</artifactId>
+        <version>2.0.2</version>
+    </dependency>
+    <dependency>
+        <groupId>io.github.openfeign.form</groupId>
+        <artifactId>feign-form-spring</artifactId>
+        <version>2.0.2</version>
+    </dependency>
+    ...
+</dependencies>
 ```
 
 ```java
