@@ -104,7 +104,7 @@ In example above, we send file in parameter named **photo** with additional fiel
 
 ### Spring MultipartFile and Spring Cloud Netflix @FeingClient support
 
-You can also use Form Encoder with Spring `MultipartFile` and `@FeingClient`:
+You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`:
 
 ```xml
 <dependency>
