@@ -3,36 +3,37 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
-    <modelVersion>4.0.0</modelVersion>   
-    <packaging>jar</packaging>
+  <modelVersion>4.0.0</modelVersion>   
+  <packaging>jar</packaging>
     
-    <artifactId>feign-form-spring</artifactId>
+  <artifactId>feign-form-spring</artifactId>
     
-    <parent>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form-parent</artifactId>
-        <version>2.0.1</version>
-    </parent>
+  <parent>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form-parent</artifactId>
+    <version>2.0.1</version>
+  </parent>
     
-    <name>Open Feign Forms Extension for Spring</name>   
+  <name>Open Feign Forms Extension for Spring</name>   
     
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>feign-form</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-feign</artifactId>
-            <scope>test</scope>
-            <version>1.1.5.RELEASE</version>
-        </dependency>
-     </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-form</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-feign</artifactId>
+      <scope>test</scope>
+      <version>1.1.5.RELEASE</version>
+    </dependency>
+  </dependencies>
 </project>

@@ -24,6 +24,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
+ * Form urlencoded implementation of {@link feign.form.FormDataProcessor}.
+ *
  * @author Artem Labazin <xxlabaza@gmail.com>
  * @since 30.04.2016
  */

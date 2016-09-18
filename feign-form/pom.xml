@@ -3,16 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
-    <modelVersion>4.0.0</modelVersion>   
-    <packaging>jar</packaging>
+  <modelVersion>4.0.0</modelVersion>   
+  <packaging>jar</packaging>
     
-    <artifactId>feign-form</artifactId>
+  <artifactId>feign-form</artifactId>
     
-    <parent>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form-parent</artifactId>
-        <version>2.0.1</version>
-    </parent>
+  <parent>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form-parent</artifactId>
+    <version>2.0.1</version>
+  </parent>
     
-    <name>Open Feign Forms Core</name>   
+  <name>Open Feign Forms Core</name>   
 </project>
