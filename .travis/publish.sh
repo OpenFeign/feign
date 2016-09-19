@@ -96,7 +96,7 @@ if ! is_pull_request && build_started_by_tag; then
   check_release_tag
 fi
 
-mvn install -nsu
+mvn install -nsu -DskipTests
 
 # If we are on a pull request, our only job is to run tests, which happened above via mvn install
 if is_pull_request; then
