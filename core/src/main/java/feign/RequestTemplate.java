@@ -20,14 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import static feign.Util.CONTENT_LENGTH;
@@ -51,6 +44,7 @@ public final class RequestTemplate implements Serializable {
       new LinkedHashMap<String, Collection<String>>();
   private final Map<String, Collection<String>> headers =
       new LinkedHashMap<String, Collection<String>>();
+  private final Map<String, Object> properties = new HashMap<String, Object>();
   private String method;
   /* final to encourage mutable use vs replacing the object. */
   private StringBuilder url = new StringBuilder();
@@ -69,6 +63,7 @@ public final class RequestTemplate implements Serializable {
     this.url.append(toCopy.url);
     this.queries.putAll(toCopy.queries);
     this.headers.putAll(toCopy.headers);
+    this.properties.putAll(toCopy.properties);
     this.charset = toCopy.charset;
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
@@ -238,11 +233,13 @@ public final class RequestTemplate implements Serializable {
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
+    Map<String, Object> propertiesSafeCopy = new HashMap<String, Object>();
     safeCopy.putAll(headers);
+    propertiesSafeCopy.putAll(properties);
     return Request.create(
         method,
         new StringBuilder(url).append(queryLine()).toString(),
-        Collections.unmodifiableMap(safeCopy),
+        Collections.unmodifiableMap(safeCopy), Collections.unmodifiableMap(propertiesSafeCopy),
         body, charset
     );
   }
@@ -474,6 +471,8 @@ public final class RequestTemplate implements Serializable {
   public Map<String, Collection<String>> headers() {
     return Collections.unmodifiableMap(headers);
   }
+
+  public Map<String, Object> properties() { return properties; }
 
   /**
    * replaces the {@link feign.Util#CONTENT_LENGTH} header. <br> Usually populated by an {@link
