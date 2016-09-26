@@ -38,6 +38,12 @@ public @interface Param {
    */
   Class<? extends Expander> expander() default ToStringExpander.class;
 
+  /**
+   * Specifies whether argument is already encoded
+   * Value be ignored for headers (headers are never encoded)
+   */
+  boolean encoded() default false;
+
   interface Expander {
 
     /**
