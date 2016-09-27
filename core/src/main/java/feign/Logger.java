@@ -71,7 +71,7 @@ public abstract class Logger {
     }
   }
 
-  void logRetry(String configKey, Level logLevel) {
+  protected void logRetry(String configKey, Level logLevel) {
     log(configKey, "---> RETRYING");
   }
 
@@ -107,7 +107,7 @@ public abstract class Logger {
     return response;
   }
 
-  IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
+  protected IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
     log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
