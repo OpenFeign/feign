@@ -137,7 +137,7 @@ public abstract class Logger {
     FULL
   }
 
-  /** logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}. */
+  /** Logs to System.err. */
   public static class ErrorLogger extends Logger {
     @Override
     protected void log(String configKey, String format, Object... args) {
@@ -145,7 +145,7 @@ public abstract class Logger {
     }
   }
 
-  /** logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}, if loggable. */
+  /** Logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}, if loggable. */
   public static class JavaLogger extends Logger {
 
     final java.util.logging.Logger logger =
@@ -175,8 +175,8 @@ public abstract class Logger {
     }
 
     /**
-     * helper that configures jul to sanely log messages at FINE level without additional
-     * formatting.
+     * Helper that configures java.util.logging to sanely log messages at FINE level without
+     * additional formatting.
      */
     public JavaLogger appendToFile(String logfile) {
       logger.setLevel(java.util.logging.Level.FINE);
