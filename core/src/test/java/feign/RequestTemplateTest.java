@@ -36,20 +36,20 @@ public class RequestTemplateTest {
   /**
    * Avoid depending on guava solely for map literals.
    */
-  private static <T> Map<String, T> mapOf(String key, T val) {
-    Map<String, T> result = new LinkedHashMap<String, T>();
+  private static <K, V> Map<K, V> mapOf(K key, V val) {
+    Map<K, V> result = new LinkedHashMap<K, V>();
     result.put(key, val);
     return result;
   }
 
-  private static <T> Map<String, T> mapOf(String k1, T v1, String k2, T v2) {
-    Map<String, T> result = mapOf(k1, v1);
+  private static <K, V> Map<K, V> mapOf(K k1, V v1, K k2, V v2) {
+    Map<K, V> result = mapOf(k1, v1);
     result.put(k2, v2);
     return result;
   }
 
-  private static <T> Map<String, T> mapOf(String k1, T v1, String k2, T v2, String k3, T v3) {
-    Map<String, T> result = mapOf(k1, v1, k2, v2);
+  private static <K, V> Map<K, V> mapOf(K k1, V v1, K k2, V v2, K k3, V v3) {
+    Map<K, V> result = mapOf(k1, v1, k2, v2);
     result.put(k3, v3);
     return result;
   }

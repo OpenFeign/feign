@@ -117,7 +117,7 @@ public final class RequestTemplate implements Serializable {
     // skip expansion if there's no valid variables set. ex. {a} is the
     // first valid
     if (checkNotNull(template, "template").length() < 3) {
-      return template.toString();
+      return template;
     }
     checkNotNull(variables, "variables for %s", template);
 
@@ -200,6 +200,7 @@ public final class RequestTemplate implements Serializable {
     map.put(key, values);
   }
 
+  /** {@link #resolve(Map, Map)}, which assumes no parameter is encoded */
   public RequestTemplate resolve(Map<String, ?> unencoded) {
     return resolve(unencoded, Collections.<String, Boolean>emptyMap());
   }
@@ -256,8 +257,7 @@ public final class RequestTemplate implements Serializable {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
     safeCopy.putAll(headers);
     return Request.create(
-        method,
-        new StringBuilder(url).append(queryLine()).toString(),
+        method, url + queryLine(),
         Collections.unmodifiableMap(safeCopy),
         body, charset
     );
@@ -603,6 +603,11 @@ public final class RequestTemplate implements Serializable {
   @Override
   public String toString() {
     return request().toString();
+  }
+
+  /** {@link #replaceQueryValues(Map, Map)}, which assumes no parameter is encoded */
+  public void replaceQueryValues(Map<String, ?> unencoded) {
+    replaceQueryValues(unencoded, Collections.<String, Boolean>emptyMap());
   }
 
   /**

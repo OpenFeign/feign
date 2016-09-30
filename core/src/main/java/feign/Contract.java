@@ -249,7 +249,7 @@ public interface Contract {
       for (Annotation annotation : annotations) {
         Class<? extends Annotation> annotationType = annotation.annotationType();
         if (annotationType == Param.class) {
-          final Param paramAnnotation = (Param) annotation;
+          Param paramAnnotation = (Param) annotation;
           String name = paramAnnotation.value();
           checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.", paramIndex);
           nameParam(data, name, paramIndex);
@@ -288,7 +288,7 @@ public interface Contract {
 
       for (Collection<String> entry : values) {
         for (String value : entry) {
-          if (value.indexOf(search) != -1) {
+          if (value.contains(search)) {
             return true;
           }
         }
