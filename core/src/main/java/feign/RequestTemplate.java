@@ -211,7 +211,7 @@ public final class RequestTemplate implements Serializable {
    * similar to {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues, true)} , except
    * that the template values apply to any part of the request, not just the URL
    */
-  public RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
+  RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
     replaceQueryValues(unencoded, alreadyEncoded);
     Map<String, String> encoded = new LinkedHashMap<String, String>();
     for (Entry<String, ?> entry : unencoded.entrySet()) {
@@ -614,7 +614,7 @@ public final class RequestTemplate implements Serializable {
    * Replaces query values which are templated with corresponding values from the {@code unencoded}
    * map. Any unresolved queries are removed.
    */
-  public void replaceQueryValues(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
+  void replaceQueryValues(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
     Iterator<Entry<String, Collection<String>>> iterator = queries.entrySet().iterator();
     while (iterator.hasNext()) {
       Entry<String, Collection<String>> entry = iterator.next();
