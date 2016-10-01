@@ -1,6 +1,6 @@
 ### Version 9.3
 * Adds `FallbackFactory`, allowing access to the cause of a Hystrix fallback
-* Adds support for encoded parameters in @Param via @Param(encoded = true)
+* Adds support for encoded parameters via @Param(encoded = true)
 
 ### Version 9.2
 * Adds Hystrix `SetterFactory` to customize group and command keys
