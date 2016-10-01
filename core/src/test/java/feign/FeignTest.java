@@ -639,6 +639,17 @@ public class FeignTest {
     assertThat(server.takeRequest()).hasBody(expectedRequest);
   }
 
+  @Test
+  public void encodedQueryParam() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.encodedQueryParam("5.2FSi+");
+
+    assertThat(server.takeRequest()).hasPath("/?trim=5.2FSi+");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -701,6 +712,9 @@ public class FeignTest {
     @RequestLine("GET /?name={name}")
     void queryMapWithQueryParams(
         @Param("name") String name, @QueryMap Map<String, Object> queryMap);
+
+    @RequestLine("GET /?trim={trim}")
+    void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
 
     class DateToMillis implements Param.Expander {
 

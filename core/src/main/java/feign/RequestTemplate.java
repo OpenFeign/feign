@@ -122,7 +122,7 @@ public final class RequestTemplate implements Serializable {
     // skip expansion if there's no valid variables set. ex. {a} is the
     // first valid
     if (checkNotNull(template, "template").length() < 3) {
-      return template.toString();
+      return template;
     }
     checkNotNull(variables, "variables for %s", template);
 
@@ -205,6 +205,11 @@ public final class RequestTemplate implements Serializable {
     map.put(key, values);
   }
 
+  /** {@link #resolve(Map, Map)}, which assumes no parameter is encoded */
+  public RequestTemplate resolve(Map<String, ?> unencoded) {
+    return resolve(unencoded, Collections.<String, Boolean>emptyMap());
+  }
+
   /**
    * Resolves any template parameters in the requests path, query, or headers against the supplied
    * unencoded arguments. <br>
@@ -215,11 +220,14 @@ public final class RequestTemplate implements Serializable {
    * This call is similar to {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues,
    * true)} , except that the template values apply to any part of the request, not just the URL
    */
-  public RequestTemplate resolve(Map<String, ?> unencoded) {
-    replaceQueryValues(unencoded);
+  RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
+    replaceQueryValues(unencoded, alreadyEncoded);
     Map<String, String> encoded = new LinkedHashMap<String, String>();
     for (Entry<String, ?> entry : unencoded.entrySet()) {
-      encoded.put(entry.getKey(), urlEncode(String.valueOf(entry.getValue())));
+      final String key = entry.getKey();
+      final Object objectValue = entry.getValue();
+      String encodedValue = encodeValueIfNotEncoded(key, objectValue, alreadyEncoded);
+      encoded.put(key, encodedValue);
     }
     String resolvedUrl = expand(url.toString(), encoded).replace("+", "%20");
     if (decodeSlash) {
@@ -245,16 +253,22 @@ public final class RequestTemplate implements Serializable {
     return this;
   }
 
+  private String encodeValueIfNotEncoded(
+      String key, Object objectValue, Map<String, Boolean> alreadyEncoded) {
+    String value = String.valueOf(objectValue);
+    final Boolean isEncoded = alreadyEncoded.get(key);
+    if (isEncoded == null || !isEncoded) {
+      value = urlEncode(value);
+    }
+    return value;
+  }
+
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
     safeCopy.putAll(headers);
     return Request.create(
-        method,
-        new StringBuilder(url).append(queryLine()).toString(),
-        Collections.unmodifiableMap(safeCopy),
-        body,
-        charset);
+        method, url + queryLine(), Collections.unmodifiableMap(safeCopy), body, charset);
   }
 
   /* @see Request#method() */
@@ -624,11 +638,16 @@ public final class RequestTemplate implements Serializable {
     return request().toString();
   }
 
+  /** {@link #replaceQueryValues(Map, Map)}, which assumes no parameter is encoded */
+  public void replaceQueryValues(Map<String, ?> unencoded) {
+    replaceQueryValues(unencoded, Collections.<String, Boolean>emptyMap());
+  }
+
   /**
    * Replaces query values which are templated with corresponding values from the {@code unencoded}
    * map. Any unresolved queries are removed.
    */
-  public void replaceQueryValues(Map<String, ?> unencoded) {
+  void replaceQueryValues(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
     Iterator<Entry<String, Collection<String>>> iterator = queries.entrySet().iterator();
     while (iterator.hasNext()) {
       Entry<String, Collection<String>> entry = iterator.next();
@@ -645,10 +664,13 @@ public final class RequestTemplate implements Serializable {
           }
           if (variableValue instanceof Iterable) {
             for (Object val : Iterable.class.cast(variableValue)) {
-              values.add(urlEncode(String.valueOf(val)));
+              String encodedValue = encodeValueIfNotEncoded(entry.getKey(), val, alreadyEncoded);
+              values.add(encodedValue);
             }
           } else {
-            values.add(urlEncode(String.valueOf(variableValue)));
+            String encodedValue =
+                encodeValueIfNotEncoded(entry.getKey(), variableValue, alreadyEncoded);
+            values.add(encodedValue);
           }
         } else {
           values.add(value);

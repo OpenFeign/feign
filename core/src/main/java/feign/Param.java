@@ -34,6 +34,14 @@ public @interface Param {
   /** How to expand the value of this parameter, if {@link ToStringExpander} isn't adequate. */
   Class<? extends Expander> expander() default ToStringExpander.class;
 
+  /**
+   * Specifies whether argument is already encoded The value is ignored for headers (headers are
+   * never encoded)
+   *
+   * @see QueryMap#encoded
+   */
+  boolean encoded() default false;
+
   interface Expander {
 
     /** Expands the value into a string. Does not accept or return null. */

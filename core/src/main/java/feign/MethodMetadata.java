@@ -41,6 +41,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Collection<String>>();
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
+  private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
 
   MethodMetadata() {}
@@ -134,6 +135,10 @@ public final class MethodMetadata implements Serializable {
 
   public Map<Integer, Collection<String>> indexToName() {
     return indexToName;
+  }
+
+  public Map<Integer, Boolean> indexToEncoded() {
+    return indexToEncoded;
   }
 
   /** If {@link #indexToExpander} is null, classes here will be instantiated by newInstance. */
