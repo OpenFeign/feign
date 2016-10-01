@@ -291,7 +291,15 @@ public class ReflectiveFeign extends Feign {
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
                                       Map<String, Object> variables) {
-      return mutable.resolve(variables);
+      // Resolving which variable names are already encoded using their indices
+      Map<String, Boolean> variableToEncoded = new LinkedHashMap<String, Boolean>();
+      for (Entry<Integer, Boolean> entry : metadata.indexToEncoded().entrySet()) {
+        Collection<String> names = metadata.indexToName().get(entry.getKey());
+        for (String name : names) {
+          variableToEncoded.put(name, entry.getValue());
+        }
+      }
+      return mutable.resolve(variables, variableToEncoded);
     }
   }
 

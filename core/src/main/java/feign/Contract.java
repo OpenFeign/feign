@@ -249,19 +249,18 @@ public interface Contract {
       for (Annotation annotation : annotations) {
         Class<? extends Annotation> annotationType = annotation.annotationType();
         if (annotationType == Param.class) {
-          String name = ((Param) annotation).value();
-          checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
-              paramIndex);
+          Param paramAnnotation = (Param) annotation;
+          String name = paramAnnotation.value();
+          checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.", paramIndex);
           nameParam(data, name, paramIndex);
-          if (annotationType == Param.class) {
-            Class<? extends Param.Expander> expander = ((Param) annotation).expander();
-            if (expander != Param.ToStringExpander.class) {
-              data.indexToExpanderClass().put(paramIndex, expander);
-            }
+          Class<? extends Param.Expander> expander = paramAnnotation.expander();
+          if (expander != Param.ToStringExpander.class) {
+            data.indexToExpanderClass().put(paramIndex, expander);
           }
+          data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
           isHttpAnnotation = true;
           String varName = '{' + name + '}';
-          if (data.template().url().indexOf(varName) == -1 &&
+          if (!data.template().url().contains(varName) &&
               !searchMapValuesContainsSubstring(data.template().queries(), varName) &&
               !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
@@ -289,7 +288,7 @@ public interface Contract {
 
       for (Collection<String> entry : values) {
         for (String value : entry) {
-          if (value.indexOf(search) != -1) {
+          if (value.contains(search)) {
             return true;
           }
         }
