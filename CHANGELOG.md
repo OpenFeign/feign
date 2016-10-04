@@ -1,3 +1,6 @@
+### Version 9.4
+* Adds Builder class to JAXBDecoder for disabling namespace-awareness (defaults to true).
+
 ### Version 9.3
 * Adds `FallbackFactory`, allowing access to the cause of a Hystrix fallback
 * Adds support for encoded parameters via `@Param(encoded = true)`
