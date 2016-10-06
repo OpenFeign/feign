@@ -39,13 +39,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * <p/>Ex:
  * <pre>
- * class IllegalArgumentExceptionOn404Decoder extends ErrorDecoder {
+ * class IllegalArgumentExceptionOn404Decoder implements ErrorDecoder {
  *
  *   &#064;Override
  *   public Exception decode(String methodKey, Response response) {
  *    if (response.status() == 400)
  *        throw new IllegalArgumentException(&quot;bad zone name&quot;);
- *    return new ErrorDecoder.Default().decode(methodKey, request, response);
+ *    return new ErrorDecoder.Default().decode(methodKey, response);
  *   }
  *
  * }
