@@ -50,9 +50,16 @@ import org.xml.sax.SAXException;
 public class JAXBDecoder implements Decoder {
 
   private final JAXBContextFactory jaxbContextFactory;
+  private final boolean namespaceAware;
 
   public JAXBDecoder(JAXBContextFactory jaxbContextFactory) {
     this.jaxbContextFactory = jaxbContextFactory;
+    this.namespaceAware = true;
+  }
+
+  private JAXBDecoder(Builder builder) {
+    this.jaxbContextFactory = builder.jaxbContextFactory;
+    this.namespaceAware = builder.namespaceAware;
   }
 
   @Override
@@ -72,6 +79,7 @@ public class JAXBDecoder implements Decoder {
       saxParserFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
       saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
       saxParserFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+      saxParserFactory.setNamespaceAware(namespaceAware);
 
       Source source = new SAXSource(saxParserFactory.newSAXParser().getXMLReader(), new InputSource(response.body().asInputStream()));
       Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
@@ -86,6 +94,32 @@ public class JAXBDecoder implements Decoder {
       if (response.body() != null) {
         response.body().close();
       }
+    }
+  }
+
+  public static class Builder {
+    private boolean namespaceAware = true;
+    private JAXBContextFactory jaxbContextFactory;
+
+    /**
+     * Controls whether the underlying XML parser is namespace aware.
+     * Default is true.
+     */
+    public Builder withNamespaceAware(boolean namespaceAware) {
+      this.namespaceAware = namespaceAware;
+      return this;
+    }
+
+    public Builder withJAXBContextFactory(JAXBContextFactory jaxbContextFactory) {
+      this.jaxbContextFactory = jaxbContextFactory;
+      return this;
+    }
+
+    public JAXBDecoder build() {
+      if (jaxbContextFactory == null) {
+        throw new IllegalStateException("JAXBContextFactory must be non-null");
+      }
+      return new JAXBDecoder(this);
     }
   }
 }
