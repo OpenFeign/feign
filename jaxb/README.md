@@ -16,3 +16,12 @@ Response response = Feign.builder()
                          .decoder(new JAXBDecoder(jaxbFactory))
                          .target(Response.class, "https://apihost");
 ```
+
+`JAXBDecoder` can also be created with a builder to allow overriding some default parser options:
+
+```java
+JAXBDecoder jaxbDecoder = new JAXBDecoder.Builder()
+    .withJAXBContextFactory(jaxbFactory)
+    .withNamespaceAware(false) // true by default
+    .build();
+```
