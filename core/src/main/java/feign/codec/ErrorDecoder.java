@@ -30,14 +30,12 @@ import static feign.FeignException.errorStatus;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
 import static java.util.Locale.US;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
  * exception are examples of this in use.
- *
- * <p/>Ex:
+ * <p/>Example:
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder implements ErrorDecoder {
  *
@@ -47,7 +45,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *        throw new IllegalArgumentException(&quot;bad zone name&quot;);
  *    return new ErrorDecoder.Default().decode(methodKey, response);
  *   }
- *
  * }
  * </pre>
  *
@@ -62,7 +59,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * <p/><b>Not Found Semantics</b>
  * <p/> It is commonly the case that 404 (Not Found) status has semantic value in HTTP apis. While
- * the default behavior is to raise exeception, users can alternatively enable 404 processing via
+ * the default behavior is to raise an exception, users can alternatively enable 404 processing via
  * {@link feign.Feign.Builder#decode404()}.
  */
 public interface ErrorDecoder {
@@ -76,13 +73,15 @@ public interface ErrorDecoder {
    *                  ex. {@code IAM#getUser()}
    * @param response  HTTP response where {@link Response#status() status} is greater than or equal
    *                  to {@code 300}.
-   * @return Exception IOException, if there was a network error reading the response or an
-   * application-specific exception decoded by the implementation. If the throwable is retryable, it
-   * should be wrapped, or a subtype of {@link RetryableException}
+   * @return Exception An Exception or <code>null</code>. IOException, if there was a network error
+   * reading the response or an application-specific exception decoded by the implementation. If
+   * the throwable is retryable, it should be wrapped, or a subtype of {@link RetryableException}.
+   * If <code>null</code> is returned no exception is thrown and the normal {@link Decoder} will
+   * be asked to decode the response.
    */
-  public Exception decode(String methodKey, Response response);
+  Exception decode(String methodKey, Response response);
 
-  public static class Default implements ErrorDecoder {
+  class Default implements ErrorDecoder {
 
     private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
 
@@ -108,7 +107,7 @@ public interface ErrorDecoder {
    * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible. <br> See <a
    * href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */
-  static class RetryAfterDecoder {
+  class RetryAfterDecoder {
 
     static final DateFormat
         RFC822_FORMAT =

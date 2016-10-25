@@ -79,7 +79,6 @@ final class SynchronousMethodHandler implements MethodHandler {
         if (logLevel != Logger.Level.NONE) {
           logger.logRetry(metadata.configKey(), logLevel);
         }
-        continue;
       }
     }
   }
@@ -105,14 +104,25 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-    boolean shouldClose = true;
     try {
       if (logLevel != Logger.Level.NONE) {
         response =
-            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
+                logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
         // ensure the request is set. TODO: remove in Feign 10
         response.toBuilder().request(request).build();
       }
+      return decodeResponse(response);
+    } catch (IOException e) {
+      if (logLevel != Logger.Level.NONE) {
+        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
+      }
+      throw errorReading(request, e);
+    }
+  }
+
+  private Object decodeResponse(Response response) throws Throwable {
+    boolean shouldClose = true;
+    try {
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
           return response;
@@ -129,23 +139,28 @@ final class SynchronousMethodHandler implements MethodHandler {
       if (response.status() >= 200 && response.status() < 300) {
         if (void.class == metadata.returnType()) {
           return null;
-        } else {
-          return decode(response);
         }
-      } else if (decode404 && response.status() == 404) {
-        return decoder.decode(response, metadata.returnType());
-      } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
+      } else if (!decode404 || response.status() != 404) {
+        Exception exception = errorDecoder.decode(metadata.configKey(), response);
+        if (exception != null) {
+          throw exception;
+        }
       }
-    } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
-      }
-      throw errorReading(request, response, e);
+      return decodeWithDecoder(response);
     } finally {
       if (shouldClose) {
         ensureClosed(response.body());
       }
+    }
+  }
+
+  Object decodeWithDecoder(Response response) throws Throwable {
+    try {
+      return decoder.decode(response, metadata.returnType());
+    } catch (FeignException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new DecodeException(e.getMessage(), e);
     }
   }
 
@@ -158,16 +173,6 @@ final class SynchronousMethodHandler implements MethodHandler {
       interceptor.apply(template);
     }
     return target.apply(new RequestTemplate(template));
-  }
-
-  Object decode(Response response) throws Throwable {
-    try {
-      return decoder.decode(response, metadata.returnType());
-    } catch (FeignException e) {
-      throw e;
-    } catch (RuntimeException e) {
-      throw new DecodeException(e.getMessage(), e);
-    }
   }
 
   static class Factory {
