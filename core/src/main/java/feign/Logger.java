@@ -107,7 +107,7 @@ public abstract class Logger {
     return response;
   }
 
-  protected IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
+  protected void logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
     log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
@@ -116,7 +116,6 @@ public abstract class Logger {
       log(configKey, sw.toString());
       log(configKey, "<--- END ERROR");
     }
-    return ioe;
   }
 
   /**
