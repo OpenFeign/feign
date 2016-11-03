@@ -100,7 +100,7 @@ public class FormEncoder implements Encoder {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
-    if (bodyType != MAP_STRING_WILDCARD) {
+    if (!MAP_STRING_WILDCARD.equals(bodyType)) {
       deligate.encode(object, bodyType, template);
       return;
     }

@@ -21,6 +21,7 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
 import static org.springframework.http.HttpStatus.LOCKED;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -94,5 +95,15 @@ public class Server {
       status = OK;
     }
     return ResponseEntity.status(status).body(filters.size());
+  }
+
+  @RequestMapping(
+      value = "/wild-card-map",
+      method = POST,
+      consumes = APPLICATION_FORM_URLENCODED_VALUE)
+  public ResponseEntity<Integer> wildCardMap(
+      @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
+    HttpStatus status = key1.equals(key2) ? OK : BAD_REQUEST;
+    return ResponseEntity.status(status).body(null);
   }
 }
