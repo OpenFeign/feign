@@ -33,7 +33,7 @@ public interface FallbackFactory<T> {
   /**
    * Returns an instance of the fallback appropriate for the given cause
    *
-   * @param cause corresponds to {@link com.netflix.hystrix.AbstractCommand#getFailedExecutionException()}
+   * @param cause corresponds to {@link com.netflix.hystrix.AbstractCommand#getExecutionException()}
    * often, but not always an instance of {@link FeignException}.
    */
   T create(Throwable cause);
