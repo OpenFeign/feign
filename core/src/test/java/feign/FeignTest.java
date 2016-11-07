@@ -565,6 +565,27 @@ public class FeignTest {
   }
 
   @Test
+  public void nullFromErrorDecoderResultsInDecoderAsked() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(403));
+
+    TestInterface api = new TestInterfaceBuilder()
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return null;
+          }
+        })
+        .decoder(new Decoder() {
+          @Override
+          public Object decode(Response response, Type type) throws IOException {
+            assertEquals(403, response.status());
+            return "Sadly forbidden";
+          }
+        }).target("http://localhost:" + server.getPort());
+    assertEquals("Sadly forbidden", api.post());
+  }
+
+  @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(EncodeException.class);
