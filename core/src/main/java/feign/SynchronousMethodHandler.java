@@ -129,14 +129,14 @@ final class SynchronousMethodHandler implements MethodHandler {
       if (response.status() >= 200 && response.status() < 300) {
         if (void.class == metadata.returnType()) {
           return null;
-        } else {
-          return decode(response);
         }
-      } else if (decode404 && response.status() == 404) {
-        return decoder.decode(response, metadata.returnType());
-      } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
+      } else if (!decode404 || response.status() != 404) {
+        Exception exception = errorDecoder.decode(metadata.configKey(), response);
+        if (exception != null) {
+          throw exception;
+        }
       }
+      return decode(response);
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);

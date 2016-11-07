@@ -52,6 +52,7 @@ import feign.codec.StringDecoder;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -546,9 +547,10 @@ public class FeignTest {
   }
 
   @Test
-  public void decoderCanThrowUnwrappedExceptionInDecode404Mode() throws Exception {
+  public void decodingExceptionGetWrappedInDecode404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(NoSuchElementException.class);
+    thrown.expect(DecodeException.class);
+    thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
         .decode404()
@@ -560,6 +562,27 @@ public class FeignTest {
           }
         }).target("http://localhost:" + server.getPort());
     api.post();
+  }
+
+  @Test
+  public void nullFromErrorDecoderResultsInDecoderAsked() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(403));
+
+    TestInterface api = new TestInterfaceBuilder()
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return null;
+          }
+        })
+        .decoder(new Decoder() {
+          @Override
+          public Object decode(Response response, Type type) throws IOException {
+            assertEquals(403, response.status());
+            return "Sadly forbidden";
+          }
+        }).target("http://localhost:" + server.getPort());
+    assertEquals("Sadly forbidden", api.post());
   }
 
   @Test
