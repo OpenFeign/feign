@@ -52,6 +52,7 @@ import feign.codec.StringDecoder;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -546,9 +547,10 @@ public class FeignTest {
   }
 
   @Test
-  public void decoderCanThrowUnwrappedExceptionInDecode404Mode() throws Exception {
+  public void decodingExceptionGetWrappedInDecode404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(NoSuchElementException.class);
+    thrown.expect(DecodeException.class);
+    thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
         .decode404()
