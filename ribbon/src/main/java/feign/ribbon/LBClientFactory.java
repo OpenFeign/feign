@@ -1,8 +1,10 @@
 package feign.ribbon;
 
 import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
+import com.netflix.client.config.IClientConfigKey;
 import com.netflix.loadbalancer.ILoadBalancer;
 
 public interface LBClientFactory {
@@ -12,7 +14,7 @@ public interface LBClientFactory {
   /**
    * Uses {@link ClientFactory} static factories from ribbon to create an LBClient.
    */
-  public static final class Default implements LBClientFactory {
+  final class Default implements LBClientFactory {
     @Override
     public LBClient create(String clientName) {
       IClientConfig config = ClientFactory.getNamedConfig(clientName, DisableAutoRetriesByDefaultClientConfig.class);
@@ -21,10 +23,18 @@ public interface LBClientFactory {
     }
   }
 
+  IClientConfigKey<String> ServerThrottledStatusCodes = new CommonClientConfigKey<String>("ServerThrottledStatusCodes") {};
+
   final class DisableAutoRetriesByDefaultClientConfig extends DefaultClientConfigImpl {
     @Override
     public int getDefaultMaxAutoRetriesNextServer() {
       return 0;
+    }
+
+    @Override
+    public void loadDefaultValues() {
+      super.loadDefaultValues();
+      putDefaultStringProperty(LBClientFactory.ServerThrottledStatusCodes, "");
     }
   }
 }

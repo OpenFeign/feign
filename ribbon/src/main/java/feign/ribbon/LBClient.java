@@ -20,15 +20,18 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
 import com.netflix.client.RequestSpecificRetryHandler;
-import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
+import com.netflix.client.config.IClientConfigKey;
 import com.netflix.loadbalancer.ILoadBalancer;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import feign.Client;
 import feign.Request;
@@ -41,9 +44,21 @@ public final class LBClient extends
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
+  private final Set<Integer> serverThrottledStatusCodes;
 
   public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
     return new LBClient(lb, clientConfig);
+  }
+
+  private Set<Integer> parseStatusCodes(String statusCodesString) {
+    if (statusCodesString == null || statusCodesString.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<Integer> codes = new HashSet<Integer>();
+    for (String codeString: statusCodesString.split(",")) {
+      codes.add(Integer.parseInt(codeString));
+    }
+    return codes;
   }
 
   LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
@@ -51,11 +66,12 @@ public final class LBClient extends
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
+    serverThrottledStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.ServerThrottledStatusCodes));
   }
 
   @Override
   public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
-      throws IOException {
+          throws IOException, ClientException {
     Request.Options options;
     if (configOverride != null) {
       options =
@@ -66,6 +82,10 @@ public final class LBClient extends
       options = new Request.Options(connectTimeout, readTimeout);
     }
     Response response = request.client().execute(request.toRequest(), options);
+    if (serverThrottledStatusCodes.contains(response.status())) {
+      response.close();
+      throw new ClientException(ClientException.ErrorType.SERVER_THROTTLED);
+    }
     return new RibbonResponse(request.getUri(), response);
   }
 
