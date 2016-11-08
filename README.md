@@ -100,12 +100,12 @@ Include the dependencies to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>2.0.2</version>
+        <version>2.0.4</version>
     </dependency>
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form-spring</artifactId>
-        <version>2.0.2</version>
+        <version>2.0.4</version>
     </dependency>
     ...
 </dependencies>
