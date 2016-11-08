@@ -109,4 +109,4 @@ nb-configuration.xml
 .nb-gradle/
 
 # Test output log file
-*.txt
+*.txt*
