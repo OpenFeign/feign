@@ -79,7 +79,8 @@ public abstract class Logger {
                                             long elapsedTime) throws IOException {
     String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ?
         " " + response.reason() : "";
-    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", response.status(), reason, elapsedTime);
+    int status = response.status();
+    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
@@ -89,7 +90,9 @@ public abstract class Logger {
       }
 
       int bodyLength = 0;
-      if (response.body() != null) {
+      if (response.body() != null && !(status == 204 || status == 205)) {
+        // HTTP 204 No Content "...response MUST NOT include a message-body"
+        // HTTP 205 Reset Content "...response MUST NOT include an entity"
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           log(configKey, ""); // CRLF
         }
