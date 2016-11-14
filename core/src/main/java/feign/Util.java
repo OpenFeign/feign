@@ -286,7 +286,7 @@ public class Util {
     return total;
   }
 
-  static String decodeOrDefault(byte[] data, Charset charset, String defaultValue) {
+  public static String decodeOrDefault(byte[] data, Charset charset, String defaultValue) {
     if (data == null) {
       return defaultValue;
     }
