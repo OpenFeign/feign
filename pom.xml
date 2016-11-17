@@ -6,12 +6,12 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.4.1.RELEASE</version>
+    <version>1.4.2.RELEASE</version>
   </parent>
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.5</version>
+  <version>2.0.6</version>
   <packaging>pom</packaging>
 
   <name>Open Feign Forms Parent</name>
@@ -46,7 +46,7 @@
   <scm>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>2.0.2</tag>
+    <tag>2.0.6</tag>
     <url>https://github.com/OpenFeign/feign-form</url>
   </scm>
 
@@ -120,7 +120,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.4</version>
+        <version>3.0.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>

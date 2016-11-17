@@ -159,11 +159,12 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
             .append(fileName)
             .append("\"")
             .toString();
-    val contentType =
-        new StringBuilder()
-            .append("Content-Type: ")
-            .append(URLConnection.guessContentTypeFromName(fileName))
-            .toString();
+
+    String contentValue = URLConnection.guessContentTypeFromName(fileName);
+    if (contentValue == null) {
+      contentValue = "application/octet-stream";
+    }
+    val contentType = new StringBuilder().append("Content-Type: ").append(contentValue).toString();
 
     writer.append(contentDesposition).append(CRLF);
     writer.append(contentType).append(CRLF);
