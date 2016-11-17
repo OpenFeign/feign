@@ -104,8 +104,8 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
      *
      * @param output output stream to remote destination.
      * @param writer wrapped output stream.
-     * @param name file's name.
-     * @param value file's content.
+     * @param name   file's name.
+     * @param value  file's content.
      */
     protected void writeFile (OutputStream output, PrintWriter writer, String name, Object value) {
         if (value instanceof byte[]) {
@@ -157,9 +157,14 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
                 .append("Content-Disposition: form-data; name=\"").append(name).append("\"; ")
                 .append("filename=\"").append(fileName).append("\"")
                 .toString();
+
+        String contentValue = URLConnection.guessContentTypeFromName(fileName);
+        if (contentValue == null) {
+            contentValue = "application/octet-stream";
+        }
         val contentType = new StringBuilder()
                 .append("Content-Type: ")
-                .append(URLConnection.guessContentTypeFromName(fileName))
+                .append(contentValue)
                 .toString();
 
         writer.append(contentDesposition).append(CRLF);
