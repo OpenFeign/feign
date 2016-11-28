@@ -25,7 +25,7 @@ package feign;
  *
  * <pre>
  * public void apply(RequestTemplate input) {
- *     input.replaceHeader(&quot;X-Auth&quot;, currentToken);
+ *     input.header(&quot;X-Auth&quot;, currentToken);
  * }
  * </pre>
  *
