@@ -60,8 +60,7 @@ Feign can produce multiple api interfaces.  These are defined as `Target<T>` (de
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-Feign feign = Feign.builder().build();
-CloudDNS cloudDNS = feign.newInstance(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 ### Examples
