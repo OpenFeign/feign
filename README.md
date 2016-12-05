@@ -61,7 +61,7 @@ For example, the following pattern might decorate each request with the current 
 
 ```java
 Feign feign = Feign.builder().build();
-CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+CloudDNS cloudDNS = feign.newInstance(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 ### Examples
