@@ -23,6 +23,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.netflix.archaius</groupId>
+      <artifactId>archaius-core</artifactId>
+      <version>0.6.6</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.netflix.hystrix</groupId>
       <artifactId>hystrix-core</artifactId>
       <version>1.4.26</version>
