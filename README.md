@@ -359,14 +359,14 @@ In many cases, resource representations are also consistent. For this reason, ty
 interface BaseApi<V> {
 
   @RequestLine("GET /api/{key}")
-  V get(@Param("key") String);
+  V get(@Param("key") String key);
 
   @RequestLine("GET /api")
   List<V> list();
 
   @Headers("Content-Type: application/json")
   @RequestLine("PUT /api/{key}")
-  void put(@Param("key") String, V value);
+  void put(@Param("key") String key, V value);
 }
 
 interface FooApi extends BaseApi<Foo> { }
