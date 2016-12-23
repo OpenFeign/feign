@@ -11,6 +11,8 @@ import static feign.Feign.configKey;
 
 public class AnnotationErrorDecoder implements ErrorDecoder {
 
+    private static final ExceptionConstructorDefinition NO_DEFAULT_EXCEPTION = ExceptionConstructorDefinition.createExceptionConstructorDefinition(ErrorHandling.NO_DEFAULT.class);
+
     private final Map<String, MethodErrorHandler> errorHandlerMap;
     private final ErrorDecoder defaultDecoder;
 
@@ -22,8 +24,12 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
+
         if(errorHandlerMap.containsKey(methodKey)) {
-            return errorHandlerMap.get(methodKey).decode(response);
+            Exception decoded = errorHandlerMap.get(methodKey).decode(response);
+            if(!(decoded instanceof ErrorHandling.NO_DEFAULT)) {
+                return decoded;
+            }
         }
         return defaultDecoder.decode(methodKey, response);
     }
@@ -53,8 +59,7 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
 
         Map<String, MethodErrorHandler> generateErrorHandlerMapFromApi(Class<?> apiType) {
 
-            ExceptionConstructorDefinition classLevelDefault =
-                ExceptionConstructorDefinition.createExceptionConstructorDefinition(ErrorHandling.NO_DEFAULT.class);
+            ExceptionConstructorDefinition classLevelDefault = NO_DEFAULT_EXCEPTION;
             Map<Integer, ExceptionConstructorDefinition> classLevelStatusCodeDefinitions = new HashMap<Integer, ExceptionConstructorDefinition>();
 
             if(apiType.isAnnotationPresent(ErrorHandling.class)) {
@@ -65,18 +70,22 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
 
             Map<String, MethodErrorHandler> methodErrorHandlerMap = new HashMap<String, MethodErrorHandler>();
             for(Method method : apiType.getMethods()) {
+                ExceptionConstructorDefinition methodDefault = NO_DEFAULT_EXCEPTION;
+                ErrorHandlingDefinition methodErrorHandling =
+                    new ErrorHandlingDefinition(methodDefault, new HashMap<Integer, ExceptionConstructorDefinition>());
+
                 if(method.isAnnotationPresent(ErrorHandling.class)) {
-                    ErrorHandlingDefinition methodErrorHandling = readAnnotation(method.getAnnotation(ErrorHandling.class));
-                    ExceptionConstructorDefinition methodDefault = methodErrorHandling.defaultThrow;
+                    methodErrorHandling = readAnnotation(method.getAnnotation(ErrorHandling.class));
+                    methodDefault = methodErrorHandling.defaultThrow;
                     if(methodDefault.getExceptionType().equals(ErrorHandling.NO_DEFAULT.class)) {
                         methodDefault = classLevelDefault;
                     }
 
-                    MethodErrorHandler methodErrorHandler =
-                        new MethodErrorHandler(methodErrorHandling.statusCodesMap, classLevelStatusCodeDefinitions, methodDefault );
-
-                    methodErrorHandlerMap.put(configKey(apiType, method), methodErrorHandler);
                 }
+
+                MethodErrorHandler methodErrorHandler =
+                    new MethodErrorHandler(methodErrorHandling.statusCodesMap, classLevelStatusCodeDefinitions, methodDefault );
+                methodErrorHandlerMap.put(configKey(apiType, method), methodErrorHandler);
             }
 
             return methodErrorHandlerMap;

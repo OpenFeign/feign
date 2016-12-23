@@ -13,11 +13,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AnnotationErrorDecoderTest {
 
     private AnnotationErrorDecoder decoder;
+    private boolean fallbackCalled = false;
+    private Exception fallbackException = new Exception();
 
 
     @Before
     public void setUp() throws Exception {
-        decoder = AnnotationErrorDecoder.builderFor( TestClientInterface.class ).build();
+        fallbackCalled = false;
+
+        decoder = AnnotationErrorDecoder.builderFor( TestClientInterface.class )
+            .withDefaultDecoder( (methodKey, response) -> {fallbackCalled = true;
+            return fallbackException; })
+            .build();
     }
 
     @Test
@@ -60,8 +67,27 @@ public class AnnotationErrorDecoderTest {
             .isEqualTo(ClassLevelDefaultException.class);
     }
 
+    @Test
+    public void fallbackToDefaultDecoder() throws Exception {
+        decoder = AnnotationErrorDecoder.builderFor( TestClientWithNoDefaultErrorHandling.class )
+            .withDefaultDecoder( (methodKey, response) -> {fallbackCalled = true;
+                return fallbackException; })
+            .build();
+
+        assertThat(decoder.decode(feignConfigKey(TestClientWithNoDefaultErrorHandling.class, "method1Test"), testResponse(403)).getClass())
+            .isEqualTo(UnauthenticatedOrUnautherizedException.class);
+        assertThat(decoder.decode(feignConfigKey(TestClientWithNoDefaultErrorHandling.class, "method1Test"), testResponse(503)))
+            .isEqualTo(fallbackException);
+        assertThat(fallbackCalled).isTrue();
+
+    }
+
+    private static String feignConfigKey(Class apiType, String methodName) throws NoSuchMethodException {
+        return configKey(apiType, TestClientInterface.class.getMethod(methodName));
+    }
+
     private static String feignConfigKey(String methodName) throws NoSuchMethodException {
-        return configKey(TestClientInterface.class, TestClientInterface.class.getMethod(methodName));
+        return feignConfigKey(TestClientInterface.class, methodName);
     }
 
     private static Response testResponse(int status) {
@@ -69,6 +95,16 @@ public class AnnotationErrorDecoderTest {
             .status(status)
             .headers(new HashMap<String, Collection<String>>())
             .build();
+    }
+
+    @ErrorHandling(codeSpecific =
+        {
+            @StatusCodes( codes = {404}, generate = ClassLevelNotFoundException.class),
+            @StatusCodes( codes = {403}, generate = UnauthenticatedOrUnautherizedException.class)
+        }
+    )
+    interface TestClientWithNoDefaultErrorHandling {
+        void method1Test();
     }
 
 
