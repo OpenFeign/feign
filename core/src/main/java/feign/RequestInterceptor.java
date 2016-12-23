@@ -23,7 +23,7 @@ package feign;
  * For example: <br>
  * <pre>
  * public void apply(RequestTemplate input) {
- *     input.replaceHeader(&quot;X-Auth&quot;, currentToken);
+ *     input.header(&quot;X-Auth&quot;, currentToken);
  * }
  * </pre>
  * <br> <br><b>Configuration</b><br> <br> {@code RequestInterceptors} are configured via {@link

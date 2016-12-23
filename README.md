@@ -60,8 +60,7 @@ Feign can produce multiple api interfaces.  These are defined as `Target<T>` (de
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-Feign feign = Feign.builder().build();
-CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 ### Examples
@@ -360,14 +359,14 @@ In many cases, resource representations are also consistent. For this reason, ty
 interface BaseApi<V> {
 
   @RequestLine("GET /api/{key}")
-  V get(@Param("key") String);
+  V get(@Param("key") String key);
 
   @RequestLine("GET /api")
   List<V> list();
 
   @Headers("Content-Type: application/json")
   @RequestLine("PUT /api/{key}")
-  void put(@Param("key") String, V value);
+  void put(@Param("key") String key, V value);
 }
 
 interface FooApi extends BaseApi<Foo> { }
