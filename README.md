@@ -1,6 +1,6 @@
 # Feign makes writing java http clients easier
 
-[![Join the chat at https://gitter.im/Netflix/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Netflix/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/OpenFeign/feign.svg?branch=master)](https://travis-ci.org/OpenFeign/feign)
 
 Feign is a java to http client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
@@ -34,7 +34,7 @@ public static void main(String... args) {
                        .target(GitHub.class, "https://api.github.com");
 
   // Fetch and print a list of the contributors to this library.
-  List<Contributor> contributors = github.contributors("netflix", "feign");
+  List<Contributor> contributors = github.contributors("OpenFeign", "feign");
   for (Contributor contributor : contributors) {
     System.out.println(contributor.login + " (" + contributor.contributions + ")");
   }
@@ -67,7 +67,7 @@ CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(use
 Feign includes example [GitHub](./example-github) and [Wikipedia](./example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
 
 ### Integrations
-Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+Feign intends to work well with other Open Source tools.  Modules are welcome to integrate with your favorite projects!
 
 ### Gson
 [Gson](./gson) includes an encoder and decoder you can use with a JSON API.
