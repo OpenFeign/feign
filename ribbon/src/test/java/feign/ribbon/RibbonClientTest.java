@@ -57,26 +57,6 @@ public class RibbonClientTest {
   @Rule
   public final MockWebServer server2 = new MockWebServer();
 
-  private static String oldRetryConfig = null;
-
-  private static final String SUN_RETRY_PROPERTY = "sun.net.http.retryPost";
-
-  @BeforeClass
-  public static void disableSunRetry() throws Exception {
-    // The Sun HTTP Client retries all requests once on an IOException, which makes testing retry code harder than would
-    // be ideal. We can only disable it for post, so lets at least do that.
-    oldRetryConfig = System.setProperty(SUN_RETRY_PROPERTY, "false");
-  }
-
-  @AfterClass
-  public static void resetSunRetry() throws Exception {
-    if (oldRetryConfig == null) {
-      System.clearProperty(SUN_RETRY_PROPERTY);
-    } else {
-      System.setProperty(SUN_RETRY_PROPERTY, oldRetryConfig);
-    }
-  }
-
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
     return "localhost:" + url.getPort();
@@ -101,12 +81,12 @@ public class RibbonClientTest {
 
     assertEquals(1, server1.getRequestCount());
     assertEquals(1, server2.getRequestCount());
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
   @Test
   public void ioExceptionRetry() throws IOException, InterruptedException {
+    // URLConnection retries once without propagating the error, so we actually need to error twice to test the retryer
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
@@ -119,13 +99,13 @@ public class RibbonClientTest {
 
     api.post();
 
-    assertEquals(2, server1.getRequestCount());
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    assertEquals(3, server1.getRequestCount());
   }
 
   @Test
   public void ioExceptionFailsAfterTooManyFailures() throws IOException, InterruptedException {
+    // URLConnection retries once without propagating the error, so we actually need to error twice to test the retryer
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
@@ -142,15 +122,18 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    assertEquals(1, server1.getRequestCount());
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    assertEquals(2, server1.getRequestCount());
   }
 
   @Test
   public void ribbonRetryConfigurationOnSameServer() throws IOException, InterruptedException {
+    // URLConnection retries once without propagating the error, so we actually need to error twice as many times
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
@@ -168,16 +151,19 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    assertTrue(server1.getRequestCount() == 2 || server2.getRequestCount() == 2);
-    assertEquals(2, server1.getRequestCount() + server2.getRequestCount());
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    assertTrue(server1.getRequestCount() == 4 || server2.getRequestCount() == 4);
+    assertEquals(4, server1.getRequestCount() + server2.getRequestCount());
   }
 
   @Test
   public void ribbonRetryConfigurationOnMultipleServers() throws IOException, InterruptedException {
+    // URLConnection retries once without propagating the error, so we actually need to error twice as many times
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+    server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
@@ -195,10 +181,8 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    assertEquals(1, server1.getRequestCount());
-    assertEquals(1, server2.getRequestCount());
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
+    assertEquals(2, server1.getRequestCount());
+    assertEquals(2, server2.getRequestCount());
   }
 
   /*
@@ -262,8 +246,6 @@ public class RibbonClientTest {
     api.post();
 
     assertEquals(server1.getRequestCount(), 2);
-    // TODO: verify ribbon stats match
-    // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
   
   @Test
