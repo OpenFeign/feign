@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (C) 2016 Marvin Herman Froeder (marvin@marvinformatics.com)
+    Copyright (C) 2017 Marvin Herman Froeder (marvin@marvinformatics.com)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.6.201602180812</version>
+        <version>0.7.7.201606060606</version>
         <executions>
           <execution>
             <goals>
@@ -134,7 +134,7 @@
       <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.1.0</version>
+        <version>4.2.0</version>
         <configuration>
           <skip>${skipTests}</skip>
           <repoToken>${coveralls.token}</repoToken>
@@ -181,6 +181,7 @@
         <groupId>com.marvinformatics.formatter</groupId>
         <artifactId>formatter-maven-plugin</artifactId>
         <version>1.7.0</version>
+        <inherited>false</inherited>
         <configuration>
           <sourceDirectory>${project.basedir}</sourceDirectory>
           <excludes>
@@ -189,6 +190,7 @@
           </excludes>
           <lineEnding>LF</lineEnding>
           <configFile>${project.basedir}/src/config/eclipse/formatter/java.xml</configFile>
+          <configJsFile>${project.basedir}/src/config/eclipse/formatter/java.xml</configJsFile>
         </configuration>
         <executions>
           <execution>
@@ -255,6 +257,7 @@
         <version>2.10</version>
         <configuration>
           <failOnWarning>true</failOnWarning>
+          <ignoreNonCompile>true</ignoreNonCompile>
         </configuration>
         <executions>
           <execution>
@@ -262,6 +265,7 @@
             <goals>
               <goal>analyze-only</goal>
             </goals>
+            <phase>process-classes</phase>
           </execution>
         </executions>
       </plugin>
@@ -271,7 +275,7 @@
 
   <url>https://github.com/velo/feign-spring/</url>
 
-  <inceptionYear>2016</inceptionYear>
+  <inceptionYear>2017</inceptionYear>
 
   <licenses>
     <license>
