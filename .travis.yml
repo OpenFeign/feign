@@ -1,0 +1,14 @@
+language: java
+
+os:
+  - linux
+jdk:
+  - openjdk7
+  - oraclejdk7
+  - oraclejdk8
+
+install:
+  - mvn dependency:go-offline -Pci -Pskip-formatter -DskipTests=true -q
+
+script:
+  - mvn install -Pci -B

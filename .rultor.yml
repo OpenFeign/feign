@@ -1,0 +1,42 @@
+#
+# Copyright (C) 2016 Marvin Herman Froeder (marvin@marvinformatics.com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+architect:
+- velo
+
+assets:
+  secring.gpg: velo/.assets#maven/secring.gpg
+  settings.xml: velo/.assets#maven/settings.xml
+  pubring.gpg: velo/.assets#maven/pubring.gpg
+
+merge:
+  commanders:
+  - velo
+  script: |-
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
+    mvn install -Pci -B --settings ../settings.xml
+
+env:
+  MAVEN_OPTS: -XX:MaxPermSize=256m -Xmx1g
+
+release:
+  script: |-
+    mvn install dependency:go-offline -Pskip-formatter -DskipTests=true -q --settings ../settings.xml -Dgpg.homedir=..
+    mvn versions:set "-DnewVersion=${tag}"
+    git commit -am "${tag}"
+    mvn deploy -Pci -B -Prelease --settings ../settings.xml -Dgpg.homedir=..
+  commanders:
+  - velo
