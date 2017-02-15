@@ -29,7 +29,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <coveralls.token>2eqQw3qR9E45S5WR17mvXpn8nI43Vmba8</coveralls.token>
+    <coveralls.token>8xRu3MxQxJOTANTng3Mt89Q3BhbUwtIQB</coveralls.token>
 
     <java.version>1.7</java.version>
     <feign.version>9.4.0</feign.version>
@@ -180,7 +180,7 @@
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
         <artifactId>formatter-maven-plugin</artifactId>
-        <version>1.6.0.RC4</version>
+        <version>1.7.0</version>
         <configuration>
           <sourceDirectory>${project.basedir}</sourceDirectory>
           <excludes>
@@ -189,15 +189,7 @@
           </excludes>
           <lineEnding>LF</lineEnding>
           <configFile>${project.basedir}/src/config/eclipse/formatter/java.xml</configFile>
-          <configJsFile>${project.basedir}/src/config/eclipse/formatter/javascript.xml</configJsFile>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-            <version>3.0.22</version>
-          </dependency>
-        </dependencies>
         <executions>
           <execution>
             <id>format</id>
