@@ -89,7 +89,7 @@ In example above, we send file in parameter named **photo** with additional fiel
 
 > **IMPORTANT:** You can specify your files in API method by declaring type **File** or **byte[]**.
 
-### Spring MultipartFile and Spring Cloud Netflix @FeingClient support
+### Spring MultipartFile and Spring Cloud Netflix @FeignClient support
 
 You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`.
 
