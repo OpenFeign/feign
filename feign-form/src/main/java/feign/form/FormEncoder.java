@@ -91,11 +91,13 @@ public class FormEncoder implements Encoder {
     processors = new HashMap<String, FormDataProcessor>(2, 1.F);
 
     val formEncodedDataProcessor = new FormEncodedDataProcessor();
-    processors.put(formEncodedDataProcessor.getSupportetContentType(), formEncodedDataProcessor);
+    processors.put(
+        formEncodedDataProcessor.getSupportetContentType().toLowerCase(), formEncodedDataProcessor);
 
     val multipartEncodedDataProcessor = new MultipartEncodedDataProcessor();
     processors.put(
-        multipartEncodedDataProcessor.getSupportetContentType(), multipartEncodedDataProcessor);
+        multipartEncodedDataProcessor.getSupportetContentType().toLowerCase(),
+        multipartEncodedDataProcessor);
   }
 
   @Override
@@ -107,11 +109,11 @@ public class FormEncoder implements Encoder {
 
     String formType = "";
     for (Map.Entry<String, Collection<String>> entry : template.headers().entrySet()) {
-      if (!entry.getKey().equals("Content-Type")) {
+      if (!entry.getKey().equalsIgnoreCase("Content-Type")) {
         continue;
       }
       for (String contentType : entry.getValue()) {
-        if (processors.containsKey(contentType)) {
+        if (contentType != null && processors.containsKey(contentType.toLowerCase())) {
           formType = contentType;
           break;
         }
