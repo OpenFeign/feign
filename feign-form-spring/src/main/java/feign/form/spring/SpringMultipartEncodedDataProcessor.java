@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Artem Labazin <xxlabaza@gmail.com>.
+ * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import feign.form.MultipartEncodedDataProcessor;
 
 /**
  * Adds support for {@link MultipartFile} type to {@link MultipartEncodedDataProcessor}.
- * 
+ *
  * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
  * @since 14.09.2016
  */
 public class SpringMultipartEncodedDataProcessor extends MultipartEncodedDataProcessor {
 
-    
+
     @Override
     protected boolean isFile (Object value) {
         return super.isFile(value) || value instanceof MultipartFile;

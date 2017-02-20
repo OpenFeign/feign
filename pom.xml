@@ -7,13 +7,13 @@
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.8</version>
+  <version>2.0.9</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.4.2.RELEASE</version>
+    <version>1.4.3.RELEASE</version>
   </parent>
 
   <modules>
@@ -34,7 +34,7 @@
     Simple encoder for Netflix Feign project, which adds forms support (urlencoded and multipart)
   </description>
   <url>https://github.com/OpenFeign/feign-form</url>
-  <inceptionYear>2016</inceptionYear>
+  <inceptionYear>2017</inceptionYear>
 
   <licenses>
     <license>
@@ -48,7 +48,7 @@
     <url>https://github.com/OpenFeign/feign-form</url>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>2.0.8</tag>
+    <tag>2.0.9</tag>
   </scm>
 
   <developers>
@@ -93,7 +93,7 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
-      <version>9.3.1</version>
+      <version>9.4.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -109,7 +109,7 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
-      <version>9.3.1</version>
+      <version>9.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
