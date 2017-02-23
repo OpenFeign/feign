@@ -50,4 +50,14 @@ public interface IMultipartSupportService {
       @RequestBody MultipartFile file,
       @PathVariable("folder") String folder,
       @RequestParam(value = "message", required = false) String message);
+
+  @RequestMapping(
+      value = "/multipart/upload3/{folder}",
+      method = RequestMethod.POST,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  String upload3(
+      @RequestBody MultipartFile file,
+      @PathVariable("folder") String folder,
+      @RequestParam(value = "message", required = false) String message);
 }

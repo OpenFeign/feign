@@ -47,4 +47,9 @@ public class MultipartSupportService implements IMultipartSupportService {
       throw new RuntimeException("Can't get file content", e);
     }
   }
+
+  @Override
+  public String upload3(MultipartFile file, String folder, String message) {
+    return file.getOriginalFilename() + ":" + file.getContentType();
+  }
 }

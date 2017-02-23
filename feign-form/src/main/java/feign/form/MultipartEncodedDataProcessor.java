@@ -58,7 +58,7 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
       for (Map.Entry<String, Object> entry : data.entrySet()) {
         writer.append("--" + boundary).append(CRLF);
         if (isFile(entry.getValue())) {
-          writeFile(outputStream, writer, entry.getKey(), entry.getValue());
+          writeByteOrFile(outputStream, writer, entry.getKey(), entry.getValue());
         } else {
           writeParameter(writer, entry.getKey(), entry.getValue().toString());
         }
@@ -101,15 +101,16 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
    *
    * @param output output stream to remote destination.
    * @param writer wrapped output stream.
-   * @param name file's name.
-   * @param value file's content.
+   * @param name - the name of the file
+   * @param value - file's content. Byte array or {@link File}
    */
-  protected void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
+  protected void writeByteOrFile(
+      OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof byte[]) {
-      writeFile(output, writer, name, (byte[]) value);
+      writeByteArray(output, writer, name, null, null, (byte[]) value);
       return;
     }
-    writeFile(output, writer, name, (File) value);
+    writeFile(output, writer, name, null, (File) value);
   }
 
   private String createBoundary() {
@@ -122,9 +123,19 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
     writer.append(CRLF).append(value);
   }
 
+  /**
+   * Writes file to output stream.
+   *
+   * @param output output stream to remote destination.
+   * @param writer wrapped output stream.
+   * @param name - the name of the file
+   * @param contentType - the content type (if known)
+   * @param file - file
+   */
   @SneakyThrows
-  private void writeFile(OutputStream output, PrintWriter writer, String name, File file) {
-    writeFileMeta(writer, name, file.getName());
+  protected void writeFile(
+      OutputStream output, PrintWriter writer, String name, String contentType, File file) {
+    writeFileMeta(writer, name, file.getName(), contentType);
 
     InputStream input = null;
     try {
@@ -142,14 +153,31 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
     writer.flush();
   }
 
+  /**
+   * Writes file's content to output stream.
+   *
+   * @param output output stream to remote destination.
+   * @param writer wrapped output stream.
+   * @param name - the name of the file
+   * @param originalFilename - the original filename (as on the client's machine)
+   * @param contentType - the content type (if known)
+   * @param bytes file's content.
+   */
   @SneakyThrows
-  private void writeFile(OutputStream output, PrintWriter writer, String name, byte[] bytes) {
-    writeFileMeta(writer, name, "");
+  protected void writeByteArray(
+      OutputStream output,
+      PrintWriter writer,
+      String name,
+      String originalFilename,
+      String contentType,
+      byte[] bytes) {
+    writeFileMeta(writer, name, originalFilename, contentType);
     output.write(bytes);
     writer.flush();
   }
 
-  private void writeFileMeta(PrintWriter writer, String name, String fileName) {
+  private void writeFileMeta(
+      PrintWriter writer, String name, String fileName, String contentValue) {
     val contentDesposition =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
@@ -160,7 +188,9 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
             .append("\"")
             .toString();
 
-    String contentValue = URLConnection.guessContentTypeFromName(fileName);
+    if (contentValue == null && fileName != null) {
+      contentValue = URLConnection.guessContentTypeFromName(fileName);
+    }
     if (contentValue == null) {
       contentValue = "application/octet-stream";
     }

@@ -36,16 +36,19 @@ public class SpringMultipartEncodedDataProcessor extends MultipartEncodedDataPro
   }
 
   @Override
-  protected void writeFile(OutputStream output, PrintWriter writer, String name, Object value) {
+  protected void writeByteOrFile(
+      OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof MultipartFile) {
       try {
-        writeFile(output, writer, name, ((MultipartFile) value).getBytes());
+        MultipartFile mpf = (MultipartFile) value;
+        writeByteArray(
+            output, writer, name, mpf.getOriginalFilename(), mpf.getContentType(), mpf.getBytes());
       } catch (IOException e) {
         throw new EncodeException("Can't encode MultipartFile", e);
       }
       return;
     }
 
-    super.writeFile(output, writer, name, value);
+    super.writeByteOrFile(output, writer, name, value);
   }
 }
