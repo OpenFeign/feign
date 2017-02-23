@@ -60,4 +60,12 @@ public class FeignClientAnnotatedInterfaceTest {
 
         Assert.assertEquals("test:message text", response);
     }
+    
+    @Test
+    public void uploadFileNameAndContentTypeTest () throws Exception {
+    	MultipartFile file = new MockMultipartFile("file", "hello.dat", "application/octet-stream", "test".getBytes(UTF_8));
+    	String response = client.upload3(file, "test folder", "message text");
+    	
+    	Assert.assertEquals("hello.dat:application/octet-stream", response);
+    }
 }
