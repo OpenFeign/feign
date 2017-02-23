@@ -57,7 +57,7 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
       val writer = new PrintWriter(outputStream);
       for (Map.Entry<String, Object> entry : data.entrySet()) {
         writer.append("--" + boundary).append(CRLF);
-        if (isFile(entry.getValue())) {
+        if (isPayload(entry.getValue())) {
           writeByteOrFile(outputStream, writer, entry.getKey(), entry.getValue());
         } else {
           writeParameter(writer, entry.getKey(), entry.getValue().toString());
@@ -92,7 +92,7 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
    *
    * @param value form file parameter.
    */
-  protected boolean isFile(Object value) {
+  protected boolean isPayload(Object value) {
     return value != null && (value instanceof File || value instanceof byte[]);
   }
 
@@ -101,16 +101,16 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
    *
    * @param output output stream to remote destination.
    * @param writer wrapped output stream.
-   * @param name - the name of the file
-   * @param value - file's content. Byte array or {@link File}
+   * @param name the name of the file.
+   * @param value file's content. Byte array or {@link File}.
    */
   protected void writeByteOrFile(
       OutputStream output, PrintWriter writer, String name, Object value) {
     if (value instanceof byte[]) {
       writeByteArray(output, writer, name, null, null, (byte[]) value);
-      return;
+    } else {
+      writeFile(output, writer, name, null, (File) value);
     }
-    writeFile(output, writer, name, null, (File) value);
   }
 
   private String createBoundary() {
@@ -124,13 +124,13 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
   }
 
   /**
-   * Writes file to output stream.
+   * Writes file to output stream as a {@link File}.
    *
    * @param output output stream to remote destination.
    * @param writer wrapped output stream.
-   * @param name - the name of the file
-   * @param contentType - the content type (if known)
-   * @param file - file
+   * @param name the name of the file.
+   * @param contentType the content type (if known).
+   * @param file file object.
    */
   @SneakyThrows
   protected void writeFile(
@@ -154,13 +154,13 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
   }
 
   /**
-   * Writes file's content to output stream.
+   * Writes file's content to output stream as a byte array.
    *
-   * @param output output stream to remote destination.
+   * @param output utput stream to remote destination.
    * @param writer wrapped output stream.
-   * @param name - the name of the file
-   * @param originalFilename - the original filename (as on the client's machine)
-   * @param contentType - the content type (if known)
+   * @param name the name of the file.
+   * @param originalFilename the original filename (as on the client's machine).
+   * @param contentType the content type (if known).
    * @param bytes file's content.
    */
   @SneakyThrows
@@ -188,11 +188,11 @@ public class MultipartEncodedDataProcessor implements FormDataProcessor {
             .append("\"")
             .toString();
 
-    if (contentValue == null && fileName != null) {
-      contentValue = URLConnection.guessContentTypeFromName(fileName);
-    }
     if (contentValue == null) {
-      contentValue = "application/octet-stream";
+      contentValue =
+          fileName != null
+              ? URLConnection.guessContentTypeFromName(fileName)
+              : "application/octet-stream";
     }
     val contentType = new StringBuilder().append("Content-Type: ").append(contentValue).toString();
 

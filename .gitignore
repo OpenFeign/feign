@@ -111,3 +111,4 @@ nb-configuration.xml
 # Test output log file
 *.txt*
 .DS_Store
+.vscode/

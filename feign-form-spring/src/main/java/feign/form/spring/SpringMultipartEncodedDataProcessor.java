@@ -31,8 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class SpringMultipartEncodedDataProcessor extends MultipartEncodedDataProcessor {
 
   @Override
-  protected boolean isFile(Object value) {
-    return super.isFile(value) || value instanceof MultipartFile;
+  protected boolean isPayload(Object value) {
+    return super.isPayload(value) || value instanceof MultipartFile;
   }
 
   @Override
