@@ -32,17 +32,16 @@ import feign.form.MultipartEncodedDataProcessor;
  */
 public class SpringMultipartEncodedDataProcessor extends MultipartEncodedDataProcessor {
 
-
     @Override
-    protected boolean isFile (Object value) {
-        return super.isFile(value) || value instanceof MultipartFile;
+    protected boolean isPayload (Object value) {
+        return super.isPayload(value) || value instanceof MultipartFile;
     }
 
     @Override
-	protected void writeByteOrFile (OutputStream output, PrintWriter writer, String name, Object value) {
+    protected void writeByteOrFile (OutputStream output, PrintWriter writer, String name, Object value) {
         if (value instanceof MultipartFile) {
             try {
-            	MultipartFile mpf = (MultipartFile) value;
+                MultipartFile mpf = (MultipartFile) value;
                 writeByteArray(output, writer, name, mpf.getOriginalFilename(), mpf.getContentType(), mpf.getBytes());
             } catch (IOException e) {
                 throw new EncodeException("Can't encode MultipartFile", e);
