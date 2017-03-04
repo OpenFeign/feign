@@ -37,7 +37,8 @@ interface GitHub {
 
     @ErrorHandling(codeSpecific =
         {
-            @ErrorCodes( codes = {404}, generate = NonExistenRepoException.class),
+            @ErrorCodes( codes = {404}, generate = NonExistentRepoException.class),
+            @ErrorCodes( codes = {502, 503, 504}, generate = RetryAfterCertainTimeException.class),
         },
         defaultException = FailedToGetContributorsException.class
     )
@@ -49,6 +50,7 @@ In the above example, error responses to 'contributors' would hence be mapped as
 * 401 => UnAuthorizedException (from Class definition)
 * 403 => ForbiddenException (from Class definition)
 * 404 => NonExistenRepoException (from Method definition, note that the class generic exception won't be thrown here)
+* 502,503,504 => RetryAfterCertainTimeException (from method definition. Note that you can have multiple error codes generate the same type of exception)
 * any other => FailedToGetContributorsException (from Method default)
 
 For a class level default exception to be thrown, the method must not have a defaultException defined, nor must the error code
