@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface ErrorHandling {
-    StatusCodes[] codeSpecific() default {};
+    ErrorCodes[] codeSpecific() default {};
     Class<? extends Exception> defaultException() default NO_DEFAULT.class;
 
     final class NO_DEFAULT extends Exception {}

@@ -1,6 +1,7 @@
 package feign.error;
 
 import feign.Response;
+import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
 import java.lang.reflect.Method;
@@ -36,6 +37,8 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
     public static class Builder {
         private final Class<?> apiType;
         private ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
+        private Decoder responseBodyDecoder = new Decoder.Default();
+
 
         public Builder(Class<?> apiType) {
             this.apiType = apiType;
@@ -53,12 +56,14 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
 
         Map<String, MethodErrorHandler> generateErrorHandlerMapFromApi(Class<?> apiType) {
 
-            ExceptionConstructorDefinition classLevelDefault =
-                ExceptionConstructorDefinition.createExceptionConstructorDefinition(ErrorHandling.NO_DEFAULT.class);
-            Map<Integer, ExceptionConstructorDefinition> classLevelStatusCodeDefinitions = new HashMap<Integer, ExceptionConstructorDefinition>();
+            ExceptionGenerator classLevelDefault = new ExceptionGenerator.Builder()
+                .withResponseBodyDecoder(responseBodyDecoder)
+                .withExceptionType(ErrorHandling.NO_DEFAULT.class)
+                .build();
+            Map<Integer, ExceptionGenerator> classLevelStatusCodeDefinitions = new HashMap<Integer, ExceptionGenerator>();
 
             if(apiType.isAnnotationPresent(ErrorHandling.class)) {
-                ErrorHandlingDefinition classErrorHandlingDefinition = readAnnotation(apiType.getAnnotation(ErrorHandling.class));
+                ErrorHandlingDefinition classErrorHandlingDefinition = readAnnotation(apiType.getAnnotation(ErrorHandling.class), responseBodyDecoder);
                 classLevelDefault = classErrorHandlingDefinition.defaultThrow;
                 classLevelStatusCodeDefinitions = classErrorHandlingDefinition.statusCodesMap;
             }
@@ -66,8 +71,8 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
             Map<String, MethodErrorHandler> methodErrorHandlerMap = new HashMap<String, MethodErrorHandler>();
             for(Method method : apiType.getMethods()) {
                 if(method.isAnnotationPresent(ErrorHandling.class)) {
-                    ErrorHandlingDefinition methodErrorHandling = readAnnotation(method.getAnnotation(ErrorHandling.class));
-                    ExceptionConstructorDefinition methodDefault = methodErrorHandling.defaultThrow;
+                    ErrorHandlingDefinition methodErrorHandling = readAnnotation(method.getAnnotation(ErrorHandling.class), responseBodyDecoder);
+                    ExceptionGenerator methodDefault = methodErrorHandling.defaultThrow;
                     if(methodDefault.getExceptionType().equals(ErrorHandling.NO_DEFAULT.class)) {
                         methodDefault = classLevelDefault;
                     }
@@ -82,12 +87,14 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
             return methodErrorHandlerMap;
         }
 
-        static ErrorHandlingDefinition readAnnotation(ErrorHandling errorHandling) {
-            ExceptionConstructorDefinition defaultException =
-                ExceptionConstructorDefinition.createExceptionConstructorDefinition(errorHandling.defaultException());
-            Map<Integer, ExceptionConstructorDefinition> statusCodesDefinition = new HashMap<Integer, ExceptionConstructorDefinition>();
+        static ErrorHandlingDefinition readAnnotation(ErrorHandling errorHandling, Decoder responseBodyDecoder) {
+            ExceptionGenerator defaultException = new ExceptionGenerator.Builder()
+                .withResponseBodyDecoder(responseBodyDecoder)
+                .withExceptionType(errorHandling.defaultException())
+                .build();
+            Map<Integer, ExceptionGenerator> statusCodesDefinition = new HashMap<Integer, ExceptionGenerator>();
 
-            for(StatusCodes statusCodeDefinition : errorHandling.codeSpecific()) {
+            for(ErrorCodes statusCodeDefinition : errorHandling.codeSpecific()) {
                 for(int statusCode : statusCodeDefinition.codes()) {
                     if(statusCodesDefinition.containsKey(statusCode)) {
                         throw new IllegalStateException(
@@ -96,7 +103,10 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
                                 "and [" + statusCodeDefinition.generate() + "] - dupe definition");
                     }
                     statusCodesDefinition.put(statusCode,
-                        ExceptionConstructorDefinition.createExceptionConstructorDefinition(statusCodeDefinition.generate()));
+                        new ExceptionGenerator.Builder()
+                            .withResponseBodyDecoder(responseBodyDecoder)
+                            .withExceptionType(statusCodeDefinition.generate())
+                            .build());
                 }
             }
 
@@ -104,11 +114,11 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
         }
 
         private static class ErrorHandlingDefinition {
-            private final ExceptionConstructorDefinition defaultThrow;
-            private final Map<Integer, ExceptionConstructorDefinition> statusCodesMap;
+            private final ExceptionGenerator defaultThrow;
+            private final Map<Integer, ExceptionGenerator> statusCodesMap;
 
 
-            private ErrorHandlingDefinition(ExceptionConstructorDefinition defaultThrow, Map<Integer, ExceptionConstructorDefinition> statusCodesMap) {
+            private ErrorHandlingDefinition(ExceptionGenerator defaultThrow, Map<Integer, ExceptionGenerator> statusCodesMap) {
                 this.defaultThrow = defaultThrow;
                 this.statusCodesMap = statusCodesMap;
             }

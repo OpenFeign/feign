@@ -1,6 +1,6 @@
 package feign.error;
 
-public @interface StatusCodes {
+public @interface ErrorCodes {
     int[] codes();
     Class<? extends Exception> generate();
 }
