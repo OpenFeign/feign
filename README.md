@@ -187,6 +187,20 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
+If you need to pre-process the response before give it to the Decoder, you can use the [InterceptorDecoder](/feign/codec/InterceptorDecoder.java).
+
+```java
+GitHub github = Feign.builder()
+                     .decoder(
+                         new InterceptorDecoder(
+                             new GsonDecoder(), 
+                             (response, type) -> myTransformingLogic(response, type)
+                         )
+                     )
+                     .target(GitHub.class, "https://api.github.com");
+                        
+```
+
 ### Encoders
 The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
