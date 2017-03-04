@@ -29,7 +29,6 @@ import java.net.URL;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -49,7 +48,6 @@ import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
 
-@Ignore
 public class RibbonClientTest {
 
   @Rule
