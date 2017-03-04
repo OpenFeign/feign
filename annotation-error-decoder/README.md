@@ -15,7 +15,7 @@ GitHub github = Feign.builder()
 ```
 
 ##Leveraging the annotations and priority order
-For annotation decoding to work, the class must be annotated with @ErrorHandling tags.
+For annotation decoding to work, the class must be annotated with @ErrorHandling` tags.
 The tags are valid in both the class level as well as method level. They will be treated from 'most specific' to 
 'least specific' in the following order:
 
@@ -47,13 +47,16 @@ interface GitHub {
 }
 ```
 In the above example, error responses to 'contributors' would hence be mapped as follows by status codes:
-* 401 => UnAuthorizedException (from Class definition)
-* 403 => ForbiddenException (from Class definition)
-* 404 => NonExistenRepoException (from Method definition, note that the class generic exception won't be thrown here)
-* 502,503,504 => RetryAfterCertainTimeException (from method definition. Note that you can have multiple error codes generate the same type of exception)
-* any other => FailedToGetContributorsException (from Method default)
 
-For a class level default exception to be thrown, the method must not have a defaultException defined, nor must the error code
+| Code        | Exception                          | Reason                |
+| ----------- | --------------------------------   | --------------------- |
+| 401         | `UnAuthorizedException`            | from Class definition |
+| 403         | `ForbiddenException`               | from Class definition |
+| 404         | `NonExistenRepoException`          | from Method definition, note that the class generic exception won't be thrown here |
+| 502,503,504 | `RetryAfterCertainTimeException`   | from method definition. Note that you can have multiple error codes generate the same type of exception |
+| Any Other   | `FailedToGetContributorsException` | from Method default   |
+
+For a class level default exception to be thrown, the method must not have a `defaultException` defined, nor must the error code
 be mapped at either the method or class level.
 
 If the return code cannot be mapped to any code and no default exceptions have been configured, then the decoder will
