@@ -1,7 +1,5 @@
 package feign.error;
 
-
-import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
