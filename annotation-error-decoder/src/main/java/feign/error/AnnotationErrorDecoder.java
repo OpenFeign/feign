@@ -49,6 +49,11 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
             return this;
         }
 
+        public Builder withResponseBodyDecoder(Decoder responseBodyDecoder) {
+            this.responseBodyDecoder = responseBodyDecoder;
+            return this;
+        }
+
         public AnnotationErrorDecoder build() {
             Map<String, MethodErrorHandler> errorHandlerMap = generateErrorHandlerMapFromApi(apiType);
             return new AnnotationErrorDecoder(errorHandlerMap, defaultDecoder);
