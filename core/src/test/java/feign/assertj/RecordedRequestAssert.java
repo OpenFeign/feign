@@ -62,6 +62,12 @@ public final class RecordedRequestAssert
     return this;
   }
 
+  public RecordedRequestAssert hasOneOfPath(String... expected) {
+    isNotNull();
+    objects.assertIsIn(info, actual.getPath(), expected);
+    return this;
+  }
+
   public RecordedRequestAssert hasBody(String utf8Expected) {
     isNotNull();
     objects.assertEqual(info, actual.getBody().readUtf8(), utf8Expected);
