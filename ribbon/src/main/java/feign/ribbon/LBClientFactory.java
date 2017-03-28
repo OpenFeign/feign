@@ -14,7 +14,7 @@ public interface LBClientFactory {
   /**
    * Uses {@link ClientFactory} static factories from ribbon to create an LBClient.
    */
-  final class Default implements LBClientFactory {
+  public static final class Default implements LBClientFactory {
     @Override
     public LBClient create(String clientName) {
       IClientConfig config = ClientFactory.getNamedConfig(clientName, DisableAutoRetriesByDefaultClientConfig.class);

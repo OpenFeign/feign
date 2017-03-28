@@ -22,14 +22,13 @@ import com.netflix.client.IResponse;
 import com.netflix.client.RequestSpecificRetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
-import com.netflix.client.config.IClientConfigKey;
 import com.netflix.loadbalancer.ILoadBalancer;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,11 +49,11 @@ public final class LBClient extends
     return new LBClient(lb, clientConfig);
   }
 
-  private Set<Integer> parseStatusCodes(String statusCodesString) {
+  static Set<Integer> parseStatusCodes(String statusCodesString) {
     if (statusCodesString == null || statusCodesString.isEmpty()) {
       return Collections.emptySet();
     }
-    Set<Integer> codes = new HashSet<Integer>();
+    Set<Integer> codes = new LinkedHashSet<Integer>();
     for (String codeString: statusCodesString.split(",")) {
       codes.add(Integer.parseInt(codeString));
     }
