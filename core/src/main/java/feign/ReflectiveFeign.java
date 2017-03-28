@@ -273,18 +273,19 @@ public class ReflectiveFeign extends Feign {
 
         Collection<String> values = new ArrayList<String>();
 
+        boolean encoded = metadata.queryMapEncoded();
         Object currValue = currEntry.getValue();
         if (currValue instanceof Iterable<?>) {
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
-            values.add(nextObject == null ? null : nextObject.toString());
+            values.add(nextObject == null ? null : encoded ? nextObject.toString() : RequestTemplate.urlEncode(nextObject.toString()));
           }
         } else {
-          values.add(currValue == null ? null : currValue.toString());
+          values.add(currValue == null ? null : encoded ? currValue.toString() : RequestTemplate.urlEncode(currValue.toString()));
         }
 
-        mutable.query(metadata.queryMapEncoded(), (String) currEntry.getKey(), values);
+        mutable.query(true, encoded ? (String) currEntry.getKey() : RequestTemplate.urlEncode(currEntry.getKey()), values);
       }
       return mutable;
     }
