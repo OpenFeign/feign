@@ -15,10 +15,9 @@ GitHub github = Feign.builder()
 ```
 
 ##Leveraging the annotations and priority order
-For annotation decoding to work, the class must be annotated with @ErrorHandling` tags.
+For annotation decoding to work, the class must be annotated with `@ErrorHandling` tags.
 The tags are valid in both the class level as well as method level. They will be treated from 'most specific' to 
 'least specific' in the following order:
-
 * A code specific exception defined on the method 
 * A code specific exception defined on the class
 * The default exception of the method
