@@ -356,6 +356,35 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMapValueStartingWithBrace() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "{alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("{name", "alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?%7Bname=alice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "%7Balice");
+    api.queryMapEncoded(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("%7Bname", "%7Balice");
+    api.queryMapEncoded(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?%7Bname=%7Balice");
+  }
+
+  @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals(
         "TestInterface#post()", Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
@@ -711,6 +740,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMap(@QueryMap Map<String, Object> queryMap);
+
+    @RequestLine("GET /")
+    void queryMapEncoded(@QueryMap(encoded = true) Map<String, Object> queryMap);
 
     @RequestLine("GET /?name={name}")
     void queryMapWithQueryParams(
