@@ -14,7 +14,7 @@ public class LBClientTest {
   public void testParseCodes() {
     assertEquals(Collections.emptySet(), LBClient.parseStatusCodes(""));
     assertEquals(Collections.emptySet(), LBClient.parseStatusCodes(null));
-    assertEquals(Collections.singleton(500), LBClient.parseStatusCodes("504"));
+    assertEquals(Collections.singleton(504), LBClient.parseStatusCodes("504"));
     assertEquals(new LinkedHashSet<Integer>(Arrays.asList(503, 504)), LBClient.parseStatusCodes("503,504"));
   }
 }
