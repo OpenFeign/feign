@@ -15,6 +15,7 @@
  */
 package feign.slf4j;
 
+import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -27,7 +28,8 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
@@ -37,7 +39,7 @@ import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
  */
 final class RecordingSimpleLogger implements TestRule {
 
-  private String expectedMessages = "";
+  private Matcher<String> expectedMessages = equalTo("");
 
   /**
    * Resets {@link org.slf4j.impl.SimpleLogger} to the new log level.
@@ -60,6 +62,14 @@ final class RecordingSimpleLogger implements TestRule {
    * Newline delimited output that would be sent to stderr.
    */
   RecordingSimpleLogger expectMessages(String expectedMessages) {
+    return expectMessages(equalTo(expectedMessages));
+  }
+
+
+  /**
+   * Matcher to verify log output
+   */
+  RecordingSimpleLogger expectMessages(Matcher<String> expectedMessages) {
     this.expectedMessages = expectedMessages;
     return this;
   }
@@ -77,7 +87,7 @@ final class RecordingSimpleLogger implements TestRule {
         try {
           System.setErr(new PrintStream(buff));
           base.evaluate();
-          assertEquals(expectedMessages, buff.toString());
+          assertThat(buff.toString(), expectedMessages);
         } finally {
           System.setErr(stderr);
         }
