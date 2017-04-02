@@ -20,6 +20,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>feign-optional-decoder</module>
   </modules>
 
   <properties>
