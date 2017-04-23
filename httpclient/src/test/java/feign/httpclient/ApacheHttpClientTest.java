@@ -100,7 +100,7 @@ public class ApacheHttpClientTest extends AbstractClientTest {
 
 
   @Test
-  public void shouldUseDefaultRequestConfigDefaultClient() throws Exception {
+  public void shouldUseDefaultRequestConfigUserClient() throws Exception {
 
     this.apacheHttpClient = new ApacheHttpClient(this.httpClient, true) {
       @Override
