@@ -116,7 +116,7 @@ public final class ApacheHttpClient implements Client {
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
           UnsupportedEncodingException, MalformedURLException, URISyntaxException {
-    RequestBuilder requestBuilder = createRequestBuilder(request.method());
+    RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
     //per request timeouts
 
@@ -177,10 +177,6 @@ public final class ApacheHttpClient implements Client {
     }
 
     return requestBuilder.build();
-  }
-
-  protected RequestBuilder createRequestBuilder(String method) {
-    return RequestBuilder.create(method);
   }
 
   private ContentType getContentType(Request request) {
