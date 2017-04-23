@@ -13,22 +13,19 @@
  */
 package feign.httpclient;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -42,14 +39,9 @@ public class ApacheHttpClientTest extends AbstractClientTest {
 
   ApacheHttpClient apacheHttpClient;
 
-  @Mock
-  RequestBuilder requestBuilder;
-
-  @Mock
-  HttpClient httpClient;
-
-  Request request;
+  CloseableHttpClient httpClient;
   Request.Options options;
+  Request request;
 
 
   @Override
@@ -61,55 +53,47 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   @Before
   public void before() {
 
-    MockitoAnnotations.initMocks(this);
-    when(requestBuilder.getCharset()).thenReturn(Charset.forName("UTF8"));
-
+    this.httpClient = HttpClients.createDefault();
     this.request =
         Request.create("GET", "http://example.com", new HashMap<>(), null, Charset.forName("UTF8"));
     this.options = new Request.Options();
   }
 
+  @After
+  public void after() throws IOException {
+    this.httpClient.close();
+  }
+
 
   @Test
   public void shouldUseEmbeddedRequestConfigDefaultClient() throws Exception {
-    this.apacheHttpClient = new ApacheHttpClient() {
-      @Override
-      protected RequestBuilder createRequestBuilder(String method) {
-        return ApacheHttpClientTest.this.requestBuilder;
-      }
-    };
 
-    this.apacheHttpClient.toHttpUriRequest(this.request, this.options);
-    verify(this.requestBuilder, times(1)).setConfig(any(RequestConfig.class));
+    ApacheHttpClient apacheHttpClient = new ApacheHttpClient();
+    HttpRequestBase httpRequest =
+        (HttpRequestBase) apacheHttpClient.toHttpUriRequest(this.request, this.options);
+
+    assertNotNull(httpRequest.getConfig());
   }
 
 
   @Test
   public void shouldUseEmbeddedRequestConfigUserClient() throws Exception {
 
-    this.apacheHttpClient = new ApacheHttpClient(this.httpClient) {
-      @Override
-      protected RequestBuilder createRequestBuilder(String method) {
-        return ApacheHttpClientTest.this.requestBuilder;
-      }
-    };
+    ApacheHttpClient apacheHttpClient = new ApacheHttpClient(this.httpClient);
+    HttpRequestBase httpRequest =
+        (HttpRequestBase) apacheHttpClient.toHttpUriRequest(this.request, this.options);
 
-    this.apacheHttpClient.toHttpUriRequest(this.request, this.options);
-    verify(this.requestBuilder, times(1)).setConfig(any(RequestConfig.class));
+    assertNotNull(httpRequest.getConfig());
   }
 
 
   @Test
   public void shouldUseDefaultRequestConfigUserClient() throws Exception {
 
-    this.apacheHttpClient = new ApacheHttpClient(this.httpClient, true) {
-      @Override
-      protected RequestBuilder createRequestBuilder(String method) {
-        return ApacheHttpClientTest.this.requestBuilder;
-      }
-    };
+    ApacheHttpClient apacheHttpClient = new ApacheHttpClient(this.httpClient, true);
+    HttpRequestBase httpRequest =
+        (HttpRequestBase) apacheHttpClient.toHttpUriRequest(this.request, this.options);
 
-    this.apacheHttpClient.toHttpUriRequest(this.request, this.options);
-    verify(this.requestBuilder, never()).setConfig(any(RequestConfig.class));
+    assertNull(httpRequest.getConfig());
   }
 }

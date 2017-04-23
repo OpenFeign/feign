@@ -63,20 +63,40 @@ import static feign.Util.UTF_8;
 /*
  * Based on Square, Inc's Retrofit ApacheClient implementation
  */
-public class ApacheHttpClient implements Client {
+public final class ApacheHttpClient implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
   private final HttpClient client;
   private final boolean useDefaultRequestConfig;
 
+  /**
+   * Default constructor. An HttpClient instance is created for you. Feign request
+   * options are used to set up the RequestConfig
+   */
+
   public ApacheHttpClient() {
     this(HttpClientBuilder.create().build());
   }
+
+  /**
+   * Construct using your pre-configured HttpClient. Feign request
+   * options are used to set up the RequestConfig
+   * @param client your ready-to-use HttpClient instance
+   */
 
   public ApacheHttpClient(HttpClient client) {
     this(client, false);
   }
 
+  /**
+   * Construct using your pre-configured HttpClient, allowing you to choose whether
+   * Feign's request options are used to set up the RequestConfig
+   * @param client your ready-to-use HttpClient instance
+   * @param useDefaultRequestConfig true if you have set up a default RequestConfig in your
+   * HttpClient and would like it to be used for Feign calls. false if you'd like Feign to
+   * configure a RequestConfig using its request options.
+   */
+  
   public ApacheHttpClient(HttpClient client, boolean useDefaultRequestConfig) {
     this.client = client;
     this.useDefaultRequestConfig = useDefaultRequestConfig;
@@ -94,7 +114,7 @@ public class ApacheHttpClient implements Client {
     return toFeignResponse(httpResponse).toBuilder().request(request).build();
   }
 
-  protected HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
+  HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
           UnsupportedEncodingException, MalformedURLException, URISyntaxException {
     RequestBuilder requestBuilder = createRequestBuilder(request.method());
 
