@@ -63,17 +63,23 @@ import static feign.Util.UTF_8;
 /*
  * Based on Square, Inc's Retrofit ApacheClient implementation
  */
-public final class ApacheHttpClient implements Client {
+public class ApacheHttpClient implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
   private final HttpClient client;
+  private final boolean useDefaultRequestConfig;
 
   public ApacheHttpClient() {
     this(HttpClientBuilder.create().build());
   }
 
   public ApacheHttpClient(HttpClient client) {
+    this(client, false);
+  }
+
+  public ApacheHttpClient(HttpClient client, boolean useDefaultRequestConfig) {
     this.client = client;
+    this.useDefaultRequestConfig = useDefaultRequestConfig;
   }
 
   @Override
@@ -88,17 +94,20 @@ public final class ApacheHttpClient implements Client {
     return toFeignResponse(httpResponse).toBuilder().request(request).build();
   }
 
-  HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
+  protected HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
           UnsupportedEncodingException, MalformedURLException, URISyntaxException {
-    RequestBuilder requestBuilder = RequestBuilder.create(request.method());
+    RequestBuilder requestBuilder = createRequestBuilder(request.method());
 
     //per request timeouts
-    RequestConfig requestConfig = RequestConfig
-            .custom()
-            .setConnectTimeout(options.connectTimeoutMillis())
-            .setSocketTimeout(options.readTimeoutMillis())
-            .build();
-    requestBuilder.setConfig(requestConfig);
+
+    if(!useDefaultRequestConfig) {
+      RequestConfig requestConfig = RequestConfig
+	  .custom()
+	  .setConnectTimeout(options.connectTimeoutMillis())
+	  .setSocketTimeout(options.readTimeoutMillis())
+	  .build();
+      requestBuilder.setConfig(requestConfig);
+    }
 
     URI uri = new URIBuilder(request.url()).build();
 
@@ -148,6 +157,10 @@ public final class ApacheHttpClient implements Client {
     }
 
     return requestBuilder.build();
+  }
+
+  protected RequestBuilder createRequestBuilder(String method) {
+    return RequestBuilder.create(method);
   }
 
   private ContentType getContentType(Request request) {
