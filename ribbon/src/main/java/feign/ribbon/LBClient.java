@@ -96,7 +96,7 @@ public final class LBClient extends
     Request toRequest() {
       return new RequestTemplate()
           .method(request.method())
-          .append(getUri().toASCIIString())
+          .appendDirectly(getUri().toASCIIString())
           .headers(request.headers())
           .body(request.body(), request.charset())
           .request();
