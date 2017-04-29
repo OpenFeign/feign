@@ -365,13 +365,18 @@ public class RequestTemplateTest {
   
   @Test
   public void appendDirectlytest() throws Exception {
+    // test url with queries whose value is a json string. 
+    // A request with this kind of url may get a response with code 400 since the request line contains "unwise" characters referring to RFC 2396. 
     String url = "http://test.feign.com/query?params=%7b%22int%22%3a1%2c%22string%22%3a%22str%22%7d";
     RequestTemplate templateWithRecode = new RequestTemplate().method("GET").append(url);
     RequestTemplate templateWithoutRecode = new RequestTemplate().method("GET").appendDirectly(url);
 
+    // the method append() will decode the queries then encode them except the values starting with '{'
     assertThat(templateWithRecode.queryLine()).isEqualTo("?params={\"int\":1,\"string\":\"str\"}");
+    // appendDirectly() will not decode or encode the queries at all, so here expect the encoded string
     assertThat(templateWithoutRecode.queryLine()).isEqualTo("?params=%7b%22int%22%3a1%2c%22string%22%3a%22str%22%7d");
     
+    // here to test appendDirectly() will work correctly even though the values are not encoded
     String urlWithoutEncode = "http://test.feign.com/query?params={\"int\":1,\"string\":\"str\"}";
     templateWithoutRecode = new RequestTemplate().method("GET").appendDirectly(urlWithoutEncode);
     assertThat(templateWithRecode.queryLine()).isEqualTo("?params={\"int\":1,\"string\":\"str\"}");
