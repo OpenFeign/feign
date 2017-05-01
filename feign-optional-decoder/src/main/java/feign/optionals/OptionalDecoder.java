@@ -7,12 +7,14 @@ import feign.codec.Decoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.Optional;
 
-public class OptionalDecoder implements Decoder {
+public final class OptionalDecoder implements Decoder {
     final Decoder delegate;
 
     public OptionalDecoder(Decoder delegate) {
+        Objects.requireNonNull(delegate, "Decoder must not be null. ");
         this.delegate = delegate;
     }
 
