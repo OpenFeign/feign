@@ -1,3 +1,6 @@
+### Version 9.4.1
+* 404 responses are no longer swallowed for `void` return types.
+
 ### Version 9.4
 * Adds Builder class to JAXBDecoder for disabling namespace-awareness (defaults to true).
 

@@ -23,6 +23,7 @@ import okhttp3.mockwebserver.SocketPolicy;
 import okhttp3.mockwebserver.MockWebServer;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import okio.Buffer;
 import org.assertj.core.api.Fail;
@@ -598,6 +599,18 @@ public class FeignTest {
   }
 
   @Test
+  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    thrown.expect(IllegalArgumentException.class);
+
+    TestInterface api = new TestInterfaceBuilder()
+        .decode404()
+        .errorDecoder(new IllegalArgumentExceptionOn404())
+        .target("http://localhost:" + server.getPort());
+    api.queryMap(Collections.emptyMap());
+  }
+
+  @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(EncodeException.class);
@@ -799,6 +812,17 @@ public class FeignTest {
     @Override
     public Exception decode(String methodKey, Response response) {
       if (response.status() == 400) {
+        return new IllegalArgumentException("bad zone name");
+      }
+      return super.decode(methodKey, response);
+    }
+  }
+
+  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+
+    @Override
+    public Exception decode(String methodKey, Response response) {
+      if (response.status() == 404) {
         return new IllegalArgumentException("bad zone name");
       }
       return super.decode(methodKey, response);
