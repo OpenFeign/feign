@@ -25,7 +25,6 @@ import okhttp3.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -106,6 +105,9 @@ public final class OkHttpClient implements Client {
 
   private static feign.Response.Body toBody(final ResponseBody input) throws IOException {
     if (input == null || input.contentLength() == 0) {
+      if (input != null) {
+        input.close();
+      }
       return null;
     }
     final Integer length = input.contentLength() >= 0 && input.contentLength() <= Integer.MAX_VALUE ?
