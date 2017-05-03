@@ -15,14 +15,6 @@
  */
 package feign;
 
-import static feign.Util.CONTENT_LENGTH;
-import static feign.Util.UTF_8;
-import static feign.Util.checkArgument;
-import static feign.Util.checkNotNull;
-import static feign.Util.emptyToNull;
-import static feign.Util.toArray;
-import static feign.Util.valuesOrEmpty;
-
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -37,6 +29,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.UTF_8;
+import static feign.Util.checkArgument;
+import static feign.Util.checkNotNull;
+import static feign.Util.emptyToNull;
+import static feign.Util.toArray;
+import static feign.Util.valuesOrEmpty;
 
 /**
  * Builds a request to an http target. Not thread safe. <br> <br><br><b>relationship to JAXRS
@@ -308,17 +308,6 @@ public final class RequestTemplate implements Serializable {
     return this;
   }
 
-  /**
-   * Append the specified {@code value} to {@code url} without decoding or encoding. Append all 
-   * the queries into {@code queries} without decoding or encoding if {@code url} already has queries. 
-   * <br/> <b>Note:</b> The difference between {@link #append(CharSequence value)} and 
-   * {@link appendDirectly(CharSequence value)} is: {@link #append(CharSequence value)} decodes 
-   * the {@code value} then encodes it(encode can see here {@link #encodeIfNotVariable(String)}).
-   * {@link appendDirectly(CharSequence value)} processes the {@code value} directly, which means 
-   * it does not decode or encode at all. <br/>{@link RibbonRequest.toRequest()} should use this method.
-   * @param value the value to append to url/queries
-   * @see #url()
-   */
   public RequestTemplate appendDirectly(CharSequence value) {
 	url.append(value);
 

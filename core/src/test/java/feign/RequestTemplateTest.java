@@ -371,9 +371,5 @@ public class RequestTemplateTest {
 
     assertThat(templateWithRecode.queryLine()).isEqualTo("?params={\"int\":1,\"string\":\"str\"}");
     assertThat(templateWithoutRecode.queryLine()).isEqualTo("?params=%7b%22int%22%3a1%2c%22string%22%3a%22str%22%7d");
-    
-    String urlWithoutEncode = "http://test.feign.com/query?params={\"int\":1,\"string\":\"str\"}";
-    templateWithoutRecode = new RequestTemplate().method("GET").appendDirectly(urlWithoutEncode);
-    assertThat(templateWithRecode.queryLine()).isEqualTo("?params={\"int\":1,\"string\":\"str\"}");
   }
 }
