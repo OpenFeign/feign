@@ -103,6 +103,9 @@ public final class OkHttpClient implements Client {
 
   private static feign.Response.Body toBody(final ResponseBody input) throws IOException {
     if (input == null || input.contentLength() == 0) {
+      if (input != null) {
+        input.close();
+      }
       return null;
     }
     final Integer length =
