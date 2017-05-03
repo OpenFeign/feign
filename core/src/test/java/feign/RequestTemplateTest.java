@@ -362,14 +362,4 @@ public class RequestTemplateTest {
     assertThat(template.queries()).doesNotContain(entry("params[]", asList("not encoded")));
     assertThat(template.queries()).contains(entry("params[]", asList("encoded")));
   }
-  
-  @Test
-  public void appendDirectlytest() throws Exception {
-    String url = "http://test.feign.com/query?params=%7b%22int%22%3a1%2c%22string%22%3a%22str%22%7d";
-    RequestTemplate templateWithRecode = new RequestTemplate().method("GET").append(url);
-    RequestTemplate templateWithoutRecode = new RequestTemplate().method("GET").appendDirectly(url);
-
-    assertThat(templateWithRecode.queryLine()).isEqualTo("?params={\"int\":1,\"string\":\"str\"}");
-    assertThat(templateWithoutRecode.queryLine()).isEqualTo("?params=%7b%22int%22%3a1%2c%22string%22%3a%22str%22%7d");
-  }
 }

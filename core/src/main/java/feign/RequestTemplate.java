@@ -162,60 +162,43 @@ public final class RequestTemplate implements Serializable {
   }
 
   private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
-    return parseQueries(queryLine, true);
-  }
-  
-  private static Map<String, Collection<String>> parseQueriesWithoutDecode(String queryLine) {
-    return parseQueries(queryLine, false);
-  }
-  
-  private static Map<String, Collection<String>> parseQueries(String queryLine, boolean decode) {
     Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
     if (emptyToNull(queryLine) == null) {
       return map;
     }
     if (queryLine.indexOf('&') == -1) {
-      putKV(queryLine, map, decode);
+      putKV(queryLine, map);
     } else {
       char[] chars = queryLine.toCharArray();
       int start = 0;
       int i = 0;
       for (; i < chars.length; i++) {
         if (chars[i] == '&') {
-          putKV(queryLine.substring(start, i), map, decode);
+          putKV(queryLine.substring(start, i), map);
           start = i + 1;
         }
       }
-      putKV(queryLine.substring(start, i), map, decode);
+      putKV(queryLine.substring(start, i), map);
     }
     return map;
   }
 
   private static void putKV(String stringToParse, Map<String, Collection<String>> map) {
-    putKV(stringToParse, map, true);
-  }
-  
-  private static void putKVWithoutDecode(String stringToParse, Map<String, Collection<String>> map) {
-    putKV(stringToParse, map, false);
-  }
-	
-  private static void putKV(String stringToParse, Map<String, Collection<String>> map, boolean decode) {
     String key;
     String value;
     // note that '=' can be a valid part of the value
     int firstEq = stringToParse.indexOf('=');
     if (firstEq == -1) {
-      key = decode ? urlDecode(stringToParse) : stringToParse;
+      key = urlDecode(stringToParse);
       value = null;
     } else {
-      key = decode ? urlDecode(stringToParse.substring(0, firstEq)) : stringToParse.substring(0, firstEq);
-      value =decode ? urlDecode(stringToParse.substring(firstEq + 1)) : stringToParse.substring(firstEq + 1);
+      key = urlDecode(stringToParse.substring(0, firstEq));
+      value = urlDecode(stringToParse.substring(firstEq + 1));
     }
     Collection<String> values = map.containsKey(key) ? map.get(key) : new ArrayList<String>();
     values.add(value);
     map.put(key, values);
   }
-
 
   /** {@link #resolve(Map, Map)}, which assumes no parameter is encoded */
   public RequestTemplate resolve(Map<String, ?> unencoded) {
@@ -306,22 +289,6 @@ public final class RequestTemplate implements Serializable {
     url.append(value);
     url = pullAnyQueriesOutOfUrl(url);
     return this;
-  }
-
-  public RequestTemplate appendDirectly(CharSequence value) {
-	url.append(value);
-
-	// parse out queries without decode
-	int queryIndex = url.indexOf("?");
-	if (queryIndex != -1) {
-		String queryLine = url.substring(queryIndex + 1);
-		Map<String, Collection<String>> firstQueries = parseQueriesWithoutDecode(queryLine);
-		queries.putAll(firstQueries);
-
-		url = new StringBuilder(url.substring(0, queryIndex));
-	}
-
-	return this;
   }
 
   /* @see #url() */
