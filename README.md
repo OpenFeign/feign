@@ -187,7 +187,7 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-If you need to pre-process the response before give it to the Decoder, you can use the [InterceptorDecoder](/feign/codec/InterceptorDecoder.java).
+If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method:
 
 ```java
 GitHub github = Feign.builder()
