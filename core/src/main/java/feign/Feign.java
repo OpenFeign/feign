@@ -15,6 +15,7 @@
  */
 package feign;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -144,6 +145,14 @@ public abstract class Feign {
     }
 
     /**
+     * Allows to map the response before passing it to the decoder.
+     */
+    public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
+      this.decoder = new ResponseMappingDecoder(mapper, decoder);
+      return this;
+    }
+
+    /**
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
@@ -218,5 +227,28 @@ public abstract class Feign {
                                   errorDecoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
     }
+  }
+
+  static class ResponseMappingDecoder implements Decoder {
+
+    private final ResponseMapper mapper;
+    private final Decoder delegate;
+
+    ResponseMappingDecoder(ResponseMapper mapper, Decoder decoder) {
+      this.mapper = mapper;
+      this.delegate = decoder;
+    }
+
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
+      return delegate.decode(mapper.map(response, type), type);
+    }
+  }
+
+  /**
+   * Map function to apply to the response before decoding it.
+   */
+  public interface ResponseMapper {
+    Response map(Response response, Type type);
   }
 }

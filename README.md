@@ -191,14 +191,8 @@ If you need to pre-process the response before give it to the Decoder, you can u
 
 ```java
 GitHub github = Feign.builder()
-                     .decoder(
-                         new InterceptorDecoder(
-                             new GsonDecoder(), 
-                             (response, type) -> myTransformingLogic(response, type)
-                         )
-                     )
+                     .mapAndDecode((response, type) -> myTransformingLogic(response, type), new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
-                        
 ```
 
 ### Encoders

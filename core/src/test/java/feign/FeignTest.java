@@ -23,6 +23,7 @@ import okhttp3.mockwebserver.SocketPolicy;
 import okhttp3.mockwebserver.MockWebServer;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import okio.Buffer;
 import org.assertj.core.api.Fail;
@@ -49,6 +50,7 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
+import feign.Feign.ResponseMappingDecoder;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -658,6 +660,49 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
             .hasPath("/?trim=5.2FSi+");
+  }
+
+  @Test
+  public void responseMapperIsAppliedBeforeDelegate() throws IOException {
+    ResponseMappingDecoder decoder = new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
+    String output = (String) decoder.decode(responseWithText("response"), String.class);
+
+    assertThat(output).isEqualTo("RESPONSE");
+  }
+
+  private Feign.ResponseMapper upperCaseResponseMapper() {
+    return new Feign.ResponseMapper() {
+      @Override
+      public Response map(Response response, Type type) {
+        try {
+          return response
+                  .toBuilder()
+                  .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+                  .build();
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+  }
+
+  private Response responseWithText(String text) {
+    return Response.builder()
+            .body(text, Util.UTF_8)
+            .status(200)
+            .headers(new HashMap<String, Collection<String>>())
+            .build();
+  }
+
+  @Test
+  public void mapAndDecodeExecutesMapFunction() {
+    server.enqueue(new MockResponse().setBody("response!"));
+
+    TestInterface api = new Feign.Builder()
+            .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertEquals(api.post(), "RESPONSE!");
   }
 
   interface TestInterface {

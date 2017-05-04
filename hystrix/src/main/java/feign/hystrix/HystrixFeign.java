@@ -165,6 +165,11 @@ public final class HystrixFeign {
     }
 
     @Override
+    public Builder mapAndDecode(Feign.ResponseMapper mapper, Decoder decoder) {
+      return (Builder) super.mapAndDecode(mapper, decoder);
+    }
+
+    @Override
     public Builder decode404() {
       return (Builder) super.decode404();
     }
