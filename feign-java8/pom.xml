@@ -9,9 +9,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>feign-optional-decoder</artifactId>
-    <name>Feign Optional Decoder</name>
-    <description>Feign Optional Decoder</description>
+    <artifactId>feign-java8</artifactId>
+    <name>Feign Java 8</name>
+    <description>Feign Java 8</description>
 
     <properties>
         <!-- override default bytecode version for src/main from parent pom -->
