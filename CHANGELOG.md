@@ -1,3 +1,6 @@
+### Version 9.5
+* Introduces `feign-java8` with support for `java.util.Optional`
+
 ### Version 9.4.1
 * 404 responses are no longer swallowed for `void` return types.
 
