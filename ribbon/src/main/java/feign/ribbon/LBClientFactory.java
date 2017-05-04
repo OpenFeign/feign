@@ -23,7 +23,7 @@ public interface LBClientFactory {
     }
   }
 
-  IClientConfigKey<String> ServerThrottledStatusCodes = new CommonClientConfigKey<String>("ServerThrottledStatusCodes") {};
+  IClientConfigKey<String> RetryableStatusCodes = new CommonClientConfigKey<String>("RetryableStatusCodes") {};
 
   final class DisableAutoRetriesByDefaultClientConfig extends DefaultClientConfigImpl {
     @Override
@@ -34,7 +34,7 @@ public interface LBClientFactory {
     @Override
     public void loadDefaultValues() {
       super.loadDefaultValues();
-      putDefaultStringProperty(LBClientFactory.ServerThrottledStatusCodes, "");
+      putDefaultStringProperty(LBClientFactory.RetryableStatusCodes, "");
     }
   }
 }

@@ -273,7 +273,7 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
     getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetriesNextServer", 1);
-    getConfigInstance().setProperty(client() + ".ribbon.ServerThrottledStatusCodes", "503,502");
+    getConfigInstance().setProperty(client() + ".ribbon.RetryableStatusCodes", "503,502");
 
     TestInterface
             api =

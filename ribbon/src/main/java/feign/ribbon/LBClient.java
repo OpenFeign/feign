@@ -43,7 +43,7 @@ public final class LBClient extends
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
-  private final Set<Integer> serverThrottledStatusCodes;
+  private final Set<Integer> retryableStatusCodes;
 
   public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
     return new LBClient(lb, clientConfig);
@@ -65,7 +65,7 @@ public final class LBClient extends
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
-    serverThrottledStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.ServerThrottledStatusCodes));
+    retryableStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.RetryableStatusCodes));
   }
 
   @Override
@@ -81,7 +81,7 @@ public final class LBClient extends
       options = new Request.Options(connectTimeout, readTimeout);
     }
     Response response = request.client().execute(request.toRequest(), options);
-    if (serverThrottledStatusCodes.contains(response.status())) {
+    if (retryableStatusCodes.contains(response.status())) {
       response.close();
       throw new ClientException(ClientException.ErrorType.SERVER_THROTTLED);
     }
