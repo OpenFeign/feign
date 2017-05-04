@@ -23,6 +23,7 @@ import okhttp3.mockwebserver.SocketPolicy;
 import okhttp3.mockwebserver.MockWebServer;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import okio.Buffer;
@@ -370,6 +371,39 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMapValueStartingWithBrace() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "{alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest())
+        .hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("{name", "alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest())
+        .hasPath("/?%7Bname=alice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("name", "%7Balice");
+    api.queryMapEncoded(queryMap);
+    assertThat(server.takeRequest())
+        .hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<String, Object>();
+    queryMap.put("%7Bname", "%7Balice");
+    api.queryMapEncoded(queryMap);
+    assertThat(server.takeRequest())
+        .hasPath("/?%7Bname=%7Balice");
+  }
+
+  @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals("TestInterface#post()",
                  Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
@@ -567,6 +601,18 @@ public class FeignTest {
   }
 
   @Test
+  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+    thrown.expect(IllegalArgumentException.class);
+
+    TestInterface api = new TestInterfaceBuilder()
+        .decode404()
+        .errorDecoder(new IllegalArgumentExceptionOn404())
+        .target("http://localhost:" + server.getPort());
+    api.queryMap(Collections.emptyMap());
+  }
+
+  @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
     thrown.expect(EncodeException.class);
@@ -760,6 +806,9 @@ public class FeignTest {
     @RequestLine("GET /")
     void queryMap(@QueryMap Map<String, Object> queryMap);
 
+    @RequestLine("GET /")
+    void queryMapEncoded(@QueryMap(encoded = true) Map<String, Object> queryMap);
+
     @RequestLine("GET /?name={name}")
     void queryMapWithQueryParams(@Param("name") String name, @QueryMap Map<String, Object> queryMap);
 
@@ -808,6 +857,17 @@ public class FeignTest {
     @Override
     public Exception decode(String methodKey, Response response) {
       if (response.status() == 400) {
+        return new IllegalArgumentException("bad zone name");
+      }
+      return super.decode(methodKey, response);
+    }
+  }
+
+  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+
+    @Override
+    public Exception decode(String methodKey, Response response) {
+      if (response.status() == 404) {
         return new IllegalArgumentException("bad zone name");
       }
       return super.decode(methodKey, response);
