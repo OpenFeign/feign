@@ -58,6 +58,7 @@ public final class RequestTemplate implements Serializable {
   private byte[] body;
   private String bodyTemplate;
   private boolean decodeSlash = true;
+  private boolean retried = false;
 
   public RequestTemplate() {
   }
@@ -73,6 +74,7 @@ public final class RequestTemplate implements Serializable {
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
+    this.retried  = toCopy.retried;
   }
 
   private static String urlDecode(String arg) {
@@ -259,7 +261,7 @@ public final class RequestTemplate implements Serializable {
     return Request.create(
         method, url + queryLine(),
         Collections.unmodifiableMap(safeCopy),
-        body, charset
+        body, charset, retried
     );
   }
 
@@ -277,6 +279,11 @@ public final class RequestTemplate implements Serializable {
 
   public RequestTemplate decodeSlash(boolean decodeSlash) {
     this.decodeSlash = decodeSlash;
+    return this;
+  }
+
+  public RequestTemplate retried(boolean retried) {
+    this.retried = retried;
     return this;
   }
   

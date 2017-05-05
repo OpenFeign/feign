@@ -15,27 +15,27 @@
  */
 package feign;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
-import org.junit.Rule;
-import org.junit.Test;
-
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import feign.codec.Decoder;
-import feign.codec.Encoder;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class FeignBuilderTest {
 
@@ -181,6 +181,113 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testRetriedWhenExceededNumberOfRetries() throws Exception {
+    Client client = new Client() {
+      @Override public Response execute(Request request, Request.Options options)
+          throws IOException {
+        throw new IOException();
+      }
+    };
+
+    String url = "http://localhost:" + server.getPort();
+    final AtomicInteger atomicInteger = new AtomicInteger();
+    // Post processor that verifies that retried flag is set for successful retires only
+    // if the exception is to be propagated the RequestTemplate will not have the flag set
+    RequestPostProcessor requestPostProcessor = new RequestPostProcessor() {
+      @Override
+      public void apply(RequestTemplate template, RetryableException exception) {
+        // there will be 4 retries - in each case template should be retried
+        if (atomicInteger.incrementAndGet() != 5) {
+          assertThat(template.request().retried()).isTrue();
+        } else {
+          // with the 5th attempt the exception will be propagated so retried is false
+          assertThat(template.request().retried()).isFalse();
+        }
+        // in every situation exception is set
+        assertThat(exception).isNotNull();
+      }
+    };
+
+    TestInterface api =
+        Feign.builder()
+            .client(client)
+            .requestPostProcessor(requestPostProcessor)
+            .target(TestInterface.class, url);
+
+    try {
+      api.decodedPost();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException e) {
+    }
+  }
+
+  @Test
+  public void testRetriedWhenRequestEventuallyIsSent() throws Exception {
+    String url = "http://localhost:" + server.getPort();
+    final AtomicInteger atomicInteger = new AtomicInteger();
+    // Client to simulate a retry scenario
+    Client client = new Client() {
+      @Override public Response execute(Request request, Request.Options options)
+          throws IOException {
+        // we simulate an exception only for the first request
+        if (atomicInteger.get() == 1) {
+          throw new IOException();
+        } else {
+          // with the second retry (first retry) we send back good result
+          return Response.create(200, "OK", new HashMap<String, Collection<String>>(),
+              "OK", Charset.defaultCharset());
+        }
+      }
+    };
+    // interceptor will be invoked twice (1st request that will fail, 2nd when we retry)
+    RequestInterceptor requestInterceptor = new RequestInterceptor() {
+      @Override public void apply(RequestTemplate template) {
+        if (atomicInteger.get() == 0) {
+          // when first executed, the request should not have been retried
+          // for distributed tracing we could start a span here
+          assertThat(template.request().retried()).isFalse();
+          atomicInteger.incrementAndGet();
+        } else if (atomicInteger.get() == 1) {
+          // with the second passing the request was to be retried
+          // for distributed tracing we could continue a span here
+          assertThat(template.request().retried()).isTrue();
+          atomicInteger.incrementAndGet();
+        }
+      }
+    };
+    RequestPostProcessor requestPostProcessor = new RequestPostProcessor() {
+      @Override
+      public void apply(RequestTemplate template, RetryableException exception) {
+        // after exception was thrown the template should know that it's been retried
+        assertThat(template.request().retried()).isTrue();
+        if (atomicInteger.get() == 1) {
+          // retry should have taken place only in the first passing
+          // thus the exception can't be null
+          // for distributed tracing we would NOT close a span here since it will be retried
+          // also e.g. we could add a tag to a span
+          assertThat(exception).isNotNull();
+        } else {
+          // with the second processing the result was successful so the exception should be null
+          // for distributed tracing we could close a span here
+          assertThat(exception).isNull();
+        }
+      }
+    };
+
+    TestInterface api =
+        Feign.builder()
+            .client(client)
+            .requestInterceptor(requestInterceptor)
+            .requestPostProcessor(requestPostProcessor)
+            .target(TestInterface.class, url);
+
+    assertThat(api.decodedPost()).isEqualTo("OK");
+
+    // request interception should take place only twice (1st request & 2nd retry)
+    assertThat(atomicInteger.get()).isEqualTo(2);
+  }
+
+  @Test
   public void testProvideInvocationHandlerFactory() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
@@ -206,7 +313,7 @@ public class FeignBuilderTest {
     assertThat(server.takeRequest())
         .hasBody("request data");
   }
-  
+
   @Test
   public void testSlashIsEncodedInPathParams() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
@@ -257,7 +364,7 @@ public class FeignBuilderTest {
 
     @RequestLine("POST /")
     String decodedPost();
-    
+
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     byte[] getQueues(@Param("vhost") String vhost);
 

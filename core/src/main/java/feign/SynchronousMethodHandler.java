@@ -16,6 +16,7 @@
 package feign;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -46,9 +47,12 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
+  private final List<RequestPostProcessor> requestPostProcessors;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-                                   List<RequestInterceptor> requestInterceptors, Logger logger,
+                                   List<RequestInterceptor> requestInterceptors,
+                                   List<RequestPostProcessor> requestPostProcessors,
+                                   Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
                                    Decoder decoder, ErrorDecoder errorDecoder, boolean decode404) {
@@ -57,6 +61,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
     this.requestInterceptors =
         checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
+    this.requestPostProcessors =
+        checkNotNull(requestPostProcessors, "requestPostProcessor for %s", target);
     this.logger = checkNotNull(logger, "logger for %s", target);
     this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
@@ -71,15 +77,25 @@ final class SynchronousMethodHandler implements MethodHandler {
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
     Retryer retryer = this.retryer.clone();
+    RetryableException exception = null;
     while (true) {
       try {
+        exception = null;
         return executeAndDecode(template);
       } catch (RetryableException e) {
+        exception = e;
+        template.retried(false);
         retryer.continueOrPropagate(e);
+        // exception wasn't propagated so the request got successfully retried
+        template.retried(true);
         if (logLevel != Logger.Level.NONE) {
           logger.logRetry(metadata.configKey(), logLevel);
         }
         continue;
+      } finally {
+        for (RequestPostProcessor postProcessor : requestPostProcessors) {
+          postProcessor.apply(template, exception);
+        }
       }
     }
   }
@@ -175,15 +191,24 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
+    private final List<RequestPostProcessor> requestPostProcessors;
     private final Logger logger;
     private final Logger.Level logLevel;
     private final boolean decode404;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel, boolean decode404) {
+            Logger.Level logLevel, Logger logger, boolean decode404) {
+      this(client, retryer, requestInterceptors, new ArrayList<RequestPostProcessor>(),
+          logLevel, logger, decode404);
+    }
+
+    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
+            List<RequestPostProcessor> requestPostProcessors, Logger.Level logLevel,
+            Logger logger, boolean decode404) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.requestPostProcessors = checkNotNull(requestPostProcessors, "requestPostProcessors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.decode404 = decode404;
@@ -192,8 +217,9 @@ final class SynchronousMethodHandler implements MethodHandler {
     public MethodHandler create(Target<?> target, MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options, Decoder decoder, ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-                                          logLevel, md, buildTemplateFromArgs, options, decoder,
+      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
+                                          requestPostProcessors, logger, logLevel, md,
+                                          buildTemplateFromArgs, options, decoder,
                                           errorDecoder, decode404);
     }
   }

@@ -33,7 +33,16 @@ public final class Request {
    */
   public static Request create(String method, String url, Map<String, Collection<String>> headers,
                                byte[] body, Charset charset) {
-    return new Request(method, url, headers, body, charset);
+    return create(method, url, headers, body, charset, false);
+  }
+
+  /**
+   * No parameters can be null except {@code body} and {@code charset}. All parameters must be
+   * effectively immutable, via safe copies, not mutating or otherwise.
+   */
+  public static Request create(String method, String url, Map<String, Collection<String>> headers,
+                               byte[] body, Charset charset, boolean retried) {
+    return new Request(method, url, headers, body, charset, retried);
   }
 
   private final String method;
@@ -41,14 +50,20 @@ public final class Request {
   private final Map<String, Collection<String>> headers;
   private final byte[] body;
   private final Charset charset;
+  private final boolean retried;
 
   Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
           Charset charset) {
+    this(method, url, headers, body, charset, false);
+  }
+  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
+          Charset charset, boolean retried) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
+    this.retried = retried;
   }
 
   /* Method to invoke on the server. */
@@ -83,6 +98,14 @@ public final class Request {
    */
   public byte[] body() {
     return body;
+  }
+
+  /**
+   * {@code true} - if the request has been successfully retried
+   * {@code false} - if the request hasn't been retried or number of retries was exceeded
+   */
+  public boolean retried() {
+    return retried;
   }
 
   @Override
