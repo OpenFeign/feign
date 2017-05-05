@@ -6,7 +6,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import feign.*;
+import feign.Client;
+import feign.Contract;
+import feign.Feign;
+import feign.InvocationHandlerFactory;
+import feign.Logger;
+import feign.Request;
+import feign.RequestInterceptor;
+import feign.ResponseMapper;
+import feign.Retryer;
+import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
