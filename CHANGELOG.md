@@ -1,3 +1,6 @@
+### Version 9.5
+* Adds `Feign.Builder.mapAndDecode()` to allow response preprocessing before decoding it.
+
 ### Version 9.4.1
 * 404 responses are no longer swallowed for `void` return types.
 
