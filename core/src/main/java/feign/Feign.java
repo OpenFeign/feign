@@ -244,11 +244,4 @@ public abstract class Feign {
       return delegate.decode(mapper.map(response, type), type);
     }
   }
-
-  /**
-   * Map function to apply to the response before decoding it.
-   */
-  public interface ResponseMapper {
-    Response map(Response response, Type type);
-  }
 }

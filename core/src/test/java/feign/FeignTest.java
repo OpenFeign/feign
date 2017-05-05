@@ -716,8 +716,8 @@ public class FeignTest {
     assertThat(output).isEqualTo("RESPONSE");
   }
 
-  private Feign.ResponseMapper upperCaseResponseMapper() {
-    return new Feign.ResponseMapper() {
+  private ResponseMapper upperCaseResponseMapper() {
+    return new ResponseMapper() {
       @Override
       public Response map(Response response, Type type) {
         try {

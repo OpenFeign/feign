@@ -187,12 +187,14 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method:
+If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method.
+An example use case is dealing with an API that only serves jsonp, you will maybe need to unwrap the jsonp before
+send it to the Json decoder of your choice:
 
 ```java
-GitHub github = Feign.builder()
-                     .mapAndDecode((response, type) -> myTransformingLogic(response, type), new GsonDecoder())
-                     .target(GitHub.class, "https://api.github.com");
+JsonpApi jsonpApi = Feign.builder()
+                         .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
+                         .target(JsonpApi.class, "https://some-jsonp-api.com");
 ```
 
 ### Encoders

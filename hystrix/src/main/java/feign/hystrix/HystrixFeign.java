@@ -6,15 +6,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
-import feign.InvocationHandlerFactory;
-import feign.Logger;
-import feign.Request;
-import feign.RequestInterceptor;
-import feign.Retryer;
-import feign.Target;
+import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -165,7 +157,7 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Builder mapAndDecode(Feign.ResponseMapper mapper, Decoder decoder) {
+    public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
       return (Builder) super.mapAndDecode(mapper, decoder);
     }
 
