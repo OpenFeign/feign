@@ -1,7 +1,5 @@
 package feign.ribbon;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -14,7 +12,17 @@ import org.junit.Test;
 import feign.Request;
 import feign.ribbon.LBClient.RibbonRequest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class LBClientTest {
+
+  @Test
+  public void testParseCodes() {
+    assertThat(LBClient.parseStatusCodes("")).isEmpty();
+    assertThat(LBClient.parseStatusCodes(null)).isEmpty();
+    assertThat(LBClient.parseStatusCodes("504")).contains(504);
+    assertThat(LBClient.parseStatusCodes("503,504")).contains(503, 504);
+  }
 
   @Test
   public void testRibbonRequest() throws URISyntaxException {

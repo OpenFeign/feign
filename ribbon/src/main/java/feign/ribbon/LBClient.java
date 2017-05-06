@@ -20,7 +20,6 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientRequest;
 import com.netflix.client.IResponse;
 import com.netflix.client.RequestSpecificRetryHandler;
-import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -29,12 +28,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import feign.Client;
 import feign.Request;
-import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
 
@@ -44,9 +45,21 @@ public final class LBClient extends
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
+  private final Set<Integer> retryableStatusCodes;
 
   public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
     return new LBClient(lb, clientConfig);
+  }
+
+  static Set<Integer> parseStatusCodes(String statusCodesString) {
+    if (statusCodesString == null || statusCodesString.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<Integer> codes = new LinkedHashSet<Integer>();
+    for (String codeString: statusCodesString.split(",")) {
+      codes.add(Integer.parseInt(codeString));
+    }
+    return codes;
   }
 
   LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
@@ -54,11 +67,12 @@ public final class LBClient extends
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
+    retryableStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.RetryableStatusCodes));
   }
 
   @Override
   public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
-      throws IOException {
+          throws IOException, ClientException {
     Request.Options options;
     if (configOverride != null) {
       options =
@@ -69,6 +83,10 @@ public final class LBClient extends
       options = new Request.Options(connectTimeout, readTimeout);
     }
     Response response = request.client().execute(request.toRequest(), options);
+    if (retryableStatusCodes.contains(response.status())) {
+      response.close();
+      throw new ClientException(ClientException.ErrorType.SERVER_THROTTLED);
+    }
     return new RibbonResponse(request.getUri(), response);
   }
 
