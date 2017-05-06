@@ -187,6 +187,16 @@ GitHub github = Feign.builder()
                      .target(GitHub.class, "https://api.github.com");
 ```
 
+If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method.
+An example use case is dealing with an API that only serves jsonp, you will maybe need to unwrap the jsonp before
+send it to the Json decoder of your choice:
+
+```java
+JsonpApi jsonpApi = Feign.builder()
+                         .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
+                         .target(JsonpApi.class, "https://some-jsonp-api.com");
+```
+
 ### Encoders
 The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
