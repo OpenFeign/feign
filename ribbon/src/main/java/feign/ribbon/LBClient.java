@@ -25,11 +25,13 @@ import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 import feign.Client;
 import feign.Request;
-import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class LBClient
@@ -91,12 +93,15 @@ public final class LBClient
     }
 
     Request toRequest() {
-      return new RequestTemplate()
-          .method(request.method())
-          .append(getUri().toASCIIString())
-          .headers(request.headers())
-          .body(request.body(), request.charset())
-          .request();
+      // add header "Content-Length" according to the request body
+      final byte[] body = request.body();
+      final int bodyLength = body != null ? body.length : 0;
+      // create a new Map to avoid side effect, not to change the old headers
+      Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+      headers.putAll(request.headers());
+      headers.put(Util.CONTENT_LENGTH, Arrays.asList(String.valueOf(bodyLength)));
+      return Request.create(
+          request.method(), getUri().toASCIIString(), headers, body, request.charset());
     }
 
     Client client() {
