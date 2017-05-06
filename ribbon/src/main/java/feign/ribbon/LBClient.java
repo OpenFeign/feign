@@ -29,14 +29,13 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import feign.Client;
 import feign.Request;
-import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
 
