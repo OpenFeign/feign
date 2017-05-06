@@ -1,4 +1,5 @@
 ### Version 9.5
+* Introduces `feign-java8` with support for `java.util.Optional`
 * Adds `Feign.Builder.mapAndDecode()` to allow response preprocessing before decoding it.
 
 ### Version 9.4.1
