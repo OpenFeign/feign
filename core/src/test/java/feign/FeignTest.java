@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import feign.Feign.ResponseMappingDecoder;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -694,6 +696,50 @@ public class FeignTest {
     api.encodedQueryParam("5.2FSi+");
 
     assertThat(server.takeRequest()).hasPath("/?trim=5.2FSi+");
+  }
+
+  @Test
+  public void responseMapperIsAppliedBeforeDelegate() throws IOException {
+    ResponseMappingDecoder decoder =
+        new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
+    String output = (String) decoder.decode(responseWithText("response"), String.class);
+
+    assertThat(output).isEqualTo("RESPONSE");
+  }
+
+  private ResponseMapper upperCaseResponseMapper() {
+    return new ResponseMapper() {
+      @Override
+      public Response map(Response response, Type type) {
+        try {
+          return response.toBuilder()
+              .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+              .build();
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+  }
+
+  private Response responseWithText(String text) {
+    return Response.builder()
+        .body(text, Util.UTF_8)
+        .status(200)
+        .headers(new HashMap<String, Collection<String>>())
+        .build();
+  }
+
+  @Test
+  public void mapAndDecodeExecutesMapFunction() {
+    server.enqueue(new MockResponse().setBody("response!"));
+
+    TestInterface api =
+        new Feign.Builder()
+            .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertEquals(api.post(), "RESPONSE!");
   }
 
   interface TestInterface {
