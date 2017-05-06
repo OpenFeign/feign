@@ -119,7 +119,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
           return super.getFallback();
         }
         try {
-          Object fallback = fallbackFactory.create(getFailedExecutionException());
+          Object fallback = fallbackFactory.create(getExecutionException());
           Object result = fallbackMethodMap.get(method).invoke(fallback, args);
           if (isReturnsHystrixCommand(method)) {
             return ((HystrixCommand) result).execute();

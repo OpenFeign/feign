@@ -1,6 +1,6 @@
 # Feign makes writing java http clients easier
 
-[![Join the chat at https://gitter.im/Netflix/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Netflix/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/OpenFeign/feign.svg?branch=master)](https://travis-ci.org/OpenFeign/feign)
 
 Feign is a java to http client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
@@ -34,7 +34,7 @@ public static void main(String... args) {
                        .target(GitHub.class, "https://api.github.com");
 
   // Fetch and print a list of the contributors to this library.
-  List<Contributor> contributors = github.contributors("netflix", "feign");
+  List<Contributor> contributors = github.contributors("OpenFeign", "feign");
   for (Contributor contributor : contributors) {
     System.out.println(contributor.login + " (" + contributor.contributions + ")");
   }
@@ -60,15 +60,14 @@ Feign can produce multiple api interfaces.  These are defined as `Target<T>` (de
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-Feign feign = Feign.builder().build();
-CloudDNS cloudDNS = feign.target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
 ```
 
 ### Examples
 Feign includes example [GitHub](./example-github) and [Wikipedia](./example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
 
 ### Integrations
-Feign intends to work well within Netflix and other Open Source communities.  Modules are welcome to integrate with your favorite projects!
+Feign intends to work well with other Open Source tools.  Modules are welcome to integrate with your favorite projects!
 
 ### Gson
 [Gson](./gson) includes an encoder and decoder you can use with a JSON API.
@@ -186,6 +185,16 @@ Here's how to configure JSON decoding (using the `feign-gson` extension):
 GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
+```
+
+If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method.
+An example use case is dealing with an API that only serves jsonp, you will maybe need to unwrap the jsonp before
+send it to the Json decoder of your choice:
+
+```java
+JsonpApi jsonpApi = Feign.builder()
+                         .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
+                         .target(JsonpApi.class, "https://some-jsonp-api.com");
 ```
 
 ### Encoders
@@ -360,14 +369,14 @@ In many cases, resource representations are also consistent. For this reason, ty
 interface BaseApi<V> {
 
   @RequestLine("GET /api/{key}")
-  V get(@Param("key") String);
+  V get(@Param("key") String key);
 
   @RequestLine("GET /api")
   List<V> list();
 
   @Headers("Content-Type: application/json")
   @RequestLine("PUT /api/{key}")
-  void put(@Param("key") String, V value);
+  void put(@Param("key") String key, V value);
 }
 
 interface FooApi extends BaseApi<Foo> { }

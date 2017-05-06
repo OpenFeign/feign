@@ -83,7 +83,7 @@ public final class RequestTemplate implements Serializable {
     }
   }
 
-  private static String urlEncode(Object arg) {
+  static String urlEncode(Object arg) {
     try {
       return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
     } catch (UnsupportedEncodingException e) {
