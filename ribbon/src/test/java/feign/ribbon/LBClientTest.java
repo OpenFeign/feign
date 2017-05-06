@@ -15,6 +15,14 @@ import org.junit.Test;
 public class LBClientTest {
 
   @Test
+  public void testParseCodes() {
+    assertThat(LBClient.parseStatusCodes("")).isEmpty();
+    assertThat(LBClient.parseStatusCodes(null)).isEmpty();
+    assertThat(LBClient.parseStatusCodes("504")).contains(504);
+    assertThat(LBClient.parseStatusCodes("503,504")).contains(503, 504);
+  }
+
+  @Test
   public void testRibbonRequest() throws URISyntaxException {
     // test for RibbonRequest.toRequest()
     // the url has a query whose value is an encoded json string

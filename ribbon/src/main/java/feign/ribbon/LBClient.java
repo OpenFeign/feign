@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class LBClient
     extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
@@ -40,9 +43,21 @@ public final class LBClient
   private final int connectTimeout;
   private final int readTimeout;
   private final IClientConfig clientConfig;
+  private final Set<Integer> retryableStatusCodes;
 
   public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
     return new LBClient(lb, clientConfig);
+  }
+
+  static Set<Integer> parseStatusCodes(String statusCodesString) {
+    if (statusCodesString == null || statusCodesString.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<Integer> codes = new LinkedHashSet<Integer>();
+    for (String codeString : statusCodesString.split(",")) {
+      codes.add(Integer.parseInt(codeString));
+    }
+    return codes;
   }
 
   LBClient(ILoadBalancer lb, IClientConfig clientConfig) {
@@ -50,11 +65,12 @@ public final class LBClient
     this.clientConfig = clientConfig;
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
+    retryableStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.RetryableStatusCodes));
   }
 
   @Override
   public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
-      throws IOException {
+      throws IOException, ClientException {
     Request.Options options;
     if (configOverride != null) {
       options =
@@ -65,6 +81,10 @@ public final class LBClient
       options = new Request.Options(connectTimeout, readTimeout);
     }
     Response response = request.client().execute(request.toRequest(), options);
+    if (retryableStatusCodes.contains(response.status())) {
+      response.close();
+      throw new ClientException(ClientException.ErrorType.SERVER_THROTTLED);
+    }
     return new RibbonResponse(request.getUri(), response);
   }
 

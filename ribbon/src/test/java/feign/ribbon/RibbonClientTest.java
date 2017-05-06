@@ -273,6 +273,34 @@ public class RibbonClientTest {
   }
 
   @Test
+  public void ribbonRetryOnStatusCodes() throws IOException, InterruptedException {
+    server1.enqueue(new MockResponse().setResponseCode(502));
+    server2.enqueue(new MockResponse().setResponseCode(503));
+
+    getConfigInstance()
+        .setProperty(
+            serverListKey(),
+            hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetriesNextServer", 1);
+    getConfigInstance().setProperty(client() + ".ribbon.RetryableStatusCodes", "503,502");
+
+    TestInterface api =
+        Feign.builder()
+            .client(RibbonClient.create())
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://" + client());
+
+    try {
+      api.post();
+      fail("No exception thrown");
+    } catch (Exception ignored) {
+
+    }
+    assertEquals(1, server1.getRequestCount());
+    assertEquals(1, server2.getRequestCount());
+  }
+
+  @Test
   public void testFeignOptionsClientConfig() {
     Request.Options options = new Request.Options(1111, 22222);
     IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
