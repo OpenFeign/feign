@@ -13,6 +13,7 @@ import feign.InvocationHandlerFactory;
 import feign.Logger;
 import feign.Request;
 import feign.RequestInterceptor;
+import feign.ResponseMapper;
 import feign.Retryer;
 import feign.Target;
 import feign.codec.Decoder;
@@ -162,6 +163,11 @@ public final class HystrixFeign {
     @Override
     public Builder decoder(Decoder decoder) {
       return (Builder) super.decoder(decoder);
+    }
+
+    @Override
+    public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
+      return (Builder) super.mapAndDecode(mapper, decoder);
     }
 
     @Override
