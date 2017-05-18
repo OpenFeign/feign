@@ -556,21 +556,6 @@ public class DefaultContractTest {
     contract.parseAndValidatateMetadata(OverrideParameterizedApi.class);
   }
 
-  interface Child<T> extends SimpleParameterizedBaseApi<List<T>> {
-
-  }
-
-  interface GrandChild extends Child<String> {
-
-  }
-
-  @Test
-  public void onlySingleLevelInheritanceSupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Only single-level inheritance supported: GrandChild");
-    contract.parseAndValidatateMetadata(GrandChild.class);
-  }
-
   @Headers("Foo: Bar")
   interface ParameterizedBaseApi<K, M> {
 

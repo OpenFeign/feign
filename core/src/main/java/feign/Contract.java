@@ -19,11 +19,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
@@ -47,13 +43,6 @@ public interface Contract {
     public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
       checkState(targetType.getTypeParameters().length == 0, "Parameterized types unsupported: %s",
                  targetType.getSimpleName());
-      checkState(targetType.getInterfaces().length <= 1, "Only single inheritance supported: %s",
-                 targetType.getSimpleName());
-      if (targetType.getInterfaces().length == 1) {
-        checkState(targetType.getInterfaces()[0].getInterfaces().length == 0,
-                   "Only single-level inheritance supported: %s",
-                   targetType.getSimpleName());
-      }
       Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class ||
