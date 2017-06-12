@@ -243,6 +243,19 @@ public abstract class AbstractClientTest {
         assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
     }
 
+    @Test
+    public void testContentTypeDefaultsToRequestCharset() throws Exception {
+        server.enqueue(new MockResponse().setBody("foo"));
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        // should use utf-8 encoding by default
+        api.postWithContentType("àáâãäåèéêë", "text/plain");
+
+        MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
+                .hasBody("àáâãäåèéêë");
+    }
+
     public interface TestInterface {
 
         @RequestLine("POST /?foo=bar&foo=baz&qux=")
