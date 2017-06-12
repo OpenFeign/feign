@@ -157,6 +157,9 @@ public final class ApacheHttpClient implements Client {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           contentType = ContentType.parse(values.iterator().next());
+          if (contentType.getCharset() == null) {
+            contentType = contentType.withCharset(request.charset());
+          }
           break;
         }
       }
