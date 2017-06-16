@@ -117,16 +117,6 @@ public interface Contract {
         }
       }
 
-      if (data.headerMapIndex() != null) {
-        checkState(Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()]),
-                "HeaderMap parameter must be a Map: %s", parameterTypes[data.headerMapIndex()]);
-      }
-
-      if (data.queryMapIndex() != null) {
-        checkState(Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()]),
-                "QueryMap parameter must be a Map: %s", parameterTypes[data.queryMapIndex()]);
-      }
-
       return data;
     }
 

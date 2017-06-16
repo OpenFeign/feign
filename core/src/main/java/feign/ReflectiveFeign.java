@@ -214,11 +214,11 @@ public class ReflectiveFeign extends Feign {
       if (metadata.queryMapIndex() != null) {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
-        template = addQueryMapQueryParameters(argv, template);
+        template = addQueryMapQueryParameters(argv[metadata.queryMapIndex()], template);
       }
 
       if (metadata.headerMapIndex() != null) {
-        template = addHeaderMapHeaders(argv, template);
+        template = addHeaderMapHeaders(argv[metadata.headerMapIndex()], template);
       }
 
       return template;
@@ -242,8 +242,10 @@ public class ReflectiveFeign extends Feign {
     }
 
     @SuppressWarnings("unchecked")
-    private RequestTemplate addHeaderMapHeaders(Object[] argv, RequestTemplate mutable) {
-      Map<Object, Object> headerMap = (Map<Object, Object>) argv[metadata.headerMapIndex()];
+    private RequestTemplate addHeaderMapHeaders(Object headerMapArg, RequestTemplate mutable) {
+      checkState(Map.class.isAssignableFrom(headerMapArg.getClass()),
+              "HeaderMap parameter must be a Map: %s", headerMapArg.getClass());
+      Map<Object, Object> headerMap = (Map<Object, Object>) headerMapArg;
       for (Entry<Object, Object> currEntry : headerMap.entrySet()) {
         checkState(currEntry.getKey().getClass() == String.class, "HeaderMap key must be a String: %s", currEntry.getKey());
 
@@ -266,8 +268,10 @@ public class ReflectiveFeign extends Feign {
     }
 
     @SuppressWarnings("unchecked")
-    private RequestTemplate addQueryMapQueryParameters(Object[] argv, RequestTemplate mutable) {
-      Map<Object, Object> queryMap = (Map<Object, Object>) argv[metadata.queryMapIndex()];
+    private RequestTemplate addQueryMapQueryParameters(Object queryMapArg, RequestTemplate mutable) {
+      checkState(Map.class.isAssignableFrom(queryMapArg.getClass()),
+              "QueryMap parameter must be a Map: %s", queryMapArg);
+      Map<Object, Object> queryMap = (Map<Object, Object>) queryMapArg;
       for (Entry<Object, Object> currEntry : queryMap.entrySet()) {
         checkState(currEntry.getKey().getClass() == String.class, "QueryMap key must be a String: %s", currEntry.getKey());
 

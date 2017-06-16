@@ -319,16 +319,6 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapMustBeInstanceOfMap() throws Exception {
-    try {
-      parseAndValidateMetadata(QueryMapTestInterface.class, "nonMapQueryMap", String.class);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
-      assertThat(ex).hasMessage("QueryMap parameter must be a Map: class java.lang.String");
-    }
-  }
-
-  @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(SlashNeedToBeEncoded.class,
                                                  "getQueues", String.class);
