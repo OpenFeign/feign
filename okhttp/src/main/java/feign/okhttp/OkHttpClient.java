@@ -62,13 +62,12 @@ public final class OkHttpClient implements Client {
       }
 
       for (String value : input.headers().get(field)) {
+        requestBuilder.addHeader(field, value);
         if (field.equalsIgnoreCase("Content-Type")) {
           mediaType = MediaType.parse(value);
           if (input.charset() != null) {
             mediaType.charset(input.charset());
           }
-        } else {
-          requestBuilder.addHeader(field, value);
         }
       }
     }
@@ -79,10 +78,13 @@ public final class OkHttpClient implements Client {
 
     byte[] inputBody = input.body();
     boolean isMethodWithBody = "POST".equals(input.method()) || "PUT".equals(input.method());
-    if (isMethodWithBody && inputBody == null) {
-      // write an empty BODY to conform with okhttp 2.4.0+
-      // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
-      inputBody = new byte[0];
+    if (isMethodWithBody) {
+      requestBuilder.removeHeader("Content-Type");
+      if (inputBody == null) {
+        // write an empty BODY to conform with okhttp 2.4.0+
+        // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
+        inputBody = new byte[0];
+      }
     }
 
     RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
