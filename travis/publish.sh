@@ -60,7 +60,7 @@ check_release_tag() {
 }
 
 is_release_commit() {
-  project_version=$(./mvnw help:evaluate -N -Dexpression=project.version|grep -v '\[')
+  project_version=$(./mvnw help:evaluate -N -Dexpression=project.version|sed -n '/^[0-9]/p')
   if [[ "$project_version" =~ ^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$ ]]; then
     echo "Build started by release commit $project_version. Will synchronize to maven central."
     return 0
