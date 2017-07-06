@@ -20,6 +20,7 @@
     <dependency>
       <groupId>org.jvnet</groupId>
       <artifactId>animal-sniffer-annotation</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
