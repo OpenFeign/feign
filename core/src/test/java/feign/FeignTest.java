@@ -354,23 +354,6 @@ public class FeignTest {
   }
 
   @Test
-  public void queryMapKeysMustBeStrings() throws Exception {
-    server.enqueue(new MockResponse());
-
-    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
-
-    Map<Object, String> queryMap = new LinkedHashMap<Object, String>();
-    queryMap.put(Integer.valueOf(42), "alice");
-
-    try {
-      api.queryMap((Map) queryMap);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
-      assertThat(ex).hasMessage("QueryMap key must be a String: 42");
-    }
-  }
-
-  @Test
   public void queryMapValueStartingWithBrace() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 

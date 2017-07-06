@@ -18,6 +18,8 @@ package feign;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,6 +100,7 @@ public interface Contract {
                  "Method %s not annotated with HTTP method type (ex. GET, POST)",
                  method.getName());
       Class<?>[] parameterTypes = method.getParameterTypes();
+      Type[] genericParameterTypes = method.getGenericParameterTypes();
 
       Annotation[][] parameterAnnotations = method.getParameterAnnotations();
       int count = parameterAnnotations.length;
@@ -113,21 +116,28 @@ public interface Contract {
                      "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
           data.bodyIndex(i);
-          data.bodyType(Types.resolve(targetType, targetType, method.getGenericParameterTypes()[i]));
+          data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
         }
       }
 
       if (data.headerMapIndex() != null) {
-        checkState(Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()]),
-                "HeaderMap parameter must be a Map: %s", parameterTypes[data.headerMapIndex()]);
+        checkMapString("HeaderMap", parameterTypes[data.headerMapIndex()], genericParameterTypes[data.headerMapIndex()]);
       }
 
       if (data.queryMapIndex() != null) {
-        checkState(Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()]),
-                "QueryMap parameter must be a Map: %s", parameterTypes[data.queryMapIndex()]);
+        checkMapString("QueryMap", parameterTypes[data.queryMapIndex()], genericParameterTypes[data.queryMapIndex()]);
       }
 
       return data;
+    }
+
+    private static void checkMapString(String name, Class<?> type, Type genericType) {
+      checkState(Map.class.isAssignableFrom(type),
+              "%s parameter must be a Map: %s", name, type);
+      Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+      Class<?> keyClass = (Class<?>) parameterTypes[0];
+      checkState(String.class.equals(keyClass),
+              "%s key must be a String: %s", name, keyClass.getSimpleName());
     }
 
     /**
