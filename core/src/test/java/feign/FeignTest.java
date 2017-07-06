@@ -49,7 +49,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
-import org.assertj.core.api.Fail;
 import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
@@ -339,23 +338,6 @@ public class FeignTest {
     api.queryMapWithQueryParams("alice", queryMap);
     // null value for a query map key removes query parameter
     assertThat(server.takeRequest()).hasPath("/");
-  }
-
-  @Test
-  public void queryMapKeysMustBeStrings() throws Exception {
-    server.enqueue(new MockResponse());
-
-    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
-
-    Map<Object, String> queryMap = new LinkedHashMap<Object, String>();
-    queryMap.put(Integer.valueOf(42), "alice");
-
-    try {
-      api.queryMap((Map) queryMap);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
-      assertThat(ex).hasMessage("QueryMap key must be a String: 42");
-    }
   }
 
   @Test

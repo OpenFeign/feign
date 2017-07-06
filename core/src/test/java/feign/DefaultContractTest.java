@@ -310,6 +310,16 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void queryMapKeysMustBeStrings() throws Exception {
+    try {
+      parseAndValidateMetadata(QueryMapTestInterface.class, "nonStringKeyQueryMap", Map.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException ex) {
+      assertThat(ex).hasMessage("QueryMap key must be a String: Integer");
+    }
+  }
+
+  @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md =
         parseAndValidateMetadata(SlashNeedToBeEncoded.class, "getQueues", String.class);
@@ -488,6 +498,10 @@ public class DefaultContractTest {
     // invalid
     @RequestLine("POST /")
     void nonMapQueryMap(@QueryMap String notAMap);
+
+    // invalid
+    @RequestLine("POST /")
+    void nonStringKeyQueryMap(@QueryMap Map<Integer, String> queryMap);
   }
 
   interface SlashNeedToBeEncoded {
