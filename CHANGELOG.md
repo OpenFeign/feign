@@ -1,3 +1,6 @@
+### Version 9.5.1
+* Update Okhttp client so that if specified, the content-type is included even without a body.
+
 ### Version 9.5
 * Introduces `feign-java8` with support for `java.util.Optional`
 * Adds `Feign.Builder.mapAndDecode()` to allow response preprocessing before decoding it.
