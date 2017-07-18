@@ -67,13 +67,39 @@ public final class ApacheHttpClient implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
   private final HttpClient client;
+  private final boolean useDefaultRequestConfig;
+
+  /**
+   * Default constructor. An HttpClient instance is created for you. Feign request
+   * options are used to set up the RequestConfig
+   */
 
   public ApacheHttpClient() {
     this(HttpClientBuilder.create().build());
   }
 
+  /**
+   * Construct using your pre-configured HttpClient. Feign request
+   * options are used to set up the RequestConfig
+   * @param client your ready-to-use HttpClient instance
+   */
+
   public ApacheHttpClient(HttpClient client) {
+    this(client, false);
+  }
+
+  /**
+   * Construct using your pre-configured HttpClient, allowing you to choose whether
+   * Feign's request options are used to set up the RequestConfig
+   * @param client your ready-to-use HttpClient instance
+   * @param useDefaultRequestConfig true if you have set up a default RequestConfig in your
+   * HttpClient and would like it to be used for Feign calls. false if you'd like Feign to
+   * configure a RequestConfig using its request options.
+   */
+  
+  public ApacheHttpClient(HttpClient client, boolean useDefaultRequestConfig) {
     this.client = client;
+    this.useDefaultRequestConfig = useDefaultRequestConfig;
   }
 
   @Override
@@ -93,12 +119,15 @@ public final class ApacheHttpClient implements Client {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
     //per request timeouts
-    RequestConfig requestConfig = RequestConfig
-            .custom()
-            .setConnectTimeout(options.connectTimeoutMillis())
-            .setSocketTimeout(options.readTimeoutMillis())
-            .build();
-    requestBuilder.setConfig(requestConfig);
+
+    if(!useDefaultRequestConfig) {
+      RequestConfig requestConfig = RequestConfig
+	  .custom()
+	  .setConnectTimeout(options.connectTimeoutMillis())
+	  .setSocketTimeout(options.readTimeoutMillis())
+	  .build();
+      requestBuilder.setConfig(requestConfig);
+    }
 
     URI uri = new URIBuilder(request.url()).build();
 
