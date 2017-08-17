@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import feign.InvocationHandlerFactory.MethodHandler;
+import feign.MethodHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -30,7 +30,7 @@ import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
 import static feign.Util.ensureClosed;
 
-final class SynchronousMethodHandler implements MethodHandler {
+public class SynchronousMethodHandler implements MethodHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
@@ -47,7 +47,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
 
-  private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
+  public SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
@@ -170,31 +170,4 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
   }
 
-  static class Factory {
-
-    private final Client client;
-    private final Retryer retryer;
-    private final List<RequestInterceptor> requestInterceptors;
-    private final Logger logger;
-    private final Logger.Level logLevel;
-    private final boolean decode404;
-
-    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel, boolean decode404) {
-      this.client = checkNotNull(client, "client");
-      this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.logger = checkNotNull(logger, "logger");
-      this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.decode404 = decode404;
-    }
-
-    public MethodHandler create(Target<?> target, MethodMetadata md,
-                                RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-                                          logLevel, md, buildTemplateFromArgs, options, decoder,
-                                          errorDecoder, decode404);
-    }
-  }
 }

@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.MethodHandlerFactory.MethodHandler;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;

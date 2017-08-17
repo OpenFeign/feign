@@ -107,6 +107,8 @@ public abstract class Feign {
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
+    private MethodHandlerFactory.Builder methodHandlerFactoryBuilder = new MethodHandlerFactory.Builder();
+    private FeignFactory feignFactory = new FeignFactory.Factory();
     private boolean decode404;
 
     public Builder logLevel(Logger.Level logLevel) {
@@ -210,6 +212,14 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * Allows you to override how the method is handled inside of Feign.
+     */
+    public Builder methodHandlerFactory(MethodHandlerFactory.Builder methodHandlerFactoryBuilder) {
+      this.methodHandlerFactoryBuilder = methodHandlerFactoryBuilder;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -218,14 +228,23 @@ public abstract class Feign {
       return build().newInstance(target);
     }
 
+
     public Feign build() {
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel, decode404);
+      MethodHandlerFactory methodHandlerFactory =
+          methodHandlerFactoryBuilder
+                  .client(client)
+                  .retryer(retryer)
+                  .requestInterceptors(requestInterceptors)
+                  .logger(logger)
+                  .logLevel(logLevel)
+                  .decode404(decode404)
+                  .build();
+
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,
-                                  errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
+                                  errorDecoder, methodHandlerFactory);
+
+      return feignFactory.create(handlersByName, invocationHandlerFactory);
     }
   }
 

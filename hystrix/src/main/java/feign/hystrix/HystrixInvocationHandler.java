@@ -26,7 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import feign.InvocationHandlerFactory.MethodHandler;
+import feign.MethodHandlerFactory.MethodHandler;
 import feign.Target;
 import rx.Completable;
 import rx.Observable;

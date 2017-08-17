@@ -21,7 +21,7 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.Map.Entry;
 
-import feign.InvocationHandlerFactory.MethodHandler;
+import feign.MethodHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.Decoder;
@@ -130,10 +130,10 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
-    private final SynchronousMethodHandler.Factory factory;
+    private final MethodHandlerFactory factory;
 
     ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                        ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
+                        ErrorDecoder errorDecoder, MethodHandlerFactory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;

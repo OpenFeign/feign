@@ -19,6 +19,7 @@ import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.MethodHandlerFactory.MethodHandler;
 
 /**
  * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects. Also

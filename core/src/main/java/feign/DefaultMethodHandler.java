@@ -1,6 +1,6 @@
 package feign;
 
-import feign.InvocationHandlerFactory.MethodHandler;
+import feign.MethodHandlerFactory.MethodHandler;
 import org.jvnet.animal_sniffer.IgnoreJRERequirement;
 
 import java.lang.invoke.MethodHandle;
