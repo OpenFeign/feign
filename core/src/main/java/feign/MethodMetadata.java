@@ -44,6 +44,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
+  private boolean required = true;
 
   MethodMetadata() {
   }
@@ -166,5 +167,13 @@ public final class MethodMetadata implements Serializable {
    */
   public Map<Integer, Expander> indexToExpander() {
     return indexToExpander;
+  }
+
+  public boolean isRequired() {
+    return required;
+  }
+
+  public void setRequired(boolean required) {
+    this.required = required;
   }
 }

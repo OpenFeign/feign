@@ -340,7 +340,9 @@ public class ReflectiveFeign extends Feign {
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
                                       Map<String, Object> variables) {
       Object body = argv[metadata.bodyIndex()];
-      checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
+      if(metadata.isRequired()) {
+        checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
+      }
       try {
         encoder.encode(body, metadata.bodyType(), mutable);
       } catch (EncodeException e) {
