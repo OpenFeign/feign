@@ -24,6 +24,7 @@ import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.StreamDecoder;
 
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -46,6 +47,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
+  private final boolean decoderShouldClose;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
@@ -65,6 +67,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
+    this.decoderShouldClose = decoder instanceof StreamDecoder;
   }
 
   @Override
@@ -130,9 +133,11 @@ final class SynchronousMethodHandler implements MethodHandler {
         if (void.class == metadata.returnType()) {
           return null;
         } else {
+          shouldClose = !decoderShouldClose;
           return decode(response);
         }
       } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
+        shouldClose = !decoderShouldClose;
         return decode(response);
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);

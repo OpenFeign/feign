@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>feign-gson</artifactId>
+            <artifactId>feign-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
