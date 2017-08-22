@@ -23,7 +23,7 @@ import feign.Response;
  * For example: <br>
  * <pre>
  * Feign.builder()
- * .decoder(new Java8StreamDecoder((type, response) -> JacksonIterator.<StreamInterface.Car>builder().of(type).mapper(mapper).response(response).build()))
+ * .decoder(new Java8StreamDecoder((type, response) -> JacksonIterator.<Contributor>builder().of(type).mapper(mapper).response(response).build()))
  * .target(GitHub.class, "https://api.github.com");
  * </pre>
  */
