@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package feign.form;
 
 import feign.*;
@@ -16,40 +32,40 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        webEnvironment = DEFINED_PORT,
-        classes = Server.class
+    webEnvironment = DEFINED_PORT,
+    classes = Server.class
 )
 public class WildCardMapTest {
 
-    private static FormUrlEncodedApi API;
+  private static FormUrlEncodedApi API;
 
-    @BeforeClass
-    public static void configureClient() {
-        API = Feign.builder()
-                .encoder(new FormEncoder())
-                .logger(new Logger.JavaLogger().appendToFile("log.txt"))
-                .logLevel(FULL)
-                .target(FormUrlEncodedApi.class, "http://localhost:8080");
-    }
+  @BeforeClass
+  public static void configureClient() {
+    API = Feign.builder()
+        .encoder(new FormEncoder())
+        .logger(new Logger.JavaLogger().appendToFile("log.txt"))
+        .logLevel(FULL)
+        .target(FormUrlEncodedApi.class, "http://localhost:8080");
+  }
 
-    @Test
-    public void testOk() {
-        Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "1");}};
-        Response response = API.wildCardMap(param);
-        Assert.assertEquals(200, response.status());
-    }
+  @Test
+  public void testOk() {
+    Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "1");}};
+    Response response = API.wildCardMap(param);
+    Assert.assertEquals(200, response.status());
+  }
 
-    @Test
-    public void testBadRequest() {
-        Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "2");}};
-        Response response = API.wildCardMap(param);
-        Assert.assertEquals(400, response.status());
-    }
+  @Test
+  public void testBadRequest() {
+    Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "2");}};
+    Response response = API.wildCardMap(param);
+    Assert.assertEquals(400, response.status());
+  }
 
-    interface FormUrlEncodedApi {
+  interface FormUrlEncodedApi {
 
-        @RequestLine("POST /wild-card-map")
-        @Headers("Content-Type: application/x-www-form-urlencoded")
-        Response wildCardMap(Map<String, ?> param);
-    }
+    @RequestLine("POST /wild-card-map")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    Response wildCardMap(Map<String, ?> param);
+  }
 }

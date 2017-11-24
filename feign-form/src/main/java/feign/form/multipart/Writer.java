@@ -14,29 +14,30 @@
  * limitations under the License.
  */
 
-package feign.form;
-
-import static lombok.AccessLevel.PRIVATE;
-
-import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+package feign.form.multipart;
 
 /**
+ *
  * @author Artem Labazin <xxlabaza@gmail.com>
- * @since 01.05.2016
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = PRIVATE)
-public class Dto implements Serializable {
+public interface Writer {
 
-  private static final long serialVersionUID = 4743133513526293872L;
+  /**
+   * Processing form data to request body.
+   *
+   * @param output    output writer.
+   * @param boundary  data boundary.
+   * @param key       name for piece of data.
+   * @param value     piece of data.
+   */
+  void write (Output output, String boundary, String key, Object value) throws Exception;
 
-  String name;
-
-  Integer age;
+  /**
+   * Answers on question - "could this writer properly write the value".
+   *
+   * @param value object to write.
+   *
+   * @return {@code true} - if could write this object, otherwise {@code true}
+   */
+  boolean isApplicable (Object value);
 }

@@ -14,29 +14,38 @@
  * limitations under the License.
  */
 
-package feign.form;
+package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import feign.RequestTemplate;
+import feign.codec.Encoder;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.val;
 
 /**
+ *
  * @author Artem Labazin <xxlabaza@gmail.com>
- * @since 01.05.2016
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = PRIVATE)
-public class Dto implements Serializable {
+@RequiredArgsConstructor
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+public class DelegateWriter extends AbstractWriter {
 
-  private static final long serialVersionUID = 4743133513526293872L;
+  Encoder delegate;
 
-  String name;
+  ParameterWriter parameterWriter = new ParameterWriter();
 
-  Integer age;
+  @Override
+  public boolean isApplicable (Object value) {
+    return true;
+  }
+
+  @Override
+  protected void write (Output output, String key, Object value) throws Exception {
+    val fake = new RequestTemplate();
+    delegate.encode(value, value.getClass(), fake);
+    val string = new String(fake.body(), output.getCharset()).replaceAll("\n", "");
+    parameterWriter.write(output, key, string);
+  }
 }
