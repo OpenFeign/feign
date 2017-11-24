@@ -692,6 +692,23 @@ public class FeignTest {
   }
 
   @Test
+  public void postBodyWithNullValue() throws InterruptedException {
+    server.enqueue(new MockResponse());
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+    api.login(null, null, null);
+    assertThat(server.takeRequest())
+            .hasBody("{\"customer_name\": null, \"user_name\": null, \"password\": null}");
+  }
+
+  @Test
+  public void postBodyPlainText() throws InterruptedException {
+    server.enqueue(new MockResponse());
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+    api.postBodyPlainText(null);
+    assertThat(server.takeRequest()).hasBody("");
+  }
+
+  @Test
   public void responseMapperIsAppliedBeforeDelegate() throws IOException {
     ResponseMappingDecoder decoder = new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
     String output = (String) decoder.decode(responseWithText("response"), String.class);
@@ -797,6 +814,11 @@ public class FeignTest {
 
     @RequestLine("GET /?trim={trim}")
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
+
+    @RequestLine("POST /")
+    @Headers("Content-Type: text/plain")
+    @Body("{body}")
+    void postBodyPlainText(@Param("body") String body);
 
     class DateToMillis implements Param.Expander {
 

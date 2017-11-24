@@ -120,8 +120,9 @@ public final class RequestTemplate implements Serializable {
       return template;
     }
     checkNotNull(variables, "variables for %s", template);
-
+    boolean isJsonTemplate = template.startsWith("%7B") && template.endsWith("%7D");
     boolean inVar = false;
+    boolean afterNullValue = false;
     StringBuilder var = new StringBuilder();
     StringBuilder builder = new StringBuilder();
     for (char c : template.toCharArray()) {
@@ -141,12 +142,16 @@ public final class RequestTemplate implements Serializable {
             break;
           }
           inVar = false;
-          String key = var.toString();
           Object value = variables.get(var.toString());
           if (value != null) {
             builder.append(value);
-          } else {
-            builder.append('{').append(key).append('}');
+          } else if (isJsonTemplate) {
+            //remove double quote before value in case it exists
+            if(builder.length() > 0 && builder.charAt(builder.length()-1) == '\"') {
+              builder.setLength(builder.length() - 1);
+            }
+            builder.append("null");
+            afterNullValue = true;
           }
           var = new StringBuilder();
           break;
@@ -154,7 +159,15 @@ public final class RequestTemplate implements Serializable {
           if (inVar) {
             var.append(c);
           } else {
-            builder.append(c);
+            if(!afterNullValue) {
+              builder.append(c);
+            } else {
+              afterNullValue = false;
+              //skip double quote after null value
+              if('\"' != c) {
+                builder.append(c);
+              }
+            }
           }
       }
     }
