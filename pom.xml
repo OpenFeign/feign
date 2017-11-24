@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
@@ -6,12 +21,12 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.5.3.RELEASE</version>
+    <version>1.5.8.RELEASE</version>
   </parent>
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>2.2.1</version>
+  <version>3.0.0</version>
   <packaging>pom</packaging>
 
   <name>Open Feign Forms Parent</name>
@@ -46,7 +61,7 @@
   <scm>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>2.2.1</tag>
+    <tag>3.0.0</tag>
     <url>https://github.com/OpenFeign/feign-form</url>
   </scm>
 
@@ -69,7 +84,6 @@
     <maven.compiler.testTarget>1.8</maven.compiler.testTarget>
     <maven.compiler.testSource>1.8</maven.compiler.testSource>
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
-    <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -122,7 +136,7 @@
       <plugins>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin.version}</version>
+          <version>3.0.2</version>
           <configuration>
             <archive>
               <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -168,7 +182,7 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <executions>
-          <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
+          <!--Ensure main source tree compiles to Java ${main.java.version} bytecode.-->
           <execution>
             <id>default-compile</id>
             <goals>
@@ -186,7 +200,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.15</version>
+        <version>1.16</version>
         <configuration>
           <signature>
             <groupId>org.codehaus.mojo.signature</groupId>

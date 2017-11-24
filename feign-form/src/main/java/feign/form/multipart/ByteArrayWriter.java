@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-package feign.form;
-
-import static lombok.AccessLevel.PRIVATE;
-
-import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+package feign.form.multipart;
 
 /**
  * @author Artem Labazin <xxlabaza@gmail.com>
- * @since 01.05.2016
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = PRIVATE)
-public class Dto implements Serializable {
+public class ByteArrayWriter extends AbstractWriter {
 
-  private static final long serialVersionUID = 4743133513526293872L;
+  @Override
+  public boolean isApplicable(Object value) {
+    return value != null && value instanceof byte[];
+  }
 
-  String name;
+  @Override
+  protected void write(Output output, String key, Object value) throws Exception {
+    writeFileMetadata(output, key, null, null);
 
-  Integer age;
+    byte[] bytes = (byte[]) value;
+    output.write(bytes);
+  }
 }

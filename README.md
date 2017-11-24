@@ -11,7 +11,7 @@ Include the dependency to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>2.2.1</version>
+        <version>3.0.0</version>
     </dependency>
     ...
 </dependencies>
@@ -100,12 +100,12 @@ Include the dependencies to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>2.2.1</version>
+        <version>3.0.0</version>
     </dependency>
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form-spring</artifactId>
-        <version>2.2.1</version>
+        <version>3.0.0</version>
     </dependency>
     ...
 </dependencies>
@@ -115,12 +115,28 @@ Include the dependencies to your project's pom.xml file:
 @FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
 public interface FileUploadServiceClient extends IFileUploadServiceClient {
 
-    @Configuration
+    public class MultipartSupportConfig {
+
+        @Autowired
+        private ObjectFactory<HttpMessageConverters> messageConverters;
+
+        @Bean
+        public Encoder feignFormEncoder() {
+            return new SpringFormEncoder(new SpringEncoder(messageConverters));
+        }
+    }
+}
+```
+
+Or, if you don't need Spring's standard encoder:
+
+```java
+@FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
+public interface FileUploadServiceClient extends IFileUploadServiceClient {
+
     public class MultipartSupportConfig {
 
         @Bean
-        @Primary
-        @Scope("prototype")
         public Encoder feignFormEncoder() {
             return new SpringFormEncoder();
         }
