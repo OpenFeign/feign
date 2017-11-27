@@ -30,6 +30,7 @@ import feign.form.multipart.SingleFileWriter;
 import feign.form.multipart.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.FieldDefaults;
@@ -101,6 +102,14 @@ public class MultipartFormContentProcessor implements ContentProcessor {
    */
   public final void addWriter(Writer writer) {
     writers.add(writer);
+  }
+
+  public final List<Writer> getWriters() {
+    return Collections.unmodifiableList(writers);
+  }
+
+  public final void setWriter(int index, Writer writer) {
+    writers.set(index, writer);
   }
 
   private Writer findApplicableWriter(Object value) {

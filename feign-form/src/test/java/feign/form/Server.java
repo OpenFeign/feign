@@ -127,12 +127,7 @@ public class Server {
 
   @RequestMapping(value = "/query_map")
   public ResponseEntity<Integer> queryMap(@RequestParam("filter") List<String> filters) {
-    HttpStatus status;
-    if (filters == null || filters.isEmpty()) {
-      status = BAD_REQUEST;
-    } else {
-      status = OK;
-    }
+    val status = filters != null && !filters.isEmpty() ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(filters.size());
   }
 
@@ -142,7 +137,7 @@ public class Server {
       consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Integer> wildCardMap(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
-    val status = key1.equals(key2) ? OK : BAD_REQUEST;
+    val status = key1.equals(key2) ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(null);
   }
 
@@ -153,5 +148,11 @@ public class Server {
     val dto = objectMapper.readValue(dtoString, Dto.class);
     val status = dto != null && dto.getName().equals("Artem") ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getSize());
+  }
+
+  @PostMapping(path = "/upload/byte_array", consumes = MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> uploadByteArray(@RequestPart("file") MultipartFile file) {
+    val status = file != null ? OK : I_AM_A_TEAPOT;
+    return ResponseEntity.status(status).body(file.getOriginalFilename());
   }
 }

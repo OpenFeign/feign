@@ -101,7 +101,7 @@ public class FormEncoder implements Encoder {
    * @param type a type for content processor search.
    * @return {@link ContentProcessor} instance for specified type or null.
    */
-  protected final ContentProcessor getContentProcessor(ContentType type) {
+  public final ContentProcessor getContentProcessor(ContentType type) {
     return processors.get(type);
   }
 

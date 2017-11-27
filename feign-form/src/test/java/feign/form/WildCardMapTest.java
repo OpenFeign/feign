@@ -68,7 +68,7 @@ public class WildCardMapTest {
           }
         };
     Response response = API.wildCardMap(param);
-    Assert.assertEquals(400, response.status());
+    Assert.assertEquals(418, response.status());
   }
 
   interface FormUrlEncodedApi {
