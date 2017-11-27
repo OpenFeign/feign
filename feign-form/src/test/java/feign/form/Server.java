@@ -58,19 +58,19 @@ public class Server {
 
   @RequestMapping(value = "/form", method = POST)
   public ResponseEntity<Void> form (@RequestParam("key1") String key1,
-                    @RequestParam("key2") String key2
+                                    @RequestParam("key2") String key2
   ) {
     val status = !key1.equals(key2)
-              ? BAD_REQUEST
-              : OK;
+                 ? BAD_REQUEST
+                 : OK;
     return ResponseEntity.status(status).body(null);
   }
 
   @RequestMapping(value = "/upload/{id}", method = POST)
   @ResponseStatus(OK)
   public ResponseEntity<Long> upload (@PathVariable("id") Integer id,
-                    @RequestParam("public") Boolean isPublic,
-                    @RequestParam("file") MultipartFile file
+                                      @RequestParam("public") Boolean isPublic,
+                                      @RequestParam("file") MultipartFile file
   ) {
     HttpStatus status;
     if (id == null || id != 10) {
@@ -129,21 +129,17 @@ public class Server {
 
   @RequestMapping(value = "/query_map")
   public ResponseEntity<Integer> queryMap (@RequestParam("filter") List<String> filters) {
-    HttpStatus status;
-    if (filters == null || filters.isEmpty()) {
-      status = BAD_REQUEST;
-    } else {
-      status = OK;
-    }
+    val status = filters != null && !filters.isEmpty()
+                 ? OK
+                 : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(filters.size());
   }
 
   @RequestMapping(value = "/wild-card-map", method = POST, consumes = APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity<Integer> wildCardMap (@RequestParam("key1") String key1,
-                        @RequestParam("key2") String key2) {
+  public ResponseEntity<Integer> wildCardMap (@RequestParam("key1") String key1, @RequestParam("key2") String key2) {
     val status = key1.equals(key2)
-              ? OK
-              : BAD_REQUEST;
+                 ? OK
+                 : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(null);
   }
 
@@ -152,12 +148,23 @@ public class Server {
       consumes = MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<Long> uploadWithJson (@RequestPart("dto") String dtoString,
-                        @RequestPart("file") MultipartFile file
+                                              @RequestPart("file") MultipartFile file
   ) throws IOException {
     val dto = objectMapper.readValue(dtoString, Dto.class);
     val status = dto != null && dto.getName().equals("Artem")
-           ? OK
-           : I_AM_A_TEAPOT;
+                 ? OK
+                 : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getSize());
+  }
+
+  @PostMapping(
+      path = "/upload/byte_array",
+      consumes = MULTIPART_FORM_DATA_VALUE
+  )
+  public ResponseEntity<String> uploadByteArray (@RequestPart("file") MultipartFile file) {
+    val status = file != null
+                 ? OK
+                 : I_AM_A_TEAPOT;
+    return ResponseEntity.status(status).body(file.getOriginalFilename());
   }
 }

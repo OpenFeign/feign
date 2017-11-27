@@ -59,7 +59,7 @@ public class WildCardMapTest {
   public void testBadRequest() {
     Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "2");}};
     Response response = API.wildCardMap(param);
-    Assert.assertEquals(400, response.status());
+    Assert.assertEquals(418, response.status());
   }
 
   interface FormUrlEncodedApi {

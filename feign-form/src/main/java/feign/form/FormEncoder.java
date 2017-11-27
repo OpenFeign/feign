@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -105,7 +104,7 @@ public class FormEncoder implements Encoder {
    *
    * @return {@link ContentProcessor} instance for specified type or null.
    */
-  protected final ContentProcessor getContentProcessor (ContentType type) {
+  public final ContentProcessor getContentProcessor (ContentType type) {
     return processors.get(type);
   }
 
