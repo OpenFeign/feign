@@ -81,7 +81,9 @@ public class MultipartFormContentProcessor implements ContentProcessor {
         .toString();
 
     template.header(CONTENT_TYPE_HEADER, contentTypeHeaderValue);
-    template.body(output.toByteArray(), charset);
+    // Feign's clients try to determine binary/string content by charset presence
+    // so, I set it to null (in spite of availability charset) for backward compatibility.
+    template.body(output.toByteArray(), null);
 
     output.close();
   }
