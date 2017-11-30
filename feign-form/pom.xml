@@ -27,7 +27,7 @@ limitations under the License.
   <parent>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>parent</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
   </parent>
 
   <name>Open Feign Forms Core</name>
