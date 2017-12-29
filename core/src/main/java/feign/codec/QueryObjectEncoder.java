@@ -10,6 +10,26 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * You can create an QueryObject like this
+ * <pre>
+ * {@code
+ * @QueryObject
+ * class FindUsersQuery {
+ *    .....
+ *    @QueryObject.Param("userId")
+ *    long getUserId() {...}
+ *    @QueryObject.Param("userName")
+ *    long getUserName() {...}
+ * }
+ * </pre>
+ * Then you can declare the client like this:
+ * <pre>
+ * {@code
+ * @RequestLine("GET /users?userId={userId}&userName={userName}")
+ * List<User> getUsers(FindUsersQuery query);
+ * </pre>
+ */
 public class QueryObjectEncoder implements Encoder {
 
     private Encoder fallbackEncoder;
