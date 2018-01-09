@@ -19,7 +19,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-
 /**
  * Implementation of {@link HttpMessageConverter} that can read multipart/form-data HTTP bodies
  * (writing is not handled because that is already supported by {@link FormHttpMessageConverter}).
@@ -29,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
  * multipart body is read into an underlying byte array (in memory) implemented via
  * {@link ByteArrayMultipartFile}.
  */
-
 public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter<MultipartFile[]> {
 
     private static final Pattern NEWLINES_PATTERN = Pattern.compile("\\R");
@@ -40,6 +38,10 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
 
     private final int bufSize;
 
+    /**
+     * Construct an {@code AbstractHttpMessageConverter} that can read mulitpart/form-data.
+     * @param bufSize The size of the buffer (in bytes) to read the HTTP multipart body.
+     */
     public SpringManyMultipartFilesReader(final int bufSize) {
         super(MediaType.MULTIPART_FORM_DATA);
         this.bufSize = bufSize;
