@@ -22,7 +22,7 @@ public class SpringMultipartDecoderTest {
   @Autowired private DownloadClient downloadClient;
 
   @Test
-  public void upload1Test() throws Exception {
+  public void downloadTest() throws Exception {
     MultipartFile[] downloads = downloadClient.download("123");
 
     Assert.assertEquals(2, downloads.length);

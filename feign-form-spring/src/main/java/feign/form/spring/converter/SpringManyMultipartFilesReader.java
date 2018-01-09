@@ -35,6 +35,11 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
 
   private final int bufSize;
 
+  /**
+   * Construct an {@code AbstractHttpMessageConverter} that can read mulitpart/form-data.
+   *
+   * @param bufSize The size of the buffer (in bytes) to read the HTTP multipart body.
+   */
   public SpringManyMultipartFilesReader(final int bufSize) {
     super(MediaType.MULTIPART_FORM_DATA);
     this.bufSize = bufSize;
