@@ -7,7 +7,7 @@
 
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
 
     <name>feign-vertx</name>

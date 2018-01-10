@@ -10,6 +10,8 @@ import feign.codec.ErrorDecoder;
 import feign.vertx.VertxDelegatingContract;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -88,7 +90,7 @@ public class VertxFeign extends Feign {
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Request.Options options = new Request.Options();
+    private HttpClientOptions options = new HttpClientOptions();
     private InvocationHandlerFactory invocationHandlerFactory =
         new VertxInvocationHandler.Factory();
     private boolean decode404;
@@ -233,17 +235,32 @@ public class VertxFeign extends Feign {
     }
 
     /**
-     * Sets request options.
+     * Sets request options using Vert.x {@link HttpClientOptions}
      *
-     * @param options HTTP request options.
+     * @param options {@link HttpClientOptions} for full customization of the underlying Vert.x {@link HttpClient}
+     *
+     * @return this builder
+     */
+    public Builder options(final HttpClientOptions options) {
+      this.options = options;
+      return this;
+    }
+
+    /**
+     * Sets request options using Feign {@link Request.Options}
+     *
+     * @param options Feign {@link Request.Options} object
      *
      * @return this builder
      */
     @Override
     public Builder options(final Request.Options options) {
-      this.options = options;
+      this.options = new HttpClientOptions()
+                        .setConnectTimeout(options.connectTimeoutMillis())
+                        .setIdleTimeout(options.readTimeoutMillis());
       return this;
     }
+
 
     /**
      * Adds a single request interceptor to the builder.
@@ -321,7 +338,7 @@ public class VertxFeign extends Feign {
 
   private static final class ParseHandlersByName {
     private final Contract contract;
-    private final Request.Options options;
+    private final HttpClientOptions options;
     private final Encoder encoder;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
@@ -329,7 +346,7 @@ public class VertxFeign extends Feign {
 
     ParseHandlersByName(
         final Contract contract,
-        final Request.Options options,
+        final HttpClientOptions options,
         final Encoder encoder,
         final Decoder decoder,
         final ErrorDecoder errorDecoder,

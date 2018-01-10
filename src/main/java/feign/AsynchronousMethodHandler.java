@@ -13,6 +13,7 @@ import feign.vertx.VertxHttpClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpClientOptions;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -37,7 +38,7 @@ class AsynchronousMethodHandler
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
-  private final Request.Options options;
+  private final HttpClientOptions options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
@@ -51,7 +52,7 @@ class AsynchronousMethodHandler
       Logger.Level logLevel,
       MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs,
-      Request.Options options,
+      HttpClientOptions options,
       Decoder decoder,
       ErrorDecoder errorDecoder,
       boolean decode404) {
@@ -283,7 +284,7 @@ class AsynchronousMethodHandler
         final Target<?> target,
         final MethodMetadata metadata,
         final RequestTemplate.Factory buildTemplateFromArgs,
-        final Request.Options options,
+        final HttpClientOptions options,
         final Decoder decoder,
         final ErrorDecoder errorDecoder) {
       return new AsynchronousMethodHandler(
