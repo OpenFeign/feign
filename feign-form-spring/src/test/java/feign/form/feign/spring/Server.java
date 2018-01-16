@@ -24,6 +24,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import java.nio.charset.Charset;
 import java.util.Map;
 import lombok.SneakyThrows;
+import lombok.val;
 import org.apache.commons.codec.CharEncoding;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -98,19 +99,19 @@ public class Server {
       method = GET,
       produces = MULTIPART_FORM_DATA_VALUE)
   public MultiValueMap<String, Object> download(@PathVariable("fileId") String fileId) {
-    MultiValueMap<String, Object> multiParts = new LinkedMultiValueMap<String, Object>();
+    val multiParts = new LinkedMultiValueMap<String, Object>();
 
-    String info = "The text for file ID " + fileId + ". Testing unicode €";
-    HttpHeaders infoPartheader = new HttpHeaders();
+    val infoString = "The text for file ID " + fileId + ". Testing unicode €";
+    val infoPartheader = new HttpHeaders();
     infoPartheader.setContentType(
         new MediaType("text", "plain", Charset.forName(CharEncoding.UTF_8)));
-    HttpEntity<String> infoPart = new HttpEntity<String>(info, infoPartheader);
 
-    ClassPathResource file = new ClassPathResource("testfile.txt");
-    HttpHeaders filePartheader = new HttpHeaders();
+    val infoPart = new HttpEntity<String>(infoString, infoPartheader);
+
+    val file = new ClassPathResource("testfile.txt");
+    val filePartheader = new HttpHeaders();
     filePartheader.setContentType(APPLICATION_OCTET_STREAM);
-    HttpEntity<ClassPathResource> filePart =
-        new HttpEntity<ClassPathResource>(file, filePartheader);
+    val filePart = new HttpEntity<ClassPathResource>(file, filePartheader);
 
     multiParts.add("info", infoPart);
     multiParts.add("file", filePart);

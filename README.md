@@ -11,7 +11,7 @@ Include the dependency to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.0</version>
     </dependency>
     ...
 </dependencies>
@@ -100,12 +100,12 @@ Include the dependencies to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.0</version>
     </dependency>
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form-spring</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.0</version>
     </dependency>
     ...
 </dependencies>
@@ -139,6 +139,48 @@ public interface FileUploadServiceClient extends IFileUploadServiceClient {
         @Bean
         public Encoder feignFormEncoder() {
             return new SpringFormEncoder();
+        }
+    }
+}
+```
+
+Thanks to [tf-haotri-pham](https://github.com/tf-haotri-pham) for his featur, which makes use of Apache commons-fileupload library, which handles the parsing of the multipart response. The body data parts are held as byte arrays in memory.
+
+To use this feature, include SpringManyMultipartFilesReader in the list of message converters for the Decoder and have the Feign client return an array of MultipartFile:
+
+```java
+@FeignClient(
+        name = "${feign.name}",
+        url = "${feign.url}"
+        configuration = DownloadClient.ClientConfiguration.class)
+public interface DownloadClient {
+
+    @RequestMapping(
+            value = "/multipart/download/{fileId}",
+            method = GET)
+    MultipartFile[] download(@PathVariable("fileId") String fileId);
+
+    class ClientConfiguration {
+
+        @Autowired
+        private ObjectFactory<HttpMessageConverters> messageConverters;
+
+        @Bean
+        public Decoder feignDecoder () {
+            final List<HttpMessageConverter<?>> springConverters = messageConverters.getObject().getConverters();
+            final List<HttpMessageConverter<?>> decoderConverters
+                    = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+
+            decoderConverters.addAll(springConverters);
+            decoderConverters.add(new SpringManyMultipartFilesReader(4096));
+            final HttpMessageConverters httpMessageConverters = new HttpMessageConverters(decoderConverters);
+
+            return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
+                @Override
+                public HttpMessageConverters getObject() {
+                    return httpMessageConverters;
+                }
+            });
         }
     }
 }

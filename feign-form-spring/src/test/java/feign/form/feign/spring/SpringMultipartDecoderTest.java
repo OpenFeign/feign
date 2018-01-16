@@ -37,6 +37,6 @@ public class SpringMultipartDecoderTest {
 
     Assert.assertEquals("testfile.txt", downloads[1].getOriginalFilename());
     Assert.assertEquals(MediaType.APPLICATION_OCTET_STREAM_VALUE, downloads[1].getContentType());
-    Assert.assertEquals(13, downloads[1].getSize());
+    Assert.assertEquals(14, downloads[1].getSize());
   }
 }

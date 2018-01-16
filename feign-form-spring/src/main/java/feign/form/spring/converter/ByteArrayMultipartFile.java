@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Artem Labazin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package feign.form.spring.converter;
 
 import java.io.ByteArrayInputStream;
@@ -5,75 +21,48 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.springframework.util.Assert;
+import lombok.NonNull;
+import lombok.Value;
+import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Straight-forward implementation of interface {@link MultipartFile} where the file data is held as
  * a byte array in memory.
  */
-final class ByteArrayMultipartFile implements MultipartFile {
+@Value
+class ByteArrayMultipartFile implements MultipartFile {
 
-  private final String name;
-  private final String originalFileName;
-  private final String contentType;
-  private final byte[] data;
+  String name;
 
-  ByteArrayMultipartFile(
-      final String name,
-      final String originalFileName,
-      final String contentType,
-      final byte[] data) {
-    Assert.notNull(data, "Byte array data may not be null!");
+  String originalFilename;
 
-    this.name = name;
-    this.originalFileName = originalFileName;
-    this.contentType = contentType;
-    this.data = data;
-  }
+  String contentType;
 
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  @Override
-  public String getOriginalFilename() {
-    return originalFileName;
-  }
-
-  @Override
-  public String getContentType() {
-    return contentType;
-  }
+  @NonNull byte[] bytes;
 
   @Override
   public boolean isEmpty() {
-    return data.length == 0;
+    return bytes.length == 0;
   }
 
   @Override
   public long getSize() {
-    return data.length;
-  }
-
-  @Override
-  public byte[] getBytes() {
-    return data;
+    return bytes.length;
   }
 
   @Override
   public InputStream getInputStream() {
-    return new ByteArrayInputStream(data);
+    return new ByteArrayInputStream(bytes);
   }
 
   @Override
-  public void transferTo(final File destination) throws IOException {
-    final FileOutputStream fos = new FileOutputStream(destination);
+  public void transferTo(File destination) throws IOException {
+    val outputStream = new FileOutputStream(destination);
     try {
-      fos.write(data);
+      outputStream.write(bytes);
     } finally {
-      fos.close();
+      outputStream.close();
     }
   }
 }

@@ -1,11 +1,14 @@
 package feign.form.feign.spring.converter;
 
 import static java.util.Collections.singletonList;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,10 +23,9 @@ public class SpringManyMultipartFilesReaderTest {
 
   @Test
   public void readMultipartFormDataTest() throws IOException {
-    final SpringManyMultipartFilesReader multipartFilesReader =
-        new SpringManyMultipartFilesReader(4096);
-    final MultipartFile[] multipartFiles =
-        multipartFilesReader.read(MultipartFile[].class, new ValidMulitpartMessage());
+    val multipartFilesReader = new SpringManyMultipartFilesReader(4096);
+    val multipartFiles =
+        multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());
 
     Assert.assertEquals(2, multipartFiles.length);
 
@@ -37,10 +39,11 @@ public class SpringManyMultipartFilesReaderTest {
         "Plain text", IOUtils.toString(multipartFiles[1].getInputStream(), "US-ASCII"));
   }
 
-  public static class ValidMulitpartMessage implements HttpInputMessage {
+  public static class ValidMultipartMessage implements HttpInputMessage {
+
     @Override
     public InputStream getBody() throws IOException {
-      final String multipartBody =
+      val multipartBody =
           "--"
               + DUMMY_MULTIPART_BOUNDARY
               + "\r\n"
@@ -66,11 +69,10 @@ public class SpringManyMultipartFilesReaderTest {
 
     @Override
     public HttpHeaders getHeaders() {
-      final HttpHeaders httpHeaders = new HttpHeaders();
+      val httpHeaders = new HttpHeaders();
       httpHeaders.put(
-          HttpHeaders.CONTENT_TYPE,
-          singletonList(
-              MediaType.MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY));
+          CONTENT_TYPE,
+          singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY));
       return httpHeaders;
     }
   }

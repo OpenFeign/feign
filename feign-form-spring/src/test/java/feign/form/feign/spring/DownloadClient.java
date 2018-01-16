@@ -5,7 +5,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import java.util.ArrayList;
-import java.util.List;
+import lombok.val;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
@@ -32,18 +32,17 @@ public interface DownloadClient {
 
     @Bean
     public Decoder feignDecoder() {
-      final List<HttpMessageConverter<?>> springConverters =
-          messageConverters.getObject().getConverters();
-      final List<HttpMessageConverter<?>> decoderConverters =
-          new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+      val springConverters = messageConverters.getObject().getConverters();
+      val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
       decoderConverters.addAll(springConverters);
       decoderConverters.add(new SpringManyMultipartFilesReader(4096));
-      final HttpMessageConverters httpMessageConverters =
-          new HttpMessageConverters(decoderConverters);
+
+      val httpMessageConverters = new HttpMessageConverters(decoderConverters);
 
       return new SpringDecoder(
           new ObjectFactory<HttpMessageConverters>() {
+
             @Override
             public HttpMessageConverters getObject() {
               return httpMessageConverters;

@@ -1,80 +1,71 @@
+/*
+ * Copyright 2018 Artem Labazin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package feign.form.spring.converter;
 
-import java.util.Collection;
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import lombok.experimental.Delegate;
+import lombok.experimental.FieldDefaults;
 
 /**
  * A Map<String, String> implementation that normalizes the key to UPPER CASE, so that value
  * retrieval via the key is case insensitive.
  */
+@FieldDefaults(level = PRIVATE, makeFinal = true)
 final class IgnoreKeyCaseMap implements Map<String, String> {
-  private final HashMap<String, String> hashMap = new HashMap<String, String>();
+
+  @Delegate(excludes = OverrideMap.class)
+  HashMap<String, String> delegate = new HashMap<String, String>();
 
   @Override
-  public int size() {
-    return hashMap.size();
+  public boolean containsKey(Object key) {
+    return delegate.containsKey(normalizeKey(key));
   }
 
   @Override
-  public boolean isEmpty() {
-    return hashMap.isEmpty();
+  public String get(Object key) {
+    return delegate.get(normalizeKey(key));
   }
 
   @Override
-  public boolean containsKey(final Object key) {
-    return hashMap.containsKey(normalizeKey(key));
+  public String put(String key, String value) {
+    return delegate.put(normalizeKey(key), value);
   }
 
   @Override
-  public boolean containsValue(final Object value) {
-    return hashMap.containsValue(value);
+  public String remove(Object key) {
+    return delegate.remove(normalizeKey(key));
   }
 
-  @Override
-  public String get(final Object key) {
-    return hashMap.get(normalizeKey(key));
+  private static String normalizeKey(Object key) {
+    return key != null ? key.toString().toUpperCase(new Locale("en_US")) : null;
   }
 
-  @Override
-  public String put(final String key, final String value) {
-    return hashMap.put(normalizeKey(key), value);
-  }
+  private interface OverrideMap {
 
-  @Override
-  public String remove(final Object key) {
-    return hashMap.remove(normalizeKey(key));
-  }
+    boolean containsKey(Object key);
 
-  @Override
-  public void putAll(final Map<? extends String, ? extends String> m) {
-    for (final Map.Entry<? extends String, ? extends String> entry : m.entrySet()) {
-      put(entry.getKey(), entry.getValue());
-    }
-  }
+    String get(Object key);
 
-  @Override
-  public void clear() {
-    hashMap.clear();
-  }
+    String put(String key, String value);
 
-  @Override
-  public Set<String> keySet() {
-    return hashMap.keySet();
-  }
-
-  @Override
-  public Collection<String> values() {
-    return hashMap.values();
-  }
-
-  @Override
-  public Set<Entry<String, String>> entrySet() {
-    return hashMap.entrySet();
-  }
-
-  private static String normalizeKey(final Object key) {
-    return key != null ? key.toString().toUpperCase() : null;
+    String remove(Object key);
   }
 }
