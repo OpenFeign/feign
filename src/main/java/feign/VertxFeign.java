@@ -237,7 +237,7 @@ public class VertxFeign extends Feign {
     /**
      * Sets request options using Vert.x {@link HttpClientOptions}
      *
-     * @param options {@link HttpClientOptions} for full customization of the underlying Vert.x {@link HttpClient}
+     * @param options {@code HttpClientOptions} for full customization of the underlying Vert.x {@link HttpClient}
      *
      * @return this builder
      */
@@ -249,15 +249,15 @@ public class VertxFeign extends Feign {
     /**
      * Sets request options using Feign {@link Request.Options}
      *
-     * @param options Feign {@link Request.Options} object
+     * @param options Feign {@code Request.Options} object
      *
      * @return this builder
      */
     @Override
     public Builder options(final Request.Options options) {
       this.options = new HttpClientOptions()
-                        .setConnectTimeout(options.connectTimeoutMillis())
-                        .setIdleTimeout(options.readTimeoutMillis());
+          .setConnectTimeout(options.connectTimeoutMillis())
+          .setIdleTimeout(options.readTimeoutMillis());
       return this;
     }
 
