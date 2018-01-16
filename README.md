@@ -12,7 +12,7 @@ Include the dependency to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
     </dependency>
     ...
 </dependencies>
@@ -102,12 +102,12 @@ Include the dependencies to your project's pom.xml file:
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
     </dependency>
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form-spring</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
     </dependency>
     ...
 </dependencies>

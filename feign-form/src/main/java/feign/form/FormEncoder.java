@@ -16,6 +16,7 @@
 
 package feign.form;
 
+import static feign.form.util.CharsetUtil.UTF_8;
 import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -44,12 +45,9 @@ public class FormEncoder implements Encoder {
 
   private static final Pattern CHARSET_PATTERN;
 
-  private static final Charset DEFAULT_CHARSET;
-
   static {
     CONTENT_TYPE_HEADER = "Content-Type";
     CHARSET_PATTERN = Pattern.compile("(?<=charset=)([\\w\\-]+)");
-    DEFAULT_CHARSET = Charset.forName("UTF-8");
   }
 
   Encoder delegate;
@@ -130,6 +128,6 @@ public class FormEncoder implements Encoder {
     val matcher = CHARSET_PATTERN.matcher(contentTypeValue);
     return matcher.find()
          ? Charset.forName(matcher.group(1))
-         : DEFAULT_CHARSET;
+         : UTF_8;
   }
 }
