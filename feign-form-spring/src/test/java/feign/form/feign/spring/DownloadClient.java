@@ -1,3 +1,4 @@
+
 package feign.form.feign.spring;
 
 import feign.codec.Decoder;
@@ -14,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
+import lombok.val;
 
 @FeignClient(
         name = "multipart-download-support-service",
@@ -29,7 +31,7 @@ public interface DownloadClient {
             value = "/multipart/download/{fileId}",
             method = GET
     )
-    MultipartFile[] download(@PathVariable("fileId") String fileId);
+    MultipartFile[] download (@PathVariable("fileId") String fileId);
 
     class ClientConfiguration {
 
@@ -38,17 +40,18 @@ public interface DownloadClient {
 
         @Bean
         public Decoder feignDecoder () {
-            final List<HttpMessageConverter<?>> springConverters = messageConverters.getObject().getConverters();
-            final List<HttpMessageConverter<?>> decoderConverters
-                    = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+            val springConverters = messageConverters.getObject().getConverters();
+            val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
             decoderConverters.addAll(springConverters);
             decoderConverters.add(new SpringManyMultipartFilesReader(4096));
-            final HttpMessageConverters httpMessageConverters = new HttpMessageConverters(decoderConverters);
+
+            val httpMessageConverters = new HttpMessageConverters(decoderConverters);
 
             return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
+
                 @Override
-                public HttpMessageConverters getObject() {
+                public HttpMessageConverters getObject () {
                     return httpMessageConverters;
                 }
             });

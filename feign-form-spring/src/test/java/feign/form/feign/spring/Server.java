@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 import lombok.SneakyThrows;
+import lombok.val;
 import org.apache.commons.codec.CharEncoding;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -51,75 +52,76 @@ import org.springframework.web.multipart.MultipartFile;
 @SpringBootApplication
 public class Server {
 
-  @RequestMapping(
-      value = "/multipart/upload1/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  @SneakyThrows
-  public String upload1 (@PathVariable("folder") String folder,
-                         @RequestPart MultipartFile file,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
-    return new String(file.getBytes()) + ':' + message + ':' + folder;
-  }
+    @RequestMapping(
+            value = "/multipart/upload1/{folder}",
+            method = POST,
+            consumes = MULTIPART_FORM_DATA_VALUE
+    )
+    @SneakyThrows
+    public String upload1 (@PathVariable("folder") String folder,
+                           @RequestPart MultipartFile file,
+                           @RequestParam(value = "message", required = false) String message
+    ) {
+        return new String(file.getBytes()) + ':' + message + ':' + folder;
+    }
 
-  @RequestMapping(
-      value = "/multipart/upload2/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  @SneakyThrows
-  public String upload2 (@RequestBody MultipartFile file,
-                         @PathVariable("folder") String folder,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
-    return new String(file.getBytes()) + ':' + message + ':' + folder;
-  }
+    @RequestMapping(
+            value = "/multipart/upload2/{folder}",
+            method = POST,
+            consumes = MULTIPART_FORM_DATA_VALUE
+    )
+    @SneakyThrows
+    public String upload2 (@RequestBody MultipartFile file,
+                           @PathVariable("folder") String folder,
+                           @RequestParam(value = "message", required = false) String message
+    ) {
+        return new String(file.getBytes()) + ':' + message + ':' + folder;
+    }
 
-  @RequestMapping(
-      value = "/multipart/upload3/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  public String upload3 (@RequestBody MultipartFile file,
-                         @PathVariable("folder") String folder,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
-    return file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder;
-  }
+    @RequestMapping(
+            value = "/multipart/upload3/{folder}",
+            method = POST,
+            consumes = MULTIPART_FORM_DATA_VALUE
+    )
+    public String upload3 (@RequestBody MultipartFile file,
+                           @PathVariable("folder") String folder,
+                           @RequestParam(value = "message", required = false) String message
+    ) {
+        return file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder;
+    }
 
-  @RequestMapping(
-      path = "/multipart/upload4/{id}",
-      method = POST
-  )
-  public String upload4 (@PathVariable("id") String id,
-                         @RequestBody Map<String, Object> map,
-                         @RequestParam String userName
-  ) {
-    return userName + ':' + id + ':' + map.size();
-  }
+    @RequestMapping(
+            path = "/multipart/upload4/{id}",
+            method = POST
+    )
+    public String upload4 (@PathVariable("id") String id,
+                           @RequestBody Map<String, Object> map,
+                           @RequestParam String userName
+    ) {
+        return userName + ':' + id + ':' + map.size();
+    }
 
-  @RequestMapping(
-          value = "/multipart/download/{fileId}",
-          method = GET,
-          produces = MULTIPART_FORM_DATA_VALUE
-  )
-  public MultiValueMap<String, Object> download(@PathVariable("fileId") String fileId) {
-    MultiValueMap<String, Object> multiParts = new LinkedMultiValueMap<String, Object>();
+    @RequestMapping(
+            value = "/multipart/download/{fileId}",
+            method = GET,
+            produces = MULTIPART_FORM_DATA_VALUE
+    )
+    public MultiValueMap<String, Object> download (@PathVariable("fileId") String fileId) {
+        val multiParts = new LinkedMultiValueMap<String, Object>();
 
-    String info = "The text for file ID " + fileId + ". Testing unicode €";
-    HttpHeaders infoPartheader = new HttpHeaders();
-    infoPartheader.setContentType(new MediaType("text", "plain", Charset.forName(CharEncoding.UTF_8)));
-    HttpEntity<String> infoPart = new HttpEntity<String>(info, infoPartheader);
+        val infoString = "The text for file ID " + fileId + ". Testing unicode €";
+        val infoPartheader = new HttpHeaders();
+        infoPartheader.setContentType(new MediaType("text", "plain", Charset.forName(CharEncoding.UTF_8)));
 
-    ClassPathResource file = new ClassPathResource("testfile.txt");
-    HttpHeaders filePartheader = new HttpHeaders();
-    filePartheader.setContentType(APPLICATION_OCTET_STREAM);
-    HttpEntity<ClassPathResource> filePart = new HttpEntity<ClassPathResource>(file, filePartheader);
+        val infoPart = new HttpEntity<String>(infoString, infoPartheader);
 
-    multiParts.add("info", infoPart);
-    multiParts.add("file", filePart);
-    return multiParts;
-  }
+        val file = new ClassPathResource("testfile.txt");
+        val filePartheader = new HttpHeaders();
+        filePartheader.setContentType(APPLICATION_OCTET_STREAM);
+        val filePart = new HttpEntity<ClassPathResource>(file, filePartheader);
+
+        multiParts.add("info", infoPart);
+        multiParts.add("file", filePart);
+        return multiParts;
+    }
 }
