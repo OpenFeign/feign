@@ -1,11 +1,11 @@
 /*
- * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+ * Copyright 2018 Artem Labazin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,14 @@ package feign.form.spring;
 import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
 
+import java.lang.reflect.Type;
+
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
-import java.lang.reflect.Type;
+
 import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 

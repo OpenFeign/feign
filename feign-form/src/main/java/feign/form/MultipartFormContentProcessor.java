@@ -1,11 +1,11 @@
 /*
- * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+ * Copyright 2018 Artem Labazin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,12 @@ package feign.form;
 import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
 
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.form.multipart.ByteArrayWriter;
@@ -28,17 +34,13 @@ import feign.form.multipart.Output;
 import feign.form.multipart.ParameterWriter;
 import feign.form.multipart.SingleFileWriter;
 import feign.form.multipart.Writer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
  *
- * @author Artem Labazin <xxlabaza@gmail.com>
+ * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class MultipartFormContentProcessor implements ContentProcessor {

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2018 Artem Labazin <xxlabaza@gmail.com>.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+     http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<ruleset name="Apulse PMD rule set"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+  <description>PMD Rules</description>
+
+  <rule ref="rulesets/java/basic.xml">
+    <exclude name="AvoidUsingHardCodedIP" />
+  </rule>
+
+  <rule ref="rulesets/java/braces.xml" />
+  <rule ref="rulesets/java/clone.xml" />
+  <rule ref="rulesets/java/unusedcode.xml"/>
+  <rule ref="rulesets/java/finalizers.xml" />
+
+
+  <rule ref="rulesets/java/imports.xml">
+    <!-- Stupid rule... -->
+    <exclude name="TooManyStaticImports" />
+  </rule>
+
+  <rule ref="rulesets/java/codesize.xml" >
+    <!-- See the explanation for TooManyMethods.-->
+    <exclude name="TooManyFields" />
+    <!-- Design is very hard to measure by numbers like this.-->
+    <!-- The number and quality of dependencies might be a better indicator, -->
+    <!-- and that requires a different tool.-->
+    <exclude name="TooManyMethods" />
+    <!-- See the explanation for TooManyMethods.-->
+    <exclude name="ExcessivePublicCount" />
+    <!-- Needs better understanding and proper configuration-->
+    <exclude name="StdCyclomaticComplexity" />
+    <!-- Needs better understanding and proper configuration-->
+    <exclude name="ModifiedCyclomaticComplexity" />
+    <!-- See the explanation for TooManyMethods.-->
+    <exclude name="ExcessiveParameterList" />
+    <!-- Too abstract rule -->
+    <exclude name="CyclomaticComplexity" />
+  </rule>
+
+  <rule ref="rulesets/java/design.xml">
+    <!-- Sometimes important to avoid "DOS attack" but not as a general rule-->
+    <exclude name="AvoidSynchronizedAtMethodLevel" />
+    <!-- It's just extra effort to write and read the final keyword-->
+    <exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal" />
+    <!-- Maybe good idea if PMD could exclude null checks from this-->
+    <exclude name="ConfusingTernary" />
+    <!-- Statistical analysis is prone to givin false positives. Potential god classes-->
+    <!-- most probably violate something else, too.-->
+    <!-- And dependency analysis tools also help here.-->
+    <exclude name="GodClass" />
+    <!-- Switch is sometimes very readable-->
+    <exclude name="TooFewBranchesForASwitchStatement"/>
+    <!-- A static utility is a static utility even if it masquerades as something-->
+    <!-- else by using the Singleton pattern-->
+    <exclude name="UseUtilityClass" />
+    <!-- This is good advice, but since it's violated so much in this project-->
+    <!-- and the problem is not big (especially with good syntax colouring),-->
+    <!-- we'll keep this ignored for now.-->
+    <exclude name="AvoidReassigningParameters" />
+    <!-- Good idea almost always, but not quite.-->
+    <!--<exclude name="ReturnEmptyArrayRatherThanNull" />-->
+    <!-- Sometimes one step at a time makes clearer code.-->
+    <!-- Debugging is also easier if the return value is in a variable.-->
+    <exclude name="UnnecessaryLocalBeforeReturn" />
+    <!-- There are valid reasons for passing arrays (making it nullable for example)-->
+    <exclude name="UseVarargs" />
+    <!-- TODO explain what false positives this gives-->
+    <exclude name="MissingBreakInSwitch" />
+    <!-- TODO enable when all findings have been fixed-->
+    <exclude name="UseLocaleWithCaseConversions" />
+    <!-- It gives a lot of warnings on 'equals' method, fixing would decrease readability-->
+    <exclude name="SimplifyBooleanReturns"/>
+    <!--Gives false positive-->
+    <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
+    <!-- Good rule but in practice to often suppressed -->
+    <exclude name="PreserveStackTrace"/>
+
+    <exclude name="AccessorMethodGeneration"/>
+  </rule>
+
+  <rule ref="rulesets/java/migrating.xml">
+    <!-- The annotation is not as readable and there is no way to state which-->
+    <!-- line should throw the exception and with what message-->
+    <exclude name="JUnitUseExpected" />
+    <!-- Main code is not junit code-->
+    <exclude name="JUnit4TestShouldUseTestAnnotation" />
+  </rule>
+
+  <rule ref="rulesets/java/naming.xml">
+    <!-- Often good to start name with Abstract, but on the other hand this-->
+    <!-- rule is a bit too much like Hungarian notation and I in interface names.-->
+    <!-- Who cares if it's abstract or not when you are using it?-->
+    <exclude name="AbstractNaming" />
+    <!-- Opinion, for me a getter is not a command, it's a declarative-->
+    <!-- data reference-->
+    <exclude name="AvoidFieldNameMatchingMethodName" />
+    <!-- Why should generics not be named properly, like all other things-->
+    <!-- (well, except Windows filesystem roots)?-->
+    <exclude name="GenericsNaming" />
+    <!-- It can be long if it's the only way to make it good-->
+    <exclude name="LongVariable" />
+    <!-- It can be short if it's good-->
+    <exclude name="ShortVariable" />
+    <!-- TODO explain why.-->
+    <exclude name="BooleanGetMethodName" />
+    <!-- It can be short if it's good-->
+    <exclude name="ShortClassName" />
+    <!-- It can be short if it's good-->
+    <exclude name="ShortMethodName" />
+  </rule>
+
+  <rule ref="rulesets/java/optimizations.xml">
+    <!-- Too many false hits. Optimization can't be done with static analysis.
+    Besides, following this may encourage the antipattern of using too broad
+    scope for stuff: -->
+    <exclude name="AvoidInstantiatingObjectsInLoops" />
+    <!-- Good principle but too verbose in practice: -->
+    <exclude name="MethodArgumentCouldBeFinal" />
+    <!-- Good principle and maybe sometimes even practical but not in this
+    project: -->
+    <exclude name="LocalVariableCouldBeFinal" />
+    <exclude name="RedundantFieldInitializer" />
+  </rule>
+
+  <rule ref="rulesets/java/strictexception.xml" >
+    <!-- NPE communicates very cleary what is happening, it is not-->
+    <!-- interesting who reports it (jvm or user code)-->
+    <exclude name="AvoidThrowingNullPointerException" />
+    <!-- TODO explain why-->
+    <exclude name="AvoidCatchingGenericException" />
+    <!-- TODO explain why-->
+    <exclude name="AvoidThrowingRawExceptionTypes" />
+    <!-- One valid case is to catch runtime, throw as such and after that-->
+    <!-- catch Exception and wrap as runtime.-->
+    <!-- Without the first all runtimes are unnecessarily wrapped.-->
+    <exclude name="AvoidRethrowingException" />
+    <!-- There are case which should throws generic exceptions -->
+    <exclude name="SignatureDeclareThrowsException" />
+  </rule>
+
+  <rule ref="rulesets/java/strings.xml" >
+    <!-- Splitting to multiple lines is sometimes more readable.-->
+    <!-- Besides, where's the proof that it affects performance?-->
+    <exclude name="ConsecutiveAppendsShouldReuse" />
+  </rule>
+</ruleset>

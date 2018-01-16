@@ -1,11 +1,11 @@
 /*
- * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+ * Copyright 2018 Artem Labazin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,21 +19,23 @@ package feign.form;
 import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
  *
- * @author Artem Labazin <xxlabaza@gmail.com>
+ * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class FormEncoder implements Encoder {
@@ -81,7 +83,7 @@ public class FormEncoder implements Encoder {
   @Override
   @SuppressWarnings("unchecked")
   public void encode (Object object, Type bodyType, RequestTemplate template) throws EncodeException {
-    val contentTypeValue = getContentTypeValue(template.headers());
+    String contentTypeValue = getContentTypeValue(template.headers());
     val contentType = ContentType.of(contentTypeValue);
     if (!MAP_STRING_WILDCARD.equals(bodyType) || !processors.containsKey(contentType)) {
       delegate.encode(object, bodyType, template);
@@ -108,6 +110,7 @@ public class FormEncoder implements Encoder {
     return processors.get(type);
   }
 
+  @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
   private String getContentTypeValue (Map<String, Collection<String>> headers) {
     for (val entry : headers.entrySet()) {
       if (!entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)) {

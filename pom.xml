@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+Copyright 2018 Artem Labazin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ limitations under the License.
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>3.0.3</version>
+  <version>3.1.0</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.5.8.RELEASE</version>
+    <version>1.5.9.RELEASE</version>
   </parent>
 
   <modules>
@@ -39,10 +39,14 @@ limitations under the License.
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
+
     <maven.compiler.testTarget>1.8</maven.compiler.testTarget>
     <maven.compiler.testSource>1.8</maven.compiler.testSource>
+
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
   </properties>
 
@@ -65,7 +69,7 @@ limitations under the License.
     <url>https://github.com/OpenFeign/feign-form</url>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>3.0.3</tag>
+    <tag>3.1.0</tag>
   </scm>
 
   <developers>
@@ -147,6 +151,79 @@ limitations under the License.
               <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
             </archive>
           </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>3.0.5</version>
+          <configuration>
+            <effort>Max</effort>
+            <threshold>Low</threshold>
+            <xmlOutput>false</xmlOutput>
+            <excludeFilterFile>${project.basedir}/../.codestyle/findbugs.xml</excludeFilterFile>
+          </configuration>
+          <executions>
+            <execution>
+              <id>analyze-compile</id>
+              <phase>compile</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>3.8</version>
+          <configuration>
+            <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
+            <targetJdk>${maven.compiler.source}</targetJdk>
+            <verbose>true</verbose>
+            <linkXRef>false</linkXRef>
+            <rulesets>
+              <ruleset>${project.basedir}/../.codestyle/pmd.xml</ruleset>
+            </rulesets>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>2.17</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.7</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <configLocation>${project.basedir}/../.codestyle/checkstyle.xml</configLocation>
+                <consoleOutput>true</consoleOutput>
+                <failsOnError>true</failsOnError>
+                <failOnViolation>true</failOnViolation>
+                <linkXRef>false</linkXRef>
+                <!-- <includeTestSourceDirectory>true</includeTestSourceDirectory> -->
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
