@@ -1,11 +1,11 @@
 /*
- * Copyright 2017 Artem Labazin <xxlabaza@gmail.com>.
+ * Copyright 2018 Artem Labazin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
- * @author Artem Labazin <xxlabaza@gmail.com>
+ * @author Artem Labazin
  */
 public abstract class AbstractWriter implements Writer {
 
@@ -40,7 +40,12 @@ public abstract class AbstractWriter implements Writer {
    * @param output output writer.
    * @param key name for piece of data.
    * @param value piece of data.
+   * @throws Exception in case of write errors
    */
+  @SuppressWarnings({
+    "PMD.UncommentedEmptyMethodBody",
+    "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
+  })
   protected void write(Output output, String key, Object value) throws Exception {}
 
   /**
@@ -65,8 +70,9 @@ public abstract class AbstractWriter implements Writer {
             .append("\"")
             .toString();
 
-    if (contentType == null) {
-      contentType =
+    String fileContentType = contentType;
+    if (fileContentType == null) {
+      fileContentType =
           fileName != null
               ? URLConnection.guessContentTypeFromName(fileName)
               : "application/octet-stream";
@@ -77,7 +83,7 @@ public abstract class AbstractWriter implements Writer {
             .append(contentDesposition)
             .append(CRLF)
             .append("Content-Type: ")
-            .append(contentType)
+            .append(fileContentType)
             .append(CRLF)
             .append("Content-Transfer-Encoding: binary")
             .append(CRLF)
