@@ -16,7 +16,7 @@
 
 package feign.form.spring.converter;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static feign.form.util.CharsetUtil.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -25,6 +25,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -143,7 +144,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
         bodyStream.toByteArray());
   }
 
-  private IgnoreKeyCaseMap splitIntoKeyValuePairs(
+  private Map<String, String> splitIntoKeyValuePairs(
       String str,
       Pattern entriesSeparatorPattern,
       Pattern keyValueSeparatorPattern,

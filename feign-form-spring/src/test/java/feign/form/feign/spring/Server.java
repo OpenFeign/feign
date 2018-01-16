@@ -16,16 +16,15 @@
 
 package feign.form.feign.spring;
 
+import static feign.form.util.CharsetUtil.UTF_8;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import java.nio.charset.Charset;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.apache.commons.codec.CharEncoding;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.core.io.ClassPathResource;
@@ -103,8 +102,7 @@ public class Server {
 
     val infoString = "The text for file ID " + fileId + ". Testing unicode €";
     val infoPartheader = new HttpHeaders();
-    infoPartheader.setContentType(
-        new MediaType("text", "plain", Charset.forName(CharEncoding.UTF_8)));
+    infoPartheader.setContentType(new MediaType("text", "plain", UTF_8));
 
     val infoPart = new HttpEntity<String>(infoString, infoPartheader);
 

@@ -16,7 +16,7 @@
 
 package feign.form.feign.spring;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static feign.form.util.CharsetUtil.UTF_8;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.util.HashMap;

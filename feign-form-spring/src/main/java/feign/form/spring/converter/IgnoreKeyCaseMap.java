@@ -16,56 +16,38 @@
 
 package feign.form.spring.converter;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import lombok.experimental.Delegate;
-import lombok.experimental.FieldDefaults;
 
 /**
  * A Map<String, String> implementation that normalizes the key to UPPER CASE, so that value
  * retrieval via the key is case insensitive.
  */
-@FieldDefaults(level = PRIVATE, makeFinal = true)
-final class IgnoreKeyCaseMap implements Map<String, String> {
+final class IgnoreKeyCaseMap extends HashMap<String, String> {
 
-  @Delegate(excludes = OverrideMap.class)
-  HashMap<String, String> delegate = new HashMap<String, String>();
-
-  @Override
-  public boolean containsKey(Object key) {
-    return delegate.containsKey(normalizeKey(key));
-  }
-
-  @Override
-  public String get(Object key) {
-    return delegate.get(normalizeKey(key));
-  }
-
-  @Override
-  public String put(String key, String value) {
-    return delegate.put(normalizeKey(key), value);
-  }
-
-  @Override
-  public String remove(Object key) {
-    return delegate.remove(normalizeKey(key));
-  }
+  private static final long serialVersionUID = -2321516556941546746L;
 
   private static String normalizeKey(Object key) {
     return key != null ? key.toString().toUpperCase(new Locale("en_US")) : null;
   }
 
-  private interface OverrideMap {
+  @Override
+  public boolean containsKey(Object key) {
+    return super.containsKey(normalizeKey(key));
+  }
 
-    boolean containsKey(Object key);
+  @Override
+  public String get(Object key) {
+    return super.get(normalizeKey(key));
+  }
 
-    String get(Object key);
+  @Override
+  public String put(String key, String value) {
+    return super.put(normalizeKey(key), value);
+  }
 
-    String put(String key, String value);
-
-    String remove(Object key);
+  @Override
+  public String remove(Object key) {
+    return super.remove(normalizeKey(key));
   }
 }
