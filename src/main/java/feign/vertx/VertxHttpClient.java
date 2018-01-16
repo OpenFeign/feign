@@ -36,15 +36,14 @@ public final class VertxHttpClient {
    * Executes HTTP request and returns {@link Future} with response.
    *
    * @param request request
-   * @param options request options
+   * @param options {@link HttpClientOptions}
    *
    * @return future of HTTP response
    */
   public Future<Response> execute(
       final Request request,
-      final Request.Options options) {
-    final HttpClientOptions requestOptions = makeHttpClientOptions(options);
-    final HttpClient client = vertx.createHttpClient(requestOptions);
+      final HttpClientOptions options) {
+    final HttpClient client = vertx.createHttpClient(options);
     final HttpClientRequest httpClientRequest;
 
     try {
@@ -120,20 +119,6 @@ public final class VertxHttpClient {
     return httpClientRequest;
   }
 
-  /**
-   * Transforms per-request provided feign {@link Request.Options} into Vert.x
-   * {@link HttpClientOptions}.
-   *
-   * @param options feign options
-   *
-   * @return options for vert.x HTTP client
-   */
-  private HttpClientOptions makeHttpClientOptions(
-      final Request.Options options) {
-    return new HttpClientOptions()
-        .setConnectTimeout(options.connectTimeoutMillis())
-        .setIdleTimeout(options.readTimeoutMillis());
-  }
 
   /**
    * Parses {@link HttpMethod} from string.
