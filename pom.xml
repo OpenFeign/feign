@@ -26,7 +26,7 @@ limitations under the License.
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>3.2.0</version>
+  <version>3.2.1</version>
   <packaging>pom</packaging>
 
   <name>Open Feign Forms Parent</name>
@@ -61,7 +61,7 @@ limitations under the License.
   <scm>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>3.2.0</tag>
+    <tag>3.2.1</tag>
     <url>https://github.com/OpenFeign/feign-form</url>
   </scm>
 
@@ -195,6 +195,14 @@ limitations under the License.
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>2.17</version>
+          <configuration>
+            <!-- Checks for Headers                                -->
+            <!-- See http://checkstyle.sf.net/config_header.html   -->
+            <module name="Header">
+              <property name="headerFile" value="../.codestyle/license_for_check.txt"></property>
+              <property name="fileExtensions" value="java"></property>
+            </module>
+          </configuration>
           <dependencies>
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>

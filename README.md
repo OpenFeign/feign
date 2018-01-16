@@ -5,13 +5,14 @@ This module adds support for encoding **application/x-www-form-urlencoded** and 
 ## Add dependency
 
 Include the dependency to your project's pom.xml file:
+
 ```xml
 <dependencies>
     ...
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.1</version>
     </dependency>
     ...
 </dependencies>
@@ -94,18 +95,19 @@ In example above, we send file in parameter named **photo** with additional fiel
 You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`.
 
 Include the dependencies to your project's pom.xml file:
+
 ```xml
 <dependencies>
     ...
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.1</version>
     </dependency>
     <dependency>
         <groupId>io.github.openfeign.form</groupId>
         <artifactId>feign-form-spring</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.1</version>
     </dependency>
     ...
 </dependencies>

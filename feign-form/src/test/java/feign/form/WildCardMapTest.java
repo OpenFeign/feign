@@ -49,6 +49,9 @@ public class WildCardMapTest {
   public void testOk() {
     Map<String, Object> param =
         new HashMap<String, Object>() {
+
+          private static final long serialVersionUID = 3109256773218160485L;
+
           {
             put("key1", "1");
             put("key2", "1");
@@ -62,6 +65,9 @@ public class WildCardMapTest {
   public void testBadRequest() {
     Map<String, Object> param =
         new HashMap<String, Object>() {
+
+          private static final long serialVersionUID = 3109256773218160485L;
+
           {
             put("key1", "1");
             put("key2", "2");

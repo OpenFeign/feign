@@ -18,6 +18,7 @@ package feign.form;
 
 import static feign.Logger.Level.FULL;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
@@ -25,8 +26,6 @@ import feign.jackson.JacksonEncoder;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import lombok.val;
 import org.junit.Assert;
@@ -99,7 +98,7 @@ public class BasicClientTest {
   @Test
   public void testQueryMap() {
     Map<String, Object> value =
-        Collections.singletonMap("filter", Arrays.asList("one", "two", "three", "four"));
+        singletonMap("filter", (Object) asList("one", "two", "three", "four"));
 
     val stringResponse = api.queryMap(value);
     Assert.assertEquals("4", stringResponse);
