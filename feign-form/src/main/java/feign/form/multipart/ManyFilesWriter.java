@@ -40,7 +40,7 @@ public class ManyFilesWriter extends AbstractWriter {
         fileWriter.write(output, boundary, key, file);
       }
     } else if (value instanceof Iterable) {
-      val iterable = (Iterable) value;
+      val iterable = (Iterable<?>) value;
       for (val file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
@@ -56,7 +56,7 @@ public class ManyFilesWriter extends AbstractWriter {
       return true;
     }
     if (value instanceof Iterable) {
-      val iterable = (Iterable) value;
+      val iterable = (Iterable<?>) value;
       val iterator = iterable.iterator();
       if (iterator.hasNext() && iterator.next() instanceof File) {
         return true;

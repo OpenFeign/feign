@@ -23,7 +23,7 @@ limitations under the License.
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>3.2.0</version>
+  <version>3.2.1</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -69,7 +69,7 @@ limitations under the License.
     <url>https://github.com/OpenFeign/feign-form</url>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>3.2.0</tag>
+    <tag>3.2.1</tag>
   </scm>
 
   <developers>
@@ -207,6 +207,14 @@ limitations under the License.
               <version>8.7</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <!-- Checks for Headers                                -->
+            <!-- See http://checkstyle.sf.net/config_header.html   -->
+            <module name="Header">
+              <property name="headerFile" value="../.codestyle/license_for_check.txt"/>
+              <property name="fileExtensions" value="java"/>
+            </module>
+          </configuration>
           <executions>
             <execution>
               <id>validate</id>

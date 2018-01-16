@@ -42,7 +42,7 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
         fileWriter.write(output, boundary, key, file);
       }
     } else if (value instanceof Iterable) {
-      val iterable = (Iterable) value;
+      val iterable = (Iterable<?>) value;
       for (val file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
@@ -58,7 +58,7 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
       return true;
     }
     if (value instanceof Iterable) {
-      val iterable = (Iterable) value;
+      val iterable = (Iterable<?>) value;
       val iterator = iterable.iterator();
       if (iterator.hasNext() && iterator.next() instanceof MultipartFile) {
         return true;

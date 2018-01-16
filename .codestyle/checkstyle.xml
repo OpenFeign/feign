@@ -33,14 +33,6 @@ limitations under the License.
   </module>
 
 
-  <!-- Checks for Headers                                -->
-  <!-- See http://checkstyle.sf.net/config_header.html   -->
-  <module name="Header">
-    <property name="headerFile" value=".codestyle/license_for_check.txt"/>
-    <property name="fileExtensions" value="java"/>
-  </module>
-
-
   <!--http://checkstyle.sourceforge.net/config_sizes.html#FileLength-->
   <module name="FileLength">
     <property name="max" value="300"/>

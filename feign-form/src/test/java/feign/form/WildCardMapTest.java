@@ -32,40 +32,57 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-    webEnvironment = DEFINED_PORT,
-    classes = Server.class
+        webEnvironment = DEFINED_PORT,
+        classes = Server.class
 )
 public class WildCardMapTest {
 
-  private static FormUrlEncodedApi API;
+    private static FormUrlEncodedApi API;
 
-  @BeforeClass
-  public static void configureClient() {
-    API = Feign.builder()
-        .encoder(new FormEncoder())
-        .logger(new Logger.JavaLogger().appendToFile("log.txt"))
-        .logLevel(FULL)
-        .target(FormUrlEncodedApi.class, "http://localhost:8080");
-  }
+    @BeforeClass
+    public static void configureClient () {
+        API = Feign.builder()
+                .encoder(new FormEncoder())
+                .logger(new Logger.JavaLogger().appendToFile("log.txt"))
+                .logLevel(FULL)
+                .target(FormUrlEncodedApi.class, "http://localhost:8080");
+    }
 
-  @Test
-  public void testOk() {
-    Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "1");}};
-    Response response = API.wildCardMap(param);
-    Assert.assertEquals(200, response.status());
-  }
+    @Test
+    public void testOk () {
+        Map<String, Object> param = new HashMap<String, Object>() {
 
-  @Test
-  public void testBadRequest() {
-    Map<String, Object> param = new HashMap<String, Object>() {{put("key1", "1"); put("key2", "2");}};
-    Response response = API.wildCardMap(param);
-    Assert.assertEquals(418, response.status());
-  }
+            private static final long serialVersionUID = 3109256773218160485L;
 
-  interface FormUrlEncodedApi {
+            {
+                put("key1", "1");
+                put("key2", "1");
+            }
+        };
+        Response response = API.wildCardMap(param);
+        Assert.assertEquals(200, response.status());
+    }
 
-    @RequestLine("POST /wild-card-map")
-    @Headers("Content-Type: application/x-www-form-urlencoded")
-    Response wildCardMap(Map<String, ?> param);
-  }
+    @Test
+    public void testBadRequest () {
+        Map<String, Object> param = new HashMap<String, Object>() {
+
+            private static final long serialVersionUID = 3109256773218160485L;
+
+            {
+
+                put("key1", "1");
+                put("key2", "2");
+            }
+        };
+        Response response = API.wildCardMap(param);
+        Assert.assertEquals(418, response.status());
+    }
+
+    interface FormUrlEncodedApi {
+
+        @RequestLine("POST /wild-card-map")
+        @Headers("Content-Type: application/x-www-form-urlencoded")
+        Response wildCardMap (Map<String, ?> param);
+    }
 }

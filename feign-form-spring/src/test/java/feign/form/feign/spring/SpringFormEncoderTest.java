@@ -87,7 +87,7 @@ public class SpringFormEncoderTest {
 
   @Test
   public void upload4Test () throws Exception {
-    val map = new HashMap<>();
+    val map = new HashMap<Object, Object>();
     map.put("one", 1);
     map.put("two", 2);
 
