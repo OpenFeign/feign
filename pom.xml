@@ -72,6 +72,27 @@ limitations under the License.
     <tag>3.2.2</tag>
   </scm>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/OpenFeign/feign-form/issues</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>Travis</system>
+    <url>https://travis-ci.org/infobip/popout</url>
+  </ciManagement>
+
   <developers>
     <developer>
       <name>Artem Labazin</name>
@@ -82,18 +103,6 @@ limitations under the License.
       <email>tjuchniewicz@gmail.com</email>
     </developer>
   </developers>
-
-  <distributionManagement>
-    <repository>
-      <id>bintray</id>
-      <url>https://api.bintray.com/maven/openfeign/maven/feign-form/;publish=1</url>
-    </repository>
-  </distributionManagement>
-
-  <issueManagement>
-    <system>Github</system>
-    <url>https://github.com/OpenFeign/feign-form/issues</url>
-  </issueManagement>
 
   <dependencyManagement>
     <dependencies>
@@ -207,14 +216,6 @@ limitations under the License.
               <version>8.7</version>
             </dependency>
           </dependencies>
-          <configuration>
-            <!-- Checks for Headers                                -->
-            <!-- See http://checkstyle.sf.net/config_header.html   -->
-            <module name="Header">
-              <property name="headerFile" value="../.codestyle/license_for_check.txt"/>
-              <property name="fileExtensions" value="java"/>
-            </module>
-          </configuration>
           <executions>
             <execution>
               <id>validate</id>
@@ -228,6 +229,7 @@ limitations under the License.
                 <failsOnError>true</failsOnError>
                 <failOnViolation>true</failOnViolation>
                 <linkXRef>false</linkXRef>
+                <propertyExpansion>codestyleFolder=${project.basedir}/../.codestyle</propertyExpansion>
                 <!-- <includeTestSourceDirectory>true</includeTestSourceDirectory> -->
               </configuration>
             </execution>
@@ -317,26 +319,33 @@ limitations under the License.
         </configuration>
       </plugin>
 
+      <!-- To release to Maven central -->
       <plugin>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.8</version>
+        <extensions>true</extensions>
         <configuration>
-          <useReleaseProfile>false</useReleaseProfile>
-          <releaseProfiles>release</releaseProfiles>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <tagNameFormat>@{project.version}</tagNameFormat>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>
 
+      <!-- To sign the artifacts -->
       <plugin>
-        <groupId>io.zipkin.centralsync-maven-plugin</groupId>
-        <artifactId>centralsync-maven-plugin</artifactId>
-        <version>0.1.0</version>
-        <configuration>
-          <subject>openfeign</subject>
-          <repo>maven</repo>
-          <packageName>feign-form</packageName>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

@@ -1,5 +1,8 @@
 # Form Encoder
 
+[![build_status](https://travis-ci.org/OpenFeign/feign-form.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-form)
+[![maven_central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form)
+
 This module adds support for encoding **application/x-www-form-urlencoded** and **multipart/form-data** forms.
 
 ## Add dependency

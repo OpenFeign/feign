@@ -22,6 +22,13 @@ limitations under the License.
   <property name="severity" value="error"/>
   <property name="fileExtensions" value="java, properties, xml"/>
 
+  <!-- Checks for Headers                                -->
+  <!-- See http://checkstyle.sf.net/config_header.html   -->
+  <module name="Header">
+    <property name="headerFile" value="${codestyleFolder}/license_for_check.txt"/>
+    <property name="fileExtensions" value="java"/>
+  </module>
+
 
   <!-- Regex checks.                                            -->
   <!-- See http://checkstyle.sourceforge.net/config_regexp.html -->
