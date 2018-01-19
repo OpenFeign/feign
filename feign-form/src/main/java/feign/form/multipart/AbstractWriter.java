@@ -67,10 +67,10 @@ public abstract class AbstractWriter implements Writer {
     String fileContentType = contentType;
     if (fileContentType == null) {
       if (fileName != null) {
-          fileContentType = URLConnection.guessContentTypeFromName(fileName);
+        fileContentType = URLConnection.guessContentTypeFromName(fileName);
       }
       if (fileContentType == null) {
-          fileContentType = "application/octet-stream";
+        fileContentType = "application/octet-stream";
       }
     }
 
