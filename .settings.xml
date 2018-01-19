@@ -4,19 +4,21 @@
                           http://maven.apache.org/xsd/settings-1.0.0.xsd">
   <servers>
     <server>
-      <id>sonatype</id>
+      <id>ossrh</id>
       <username>${env.SONATYPE_USER}</username>
       <password>${env.SONATYPE_PASSWORD}</password>
     </server>
-    <server>
-      <id>bintray</id>
-      <username>${env.BINTRAY_USER}</username>
-      <password>${env.BINTRAY_KEY}</password>
-    </server>
-    <server>
-      <id>github.com</id>
-      <username>${env.GH_USER}</username>
-      <password>${env.GH_TOKEN}</password>
-    </server>
   </servers>
+  <profiles>
+    <profile>
+      <id>ossrh</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <gpg.executable>${env.GPG_EXECUTABLE}</gpg.executable>
+        <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
 </settings>

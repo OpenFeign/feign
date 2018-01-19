@@ -1,36 +1,43 @@
-# Run `travis lint` when changing this file to avoid breaking the build.
-# Default JDK is really old: 1.8.0_31; Trusty's is less old: 1.8.0_51
-# https://docs.travis-ci.com/user/ci-environment/#Virtualization-environments
-sudo: required
-dist: trusty
+
+language: java
 
 cache:
   directories:
   - $HOME/.m2
 
-language: java
-
 jdk:
   - oraclejdk8
 
-
 before_install:
-  # Parameters used during release
-  - git config user.name "$GH_USER"
-  - git config user.email "$GH_USER_EMAIL"
-  # setup https authentication credentials, used by ./mvnw release:prepare
-  - git config credential.helper "store --file=.git/credentials"
-  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
+  - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
+  - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 
 install:
-  # Override default travis to use the maven wrapper
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  mvn --settings .settings.xml clean install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 script:
-  - ./.travis/publish.sh
+  mvn --settings .settings.xml verify -DskipTests=false -Dmaven.javadoc.skip=false -B -U
 
-# Don't build release tags. This avoids publish conflicts because the version commit exists both on master and the release tag.
-# See https://github.com/travis-ci/travis-ci/issues/1532
-branches:
-  except:
-    - /^[0-9]/
+before_deploy:
+  - mvn help:evaluate -N -Dexpression=project.version | grep -v '\['
+  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[')
+
+deploy:
+  provider: releases
+  api_key:
+    secure: D6QIU6EyLGlsZJMmnq/xK+GgjaeyVsXtt42pZMmxN5/CDJE83am6kAgF8TmM3ZLT8PGteRq/U+BYXMFipagXn4RDvFWRq+ZjjCPzXZ0+CLO7EbzTNgtIzweMYrx6EwnMyQ6TDP7M/hjylB5LePsi6ASP3GLbKQ9GuaDPCnLJGGDzuRJPbCuk0TIKpfEz+WxC7vL/FqJluPs3wINR1dv4rTGjz9I/unxBwiSkUZHgI08jbJOPr19mFUej2L5+hm40H9THKGqEwTCDEjIiJodv6gIAvK8Kt+upRewNdX8AJiLnK877KLnhm8gsZy14gVx8fZ3/xEC4EB44z4UQjfZL0FBtw2cwFe/zij0q8v53h0vjEpJEZeIqwW4QrbADk7Sr5EqCCVdq+S/lLxuEPgnAw7ARX87fELrIP3DyONVP773sC2k3ZUi9MZjBmlwSgHB2Si30deBSxIVKgWCRdGyM2hMAU2nSfM4tuZMMivucrh3+ibppJxNpl512UBUkXNX16/mjeQlv3Ve3FZ08C+GZ+1A+t7orPok9mz7k0h2FPx39YmvDc1pWbKBtPAbgFj+Uyebuc15wf5JDDTDgmr3oBGHjWMj6PaA+ovJ0lti4g5QzboP9rI3HC7Jz44KIlX55eUaRhcWBxZJWxIAfPpJ1cKKrztjMhPjPh147epLbXX4=
+  file:
+    - "feign-form/target/feign-form-$project_version.jar"
+    - "feign-form/target/feign-form-$project_version-javadoc.jar"
+    - "feign-form/target/feign-form-$project_version-sources.jar"
+    - "feign-form-spring/target/feign-form-spring-$project_version.jar"
+    - "feign-form-spring/target/feign-form-spring-$project_version-javadoc.jar"
+    - "feign-form-spring/target/feign-form-spring-$project_version-sources.jar"
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: OpenFeign/feign-form
+  name: $project_version
+
+after_deploy:
+  mvn --settings .settings.xml deploy -DskipTests=true -Dmaven.javadoc.skip=true -B -U
