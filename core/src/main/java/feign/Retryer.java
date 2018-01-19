@@ -75,6 +75,7 @@ public interface Retryer extends Cloneable {
         Thread.sleep(interval);
       } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
+        throw e;
       }
       sleptForMillis += interval;
     }
