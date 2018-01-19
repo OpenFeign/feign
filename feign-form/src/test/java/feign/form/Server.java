@@ -167,4 +167,15 @@ public class Server {
                  : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getOriginalFilename());
   }
+
+  @PostMapping(
+      path = "/upload/unknown_type",
+      consumes = MULTIPART_FORM_DATA_VALUE
+  )
+  public ResponseEntity<String> uploadUnknownType (@RequestPart("file") MultipartFile file) {
+    val status = file != null
+                 ? OK
+                 : I_AM_A_TEAPOT;
+    return ResponseEntity.status(status).body(file.getContentType());
+  }
 }

@@ -149,4 +149,13 @@ public class BasicClientTest {
     Assert.assertNotNull(response);
     Assert.assertEquals(200, response.status());
   }
+
+  @Test
+  public void testUnknownTypeFile() throws Exception {
+      val path = Paths.get(this.getClass().getClassLoader().getResource("file.abc").toURI());
+      Assert.assertTrue(Files.exists(path));
+
+      val stringResponse = api.uploadUnknownType(path.toFile());
+      Assert.assertEquals("application/octet-stream", stringResponse);
+  }
 }
