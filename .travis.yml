@@ -3,7 +3,7 @@ language: java
 
 cache:
   directories:
-  - $HOME/.m2
+    - $HOME/.m2
 
 jdk:
   - oraclejdk8
@@ -16,11 +16,13 @@ install:
   mvn --settings .settings.xml clean install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 script:
-  mvn --settings .settings.xml verify -DskipTests=false -Dmaven.javadoc.skip=false -B -U
+  mvn --settings .settings.xml verify -DskipTests=false -Dmaven.javadoc.skip=true -B -U
 
 before_deploy:
   - mvn help:evaluate -N -Dexpression=project.version | grep -v '\['
   - export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[')
+  - sed -i -- "s/\${env.SONATYPE_PASSWORD}/$SONATYPE_PASSWORD/g" .settings.xml
+  - mvn --settings .settings.xml clean deploy -DskipTests=true -Dmaven.javadoc.skip=false -B -U
 
 deploy:
   provider: releases
@@ -38,6 +40,3 @@ deploy:
     tags: true
     repo: OpenFeign/feign-form
   name: $project_version
-
-after_deploy:
-  mvn --settings .settings.xml deploy -DskipTests=true -Dmaven.javadoc.skip=true -B -U
