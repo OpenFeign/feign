@@ -72,10 +72,12 @@ public abstract class AbstractWriter implements Writer {
 
     String fileContentType = contentType;
     if (fileContentType == null) {
-      fileContentType =
-          fileName != null
-              ? URLConnection.guessContentTypeFromName(fileName)
-              : "application/octet-stream";
+      if (fileName != null) {
+        fileContentType = URLConnection.guessContentTypeFromName(fileName);
+      }
+      if (fileContentType == null) {
+        fileContentType = "application/octet-stream";
+      }
     }
 
     val string =
