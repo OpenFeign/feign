@@ -17,17 +17,17 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Allows Feign interfaces to return vertx {@code Futures}.
+ * Allows Feign interfaces to return Vert.x {@link io.vertx.core.Future Future}s.
  *
  * @author Alexei KLENIN
+ * @author Gordon McKinney
  */
-public class VertxFeign extends Feign {
+public final class VertxFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
 
@@ -44,11 +44,12 @@ public class VertxFeign extends Feign {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> T newInstance(Target<T> target) {
-    final Map<String, MethodHandler> nameToHandler =
-        targetToHandlersByName.apply(target);
-    final Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<>();
-    final List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<>();
+  public <T> T newInstance(final Target<T> target) {
+    checkNotNull(target, "Argument target must be not null");
+
+    final Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
+    final Map<Method, MethodHandler> methodToHandler = new HashMap<>();
+    final List<DefaultMethodHandler> defaultMethodHandlers = new ArrayList<>();
 
     for (final Method method : target.type().getMethods()) {
       if (isDefault(method)) {
@@ -56,18 +57,17 @@ public class VertxFeign extends Feign {
         defaultMethodHandlers.add(handler);
         methodToHandler.put(method, handler);
       } else {
-        methodToHandler.put(method, nameToHandler.get(
-            Feign.configKey(target.type(), method)));
+        methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
       }
     }
 
     final InvocationHandler handler = factory.create(target, methodToHandler);
-    T proxy = (T) Proxy.newProxyInstance(
+    final T proxy = (T) Proxy.newProxyInstance(
         target.type().getClassLoader(),
-        new Class<?>[]{target.type()}, handler);
+        new Class<?>[] { target.type() },
+        handler);
 
-    for (final DefaultMethodHandler defaultMethodHandler :
-        defaultMethodHandlers) {
+    for (final DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
       defaultMethodHandler.bindTo(proxy);
     }
 
@@ -79,11 +79,9 @@ public class VertxFeign extends Feign {
    */
   public static final class Builder extends Feign.Builder {
     private Vertx vertx;
-    private final List<RequestInterceptor> requestInterceptors =
-        new ArrayList<>();
+    private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
     private Logger.Level logLevel = Logger.Level.NONE;
-    private Contract contract =
-        new VertxDelegatingContract(new Contract.Default());
+    private Contract contract = new VertxDelegatingContract(new Contract.Default());
     private VertxHttpClient client;
     private Retryer retryer = new Retryer.Default();
     private Logger logger = new Logger.NoOpLogger();
@@ -111,12 +109,12 @@ public class VertxFeign extends Feign {
     /**
      * Sets a vertx instance to use to make the client.
      *
-     * @param vertx vertx instance
+     * @param vertx  vertx instance
      *
      * @return this builder
      */
     public Builder vertx(final Vertx vertx) {
-      this.vertx = vertx;
+      this.vertx = checkNotNull(vertx, "Argument vertx must be not null");
       this.client = new VertxHttpClient(vertx);
       return this;
     }
@@ -124,26 +122,26 @@ public class VertxFeign extends Feign {
     /**
      * Sets log level.
      *
-     * @param logLevel log level
+     * @param logLevel  log level
      *
      * @return this builder
      */
     @Override
     public Builder logLevel(final Logger.Level logLevel) {
-      this.logLevel = logLevel;
+      this.logLevel = checkNotNull(logLevel, "Argument logLevel must be not null");
       return this;
     }
 
     /**
-     * Sets contract. Provided contract will be wrapped in
-     * {@link VertxDelegatingContract}
+     * Sets contract. Provided contract will be wrapped in {@link VertxDelegatingContract}.
      *
-     * @param contract contract.
+     * @param contract  contract
      *
      * @return this builder
      */
     @Override
     public Builder contract(final Contract contract) {
+      checkNotNull(contract, "Argument contract must be not null");
       this.contract = new VertxDelegatingContract(contract);
       return this;
     }
@@ -151,67 +149,66 @@ public class VertxFeign extends Feign {
     /**
      * Sets retryer.
      *
-     * @param retryer retryer
+     * @param retryer  retryer
      *
      * @return this builder
      */
     @Override
     public Builder retryer(final Retryer retryer) {
-      this.retryer = retryer;
+      this.retryer = checkNotNull(retryer, "Argument retryer must be not null");
       return this;
     }
 
     /**
      * Sets logger.
      *
-     * @param logger logger
+     * @param logger  logger
      *
      * @return this builder
      */
     @Override
     public Builder logger(final Logger logger) {
-      this.logger = logger;
+      this.logger = checkNotNull(logger, "Argument logger must be not null");
       return this;
     }
 
     /**
      * Sets encoder.
      *
-     * @param encoder encoder
+     * @param encoder  encoder
      *
      * @return this builder
      */
     @Override
     public Builder encoder(final Encoder encoder) {
-      this.encoder = encoder;
+      this.encoder = checkNotNull(encoder, "Argument encoder must be not null");
       return this;
     }
 
     /**
      * Sets decoder.
      *
-     * @param decoder decoder
+     * @param decoder  decoder
      *
      * @return this builder
      */
     @Override
     public Builder decoder(final Decoder decoder) {
-      this.decoder = decoder;
+      this.decoder = checkNotNull(decoder, "Argument decoder must be not null");
       return this;
     }
 
     /**
-     * This flag indicates that the {@link #decoder(Decoder) decoder} should
-     * process responses with 404 status, specifically returning null or empty
-     * instead of throwing {@link FeignException}.
+     * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
+     * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
-     * <p>All first-party (ex gson) decoders return well-known empty values
-     * defined by {@link Util#emptyValueOf}. To customize further, wrap an
-     * existing {@link #decoder(Decoder) decoder} or make your own.
+     * <p>All first-party (ex gson) decoders return well-known empty values defined by
+     * {@link Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder)
+     * decoder} or make your own.
      *
-     * <p>This flag only works with 404, as opposed to all or arbitrary status
-     * codes. This was an explicit decision: 404 - empty is safe, common and
-     * doesn't complicate redirection, retry or fallback policy.
+     * <p>This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * explicit decision: 404 - empty is safe, common and doesn't complicate redirection, retry or
+     * fallback policy.
      *
      * @return this builder
      */
@@ -224,95 +221,102 @@ public class VertxFeign extends Feign {
     /**
      * Sets error decoder.
      *
-     * @param errorDecoder error deoceder
+     * @param errorDecoder  error deoceder
      *
      * @return this builder
      */
     @Override
     public Builder errorDecoder(final ErrorDecoder errorDecoder) {
-      this.errorDecoder = errorDecoder;
+      this.errorDecoder = checkNotNull(errorDecoder, "Argument errorDecoder must be not null");
       return this;
     }
 
     /**
-     * Sets request options using Vert.x {@link HttpClientOptions}
+     * Sets request options using Vert.x {@link HttpClientOptions}.
      *
-     * @param options {@code HttpClientOptions} for full customization of the underlying Vert.x {@link HttpClient}
+     * @param options  {@code HttpClientOptions} for full customization of the underlying Vert.x
+     *     {@link HttpClient}
      *
      * @return this builder
      */
     public Builder options(final HttpClientOptions options) {
-      this.options = options;
+      this.options = checkNotNull(options, "Argument options must be not null");
       return this;
     }
 
     /**
-     * Sets request options using Feign {@link Request.Options}
+     * Sets request options using Feign {@link Request.Options}.
      *
-     * @param options Feign {@code Request.Options} object
+     * @param options  Feign {@code Request.Options} object
      *
      * @return this builder
      */
     @Override
     public Builder options(final Request.Options options) {
+      checkNotNull(options, "Argument options must be not null");
       this.options = new HttpClientOptions()
           .setConnectTimeout(options.connectTimeoutMillis())
           .setIdleTimeout(options.readTimeoutMillis());
       return this;
     }
 
-
     /**
      * Adds a single request interceptor to the builder.
      *
-     * @param requestInterceptor request interceptor to add
+     * @param requestInterceptor  request interceptor to add
      *
      * @return this builder
      */
     @Override
-    public Builder requestInterceptor(
-        final RequestInterceptor requestInterceptor) {
+    public Builder requestInterceptor(final RequestInterceptor requestInterceptor) {
+      checkNotNull(requestInterceptor, "Argument requestInterceptor must be not null");
       this.requestInterceptors.add(requestInterceptor);
       return this;
     }
 
     /**
-     * Sets the full set of request interceptors for the builder, overwriting
-     * any previous interceptors.
+     * Sets the full set of request interceptors for the builder, overwriting any previous
+     * interceptors.
      *
-     * @param requestInterceptors set of request interceptors
+     * @param requestInterceptors  set of request interceptors
      *
      * @return this builder
      */
     @Override
-    public Builder requestInterceptors(
-        final Iterable<RequestInterceptor> requestInterceptors) {
+    public Builder requestInterceptors(final Iterable<RequestInterceptor> requestInterceptors) {
+      checkNotNull(requestInterceptors, "Argument requestInterceptors must be not null");
+
       this.requestInterceptors.clear();
-      for (RequestInterceptor requestInterceptor : requestInterceptors) {
+
+      for (final RequestInterceptor requestInterceptor : requestInterceptors) {
         this.requestInterceptors.add(requestInterceptor);
       }
+
       return this;
     }
 
     /**
      * Defines target and builds client.
      *
-     * @param apiType API interface
-     * @param url base URL
-     * @param <T> class of API interface
+     * @param apiType  API interface
+     * @param url  base URL
+     * @param <T>  class of API interface
      *
      * @return built client
      */
     @Override
     public <T> T target(final Class<T> apiType, final String url) {
+      checkNotNull(apiType, "Argument apiType must be not null");
+      checkNotNull(url, "Argument url must be not null");
+
       return target(new Target.HardCodedTarget<>(apiType, url));
     }
 
     /**
      * Defines target and builds client.
      *
-     * @param target target instance
-     * @param <T> class of API interface
+     * @param target  target instance
+     * @param <T>  class of API interface
      *
      * @return built client
      */
@@ -323,15 +327,14 @@ public class VertxFeign extends Feign {
 
     @Override
     public VertxFeign build() {
-      checkNotNull(this.vertx,
-          "Vertx instance wasn't provided in VertxFeign builder");
+      checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
-          new AsynchronousMethodHandler.Factory(client, retryer,
-              requestInterceptors, logger, logLevel, decode404);
+          new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
+              logLevel, decode404);
       final ParseHandlersByName handlersByName = new ParseHandlersByName(
-          contract, options, encoder, decoder, errorDecoder,
-          methodHandlerFactory);
+          contract, options, encoder, decoder, errorDecoder, methodHandlerFactory);
+
       return new VertxFeign(handlersByName, invocationHandlerFactory);
     }
   }
@@ -344,7 +347,7 @@ public class VertxFeign extends Feign {
     private final ErrorDecoder errorDecoder;
     private final AsynchronousMethodHandler.Factory factory;
 
-    ParseHandlersByName(
+    private ParseHandlersByName(
         final Contract contract,
         final HttpClientOptions options,
         final Encoder encoder,
@@ -355,31 +358,30 @@ public class VertxFeign extends Feign {
       this.options = options;
       this.factory = factory;
       this.errorDecoder = errorDecoder;
-      this.encoder = checkNotNull(encoder, "encoder must not be null");
-      this.decoder = checkNotNull(decoder, "decoder must not be null");
+      this.encoder = encoder;
+      this.decoder = decoder;
     }
 
-    Map<String, MethodHandler> apply(final Target key) {
-      final List<MethodMetadata> metadata = contract
-          .parseAndValidatateMetadata(key.type());
-      final Map<String, MethodHandler> result = new LinkedHashMap<>();
+    private Map<String, MethodHandler> apply(final Target key) {
+      final List<MethodMetadata> metadatas = contract.parseAndValidatateMetadata(key.type());
+      final Map<String, MethodHandler> result = new HashMap<>();
 
-      for (final MethodMetadata md : metadata) {
+      for (final MethodMetadata metadata : metadatas) {
         BuildTemplateByResolvingArgs buildTemplate;
 
-        if (!md.formParams().isEmpty()
-            && md.template().bodyTemplate() == null) {
+        if (!metadata.formParams().isEmpty()
+            && metadata.template().bodyTemplate() == null) {
           buildTemplate = new BuildTemplateByResolvingArgs
-              .BuildFormEncodedTemplateFromArgs(md, encoder);
-        } else if (md.bodyIndex() != null) {
+              .BuildFormEncodedTemplateFromArgs(metadata, encoder);
+        } else if (metadata.bodyIndex() != null) {
           buildTemplate = new BuildTemplateByResolvingArgs
-              .BuildEncodedTemplateFromArgs(md, encoder);
+              .BuildEncodedTemplateFromArgs(metadata, encoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md);
+          buildTemplate = new BuildTemplateByResolvingArgs(metadata);
         }
 
-        result.put(md.configKey(), factory.create(
-                key, md, buildTemplate, options, decoder, errorDecoder));
+        result.put(metadata.configKey(), factory.create(
+                key, metadata, buildTemplate, options, decoder, errorDecoder));
       }
 
       return result;

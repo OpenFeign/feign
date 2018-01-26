@@ -98,8 +98,8 @@ public class VertxHttpClientTest {
     /* Then */
     CompositeFuture.all(flavorsFuture, mixinsFuture).setHandler(res -> {
       if (res.succeeded()) {
-        Collection<Flavor> flavors = res.result().result(0);
-        Collection<Mixin> mixins = res.result().result(1);
+        Collection<Flavor> flavors = res.result().resultAt(0);
+        Collection<Mixin> mixins = res.result().resultAt(1);
 
         try {
           assertThat(flavors)

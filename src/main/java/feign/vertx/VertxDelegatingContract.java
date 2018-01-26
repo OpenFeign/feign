@@ -16,8 +16,7 @@ import java.util.List;
  *
  * @author Alexei KLENIN
  */
-public class VertxDelegatingContract implements Contract {
-
+public final class VertxDelegatingContract implements Contract {
   private final Contract delegate;
 
   public VertxDelegatingContract(final Contract delegate) {
@@ -25,10 +24,10 @@ public class VertxDelegatingContract implements Contract {
   }
 
   @Override
-  public List<MethodMetadata> parseAndValidatateMetadata(
-      final Class<?> targetType) {
-    final List<MethodMetadata> metadatas =
-        this.delegate.parseAndValidatateMetadata(targetType);
+  public List<MethodMetadata> parseAndValidatateMetadata(final Class<?> targetType) {
+    checkNotNull(targetType, "Argument targetType must be not null");
+
+    final List<MethodMetadata> metadatas = delegate.parseAndValidatateMetadata(targetType);
 
     for (final MethodMetadata metadata : metadatas) {
       final Type type = metadata.returnType();

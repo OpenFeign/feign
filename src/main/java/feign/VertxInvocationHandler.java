@@ -1,7 +1,5 @@
 package feign;
 
-import static feign.Util.checkNotNull;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Future;
@@ -12,8 +10,8 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 
 /**
- * {@link InvocationHandler} implementation that transforms calls to methods of
- * feign contract into asynchronous HTTP requests via vertx.
+ * {@link InvocationHandler} implementation that transforms calls to methods of feign contract into
+ * asynchronous HTTP requests via vertx.
  *
  * @author Alexei KLENIN
  */
@@ -21,16 +19,18 @@ final class VertxInvocationHandler implements InvocationHandler {
   private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
 
-  private VertxInvocationHandler(final Target<?> target,
+  private VertxInvocationHandler(
+      final Target<?> target,
       final Map<Method, MethodHandler> dispatch) {
-    this.target = checkNotNull(target, "target must not be null");
-    this.dispatch = checkNotNull(dispatch, "dispatch must not be null");
+    this.target = target;
+    this.dispatch = dispatch;
   }
 
   @Override
-  public Object invoke(final Object proxy,
-                       final Method method,
-                       final Object[] args) throws Throwable {
+  public Object invoke(
+      final Object proxy,
+      final Method method,
+      final Object[] args) throws Throwable {
     switch (method.getName()) {
       case "equals" :
         final Object otherHandler = args.length > 0 && args[0] != null
@@ -47,17 +47,17 @@ final class VertxInvocationHandler implements InvocationHandler {
         } else {
           throw new FeignException(String.format(
               "Method %s of contract %s doesn't return io.vertx.core.Future",
-              method.getName(), method.getDeclaringClass().getSimpleName()));
+              method.getName(),
+              method.getDeclaringClass().getSimpleName()));
         }
     }
   }
 
   /**
-   * Transforms method invocation into request that executed by
-   * {@link VertxHttpClient}.
+   * Transforms method invocation into request that executed by {@link VertxHttpClient}.
    *
-   * @param method invoked method
-   * @param args provided arguments to method
+   * @param method  invoked method
+   * @param args  provided arguments to method
    *
    * @return future with decoded result or occurred exception
    */
@@ -72,7 +72,7 @@ final class VertxInvocationHandler implements InvocationHandler {
   /**
    * Checks if method must return vertx {@code Future}.
    *
-   * @param method invoked method
+   * @param method  invoked method
    *
    * @return true if method must return Future, false if not
    */
@@ -83,10 +83,10 @@ final class VertxInvocationHandler implements InvocationHandler {
   @Override
   public boolean equals(final Object other) {
     if (other instanceof VertxInvocationHandler) {
-      final VertxInvocationHandler otherHandler =
-          (VertxInvocationHandler) other;
+      final VertxInvocationHandler otherHandler = (VertxInvocationHandler) other;
       return this.target.equals(otherHandler.target);
     }
+
     return false;
   }
 
@@ -106,8 +106,9 @@ final class VertxInvocationHandler implements InvocationHandler {
   static final class Factory implements InvocationHandlerFactory {
 
     @Override
-    public InvocationHandler create(final Target target,
-                                    final Map<Method, MethodHandler> dispatch) {
+    public InvocationHandler create(
+        final Target target,
+        final Map<Method, MethodHandler> dispatch) {
       return new VertxInvocationHandler(target, dispatch);
     }
   }

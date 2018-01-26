@@ -1,6 +1,6 @@
 package feign;
 
-import static feign.Util.checkArgument;
+import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 
 import feign.codec.EncodeException;
@@ -8,65 +8,71 @@ import feign.codec.Encoder;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Copy of private {@code ReflectiveFeign.BuildTemplateByResolvingArgs}.
  */
-public class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
-  protected final MethodMetadata metadata;
-  private final Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
+class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
+  final MethodMetadata metadata;
+  private final Map<Integer, Param.Expander> indexToExpander = new HashMap<>();
 
-  public BuildTemplateByResolvingArgs(MethodMetadata metadata) {
+  BuildTemplateByResolvingArgs(final MethodMetadata metadata) {
     this.metadata = metadata;
+
     if (metadata.indexToExpander() != null) {
       indexToExpander.putAll(metadata.indexToExpander());
       return;
     }
+
     if (metadata.indexToExpanderClass().isEmpty()) {
       return;
     }
-    for (Map.Entry<Integer, Class<? extends Param.Expander>> indexToExpanderClass : metadata
+
+    for (final Map.Entry<Integer, Class<? extends Param.Expander>> indexToExpanderClass : metadata
         .indexToExpanderClass().entrySet()) {
       try {
-        indexToExpander
-            .put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
-      } catch (InstantiationException e) {
-        throw new IllegalStateException(e);
-      } catch (IllegalAccessException e) {
-        throw new IllegalStateException(e);
+        indexToExpander.put(
+            indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
+      } catch (final InstantiationException | IllegalAccessException exception) {
+        throw new IllegalStateException(exception);
       }
     }
   }
 
   @Override
-  public RequestTemplate create(Object[] argv) {
-    RequestTemplate mutable = new RequestTemplate(metadata.template());
+  public RequestTemplate create(final Object[] argv) {
+    final RequestTemplate mutable = new RequestTemplate(metadata.template());
+
     if (metadata.urlIndex() != null) {
-      int urlIndex = metadata.urlIndex();
-      checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
+      final int urlIndex = metadata.urlIndex();
+      checkNotNull(argv[urlIndex], "URI parameter %s was null", urlIndex);
       mutable.insert(0, String.valueOf(argv[urlIndex]));
     }
-    Map<String, Object> varBuilder = new LinkedHashMap<String, Object>();
-    for (Map.Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
-      int i = entry.getKey();
+
+    final Map<String, Object> varBuilder = new HashMap<>();
+
+    for (final Map.Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
+      final int i = entry.getKey();
       Object value = argv[entry.getKey()];
+
       if (value != null) { // Null values are skipped.
         if (indexToExpander.containsKey(i)) {
           value = indexToExpander.get(i).expand(value);
         }
-        for (String name : entry.getValue()) {
+
+        for (final String name : entry.getValue()) {
           varBuilder.put(name, value);
         }
       }
     }
 
     RequestTemplate template = resolve(argv, mutable, varBuilder);
+
     if (metadata.queryMapIndex() != null) {
-      // add query map parameters after initial resolve so that they take
-      // precedence over any predefined values
+      /* Add query map parameters after initial resolve so that they take precedence over any
+         predefined values */
       template = addQueryMapQueryParameters(argv, template);
     }
 
@@ -78,86 +84,98 @@ public class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   }
 
   @SuppressWarnings("unchecked")
-  private RequestTemplate addHeaderMapHeaders(Object[] argv, RequestTemplate mutable) {
-    Map<Object, Object> headerMap = (Map<Object, Object>) argv[metadata.headerMapIndex()];
-    for (Map.Entry<Object, Object> currEntry : headerMap.entrySet()) {
-      checkState(currEntry.getKey().getClass() == String.class, "HeaderMap key must be a String: %s", currEntry.getKey());
+  private RequestTemplate addHeaderMapHeaders(
+      final Object[] argv,
+      final RequestTemplate mutableRequestTemplate) {
+    final Map<Object, Object> headerMap = (Map<Object, Object>) argv[metadata.headerMapIndex()];
 
-      Collection<String> values = new ArrayList<String>();
+    for (final Map.Entry<Object, Object> currEntry : headerMap.entrySet()) {
+      checkState(currEntry.getKey().getClass() == String.class,
+          "HeaderMap key must be a String: %s", currEntry.getKey());
 
-      Object currValue = currEntry.getValue();
+      final Object currValue = currEntry.getValue();
+      final Collection<String> values = new ArrayList<>();
+
       if (currValue instanceof Iterable<?>) {
-        Iterator<?> iter = ((Iterable<?>) currValue).iterator();
-        while (iter.hasNext()) {
-          Object nextObject = iter.next();
-          values.add(nextObject == null ? null : nextObject.toString());
+        for (final Object valueObject : (Iterable<?>) currValue) {
+          values.add(valueObject == null ? null : valueObject.toString());
         }
       } else {
         values.add(currValue == null ? null : currValue.toString());
       }
 
-      mutable.header((String) currEntry.getKey(), values);
+      mutableRequestTemplate.header((String) currEntry.getKey(), values);
     }
-    return mutable;
+
+    return mutableRequestTemplate;
   }
 
   @SuppressWarnings("unchecked")
-  private RequestTemplate addQueryMapQueryParameters(Object[] argv, RequestTemplate mutable) {
-    Map<Object, Object> queryMap = (Map<Object, Object>) argv[metadata.queryMapIndex()];
-    for (Map.Entry<Object, Object> currEntry : queryMap.entrySet()) {
-      checkState(currEntry.getKey().getClass() == String.class, "QueryMap key must be a String: %s", currEntry.getKey());
+  private RequestTemplate addQueryMapQueryParameters(
+      final Object[] argv,
+      final RequestTemplate mutableRequestTemplate) {
+    final Map<Object, Object> queryMap = (Map<Object, Object>) argv[metadata.queryMapIndex()];
 
-      Collection<String> values = new ArrayList<String>();
+    for (final Map.Entry<Object, Object> currEntry : queryMap.entrySet()) {
+      checkState(currEntry.getKey().getClass() == String.class,
+          "QueryMap key must be a String: %s", currEntry.getKey());
 
-      Object currValue = currEntry.getValue();
+      final Object currValue = currEntry.getValue();
+      final Collection<String> values = new ArrayList<>();
+
       if (currValue instanceof Iterable<?>) {
-        Iterator<?> iter = ((Iterable<?>) currValue).iterator();
-        while (iter.hasNext()) {
-          Object nextObject = iter.next();
-          values.add(nextObject == null ? null : nextObject.toString());
+        for (final Object valueObject : (Iterable<?>) currValue) {
+          values.add(valueObject == null ? null : valueObject.toString());
         }
       } else {
         values.add(currValue == null ? null : currValue.toString());
       }
 
-      mutable.query((String) currEntry.getKey(), values);
+      mutableRequestTemplate.query((String) currEntry.getKey(), values);
     }
-    return mutable;
+
+    return mutableRequestTemplate;
   }
 
-  protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                    Map<String, Object> variables) {
+  protected RequestTemplate resolve(
+      final Object[] argv,
+      final RequestTemplate mutable,
+      final Map<String, Object> variables) {
     return mutable.resolve(variables);
   }
 
   /**
    * Public copy of {@code ReflectiveFeign.BuildFormEncodedTemplateFromArgs}.
    */
-  public static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
-
+  static final class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
-    public BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
+    BuildFormEncodedTemplateFromArgs(final MethodMetadata metadata, final Encoder encoder) {
       super(metadata);
       this.encoder = encoder;
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                      Map<String, Object> variables) {
-      Map<String, Object> formVariables = new LinkedHashMap<String, Object>();
-      for (Map.Entry<String, Object> entry : variables.entrySet()) {
+    protected RequestTemplate resolve(
+        final Object[] argv,
+        final RequestTemplate mutable,
+        final Map<String, Object> variables) {
+      final Map<String, Object> formVariables = new HashMap<>();
+
+      for (final Map.Entry<String, Object> entry : variables.entrySet()) {
         if (metadata.formParams().contains(entry.getKey())) {
           formVariables.put(entry.getKey(), entry.getValue());
         }
       }
+
       try {
         encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable);
-      } catch (EncodeException e) {
-        throw e;
-      } catch (RuntimeException e) {
-        throw new EncodeException(e.getMessage(), e);
+      } catch (final EncodeException encodeException) {
+        throw encodeException;
+      } catch (final RuntimeException unexpectedException) {
+        throw new EncodeException(unexpectedException.getMessage(), unexpectedException);
       }
+
       return super.resolve(argv, mutable, variables);
     }
   }
@@ -165,27 +183,30 @@ public class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   /**
    * Public copy of {@code ReflectiveFeign.BuildEncodedTemplateFromArgs}.
    */
-  public static class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
-
+  static final class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
-    public BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
+    BuildEncodedTemplateFromArgs(final MethodMetadata metadata, final Encoder encoder) {
       super(metadata);
       this.encoder = encoder;
     }
 
     @Override
-    protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                      Map<String, Object> variables) {
-      Object body = argv[metadata.bodyIndex()];
-      checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
+    protected RequestTemplate resolve(
+        final Object[] argv,
+        final RequestTemplate mutable,
+        final Map<String, Object> variables) {
+      final Object body = argv[metadata.bodyIndex()];
+      checkNotNull(body, "Body parameter %s was null", metadata.bodyIndex());
+
       try {
         encoder.encode(body, metadata.bodyType(), mutable);
-      } catch (EncodeException e) {
-        throw e;
-      } catch (RuntimeException e) {
-        throw new EncodeException(e.getMessage(), e);
+      } catch (final EncodeException encodeException) {
+        throw encodeException;
+      } catch (final RuntimeException unexpectedException) {
+        throw new EncodeException(unexpectedException.getMessage(), unexpectedException);
       }
+
       return super.resolve(argv, mutable, variables);
     }
   }
