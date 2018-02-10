@@ -15,10 +15,15 @@
  */
 package feign.jaxb;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -32,28 +37,38 @@ import javax.xml.bind.Unmarshaller;
  */
 public final class JAXBContextFactory {
 
-  private final ConcurrentHashMap<Class, JAXBContext>
-      jaxbContexts =
-      new ConcurrentHashMap<Class, JAXBContext>(64);
+  private final ConcurrentHashMap<Integer, JAXBContext> jaxbContexts = 
+          new ConcurrentHashMap<Integer, JAXBContext>(64);
   private final Map<String, Object> properties;
+  private final CopyOnWriteArraySet<Class<?>> jaxbClasses =
+          new CopyOnWriteArraySet<>();
 
   private JAXBContextFactory(Map<String, Object> properties) {
     this.properties = properties;
   }
 
+  private JAXBContextFactory(Map<String, Object> properties, Set<Class<?>> jaxbClasses) {
+      this.properties = properties;
+      this.jaxbClasses.addAll(jaxbClasses);
+  }
+  
   /**
    * Creates a new {@link javax.xml.bind.Unmarshaller} that handles the supplied class.
    */
-  public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
+  public Unmarshaller createUnmarshaller(Class<?>... classes) throws JAXBException {
+    if (this.jaxbClasses.size() > 0)
+        classes = this.jaxbClasses.toArray(new Class<?>[0]);
+    JAXBContext ctx = getContext(classes);
     return ctx.createUnmarshaller();
   }
 
   /**
    * Creates a new {@link javax.xml.bind.Marshaller} that handles the supplied class.
    */
-  public Marshaller createMarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
+  public Marshaller createMarshaller(Class<?>... classes) throws JAXBException {
+    if (this.jaxbClasses.size() > 0)
+        classes = this.jaxbClasses.toArray(new Class<?>[0]);      
+    JAXBContext ctx = getContext(classes);
     Marshaller marshaller = ctx.createMarshaller();
     setMarshallerProperties(marshaller);
     return marshaller;
@@ -68,22 +83,31 @@ public final class JAXBContextFactory {
     }
   }
 
-  private JAXBContext getContext(Class<?> clazz) throws JAXBException {
-    JAXBContext jaxbContext = this.jaxbContexts.get(clazz);
-    if (jaxbContext == null) {
-      jaxbContext = JAXBContext.newInstance(clazz);
-      this.jaxbContexts.putIfAbsent(clazz, jaxbContext);
-    }
-    return jaxbContext;
+  private JAXBContext getContext(Class<?>... classes) throws JAXBException {
+      int hashCode = Arrays.hashCode(classes);
+      JAXBContext jaxbContext;
+      synchronized (this.jaxbContexts) {            
+          jaxbContext = this.jaxbContexts.get(hashCode);
+          if (jaxbContext == null) {
+              jaxbContext = JAXBContext.newInstance(classes);
+              this.jaxbContexts.putIfAbsent(hashCode, jaxbContext);
+          }
+      }
+      return jaxbContext;
   }
 
+  public Set<Class<?>> getJaxbClasses() {
+      return jaxbClasses;
+  }
+  
   /**
    * Creates instances of {@link feign.jaxb.JAXBContextFactory}
    */
   public static class Builder {
 
     private final Map<String, Object> properties = new HashMap<String, Object>(5);
-
+    private final Set<Class<?>> jaxbClasses = new HashSet<>();
+    
     /**
      * Sets the jaxb.encoding property of any Marshaller created by this factory.
      */
@@ -123,12 +147,21 @@ public final class JAXBContextFactory {
       properties.put(Marshaller.JAXB_FRAGMENT, value);
       return this;
     }
+    
+    public Builder withJaxbClasses(Class<?>...classes) {
+        List<Class<?>> l = Arrays.asList(classes);
+        jaxbClasses.addAll(l);
+        return this;
+    }
 
     /**
      * Creates a new {@link feign.jaxb.JAXBContextFactory} instance.
      */
     public JAXBContextFactory build() {
-      return new JAXBContextFactory(properties);
+        if (this.jaxbClasses.size() > 0)
+            return new JAXBContextFactory(properties, jaxbClasses);
+        else
+            return new JAXBContextFactory(properties);
     }
   }
 }
