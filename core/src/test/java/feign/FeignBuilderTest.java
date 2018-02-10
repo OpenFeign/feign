@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
@@ -21,10 +19,12 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +35,8 @@ import feign.codec.Encoder;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class FeignBuilderTest {
@@ -242,6 +244,62 @@ public class FeignBuilderTest {
     assertThat(server.takeRequest()).hasPath("/");
   }
 
+  /**
+   * This test ensures that the doNotCloseAfterDecode flag functions.
+   *
+   * It does so by creating a custom Decoder that lazily retrieves the
+   * response body when asked for it and pops the value into an Iterator.
+   *
+   * Without the doNoCloseAfterDecode flag, the test will fail with a
+   * "stream is closed" exception.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testDoNotCloseAfterDecode() throws Exception {
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    String url = "http://localhost:" + server.getPort();
+    Decoder decoder = new Decoder() {
+      @Override
+      public Iterator decode(Response response, Type type) {
+        return new Iterator() {
+          private boolean called = false;
+
+          @Override
+          public boolean hasNext() {
+            return !called;
+          }
+
+          @Override
+          public Object next() {
+            try {
+              return Util.toString(response.body().asReader());
+            } catch (IOException e) {
+              fail(e.getMessage());
+              return null;
+            } finally {
+              Util.ensureClosed(response);
+              called = true;
+            }
+          }
+        };
+      }
+    };
+
+    TestInterface api = Feign.builder()
+            .decoder(decoder)
+            .doNotCloseAfterDecode()
+            .target(TestInterface.class, url);
+    Iterator<String> iterator = api.decodedLazyPost();
+
+    assertTrue(iterator.hasNext());
+    assertEquals("success!", iterator.next());
+    assertFalse(iterator.hasNext());
+
+    assertEquals(1, server.getRequestCount());
+  }
+
   interface TestInterface {
     @RequestLine("GET")
     Response getNoPath();
@@ -257,6 +315,9 @@ public class FeignBuilderTest {
 
     @RequestLine("POST /")
     String decodedPost();
+
+    @RequestLine("POST /")
+    Iterator<String> decodedLazyPost();
     
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     byte[] getQueues(@Param("vhost") String vhost);
