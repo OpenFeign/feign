@@ -41,7 +41,7 @@ public final class JAXBContextFactory {
           new ConcurrentHashMap<Integer, JAXBContext>(64);
   private final Map<String, Object> properties;
   private final CopyOnWriteArraySet<Class<?>> jaxbClasses =
-          new CopyOnWriteArraySet<>();
+          new CopyOnWriteArraySet<Class<?>>();
 
   private JAXBContextFactory(Map<String, Object> properties) {
     this.properties = properties;
@@ -106,7 +106,7 @@ public final class JAXBContextFactory {
   public static class Builder {
 
     private final Map<String, Object> properties = new HashMap<String, Object>(5);
-    private final Set<Class<?>> jaxbClasses = new HashSet<>();
+    private final Set<Class<?>> jaxbClasses = new HashSet<Class<?>>();
     
     /**
      * Sets the jaxb.encoding property of any Marshaller created by this factory.
