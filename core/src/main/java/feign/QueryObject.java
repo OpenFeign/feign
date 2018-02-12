@@ -2,6 +2,7 @@ package feign;
 
 import java.lang.annotation.Retention;
 
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -14,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface QueryObject {
 
     @Retention(RUNTIME)
-    @java.lang.annotation.Target(TYPE)
+    @java.lang.annotation.Target(METHOD)
     @interface Param {
         String value();
     }

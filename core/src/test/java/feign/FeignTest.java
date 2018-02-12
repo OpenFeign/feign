@@ -18,7 +18,9 @@ package feign;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import feign.codec.*;
 import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -27,7 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import okio.Buffer;
-import org.assertj.core.api.Fail;
 import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,14 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
 import feign.Feign.ResponseMappingDecoder;
 
 import static feign.Util.UTF_8;
@@ -699,6 +695,39 @@ public class FeignTest {
     assertThat(output).isEqualTo("RESPONSE");
   }
 
+  @Test
+  public void okWithQueryObject() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    TestInterface api = new TestInterfaceBuilder().encoder(new QueryObjectEncoder(new Encoder.Default())).
+            target("http://localhost:" + server.getPort());
+    TestInterface.QueryObjectTestParam testParam = new TestInterface.QueryObjectTestParam("aa", 888);
+    testParam.setK3("123");
+    api.queryObjectWithQueryParams(testParam);
+    RecordedRequest req = server.takeRequest();
+    assertThat(req.getMethod()).isEqualToIgnoringCase("GET");
+    Map<String, String> map = Arrays.stream(req.getPath().substring(2).split("&")).map(kv -> kv.split("=")).
+            collect(Collectors.toMap(kv -> kv[0], kv -> kv[1]));
+    assertThat(map.get("k1")).isEqualTo("aa");
+    assertThat(map.get("k2")).isEqualTo("888");
+    assertThat(map.get("k3")).isEqualTo("123");
+  }
+
+  @Test
+  public void okWithQueryObjectOptional() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    TestInterface api = new TestInterfaceBuilder().encoder(new QueryObjectEncoder(new Encoder.Default())).
+            target("http://localhost:" + server.getPort());
+    api.queryObjectWithQueryParams(new TestInterface.QueryObjectTestParam("xx", 55));
+    RecordedRequest req = server.takeRequest();
+    assertThat(req.getMethod()).isEqualToIgnoringCase("GET");
+    Map<String, String> map = Arrays.stream(req.getPath().substring(2).split("&")).map(kv -> kv.split("=")).
+            collect(Collectors.toMap(kv -> kv[0], kv -> kv[1]));
+    assertThat(map.get("k1")).isEqualTo("xx");
+    assertThat(map.get("k2")).isEqualTo("55");
+    assertThat(map.get("k3")).isNull();
+  }
+
+
   private ResponseMapper upperCaseResponseMapper() {
     return new ResponseMapper() {
       @Override
@@ -798,11 +827,45 @@ public class FeignTest {
     @RequestLine("GET /?trim={trim}")
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
 
+    @RequestLine("GET /?k1={k1}&k2={k2}&k3={k3}")
+    void queryObjectWithQueryParams(QueryObjectTestParam test);
+
     class DateToMillis implements Param.Expander {
 
       @Override
       public String expand(Object value) {
         return String.valueOf(((Date) value).getTime());
+      }
+    }
+
+    @QueryObject
+    class QueryObjectTestParam {
+      private final String k1;
+      private final int k2;
+      private String k3; //optional
+
+      public QueryObjectTestParam(String k1, int k2) {
+        this.k1 = k1;
+        this.k2 = k2;
+      }
+
+      @QueryObject.Param("k1")
+      public String getK1() {
+        return k1;
+      }
+
+      @QueryObject.Param("k2")
+      public int getK2() {
+        return k2;
+      }
+
+      @QueryObject.Param("k3")
+      public String getK3() {
+        return k3;
+      }
+
+      public void setK3(String k3) {
+        this.k3 = k3;
       }
     }
   }
