@@ -39,6 +39,18 @@ public class HystrixBuilderTest {
   public final MockWebServer server = new MockWebServer();
 
   @Test
+  public void defaultHystrixCommand() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.defaultCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("foo");
+  }
+
+  @Test
   public void hystrixCommand() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -182,6 +194,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void defaultMethodRxObservable() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    Observable<String> observable = api.defaultObservable();
+
+    assertThat(observable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    observable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
+  }
+
+  @Test
   public void rxObservable() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -305,6 +334,23 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void defaultMethodRxSingle() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    Single<String> single = api.defaultSingle();
+
+    assertThat(single).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    single.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
+  }
+
+  @Test
   public void rxSingle() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -404,6 +450,25 @@ public class HystrixBuilderTest {
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
+  }
+
+  @Test
+  public void defaultRxCompletableEmptyBody() {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = target();
+
+    Completable completable = api.defaultCompletable();
+
+    assertThat(completable).isNotNull();
+    assertThat(server.getRequestCount()).isEqualTo(0);
+
+    TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    completable.subscribe(testSubscriber);
+    testSubscriber.awaitTerminalEvent();
+
+    testSubscriber.assertCompleted();
+    testSubscriber.assertNoErrors();
   }
 
   @Test
@@ -593,6 +658,10 @@ public class HystrixBuilderTest {
     @Headers("Accept: application/json")
     HystrixCommand<String> command();
 
+    default HystrixCommand<String> defaultCommand() {
+      return command();
+    }
+
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     HystrixCommand<Integer> intCommand();
@@ -605,6 +674,10 @@ public class HystrixBuilderTest {
     @Headers("Accept: application/json")
     Observable<String> observable();
 
+    default Observable<String> defaultObservable() {
+      return observable();
+    }
+
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     Single<Integer> intSingle();
@@ -616,6 +689,10 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     Single<String> single();
+
+    default Single<String> defaultSingle() {
+      return single();
+    }
 
     @RequestLine("GET /")
     @Headers("Accept: application/json")
@@ -632,6 +709,10 @@ public class HystrixBuilderTest {
 
     @RequestLine("GET /")
     Completable completable();
+
+    default Completable defaultCompletable() {
+      return completable();
+    }
   }
 
   class FallbackTestInterface implements TestInterface {

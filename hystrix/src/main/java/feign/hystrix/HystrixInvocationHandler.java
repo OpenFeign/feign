@@ -28,6 +28,7 @@ import java.util.Set;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import feign.Util;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -160,19 +161,19 @@ final class HystrixInvocationHandler implements InvocationHandler {
   }
 
   private boolean isReturnsCompletable(Method method) {
-    return Completable.class.isAssignableFrom(method.getReturnType());
+    return !Util.isDefault(method) && Completable.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsHystrixCommand(Method method) {
-    return HystrixCommand.class.isAssignableFrom(method.getReturnType());
+    return !Util.isDefault(method) && HystrixCommand.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsObservable(Method method) {
-    return Observable.class.isAssignableFrom(method.getReturnType());
+    return !Util.isDefault(method) && Observable.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsSingle(Method method) {
-    return Single.class.isAssignableFrom(method.getReturnType());
+    return !Util.isDefault(method) && Single.class.isAssignableFrom(method.getReturnType());
   }
 
   @Override
