@@ -146,7 +146,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
       }
     };
 
-    if (isReturnsHystrixCommand(method)) {
+    if (Util.isDefault(method)) {
+      return hystrixCommand.execute();
+    } else if (isReturnsHystrixCommand(method)) {
       return hystrixCommand;
     } else if (isReturnsObservable(method)) {
       // Create a cold Observable
@@ -161,19 +163,19 @@ final class HystrixInvocationHandler implements InvocationHandler {
   }
 
   private boolean isReturnsCompletable(Method method) {
-    return !Util.isDefault(method) && Completable.class.isAssignableFrom(method.getReturnType());
+    return Completable.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsHystrixCommand(Method method) {
-    return !Util.isDefault(method) && HystrixCommand.class.isAssignableFrom(method.getReturnType());
+    return HystrixCommand.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsObservable(Method method) {
-    return !Util.isDefault(method) && Observable.class.isAssignableFrom(method.getReturnType());
+    return Observable.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsSingle(Method method) {
-    return !Util.isDefault(method) && Single.class.isAssignableFrom(method.getReturnType());
+    return Single.class.isAssignableFrom(method.getReturnType());
   }
 
   @Override
