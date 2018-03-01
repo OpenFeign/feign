@@ -30,6 +30,8 @@ import java.util.stream.StreamSupport;
 @SuppressWarnings("unused")
 public final class VertxHttpClient {
   private final Vertx vertx;
+  
+  private HttpClient client = null;
 
   public VertxHttpClient(final Vertx vertx) {
     this.vertx = checkNotNull(vertx, "Argument vertx must not be null");
@@ -47,11 +49,14 @@ public final class VertxHttpClient {
     checkNotNull(request, "Argument request must be not null");
     checkNotNull(options, "Argument options must be not null");
 
-    final HttpClient client = vertx.createHttpClient(options);
+    if (this.client == null) {
+      this.client = vertx.createHttpClient(options);
+    }
+
     final HttpClientRequest httpClientRequest;
 
     try {
-      httpClientRequest = makeHttpClientRequest(request, client);
+      httpClientRequest = makeHttpClientRequest(request, this.client);
     } catch (final MalformedURLException unexpectedException) {
       return Future.failedFuture(unexpectedException);
     }
