@@ -72,7 +72,9 @@ public class StreamDecoderTest {
           } catch (IOException e) {
             throw new DecodeException(e.getMessage(), e);
           }
-        })).target(StreamInterface.class, server.url("/").toString());
+        }))
+        .closeAfterDecode(false)
+        .target(StreamInterface.class, server.url("/").toString());
 
     try (Stream<String> stream = api.get()) {
       assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
@@ -88,7 +90,8 @@ public class StreamDecoderTest {
 
     StreamInterface api = Feign.builder()
         .decoder(new StreamDecoder((type, response) -> JacksonIterator.<StreamInterface.Car>builder().of(type).mapper(mapper).response(response).build()))
-              .target(StreamInterface.class, server.url("/").toString());
+        .closeAfterDecode(false)
+        .target(StreamInterface.class, server.url("/").toString());
 
     try (Stream<StreamInterface.Car> stream = api.getCars()) {
       assertThat(stream.collect(Collectors.toList())).hasSize(2);

@@ -37,6 +37,7 @@ import static feign.Util.ensureClosed;
  * <pre><code>
  * Feign.builder()
  *   .decoder(new StreamDecoder((type, response) -> JacksonIterator.<Contributor>builder().of(type).mapper(mapper).response(response).build()))
+ *   .closeAfterDecode(false) // Required for streaming
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
