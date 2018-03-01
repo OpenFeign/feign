@@ -108,6 +108,7 @@ public abstract class Feign {
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
     private boolean decode404;
+    private boolean closeAfterDecode = true;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -172,6 +173,21 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * This flag indicates that the {@link InvocationHandlerFactory.MethodHandler methodHandler}
+     * should close the response input stream after decoding the response.
+     * If this flag is <code>false</code>, {@link #decoder(Decoder) decoder}
+     * is responsible to close the input stream itself.
+     *
+     * Default is true for back compatibility.
+     *
+     * @since 9.5.2
+     */
+    public Builder closeAfterDecode(boolean closeAfterDecode) {
+      this.closeAfterDecode = closeAfterDecode;
+      return this;
+    }
+
     public Builder errorDecoder(ErrorDecoder errorDecoder) {
       this.errorDecoder = errorDecoder;
       return this;
@@ -221,7 +237,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel, decode404);
+                                               logLevel, decode404, closeAfterDecode);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder,
                                   errorDecoder, synchronousMethodHandlerFactory);

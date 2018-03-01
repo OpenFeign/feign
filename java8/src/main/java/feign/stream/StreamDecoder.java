@@ -26,7 +26,7 @@ import java.util.stream.StreamSupport;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
-import feign.codec.AutoCloseableDecoder;
+import feign.codec.Decoder;
 
 import static feign.Util.ensureClosed;
 
@@ -44,7 +44,7 @@ import static feign.Util.ensureClosed;
  * }</code></pre>
  * @author Pierrick HYMBERT
  */
-public class StreamDecoder implements AutoCloseableDecoder {
+public class StreamDecoder implements Decoder {
 
   private final BiFunction<Class<?>, Response, Iterator<?>> iteratorProvider;
 
