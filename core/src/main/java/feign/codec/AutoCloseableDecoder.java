@@ -15,7 +15,7 @@ package feign.codec;
 
 /**
  * Custom decoder responsible to close the response stream itself.
- * Used in java8 streaming api.
+ * For example in java8 streaming api.
  */
-public interface StreamDecoder extends Decoder {
+public interface AutoCloseableDecoder extends Decoder {
 }

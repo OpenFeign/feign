@@ -24,7 +24,7 @@ import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.StreamDecoder;
+import feign.codec.AutoCloseableDecoder;
 
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -67,7 +67,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
-    this.decoderShouldClose = decoder instanceof StreamDecoder;
+    this.decoderShouldClose = decoder instanceof AutoCloseableDecoder;
   }
 
   @Override

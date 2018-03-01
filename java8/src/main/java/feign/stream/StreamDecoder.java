@@ -19,32 +19,50 @@ import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import feign.FeignException;
 import feign.Response;
 import feign.codec.DecodeException;
-import feign.codec.StreamDecoder;
+import feign.codec.AutoCloseableDecoder;
 
 import static feign.Util.ensureClosed;
 
 /**
- * Base decoder to support java8 streams.
+ * Iterator based decoder that support streaming.
+ *
+ * <p>Example: <br>
+ * <pre><code>
+ * Feign.builder()
+ *   .decoder(new StreamDecoder((type, response) -> JacksonIterator.<Contributor>builder().of(type).mapper(mapper).response(response).build()))
+ *   .target(GitHub.class, "https://api.github.com");
+ * interface GitHub {
+ *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
+ *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+ * }</code></pre>
+ * @author Pierrick HYMBERT
  */
-public abstract class AbstractStreamDecoder implements StreamDecoder {
+public class StreamDecoder implements AutoCloseableDecoder {
+
+  private final BiFunction<Class<?>, Response, Iterator<?>> iteratorProvider;
+
+  public StreamDecoder(final BiFunction<Class<?>, Response, Iterator<?>> iteratorProvider) {
+    this.iteratorProvider = iteratorProvider;
+  }
 
   @Override
   public Object decode(final Response response, final Type type)
       throws IOException, DecodeException, FeignException {
     if (!(type instanceof ParameterizedType)) {
       throw new IllegalArgumentException(
-          "Java8StreamDecoder supports only stream: unknown " + type);
+          "StreamDecoder supports only stream: unknown " + type);
     }
     final ParameterizedType parameterizedType = (ParameterizedType) type;
     if (!Stream.class.equals(parameterizedType.getRawType())) {
       throw new IllegalArgumentException(
-          "Java8StreamDecoder supports only stream: unknown " + type);
+          "StreamDecoder supports only stream: unknown " + type);
     }
     final Class<?> streamedType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
 
@@ -72,8 +90,10 @@ public abstract class AbstractStreamDecoder implements StreamDecoder {
    * @param response     Current response
    * @param <T>          Type of the iterator.
    */
-  protected abstract <T> Iterator<? extends T> provideStreamIterator(
-      final Class<? extends T> streamedType, final Response response);
+  protected <T> Iterator<? extends T> provideStreamIterator(final Class<? extends T> streamedType,
+                                                            final Response response) {
+    return (Iterator<T>) iteratorProvider.apply(streamedType, response);
+  }
 
   /**
    * Computes estimated stream size, null if the size is unknown.
