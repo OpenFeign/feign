@@ -24,30 +24,31 @@ import java.util.stream.Stream;
 
 @State(Scope.Thread)
 public class StreamDecoderBenchmark {
-  private static final int FEW_CARS = 1_000;
-  private static final int LOT_OF_CARS = FEW_CARS * FEW_CARS;
+  private static final int FEW_CARS = 10;
+  private static final int LOT_OF_CARS = (int) Math.pow(FEW_CARS, 6);
 
-  private Callable<Iterator<Car>> cars;
+  private Callable<Iterator<Car>> hugeCars;
+  private Callable<Iterator<Car>> fewCars;
 
   interface ListApi {
-    @RequestLine("GET /cars")
-    List<Car> getLotOfCars();
+    @RequestLine("GET /huge-cars")
+    List<Car> getHugeCars();
 
     @RequestLine("GET /few-cars")
     List<Car> getFewCars();
   }
 
   interface IteratorApi {
-    @RequestLine("GET /cars")
-    Iterator<Car> getLotOfCars();
+    @RequestLine("GET /huge-cars")
+    Iterator<Car> getHugeCars();
 
     @RequestLine("GET /few-cars")
     Iterator<Car> getFewCars();
   }
 
   interface StreamApi {
-    @RequestLine("GET /cars")
-    Stream<Car> getLotOfCars();
+    @RequestLine("GET /huge-cars")
+    Stream<Car> getHugeCars();
 
     @RequestLine("GET /few-cars")
     Stream<Car> getFewCars();
@@ -56,8 +57,15 @@ public class StreamDecoderBenchmark {
   @Param({"list", "iterator", "stream"})
   private String api;
 
-  @Param({"small", "huge"})
-  private String size;
+  @Benchmark
+  @Warmup(iterations = 5, time = 1)
+  @Measurement(iterations = 10, time = 1)
+  @Fork(5)
+  @BenchmarkMode(Mode.AverageTime)
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
+  public void feignFew() throws Exception {
+    fetch(this.fewCars.call());
+  }
 
   @Benchmark
   @Warmup(iterations = 5, time = 1)
@@ -65,8 +73,11 @@ public class StreamDecoderBenchmark {
   @Fork(3)
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  public void feign() throws Exception {
-    final Iterator<Car> cars = this.cars.call();
+  public void feignHuge() throws Exception {
+    fetch(this.hugeCars.call());
+  }
+
+  private void fetch(Iterator<Car> cars) {
     while (cars.hasNext()) {
       cars.next();
     }
@@ -80,48 +91,24 @@ public class StreamDecoderBenchmark {
         ListApi listApi = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(ListApi.class, serverUrl);
-        switch (size) {
-          case "small":
-            cars = () -> listApi.getFewCars().iterator();
-            break;
-          case "huge":
-            cars = () -> listApi.getLotOfCars().iterator();
-            break;
-          default:
-            throw new IllegalStateException("Unknown size: " + size);
-        }
+        fewCars = () -> listApi.getFewCars().iterator();
+        hugeCars = () -> listApi.getHugeCars().iterator();
         break;
       case "iterator":
         IteratorApi iteratorApi = Feign.builder()
             .decoder(new JacksonIteratorDecoder())
             .closeAfterDecode(false)
             .target(IteratorApi.class, serverUrl);
-        switch (size) {
-          case "small":
-            cars = iteratorApi::getFewCars;
-            break;
-          case "huge":
-            cars = iteratorApi::getLotOfCars;
-            break;
-          default:
-            throw new IllegalStateException("Unknown size: " + size);
-        }
+        fewCars = iteratorApi::getFewCars;
+        hugeCars = iteratorApi::getHugeCars;
         break;
       case "stream":
         StreamApi streamApi = Feign.builder()
             .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
             .closeAfterDecode(false)
             .target(StreamApi.class, serverUrl);
-        switch (size) {
-          case "small":
-            cars = () -> streamApi.getFewCars().iterator();
-            break;
-          case "huge":
-            cars = () -> streamApi.getLotOfCars().iterator();
-            break;
-          default:
-            throw new IllegalStateException("Unknown size: " + size);
-        }
+        fewCars = () -> streamApi.getFewCars().iterator();
+        hugeCars = () -> streamApi.getHugeCars().iterator();
         break;
       default:
         throw new IllegalStateException("Unknown api: " + api);
@@ -150,13 +137,13 @@ public class StreamDecoderBenchmark {
   private static MockWebServer createMockServer() {
     String car = "{\"name\":\"c4\",\"manufacturer\":\"Citroën\"}";
 
-    String fewAnswer = "[]";
+    String small = "[]";
     StringBuilder builder = new StringBuilder("[");
     builder.append(car);
     for (int i = 1; i < LOT_OF_CARS; i++) {
       builder.append(",").append(car);
       if (i + 1 == FEW_CARS) {
-        fewAnswer = builder.toString() + "]";
+        small = builder.toString() + "]";
       }
     }
     builder.append("]");
@@ -165,17 +152,17 @@ public class StreamDecoderBenchmark {
     globalLogger.setLevel(Level.WARNING); // Disable logging of mock web server
     MockWebServer server = new MockWebServer();
 
-    final String smallAnswer = fewAnswer;
+    final String fewAnswer = small;
     final String hugeAnswer = builder.toString();
 
     server.setDispatcher(new Dispatcher() {
       @Override
       public MockResponse dispatch(final RecordedRequest request) throws InterruptedException {
         switch (request.getPath()) {
-          case "/cars":
-            return new MockResponse().setBody(hugeAnswer);
           case "/few-cars":
-            return new MockResponse().setBody(smallAnswer);
+            return new MockResponse().setBody(fewAnswer);
+          case "/huge-cars":
+            return new MockResponse().setBody(hugeAnswer);
           default:
             throw new IllegalArgumentException(request.getPath());
         }
