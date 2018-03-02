@@ -64,7 +64,7 @@ public class StreamDecoderBenchmark {
   @Measurement(iterations = 5, time = 1)
   @Fork(3)
   @BenchmarkMode(Mode.AverageTime)
-  @OutputTimeUnit(TimeUnit.SECONDS)
+  @OutputTimeUnit(TimeUnit.MILLISECONDS)
   public void feign() throws Exception {
     final Iterator<Car> cars = this.cars.call();
     while (cars.hasNext()) {
