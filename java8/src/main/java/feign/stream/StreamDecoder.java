@@ -19,13 +19,11 @@ import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import feign.FeignException;
 import feign.Response;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 
 import static feign.Util.ensureClosed;
@@ -36,7 +34,7 @@ import static feign.Util.ensureClosed;
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
- *   .decoder(new StreamDecoder((type, response) -> JacksonIterator.<Contributor>builder().of(type).mapper(mapper).response(response).build()))
+ *   .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
  *   .closeAfterDecode(false) // Required for streaming
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
@@ -47,64 +45,80 @@ import static feign.Util.ensureClosed;
  */
 public class StreamDecoder implements Decoder {
 
-  private final BiFunction<Class<?>, Response, Iterator<?>> iteratorProvider;
+  private final Decoder iteratorDecoder;
 
-  public StreamDecoder(final BiFunction<Class<?>, Response, Iterator<?>> iteratorProvider) {
-    this.iteratorProvider = iteratorProvider;
+  public StreamDecoder(final Decoder iteratorDecoder) {
+    this.iteratorDecoder = iteratorDecoder;
   }
 
   @Override
   public Object decode(final Response response, final Type type)
-      throws IOException, DecodeException, FeignException {
+      throws IOException, FeignException {
     if (!(type instanceof ParameterizedType)) {
       throw new IllegalArgumentException(
           "StreamDecoder supports only stream: unknown " + type);
     }
-    final ParameterizedType parameterizedType = (ParameterizedType) type;
-    if (!Stream.class.equals(parameterizedType.getRawType())) {
+    final ParameterizedType streamType = (ParameterizedType) type;
+    if (!Stream.class.equals(streamType.getRawType())) {
       throw new IllegalArgumentException(
           "StreamDecoder supports only stream: unknown " + type);
     }
-    final Class<?> streamedType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
-
-    final Integer streamSize = computeEstimatedStreamSize(streamedType, response);
+    final Integer streamSize = computeEstimatedStreamSize(streamType, response);
 
     final Spliterator<?> spliterator;
     if (streamSize == null) {
       spliterator =
-          Spliterators.spliteratorUnknownSize(provideStreamIterator(streamedType, response),
+          Spliterators.spliteratorUnknownSize(provideIterator(streamType, response),
               streamCharacteristics());
     } else {
       spliterator =
-          Spliterators.spliterator(provideStreamIterator(streamedType, response), streamSize,
+          Spliterators.spliterator(provideIterator(streamType, response), streamSize,
               streamCharacteristics());
     }
 
-    return StreamSupport.stream(spliterator, isParallelStream()).onClose(onStreamClose(streamedType, response));
+    return StreamSupport.stream(spliterator, isParallelStream())
+                        .onClose(onStreamClose(streamType, response));
   }
 
   /**
    * Provides an iterator to retrieve data from the response and type.
    * Implementation is responsible to close the response body.
    *
-   * @param streamedType Type to stream as an iterator
-   * @param response     Current response
-   * @param <T>          Type of the iterator.
+   * @param streamType Type of the stream
+   * @param response          Current response
+   * @param <T>               Type of the iterator.
    */
-  protected <T> Iterator<? extends T> provideStreamIterator(final Class<? extends T> streamedType,
-                                                            final Response response) {
-    return (Iterator<T>) iteratorProvider.apply(streamedType, response);
+  @SuppressWarnings("unchecked")
+  protected <T> Iterator<? extends T> provideIterator(final ParameterizedType streamType,
+                                                      final Response response) throws IOException {
+    return (Iterator) iteratorDecoder.decode(response, new ParameterizedType() {
+
+      @Override
+      public Type[] getActualTypeArguments() {
+        return streamType.getActualTypeArguments();
+      }
+
+      @Override
+      public Type getRawType() {
+        return Iterator.class;
+      }
+
+      @Override
+      public Type getOwnerType() {
+        return streamType.getOwnerType();
+      }
+    });
   }
 
   /**
    * Computes estimated stream size, null if the size is unknown.
    *
-   * @param streamedType Type to stream
-   * @param response     http response
+   * @param streamType Type of stream
+   * @param response          http response
    * @return Estimated stream size
    */
-  protected <T> Integer computeEstimatedStreamSize(final Class<? extends T> streamedType,
-                                               final Response response) {
+  protected <T> Integer computeEstimatedStreamSize(final ParameterizedType streamType,
+                                                  final Response response) {
     return null;
   }
 
@@ -126,11 +140,11 @@ public class StreamDecoder implements Decoder {
    * Action to run when stream is closed.
    * Default action is to close underlying response.
    *
-   * @param streamedType Streamed type
+   * @param streamType type of the stream
    * @param response Response Related stream response
    * @return Runnable on stream close
    */
-  protected <T> Runnable onStreamClose(Class<? extends T> streamedType, Response response) {
+  protected <T> Runnable onStreamClose(ParameterizedType streamType, Response response) {
     return () -> ensureClosed(response.body());
   }
 }

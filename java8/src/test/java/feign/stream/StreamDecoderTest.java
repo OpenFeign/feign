@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 import feign.Feign;
 import feign.RequestLine;
 import feign.codec.DecodeException;
-import feign.jackson.JacksonIterator;
+import feign.jackson.JacksonIteratorDecoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -66,7 +66,7 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(new StreamDecoder((type, response) -> {
+        .decoder(new StreamDecoder((response, type) -> {
           try {
             return new BufferedReader(new InputStreamReader(response.body().asInputStream())).lines().iterator();
           } catch (IOException e) {
@@ -89,7 +89,7 @@ public class StreamDecoderTest {
     ObjectMapper mapper = new ObjectMapper();
 
     StreamInterface api = Feign.builder()
-        .decoder(new StreamDecoder((type, response) -> JacksonIterator.<StreamInterface.Car>builder().of(type).mapper(mapper).response(response).build()))
+        .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
         .closeAfterDecode(false)
         .target(StreamInterface.class, server.url("/").toString());
 

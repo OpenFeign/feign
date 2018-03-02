@@ -1,10 +1,9 @@
 package feign.stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonIterator;
+import feign.jackson.JacksonIteratorDecoder;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -67,7 +66,7 @@ public class StreamDecoderBenchmark {
                 break;
             case "stream":
                 StreamInterface streamInterface = Feign.builder()
-                        .decoder(new StreamDecoder((type, response) -> JacksonIterator.<StreamDecoderTest.StreamInterface.Car>builder().of(type).mapper(new ObjectMapper()).response(response).build()))
+                        .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
                         .closeAfterDecode(false)
                         .target(StreamInterface.class, serverUrl);
                 cars = () -> streamInterface.getCars().iterator();
