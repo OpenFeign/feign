@@ -13,6 +13,7 @@
  */
 package feign.stream;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -66,18 +67,19 @@ public class StreamDecoder implements Decoder {
     final Integer streamSize = computeEstimatedStreamSize(streamType, response);
 
     final Spliterator<?> spliterator;
+    final Iterator<?> iterator = provideIterator(streamType, response);
     if (streamSize == null) {
       spliterator =
-          Spliterators.spliteratorUnknownSize(provideIterator(streamType, response),
+          Spliterators.spliteratorUnknownSize(iterator,
               streamCharacteristics());
     } else {
       spliterator =
-          Spliterators.spliterator(provideIterator(streamType, response), streamSize,
+          Spliterators.spliterator(iterator, streamSize,
               streamCharacteristics());
     }
 
     return StreamSupport.stream(spliterator, isParallelStream())
-                        .onClose(onStreamClose(streamType, response));
+                        .onClose(onStreamClose(streamType, iterator, response));
   }
 
   /**
@@ -141,10 +143,16 @@ public class StreamDecoder implements Decoder {
    * Default action is to close underlying response.
    *
    * @param streamType type of the stream
-   * @param response Response Related stream response
-   * @return Runnable on stream close
+   * @param iterator Stream based iterator
+   *@param response Response Related stream response  @return Runnable on stream close
    */
-  protected <T> Runnable onStreamClose(ParameterizedType streamType, Response response) {
-    return () -> ensureClosed(response.body());
+  protected <T> Runnable onStreamClose(ParameterizedType streamType, Iterator<?> iterator, Response response) {
+    return () -> {
+      if (iterator instanceof Closeable) {
+        ensureClosed((Closeable) iterator);
+      } else {
+        ensureClosed(response);
+      }
+    };
   }
 }

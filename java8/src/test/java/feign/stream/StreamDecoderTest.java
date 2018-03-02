@@ -66,13 +66,7 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(new StreamDecoder((response, type) -> {
-          try {
-            return new BufferedReader(new InputStreamReader(response.body().asInputStream())).lines().iterator();
-          } catch (IOException e) {
-            throw new DecodeException(e.getMessage(), e);
-          }
-        }))
+        .decoder(new StreamDecoder((response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
         .closeAfterDecode(false)
         .target(StreamInterface.class, server.url("/").toString());
 
