@@ -84,7 +84,7 @@ public class JacksonIteratorDecoder implements Decoder {
         return null; // Eagerly returning null avoids "No content to map due to end-of-input"
       }
       reader.reset();
-      return new JacksonIterator<>(actualIteratorTypeArgument(type), mapper, reader);
+      return new JacksonIterator<Object>(actualIteratorTypeArgument(type), mapper, reader);
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
