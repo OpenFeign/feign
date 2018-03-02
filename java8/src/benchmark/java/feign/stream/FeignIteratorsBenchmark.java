@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 @State(Scope.Thread)
-public class StreamDecoderBenchmark {
-  private static final int FEW_CARS = 10;
-  private static final int LOT_OF_CARS = (int) Math.pow(FEW_CARS, 6);
+public class FeignIteratorsBenchmark {
+  private static final int FEW = 10;
+  private static final int HUGE = (int) Math.pow(FEW, 6);
 
   interface ListApi {
     @RequestLine("GET /huge-cars")
@@ -144,7 +144,7 @@ public class StreamDecoderBenchmark {
 
   public static void main(String[] args) throws Exception {
     Options opt = new OptionsBuilder()
-        .include(StreamDecoderBenchmark.class.getSimpleName())
+        .include(FeignIteratorsBenchmark.class.getSimpleName())
         .addProfiler(GCProfiler.class)
         .jvmArgs("-server", "-Xms1G", "-Xmx1G")
         .build();
@@ -158,9 +158,9 @@ public class StreamDecoderBenchmark {
     String fewAnswer = "[]";
     StringBuilder builder = new StringBuilder("[");
     builder.append(car);
-    for (int i = 1; i < LOT_OF_CARS; i++) {
+    for (int i = 1; i < HUGE; i++) {
       builder.append(",").append(car);
-      if (i + 1 == FEW_CARS) {
+      if (i + 1 == FEW) {
         fewAnswer = builder.toString() + "]";
       }
     }

@@ -85,7 +85,7 @@
                         <version>1.6.0</version>
                         <executions>
                             <execution>
-                                <id>run-jmh</id>
+                                <id>run-benchmark-decoder-iterators</id>
                                 <phase>test</phase>
                                 <goals>
                                     <goal>exec</goal>
@@ -96,7 +96,7 @@
                                     <arguments>
                                         <argument>-classpath</argument>
                                         <classpath />
-                                        <argument>feign.stream.StreamDecoderBenchmark</argument>
+                                        <argument>feign.stream.DecoderIteratorsBenchmark</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
