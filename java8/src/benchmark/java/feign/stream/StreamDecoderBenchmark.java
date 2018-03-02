@@ -14,6 +14,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -26,9 +27,6 @@ import java.util.stream.Stream;
 public class StreamDecoderBenchmark {
   private static final int FEW_CARS = 10;
   private static final int LOT_OF_CARS = (int) Math.pow(FEW_CARS, 6);
-
-  private Callable<Iterator<Car>> hugeCars;
-  private Callable<Iterator<Car>> fewCars;
 
   interface ListApi {
     @RequestLine("GET /huge-cars")
@@ -57,62 +55,86 @@ public class StreamDecoderBenchmark {
   @Param({"list", "iterator", "stream"})
   private String api;
 
+  @Param({"few", "huge"})
+  private String size;
+
+  private Callable<Iterator<Car>> cars;
+
   @Benchmark
   @Warmup(iterations = 5, time = 1)
   @Measurement(iterations = 10, time = 1)
-  @Fork(5)
-  @BenchmarkMode(Mode.AverageTime)
-  @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  public void feignFew() throws Exception {
-    fetch(this.fewCars.call());
-  }
-
-  @Benchmark
-  @Warmup(iterations = 5, time = 1)
-  @Measurement(iterations = 5, time = 1)
   @Fork(3)
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  public void feignHuge() throws Exception {
-    fetch(this.hugeCars.call());
-  }
-
-  private void fetch(Iterator<Car> cars) {
+  public void feign() throws Exception {
+    final Iterator<Car> cars = this.cars.call();
     while (cars.hasNext()) {
       cars.next();
     }
   }
 
+  private MockWebServer mockServer;
+
   @Setup
   public void setup() {
-    final String serverUrl = System.getProperty("server.url");
+    mockServer = createMockServer();
+    final String serverUrl = mockServer.url("/").toString();
     switch (api) {
       case "list":
         ListApi listApi = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(ListApi.class, serverUrl);
-        fewCars = () -> listApi.getFewCars().iterator();
-        hugeCars = () -> listApi.getHugeCars().iterator();
+        switch (size) {
+          case "few":
+            cars = () -> listApi.getFewCars().iterator();
+            break;
+          case "huge":
+            cars = () -> listApi.getHugeCars().iterator();
+            break;
+          default:
+            throw new IllegalStateException("Unknown size: " + size);
+        }
         break;
       case "iterator":
         IteratorApi iteratorApi = Feign.builder()
             .decoder(new JacksonIteratorDecoder())
             .closeAfterDecode(false)
             .target(IteratorApi.class, serverUrl);
-        fewCars = iteratorApi::getFewCars;
-        hugeCars = iteratorApi::getHugeCars;
+        switch (size) {
+          case "few":
+            cars = iteratorApi::getFewCars;
+            break;
+          case "huge":
+            cars = iteratorApi::getHugeCars;
+            break;
+          default:
+            throw new IllegalStateException("Unknown size: " + size);
+        }
         break;
       case "stream":
         StreamApi streamApi = Feign.builder()
             .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
             .closeAfterDecode(false)
             .target(StreamApi.class, serverUrl);
-        fewCars = () -> streamApi.getFewCars().iterator();
-        hugeCars = () -> streamApi.getHugeCars().iterator();
+        switch (size) {
+          case "few":
+            cars = () -> streamApi.getFewCars().iterator();
+            break;
+          case "huge":
+            cars = () -> streamApi.getHugeCars().iterator();
+            break;
+          default:
+            throw new IllegalStateException("Unknown size: " + size);
+        }
         break;
       default:
         throw new IllegalStateException("Unknown api: " + api);
     }
+  }
+
+  @TearDown
+  public void tearDown() throws IOException {
+    mockServer.shutdown();
   }
 
   static class Car {
@@ -121,48 +143,43 @@ public class StreamDecoderBenchmark {
   }
 
   public static void main(String[] args) throws Exception {
-    MockWebServer mockServer = createMockServer();
-
     Options opt = new OptionsBuilder()
         .include(StreamDecoderBenchmark.class.getSimpleName())
         .addProfiler(GCProfiler.class)
-        .jvmArgs("-server", "-Xms1G", "-Xmx1G", "-Dserver.url=" + mockServer.url("/").toString())
+        .jvmArgs("-server", "-Xms1G", "-Xmx1G")
         .build();
 
     new Runner(opt).run();
-
-    mockServer.shutdown();
   }
 
-  private static MockWebServer createMockServer() {
-    String car = "{\"name\":\"c4\",\"manufacturer\":\"Citroën\"}";
+  private MockWebServer createMockServer() {
+    final String car = "{\"name\":\"c4\",\"manufacturer\":\"Citroën\"}";
 
-    String small = "[]";
+    String fewAnswer = "[]";
     StringBuilder builder = new StringBuilder("[");
     builder.append(car);
     for (int i = 1; i < LOT_OF_CARS; i++) {
       builder.append(",").append(car);
       if (i + 1 == FEW_CARS) {
-        small = builder.toString() + "]";
+        fewAnswer = builder.toString() + "]";
       }
     }
     builder.append("]");
 
-    Logger globalLogger = Logger.getLogger("");
-    globalLogger.setLevel(Level.WARNING); // Disable logging of mock web server
+    Logger.getLogger("").setLevel(Level.WARNING); // Disable logging of mock web server
     MockWebServer server = new MockWebServer();
 
-    final String fewAnswer = small;
-    final String hugeAnswer = builder.toString();
+    final MockResponse fewCarsResponse = new MockResponse().setBody(fewAnswer);
+    final MockResponse hugeCarsResponse = new MockResponse().setBody(builder.toString());
 
     server.setDispatcher(new Dispatcher() {
       @Override
       public MockResponse dispatch(final RecordedRequest request) throws InterruptedException {
         switch (request.getPath()) {
-          case "/few-cars":
-            return new MockResponse().setBody(fewAnswer);
           case "/huge-cars":
-            return new MockResponse().setBody(hugeAnswer);
+            return hugeCarsResponse;
+          case "/few-cars":
+            return fewCarsResponse;
           default:
             throw new IllegalArgumentException(request.getPath());
         }
