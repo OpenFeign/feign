@@ -1,11 +1,6 @@
 package feign.vertx.testcase.domain;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -14,7 +9,7 @@ import java.util.stream.IntStream;
  * @author Alexei KLENIN
  */
 public class OrderGenerator {
-  private static final int[] BALLS_NUMBER = {1, 3, 5, 7};
+  private static final int[] BALLS_NUMBER = { 1, 3, 5, 7 };
   private static final int[] MIXIN_NUMBER = { 1, 2, 3 };
 
   private static final Random random = new Random();
@@ -35,22 +30,6 @@ public class OrderGenerator {
         .forEach(order::addMixin);
 
     return order;
-  }
-
-  public Collection<IceCreamOrder> generate(int n) {
-    Instant now = Instant.now();
-
-    List<Instant> orderTimestamps = IntStream
-        .range(0, n)
-        .mapToObj(minutes -> now.minus(minutes, ChronoUnit.MINUTES))
-        .collect(Collectors.toList());
-
-    return IntStream
-        .range(0, n)
-        .mapToObj(i -> this
-            .generate()
-            .withOrderTimestamp(orderTimestamps.get(i)))
-        .collect(Collectors.toList());
   }
 
   private int peekBallsNumber() {
