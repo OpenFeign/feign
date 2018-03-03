@@ -51,7 +51,7 @@ public class RealRequestBenchmarks {
     });
     server.start();
     client = new OkHttpClient();
-    client.setRetryOnConnectionFailure(false);
+    client.retryOnConnectionFailure();
     okFeign = Feign.builder()
         .client(new feign.okhttp.OkHttpClient(client))
         .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
@@ -69,8 +69,8 @@ public class RealRequestBenchmarks {
    * How fast can we execute get commands synchronously?
    */
   @Benchmark
-  public com.squareup.okhttp.Response query_baseCaseUsingOkHttp() throws IOException {
-    com.squareup.okhttp.Response result = client.newCall(queryRequest).execute();
+  public okhttp3.Response query_baseCaseUsingOkHttp() throws IOException {
+    okhttp3.Response result = client.newCall(queryRequest).execute();
     result.body().close();
     return result;
   }

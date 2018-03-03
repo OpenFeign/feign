@@ -4,31 +4,42 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>parent</artifactId>
+    <version>9.5.2-SNAPSHOT</version>
   </parent>
 
-  <!-- TODO: change group id when 9.0 is released -->
-  <groupId>com.netflix.feign</groupId>
   <artifactId>feign-benchmark</artifactId>
-  <packaging>jar</packaging>
-  <version>8.1.0-SNAPSHOT</version>
   <name>Feign Benchmark (JMH)</name>
 
   <properties>
-    <jmh.version>1.11.2</jmh.version>
+    <jmh.version>1.20</jmh.version>
+    <!-- override default bytecode version for src/main from parent pom -->
+    <main.java.version>1.8</main.java.version>
+    <main.signature.artifact>java18</main.signature.artifact>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.netflix.feign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-okhttp</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-jackson</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-java8</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
