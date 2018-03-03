@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Give me some ice-cream! :p
@@ -13,19 +13,17 @@ import java.util.Set;
  * @author Alexei KLENIN
  */
 public class IceCreamOrder {
-  private static Random random = new Random();
-
-  private int id;                       // order id
-  private Map<Flavor, Integer> balls;   // how much balls of flavor
-  private Set<Mixin> mixins;            // and some mixins ...
-  private Instant orderTimestamp;       // and give it to me right now !
+  private final int id;                       // order id
+  private final Map<Flavor, Integer> balls;   // how much balls of flavor
+  private final Set<Mixin> mixins;            // and some mixins ...
+  private Instant orderTimestamp;             // and give it to me right now !
 
   IceCreamOrder() {
     this(Instant.now());
   }
 
   IceCreamOrder(final Instant orderTimestamp) {
-    this.id = random.nextInt();
+    this.id = ThreadLocalRandom.current().nextInt();
     this.balls = new HashMap<>();
     this.mixins = new HashSet<>();
     this.orderTimestamp = orderTimestamp;

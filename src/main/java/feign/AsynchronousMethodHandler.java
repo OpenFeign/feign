@@ -12,7 +12,6 @@ import feign.vertx.VertxHttpClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClientOptions;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -37,7 +36,6 @@ final class AsynchronousMethodHandler implements MethodHandler {
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
-  private final HttpClientOptions options;
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
@@ -51,7 +49,6 @@ final class AsynchronousMethodHandler implements MethodHandler {
       final Logger.Level logLevel,
       final MethodMetadata metadata,
       final RequestTemplate.Factory buildTemplateFromArgs,
-      final HttpClientOptions options,
       final Decoder decoder,
       final ErrorDecoder errorDecoder,
       final boolean decode404) {
@@ -63,7 +60,6 @@ final class AsynchronousMethodHandler implements MethodHandler {
     this.logLevel = logLevel;
     this.metadata = metadata;
     this.buildTemplateFromArgs = buildTemplateFromArgs;
-    this.options = options;
     this.errorDecoder = errorDecoder;
     this.decoder = decoder;
     this.decode404 = decode404;
@@ -71,7 +67,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Future invoke(final Object[] argv) throws Throwable {
+  public Future invoke(final Object[] argv) {
     final RequestTemplate template = buildTemplateFromArgs.create(argv);
     final Retryer retryer = this.retryer.clone();
 
@@ -97,7 +93,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
 
     final Instant start = Instant.now();
 
-    client.execute(request, this.options).setHandler(res -> {
+    client.execute(request).setHandler(res -> {
       boolean shouldClose = true;
 
       final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
@@ -264,7 +260,6 @@ final class AsynchronousMethodHandler implements MethodHandler {
         final Target<?> target,
         final MethodMetadata metadata,
         final RequestTemplate.Factory buildTemplateFromArgs,
-        final HttpClientOptions options,
         final Decoder decoder,
         final ErrorDecoder errorDecoder) {
       return new AsynchronousMethodHandler(
@@ -276,7 +271,6 @@ final class AsynchronousMethodHandler implements MethodHandler {
           logLevel,
           metadata,
           buildTemplateFromArgs,
-          options,
           decoder,
           errorDecoder,
           decode404);

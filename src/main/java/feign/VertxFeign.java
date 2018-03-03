@@ -82,15 +82,12 @@ public final class VertxFeign extends Feign {
     private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new VertxDelegatingContract(new Contract.Default());
-    private VertxHttpClient client;
     private Retryer retryer = new Retryer.Default();
     private Logger logger = new Logger.NoOpLogger();
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private HttpClientOptions options = new HttpClientOptions();
-    private InvocationHandlerFactory invocationHandlerFactory =
-        new VertxInvocationHandler.Factory();
     private boolean decode404;
 
     /** Unsupported operation. */
@@ -115,7 +112,6 @@ public final class VertxFeign extends Feign {
      */
     public Builder vertx(final Vertx vertx) {
       this.vertx = checkNotNull(vertx, "Argument vertx must be not null");
-      this.client = new VertxHttpClient(vertx);
       return this;
     }
 
@@ -329,11 +325,14 @@ public final class VertxFeign extends Feign {
     public VertxFeign build() {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
+      final VertxHttpClient client = new VertxHttpClient(vertx, this.options);
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
       final ParseHandlersByName handlersByName = new ParseHandlersByName(
           contract, options, encoder, decoder, errorDecoder, methodHandlerFactory);
+      final InvocationHandlerFactory invocationHandlerFactory =
+          new VertxInvocationHandler.Factory();
 
       return new VertxFeign(handlersByName, invocationHandlerFactory);
     }
@@ -381,7 +380,7 @@ public final class VertxFeign extends Feign {
         }
 
         result.put(metadata.configKey(), factory.create(
-                key, metadata, buildTemplate, options, decoder, errorDecoder));
+                key, metadata, buildTemplate, decoder, errorDecoder));
       }
 
       return result;

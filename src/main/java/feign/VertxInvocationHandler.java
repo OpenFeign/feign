@@ -27,10 +27,7 @@ final class VertxInvocationHandler implements InvocationHandler {
   }
 
   @Override
-  public Object invoke(
-      final Object proxy,
-      final Method method,
-      final Object[] args) throws Throwable {
+  public Object invoke(final Object proxy, final Method method, final Object[] args) {
     switch (method.getName()) {
       case "equals" :
         final Object otherHandler = args.length > 0 && args[0] != null

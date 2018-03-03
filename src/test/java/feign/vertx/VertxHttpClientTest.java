@@ -21,9 +21,9 @@ import feign.slf4j.Slf4jLogger;
 import feign.vertx.testcase.IcecreamServiceApi;
 import feign.vertx.testcase.IcecreamServiceApiBroken;
 import feign.vertx.testcase.domain.Bill;
+import feign.vertx.testcase.domain.Flavor;
 import feign.vertx.testcase.domain.IceCreamOrder;
 import feign.vertx.testcase.domain.Mixin;
-import feign.vertx.testcase.domain.Flavor;
 import feign.vertx.testcase.domain.OrderGenerator;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -39,7 +39,6 @@ import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RunWith(VertxUnitRunner.class)
@@ -161,7 +160,7 @@ public class VertxHttpClientTest {
   }
 
   @Test
-  public void testFindOrder_404(TestContext context) throws ExecutionException {
+  public void testFindOrder_404(TestContext context) {
 
     /* Given */
     stubFor(get(urlEqualTo("/icecream/orders/123"))

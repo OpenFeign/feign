@@ -29,34 +29,33 @@ import java.util.stream.StreamSupport;
  */
 @SuppressWarnings("unused")
 public final class VertxHttpClient {
-  private final Vertx vertx;
-  
-  private HttpClient client = null;
+  private final HttpClient httpClient;
 
-  public VertxHttpClient(final Vertx vertx) {
-    this.vertx = checkNotNull(vertx, "Argument vertx must not be null");
+  /**
+   * Constructor from {@link Vertx} instance and HTTP client options.
+   *
+   * @param vertx  vertx instance
+   * @param options  HTTP options
+   */
+  public VertxHttpClient(final Vertx vertx, final HttpClientOptions options) {
+    checkNotNull(vertx, "Argument vertx must not be null");
+    checkNotNull(options, "Argument options must be not null");
+    this.httpClient = vertx.createHttpClient(options);
   }
 
   /**
    * Executes HTTP request and returns {@link Future} with response.
    *
    * @param request  request
-   * @param options  HTTP request options
-   *
    * @return future of HTTP response
    */
-  public Future<Response> execute(final Request request, final HttpClientOptions options) {
+  public Future<Response> execute(final Request request) {
     checkNotNull(request, "Argument request must be not null");
-    checkNotNull(options, "Argument options must be not null");
-
-    if (this.client == null) {
-      this.client = vertx.createHttpClient(options);
-    }
 
     final HttpClientRequest httpClientRequest;
 
     try {
-      httpClientRequest = makeHttpClientRequest(request, this.client);
+      httpClientRequest = makeHttpClientRequest(request);
     } catch (final MalformedURLException unexpectedException) {
       return Future.failedFuture(unexpectedException);
     }
@@ -98,13 +97,10 @@ public final class VertxHttpClient {
    * Creates {@link HttpClientRequest} (Vert.x) from {@link Request} (feign).
    *
    * @param request  feign request
-   * @param client  vertx HTTP client
-   *
    * @return fully formed HttpClientRequest
    */
-  private HttpClientRequest makeHttpClientRequest(
-      final Request request,
-      final HttpClient client) throws MalformedURLException {
+  private HttpClientRequest makeHttpClientRequest(final Request request)
+      throws MalformedURLException {
     final URL url = new URL(request.url());
     final int port = url.getPort() > -1
         ? url.getPort()
@@ -112,7 +108,7 @@ public final class VertxHttpClient {
     final String host = url.getHost();
     final String requestUri = url.getFile();
 
-    HttpClientRequest httpClientRequest = client.request(
+    HttpClientRequest httpClientRequest = httpClient.request(
         HttpMethod.valueOf(request.method()),
         port,
         host,

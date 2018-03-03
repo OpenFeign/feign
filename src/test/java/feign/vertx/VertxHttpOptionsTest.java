@@ -1,5 +1,13 @@
 package feign.vertx;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.Logger;
 import feign.Request;
@@ -7,7 +15,7 @@ import feign.VertxFeign;
 import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
 import feign.vertx.testcase.IcecreamServiceApi;
-import feign.vertx.testcase.domain.*;
+import feign.vertx.testcase.domain.Flavor;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.ext.unit.Async;
@@ -22,9 +30,6 @@ import org.junit.runner.RunWith;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test the new capability of Vertx Feign client to support both Feign
@@ -43,9 +48,9 @@ public class VertxHttpOptionsTest {
   private String flavorsStr;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     /* Given */
-  flavorsStr = Arrays
+    flavorsStr = Arrays
             .stream(Flavor.values())
             .map(flavor -> "\"" + flavor + "\"")
             .collect(Collectors.joining(", ", "[ ", " ]"));

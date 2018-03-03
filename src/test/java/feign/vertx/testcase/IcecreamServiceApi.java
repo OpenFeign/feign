@@ -3,10 +3,10 @@ package feign.vertx.testcase;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import feign.vertx.testcase.domain.Mixin;
 import feign.vertx.testcase.domain.Bill;
 import feign.vertx.testcase.domain.Flavor;
 import feign.vertx.testcase.domain.IceCreamOrder;
+import feign.vertx.testcase.domain.Mixin;
 import io.vertx.core.Future;
 
 import java.util.Collection;

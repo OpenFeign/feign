@@ -3,7 +3,6 @@ package feign.vertx.testcase;
 import feign.Headers;
 import feign.RequestLine;
 import feign.Response;
-import feign.vertx.testcase.domain.Bill;
 import io.vertx.core.Future;
 
 /**
