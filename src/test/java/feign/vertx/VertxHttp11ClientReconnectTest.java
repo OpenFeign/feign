@@ -52,7 +52,7 @@ public class VertxHttp11ClientReconnectTest {
         .options(options)
         .encoder(new JacksonEncoder())
         .decoder(new JacksonDecoder())
-        .target(HelloServiceAPI.class, "http://localhost:8089");
+        .target(HelloServiceAPI.class, "http://localhost:8091");
   }
 
   /**
@@ -75,7 +75,7 @@ public class VertxHttp11ClientReconnectTest {
     HttpServerOptions serverOptions =
         new HttpServerOptions()
             .setLogActivity(true)
-            .setPort(8089)
+            .setPort(8091)
             .setSsl(false);
 
     httpServer = this.vertx.createHttpServer(serverOptions);
