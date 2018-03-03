@@ -13,6 +13,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -25,26 +26,27 @@ import java.util.HashSet;
  */
 @RunWith(VertxUnitRunner.class)
 public class VertxHttp11ClientLeakFixTest {
-  private Vertx vertx = Vertx.vertx();
-  private HttpServer httpServer = null;
+  private static final HttpServerOptions serverOptions = new HttpServerOptions()
+          .setLogActivity(true)
+          .setPort(8091)
+          .setSsl(false);
+  private static final Vertx vertx = Vertx.vertx();
+
+  HttpServer httpServer;
 
   private HashSet<HttpConnection> connections = new HashSet<>();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
+  @Before
+  public void initServer() {
+    httpServer = vertx.createHttpServer(serverOptions);
+  }
+
   @Test
   public void testHttpClientIssue(TestContext context) {
-
     Async async = context.async();
-
-    HttpServerOptions serverOptions =
-            new HttpServerOptions()
-                    .setLogActivity(true)
-                    .setPort(8089)
-                    .setSsl(false);
-
-    httpServer = this.vertx.createHttpServer(serverOptions);
 
     // add a request handler and save the connections.
     httpServer.requestHandler(request -> {
@@ -69,7 +71,7 @@ public class VertxHttp11ClientLeakFixTest {
             .options(options)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
-            .target(HelloServiceAPI.class, "http://localhost:8089");
+            .target(HelloServiceAPI.class, "http://localhost:8091");
 
         // run 10 times call to the server, then check if there are 10 connections created in server or not.
         for (int numToCall = 10; numToCall > 0; numToCall--) {
@@ -97,6 +99,7 @@ public class VertxHttp11ClientLeakFixTest {
     context.assertTrue(this.connections.size() == 3);
 
     // Stop the server
-    httpServer.close();
+    Async async = context.async();
+    httpServer.close(ignored -> async.complete());
   }
 }
