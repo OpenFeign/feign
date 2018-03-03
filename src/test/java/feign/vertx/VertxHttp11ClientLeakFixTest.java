@@ -41,7 +41,7 @@ public class VertxHttp11ClientLeakFixTest {
     HttpServerOptions serverOptions =
             new HttpServerOptions()
                     .setLogActivity(true)
-                    .setPort(8090)
+                    .setPort(8089)
                     .setSsl(false);
 
     httpServer = this.vertx.createHttpServer(serverOptions);
@@ -69,7 +69,7 @@ public class VertxHttp11ClientLeakFixTest {
             .options(options)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
-            .target(HelloServiceAPI.class, "http://localhost:8090");
+            .target(HelloServiceAPI.class, "http://localhost:8089");
 
         // run 10 times call to the server, then check if there are 10 connections created in server or not.
         for (int numToCall = 10; numToCall > 0; numToCall--) {
