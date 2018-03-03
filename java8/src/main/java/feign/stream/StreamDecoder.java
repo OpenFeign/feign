@@ -31,7 +31,7 @@ import static feign.Util.ensureClosed;
 
 /**
  * Iterator based decoder that support streaming.
- *
+ * <p>
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
@@ -42,6 +42,7 @@ import static feign.Util.ensureClosed;
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code></pre>
+ *
  * @author Pierrick HYMBERT
  */
 public class StreamDecoder implements Decoder {
@@ -64,95 +65,42 @@ public class StreamDecoder implements Decoder {
       throw new IllegalArgumentException(
           "StreamDecoder supports only stream: unknown " + type);
     }
-    final Integer streamSize = computeEstimatedStreamSize(streamType, response);
+    final Iterator<?> iterator = (Iterator) iteratorDecoder.decode(response,
+        new IteratorParameterizedType(streamType));
 
-    final Spliterator<?> spliterator;
-    final Iterator<?> iterator = provideIterator(streamType, response);
-    if (streamSize == null) {
-      spliterator =
-          Spliterators.spliteratorUnknownSize(iterator,
-              streamCharacteristics());
-    } else {
-      spliterator =
-          Spliterators.spliterator(iterator, streamSize,
-              streamCharacteristics());
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(iterator,
+            Spliterator.DISTINCT | Spliterator.NONNULL), false)
+        .onClose(() -> {
+          if (iterator instanceof Closeable) {
+            ensureClosed((Closeable) iterator);
+          } else {
+            ensureClosed(response);
+          }
+        });
+  }
+
+  private static final class IteratorParameterizedType implements ParameterizedType {
+
+    private final ParameterizedType streamType;
+
+    private IteratorParameterizedType(final ParameterizedType streamType) {
+      this.streamType = streamType;
     }
 
-    return StreamSupport.stream(spliterator, isParallelStream())
-                        .onClose(onStreamClose(streamType, iterator, response));
-  }
+    @Override
+    public Type[] getActualTypeArguments() {
+      return streamType.getActualTypeArguments();
+    }
 
-  /**
-   * Provides an iterator to retrieve data from the response and type.
-   * Implementation is responsible to close the response body.
-   *
-   * @param streamType Type of the stream
-   * @param response          Current response
-   * @param <T>               Type of the iterator.
-   */
-  @SuppressWarnings("unchecked")
-  protected <T> Iterator<? extends T> provideIterator(final ParameterizedType streamType,
-                                                      final Response response) throws IOException {
-    return (Iterator) iteratorDecoder.decode(response, new ParameterizedType() {
+    @Override
+    public Type getRawType() {
+      return Iterator.class;
+    }
 
-      @Override
-      public Type[] getActualTypeArguments() {
-        return streamType.getActualTypeArguments();
-      }
-
-      @Override
-      public Type getRawType() {
-        return Iterator.class;
-      }
-
-      @Override
-      public Type getOwnerType() {
-        return streamType.getOwnerType();
-      }
-    });
-  }
-
-  /**
-   * Computes estimated stream size, null if the size is unknown.
-   *
-   * @param streamType Type of stream
-   * @param response          http response
-   * @return Estimated stream size
-   */
-  protected <T> Integer computeEstimatedStreamSize(final ParameterizedType streamType,
-                                                  final Response response) {
-    return null;
-  }
-
-  /**
-   * @return True if the underlying iterator support parallel calls, false otherwise. Default false.
-   */
-  protected boolean isParallelStream() {
-    return false;
-  }
-
-  /**
-   * @return Supported stream characteristics
-   */
-  protected int streamCharacteristics() {
-    return Spliterator.DISTINCT | Spliterator.NONNULL;
-  }
-
-  /**
-   * Action to run when stream is closed.
-   * Default action is to close underlying response.
-   *
-   * @param streamType type of the stream
-   * @param iterator Stream based iterator
-   *@param response Response Related stream response  @return Runnable on stream close
-   */
-  protected <T> Runnable onStreamClose(ParameterizedType streamType, Iterator<?> iterator, Response response) {
-    return () -> {
-      if (iterator instanceof Closeable) {
-        ensureClosed((Closeable) iterator);
-      } else {
-        ensureClosed(response);
-      }
-    };
+    @Override
+    public Type getOwnerType() {
+      return streamType.getOwnerType();
+    }
   }
 }

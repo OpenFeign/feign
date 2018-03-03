@@ -1,11 +1,9 @@
-/*
- * Copyright 2013 Netflix, Inc.
- *
+/**
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -99,7 +97,7 @@ public class JacksonIteratorDecoder implements Decoder {
     }
     ParameterizedType parameterizedType = (ParameterizedType) type;
     if (!Iterator.class.equals(parameterizedType.getRawType())) {
-      throw new IllegalArgumentException("Not supported an iterator " + parameterizedType.getRawType().toString());
+      throw new IllegalArgumentException("Not an iterator type " + parameterizedType.getRawType().toString());
     }
     return ((ParameterizedType) type).getActualTypeArguments()[0];
   }
@@ -125,16 +123,20 @@ public class JacksonIteratorDecoder implements Decoder {
         if (jsonToken == null) {
           return false;
         }
-        if (JsonToken.START_ARRAY.equals(jsonToken)) {
+
+        if (jsonToken == JsonToken.START_ARRAY) {
           jsonToken = parser.nextToken();
         }
-        if (JsonToken.END_ARRAY.equals(jsonToken)) {
+
+        if (jsonToken == JsonToken.END_ARRAY) {
           current = null;
           return false;
         }
-        if (!JsonToken.START_OBJECT.equals(jsonToken)) {
+
+        if (jsonToken != JsonToken.START_OBJECT) {
           throw new IOException("Unexpected json token in response body " + jsonToken);
         }
+
         current = objectReader.readValue(parser);
       } catch (IOException e) {
         throw new DecodeException(e.getMessage(), e);
