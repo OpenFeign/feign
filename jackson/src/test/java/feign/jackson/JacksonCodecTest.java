@@ -13,10 +13,13 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import org.junit.Test;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +32,7 @@ import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class JacksonCodecTest {
 
@@ -151,6 +155,52 @@ public class JacksonCodecTest {
                                  + "  \"name\" : \"DENOMINATOR.IO.\",\n"
                                  + "  \"id\" : \"ABCD\"\n"
                                  + "} ]");
+  }
+
+  @Test
+  public void decodesIterator() throws Exception {
+    List<Zone> zones = new LinkedList<Zone>();
+    zones.add(new Zone("denominator.io."));
+    zones.add(new Zone("denominator.io.", "ABCD"));
+
+    Response response = Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(zonesJson, UTF_8)
+            .build();
+    Object decoded = JacksonIteratorDecoder.Factory.create().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+    assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
+    assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
+    assertEquals(zones, asList((Iterator<?>) decoded));
+  }
+
+  private <T> List<T> asList(Iterator<T> iter) {
+    final List<T> copy = new ArrayList<T>();
+    while (iter.hasNext())
+      copy.add(iter.next());
+    return copy;
+  }
+
+  @Test
+  public void nullBodyDecodesToNullIterator() throws Exception {
+    Response response = Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
+    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
+  }
+
+  @Test
+  public void emptyBodyDecodesToNullIterator() throws Exception {
+    Response response = Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(new byte[0])
+            .build();
+    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {

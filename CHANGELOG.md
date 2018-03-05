@@ -1,3 +1,10 @@
+### Version 9.6
+* Adds `Feign.Builder.closeAfterDecode(false)` option to let the decoder to choose to close `Response` instead of the default `MethodHandler`. **Warning** this option is at your own risk, if you disable default close-after-decode behavior you are responsible to close response resources by calling `Response.close()`.
+* Introduces `JacksonIteratorDecoder` in `feign-jackson` which provides a closeable iterator for lazy processing json arrays. This decoder have to be used with `Feign.Builder.closeAfterDecode(false)` option disabled. Built-in iterator auto closes the `Response` when it reached json array end or failed to parse stream.
+  If this iterator is not fetched till the end, it has to be casted to `Closeable` and explicity `Closeable.close()` by the consumer.
+* Introduces `StreamDecoder` in `feign-java8` which provides a `java.util.stream.Stream` for lazy processing response based on a wrapped decoder that is responsible to transform the `Response` to an `Iterator`.
+ This decoder have to be used with `Feign.Builder.closeAfterDecode(false)` option disabled.
+
 ### Version 9.5.1
 * When specified, Content-Type header is now included on OkHttp requests lacking a body.
 * Sets empty HttpEntity if apache request body is null.
