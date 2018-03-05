@@ -169,7 +169,7 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(zonesJson, UTF_8)
             .build();
-    Object decoded = new JacksonIteratorDecoder().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+    Object decoded = JacksonIteratorDecoder.Factory.create().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
     assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
     assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
     assertEquals(zones, asList((Iterator<?>) decoded));
@@ -189,7 +189,7 @@ public class JacksonCodecTest {
             .reason("OK")
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
-    assertNull(new JacksonIteratorDecoder().decode(response, Iterator.class));
+    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
   }
 
   @Test
@@ -200,7 +200,7 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(new byte[0])
             .build();
-    assertNull(new JacksonIteratorDecoder().decode(response, Iterator.class));
+    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {

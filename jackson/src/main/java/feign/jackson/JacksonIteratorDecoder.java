@@ -41,7 +41,7 @@ import static feign.Util.ensureClosed;
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
- *   .decoder(new JacksonIteratorDecoder())
+ *   .decoder(JacksonIteratorDecoder.Factory.create())
  *   .closeAfterDecode(false) // Required to fetch the iterator after the response is processed, need to be close
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
@@ -53,16 +53,7 @@ public class JacksonIteratorDecoder implements Decoder {
 
   private final ObjectMapper mapper;
 
-  public JacksonIteratorDecoder() {
-    this(Collections.<Module>emptyList());
-  }
-
-  public JacksonIteratorDecoder(Iterable<Module> modules) {
-    this(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModules(modules));
-  }
-
-  public JacksonIteratorDecoder(ObjectMapper mapper) {
+  private JacksonIteratorDecoder(ObjectMapper mapper) {
     this.mapper = mapper;
   }
 
@@ -99,6 +90,20 @@ public class JacksonIteratorDecoder implements Decoder {
       throw new IllegalArgumentException("Not an iterator type " + parameterizedType.getRawType().toString());
     }
     return ((ParameterizedType) type).getActualTypeArguments()[0];
+  }
+
+  public static final class Factory {
+    public static JacksonIteratorDecoder create() {
+       return create(Collections.<Module>emptyList());
+    }
+    public static JacksonIteratorDecoder create(Iterable<Module> modules) {
+      return new JacksonIteratorDecoder(new ObjectMapper()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .registerModules(modules));
+    }
+    public static JacksonIteratorDecoder create(ObjectMapper objectMapper) {
+      return new JacksonIteratorDecoder(objectMapper);
+    }
   }
 
   private final class JacksonIterator<T> implements Iterator<T>, Closeable {
