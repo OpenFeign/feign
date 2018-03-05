@@ -46,12 +46,14 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
+  private final boolean closeAfterDecode;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
                                    List<RequestInterceptor> requestInterceptors, Logger logger,
                                    Logger.Level logLevel, MethodMetadata metadata,
                                    RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404) {
+                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+                                   boolean closeAfterDecode) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -65,6 +67,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
+    this.closeAfterDecode = closeAfterDecode;
   }
 
   @Override
@@ -130,9 +133,11 @@ final class SynchronousMethodHandler implements MethodHandler {
         if (void.class == metadata.returnType()) {
           return null;
         } else {
+          shouldClose = closeAfterDecode;
           return decode(response);
         }
       } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
+        shouldClose = closeAfterDecode;
         return decode(response);
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);
@@ -178,15 +183,17 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Logger logger;
     private final Logger.Level logLevel;
     private final boolean decode404;
+    private final boolean closeAfterDecode;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel, boolean decode404) {
+            Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.decode404 = decode404;
+      this.closeAfterDecode = closeAfterDecode;
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md,
@@ -194,7 +201,7 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 Options options, Decoder decoder, ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
                                           logLevel, md, buildTemplateFromArgs, options, decoder,
-                                          errorDecoder, decode404);
+                                          errorDecoder, decode404, closeAfterDecode);
     }
   }
 }
