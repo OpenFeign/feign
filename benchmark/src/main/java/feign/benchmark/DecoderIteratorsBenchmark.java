@@ -93,12 +93,12 @@ public class DecoderIteratorsBenchmark {
         }.getType();
         break;
       case "iterator":
-        decoder = new JacksonIteratorDecoder();
+        decoder = JacksonIteratorDecoder.Factory.create();
         type = new TypeReference<Iterator<Car>>() {
         }.getType();
         break;
       case "stream":
-        decoder = new StreamDecoder(new JacksonIteratorDecoder());
+        decoder = StreamDecoder.Factory.create(JacksonIteratorDecoder.Factory.create());
         type = new TypeReference<Stream<Car>>() {
         }.getType();
         break;

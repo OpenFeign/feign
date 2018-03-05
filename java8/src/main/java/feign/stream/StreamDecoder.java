@@ -13,6 +13,10 @@
  */
 package feign.stream;
 
+import feign.FeignException;
+import feign.Response;
+import feign.codec.Decoder;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -23,10 +27,6 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import feign.FeignException;
-import feign.Response;
-import feign.codec.Decoder;
-
 import static feign.Util.ensureClosed;
 
 /**
@@ -35,7 +35,7 @@ import static feign.Util.ensureClosed;
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
- *   .decoder(new StreamDecoder(new JacksonIteratorDecoder()))
+ *   .decoder(StreamDecoder.Factory.create(JacksonIteratorDecoder.Factory.create()))
  *   .closeAfterDecode(false) // Required for streaming
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
@@ -47,7 +47,7 @@ public class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
 
-  public StreamDecoder(Decoder iteratorDecoder) {
+  private StreamDecoder(Decoder iteratorDecoder) {
     this.iteratorDecoder = iteratorDecoder;
   }
 
@@ -76,6 +76,12 @@ public class StreamDecoder implements Decoder {
             ensureClosed(response);
           }
         });
+  }
+
+  public static final class Factory {
+    public static StreamDecoder create(Decoder iteratorDecoder) {
+      return new StreamDecoder(iteratorDecoder);
+    }
   }
 
   private static final class IteratorParameterizedType implements ParameterizedType {
