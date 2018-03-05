@@ -4,9 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.github.openfeign</groupId>
-    <artifactId>parent</artifactId>
-    <version>9.5.2-SNAPSHOT</version>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
   </parent>
 
   <artifactId>feign-benchmark</artifactId>
@@ -19,28 +19,29 @@
     <main.signature.artifact>java18</main.signature.artifact>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <feign.version>9.6</feign.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
-      <version>${project.version}</version>
+      <version>${feign.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-okhttp</artifactId>
-      <version>${project.version}</version>
+      <version>${feign.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
-      <version>${project.version}</version>
+      <version>${feign.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-java8</artifactId>
-      <version>${project.version}</version>
+      <version>${feign.version}</version>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
