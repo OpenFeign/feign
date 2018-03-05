@@ -1,3 +1,6 @@
+### Version 9.6
+* Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.
+
 ### Version 9.5.1
 * When specified, Content-Type header is now included on OkHttp requests lacking a body.
 * Sets empty HttpEntity if apache request body is null.
