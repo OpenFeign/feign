@@ -34,7 +34,8 @@ import static feign.Util.ensureClosed;
 
 /**
  * Jackson decoder which return a closeable iterator.
- * Iterator <b>shall</b> be closed by the consumer.
+ * Returned iterator auto-close the {@code Response} when it reached json array end or failed to parse stream.
+ * If this iterator is not fetched till the end, it has to be casted to {@code Closeable} and explicity {@code Closeable#close} by the consumer.
  * <p>
  * <p>
  * <p>Example: <br>
@@ -80,7 +81,7 @@ public class JacksonIteratorDecoder implements Decoder {
         return null; // Eagerly returning null avoids "No content to map due to end-of-input"
       }
       reader.reset();
-      return new JacksonIterator<Object>(actualIteratorTypeArgument(type), mapper, reader);
+      return new JacksonIterator<Object>(actualIteratorTypeArgument(type), mapper, response, reader);
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
@@ -101,15 +102,15 @@ public class JacksonIteratorDecoder implements Decoder {
   }
 
   private final class JacksonIterator<T> implements Iterator<T>, Closeable {
-    private final Reader reader;
+    private final Response response;
     private final JsonParser parser;
     private final ObjectReader objectReader;
 
     private T current;
 
-    private JacksonIterator(final Type type, final ObjectMapper mapper, final Reader reader)
+    private JacksonIterator(Type type, ObjectMapper mapper, Response response, Reader reader)
         throws IOException {
-      this.reader = reader;
+      this.response = response;
       this.parser = mapper.getFactory().createParser(reader);
       this.objectReader = mapper.reader().forType(mapper.constructType(type));
     }
@@ -128,6 +129,7 @@ public class JacksonIteratorDecoder implements Decoder {
 
         if (jsonToken == JsonToken.END_ARRAY) {
           current = null;
+          ensureClosed(this);
           return false;
         }
 
@@ -137,6 +139,7 @@ public class JacksonIteratorDecoder implements Decoder {
 
         current = objectReader.readValue(parser);
       } catch (IOException e) {
+        ensureClosed(this);
         throw new DecodeException(e.getMessage(), e);
       }
       return current != null;
@@ -154,7 +157,7 @@ public class JacksonIteratorDecoder implements Decoder {
 
     @Override
     public void close() throws IOException {
-      ensureClosed(this.reader);
+      ensureClosed(this.response);
     }
   }
 }
