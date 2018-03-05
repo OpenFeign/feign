@@ -181,7 +181,7 @@ public abstract class Feign {
      *
      * Default is true for back compatibility.
      *
-     * @since 9.5.2
+     * @since 9.6
      */
     public Builder closeAfterDecode(boolean closeAfterDecode) {
       this.closeAfterDecode = closeAfterDecode;

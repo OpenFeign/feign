@@ -1,3 +1,6 @@
+### Version 9.6
+* Adds `Feign.Builder.closeAfterDecode(false)` option to let the decoder to choose to close `Response` instead of the default `MethodHandler`. **Warning** this option is at your own risk, if you disable default close-after-decode behavior you are responsible to close response resources by calling `Response.close()`.
+
 ### Version 9.5.1
 * When specified, Content-Type header is now included on OkHttp requests lacking a body.
 * Sets empty HttpEntity if apache request body is null.
