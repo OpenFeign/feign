@@ -59,7 +59,7 @@ public class DecoderIteratorsBenchmark {
 
   @SuppressWarnings("unchecked")
   private void fetch(Object o) {
-    final Iterator<Car> cars;
+    Iterator<Car> cars;
 
     if (o instanceof Collection) {
       cars = ((Collection<Car>) o).iterator();
@@ -108,7 +108,7 @@ public class DecoderIteratorsBenchmark {
   }
 
   private String carsJson(int count) {
-    final String car = "{\"name\":\"c4\",\"manufacturer\":\"Citroën\"}";
+    String car = "{\"name\":\"c4\",\"manufacturer\":\"Citroën\"}";
     StringBuilder builder = new StringBuilder("[");
     builder.append(car);
     for (int i = 1; i < count; i++) {

@@ -47,23 +47,23 @@ public class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
 
-  public StreamDecoder(final Decoder iteratorDecoder) {
+  public StreamDecoder(Decoder iteratorDecoder) {
     this.iteratorDecoder = iteratorDecoder;
   }
 
   @Override
-  public Object decode(final Response response, final Type type)
+  public Object decode(Response response, Type type)
       throws IOException, FeignException {
     if (!(type instanceof ParameterizedType)) {
       throw new IllegalArgumentException(
           "StreamDecoder supports only stream: unknown " + type);
     }
-    final ParameterizedType streamType = (ParameterizedType) type;
+    ParameterizedType streamType = (ParameterizedType) type;
     if (!Stream.class.equals(streamType.getRawType())) {
       throw new IllegalArgumentException(
           "StreamDecoder supports only stream: unknown " + type);
     }
-    final Iterator<?> iterator = (Iterator) iteratorDecoder.decode(response,
+    Iterator<?> iterator = (Iterator) iteratorDecoder.decode(response,
         new IteratorParameterizedType(streamType));
 
     return StreamSupport.stream(
@@ -82,7 +82,7 @@ public class StreamDecoder implements Decoder {
 
     private final ParameterizedType streamType;
 
-    private IteratorParameterizedType(final ParameterizedType streamType) {
+    private IteratorParameterizedType(ParameterizedType streamType) {
       this.streamType = streamType;
     }
 
