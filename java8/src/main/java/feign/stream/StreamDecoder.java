@@ -42,8 +42,6 @@ import static feign.Util.ensureClosed;
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code></pre>
- *
- * @author Pierrick HYMBERT
  */
 public class StreamDecoder implements Decoder {
 

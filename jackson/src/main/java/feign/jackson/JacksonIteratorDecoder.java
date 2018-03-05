@@ -47,8 +47,6 @@ import static feign.Util.ensureClosed;
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Iterator<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code></pre>
- *
- * @author Pierrick HYMBERT
  */
 public class JacksonIteratorDecoder implements Decoder {
 
