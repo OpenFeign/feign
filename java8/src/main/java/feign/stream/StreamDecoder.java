@@ -35,7 +35,7 @@ import static feign.Util.ensureClosed;
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
- *   .decoder(StreamDecoder.Factory.create(JacksonIteratorDecoder.Factory.create()))
+ *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
  *   .doNotCloseAfterDecode() // Required for streaming
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
@@ -43,11 +43,11 @@ import static feign.Util.ensureClosed;
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code></pre>
  */
-public class StreamDecoder implements Decoder {
+public final class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
 
-  private StreamDecoder(Decoder iteratorDecoder) {
+  StreamDecoder(Decoder iteratorDecoder) {
     this.iteratorDecoder = iteratorDecoder;
   }
 
@@ -78,17 +78,15 @@ public class StreamDecoder implements Decoder {
         });
   }
 
-  public static final class Factory {
-    public static StreamDecoder create(Decoder iteratorDecoder) {
+  public static StreamDecoder create(Decoder iteratorDecoder) {
       return new StreamDecoder(iteratorDecoder);
-    }
   }
 
-  private static final class IteratorParameterizedType implements ParameterizedType {
+  static final class IteratorParameterizedType implements ParameterizedType {
 
     private final ParameterizedType streamType;
 
-    private IteratorParameterizedType(ParameterizedType streamType) {
+    IteratorParameterizedType(ParameterizedType streamType) {
       this.streamType = streamType;
     }
 
@@ -104,7 +102,7 @@ public class StreamDecoder implements Decoder {
 
     @Override
     public Type getOwnerType() {
-      return streamType.getOwnerType();
+      return null;
     }
   }
 }

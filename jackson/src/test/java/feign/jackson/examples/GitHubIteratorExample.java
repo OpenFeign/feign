@@ -29,7 +29,7 @@ public class GitHubIteratorExample {
 
   public static void main(String... args) throws IOException {
     GitHub github = Feign.builder()
-        .decoder(JacksonIteratorDecoder.Factory.create())
+        .decoder(JacksonIteratorDecoder.create())
         .doNotCloseAfterDecode()
         .target(GitHub.class, "https://api.github.com");
 

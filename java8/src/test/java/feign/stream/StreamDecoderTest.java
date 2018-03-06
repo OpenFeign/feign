@@ -66,7 +66,7 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.Factory.create((response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
+        .decoder(StreamDecoder.create((response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
@@ -83,7 +83,7 @@ public class StreamDecoderTest {
     ObjectMapper mapper = new ObjectMapper();
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.Factory.create(JacksonIteratorDecoder.Factory.create()))
+        .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 

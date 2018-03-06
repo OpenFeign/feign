@@ -41,7 +41,7 @@ import static feign.Util.ensureClosed;
  * <p>Example: <br>
  * <pre><code>
  * Feign.builder()
- *   .decoder(JacksonIteratorDecoder.Factory.create())
+ *   .decoder(JacksonIteratorDecoder.create())
  *   .doNotCloseAfterDecode() // Required to fetch the iterator after the response is processed, need to be close
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
@@ -49,11 +49,11 @@ import static feign.Util.ensureClosed;
  *   Iterator<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code></pre>
  */
-public class JacksonIteratorDecoder implements Decoder {
+public final class JacksonIteratorDecoder implements Decoder {
 
   private final ObjectMapper mapper;
 
-  private JacksonIteratorDecoder(ObjectMapper mapper) {
+  JacksonIteratorDecoder(ObjectMapper mapper) {
     this.mapper = mapper;
   }
 
@@ -81,7 +81,7 @@ public class JacksonIteratorDecoder implements Decoder {
     }
   }
 
-  private Type actualIteratorTypeArgument(Type type) {
+  private static Type actualIteratorTypeArgument(Type type) {
     if (!(type instanceof ParameterizedType)) {
       throw new IllegalArgumentException("Not supported type " + type.toString());
     }
@@ -92,28 +92,28 @@ public class JacksonIteratorDecoder implements Decoder {
     return ((ParameterizedType) type).getActualTypeArguments()[0];
   }
 
-  public static final class Factory {
-    public static JacksonIteratorDecoder create() {
-       return create(Collections.<Module>emptyList());
-    }
-    public static JacksonIteratorDecoder create(Iterable<Module> modules) {
-      return new JacksonIteratorDecoder(new ObjectMapper()
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-          .registerModules(modules));
-    }
-    public static JacksonIteratorDecoder create(ObjectMapper objectMapper) {
-      return new JacksonIteratorDecoder(objectMapper);
-    }
+  public static JacksonIteratorDecoder create() {
+    return create(Collections.<Module>emptyList());
   }
 
-  private final class JacksonIterator<T> implements Iterator<T>, Closeable {
+  public static JacksonIteratorDecoder create(Iterable<Module> modules) {
+    return new JacksonIteratorDecoder(new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .registerModules(modules));
+  }
+
+  public static JacksonIteratorDecoder create(ObjectMapper objectMapper) {
+    return new JacksonIteratorDecoder(objectMapper);
+  }
+
+  static final class JacksonIterator<T> implements Iterator<T>, Closeable {
     private final Response response;
     private final JsonParser parser;
     private final ObjectReader objectReader;
 
     private T current;
 
-    private JacksonIterator(Type type, ObjectMapper mapper, Response response, Reader reader)
+    JacksonIterator(Type type, ObjectMapper mapper, Response response, Reader reader)
         throws IOException {
       this.response = response;
       this.parser = mapper.getFactory().createParser(reader);
@@ -138,13 +138,9 @@ public class JacksonIteratorDecoder implements Decoder {
           return false;
         }
 
-        if (jsonToken != JsonToken.START_OBJECT) {
-          throw new IOException("Unexpected json token in response body " + jsonToken);
-        }
-
         current = objectReader.readValue(parser);
       } catch (IOException e) {
-        ensureClosed(this);
+        // Input Stream closed automatically by parser
         throw new DecodeException(e.getMessage(), e);
       }
       return current != null;

@@ -182,7 +182,7 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(zonesJson, UTF_8)
             .build();
-    Object decoded = JacksonIteratorDecoder.Factory.create().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+    Object decoded = JacksonIteratorDecoder.create().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
     assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
     assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
     assertEquals(zones, asList((Iterator<?>) decoded));
@@ -202,7 +202,7 @@ public class JacksonCodecTest {
             .reason("OK")
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
-    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
+    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
   }
 
   @Test
@@ -213,7 +213,7 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(new byte[0])
             .build();
-    assertNull(JacksonIteratorDecoder.Factory.create().decode(response, Iterator.class));
+    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -284,5 +284,16 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmptyIterator() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 }
