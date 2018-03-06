@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-/**
- * This test shows up how fast different json array response processing implementations are.
- */
 @State(Scope.Thread)
 public class DecoderIteratorsBenchmark {
 
