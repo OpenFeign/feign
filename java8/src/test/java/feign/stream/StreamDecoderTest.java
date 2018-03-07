@@ -13,24 +13,25 @@
  */
 package feign.stream;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import feign.Feign;
 import feign.RequestLine;
-import feign.codec.DecodeException;
+import feign.Response;
 import feign.jackson.JacksonIteratorDecoder;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Test;
 
+import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class StreamDecoderTest {
@@ -89,6 +90,45 @@ public class StreamDecoderTest {
 
     try (Stream<StreamInterface.Car> stream = api.getCars()) {
       assertThat(stream.collect(Collectors.toList())).hasSize(2);
+    }
+  }
+
+  @Test
+  public void shouldCloseIteratorWhenStreamClosed() throws IOException {
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body("", UTF_8)
+        .build();
+
+    TestCloseableIterator it = new TestCloseableIterator();
+    StreamDecoder decoder = new StreamDecoder((r, t) -> it);
+
+    try (Stream<?> stream = (Stream) decoder.decode(response, new TypeReference<Stream<String>>() {
+    }.getType())) {
+      assertThat(stream.collect(Collectors.toList())).hasSize(1);
+      assertThat(it.called).isTrue();
+    } finally {
+      assertThat(it.closed).isTrue();
+    }
+  }
+
+  static class TestCloseableIterator implements Iterator<String>, Closeable {
+    boolean called;
+    boolean closed;
+
+    @Override public void close() throws IOException {
+      this.closed = true;
+    }
+
+    @Override public boolean hasNext() {
+      return !called;
+    }
+
+    @Override public String next() {
+      called = true;
+      return "feign";
     }
   }
 }

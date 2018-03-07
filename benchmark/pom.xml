@@ -24,6 +24,7 @@
     <version>9</version>
   </parent>
 
+  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-benchmark</artifactId>
   <version>9.6.0-SNAPSHOT</version>
   <name>Feign Benchmark (JMH)</name>

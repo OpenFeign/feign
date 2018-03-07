@@ -30,9 +30,7 @@ import java.util.stream.StreamSupport;
 import static feign.Util.ensureClosed;
 
 /**
- * Iterator based decoder that support streaming.
- * <p>
- * <p>Example: <br>
+ * Iterator based decoder that support streaming. <p> <p>Example: <br>
  * <pre><code>
  * Feign.builder()
  *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
@@ -55,20 +53,17 @@ public final class StreamDecoder implements Decoder {
   public Object decode(Response response, Type type)
       throws IOException, FeignException {
     if (!(type instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "StreamDecoder supports only stream: unknown " + type);
+      throw new IllegalArgumentException("StreamDecoder supports only stream: unknown " + type);
     }
     ParameterizedType streamType = (ParameterizedType) type;
     if (!Stream.class.equals(streamType.getRawType())) {
-      throw new IllegalArgumentException(
-          "StreamDecoder supports only stream: unknown " + type);
+      throw new IllegalArgumentException("StreamDecoder supports only stream: unknown " + type);
     }
-    Iterator<?> iterator = (Iterator) iteratorDecoder.decode(response,
-        new IteratorParameterizedType(streamType));
+    Iterator<?> iterator =
+        (Iterator) iteratorDecoder.decode(response, new IteratorParameterizedType(streamType));
 
     return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(iterator,
-            Spliterator.DISTINCT | Spliterator.NONNULL), false)
+        Spliterators.spliteratorUnknownSize(iterator, 0), false)
         .onClose(() -> {
           if (iterator instanceof Closeable) {
             ensureClosed((Closeable) iterator);
@@ -79,7 +74,7 @@ public final class StreamDecoder implements Decoder {
   }
 
   public static StreamDecoder create(Decoder iteratorDecoder) {
-      return new StreamDecoder(iteratorDecoder);
+    return new StreamDecoder(iteratorDecoder);
   }
 
   static final class IteratorParameterizedType implements ParameterizedType {
