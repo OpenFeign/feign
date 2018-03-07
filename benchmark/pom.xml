@@ -40,22 +40,22 @@
 
   <dependencies>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-okhttp</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-jackson</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-java8</artifactId>
       <version>${project.version}</version>
     </dependency>
