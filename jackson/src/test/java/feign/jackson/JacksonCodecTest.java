@@ -17,6 +17,7 @@ import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -30,10 +31,13 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import feign.RequestTemplate;
 import feign.Response;
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -174,6 +178,56 @@ public class JacksonCodecTest {
                 + "} ]");
   }
 
+  @Test
+  public void decodesIterator() throws Exception {
+    List<Zone> zones = new LinkedList<Zone>();
+    zones.add(new Zone("denominator.io."));
+    zones.add(new Zone("denominator.io.", "ABCD"));
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(zonesJson, UTF_8)
+            .build();
+    Object decoded =
+        JacksonIteratorDecoder.create()
+            .decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+    assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
+    assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
+    assertEquals(zones, asList((Iterator<?>) decoded));
+  }
+
+  private <T> List<T> asList(Iterator<T> iter) {
+    final List<T> copy = new ArrayList<T>();
+    while (iter.hasNext()) copy.add(iter.next());
+    return copy;
+  }
+
+  @Test
+  public void nullBodyDecodesToNullIterator() throws Exception {
+    Response response =
+        Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
+    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+  }
+
+  @Test
+  public void emptyBodyDecodesToNullIterator() throws Exception {
+    Response response =
+        Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(new byte[0])
+            .build();
+    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+  }
+
   static class Zone extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = 1L;
@@ -243,5 +297,17 @@ public class JacksonCodecTest {
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundDecodesToEmptyIterator() throws Exception {
+    Response response =
+        Response.builder()
+            .status(404)
+            .reason("NOT FOUND")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .build();
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 }
