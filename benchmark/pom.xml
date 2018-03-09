@@ -14,19 +14,16 @@
     the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>parent</artifactId>
+    <version>9.6.0</version>
   </parent>
 
-  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-benchmark</artifactId>
-  <version>9.6.0-SNAPSHOT</version>
   <name>Feign Benchmark (JMH)</name>
 
   <properties>
@@ -34,6 +31,7 @@
     <!-- override default bytecode version for src/main from parent pom -->
     <main.java.version>1.8</main.java.version>
     <main.signature.artifact>java18</main.signature.artifact>
+    <main.basedir>${project.basedir}/..</main.basedir>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
@@ -140,4 +138,8 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <tag>9.6.0</tag>
+  </scm>
 </project>
