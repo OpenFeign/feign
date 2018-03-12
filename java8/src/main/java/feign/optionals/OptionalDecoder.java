@@ -35,8 +35,7 @@ public final class OptionalDecoder implements Decoder {
     if (!isOptional(type)) {
       return delegate.decode(response, type);
     }
-
-    if (response.status() == 404) {
+    if (response.status() == 404 || response.status() == 204) {
       return Optional.empty();
     }
     Type enclosedType = Util.resolveLastTypeParameter(type, Optional.class);
