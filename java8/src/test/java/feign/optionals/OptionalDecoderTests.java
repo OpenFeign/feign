@@ -33,11 +33,11 @@ public class OptionalDecoderTests {
 
   @Test
   public void simple404OptionalTest() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
+    final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setBody("foo"));
 
-    OptionalInterface api =
+    final OptionalInterface api =
         Feign.builder()
             .decode404()
             .decoder(new OptionalDecoder(new Decoder.Default()))
@@ -49,15 +49,14 @@ public class OptionalDecoderTests {
 
   @Test
   public void simple204OptionalTest() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
+    final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(204));
 
-    OptionalInterface api =
+    final OptionalInterface api =
         Feign.builder()
             .decoder(new OptionalDecoder(new Decoder.Default()))
             .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.get().isPresent()).isFalse();
-    assertThat(api.get().get()).isNull();
   }
 }
