@@ -47,6 +47,18 @@ public class HystrixBuilderTest {
   @Rule public final MockWebServer server = new MockWebServer();
 
   @Test
+  public void defaultMethodReturningHystrixCommand() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.defaultMethodReturningCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("foo");
+  }
+
+  @Test
   public void hystrixCommand() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
@@ -600,6 +612,10 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     HystrixCommand<String> command();
+
+    default HystrixCommand<String> defaultMethodReturningCommand() {
+      return command();
+    }
 
     @RequestLine("GET /")
     @Headers("Accept: application/json")

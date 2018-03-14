@@ -19,6 +19,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommand.Setter;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import feign.Util;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -143,7 +144,9 @@ final class HystrixInvocationHandler implements InvocationHandler {
           }
         };
 
-    if (isReturnsHystrixCommand(method)) {
+    if (Util.isDefault(method)) {
+      return hystrixCommand.execute();
+    } else if (isReturnsHystrixCommand(method)) {
       return hystrixCommand;
     } else if (isReturnsObservable(method)) {
       // Create a cold Observable
