@@ -13,21 +13,22 @@
  */
 package feign.codec;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static feign.Util.RETRY_AFTER;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import feign.FeignException;
 import feign.Response;
-
-import static feign.Util.RETRY_AFTER;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
+import feign.TestUtil;
 
 public class DefaultErrorDecoderTest {
 
@@ -55,7 +56,8 @@ public class DefaultErrorDecoderTest {
   @Test
   public void throwsFeignExceptionIncludingBody() throws Throwable {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
+    thrown.expectMessage("status 500 reading Service#foo()");
+    thrown.expect(TestUtil.bodyMatcher("hello world"));
 
     Response response = Response.builder()
             .status(500)
@@ -66,8 +68,8 @@ public class DefaultErrorDecoderTest {
 
     throw errorDecoder.decode("Service#foo()", response);
   }
-
-  @Test
+  
+	@Test
   public void testFeignExceptionIncludesStatus() throws Throwable {
     Response response = Response.builder()
             .status(400)
@@ -95,4 +97,5 @@ public class DefaultErrorDecoderTest {
 
     throw errorDecoder.decode("Service#foo()", response);
   }
+
 }

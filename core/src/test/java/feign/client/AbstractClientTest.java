@@ -13,6 +13,11 @@
  */
 package feign.client;
 
+import static feign.Util.UTF_8;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -28,17 +33,11 @@ import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
+import feign.TestUtil;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
-import static java.util.Arrays.asList;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-
-import static feign.Util.UTF_8;
 
 /**
  * {@link AbstractClientTest} can be extended to run a set of tests against any {@link Client} implementation.
@@ -114,9 +113,10 @@ public abstract class AbstractClientTest {
     @Test
     public void parsesErrorResponse() throws IOException, InterruptedException {
         thrown.expect(FeignException.class);
-        thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
+        thrown.expectMessage("status 500 reading TestInterface#get()");
+        thrown.expect(TestUtil.bodyMatcher("message content"));
 
-        server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+        server.enqueue(new MockResponse().setResponseCode(500).setBody("message content"));
 
         TestInterface api = newBuilder()
                 .target(TestInterface.class, "http://localhost:" + server.getPort());

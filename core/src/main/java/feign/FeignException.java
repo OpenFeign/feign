@@ -13,9 +13,10 @@
  */
 package feign;
 
-import java.io.IOException;
-
 import static java.lang.String.format;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Origin exception type for all Http Apis.
@@ -24,7 +25,9 @@ public class FeignException extends RuntimeException {
 
   private static final long serialVersionUID = 0;
   private int status;
-
+  
+  protected String body;
+  
   protected FeignException(String message, Throwable cause) {
     super(message, cause);
   }
@@ -41,28 +44,68 @@ public class FeignException extends RuntimeException {
   public int status() {
     return this.status;
   }
+  
 
-  static FeignException errorReading(Request request, Response ignored, IOException cause) {
-    return new FeignException(
+  public String body() {
+		return body;
+	}
+
+	static FeignException errorReading(Request request, Response ignored, IOException cause) {
+    FeignException exc = new FeignException(
         format("%s reading %s %s", cause.getMessage(), request.method(), request.url()),
         cause);
+    
+    exc.body = fetchRequestBody(request);
+		
+		return exc;
   }
 
+	
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
-    try {
-      if (response.body() != null) {
-        String body = Util.toString(response.body().asReader());
-        message += "; content:\n" + body;
-      }
-    } catch (IOException ignored) { // NOPMD
-    }
-    return new FeignException(response.status(), message);
+    
+    FeignException exception = new FeignException(response.status(), message);
+    exception.body = fetchResponseBody(response);
+    
+		return exception;
   }
-
+  
   static FeignException errorExecuting(Request request, IOException cause) {
-    return new RetryableException(
+    RetryableException exception = new RetryableException(
         format("%s executing %s %s", cause.getMessage(), request.method(), request.url()), cause,
         null);
+    
+    String body = fetchRequestBody(request);
+    exception.body = body;
+    
+		return exception;
   }
+  
+  private static String fetchRequestBody(Request request) {
+    if (request.body() != null) {
+    	try {
+    		// no way of getting body's charset, assuming UTF-8, other charsets may generate errors, hence the catch and ignore
+				String body = new String(request.body(), StandardCharsets.UTF_8);
+				return body;
+    	} catch (Exception e) {
+    		// ignore, no body available, sorry
+    	}
+    }
+    return null;
+	}
+
+	private static String fetchResponseBody(Response response){
+    try {
+      if (response.body() != null) {
+				String body;
+				body = Util.toString(response.body().asReader());
+				return body;
+		  }
+		} catch (IOException ignored) {
+  		// ignore, no body available, sorry
+		}
+    return null;
+	}
+
+ 
 }

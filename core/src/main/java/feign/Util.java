@@ -13,6 +13,8 @@
  */
 package feign;
 
+import static java.lang.String.format;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import static java.lang.String.format;
 
 /**
  * Utilities, typically copied in from guava, so as to avoid dependency conflicts.
@@ -321,6 +321,14 @@ public class Util {
       return charset.newDecoder().decode(ByteBuffer.wrap(data)).toString();
     } catch (CharacterCodingException ex) {
       return defaultValue;
+    }
+  }
+  
+  public static String abbreviate(String text, int maxLength) {
+    if (text.length() <= maxLength) { 
+        return text;
+    } else { 
+        return text.substring(0, maxLength-2) + "..";
     }
   }
 }
