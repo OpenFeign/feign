@@ -50,9 +50,9 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
-    FeignException exc = new FeignException(
-        format("%s reading %s %s", cause.getMessage(), request.method(), request.url()), cause);
-
+    String message = format("%s reading %s %s", cause.getMessage(), request.method(), request.url());
+    
+    FeignException exc = new FeignException(message, cause);
     exc.body = fetchRequestBody(request);
 
     return exc;
@@ -69,12 +69,10 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorExecuting(Request request, IOException cause) {
-    RetryableException exception = new RetryableException(
-        format("%s executing %s %s", cause.getMessage(), request.method(), request.url()), cause,
-        null);
-
-    String body = fetchRequestBody(request);
-    exception.body = body;
+    String message = format("%s executing %s %s", cause.getMessage(), request.method(), request.url());
+    
+    RetryableException exception = new RetryableException(message, cause,null);
+    exception.body = fetchRequestBody(request);
 
     return exception;
   }
@@ -83,8 +81,7 @@ public class FeignException extends RuntimeException {
     if (request.body() != null) {
       try {
         // no way of getting body's charset, assuming UTF-8, other charsets may generate
-        // errors,
-        // hence the catch and ignore
+        // errors, hence the catch and ignore
         String body = new String(request.body(), StandardCharsets.UTF_8);
         return body;
       } catch (Exception e) {
