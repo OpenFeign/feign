@@ -273,6 +273,10 @@ public interface Contract {
               !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
+        } else if (annotationType == CustomParam.class) {
+          Class<? extends CustomParam.ParamEncoder> encoderClass = ((CustomParam)annotation).encoder();
+          data.indexToCustomEncoderClass().put(paramIndex, encoderClass);
+          isHttpAnnotation = true;
         } else if (annotationType == QueryMap.class) {
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);

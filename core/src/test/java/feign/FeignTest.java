@@ -385,6 +385,72 @@ public class FeignTest {
   }
 
   @Test
+  public void customParamObjectWithExplicitParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomObject customObject = new CustomObject();
+    customObject.name = "Name";
+    customObject.number = 3;
+
+    server.enqueue(new MockResponse());
+    api.customObjectWithExplicitParams(customObject);
+    assertThat(server.takeRequest())
+        .hasPath("/?name=Name&number=3");
+  }
+
+  @Test
+  public void customParamObjectWithImplicitParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomObject customObject = new CustomObject();
+    customObject.name = "Name";
+    customObject.number = 3;
+
+    server.enqueue(new MockResponse());
+    api.customObjectWithImpliedParams(customObject);
+    assertThat(server.takeRequest())
+            .hasPath("/?name=Name&number=3");
+  }
+
+  @Test
+  public void customParamObjectWithPartialParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomObject customObject = new CustomObject();
+    customObject.name = "Name";
+    customObject.number = null;
+
+    server.enqueue(new MockResponse());
+    api.customObjectWithImpliedParams(customObject);
+    assertThat(server.takeRequest())
+        .hasPath("/?name=Name");
+  }
+
+  @Test
+  public void customParamObjectWithEmptyParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomObject customObject = new CustomObject();
+    customObject.name = null;
+    customObject.number = null;
+
+    server.enqueue(new MockResponse());
+    api.customObjectWithImpliedParams(customObject);
+    assertThat(server.takeRequest())
+        .hasPath("/");
+  }
+
+  @Test
+  public void customParamWithCustomEncoder() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    api.customObjectWithHeaderParamEncoder("header value");
+    assertThat(server.takeRequest())
+        .hasHeaders(MapEntry.entry(HeaderGeneratingEncoder.HEADER_NAME, Arrays.asList("header value")));
+  }
+
+  @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals("TestInterface#post()",
                  Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
@@ -590,7 +656,7 @@ public class FeignTest {
         .decode404()
         .errorDecoder(new IllegalArgumentExceptionOn404())
         .target("http://localhost:" + server.getPort());
-    api.queryMap(Collections.emptyMap());
+    api.queryMap(Collections.<String, Object>emptyMap());
   }
 
   @Test
@@ -796,12 +862,51 @@ public class FeignTest {
     @RequestLine("GET /?trim={trim}")
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
 
+    @RequestLine("GET /?name={name}&number={number}")
+    void customObjectWithExplicitParams(@CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object);
+
+    @RequestLine("GET /")
+    void customObjectWithImpliedParams(@CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object);
+
+    @RequestLine("GET /")
+    void customObjectWithHeaderParamEncoder(@CustomParam(encoder = HeaderGeneratingEncoder.class) String value);
+
     class DateToMillis implements Param.Expander {
 
       @Override
       public String expand(Object value) {
         return String.valueOf(((Date) value).getTime());
       }
+    }
+  }
+
+  static class CustomObject {
+
+    String name;
+    Integer number;
+  }
+
+  static class CustomObjectParamEncoder implements CustomParam.ParamEncoder {
+
+    @Override
+    public void encode (Object object, RequestTemplate template) {
+      CustomObject customObject = (CustomObject)object;
+      if (customObject.name != null) {
+        template.query("name", customObject.name);
+      }
+      if (customObject.number != null) {
+        template.query("number", customObject.number.toString());
+      }
+    }
+  }
+
+  static class HeaderGeneratingEncoder implements CustomParam.ParamEncoder {
+
+    final static String HEADER_NAME = "X-Generated-Header";
+
+    @Override
+    public void encode (Object object, RequestTemplate template) {
+      template.header(HEADER_NAME, (String)object);
     }
   }
 

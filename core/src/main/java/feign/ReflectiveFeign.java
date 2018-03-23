@@ -29,7 +29,6 @@ import feign.codec.ErrorDecoder;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
 
 public class ReflectiveFeign extends Feign {
 
@@ -217,6 +216,18 @@ public class ReflectiveFeign extends Feign {
 
       if (metadata.headerMapIndex() != null) {
         template = addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()], template);
+      }
+
+      if (metadata.indexToCustomEncoderClass() != null) {
+        for (Map.Entry<Integer, Class<? extends CustomParam.ParamEncoder>> entry : metadata.indexToCustomEncoderClass().entrySet()) {
+          try {
+            entry.getValue().newInstance().encode(argv[entry.getKey()], template);
+          } catch (InstantiationException e) {
+            throw new IllegalStateException(e);
+          } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
+        }
       }
 
       return template;

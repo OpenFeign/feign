@@ -443,6 +443,34 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 V find(@QueryMap Map<String, Object> queryMap);
 ```
 
+#### Custom Parameter Encoding
+Parameters annotated with `CustomParam` will be encoded using the specified `CustomParam.ParamEncoder`.
+
+```java
+@RequestLine("GET /")
+V find(@CustomParam(encoder = CustomObjectEncoder.class) CustomObject customObject);
+```
+
+Your custom param encoder just needs a public 0-arg constructor and to implement the CustomParam.ParamEncoder interface. Following is an example:
+```java
+public class CustomObjectEncoder implements CustomParam.ParamEncoder {
+
+  public void encode (Object object, RequestTemplate template) {
+
+    CustomObject customObject = (CustomObject)object;
+    if (customObject.getName() != null) {
+      template.query("name", customObject.getName());
+    }
+    if (customObject.getAddress() != null) {
+      template.query("address", customObject.getAddress());
+    }
+    if (customObject.getCustomHeaderValue() != null) {
+      template.header("X-Custom-Header", customObject.getCustomHeaderValue());
+    }
+  }
+}
+```
+
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
 These allows Feign clients to contain logic that is not expressly defined by the underlying API.

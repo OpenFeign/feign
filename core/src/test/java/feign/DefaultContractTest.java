@@ -15,6 +15,7 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 
+import feign.CustomParam.ParamEncoder;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -307,6 +308,13 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void customParamObject() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(CustomParamObjectInterface.class, "customObject", CustomObject.class);
+
+    assertThat(md.indexToCustomEncoderClass()).containsOnly(entry(0, CustomObjectParamEncoder.class));
+  }
+
+  @Test
   public void onlyOneQueryMapAnnotationPermitted() throws Exception {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
@@ -471,6 +479,32 @@ public class DefaultContractTest {
     @RequestLine("POST /")
     @Headers({"Authorization: Bearer {authToken}", "Authorization: Foo"})
     void logout(@Param("authToken") String token);
+  }
+
+  interface CustomParamObjectInterface {
+
+    @RequestLine("POST /")
+    void customObject(@CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object);
+  }
+
+  class CustomObject {
+
+    String name;
+    String address;
+  }
+
+  class CustomObjectParamEncoder implements ParamEncoder {
+
+    @Override
+    public void encode (Object object, RequestTemplate template) {
+      CustomObject customObject = (CustomObject)object;
+      if (customObject.name != null) {
+        template.query("name", customObject.name);
+      }
+      if (customObject.address != null) {
+        template.query("address", ((CustomObject) object).address);
+      }
+    }
   }
 
   interface CustomExpander {
