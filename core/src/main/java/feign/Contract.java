@@ -273,10 +273,6 @@ public interface Contract {
               !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
             data.formParams().add(name);
           }
-        } else if (annotationType == CustomParam.class) {
-          Class<? extends CustomParam.ParamEncoder> encoderClass = ((CustomParam)annotation).encoder();
-          data.indexToCustomEncoderClass().put(paramIndex, encoderClass);
-          isHttpAnnotation = true;
         } else if (annotationType == QueryMap.class) {
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
@@ -286,9 +282,24 @@ public interface Contract {
           checkState(data.headerMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");
           data.headerMapIndex(paramIndex);
           isHttpAnnotation = true;
+        } else {
+          CustomParam customParam = findCustomParam(annotation);
+          if (customParam != null) {
+            Class<? extends CustomParam.ParamEncoder> encoderClass = customParam.encoder();
+            data.indexToCustomEncoderClass().put(paramIndex, encoderClass);
+            isHttpAnnotation = true;
+          }
         }
       }
       return isHttpAnnotation;
+    }
+
+    private static CustomParam findCustomParam (Annotation annotation) {
+      if (annotation instanceof CustomParam) {
+        return (CustomParam)annotation;
+      } else {
+        return annotation.annotationType().getAnnotation(CustomParam.class);
+      }
     }
 
     private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,

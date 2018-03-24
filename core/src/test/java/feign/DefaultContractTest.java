@@ -16,6 +16,9 @@ package feign;
 import com.google.gson.reflect.TypeToken;
 
 import feign.CustomParam.ParamEncoder;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -315,6 +318,22 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void customParamObjectMultiple() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(MultipleCustomParamObjectInterface.class, "customObjects", CustomObject.class, CustomObject.class);
+
+    assertThat(md.indexToCustomEncoderClass()).contains(
+        entry(0, CustomObjectParamEncoder.class),
+        entry(1, CustomObjectParamEncoder.class));
+  }
+
+  @Test
+  public void customParamObjectInheritedAnnotation() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(InheritedCustomParamObjectInterface.class, "customObject", CustomObject.class);
+
+    assertThat(md.indexToCustomEncoderClass()).containsOnly(entry(0, CustomObjectParamEncoder.class));
+  }
+
+  @Test
   public void onlyOneQueryMapAnnotationPermitted() throws Exception {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
@@ -485,6 +504,26 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void customObject(@CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object);
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @java.lang.annotation.Target(ElementType.PARAMETER)
+  @CustomParam(encoder = CustomObjectParamEncoder.class)
+  @interface InheritedCustomParam {
+  }
+
+  interface InheritedCustomParamObjectInterface {
+
+    @RequestLine("POST /")
+    void customObject(@InheritedCustomParam CustomObject object);
+  }
+
+  interface MultipleCustomParamObjectInterface {
+
+    @RequestLine("POST /")
+    void customObjects(
+        @CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object1,
+        @CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object2);
   }
 
   class CustomObject {
