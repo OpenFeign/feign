@@ -20,6 +20,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -27,6 +29,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import feign.codec.Decoder;
@@ -298,6 +301,75 @@ public class FeignBuilderTest {
     assertFalse(iterator.hasNext());
 
     assertEquals(1, server.getRequestCount());
+  }
+
+  /**
+   * When {@link Feign.Builder#doNotCloseAfterDecode()} is enabled an an exception
+   * is thrown from the {@link Decoder}, the response should be closed.
+   */
+  @Test
+  public void testDoNotCloseAfterDecodeDecoderFailure() throws Exception {
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    String url = "http://localhost:" + server.getPort();
+    Decoder angryDecoder = new Decoder() {
+      @Override
+      public Object decode(Response response, Type type) throws IOException {
+        throw new IOException("Failed to decode the response");
+      }
+    };
+
+    final AtomicBoolean closed = new AtomicBoolean();
+    TestInterface api = Feign.builder()
+            .client(new Client() {
+              Client client = new Client.Default(null, null);
+              @Override
+              public Response execute(Request request, Request.Options options) throws IOException {
+                final Response original = client.execute(request, options);
+                return Response.builder()
+                        .status(original.status())
+                        .headers(original.headers())
+                        .reason(original.reason())
+                        .request(original.request())
+                        .body(new Response.Body() {
+                          @Override
+                          public Integer length() {
+                            return original.body().length();
+                          }
+
+                          @Override
+                          public boolean isRepeatable() {
+                            return original.body().isRepeatable();
+                          }
+
+                          @Override
+                          public InputStream asInputStream() throws IOException {
+                            return original.body().asInputStream();
+                          }
+
+                          @Override
+                          public Reader asReader() throws IOException {
+                            return original.body().asReader();
+                          }
+
+                          @Override
+                          public void close() throws IOException {
+                            closed.set(true);
+                            original.body().close();
+                          }
+                        })
+                        .build();
+              }
+            })
+            .decoder(angryDecoder)
+            .doNotCloseAfterDecode()
+            .target(TestInterface.class, url);
+    try {
+      api.decodedLazyPost();
+      fail("Expected an exception");
+    } catch (FeignException expected) {
+    }
+    assertTrue("Responses must be closed when the decoder fails", closed.get());
   }
 
   interface TestInterface {
