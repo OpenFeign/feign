@@ -296,7 +296,7 @@ public interface Contract {
 
     private static CustomParam findCustomParam (Annotation annotation) {
       if (annotation instanceof CustomParam) {
-        return (CustomParam)annotation;
+        return CustomParam.class.cast(annotation);
       } else {
         return annotation.annotationType().getAnnotation(CustomParam.class);
       }
