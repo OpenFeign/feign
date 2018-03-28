@@ -20,7 +20,13 @@ import feign.form.FormData;
 
 import lombok.val;
 
+/**
+ *
+ * @author Guillaume Simard
+ * @since 24.03.2018
+ */
 public class FormDataWriter extends AbstractWriter {
+
   @Override
   public boolean isApplicable (Object value) {
     return value instanceof FormData;

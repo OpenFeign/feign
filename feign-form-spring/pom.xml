@@ -27,7 +27,7 @@ limitations under the License.
   <parent>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>parent</artifactId>
-    <version>3.2.2</version>
+    <version>3.3.0</version>
   </parent>
 
   <name>Open Feign Forms Extension for Spring</name>
@@ -54,7 +54,7 @@ limitations under the License.
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-feign</artifactId>
-      <version>1.3.5.RELEASE</version>
+      <version>1.4.4.RELEASE</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
