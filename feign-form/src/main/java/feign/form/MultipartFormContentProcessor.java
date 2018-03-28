@@ -29,6 +29,7 @@ import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.DelegateWriter;
+import feign.form.multipart.FormDataWriter;
 import feign.form.multipart.ManyFilesWriter;
 import feign.form.multipart.Output;
 import feign.form.multipart.ParameterWriter;
@@ -57,6 +58,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   public MultipartFormContentProcessor (Encoder delegate) {
     writers = new ArrayList<Writer>(6);
     addWriter(new ByteArrayWriter());
+    addWriter(new FormDataWriter());
     addWriter(new SingleFileWriter());
     addWriter(new ManyFilesWriter());
     addWriter(new ParameterWriter());

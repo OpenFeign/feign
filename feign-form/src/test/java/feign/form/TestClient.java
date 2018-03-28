@@ -16,14 +16,15 @@
 
 package feign.form;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 import feign.Headers;
 import feign.Param;
 import feign.QueryMap;
 import feign.RequestLine;
 import feign.Response;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -69,4 +70,8 @@ public interface TestClient {
   @RequestLine("POST /upload/unknown_type")
   @Headers("Content-Type: multipart/form-data")
   String uploadUnknownType (@Param("file") File file);
+
+  @RequestLine("POST /upload/form_data")
+  @Headers("Content-Type: multipart/form-data")
+  String uploadFormData (@Param("file") FormData formData);
 }

@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import lombok.val;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -157,5 +158,12 @@ public class BasicClientTest {
 
       val stringResponse = api.uploadUnknownType(path.toFile());
       Assert.assertEquals("application/octet-stream", stringResponse);
+  }
+
+  @Test
+  public void testFormData() throws Exception {
+      val formData = new FormData("application/custom-type", "Allo".getBytes("UTF-8"));
+      val stringResponse = api.uploadFormData(formData);
+      Assert.assertEquals("application/custom-type", stringResponse);
   }
 }

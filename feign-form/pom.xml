@@ -37,6 +37,14 @@ limitations under the License.
     <maven.compiler.target>1.6</maven.compiler.target>
   </properties>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
