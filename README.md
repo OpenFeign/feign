@@ -80,18 +80,37 @@ interface SomeApi {
 
     ...
 
+    // File parameter
     @RequestLine("POST /send_photo")
     @Headers("Content-Type: multipart/form-data")
     void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") File photo);
 
+    // byte[] parameter
+    @RequestLine("POST /send_photo")
+    @Headers("Content-Type: multipart/form-data")
+    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") byte[] photo);
+
+    // FormData parameter
+    @RequestLine("POST /send_photo")
+    @Headers("Content-Type: multipart/form-data")
+    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") FormData photo);
     ...
 
 }
 ```
 
-In example above, we send file in parameter named **photo** with additional field in form **is_public**.
+In the example above, the `sendPhoto` method uses the `photo` parameter using three different supported types.
 
-> **IMPORTANT:** You can specify your files in API method by declaring type **File** or **byte[]**.
+* `File` will use the File's extension to detect the `Content-Type`.
+* `byte[]` will use `application/octet-stream` as `Content-Type`.
+* `FormData` will use the `FormData`'s `Content-Type`.
+
+`FormData` is custom object that wraps a `byte[]` and defines a `Content-Type` like this:
+
+```java
+    FormData formData = new FormData("image/png", myDataAsByteArray);
+    someApi.sendPhoto(true, formData);
+```
 
 ### Spring MultipartFile and Spring Cloud Netflix @FeignClient support
 

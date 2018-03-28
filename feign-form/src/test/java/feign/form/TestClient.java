@@ -69,4 +69,8 @@ public interface TestClient {
   @RequestLine("POST /upload/unknown_type")
   @Headers("Content-Type: multipart/form-data")
   String uploadUnknownType(@Param("file") File file);
+
+  @RequestLine("POST /upload/form_data")
+  @Headers("Content-Type: multipart/form-data")
+  String uploadFormData(@Param("file") FormData formData);
 }
