@@ -17,26 +17,20 @@
 package feign.form;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Value;
 
 /**
  * This object encapsulates a byte array and its associated content type. Use if if you want to
  * specify the content type of your provided byte array.
+ *
+ * @author Guillaume Simard
+ * @since 24.03.2018
  */
+@Value
 @SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
-public final class FormData {
-  private final String contentType;
-  private final byte[] data;
+public class FormData {
 
-  public FormData(String contentType, byte[] data) {
-    this.contentType = contentType;
-    this.data = data;
-  }
+  String contentType;
 
-  public String getContentType() {
-    return contentType;
-  }
-
-  public byte[] getData() {
-    return data;
-  }
+  byte[] data;
 }
