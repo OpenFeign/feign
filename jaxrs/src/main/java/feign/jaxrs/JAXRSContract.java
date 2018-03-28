@@ -26,6 +26,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 
 import feign.Contract;
 import feign.MethodMetadata;
@@ -124,7 +126,12 @@ public final class JAXRSContract extends Contract.BaseContract {
     boolean isHttpParam = false;
     for (Annotation parameterAnnotation : annotations) {
       Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-      if (annotationType == PathParam.class) {
+      // masc20180327. parameter with unsupported jax-rs annotations should not be passed as body params.
+      // this will prevent interfaces from becoming unusable entirely due to single (unsupported) endpoints.
+      // https://github.com/OpenFeign/feign/issues/669
+      if (annotationType == Suspended.class || annotationType == Context.class) {
+        isHttpParam = true;
+      } else if (annotationType == PathParam.class) {
         String name = PathParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
                    paramIndex);
