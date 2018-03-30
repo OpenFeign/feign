@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -36,9 +37,12 @@ import org.junit.runners.model.Statement;
 @RunWith(Enclosed.class)
 public class LoggerTest {
 
-  @Rule public final MockWebServer server = new MockWebServer();
-  @Rule public final RecordingLogger logger = new RecordingLogger();
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+  public final ExpectedException thrown = ExpectedException.none();
+  public final MockWebServer server = new MockWebServer();
+  public final RecordingLogger logger = new RecordingLogger();
+
+  /** Ensure expected exception handling is done before logger rule. */
+  @Rule public final RuleChain chain = RuleChain.outerRule(server).around(logger).around(thrown);
 
   interface SendsStuff {
 
@@ -174,7 +178,6 @@ public class LoggerTest {
               Level.BASIC,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)")
             },
@@ -185,8 +188,6 @@ public class LoggerTest {
                   "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-                  "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] content-length: 3",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)")
             },
@@ -200,12 +201,9 @@ public class LoggerTest {
                   "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
                       + " \"denominator\", \"password\": \"password\"\\}",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-                  "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] content-length: 3",
-                  "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] java.net.SocketTimeoutException: Read timed out.*",
+                  "(?s)\\[SendsStuff#login\\] java.net.SocketTimeoutException: Read timed out.*",
                   "\\[SendsStuff#login\\] <--- END ERROR")
             }
           });
@@ -221,6 +219,18 @@ public class LoggerTest {
               .logger(logger)
               .logLevel(logLevel)
               .options(new Request.Options(10 * 1000, 50))
+              .retryer(
+                  new Retryer() {
+                    @Override
+                    public void continueOrPropagate(RetryableException e) {
+                      throw e;
+                    }
+
+                    @Override
+                    public Retryer clone() {
+                      return this;
+                    }
+                  })
               .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
       api.login("netflix", "denominator", "password");
@@ -271,7 +281,7 @@ public class LoggerTest {
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc"
                       + " \\([0-9]+ms\\)",
-                  "\\[SendsStuff#login\\] java.net.UnknownHostException: robofu.abc.*",
+                  "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: robofu.abc.*",
                   "\\[SendsStuff#login\\] <--- END ERROR")
             }
           });
@@ -296,6 +306,82 @@ public class LoggerTest {
                     }
                   })
               .target(SendsStuff.class, "http://robofu.abc");
+
+      thrown.expect(FeignException.class);
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class FormatCharacterTest extends LoggerTest {
+
+    private final Level logLevel;
+
+    public FormatCharacterTest(Level logLevel, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(
+          new Object[][] {
+            {Level.NONE, Arrays.asList()},
+            {
+              Level.BASIC,
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc"
+                      + " \\([0-9]+ms\\)")
+            },
+            {
+              Level.HEADERS,
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
+                  "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+                  "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc"
+                      + " \\([0-9]+ms\\)")
+            },
+            {
+              Level.FULL,
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
+                  "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] ",
+                  "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
+                      + " \"denominator\", \"password\": \"password\"\\}",
+                  "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
+                  "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc"
+                      + " \\([0-9]+ms\\)",
+                  "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: sna%fu.abc.*",
+                  "\\[SendsStuff#login\\] <--- END ERROR")
+            }
+          });
+    }
+
+    @Test
+    public void formatCharacterEmits() throws IOException, InterruptedException {
+      SendsStuff api =
+          Feign.builder()
+              .logger(logger)
+              .logLevel(logLevel)
+              .retryer(
+                  new Retryer() {
+                    @Override
+                    public void continueOrPropagate(RetryableException e) {
+                      throw e;
+                    }
+
+                    @Override
+                    public Retryer clone() {
+                      return this;
+                    }
+                  })
+              .target(SendsStuff.class, "http://sna%fu.abc");
 
       thrown.expect(FeignException.class);
 
@@ -386,7 +472,8 @@ public class LoggerTest {
         public void evaluate() throws Throwable {
           base.evaluate();
           SoftAssertions softly = new SoftAssertions();
-          for (int i = 0; i < messages.size(); i++) {
+          softly.assertThat(messages.size()).isEqualTo(expectedMessages.size());
+          for (int i = 0; i < messages.size() && i < expectedMessages.size(); i++) {
             softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
           }
           softly.assertAll();

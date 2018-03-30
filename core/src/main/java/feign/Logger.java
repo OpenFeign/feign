@@ -121,7 +121,7 @@ public abstract class Logger {
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
       StringWriter sw = new StringWriter();
       ioe.printStackTrace(new PrintWriter(sw));
-      log(configKey, sw.toString());
+      log(configKey, "%s", sw.toString());
       log(configKey, "<--- END ERROR");
     }
     return ioe;
