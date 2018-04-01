@@ -179,10 +179,13 @@ public class JAXRSContractTest {
 
   @Test
   public void emptyPathOnType() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Path.value() was empty on type ");
+    assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template()).hasUrl("");
+  }
 
-    parseAndValidateMetadata(EmptyPathOnType.class, "base");
+  @Test
+  public void emptyPathOnTypeSpecific() throws Exception {
+    assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "get").template())
+        .hasUrl("/specific");
   }
 
   @Test
@@ -195,10 +198,7 @@ public class JAXRSContractTest {
 
   @Test
   public void emptyPathOnMethod() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Path.value() was empty on method emptyPath");
-
-    parseAndValidateMetadata(PathOnType.class, "emptyPath");
+    assertThat(parseAndValidateMetadata(PathOnType.class, "emptyPath").template()).hasUrl("/base");
   }
 
   @Test
@@ -454,6 +454,10 @@ public class JAXRSContractTest {
 
     @GET
     Response base();
+
+    @GET
+    @Path("/specific")
+    Response get();
   }
 
   @Path("/base")
