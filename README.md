@@ -443,30 +443,23 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 V find(@QueryMap Map<String, Object> queryMap);
 ```
 
-#### Custom Parameter Encoding
-Parameters annotated with `CustomParam` will be encoded using the specified `CustomParam.ParamEncoder`.
+This may also be used to generate the query parameters from a POJO object.
 
 ```java
-@RequestLine("GET /")
-V find(@CustomParam(encoder = CustomObjectEncoder.class) CustomObject customObject);
+@RequestLine("GET /find")
+V find(@QueryMap CustomPojo customPojo);
 ```
 
-Your custom param encoder just needs a public 0-arg constructor and to implement the CustomParam.ParamEncoder interface. Following is an example:
+When used in this manner, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "name={name}&number={number}"
+
 ```java
-public class CustomObjectEncoder implements CustomParam.ParamEncoder {
+public class CustomPojo {
+  private final String name;
+  private final int number;
 
-  public void encode (Object object, RequestTemplate template) {
-
-    CustomObject customObject = (CustomObject)object;
-    if (customObject.getName() != null) {
-      template.query("name", customObject.getName());
-    }
-    if (customObject.getAddress() != null) {
-      template.query("address", customObject.getAddress());
-    }
-    if (customObject.getCustomHeaderValue() != null) {
-      template.header("X-Custom-Header", customObject.getCustomHeaderValue());
-    }
+  public CustomPojo (String name, int number) {
+    this.name = name;
+    this.number = number;
   }
 }
 ```

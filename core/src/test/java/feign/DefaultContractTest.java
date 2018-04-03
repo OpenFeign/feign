@@ -15,10 +15,6 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 
-import feign.CustomParam.ParamEncoder;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -311,45 +307,12 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void customParamObject() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(CustomParamObjectInterface.class, "customObject", CustomObject.class);
-
-    assertThat(md.indexToCustomEncoderClass()).containsOnly(entry(0, CustomObjectParamEncoder.class));
-  }
-
-  @Test
-  public void customParamObjectMultiple() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(MultipleCustomParamObjectInterface.class, "customObjects", CustomObject.class, CustomObject.class);
-
-    assertThat(md.indexToCustomEncoderClass()).contains(
-        entry(0, CustomObjectParamEncoder.class),
-        entry(1, CustomObjectParamEncoder.class));
-  }
-
-  @Test
-  public void customParamObjectInheritedAnnotation() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(InheritedCustomParamObjectInterface.class, "customObject", CustomObject.class);
-
-    assertThat(md.indexToCustomEncoderClass()).containsOnly(entry(0, CustomObjectParamEncoder.class));
-  }
-
-  @Test
   public void onlyOneQueryMapAnnotationPermitted() throws Exception {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException ex) {
       assertThat(ex).hasMessage("QueryMap annotation was present on multiple parameters.");
-    }
-  }
-
-  @Test
-  public void queryMapMustBeInstanceOfMap() throws Exception {
-    try {
-      parseAndValidateMetadata(QueryMapTestInterface.class, "nonMapQueryMap", String.class);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
-      assertThat(ex).hasMessage("QueryMap parameter must be a Map: class java.lang.String");
     }
   }
 
@@ -361,6 +324,29 @@ public class DefaultContractTest {
     } catch (IllegalStateException ex) {
       assertThat(ex).hasMessage("QueryMap key must be a String: Integer");
     }
+  }
+
+  @Test
+  public void queryMapPojoObject() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObject", Object.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void queryMapPojoObjectEncoded() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectEncoded", Object.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+    assertThat(md.queryMapEncoded()).isTrue();
+  }
+
+  @Test
+  public void queryMapPojoObjectNotEncoded() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectNotEncoded", Object.class);
+
+    assertThat(md.queryMapIndex()).isEqualTo(0);
+    assertThat(md.queryMapEncoded()).isFalse();
   }
 
   @Test
@@ -500,52 +486,6 @@ public class DefaultContractTest {
     void logout(@Param("authToken") String token);
   }
 
-  interface CustomParamObjectInterface {
-
-    @RequestLine("POST /")
-    void customObject(@CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object);
-  }
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @java.lang.annotation.Target(ElementType.PARAMETER)
-  @CustomParam(encoder = CustomObjectParamEncoder.class)
-  @interface InheritedCustomParam {
-  }
-
-  interface InheritedCustomParamObjectInterface {
-
-    @RequestLine("POST /")
-    void customObject(@InheritedCustomParam CustomObject object);
-  }
-
-  interface MultipleCustomParamObjectInterface {
-
-    @RequestLine("POST /")
-    void customObjects(
-        @CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object1,
-        @CustomParam(encoder = CustomObjectParamEncoder.class) CustomObject object2);
-  }
-
-  class CustomObject {
-
-    String name;
-    String address;
-  }
-
-  class CustomObjectParamEncoder implements ParamEncoder {
-
-    @Override
-    public void encode (Object object, RequestTemplate template) {
-      CustomObject customObject = (CustomObject)object;
-      if (customObject.name != null) {
-        template.query("name", customObject.name);
-      }
-      if (customObject.address != null) {
-        template.query("address", ((CustomObject) object).address);
-      }
-    }
-  }
-
   interface CustomExpander {
 
     @RequestLine("POST /?date={date}")
@@ -573,6 +513,15 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void queryMapNotEncoded(@QueryMap(encoded = false) Map<String, String> queryMap);
+
+    @RequestLine("POST /")
+    void pojoObject(@QueryMap Object object);
+
+    @RequestLine("POST /")
+    void pojoObjectEncoded(@QueryMap(encoded = true) Object object);
+
+    @RequestLine("POST /")
+    void pojoObjectNotEncoded(@QueryMap(encoded = false) Object object);
 
     // invalid
     @RequestLine("POST /")

@@ -41,8 +41,6 @@ public final class MethodMetadata implements Serializable {
   private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
-  private Map<Integer, Class<? extends CustomParam.ParamEncoder>> indexToCustomEncoderClass =
-      new LinkedHashMap<Integer, Class<? extends CustomParam.ParamEncoder>>();
   private transient Map<Integer, Expander> indexToExpander;
 
   MethodMetadata() {
@@ -105,16 +103,6 @@ public final class MethodMetadata implements Serializable {
 
   public MethodMetadata queryMapIndex(Integer queryMapIndex) {
     this.queryMapIndex = queryMapIndex;
-    return this;
-  }
-
-  public Map<Integer, Class<? extends CustomParam.ParamEncoder>> indexToCustomEncoderClass () {
-    return indexToCustomEncoderClass;
-
-  }
-
-  public MethodMetadata indexToCustomEncoderClass (Map<Integer, Class<? extends CustomParam.ParamEncoder>> indexToCustomEncoderClass) {
-    this.indexToCustomEncoderClass = indexToCustomEncoderClass;
     return this;
   }
 

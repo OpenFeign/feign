@@ -123,7 +123,9 @@ public interface Contract {
       }
 
       if (data.queryMapIndex() != null) {
-        checkMapString("QueryMap", parameterTypes[data.queryMapIndex()], genericParameterTypes[data.queryMapIndex()]);
+        if (Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()])) {
+          checkMapKeys("QueryMap", genericParameterTypes[data.queryMapIndex()]);
+        }
       }
 
       return data;
@@ -132,6 +134,10 @@ public interface Contract {
     private static void checkMapString(String name, Class<?> type, Type genericType) {
       checkState(Map.class.isAssignableFrom(type),
               "%s parameter must be a Map: %s", name, type);
+      checkMapKeys(name, genericType);
+    }
+
+    private static void checkMapKeys(String name, Type genericType) {
       Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
       Class<?> keyClass = (Class<?>) parameterTypes[0];
       checkState(String.class.equals(keyClass),
@@ -282,24 +288,9 @@ public interface Contract {
           checkState(data.headerMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");
           data.headerMapIndex(paramIndex);
           isHttpAnnotation = true;
-        } else {
-          CustomParam customParam = findCustomParam(annotation);
-          if (customParam != null) {
-            Class<? extends CustomParam.ParamEncoder> encoderClass = customParam.encoder();
-            data.indexToCustomEncoderClass().put(paramIndex, encoderClass);
-            isHttpAnnotation = true;
-          }
         }
       }
       return isHttpAnnotation;
-    }
-
-    private static CustomParam findCustomParam (Annotation annotation) {
-      if (annotation instanceof CustomParam) {
-        return CustomParam.class.cast(annotation);
-      } else {
-        return annotation.annotationType().getAnnotation(CustomParam.class);
-      }
     }
 
     private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,

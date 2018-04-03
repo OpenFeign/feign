@@ -211,26 +211,28 @@ public class ReflectiveFeign extends Feign {
       if (metadata.queryMapIndex() != null) {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
-        template = addQueryMapQueryParameters((Map<String, Object>) argv[metadata.queryMapIndex()], template);
+        boolean encoded = metadata.queryMapEncoded();
+        Object value = argv[metadata.queryMapIndex()];
+        Map<String, Object> queryMap = toQueryMap(value);
+        template = addQueryMapQueryParameters(queryMap, template);
       }
 
       if (metadata.headerMapIndex() != null) {
         template = addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()], template);
       }
 
-      if (metadata.indexToCustomEncoderClass() != null) {
-        for (Map.Entry<Integer, Class<? extends CustomParam.ParamEncoder>> entry : metadata.indexToCustomEncoderClass().entrySet()) {
-          try {
-            entry.getValue().newInstance().encode(argv[entry.getKey()], template);
-          } catch (InstantiationException e) {
-            throw new IllegalStateException(e);
-          } catch (IllegalAccessException e) {
-            throw new IllegalStateException(e);
-          }
-        }
-      }
-
       return template;
+    }
+
+    private Map<String, Object> toQueryMap (Object value) {
+     if (value instanceof Map) {
+        return (Map<String, Object>)value;
+      }
+      try {
+        return ObjectParamMetadata.getMetadata(value.getClass()).toQueryMap(value);
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     private Object expandElements(Expander expander, Object value) {
@@ -242,7 +244,7 @@ public class ReflectiveFeign extends Feign {
 
     private List<String> expandIterable(Expander expander, Iterable value) {
       List<String> values = new ArrayList<String>();
-      for (Object element : (Iterable) value) {
+      for (Object element : value) {
         if (element!=null) {
           values.add(expander.expand(element));
         }
