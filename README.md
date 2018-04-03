@@ -450,7 +450,7 @@ This may also be used to generate the query parameters from a POJO object.
 V find(@QueryMap CustomPojo customPojo);
 ```
 
-When used in this manner, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "name={name}&number={number}"
+When used in this manner, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (as usual, if any value is null, it will be left out).
 
 ```java
 public class CustomPojo {
