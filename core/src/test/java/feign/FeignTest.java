@@ -387,9 +387,7 @@ public class FeignTest {
   public void customParamPojoWithImplicitParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    CustomPojo customPojo = new CustomPojo();
-    customPojo.name = "Name";
-    customPojo.number = 3;
+    CustomPojo customPojo = new CustomPojo("Name", 3);
 
     server.enqueue(new MockResponse());
     api.customPojoWithImpliedParams(customPojo);
@@ -401,9 +399,7 @@ public class FeignTest {
   public void customParamPojoWithPartialParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    CustomPojo customPojo = new CustomPojo();
-    customPojo.name = "Name";
-    customPojo.number = null;
+    CustomPojo customPojo = new CustomPojo("Name", null);
 
     server.enqueue(new MockResponse());
     api.customPojoWithImpliedParams(customPojo);
@@ -415,9 +411,7 @@ public class FeignTest {
   public void customParamPojoWithEmptyParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    CustomPojo customPojo = new CustomPojo();
-    customPojo.name = null;
-    customPojo.number = null;
+    CustomPojo customPojo = new CustomPojo(null, null);
 
     server.enqueue(new MockResponse());
     api.customPojoWithImpliedParams(customPojo);
@@ -847,12 +841,6 @@ public class FeignTest {
         return String.valueOf(((Date) value).getTime());
       }
     }
-  }
-
-  static class CustomPojo {
-
-    String name;
-    Integer number;
   }
 
   interface OtherTestInterface {
