@@ -529,10 +529,6 @@ public class DefaultContractTest {
 
     // invalid
     @RequestLine("POST /")
-    void nonMapQueryMap(@QueryMap String notAMap);
-
-    // invalid
-    @RequestLine("POST /")
     void nonStringKeyQueryMap(@QueryMap Map<Integer, String> queryMap);
   }
 
