@@ -390,7 +390,7 @@ public class FeignTest {
     CustomPojo customPojo = new CustomPojo("Name", 3);
 
     server.enqueue(new MockResponse());
-    api.customPojoWithImpliedParams(customPojo);
+    api.queryMapPojo(customPojo);
     assertThat(server.takeRequest())
             .hasPath("/?name=Name&number=3");
   }
@@ -402,7 +402,7 @@ public class FeignTest {
     CustomPojo customPojo = new CustomPojo("Name", null);
 
     server.enqueue(new MockResponse());
-    api.customPojoWithImpliedParams(customPojo);
+    api.queryMapPojo(customPojo);
     assertThat(server.takeRequest())
         .hasPath("/?name=Name");
   }
@@ -414,7 +414,7 @@ public class FeignTest {
     CustomPojo customPojo = new CustomPojo(null, null);
 
     server.enqueue(new MockResponse());
-    api.customPojoWithImpliedParams(customPojo);
+    api.queryMapPojo(customPojo);
     assertThat(server.takeRequest())
         .hasPath("/");
   }
@@ -832,7 +832,7 @@ public class FeignTest {
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
 
     @RequestLine("GET /")
-    void customPojoWithImpliedParams(@QueryMap CustomPojo object);
+    void queryMapPojo(@QueryMap CustomPojo object);
 
     class DateToMillis implements Param.Expander {
 
