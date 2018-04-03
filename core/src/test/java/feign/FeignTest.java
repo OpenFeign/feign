@@ -384,7 +384,7 @@ public class FeignTest {
   }
 
   @Test
-  public void customParamPojoWithImplicitParams() throws Exception {
+  public void queryMapPojoWithFullParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo("Name", 3);
@@ -396,7 +396,7 @@ public class FeignTest {
   }
 
   @Test
-  public void customParamPojoWithPartialParams() throws Exception {
+  public void queryMapPojoWithPartialParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo("Name", null);
@@ -408,7 +408,7 @@ public class FeignTest {
   }
 
   @Test
-  public void customParamPojoWithEmptyParams() throws Exception {
+  public void queryMapPojoWithEmptyParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo(null, null);
