@@ -211,7 +211,6 @@ public class ReflectiveFeign extends Feign {
       if (metadata.queryMapIndex() != null) {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
-        boolean encoded = metadata.queryMapEncoded();
         Object value = argv[metadata.queryMapIndex()];
         Map<String, Object> queryMap = toQueryMap(value);
         template = addQueryMapQueryParameters(queryMap, template);
