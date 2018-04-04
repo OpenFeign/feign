@@ -107,6 +107,7 @@ public class RibbonClient implements Client {
     public FeignOptionsClientConfig(Request.Options options) {
       setProperty(CommonClientConfigKey.ConnectTimeout, options.connectTimeoutMillis());
       setProperty(CommonClientConfigKey.ReadTimeout, options.readTimeoutMillis());
+      setProperty(CommonClientConfigKey.FollowRedirects, options.isFollowRedirects());
     }
 
     @Override

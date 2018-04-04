@@ -17,6 +17,8 @@ import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -24,6 +26,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -42,6 +45,7 @@ import feign.Client;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
+import feign.Response;
 import feign.RequestLine;
 import feign.RetryableException;
 import feign.Retryer;
@@ -277,6 +281,62 @@ public class RibbonClientTest {
     assertEquals(1, server1.getRequestCount());
     assertEquals(1, server2.getRequestCount());
   }
+
+
+  @Test
+  public void testFeignOptionsFollowRedirect() {
+    String expectedLocation = server2.url("").url().toString();
+    server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", expectedLocation));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
+
+    Request.Options options = new Request.Options(1000, 1000, false);
+    TestInterface api = Feign.builder()
+            .options(options)
+            .client(RibbonClient.create())
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://" + client());
+
+    try {
+      Response response = api.get();
+      assertEquals(302, response.status());
+      Collection<String> location = response.headers().get("Location");
+      assertNotNull(location);
+      assertFalse(location.isEmpty());
+      assertEquals(expectedLocation, location.iterator().next());
+    } catch (Exception ignored) {
+      ignored.printStackTrace();
+      fail("Shouldn't throw ");
+    }
+
+  }
+
+  @Test
+  public void testFeignOptionsNoFollowRedirect() {
+    // 302 will say go to server 2
+    server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", server2.url("").url().toString()));
+    // server 2 will send back 200 with "Hello" as body
+    server2.enqueue(new MockResponse().setResponseCode(200).setBody("Hello"));
+
+    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+
+    Request.Options options = new Request.Options(1000, 1000, true);
+    TestInterface api = Feign.builder()
+            .options(options)
+            .client(RibbonClient.create())
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://" + client());
+
+    try {
+      Response response = api.get();
+      assertEquals(200, response.status());
+      assertEquals("Hello", response.body().toString());
+    } catch (Exception ignored) {
+      ignored.printStackTrace();
+      fail("Shouldn't throw ");
+    }
+
+  }
   
   @Test
   public void testFeignOptionsClientConfig() {
@@ -320,5 +380,8 @@ public class RibbonClientTest {
 
     @RequestLine("GET /?a={a}")
     void getWithQueryParameters(@Param("a") String a);
+
+    @RequestLine("GET /")
+    Response get();
   }
 }
