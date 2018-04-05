@@ -151,6 +151,7 @@ public final class OkHttpClient implements Client {
        requestScoped = delegate.newBuilder()
                .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
                .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
+               .followRedirects(options.isFollowRedirects())
                .build();
     } else {
       requestScoped = delegate;
