@@ -58,6 +58,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
 public @interface QueryMap {
+
+    /**
+     * How to expand all values of this map, if {@link Param.ToStringExpander} isn't adequate.
+     */
+    Class<? extends Param.Expander> expander() default Param.ToStringExpander.class;
+
     /**
      * Specifies whether parameter names and values are already encoded.
      *

@@ -274,9 +274,20 @@ public interface Contract {
             data.formParams().add(name);
           }
         } else if (annotationType == QueryMap.class) {
+          QueryMap queryMapAnnotation = QueryMap.class.cast(annotation);
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
-          data.queryMapEncoded(QueryMap.class.cast(annotation).encoded());
+          data.queryMapEncoded(queryMapAnnotation.encoded());
+          Class<? extends Param.Expander> expander = queryMapAnnotation.expander();
+          if (expander != Param.ToStringExpander.class) {
+            try {
+              data.queryMapExpander(expander.newInstance());
+            } catch (InstantiationException e) {
+              throw new IllegalStateException(e);
+            } catch (IllegalAccessException e) {
+              throw new IllegalStateException(e);
+            }
+          }
           isHttpAnnotation = true;
         } else if (annotationType == HeaderMap.class) {
           checkState(data.headerMapIndex() == null, "HeaderMap annotation was present on multiple parameters.");

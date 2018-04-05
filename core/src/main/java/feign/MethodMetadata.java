@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.Param.Expander;
+
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -20,8 +22,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
 
@@ -33,6 +33,7 @@ public final class MethodMetadata implements Serializable {
   private Integer headerMapIndex;
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
+  private transient Expander queryMapExpander = new Param.ToStringExpander();
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();
@@ -141,6 +142,16 @@ public final class MethodMetadata implements Serializable {
 
   public Map<Integer, Boolean> indexToEncoded() {
     return indexToEncoded;
+  }
+
+  public Expander queryMapExpander() {
+    return queryMapExpander;
+  }
+
+  public void queryMapExpander(Expander queryMapExpander) {
+    if (queryMapExpander != null) {
+      this.queryMapExpander = queryMapExpander;
+    }
   }
 
   /**

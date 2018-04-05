@@ -13,12 +13,6 @@
  */
 package feign;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.*;
-import java.util.Map.Entry;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
@@ -27,9 +21,14 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.*;
+import java.util.Map.Entry;
+
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
 
 public class ReflectiveFeign extends Feign {
 
@@ -262,19 +261,20 @@ public class ReflectiveFeign extends Feign {
 
     @SuppressWarnings("unchecked")
     private RequestTemplate addQueryMapQueryParameters(Map<String, Object> queryMap, RequestTemplate mutable) {
+      boolean encoded = metadata.queryMapEncoded();
+      Expander expander = metadata.queryMapExpander();
       for (Entry<String, Object> currEntry : queryMap.entrySet()) {
         Collection<String> values = new ArrayList<String>();
 
-        boolean encoded = metadata.queryMapEncoded();
         Object currValue = currEntry.getValue();
         if (currValue instanceof Iterable<?>) {
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
-            values.add(nextObject == null ? null : encoded ? nextObject.toString() : RequestTemplate.urlEncode(nextObject.toString()));
+            values.add(nextObject == null ? null : encoded ? expander.expand(nextObject) : RequestTemplate.urlEncode(expander.expand(nextObject)));
           }
         } else {
-          values.add(currValue == null ? null : encoded ? currValue.toString() : RequestTemplate.urlEncode(currValue.toString()));
+          values.add(currValue == null ? null : encoded ? expander.expand(currValue) : RequestTemplate.urlEncode(expander.expand(currValue)));
         }
 
         mutable.query(true, encoded ? currEntry.getKey() : RequestTemplate.urlEncode(currEntry.getKey()), values);
