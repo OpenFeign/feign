@@ -345,7 +345,8 @@ public class RibbonClientTest {
     assertThat(config.get(CommonClientConfigKey.ConnectTimeout),
         equalTo(options.connectTimeoutMillis()));
     assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
-    assertEquals(2, config.getProperties().size());
+    assertThat(config.get(CommonClientConfigKey.FollowRedirects), equalTo(options.isFollowRedirects()));
+    assertEquals(3, config.getProperties().size());
   }
 
   @Test
