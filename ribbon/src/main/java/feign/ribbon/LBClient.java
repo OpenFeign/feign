@@ -42,6 +42,7 @@ public final class LBClient
   private final int readTimeout;
   private final IClientConfig clientConfig;
   private final Set<Integer> retryableStatusCodes;
+  private final Boolean followRedirects;
 
   public static LBClient create(ILoadBalancer lb, IClientConfig clientConfig) {
     return new LBClient(lb, clientConfig);
@@ -64,6 +65,7 @@ public final class LBClient
     connectTimeout = clientConfig.get(CommonClientConfigKey.ConnectTimeout);
     readTimeout = clientConfig.get(CommonClientConfigKey.ReadTimeout);
     retryableStatusCodes = parseStatusCodes(clientConfig.get(LBClientFactory.RetryableStatusCodes));
+    followRedirects = clientConfig.get(CommonClientConfigKey.FollowRedirects);
   }
 
   @Override
@@ -74,7 +76,8 @@ public final class LBClient
       options =
           new Request.Options(
               configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
-              (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)));
+              (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
+              configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
       options = new Request.Options(connectTimeout, readTimeout);
     }

@@ -80,7 +80,7 @@ public interface Client {
       connection.setConnectTimeout(options.connectTimeoutMillis());
       connection.setReadTimeout(options.readTimeoutMillis());
       connection.setAllowUserInteraction(false);
-      connection.setInstanceFollowRedirects(true);
+      connection.setInstanceFollowRedirects(options.isFollowRedirects());
       connection.setRequestMethod(request.method());
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
