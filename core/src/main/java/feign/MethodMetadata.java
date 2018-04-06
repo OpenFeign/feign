@@ -13,8 +13,6 @@
  */
 package feign;
 
-import feign.Param.Expander;
-
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,7 +31,7 @@ public final class MethodMetadata implements Serializable {
   private Integer headerMapIndex;
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
-  private transient Expander queryMapExpander = new Param.ToStringExpander();
+  private transient Expander queryMapExpander = new Expander.ToStringExpander();
   private transient Type bodyType;
   private RequestTemplate template = new RequestTemplate();
   private List<String> formParams = new ArrayList<String>();

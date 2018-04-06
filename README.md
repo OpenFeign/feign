@@ -428,7 +428,7 @@ Bank bank = Feign.builder()
 
 #### Custom @Param Expansion
 Parameters annotated with `Param` expand based on their `toString`. By
-specifying a custom `Param.Expander`, users can control this behavior,
+specifying a custom `Expander`, users can control this behavior,
 for example formatting dates.
 
 ```java

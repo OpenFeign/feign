@@ -479,7 +479,7 @@ public class DefaultContractTest {
     void date(@Param(value = "date", expander = DateToMillis.class) Date date);
   }
 
-  class DateToMillis implements Param.Expander {
+  class DateToMillis implements Expander {
 
     @Override
     public String expand(Object value) {

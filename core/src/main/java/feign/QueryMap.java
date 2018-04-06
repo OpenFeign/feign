@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.Expander.ToStringExpander;
+
 import java.lang.annotation.Retention;
 import java.util.List;
 import java.util.Map;
@@ -59,15 +61,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @java.lang.annotation.Target(PARAMETER)
 public @interface QueryMap {
 
-    /**
-     * How to expand all values of this map, if {@link Param.ToStringExpander} isn't adequate.
-     */
-    Class<? extends Param.Expander> expander() default Param.ToStringExpander.class;
+  /**
+   * How to expand all values of this map, if {@link ToStringExpander} isn't adequate.
+   *
+   * @see Param#expander
+   */
+  Class<? extends Expander> expander() default ToStringExpander.class;
 
-    /**
-     * Specifies whether parameter names and values are already encoded.
-     *
-     * @see Param#encoded
-     */
-    boolean encoded() default false;
+  /**
+   * Specifies whether parameter names and values are already encoded.
+   *
+   * @see Param#encoded
+   */
+  boolean encoded() default false;
 }

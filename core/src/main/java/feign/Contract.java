@@ -261,8 +261,8 @@ public interface Contract {
           String name = paramAnnotation.value();
           checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.", paramIndex);
           nameParam(data, name, paramIndex);
-          Class<? extends Param.Expander> expander = paramAnnotation.expander();
-          if (expander != Param.ToStringExpander.class) {
+          Class<? extends Expander> expander = paramAnnotation.expander();
+          if (expander != Expander.ToStringExpander.class) {
             data.indexToExpanderClass().put(paramIndex, expander);
           }
           data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
@@ -278,8 +278,8 @@ public interface Contract {
           checkState(data.queryMapIndex() == null, "QueryMap annotation was present on multiple parameters.");
           data.queryMapIndex(paramIndex);
           data.queryMapEncoded(queryMapAnnotation.encoded());
-          Class<? extends Param.Expander> expander = queryMapAnnotation.expander();
-          if (expander != Param.ToStringExpander.class) {
+          Class<? extends Expander> expander = queryMapAnnotation.expander();
+          if (expander != Expander.ToStringExpander.class) {
             try {
               data.queryMapExpander(expander.newInstance());
             } catch (InstantiationException e) {

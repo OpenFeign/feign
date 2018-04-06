@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.Expander.ToStringExpander;
+
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.PARAMETER;
@@ -34,7 +36,7 @@ public @interface Param {
   /**
    * How to expand the value of this parameter, if {@link ToStringExpander} isn't adequate.
    */
-  Class<? extends Expander> expander() default ToStringExpander.class;
+  Class<? extends feign.Expander> expander() default ToStringExpander.class;
 
   /**
    * Specifies whether argument is already encoded
@@ -44,19 +46,10 @@ public @interface Param {
    */
   boolean encoded() default false;
 
-  interface Expander {
-
-    /**
-     * Expands the value into a string. Does not accept or return null.
-     */
-    String expand(Object value);
-  }
-
-  final class ToStringExpander implements Expander {
-
-    @Override
-    public String expand(Object value) {
-      return value.toString();
-    }
+  /**
+   * @see feign.Expander
+   */
+  @Deprecated
+  interface Expander extends feign.Expander {
   }
 }

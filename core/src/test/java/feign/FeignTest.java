@@ -796,7 +796,7 @@ public class FeignTest {
     @RequestLine("GET /?trim={trim}")
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
 
-    class DateToMillis implements Param.Expander {
+    class DateToMillis implements Expander {
 
       @Override
       public String expand(Object value) {

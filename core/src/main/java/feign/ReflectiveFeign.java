@@ -14,7 +14,6 @@
 package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.EncodeException;

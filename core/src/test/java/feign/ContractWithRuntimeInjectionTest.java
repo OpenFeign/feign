@@ -32,7 +32,7 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class ContractWithRuntimeInjectionTest {
 
-  static class CaseExpander implements Param.Expander {
+  static class CaseExpander implements Expander {
 
     private final boolean lowercase;
 
@@ -99,8 +99,8 @@ public class ContractWithRuntimeInjectionTest {
     public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
       List<MethodMetadata> result = super.parseAndValidatateMetadata(targetType);
       for (MethodMetadata md : result) {
-        Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
-        for (Map.Entry<Integer, Class<? extends Param.Expander>> entry : md.indexToExpanderClass().entrySet()) {
+        Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
+        for (Map.Entry<Integer, Class<? extends Expander>> entry : md.indexToExpanderClass().entrySet()) {
           indexToExpander.put(entry.getKey(), beanFactory.getBean(entry.getValue()));
         }
         md.indexToExpander(indexToExpander);
