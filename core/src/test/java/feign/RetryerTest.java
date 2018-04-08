@@ -13,6 +13,7 @@
  */
 package feign;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,5 +72,22 @@ public class RetryerTest {
   @Test(expected = RetryableException.class)
   public void neverRetryAlwaysPropagates() {
     Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
+  }
+
+  @Test
+  public void defaultRetryerFailsOnInterruptedException() {
+    Default retryer = new Retryer.Default();
+
+    Thread.currentThread().interrupt();
+    RetryableException expected = new RetryableException(null, null, new Date(System.currentTimeMillis() + 5000));
+    try {
+      retryer.continueOrPropagate(expected);
+      Thread.interrupted(); // reset interrupted flag in case it wasn't
+      Assert.fail("Retryer continued despite interruption");
+    } catch (RetryableException e) {
+      Assert.assertTrue("Interrupted status not reset", Thread.interrupted());
+      Assert.assertEquals("Retry attempt not registered as expected", 2, retryer.attempt);
+      Assert.assertEquals("Unexpected exception found", expected, e);
+    }
   }
 }
