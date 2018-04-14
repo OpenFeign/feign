@@ -56,7 +56,7 @@ public final class RequestTemplate implements Serializable {
   private byte[] body;
   private String bodyTemplate;
   private boolean decodeSlash = true;
-  private CollectionFormat collectionFormat = CollectionFormat.MULTI;
+  private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
 
   public RequestTemplate() {
   }
@@ -663,58 +663,14 @@ public final class RequestTemplate implements Serializable {
     if (queries.isEmpty()) {
       return "";
     }
-    StringBuilder queryBuilder = new StringBuilder();
+    StringBuilder queryBuilder = new StringBuilder("?");
     for (String field : queries.keySet()) {
       Collection<String> values = valuesOrEmpty(queries, field);
-      if (values.isEmpty()) {
-        continue;
-      }
-      if (values.size() > 1) {
-        queryBuilder.append('&').append(field).append('=');
-        String separator;
-        switch (collectionFormat) {
-          case CSV:
-            separator = ",";  // comma %2C
-            break;
-          case SSV:
-            separator = " ";  // space %20
-            break;
-          case TSV:
-            separator = "\t";  // tab %09
-            break;
-          case PIPES:
-            separator = "|";  // pipe %7C
-            break;
-          case MULTI:
-          default:
-            separator = '&' + field + '=';
-        }
-        boolean first = true;
-        for (String value : values) {
-          if (first) {
-            first = false;
-          } else {
-            queryBuilder.append(separator);
-          }
-          if (value != null) {
-            queryBuilder.append(value);
-          }
-        }
-        continue;
-      }
-      for (String value : values) {
-        queryBuilder.append('&');
-        queryBuilder.append(field);
-        if (value != null) {
-          queryBuilder.append('=');
-          if (!value.isEmpty()) {
-            queryBuilder.append(value);
-          }
-        }
-      }
+      CharSequence fieldAndValues = collectionFormat.join(field, values);
+      queryBuilder.append(queryBuilder.length() == 1 || fieldAndValues.length() == 0 ? "" : "&");
+      queryBuilder.append(fieldAndValues);
     }
-    queryBuilder.deleteCharAt(0);
-    return queryBuilder.insert(0, '?').toString();
+    return queryBuilder.toString();
   }
 
   interface Factory {

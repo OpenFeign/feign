@@ -272,6 +272,7 @@ public abstract class AbstractClientTest {
                 .hasBody("àáâãäåèéêë");
     }
 
+    @Test
     public void testDefaultCollectionFormat() throws Exception {
         server.enqueue(new MockResponse().setBody("body"));
 
