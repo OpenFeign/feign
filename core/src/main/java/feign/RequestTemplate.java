@@ -56,6 +56,7 @@ public final class RequestTemplate implements Serializable {
   private byte[] body;
   private String bodyTemplate;
   private boolean decodeSlash = true;
+  private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
 
   public RequestTemplate() {
   }
@@ -71,6 +72,7 @@ public final class RequestTemplate implements Serializable {
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
+    this.collectionFormat = toCopy.collectionFormat;
   }
 
   private static String urlDecode(String arg) {
@@ -280,6 +282,15 @@ public final class RequestTemplate implements Serializable {
   
   public boolean decodeSlash() {
     return decodeSlash;
+  }
+
+  public RequestTemplate collectionFormat(CollectionFormat collectionFormat) {
+    this.collectionFormat = collectionFormat;
+    return this;
+  }
+
+  public CollectionFormat collectionFormat() {
+    return collectionFormat;
   }
 
   /* @see #url() */
@@ -652,21 +663,14 @@ public final class RequestTemplate implements Serializable {
     if (queries.isEmpty()) {
       return "";
     }
-    StringBuilder queryBuilder = new StringBuilder();
+    StringBuilder queryBuilder = new StringBuilder("?");
     for (String field : queries.keySet()) {
-      for (String value : valuesOrEmpty(queries, field)) {
-        queryBuilder.append('&');
-        queryBuilder.append(field);
-        if (value != null) {
-          queryBuilder.append('=');
-          if (!value.isEmpty()) {
-            queryBuilder.append(value);
-          }
-        }
-      }
+      Collection<String> values = valuesOrEmpty(queries, field);
+      CharSequence fieldAndValues = collectionFormat.join(field, values);
+      queryBuilder.append(queryBuilder.length() == 1 || fieldAndValues.length() == 0 ? "" : "&");
+      queryBuilder.append(fieldAndValues);
     }
-    queryBuilder.deleteCharAt(0);
-    return queryBuilder.insert(0, '?').toString();
+    return queryBuilder.toString();
   }
 
   interface Factory {

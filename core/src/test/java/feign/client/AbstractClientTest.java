@@ -15,12 +15,15 @@ package feign.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import feign.Client;
+import feign.CollectionFormat;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Headers;
@@ -269,6 +272,38 @@ public abstract class AbstractClientTest {
                 .hasBody("àáâãäåèéêë");
     }
 
+    @Test
+    public void testDefaultCollectionFormat() throws Exception {
+        server.enqueue(new MockResponse().setBody("body"));
+
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.get(Arrays.asList(new String[] {"bar","baz"}));
+
+        assertThat(response.status()).isEqualTo(200);
+        assertThat(response.reason()).isEqualTo("OK");
+
+        MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
+                .hasPath("/?foo=bar&foo=baz");
+    }
+    @Test
+    public void testAlternativeCollectionFormat() throws Exception {
+        server.enqueue(new MockResponse().setBody("body"));
+
+        TestInterface api = newBuilder()
+                .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+        Response response = api.getCSV(Arrays.asList(new String[] {"bar","baz"}));
+
+        assertThat(response.status()).isEqualTo(200);
+        assertThat(response.reason()).isEqualTo("OK");
+
+        // Some HTTP libraries percent-encode commas in query parameters and others don't.
+        MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
+                .hasOneOfPath("/?foo=bar,baz", "/?foo=bar%2Cbaz");
+    }
+
     public interface TestInterface {
 
         @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -282,6 +317,12 @@ public abstract class AbstractClientTest {
         @RequestLine("GET /")
         @Headers("Accept: text/plain")
         String get();
+
+        @RequestLine("GET /?foo={multiFoo}")
+        Response get(@Param("multiFoo") List<String> multiFoo);
+
+        @RequestLine(value = "GET /?foo={multiFoo}", collectionFormat = CollectionFormat.CSV)
+        Response getCSV(@Param("multiFoo") List<String> multiFoo);
 
         @RequestLine("PATCH /")
         @Headers("Accept: text/plain")
