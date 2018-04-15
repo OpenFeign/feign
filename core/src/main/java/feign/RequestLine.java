@@ -75,4 +75,6 @@ public @interface RequestLine {
   String value();
 
   boolean decodeSlash() default true;
+
+  CollectionFormat collectionFormat() default CollectionFormat.EXPLODED;
 }

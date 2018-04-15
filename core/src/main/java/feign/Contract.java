@@ -246,6 +246,8 @@ public interface Contract {
         }
 
         data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
+        data.template()
+            .collectionFormat(RequestLine.class.cast(methodAnnotation).collectionFormat());
 
       } else if (annotationType == Body.class) {
         String body = Body.class.cast(methodAnnotation).value();
