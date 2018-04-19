@@ -13,6 +13,9 @@
  */
 package feign.assertj;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import okhttp3.Headers;
 import okhttp3.mockwebserver.RecordedRequest;
 
@@ -60,6 +63,29 @@ public final class RecordedRequestAssert
     isNotNull();
     objects.assertEqual(info, actual.getPath(), expected);
     return this;
+  }
+
+  public RecordedRequestAssert hasQueryParams(String... expectedParams) {
+    return hasQueryParams(Arrays.asList(expectedParams));
+  }
+
+  public RecordedRequestAssert hasQueryParams(Collection<String> expectedParams) {
+    isNotNull();
+    Collection<String> actualQueryParams = getQueryParams();
+    objects.assertEqual(info, expectedParams.size(), actualQueryParams.size());
+    for (String expectedParam : expectedParams) {
+      objects.assertIsIn(info, expectedParam, actualQueryParams);
+    }
+    return this;
+  }
+
+  private Collection<String> getQueryParams () {
+    String path = actual.getPath();
+    int queryStart = path.indexOf("?") + 1;
+    String[] queryParams = actual.getPath()
+        .substring(queryStart)
+        .split("&");
+    return Arrays.asList(queryParams);
   }
 
   public RecordedRequestAssert hasBody(String utf8Expected) {

@@ -392,7 +392,7 @@ public class FeignTest {
     server.enqueue(new MockResponse());
     api.queryMapPojo(customPojo);
     assertThat(server.takeRequest())
-            .hasPath("/?name=Name&number=3");
+        .hasQueryParams(Arrays.asList("name=Name", "number=3"));
   }
 
   @Test
