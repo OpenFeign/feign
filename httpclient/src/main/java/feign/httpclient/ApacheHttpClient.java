@@ -20,6 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.Configurable;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.URIBuilder;
@@ -90,12 +91,20 @@ public final class ApacheHttpClient implements Client {
           UnsupportedEncodingException, MalformedURLException, URISyntaxException {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
-    //per request timeouts
-    RequestConfig requestConfig = RequestConfig
+    RequestConfig requestConfig;
+    if (client instanceof Configurable &&
+        ((Configurable) client).getConfig() != null) {
+        requestConfig = RequestConfig.copy(((Configurable) client).getConfig())
+            .setConnectTimeout(options.connectTimeoutMillis())
+            .setSocketTimeout(options.readTimeoutMillis())
+            .build();
+    } else {
+        requestConfig = RequestConfig
             .custom()
             .setConnectTimeout(options.connectTimeoutMillis())
             .setSocketTimeout(options.readTimeoutMillis())
             .build();
+    }
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
