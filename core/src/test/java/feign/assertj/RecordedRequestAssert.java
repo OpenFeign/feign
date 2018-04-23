@@ -79,13 +79,19 @@ public final class RecordedRequestAssert
     return this;
   }
 
-  private Collection<String> getQueryParams () {
+  private Collection<String> getQueryParams() {
     String path = actual.getPath();
     int queryStart = path.indexOf("?") + 1;
     String[] queryParams = actual.getPath()
         .substring(queryStart)
         .split("&");
     return Arrays.asList(queryParams);
+  }
+
+  public RecordedRequestAssert hasOneOfPath(String... expected) {
+    isNotNull();
+    objects.assertIsIn(info, actual.getPath(), expected);
+    return this;
   }
 
   public RecordedRequestAssert hasBody(String utf8Expected) {

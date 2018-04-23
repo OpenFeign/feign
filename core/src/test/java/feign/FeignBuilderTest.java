@@ -162,7 +162,7 @@ public class FeignBuilderTest {
   }
 
   @Test
-  public void testOverrideQueryMapEnoder() throws Exception {
+  public void testOverrideQueryMapEncoder() throws Exception {
     server.enqueue(new MockResponse());
 
     String url = "http://localhost:" + server.getPort();
