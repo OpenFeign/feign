@@ -29,16 +29,17 @@ import feign.codec.ErrorDecoder;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
 
 public class ReflectiveFeign extends Feign {
 
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
+  private final QueryMapEncoder queryMapEncoder;
 
-  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
+  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory, QueryMapEncoder queryMapEncoder) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
+    this.queryMapEncoder = queryMapEncoder;
   }
 
   /**
@@ -128,14 +129,22 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
+    private final QueryMapEncoder queryMapEncoder;
     private final SynchronousMethodHandler.Factory factory;
 
-    ParseHandlersByName(Contract contract, Options options, Encoder encoder, Decoder decoder,
-                        ErrorDecoder errorDecoder, SynchronousMethodHandler.Factory factory) {
+    ParseHandlersByName(
+        Contract contract,
+        Options options,
+        Encoder encoder,
+        Decoder decoder,
+        QueryMapEncoder queryMapEncoder,
+        ErrorDecoder errorDecoder,
+        SynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
       this.errorDecoder = errorDecoder;
+      this.queryMapEncoder = queryMapEncoder;
       this.encoder = checkNotNull(encoder, "encoder");
       this.decoder = checkNotNull(decoder, "decoder");
     }
@@ -146,11 +155,11 @@ public class ReflectiveFeign extends Feign {
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder);
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder);
         } else if (md.bodyIndex() != null) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
+          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md);
+          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder);
         }
         result.put(md.configKey(),
                    factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
@@ -161,11 +170,14 @@ public class ReflectiveFeign extends Feign {
 
   private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
 
+    private final QueryMapEncoder queryMapEncoder;
+
     protected final MethodMetadata metadata;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
 
-    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata, QueryMapEncoder queryMapEncoder) {
       this.metadata = metadata;
+      this.queryMapEncoder = queryMapEncoder;
       if (metadata.indexToExpander() != null) {
         indexToExpander.putAll(metadata.indexToExpander());
         return;
@@ -212,7 +224,9 @@ public class ReflectiveFeign extends Feign {
       if (metadata.queryMapIndex() != null) {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
-        template = addQueryMapQueryParameters((Map<String, Object>) argv[metadata.queryMapIndex()], template);
+        Object value = argv[metadata.queryMapIndex()];
+        Map<String, Object> queryMap = toQueryMap(value);
+        template = addQueryMapQueryParameters(queryMap, template);
       }
 
       if (metadata.headerMapIndex() != null) {
@@ -220,6 +234,17 @@ public class ReflectiveFeign extends Feign {
       }
 
       return template;
+    }
+
+    private Map<String, Object> toQueryMap (Object value) {
+     if (value instanceof Map) {
+        return (Map<String, Object>)value;
+      }
+      try {
+        return queryMapEncoder.encode(value);
+      } catch (EncodeException e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     private Object expandElements(Expander expander, Object value) {
@@ -231,7 +256,7 @@ public class ReflectiveFeign extends Feign {
 
     private List<String> expandIterable(Expander expander, Iterable value) {
       List<String> values = new ArrayList<String>();
-      for (Object element : (Iterable) value) {
+      for (Object element : value) {
         if (element!=null) {
           values.add(expander.expand(element));
         }
@@ -300,8 +325,8 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder) {
+      super(metadata, queryMapEncoder);
       this.encoder = encoder;
     }
 
@@ -329,8 +354,8 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder) {
+      super(metadata, queryMapEncoder);
       this.encoder = encoder;
     }
 

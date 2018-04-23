@@ -123,7 +123,9 @@ public interface Contract {
       }
 
       if (data.queryMapIndex() != null) {
-        checkMapString("QueryMap", parameterTypes[data.queryMapIndex()], genericParameterTypes[data.queryMapIndex()]);
+        if (Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()])) {
+          checkMapKeys("QueryMap", genericParameterTypes[data.queryMapIndex()]);
+        }
       }
 
       return data;
@@ -132,6 +134,10 @@ public interface Contract {
     private static void checkMapString(String name, Class<?> type, Type genericType) {
       checkState(Map.class.isAssignableFrom(type),
               "%s parameter must be a Map: %s", name, type);
+      checkMapKeys(name, genericType);
+    }
+
+    private static void checkMapKeys(String name, Type genericType) {
       Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
       Class<?> keyClass = (Class<?>) parameterTypes[0];
       checkState(String.class.equals(keyClass),

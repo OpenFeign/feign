@@ -101,6 +101,7 @@ public abstract class Feign {
     private Logger logger = new NoOpLogger();
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
+    private QueryMapEncoder queryMapEncoder = new QueryMapEncoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
@@ -140,6 +141,11 @@ public abstract class Feign {
 
     public Builder decoder(Decoder decoder) {
       this.decoder = decoder;
+      return this;
+    }
+
+    public Builder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
+      this.queryMapEncoder = queryMapEncoder;
       return this;
     }
 
@@ -241,9 +247,9 @@ public abstract class Feign {
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
                                                logLevel, decode404, closeAfterDecode);
       ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder,
+          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
                                   errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
 
