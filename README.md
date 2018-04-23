@@ -239,6 +239,27 @@ LoginClient client = Feign.builder()
 client.login(new Credentials("denominator", "secret"));
 ```
 
+Sending `Get` request using an object containing request parameters can be achieved using `ObjectToQueryParamEncoder`.
+
+This encoder uses an Object as source for query parameters. Add non null values of properties as query parameters using the property name as the query parameter name.
+
+```Java
+
+interface LoginClient {
+  @RequestLine("GET /")
+  void login(Credentials creds);
+}
+...
+LoginClient client = Feign.builder()
+                          .encoder(new ObjectToQueryParamEncoder())
+                          .logLevel(Logger.Level.FULL)
+                          .target(LoginClient.class, "https://foo.com");
+
+client.login(new Credentials("denominator", "secret"));
+```
+
+This will generate a get request `https://foo.com?user_name=denominator&password=secret`
+
 ### @Body templates
 The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.
 
