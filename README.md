@@ -444,6 +444,35 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 V find(@QueryMap Map<String, Object> queryMap);
 ```
 
+This may also be used to generate the query parameters from a POJO object using a `QueryMapEncoder`.
+
+```java
+@RequestLine("GET /find")
+V find(@QueryMap CustomPojo customPojo);
+```
+
+When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
+
+```java
+public class CustomPojo {
+  private final String name;
+  private final int number;
+
+  public CustomPojo (String name, int number) {
+    this.name = name;
+    this.number = number;
+  }
+}
+```
+
+To setup a custom `QueryMapEncoder`:
+
+```java
+MyApi myApi = Feign.builder()
+                 .queryMapEncoder(new MyCustomQueryMapEncoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
 These allows Feign clients to contain logic that is not expressly defined by the underlying API.

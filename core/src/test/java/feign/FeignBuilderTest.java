@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -183,6 +184,30 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testOverrideQueryMapEncoder() throws Exception {
+    server.enqueue(new MockResponse());
+
+    String url = "http://localhost:" + server.getPort();
+    QueryMapEncoder customMapEncoder =
+        new QueryMapEncoder() {
+          @Override
+          public Map<String, Object> encode(Object ignored) {
+            Map<String, Object> queryMap = new HashMap<String, Object>();
+            queryMap.put("key1", "value1");
+            queryMap.put("key2", "value2");
+            return queryMap;
+          }
+        };
+
+    TestInterface api =
+        Feign.builder().queryMapEncoder(customMapEncoder).target(TestInterface.class, url);
+    api.queryMapEncoded("ignored");
+
+    assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("key1=value1", "key2=value2"));
+    assertEquals(1, server.getRequestCount());
+  }
+
+  @Test
   public void testProvideRequestInterceptors() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
@@ -325,6 +350,9 @@ public class FeignBuilderTest {
 
     @RequestLine("GET api/thing")
     Response getNoInitialSlashOnSlash();
+
+    @RequestLine(value = "GET /api/querymap/object")
+    String queryMapEncoded(@QueryMap Object object);
 
     @RequestLine("POST /")
     Response codecPost(String data);

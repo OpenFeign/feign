@@ -368,6 +368,39 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMapPojoWithFullParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomPojo customPojo = new CustomPojo("Name", 3);
+
+    server.enqueue(new MockResponse());
+    api.queryMapPojo(customPojo);
+    assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("name=Name", "number=3"));
+  }
+
+  @Test
+  public void queryMapPojoWithPartialParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomPojo customPojo = new CustomPojo("Name", null);
+
+    server.enqueue(new MockResponse());
+    api.queryMapPojo(customPojo);
+    assertThat(server.takeRequest()).hasPath("/?name=Name");
+  }
+
+  @Test
+  public void queryMapPojoWithEmptyParams() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    CustomPojo customPojo = new CustomPojo(null, null);
+
+    server.enqueue(new MockResponse());
+    api.queryMapPojo(customPojo);
+    assertThat(server.takeRequest()).hasPath("/");
+  }
+
+  @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals(
         "TestInterface#post()", Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
@@ -589,7 +622,7 @@ public class FeignTest {
             .decode404()
             .errorDecoder(new IllegalArgumentExceptionOn404())
             .target("http://localhost:" + server.getPort());
-    api.queryMap(Collections.emptyMap());
+    api.queryMap(Collections.<String, Object>emptyMap());
   }
 
   @Test
@@ -790,6 +823,9 @@ public class FeignTest {
 
     @RequestLine("GET /?trim={trim}")
     void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
+
+    @RequestLine("GET /")
+    void queryMapPojo(@QueryMap CustomPojo object);
 
     class DateToMillis implements Param.Expander {
 
