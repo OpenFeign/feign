@@ -75,7 +75,7 @@ public class RequestTemplateTest {
   @Test
   public void expandMissingParamProceeds() {
     assertThat(expand("/{user-dir}", mapOf("user_dir", "foo")))
-        .isEqualTo("/{user-dir}");
+        .isEqualTo("/");
   }
 
   @Test
