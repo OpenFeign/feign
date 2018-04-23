@@ -52,9 +52,8 @@ public final class JAXRSContract extends Contract.BaseContract {
   @Override
   protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
     Path path = clz.getAnnotation(Path.class);
-    if (path != null) {
-      String pathValue = emptyToNull(path.value());
-      checkState(pathValue != null, "Path.value() was empty on type %s", clz.getName());
+    if (path != null && !path.value().isEmpty()) {
+      String pathValue = path.value();
       if (!pathValue.startsWith("/")) {
         pathValue = "/" + pathValue;
       }
@@ -86,7 +85,9 @@ public final class JAXRSContract extends Contract.BaseContract {
       data.template().method(http.value());
     } else if (annotationType == Path.class) {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
-      checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
+      if (pathValue == null) {
+        return;
+      }
       String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
       if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;

@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
@@ -103,10 +104,16 @@ public final class Request {
 
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
+    private final boolean followRedirects;
 
-    public Options(int connectTimeoutMillis, int readTimeoutMillis) {
+    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
       this.connectTimeoutMillis = connectTimeoutMillis;
       this.readTimeoutMillis = readTimeoutMillis;
+      this.followRedirects = followRedirects;
+    }
+
+    public Options(int connectTimeoutMillis, int readTimeoutMillis){
+      this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 
     public Options() {
@@ -129,6 +136,16 @@ public final class Request {
      */
     public int readTimeoutMillis() {
       return readTimeoutMillis;
+    }
+
+
+    /**
+     * Defaults to true. {@code false} tells the client to not follow the redirections.
+     *
+     * @see HttpURLConnection#getFollowRedirects()
+     */
+    public boolean isFollowRedirects() {
+      return followRedirects;
     }
   }
 }

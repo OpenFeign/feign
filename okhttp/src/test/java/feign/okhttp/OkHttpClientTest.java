@@ -15,9 +15,9 @@ package feign.okhttp;
 
 import feign.Feign.Builder;
 import feign.Headers;
-import feign.Param;
 import feign.RequestLine;
 import feign.Response;
+import feign.Request;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
@@ -26,8 +26,6 @@ import feign.Feign;
 import okhttp3.mockwebserver.MockResponse;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -57,10 +55,48 @@ public class OkHttpClientTest extends AbstractClientTest {
   }
 
 
+  @Test
+  public void testNoFollowRedirect() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+
+    OkHttpClientTestInterface api = newBuilder()
+            .options(new Request.Options(1000, 1000, false))
+            .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.get();
+    // Response length should not be null
+    assertEquals(302, response.status());
+    assertEquals(server.url("redirect").toString(), response.headers().get("Location").iterator().next());
+
+  }
+
+
+  @Test
+  public void testFollowRedirect() throws Exception {
+    String expectedBody = "Hello";
+
+    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+    server.enqueue(new MockResponse().setBody(expectedBody));
+
+    OkHttpClientTestInterface api = newBuilder()
+            .options(new Request.Options(1000, 1000, true))
+            .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.get();
+    // Response length should not be null
+    assertEquals(200, response.status());
+    assertEquals(expectedBody, response.body().toString());
+
+  }
+
+
   public interface OkHttpClientTestInterface {
 
     @RequestLine("GET /")
     @Headers({"Accept: text/plain", "Content-Type: text/plain"})
     Response getWithContentType();
+
+    @RequestLine("GET /")
+    Response get();
   }
 }
