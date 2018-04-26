@@ -1,0 +1,2 @@
+# Feign JAXRS 2
+
