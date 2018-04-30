@@ -355,6 +355,14 @@ public class DefaultContractTest {
     }
   }
 
+  @Test
+  public void headerMapSubclass() throws Exception {
+    MethodMetadata md =
+        parseAndValidateMetadata(
+            HeaderMapInterface.class, "headerMapSubClass", SubClassHeaders.class);
+    assertThat(md.headerMapIndex()).isEqualTo(0);
+  }
+
   interface Methods {
 
     @RequestLine("POST /")
@@ -460,6 +468,9 @@ public class DefaultContractTest {
     @RequestLine("POST /")
     void multipleHeaderMap(
         @HeaderMap Map<String, String> headers, @HeaderMap Map<String, String> queries);
+
+    @RequestLine("POST /")
+    void headerMapSubClass(@HeaderMap SubClassHeaders httpHeaders);
   }
 
   interface HeaderParams {
@@ -608,6 +619,8 @@ public class DefaultContractTest {
 
     private List<Entity<K, M>> entities;
   }
+
+  interface SubClassHeaders extends Map<String, String> {}
 
   @Headers("Version: 1")
   interface ParameterizedApi extends ParameterizedBaseApi<String, Long> {}
