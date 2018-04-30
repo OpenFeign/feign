@@ -138,11 +138,34 @@ public interface Contract {
     }
 
     private static void checkMapKeys(String name, Type genericType) {
-      Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
-      Class<?> keyClass = (Class<?>) parameterTypes[0];
-      checkState(String.class.equals(keyClass),
-              "%s key must be a String: %s", name, keyClass.getSimpleName());
+      Class<?> keyClass = null;
+
+      // assume our type parameterized
+      if (ParameterizedType.class.isAssignableFrom(genericType.getClass())) {
+        Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+        keyClass = (Class<?>) parameterTypes[0];
+      } else if (genericType instanceof Class<?>) {
+        // raw class, type parameters cannot be inferred directly, but we can scan any extended
+        // interfaces looking for any explict types
+        Type[] interfaces = ((Class) genericType).getGenericInterfaces();
+        if (interfaces != null) {
+          for (Type extended : interfaces) {
+            if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
+              // use the first extended interface we find.
+              Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
+              keyClass = (Class<?>) parameterTypes[0];
+              break;
+            }
+          }
+        }
+      }
+
+      if (keyClass != null) {
+        checkState(String.class.equals(keyClass),
+            "%s key must be a String: %s", name, keyClass.getSimpleName());
+      }
     }
+
 
     /**
      * Called by parseAndValidateMetadata twice, first on the declaring class, then on the
