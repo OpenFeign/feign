@@ -1,29 +1,26 @@
 /**
- * Copyright (C) 2016 Marvin Herman Froeder (marvin@marvinformatics.com)
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.mock;
+
+import static feign.Util.UTF_8;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
-
 import feign.Request;
 import feign.Util;
 
@@ -57,7 +54,7 @@ public class RequestKey {
         }
 
         public Builder body(String body) {
-            return body(body.getBytes(StandardCharsets.UTF_8));
+            return body(body.getBytes(UTF_8));
         }
 
         public Builder body(byte[] body) {
@@ -82,7 +79,7 @@ public class RequestKey {
     private static String buildUrl(Request request) {
         try {
             return URLDecoder.decode(request.url(), Util.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
     }
@@ -135,27 +132,31 @@ public class RequestKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(method, url);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((method == null) ? 0 : method.hashCode());
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        RequestKey other = (RequestKey) obj;
-        return Objects.equals(other.method, method) && Objects.equals(other.url, url);
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        final RequestKey other = (RequestKey) obj;
+        if (method != other.method) return false;
+        if (url == null) {
+            if (other.url != null) return false;
+        } else if (!url.equals(other.url)) return false;
+        return true;
     }
 
     public boolean equalsExtended(Object obj) {
         if (equals(obj)) {
             RequestKey other = (RequestKey) obj;
-            boolean headersEqual = other.headers == null || headers == null || Objects.equals(other.headers, headers);
-            boolean charsetEqual = other.charset == null || charset == null || Objects.equals(other.charset, charset);
+            boolean headersEqual = other.headers == null || headers == null || headers.equals(other.headers);
+            boolean charsetEqual = other.charset == null || charset == null || charset.equals(other.charset);
             boolean bodyEqual = other.body == null || body == null || Arrays.equals(other.body, body);
             return headersEqual && charsetEqual && bodyEqual;
         }
@@ -164,8 +165,7 @@ public class RequestKey {
 
     @Override
     public String toString() {
-        return String.format("Request [%s %s: %s headers and %s]",
-                method, url,
+        return String.format("Request [%s %s: %s headers and %s]", method, url,
                 headers == null ? "without" : "with " + headers.size(),
                 charset == null ? "no charset" : "charset " + charset);
     }
