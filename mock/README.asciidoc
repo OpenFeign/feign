@@ -1,6 +1,6 @@
 # feign-mock
 
-An easy way to test https://github.com/Netflix/feign. Since feign stores most of the logic in annotations, this helps to check if the annotations are correct.
+An easy way to test https://github.com/OpenFeign/feign. Since feign stores most of the logic in annotations, this helps to check if the annotations are correct.
 
 The original article is available https://velo.github.io/2016/06/05/Testing-feign-clients.html[here]
 
