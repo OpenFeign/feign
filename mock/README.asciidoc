@@ -1,12 +1,5 @@
 # feign-mock
 
-image:https://travis-ci.org/velo/feign-mock.svg?branch=master["Build Status", link="https://travis-ci.org/velo/feign-mock"]
-image:https://coveralls.io/repos/github/velo/feign-mock/badge.svg?branch=master["Coverage Status", link="https://coveralls.io/github/velo/feign-mock?branch=master"]
-image:https://maven-badges.herokuapp.com/maven-central/com.marvinformatics.feign/feign-mock/badge.svg["Maven Central", link="https://maven-badges.herokuapp.com/maven-central/com.marvinformatics.feign/feign-mock/"]
-image:https://img.shields.io/github/issues/velo/feign-mock.svg["Issues", link="https://github.com/velo/feign-mock/issues"]
-image:https://img.shields.io/github/forks/velo/feign-mock.svg["Forks", link="https://github.com/velo/feign-mock/network"]
-image:https://img.shields.io/github/stars/velo/feign-mock.svg["Stars", link="https://github.com/velo/feign-mock/stargazers"]
-
 An easy way to test https://github.com/Netflix/feign. Since feign stores most of the logic in annotations, this helps to check if the annotations are correct.
 
 The original article is available https://velo.github.io/2016/06/05/Testing-feign-clients.html[here]
