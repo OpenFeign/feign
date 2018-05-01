@@ -8,8 +8,6 @@ If mocking feign clients is easy, testing the logic written in annotations is no
 
 To check if you are parsing the request/response properly, the only way is firing a real request. Well, that doesn't seem to be a good path to unit (or even integration) test remote services. Any IO change will affect test stability.
 
-That is why I created https://github.com/velo/feign-mock[feign-mock].
-
 With feign-mock you can use pre-loaded JSON strings or streams as content for your responses. It also allows you to verify mocked invocations and feign-mock will hit your annotations to make sure everything works.
 
 ##### Example
