@@ -23,9 +23,9 @@
     <version>9.7.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-httpclient</artifactId>
-  <name>Feign Apache HttpClient</name>
-  <description>Feign Apache HttpClient</description>
+  <artifactId>feign-jaxrs2</artifactId>
+  <name>Feign JAX-RS 2</name>
+  <description>Feign JAX-RS 2</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -38,34 +38,28 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.1</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-jaxrs</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
+      <version>2.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- for example -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-gson</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
       <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
-      <version>1.1.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

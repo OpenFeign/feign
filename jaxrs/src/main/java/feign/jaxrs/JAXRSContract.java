@@ -22,20 +22,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 
 /**
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
  * JAX-RS README</a>.
  */
-public final class JAXRSContract extends Contract.BaseContract {
+public class JAXRSContract extends Contract.BaseContract {
 
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
@@ -124,13 +117,28 @@ public final class JAXRSContract extends Contract.BaseContract {
     data.template().header(CONTENT_TYPE, clientProduces);
   }
 
+  /**
+   * Allows derived contracts to specify unsupported jax-rs parameter annotations which should be
+   * ignored. Required for JAX-RS 2 compatibility.
+   */
+  protected boolean isUnsupportedHttpParameterAnnotation(Annotation parameterAnnotation) {
+    return false;
+  }
+
   @Override
   protected boolean processAnnotationsOnParameter(
       MethodMetadata data, Annotation[] annotations, int paramIndex) {
     boolean isHttpParam = false;
     for (Annotation parameterAnnotation : annotations) {
       Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-      if (annotationType == PathParam.class) {
+      // masc20180327. parameter with unsupported jax-rs annotations should not be passed as body
+      // params.
+      // this will prevent interfaces from becoming unusable entirely due to single (unsupported)
+      // endpoints.
+      // https://github.com/OpenFeign/feign/issues/669
+      if (this.isUnsupportedHttpParameterAnnotation(parameterAnnotation)) {
+        isHttpParam = true;
+      } else if (annotationType == PathParam.class) {
         String name = PathParam.class.cast(parameterAnnotation).value();
         checkState(
             emptyToNull(name) != null, "PathParam.value() was empty on parameter %s", paramIndex);

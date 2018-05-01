@@ -62,6 +62,7 @@
     <module>jackson</module>
     <module>jaxb</module>
     <module>jaxrs</module>
+    <module>jaxrs2</module>
     <module>okhttp</module>
     <module>ribbon</module>
     <module>sax</module>
@@ -181,6 +182,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs2</artifactId>
         <version>${project.version}</version>
       </dependency>
 
