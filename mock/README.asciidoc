@@ -44,4 +44,4 @@ This simple test returns no content and verifies that the URL was truly invoked.
 
 On the mocked client, you can include all URLs and methods you want to mock.
 
-For more comprehensive examples take a look at https://github.com/velo/feign-mock/blob/master/src/test/java/feign/mock/MockClientTest.java[MockClientTest].
+For more comprehensive examples take a look at https://github.com/OpenFeign/feign/blob/master/mock/src/test/java/feign/mock/MockClientTest.java[MockClientTest].
