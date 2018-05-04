@@ -51,6 +51,12 @@
       <name>Spencer Gibb</name>
       <email>spencer@gibb.us</email>
     </developer>
+    <developer>
+      <id>velo</id>
+      <name>Marvin Herman Froeder</name>
+      <email>velo br at gmail dot com</email>
+      <url>about.me/velo</url>
+    </developer>
   </developers>
 
   <modules>
@@ -68,6 +74,7 @@
     <module>sax</module>
     <module>slf4j</module>
     <module>java8</module>
+    <module>mock</module>
     <module>benchmark</module>
   </modules>
 
