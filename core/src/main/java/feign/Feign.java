@@ -224,7 +224,7 @@ public abstract class Feign {
      * </p>Feign standard decoders do not have built in support for this flag. If
      * you are using this flag, you MUST also use a custom Decoder, and be sure to
      * close all resources appropriately somewhere in the Decoder (you can use
-     * {@link Util.ensureClosed} for convenience).
+     * {@link Util#ensureClosed} for convenience).
      *
      * @since 9.6
      *
