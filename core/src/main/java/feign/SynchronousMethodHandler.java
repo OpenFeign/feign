@@ -138,12 +138,14 @@ final class SynchronousMethodHandler implements MethodHandler {
         if (void.class == metadata.returnType()) {
           return null;
         } else {
+          Object result = decode(response);
           shouldClose = closeAfterDecode;
-          return decode(response);
+          return result;
         }
       } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
+        Object result = decode(response);
         shouldClose = closeAfterDecode;
-        return decode(response);
+        return result;
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);
       }
