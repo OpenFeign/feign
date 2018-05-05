@@ -36,7 +36,8 @@ public class ReflectiveFeign extends Feign {
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
 
-  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory, QueryMapEncoder queryMapEncoder) {
+  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
+      QueryMapEncoder queryMapEncoder) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
     this.queryMapEncoder = queryMapEncoder;
@@ -56,7 +57,7 @@ public class ReflectiveFeign extends Feign {
     for (Method method : target.type().getMethods()) {
       if (method.getDeclaringClass() == Object.class) {
         continue;
-      } else if(Util.isDefault(method)) {
+      } else if (Util.isDefault(method)) {
         DefaultMethodHandler handler = new DefaultMethodHandler(method);
         defaultMethodHandlers.add(handler);
         methodToHandler.put(method, handler);
@@ -65,9 +66,10 @@ public class ReflectiveFeign extends Feign {
       }
     }
     InvocationHandler handler = factory.create(target, methodToHandler);
-    T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
+    T proxy = (T) Proxy
+        .newProxyInstance(target.type().getClassLoader(), new Class<?>[]{target.type()}, handler);
 
-    for(DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
+    for (DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
       defaultMethodHandler.bindTo(proxy);
     }
     return proxy;
@@ -162,7 +164,7 @@ public class ReflectiveFeign extends Feign {
           buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder);
         }
         result.put(md.configKey(),
-                   factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+            factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
       }
       return result;
     }
@@ -230,15 +232,16 @@ public class ReflectiveFeign extends Feign {
       }
 
       if (metadata.headerMapIndex() != null) {
-        template = addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()], template);
+        template = addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()],
+            template);
       }
 
       return template;
     }
 
-    private Map<String, Object> toQueryMap (Object value) {
-     if (value instanceof Map) {
-        return (Map<String, Object>)value;
+    private Map<String, Object> toQueryMap(Object value) {
+      if (value instanceof Map) {
+        return (Map<String, Object>) value;
       }
       try {
         return queryMapEncoder.encode(value);
@@ -257,7 +260,7 @@ public class ReflectiveFeign extends Feign {
     private List<String> expandIterable(Expander expander, Iterable value) {
       List<String> values = new ArrayList<String>();
       for (Object element : value) {
-        if (element!=null) {
+        if (element != null) {
           values.add(expander.expand(element));
         }
       }
@@ -265,7 +268,8 @@ public class ReflectiveFeign extends Feign {
     }
 
     @SuppressWarnings("unchecked")
-    private RequestTemplate addHeaderMapHeaders(Map<String, Object> headerMap, RequestTemplate mutable) {
+    private RequestTemplate addHeaderMapHeaders(Map<String, Object> headerMap,
+        RequestTemplate mutable) {
       for (Entry<String, Object> currEntry : headerMap.entrySet()) {
         Collection<String> values = new ArrayList<String>();
 
@@ -286,7 +290,8 @@ public class ReflectiveFeign extends Feign {
     }
 
     @SuppressWarnings("unchecked")
-    private RequestTemplate addQueryMapQueryParameters(Map<String, Object> queryMap, RequestTemplate mutable) {
+    private RequestTemplate addQueryMapQueryParameters(Map<String, Object> queryMap,
+        RequestTemplate mutable) {
       for (Entry<String, Object> currEntry : queryMap.entrySet()) {
         Collection<String> values = new ArrayList<String>();
 
@@ -296,19 +301,22 @@ public class ReflectiveFeign extends Feign {
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
-            values.add(nextObject == null ? null : encoded ? nextObject.toString() : RequestTemplate.urlEncode(nextObject.toString()));
+            values.add(nextObject == null ? null : encoded ? nextObject.toString()
+                : RequestTemplate.urlEncode(nextObject.toString()));
           }
         } else {
-          values.add(currValue == null ? null : encoded ? currValue.toString() : RequestTemplate.urlEncode(currValue.toString()));
+          values.add(currValue == null ? null
+              : encoded ? currValue.toString() : RequestTemplate.urlEncode(currValue.toString()));
         }
 
-        mutable.query(true, encoded ? currEntry.getKey() : RequestTemplate.urlEncode(currEntry.getKey()), values);
+        mutable.query(true,
+            encoded ? currEntry.getKey() : RequestTemplate.urlEncode(currEntry.getKey()), values);
       }
       return mutable;
     }
 
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                      Map<String, Object> variables) {
+        Map<String, Object> variables) {
       // Resolving which variable names are already encoded using their indices
       Map<String, Boolean> variableToEncoded = new LinkedHashMap<String, Boolean>();
       for (Entry<Integer, Boolean> entry : metadata.indexToEncoded().entrySet()) {
@@ -325,14 +333,15 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder) {
+    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
+        QueryMapEncoder queryMapEncoder) {
       super(metadata, queryMapEncoder);
       this.encoder = encoder;
     }
 
     @Override
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                      Map<String, Object> variables) {
+        Map<String, Object> variables) {
       Map<String, Object> formVariables = new LinkedHashMap<String, Object>();
       for (Entry<String, Object> entry : variables.entrySet()) {
         if (metadata.formParams().contains(entry.getKey())) {
@@ -354,14 +363,15 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder) {
+    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
+        QueryMapEncoder queryMapEncoder) {
       super(metadata, queryMapEncoder);
       this.encoder = encoder;
     }
 
     @Override
     protected RequestTemplate resolve(Object[] argv, RequestTemplate mutable,
-                                      Map<String, Object> variables) {
+        Map<String, Object> variables) {
       Object body = argv[metadata.bodyIndex()];
       checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       try {

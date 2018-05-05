@@ -51,8 +51,11 @@ public interface FallbackFactory<T> {
    */
   T create(Throwable cause);
 
-  /** Returns a constant fallback after logging the cause to FINE level. */
+  /**
+   * Returns a constant fallback after logging the cause to FINE level.
+   */
   final class Default<T> implements FallbackFactory<T> {
+
     // jul to not add a dependency
     final Logger logger;
     final T constant;

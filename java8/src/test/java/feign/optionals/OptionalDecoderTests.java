@@ -27,35 +27,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OptionalDecoderTests {
 
-    interface OptionalInterface {
-        @RequestLine("GET /")
-        Optional<String> get();
-    }
+  interface OptionalInterface {
 
-    @Test
-    public void simple404OptionalTest() throws IOException, InterruptedException {
-        final MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setResponseCode(404));
-        server.enqueue(new MockResponse().setBody("foo"));
+    @RequestLine("GET /")
+    Optional<String> get();
+  }
 
-        final OptionalInterface api = Feign.builder()
-                .decode404()
-                .decoder(new OptionalDecoder(new Decoder.Default()))
-                .target(OptionalInterface.class, server.url("/").toString());
+  @Test
+  public void simple404OptionalTest() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setBody("foo"));
 
-        assertThat(api.get().isPresent()).isFalse();
-        assertThat(api.get().get()).isEqualTo("foo");
-    }
+    final OptionalInterface api = Feign.builder()
+        .decode404()
+        .decoder(new OptionalDecoder(new Decoder.Default()))
+        .target(OptionalInterface.class, server.url("/").toString());
 
-    @Test
-    public void simple204OptionalTest() throws IOException, InterruptedException {
-        final MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setResponseCode(204));
+    assertThat(api.get().isPresent()).isFalse();
+    assertThat(api.get().get()).isEqualTo("foo");
+  }
 
-        final OptionalInterface api = Feign.builder()
-                .decoder(new OptionalDecoder(new Decoder.Default()))
-                .target(OptionalInterface.class, server.url("/").toString());
+  @Test
+  public void simple204OptionalTest() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(204));
 
-        assertThat(api.get().isPresent()).isFalse();
-    }
+    final OptionalInterface api = Feign.builder()
+        .decoder(new OptionalDecoder(new Decoder.Default()))
+        .target(OptionalInterface.class, server.url("/").toString());
+
+    assertThat(api.get().isPresent()).isFalse();
+  }
 }

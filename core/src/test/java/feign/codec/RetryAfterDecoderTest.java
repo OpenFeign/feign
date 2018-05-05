@@ -44,7 +44,7 @@ public class RetryAfterDecoderTest {
   @Test
   public void rfc822Parses() throws ParseException {
     assertEquals(RFC822_FORMAT.parse("Fri, 31 Dec 1999 23:59:59 GMT"),
-                 decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
+        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test

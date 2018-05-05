@@ -44,25 +44,27 @@ public class JacksonJaxbCodecTest {
   @Test
   public void decodeTest() throws Exception {
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body("{\"value\":\"Test\"}", UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("{\"value\":\"Test\"}", UTF_8)
+        .build();
     JacksonJaxbJsonDecoder decoder = new JacksonJaxbJsonDecoder();
 
     assertThat(decoder.decode(response, MockObject.class))
         .isEqualTo(new MockObject("Test"));
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 

@@ -46,7 +46,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
   private final String path;
   private final Class<T> type;
   private final AbstractLoadBalancer lb;
-  
+
   /**
    * @Deprecated will be removed in Feign 10
    */
@@ -58,7 +58,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
     this.path = "";
     this.lb = AbstractLoadBalancer.class.cast(getNamedLoadBalancer(name()));
   }
-  
+
   protected LoadBalancingTarget(Class<T> type, String scheme, String name, String path) {
     this.type = checkNotNull(type, "type");
     this.scheme = checkNotNull(scheme, "scheme");
@@ -71,9 +71,9 @@ public class LoadBalancingTarget<T> implements Target<T> {
    * Creates a target which dynamically derives urls from a {@link com.netflix.loadbalancer.ILoadBalancer
    * loadbalancer}.
    *
-   * @param type       corresponds to {@link feign.Target#type()}
-   * @param url        naming convention is {@code https://name} or {@code http://name/api/v2} where name
-   *                   corresponds to {@link com.netflix.client.ClientFactory#getNamedLoadBalancer(String)}
+   * @param type corresponds to {@link feign.Target#type()}
+   * @param url naming convention is {@code https://name} or {@code http://name/api/v2} where name
+   * corresponds to {@link com.netflix.client.ClientFactory#getNamedLoadBalancer(String)}
    */
   public static <T> LoadBalancingTarget<T> create(Class<T> type, String url) {
     URI asUri = URI.create(url);
@@ -119,7 +119,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
     if (obj instanceof LoadBalancingTarget) {
       LoadBalancingTarget<?> other = (LoadBalancingTarget<?>) obj;
       return type.equals(other.type)
-             && name.equals(other.name);
+          && name.equals(other.name);
     }
     return false;
   }
@@ -134,6 +134,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
 
   @Override
   public String toString() {
-    return "LoadBalancingTarget(type=" + type.getSimpleName() + ", name=" + name + ", path=" + path + ")";
+    return "LoadBalancingTarget(type=" + type.getSimpleName() + ", name=" + name + ", path=" + path
+        + ")";
   }
 }

@@ -58,7 +58,7 @@ public class RealRequestBenchmarks {
   public void setup() {
     server = RxNetty.createHttpServer(SERVER_PORT, new RequestHandler<ByteBuf, ByteBuf>() {
       public rx.Observable handle(HttpServerRequest<ByteBuf> request,
-                                  HttpServerResponse<ByteBuf> response) {
+          HttpServerResponse<ByteBuf> response) {
         return response.flush();
       }
     });

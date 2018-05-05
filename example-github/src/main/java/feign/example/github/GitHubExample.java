@@ -33,10 +33,12 @@ public class GitHubExample {
   interface GitHub {
 
     class Repository {
+
       String name;
     }
 
     class Contributor {
+
       String login;
     }
 
@@ -46,13 +48,15 @@ public class GitHubExample {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
 
-    /** Lists all contributors for all repos owned by a user. */
+    /**
+     * Lists all contributors for all repos owned by a user.
+     */
     default List<String> contributors(String owner) {
       return repos(owner).stream()
-                         .flatMap(repo -> contributors(owner, repo.name).stream())
-                         .map(c -> c.login)
-                         .distinct()
-                         .collect(Collectors.toList());
+          .flatMap(repo -> contributors(owner, repo.name).stream())
+          .map(c -> c.login)
+          .distinct()
+          .collect(Collectors.toList());
     }
 
     static GitHub connect() {
@@ -68,6 +72,7 @@ public class GitHubExample {
 
 
   static class GitHubClientError extends RuntimeException {
+
     private String message; // parsed from json
 
     @Override

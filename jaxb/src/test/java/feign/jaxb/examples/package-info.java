@@ -11,4 +11,5 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-@javax.xml.bind.annotation.XmlSchema(namespace = "https://iam.amazonaws.com/doc/2010-05-08/", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED) package feign.jaxb.examples;
+@javax.xml.bind.annotation.XmlSchema(namespace = "https://iam.amazonaws.com/doc/2010-05-08/", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+package feign.jaxb.examples;

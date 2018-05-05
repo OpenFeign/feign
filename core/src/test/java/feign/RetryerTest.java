@@ -79,7 +79,8 @@ public class RetryerTest {
     Default retryer = new Retryer.Default();
 
     Thread.currentThread().interrupt();
-    RetryableException expected = new RetryableException(null, null, new Date(System.currentTimeMillis() + 5000));
+    RetryableException expected = new RetryableException(null, null,
+        new Date(System.currentTimeMillis() + 5000));
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

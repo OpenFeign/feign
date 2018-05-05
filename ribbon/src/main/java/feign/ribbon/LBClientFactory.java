@@ -28,17 +28,22 @@ public interface LBClientFactory {
    * Uses {@link ClientFactory} static factories from ribbon to create an LBClient.
    */
   public static final class Default implements LBClientFactory {
+
     @Override
     public LBClient create(String clientName) {
-      IClientConfig config = ClientFactory.getNamedConfig(clientName, DisableAutoRetriesByDefaultClientConfig.class);
+      IClientConfig config = ClientFactory
+          .getNamedConfig(clientName, DisableAutoRetriesByDefaultClientConfig.class);
       ILoadBalancer lb = ClientFactory.getNamedLoadBalancer(clientName);
       return LBClient.create(lb, config);
     }
   }
 
-  IClientConfigKey<String> RetryableStatusCodes = new CommonClientConfigKey<String>("RetryableStatusCodes") {};
+  IClientConfigKey<String> RetryableStatusCodes = new CommonClientConfigKey<String>(
+      "RetryableStatusCodes") {
+  };
 
   final class DisableAutoRetriesByDefaultClientConfig extends DefaultClientConfigImpl {
+
     @Override
     public int getDefaultMaxAutoRetriesNextServer() {
       return 0;

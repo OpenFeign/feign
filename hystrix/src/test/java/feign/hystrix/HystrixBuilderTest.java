@@ -137,14 +137,16 @@ public class HystrixBuilderTest {
 
   // When dealing with fallbacks, it is less tedious to keep interfaces small.
   interface GitHub {
+
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<String> contributors(@Param("owner") String owner, @Param("repo") String repo);
   }
 
   interface GitHubHystrix {
+
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     HystrixCommand<List<String>> contributorsHystrixCommand(@Param("owner") String owner,
-                                                            @Param("repo") String repo);
+        @Param("repo") String repo);
   }
 
   @Test
@@ -664,6 +666,7 @@ public class HystrixBuilderTest {
   }
 
   class FallbackTestInterface implements TestInterface {
+
     @Override
     public HystrixCommand<String> command() {
       return new HystrixCommand<String>(HystrixCommandGroupKey.Factory.asKey("Test")) {

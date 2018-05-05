@@ -43,7 +43,7 @@ public class BasicAuthRequestInterceptorTest {
     BasicAuthRequestInterceptor
         interceptor =
         new BasicAuthRequestInterceptor("IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO",
-                                        "101010101010101010101010101010101010101010");
+            "101010101010101010101010101010101010101010");
     interceptor.apply(template);
 
     assertThat(template)

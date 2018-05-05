@@ -25,12 +25,12 @@ import java.net.URI;
 /**
  * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
  * provided by Ribbon. Ex.
- * 
+ *
  * <pre>
  * MyService api = Feign.builder.client(RibbonClient.create()).target(MyService.class,
  *     &quot;http://myAppProd&quot;);
  * </pre>
- * 
+ *
  * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers}
  * configuration is set.
  */
@@ -101,7 +101,7 @@ public class RibbonClient implements Client {
   private LBClient lbClient(String clientName) {
     return lbClientFactory.create(clientName);
   }
-  
+
   static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
 
     public FeignOptionsClientConfig(Request.Options options) {
@@ -121,7 +121,7 @@ public class RibbonClient implements Client {
     }
 
   }
-  
+
   public static final class Builder {
 
     Builder() {

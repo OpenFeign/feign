@@ -29,8 +29,8 @@ interface FeignTestInterface {
 
   @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
   Response mixedParams(@Param("domainId") int id,
-                       @Param("name") String nameFilter,
-                       @Param("type") String typeFilter);
+      @Param("name") String nameFilter,
+      @Param("type") String typeFilter);
 
   @RequestLine("PATCH /")
   Response customMethod();
@@ -42,7 +42,7 @@ interface FeignTestInterface {
   @RequestLine("POST /")
   @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
   void form(@Param("customer_name") String customer, @Param("user_name") String user,
-            @Param("password") String password);
+      @Param("password") String password);
 
   @RequestLine("POST /")
   @Headers({"Happy: sad", "Auth-Token: {authToken}"})

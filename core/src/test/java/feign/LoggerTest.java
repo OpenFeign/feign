@@ -44,9 +44,11 @@ public class LoggerTest {
   public final MockWebServer server = new MockWebServer();
   public final RecordingLogger logger = new RecordingLogger();
 
-  /** Ensure expected exception handling is done before logger rule. */
+  /**
+   * Ensure expected exception handling is done before logger rule.
+   */
   @Rule
-  public final RuleChain chain= RuleChain.outerRule( server ).around( logger ).around( thrown );
+  public final RuleChain chain = RuleChain.outerRule(server).around(logger).around(thrown);
 
 
   interface SendsStuff {
@@ -194,8 +196,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -250,8 +254,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://robofu.abc");
@@ -265,11 +271,11 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class FormatCharacterTest
-          extends LoggerTest {
+      extends LoggerTest {
 
     private final Level logLevel;
 
-    public FormatCharacterTest( Level logLevel, List<String> expectedMessages) {
+    public FormatCharacterTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
@@ -310,8 +316,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://sna%fu.abc");
@@ -367,7 +375,7 @@ public class LoggerTest {
 
             @Override
             public Retryer clone() {
-                return this;
+              return this;
             }
           })
           .target(SendsStuff.class, "http://robofu.abc");
@@ -398,8 +406,8 @@ public class LoggerTest {
         public void evaluate() throws Throwable {
           base.evaluate();
           SoftAssertions softly = new SoftAssertions();
-          softly.assertThat( messages.size() ).isEqualTo( expectedMessages.size() );
-          for (int i = 0; i < messages.size() && i<expectedMessages.size(); i++) {
+          softly.assertThat(messages.size()).isEqualTo(expectedMessages.size());
+          for (int i = 0; i < messages.size() && i < expectedMessages.size(); i++) {
             softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
           }
           softly.assertAll();

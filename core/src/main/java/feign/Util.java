@@ -93,8 +93,8 @@ public class Util {
    * Copy of {@code com.google.common.base.Preconditions#checkArgument}.
    */
   public static void checkArgument(boolean expression,
-                                   String errorMessageTemplate,
-                                   Object... errorMessageArgs) {
+      String errorMessageTemplate,
+      Object... errorMessageArgs) {
     if (!expression) {
       throw new IllegalArgumentException(
           format(errorMessageTemplate, errorMessageArgs));
@@ -105,8 +105,8 @@ public class Util {
    * Copy of {@code com.google.common.base.Preconditions#checkNotNull}.
    */
   public static <T> T checkNotNull(T reference,
-                                   String errorMessageTemplate,
-                                   Object... errorMessageArgs) {
+      String errorMessageTemplate,
+      Object... errorMessageArgs) {
     if (reference == null) {
       // If either of these parameters is null, the right thing happens anyway
       throw new NullPointerException(
@@ -119,8 +119,8 @@ public class Util {
    * Copy of {@code com.google.common.base.Preconditions#checkState}.
    */
   public static void checkState(boolean expression,
-                                String errorMessageTemplate,
-                                Object... errorMessageArgs) {
+      String errorMessageTemplate,
+      Object... errorMessageArgs) {
     if (!expression) {
       throw new IllegalStateException(
           format(errorMessageTemplate, errorMessageArgs));
@@ -136,8 +136,9 @@ public class Util {
     // method.isDefault() is not sufficient for our usage as it does not check
     // for synthetic methods.  As a result, it picks up overridden methods as well as actual default methods.
     final int SYNTHETIC = 0x00001000;
-    return ((method.getModifiers() & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC | SYNTHETIC)) ==
-            Modifier.PUBLIC) && method.getDeclaringClass().isInterface();
+    return ((method.getModifiers() & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC
+        | SYNTHETIC)) ==
+        Modifier.PUBLIC) && method.getDeclaringClass().isInterface();
   }
 
   /**
@@ -187,18 +188,18 @@ public class Util {
    * retrofit.RestMethodInfo}.
    *
    * @param genericContext Ex. {@link java.lang.reflect.Field#getGenericType()}
-   * @param supertype      Ex. {@code Decoder.class}
+   * @param supertype Ex. {@code Decoder.class}
    * @return in the example above, the type parameter of {@code Decoder}.
    * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type
-   *                               using {@code context}.
+   * using {@code context}.
    */
   public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
       throws IllegalStateException {
     Type resolvedSuperType =
         Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
     checkState(resolvedSuperType instanceof ParameterizedType,
-               "could not resolve %s into a parameterized type %s",
-               genericContext, supertype);
+        "could not resolve %s into a parameterized type %s",
+        genericContext, supertype);
     Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
     for (int i = 0; i < types.length; i++) {
       Type type = types[i];
@@ -213,15 +214,8 @@ public class Util {
    * This returns well known empty values for well-known java types. This returns null for types not
    * in the following list.
    *
-   * <ul>
-   *   <li>{@code [Bb]oolean}</li>
-   *   <li>{@code byte[]}</li>
-   *   <li>{@code Collection}</li>
-   *   <li>{@code Iterator}</li>
-   *   <li>{@code List}</li>
-   *   <li>{@code Map}</li>
-   *   <li>{@code Set}</li>
-   * </ul>
+   * <ul> <li>{@code [Bb]oolean}</li> <li>{@code byte[]}</li> <li>{@code Collection}</li> <li>{@code
+   * Iterator}</li> <li>{@code List}</li> <li>{@code Map}</li> <li>{@code Set}</li> </ul>
    *
    * <p/> When {@link Feign.Builder#decode404() decoding HTTP 404 status}, you'll need to teach
    * decoders a default empty value for a type. This method cheaply supports typical types by only
@@ -232,6 +226,7 @@ public class Util {
   }
 
   private static final Map<Class<?>, Object> EMPTIES;
+
   static {
     Map<Class<?>, Object> empties = new LinkedHashMap<Class<?>, Object>();
     empties.put(boolean.class, false);

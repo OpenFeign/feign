@@ -34,9 +34,11 @@ public class AWSSignatureVersion4 {
       EMPTY_STRING_HASH =
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   private static final SimpleDateFormat iso8601 = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+
   static {
     iso8601.setTimeZone(TimeZone.getTimeZone("GMT"));
   }
+
   String region = "us-east-1";
   String service = "iam";
   String accessKey;
@@ -81,7 +83,7 @@ public class AWSSignatureVersion4 {
     // HexEncode(Hash(Payload))
     String bodyText =
         input.charset() != null && input.body() != null ? new String(input.body(), input.charset())
-                                                        : null;
+            : null;
     if (bodyText != null) {
       canonicalRequest.append(hex(sha256(bodyText)));
     } else {

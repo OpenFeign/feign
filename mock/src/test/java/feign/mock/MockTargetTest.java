@@ -21,16 +21,16 @@ import org.junit.Test;
 
 public class MockTargetTest {
 
-	private MockTarget<MockTargetTest> target;
+  private MockTarget<MockTargetTest> target;
 
-	@Before
-	public void setup() {
-		target = new MockTarget<>(MockTargetTest.class);
-	}
+  @Before
+  public void setup() {
+    target = new MockTarget<>(MockTargetTest.class);
+  }
 
-	@Test
-	public void test() {
-		assertThat(target.name(), equalTo("MockTargetTest"));
-	}
+  @Test
+  public void test() {
+    assertThat(target.name(), equalTo("MockTargetTest"));
+  }
 
 }

@@ -92,11 +92,12 @@ public final class RequestTemplate implements Serializable {
   }
 
   private static boolean isHttpUrl(CharSequence value) {
-    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0,  3));
+    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0, 3));
   }
 
   private static CharSequence removeTrailingSlash(CharSequence charSequence) {
-    if (charSequence != null && charSequence.length() > 0 && charSequence.charAt(charSequence.length() - 1) == '/') {
+    if (charSequence != null && charSequence.length() > 0
+        && charSequence.charAt(charSequence.length() - 1) == '/') {
       return charSequence.subSequence(0, charSequence.length() - 1);
     } else {
       return charSequence;
@@ -108,8 +109,8 @@ public final class RequestTemplate implements Serializable {
    * unresolved parameters will remain. <br> Note that if you'd like curly braces literally in the
    * {@code template}, urlencode them first.
    *
-   * @param template  URI template that can be in level 1 <a href="http://tools.ietf.org/html/rfc6570">RFC6570</a>
-   *                  form.
+   * @param template URI template that can be in level 1 <a href="http://tools.ietf.org/html/rfc6570">RFC6570</a>
+   * form.
    * @param variables to the URI template
    * @return expanded template, leaving any unresolved parameters literal
    */
@@ -200,7 +201,9 @@ public final class RequestTemplate implements Serializable {
     map.put(key, values);
   }
 
-  /** {@link #resolve(Map, Map)}, which assumes no parameter is encoded */
+  /**
+   * {@link #resolve(Map, Map)}, which assumes no parameter is encoded
+   */
   public RequestTemplate resolve(Map<String, ?> unencoded) {
     return resolve(unencoded, Collections.<String, Boolean>emptyMap());
   }
@@ -243,7 +246,8 @@ public final class RequestTemplate implements Serializable {
     return this;
   }
 
-  private String encodeValueIfNotEncoded(String key, Object objectValue, Map<String, Boolean> alreadyEncoded) {
+  private String encodeValueIfNotEncoded(String key, Object objectValue,
+      Map<String, Boolean> alreadyEncoded) {
     String value = String.valueOf(objectValue);
     final Boolean isEncoded = alreadyEncoded.get(key);
     if (isEncoded == null || !isEncoded) {
@@ -269,7 +273,7 @@ public final class RequestTemplate implements Serializable {
     checkArgument(method.matches("^[A-Z]+$"), "Invalid HTTP Method: %s", method);
     return this;
   }
-  
+
   /* @see Request#method() */
   public String method() {
     return method;
@@ -279,7 +283,7 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     return this;
   }
-  
+
   public boolean decodeSlash() {
     return decodeSlash;
   }
@@ -302,9 +306,9 @@ public final class RequestTemplate implements Serializable {
 
   /* @see #url() */
   public RequestTemplate insert(int pos, CharSequence value) {
-    if(isHttpUrl(value)) {
+    if (isHttpUrl(value)) {
       value = removeTrailingSlash(value);
-      if(url.length() > 0 && url.charAt(0) != '/') {
+      if (url.length() > 0 && url.charAt(0) != '/') {
         url.insert(0, '/');
       }
     }
@@ -317,12 +321,11 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Replaces queries with the specified {@code name} with the {@code values} supplied.
-   * <br> Values can be passed in decoded or in url-encoded form depending on the value of the
-   * {@code encoded} parameter.
-   * <br> When the {@code value} is {@code null}, all queries with the {@code configKey} are
-   * removed. <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> Like {@code WebTarget.query},
-   * except the values can be templatized. <br> ex. <br>
+   * Replaces queries with the specified {@code name} with the {@code values} supplied. <br> Values
+   * can be passed in decoded or in url-encoded form depending on the value of the {@code encoded}
+   * parameter. <br> When the {@code value} is {@code null}, all queries with the {@code configKey}
+   * are removed. <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> Like {@code
+   * WebTarget.query}, except the values can be templatized. <br> ex. <br>
    * <pre>
    * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
    * </pre>
@@ -334,10 +337,10 @@ public final class RequestTemplate implements Serializable {
    * template.query(false, &quot;param[]&quot;, &quot;value&quot;);
    * </pre>
    *
-   * @param encoded   whether name and values are already url-encoded
-   * @param name      the name of the query
-   * @param values    can be a single null to imply removing all values. Else no values are expected
-   *                  to be null.
+   * @param encoded whether name and values are already url-encoded
+   * @param name the name of the query
+   * @param values can be a single null to imply removing all values. Else no values are expected to
+   * be null.
    * @see #queries()
    */
   public RequestTemplate query(boolean encoded, String name, String... values) {
@@ -351,6 +354,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Shortcut for {@code query(false, String, String...)}
+   *
    * @see #query(boolean, String, String...)
    */
   public RequestTemplate query(String name, String... values) {
@@ -359,6 +363,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Shortcut for {@code query(false, String, Iterable<String>)}
+   *
    * @see #query(boolean, String, String...)
    */
   public RequestTemplate query(String name, Iterable<String> values) {
@@ -446,9 +451,9 @@ public final class RequestTemplate implements Serializable {
    * template.query(&quot;X-Application-Version&quot;, &quot;{version}&quot;);
    * </pre>
    *
-   * @param name   the name of the header
+   * @param name the name of the header
    * @param values can be a single null to imply removing all values. Else no values are expected to
-   *               be null.
+   * be null.
    * @see #headers()
    */
   public RequestTemplate header(String name, String... values) {
@@ -614,7 +619,9 @@ public final class RequestTemplate implements Serializable {
     return request().toString();
   }
 
-  /** {@link #replaceQueryValues(Map, Map)}, which assumes no parameter is encoded */
+  /**
+   * {@link #replaceQueryValues(Map, Map)}, which assumes no parameter is encoded
+   */
   public void replaceQueryValues(Map<String, ?> unencoded) {
     replaceQueryValues(unencoded, Collections.<String, Boolean>emptyMap());
   }
@@ -644,7 +651,8 @@ public final class RequestTemplate implements Serializable {
               values.add(encodedValue);
             }
           } else {
-            String encodedValue = encodeValueIfNotEncoded(entry.getKey(), variableValue, alreadyEncoded);
+            String encodedValue = encodeValueIfNotEncoded(entry.getKey(), variableValue,
+                alreadyEncoded);
             values.add(encodedValue);
           }
         } else {

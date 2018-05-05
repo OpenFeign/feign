@@ -42,7 +42,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Map<Method, Setter> setterMethodMap;
 
   HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
-                           SetterFactory setterFactory, FallbackFactory<?> fallbackFactory) {
+      SetterFactory setterFactory, FallbackFactory<?> fallbackFactory) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallbackFactory = fallbackFactory;
@@ -72,7 +72,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
    * Process all methods in the target so that appropriate setters are created.
    */
   static Map<Method, Setter> toSetters(SetterFactory setterFactory, Target<?> target,
-                                       Set<Method> methods) {
+      Set<Method> methods) {
     Map<Method, Setter> result = new LinkedHashMap<Method, Setter>();
     for (Method method : methods) {
       method.setAccessible(true);
@@ -100,7 +100,8 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return toString();
     }
 
-    HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setterMethodMap.get(method)) {
+    HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(
+        setterMethodMap.get(method)) {
       @Override
       protected Object run() throws Exception {
         try {

@@ -95,8 +95,8 @@ public interface Target<T> {
       if (obj instanceof HardCodedTarget) {
         HardCodedTarget<?> other = (HardCodedTarget) obj;
         return type.equals(other.type)
-               && name.equals(other.name)
-               && url.equals(other.url);
+            && name.equals(other.name)
+            && url.equals(other.url);
       }
       return false;
     }
@@ -116,7 +116,7 @@ public interface Target<T> {
         return "HardCodedTarget(type=" + type.getSimpleName() + ", url=" + url + ")";
       }
       return "HardCodedTarget(type=" + type.getSimpleName() + ", name=" + name + ", url=" + url
-             + ")";
+          + ")";
     }
   }
 
@@ -167,7 +167,7 @@ public interface Target<T> {
       if (obj instanceof EmptyTarget) {
         EmptyTarget<?> other = (EmptyTarget) obj;
         return type.equals(other.type)
-               && name.equals(other.name);
+            && name.equals(other.name);
       }
       return false;
     }

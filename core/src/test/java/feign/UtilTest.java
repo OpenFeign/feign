@@ -44,14 +44,18 @@ public class UtilTest {
     assertEquals(Collections.emptySet(), Util.emptyValueOf(Set.class));
   }
 
-  /** In other words, {@code List<String>} is as empty as {@code List<?>}. */
+  /**
+   * In other words, {@code List<String>} is as empty as {@code List<?>}.
+   */
   @Test
   public void emptyValueOf_considersRawType() throws Exception {
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     assertThat((List<?>) Util.emptyValueOf(listStringType)).isEmpty();
   }
 
-  /** Ex. your {@code Foo} object would be null, but so would things like Number. */
+  /**
+   * Ex. your {@code Foo} object would be null, but so would things like Number.
+   */
   @Test
   public void emptyValueOf_nullForUndefined() throws Exception {
     assertThat(Util.emptyValueOf(Number.class)).isNull();
@@ -111,6 +115,7 @@ public class UtilTest {
   }
 
   interface LastTypeParameter {
+
     final List<String> LIST_STRING = null;
     final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
     final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;

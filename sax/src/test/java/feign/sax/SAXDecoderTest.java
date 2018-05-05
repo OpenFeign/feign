@@ -34,26 +34,26 @@ import static org.junit.Assert.assertNull;
 public class SAXDecoderTest {
 
   static String statusFailed = ""//
-                               + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+      + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
 //
-                               + "  <soap:Body>\n"//
-                               + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
+      + "  <soap:Body>\n"//
+      + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
 //
-                               + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
+      + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
 //
-                               + "    </ns1:getNeustarNetworkStatusResponse>\n"//
-                               + "  </soap:Body>\n"//
-                               + "</soap:Envelope>";
+      + "    </ns1:getNeustarNetworkStatusResponse>\n"//
+      + "  </soap:Body>\n"//
+      + "</soap:Envelope>";
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   Decoder decoder = SAXDecoder.builder() //
       .registerContentHandler(NetworkStatus.class,
-                              new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
-                                @Override
-                                public SAXDecoder.ContentHandlerWithResult<NetworkStatus> create() {
-                                  return new NetworkStatusHandler();
-                                }
-                              }) //
+          new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
+            @Override
+            public SAXDecoder.ContentHandlerWithResult<NetworkStatus> create() {
+              return new NetworkStatusHandler();
+            }
+          }) //
       .registerContentHandler(NetworkStatusStringHandler.class) //
       .build();
 
@@ -73,31 +73,33 @@ public class SAXDecoderTest {
 
   private Response statusFailedResponse() {
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(statusFailed, UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(statusFailed, UTF_8)
+        .build();
   }
 
   @Test
   public void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertNull(decoder.decode(response, String.class));
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
   }
 
@@ -106,7 +108,7 @@ public class SAXDecoderTest {
   }
 
   static class NetworkStatusStringHandler extends DefaultHandler implements
-                                                                 SAXDecoder.ContentHandlerWithResult<String> {
+      SAXDecoder.ContentHandlerWithResult<String> {
 
     private StringBuilder currentText = new StringBuilder();
 
@@ -132,7 +134,7 @@ public class SAXDecoderTest {
   }
 
   static class NetworkStatusHandler extends DefaultHandler implements
-                                                           SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
+      SAXDecoder.ContentHandlerWithResult<NetworkStatus> {
 
     private StringBuilder currentText = new StringBuilder();
 

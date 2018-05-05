@@ -20,13 +20,11 @@ import feign.jaxrs.JAXRSContractTest;
  * Tests interfaces defined per {@link JAXRS2Contract} are interpreted into expected {@link feign
  * .RequestTemplate template} instances.
  */
-public class JAXRS2ContractTest extends JAXRSContractTest
-{
+public class JAXRS2ContractTest extends JAXRSContractTest {
 
-    @Override
-    protected JAXRSContract createContract()
-    {
-        return new JAXRS2Contract();
-    }
+  @Override
+  protected JAXRSContract createContract() {
+    return new JAXRS2Contract();
+  }
 
 }

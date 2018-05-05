@@ -41,7 +41,7 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertEquals("http://apihost http://apihost/schema.xsd",
-                 marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
+        marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
   }
 
   @Test
@@ -52,7 +52,7 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertEquals("http://apihost/schema.xsd",
-                 marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
+        marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
   }
 
   @Test

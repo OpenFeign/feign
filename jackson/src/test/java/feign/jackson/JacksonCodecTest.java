@@ -50,15 +50,15 @@ import static org.junit.Assert.assertTrue;
 public class JacksonCodecTest {
 
   private String zonesJson = ""//
-                             + "[\n"//
-                             + "  {\n"//
-                             + "    \"name\": \"denominator.io.\"\n"//
-                             + "  },\n"//
-                             + "  {\n"//
-                             + "    \"name\": \"denominator.io.\",\n"//
-                             + "    \"id\": \"ABCD\"\n"//
-                             + "  }\n"//
-                             + "]\n";
+      + "[\n"//
+      + "  {\n"//
+      + "    \"name\": \"denominator.io.\"\n"//
+      + "  },\n"//
+      + "  {\n"//
+      + "    \"name\": \"denominator.io.\",\n"//
+      + "    \"id\": \"ABCD\"\n"//
+      + "  }\n"//
+      + "]\n";
 
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
@@ -69,9 +69,9 @@ public class JacksonCodecTest {
     new JacksonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template).hasBody(""//
-                                 + "{\n" //
-                                 + "  \"foo\" : 1\n" //
-                                 + "}");
+        + "{\n" //
+        + "  \"foo\" : 1\n" //
+        + "}");
   }
 
   @Test
@@ -85,10 +85,10 @@ public class JacksonCodecTest {
     }.getType(), template);
 
     assertThat(template).hasBody(""//
-                                 + "{\n" //
-                                 + "  \"foo\" : 1,\n" //
-                                 + "  \"bar\" : [ 2, 3 ]\n" //
-                                 + "}");
+        + "{\n" //
+        + "  \"foo\" : 1,\n" //
+        + "  \"bar\" : [ 2, 3 ]\n" //
+        + "}");
   }
 
   @Test
@@ -98,11 +98,11 @@ public class JacksonCodecTest {
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response = Response.builder()
-                .status(200)
-                .reason("OK")
-                .headers(Collections.<String, Collection<String>>emptyMap())
-                .body(zonesJson, UTF_8)
-                .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(zonesJson, UTF_8)
+        .build();
     assertEquals(zones, new JacksonDecoder().decode(response, new TypeReference<List<Zone>>() {
     }.getType()));
   }
@@ -110,21 +110,21 @@ public class JacksonCodecTest {
   @Test
   public void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertNull(new JacksonDecoder().decode(response, String.class));
   }
 
   @Test
   public void emptyBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(new byte[0])
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(new byte[0])
+        .build();
     assertNull(new JacksonDecoder().decode(response, String.class));
   }
 
@@ -139,11 +139,11 @@ public class JacksonCodecTest {
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(zonesJson, UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(zonesJson, UTF_8)
+        .build();
     assertEquals(zones, decoder.decode(response, new TypeReference<List<Zone>>() {
     }.getType()));
   }
@@ -162,12 +162,12 @@ public class JacksonCodecTest {
     }.getType(), template);
 
     assertThat(template).hasBody("" //
-                                 + "[ {\n"
-                                 + "  \"name\" : \"DENOMINATOR.IO.\"\n"
-                                 + "}, {\n"
-                                 + "  \"name\" : \"DENOMINATOR.IO.\",\n"
-                                 + "  \"id\" : \"ABCD\"\n"
-                                 + "} ]");
+        + "[ {\n"
+        + "  \"name\" : \"DENOMINATOR.IO.\"\n"
+        + "}, {\n"
+        + "  \"name\" : \"DENOMINATOR.IO.\",\n"
+        + "  \"id\" : \"ABCD\"\n"
+        + "} ]");
   }
 
   @Test
@@ -177,12 +177,14 @@ public class JacksonCodecTest {
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(zonesJson, UTF_8)
-            .build();
-    Object decoded = JacksonIteratorDecoder.create().decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(zonesJson, UTF_8)
+        .build();
+    Object decoded = JacksonIteratorDecoder.create()
+        .decode(response, new TypeReference<Iterator<Zone>>() {
+        }.getType());
     assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
     assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
     assertEquals(zones, asList((Iterator<?>) decoded));
@@ -190,29 +192,30 @@ public class JacksonCodecTest {
 
   private <T> List<T> asList(Iterator<T> iter) {
     final List<T> copy = new ArrayList<T>();
-    while (iter.hasNext())
+    while (iter.hasNext()) {
       copy.add(iter.next());
+    }
     return copy;
   }
 
   @Test
   public void nullBodyDecodesToNullIterator() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
   }
 
   @Test
   public void emptyBodyDecodesToNullIterator() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(new byte[0])
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(new byte[0])
+        .build();
     assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
   }
 
@@ -275,18 +278,22 @@ public class JacksonCodecTest {
     }
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()

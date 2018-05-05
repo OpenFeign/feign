@@ -29,7 +29,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
+/**
+ * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
+ */
 public class OkHttpClientTest extends AbstractClientTest {
 
   @Override
@@ -41,32 +43,35 @@ public class OkHttpClientTest extends AbstractClientTest {
   @Test
   public void testContentTypeWithoutCharset() throws Exception {
     server.enqueue(new MockResponse()
-            .setBody("AAAAAAAA"));
+        .setBody("AAAAAAAA"));
     OkHttpClientTestInterface api = newBuilder()
-            .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
+        .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.getWithContentType();
     // Response length should not be null
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-            .hasHeaders("Accept: text/plain", "Content-Type: text/plain") // Note: OkHttp adds content length.
-            .hasMethod("GET");
+        .hasHeaders("Accept: text/plain",
+            "Content-Type: text/plain") // Note: OkHttp adds content length.
+        .hasMethod("GET");
   }
 
 
   @Test
   public void testNoFollowRedirect() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+    server.enqueue(
+        new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
 
     OkHttpClientTestInterface api = newBuilder()
-            .options(new Request.Options(1000, 1000, false))
-            .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
+        .options(new Request.Options(1000, 1000, false))
+        .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.get();
     // Response length should not be null
     assertEquals(302, response.status());
-    assertEquals(server.url("redirect").toString(), response.headers().get("Location").iterator().next());
+    assertEquals(server.url("redirect").toString(),
+        response.headers().get("Location").iterator().next());
 
   }
 
@@ -75,12 +80,13 @@ public class OkHttpClientTest extends AbstractClientTest {
   public void testFollowRedirect() throws Exception {
     String expectedBody = "Hello";
 
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+    server.enqueue(
+        new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
     server.enqueue(new MockResponse().setBody(expectedBody));
 
     OkHttpClientTestInterface api = newBuilder()
-            .options(new Request.Options(1000, 1000, true))
-            .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
+        .options(new Request.Options(1000, 1000, true))
+        .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.get();
     // Response length should not be null

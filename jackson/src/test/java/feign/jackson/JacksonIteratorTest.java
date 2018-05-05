@@ -45,7 +45,8 @@ public class JacksonIteratorTest {
 
   @Test
   public void shouldDecodeObjects() throws IOException {
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]")).containsExactly(new User("bob"), new User("joe"));
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]"))
+        .containsExactly(new User("bob"), new User("joe"));
   }
 
   @Test
@@ -53,7 +54,8 @@ public class JacksonIteratorTest {
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(IOException.class));
 
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).containsOnly(new User("bob"));
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
+        .containsOnly(new User("bob"));
   }
 
   @Test

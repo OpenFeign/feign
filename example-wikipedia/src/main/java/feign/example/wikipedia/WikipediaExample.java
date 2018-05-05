@@ -77,7 +77,7 @@ public class WikipediaExample {
    * this will lazily continue searches, making new http calls as necessary.
    *
    * @param wikipedia used to search
-   * @param query     see {@link Wikipedia#search(String)}.
+   * @param query see {@link Wikipedia#search(String)}.
    */
   static Iterator<Page> lazySearch(final Wikipedia wikipedia, final String query) {
     final Response<Page> first = wikipedia.search(query);

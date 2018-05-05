@@ -118,6 +118,7 @@ public class DecoderIteratorsBenchmark {
   }
 
   static class Car {
+
     public String name;
     public String manufacturer;
   }

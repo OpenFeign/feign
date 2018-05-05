@@ -37,9 +37,9 @@ public class JacksonEncoder implements Encoder {
 
   public JacksonEncoder(Iterable<Module> modules) {
     this(new ObjectMapper()
-             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-             .configure(SerializationFeature.INDENT_OUTPUT, true)
-             .registerModules(modules));
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .configure(SerializationFeature.INDENT_OUTPUT, true)
+        .registerModules(modules));
   }
 
   public JacksonEncoder(ObjectMapper mapper) {

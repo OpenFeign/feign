@@ -31,7 +31,7 @@ public final class Request {
    * effectively immutable, via safe copies, not mutating or otherwise.
    */
   public static Request create(String method, String url, Map<String, Collection<String>> headers,
-                               byte[] body, Charset charset) {
+      byte[] body, Charset charset) {
     return new Request(method, url, headers, body, charset);
   }
 
@@ -42,7 +42,7 @@ public final class Request {
   private final Charset charset;
 
   Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
-          Charset charset) {
+      Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
@@ -112,7 +112,7 @@ public final class Request {
       this.followRedirects = followRedirects;
     }
 
-    public Options(int connectTimeoutMillis, int readTimeoutMillis){
+    public Options(int connectTimeoutMillis, int readTimeoutMillis) {
       this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 

@@ -44,7 +44,7 @@ public class GitHubExample {
     @GET
     @Path("/repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@PathParam("owner") String owner,
-                                   @PathParam("repo") String repo);
+        @PathParam("repo") String repo);
   }
 
   static class Contributor {

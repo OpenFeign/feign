@@ -29,6 +29,7 @@ import okhttp3.mockwebserver.MockWebServer;
 public class SetterFactoryTest {
 
   interface TestInterface {
+
     @RequestLine("POST /")
     String invoke();
   }
@@ -45,13 +46,13 @@ public class SetterFactoryTest {
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
-SetterFactory commandKeyIsRequestLine = (target, method) -> {
-  String groupKey = target.name();
-  String commandKey = method.getAnnotation(RequestLine.class).value();
-  return HystrixCommand.Setter
-      .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-      .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
-};
+    SetterFactory commandKeyIsRequestLine = (target, method) -> {
+      String groupKey = target.name();
+      String commandKey = method.getAnnotation(RequestLine.class).value();
+      return HystrixCommand.Setter
+          .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+          .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
+    };
 
     TestInterface api = HystrixFeign.builder()
         .setterFactory(commandKeyIsRequestLine)
