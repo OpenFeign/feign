@@ -33,16 +33,15 @@ import java.util.Iterator;
 import static feign.Util.ensureClosed;
 
 /**
- * Jackson decoder which return a closeable iterator.
- * Returned iterator auto-close the {@code Response} when it reached json array end or failed to parse stream.
- * If this iterator is not fetched till the end, it has to be casted to {@code Closeable} and explicity {@code Closeable#close} by the consumer.
- * <p>
- * <p>
- * <p>Example: <br>
+ * Jackson decoder which return a closeable iterator. Returned iterator auto-close the {@code
+ * Response} when it reached json array end or failed to parse stream. If this iterator is not
+ * fetched till the end, it has to be casted to {@code Closeable} and explicity {@code
+ * Closeable#close} by the consumer. <p> <p> <p>Example: <br>
  * <pre><code>
  * Feign.builder()
  *   .decoder(JacksonIteratorDecoder.create())
- *   .doNotCloseAfterDecode() // Required to fetch the iterator after the response is processed, need to be close
+ *   .doNotCloseAfterDecode() // Required to fetch the iterator after the response is processed,
+ * need to be close
  *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
@@ -59,8 +58,12 @@ public final class JacksonIteratorDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
-    if (response.body() == null) return null;
+    if (response.status() == 404) {
+      return Util.emptyValueOf(type);
+    }
+    if (response.body() == null) {
+      return null;
+    }
     Reader reader = response.body().asReader();
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
@@ -72,7 +75,8 @@ public final class JacksonIteratorDecoder implements Decoder {
         return null; // Eagerly returning null avoids "No content to map due to end-of-input"
       }
       reader.reset();
-      return new JacksonIterator<Object>(actualIteratorTypeArgument(type), mapper, response, reader);
+      return new JacksonIterator<Object>(actualIteratorTypeArgument(type), mapper, response,
+          reader);
     } catch (RuntimeJsonMappingException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw IOException.class.cast(e.getCause());
@@ -87,7 +91,8 @@ public final class JacksonIteratorDecoder implements Decoder {
     }
     ParameterizedType parameterizedType = (ParameterizedType) type;
     if (!Iterator.class.equals(parameterizedType.getRawType())) {
-      throw new IllegalArgumentException("Not an iterator type " + parameterizedType.getRawType().toString());
+      throw new IllegalArgumentException(
+          "Not an iterator type " + parameterizedType.getRawType().toString());
     }
     return ((ParameterizedType) type).getActualTypeArguments()[0];
   }
@@ -107,6 +112,7 @@ public final class JacksonIteratorDecoder implements Decoder {
   }
 
   static final class JacksonIterator<T> implements Iterator<T>, Closeable {
+
     private final Response response;
     private final JsonParser parser;
     private final ObjectReader objectReader;

@@ -69,8 +69,8 @@ final class Types {
     } else {
       String className = type == null ? "null" : type.getClass().getName();
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-                                         + "GenericArrayType, but <" + type + "> is of type "
-                                         + className);
+          + "GenericArrayType, but <" + type + "> is of type "
+          + className);
     }
   }
 
@@ -91,8 +91,8 @@ final class Types {
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
       return equal(pa.getOwnerType(), pb.getOwnerType())
-             && pa.getRawType().equals(pb.getRawType())
-             && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+          && pa.getRawType().equals(pb.getRawType())
+          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
     } else if (a instanceof GenericArrayType) {
       if (!(b instanceof GenericArrayType)) {
@@ -109,7 +109,7 @@ final class Types {
       WildcardType wa = (WildcardType) a;
       WildcardType wb = (WildcardType) b;
       return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-             && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+          && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
     } else if (a instanceof TypeVariable) {
       if (!(b instanceof TypeVariable)) {
@@ -118,7 +118,7 @@ final class Types {
       TypeVariable<?> va = (TypeVariable<?>) a;
       TypeVariable<?> vb = (TypeVariable<?>) b;
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
-             && va.getName().equals(vb.getName());
+          && va.getName().equals(vb.getName());
 
     } else {
       return false; // This isn't a type we support!
@@ -197,7 +197,7 @@ final class Types {
       throw new IllegalArgumentException();
     }
     return resolve(context, contextRawType,
-                   getGenericSupertype(context, contextRawType, supertype));
+        getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
@@ -243,8 +243,8 @@ final class Types {
         }
 
         return changed
-               ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
-               : original;
+            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
+            : original;
 
       } else if (toResolve instanceof WildcardType) {
         WildcardType original = (WildcardType) toResolve;
@@ -380,7 +380,7 @@ final class Types {
     @Override
     public boolean equals(Object o) {
       return o instanceof GenericArrayType
-             && Types.equals(this, (GenericArrayType) o);
+          && Types.equals(this, (GenericArrayType) o);
     }
 
     @Override

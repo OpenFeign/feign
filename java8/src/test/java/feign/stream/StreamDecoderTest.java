@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class StreamDecoderTest {
 
   interface StreamInterface {
+
     @RequestLine("GET /")
     Stream<String> get();
 
@@ -44,6 +45,7 @@ public class StreamDecoderTest {
     Stream<Car> getCars();
 
     class Car {
+
       public String name;
       public String manufacturer;
     }
@@ -67,7 +69,8 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create((response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
+        .decoder(StreamDecoder.create(
+            (response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
@@ -115,18 +118,22 @@ public class StreamDecoderTest {
   }
 
   static class TestCloseableIterator implements Iterator<String>, Closeable {
+
     boolean called;
     boolean closed;
 
-    @Override public void close() throws IOException {
+    @Override
+    public void close() throws IOException {
       this.closed = true;
     }
 
-    @Override public boolean hasNext() {
+    @Override
+    public boolean hasNext() {
       return !called;
     }
 
-    @Override public String next() {
+    @Override
+    public String next() {
       called = true;
       return "feign";
     }

@@ -216,18 +216,15 @@ public abstract class Feign {
     }
 
     /**
-     * This flag indicates that the response should not be automatically closed
-     * upon completion of decoding the message. This should be set if you plan on
-     * processing the response into a lazy-evaluated construct, such as a
-     * {@link java.util.Iterator}.
+     * This flag indicates that the response should not be automatically closed upon completion of
+     * decoding the message. This should be set if you plan on processing the response into a
+     * lazy-evaluated construct, such as a {@link java.util.Iterator}.
      *
-     * </p>Feign standard decoders do not have built in support for this flag. If
-     * you are using this flag, you MUST also use a custom Decoder, and be sure to
-     * close all resources appropriately somewhere in the Decoder (you can use
-     * {@link Util#ensureClosed} for convenience).
+     * </p>Feign standard decoders do not have built in support for this flag. If you are using this
+     * flag, you MUST also use a custom Decoder, and be sure to close all resources appropriately
+     * somewhere in the Decoder (you can use {@link Util#ensureClosed} for convenience).
      *
      * @since 9.6
-     *
      */
     public Builder doNotCloseAfterDecode() {
       this.closeAfterDecode = false;
@@ -245,10 +242,10 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel, decode404, closeAfterDecode);
+              logLevel, decode404, closeAfterDecode);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-                                  errorDecoder, synchronousMethodHandlerFactory);
+              errorDecoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }

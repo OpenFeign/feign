@@ -62,11 +62,15 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
-    if (response.body() == null) return null;
+    if (response.status() == 404) {
+      return Util.emptyValueOf(type);
+    }
+    if (response.body() == null) {
+      return null;
+    }
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(handlerFactory != null, "type %s not in configured handlers %s", type,
-               handlerFactories.keySet());
+        handlerFactories.keySet());
     ContentHandlerWithResult<?> handler = handlerFactory.create();
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
@@ -123,9 +127,9 @@ public class SAXDecoder implements Decoder {
       Type
           type =
           resolveLastTypeParameter(checkNotNull(handlerClass, "handlerClass"),
-                                   ContentHandlerWithResult.class);
+              ContentHandlerWithResult.class);
       return registerContentHandler(type,
-                                    new NewInstanceContentHandlerWithResultFactory(handlerClass));
+          new NewInstanceContentHandlerWithResultFactory(handlerClass));
     }
 
     /**

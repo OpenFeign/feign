@@ -174,11 +174,11 @@ public interface Client {
         stream = connection.getInputStream();
       }
       return Response.builder()
-              .status(status)
-              .reason(reason)
-              .headers(headers)
-              .body(stream, length)
-              .build();
+          .status(status)
+          .reason(reason)
+          .headers(headers)
+          .body(stream, length)
+          .build();
     }
   }
 }

@@ -70,6 +70,7 @@ public class DefaultQueryMapEncoderTest {
   }
 
   static class VisibleFieldsObject {
+
     String foo;
     String bar;
     String baz;

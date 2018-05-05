@@ -73,18 +73,18 @@ public class DefaultDecoderTest {
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(headers)
-            .body(inputStream, content.length())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(headers)
+        .body(inputStream, content.length())
+        .build();
   }
 
   private Response nullBodyResponse() {
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
   }
 }

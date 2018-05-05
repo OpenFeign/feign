@@ -32,7 +32,7 @@ public interface QueryMapEncoder {
    * @param object the object to encode
    * @return the map represented by the object
    */
-  Map<String, Object> encode (Object object);
+  Map<String, Object> encode(Object object);
 
   class Default implements QueryMapEncoder {
 
@@ -40,7 +40,7 @@ public interface QueryMapEncoder {
         new HashMap<Class<?>, ObjectParamMetadata>();
 
     @Override
-    public Map<String, Object> encode (Object object) throws EncodeException {
+    public Map<String, Object> encode(Object object) throws EncodeException {
       try {
         ObjectParamMetadata metadata = getMetadata(object.getClass());
         Map<String, Object> fieldNameToValue = new HashMap<String, Object>();
@@ -69,7 +69,7 @@ public interface QueryMapEncoder {
 
       private final List<Field> objectFields;
 
-      private ObjectParamMetadata (List<Field> objectFields) {
+      private ObjectParamMetadata(List<Field> objectFields) {
         this.objectFields = Collections.unmodifiableList(objectFields);
       }
 

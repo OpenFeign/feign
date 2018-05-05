@@ -38,7 +38,7 @@ public class JacksonDecoder implements Decoder {
 
   public JacksonDecoder(Iterable<Module> modules) {
     this(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-             .registerModules(modules));
+        .registerModules(modules));
   }
 
   public JacksonDecoder(ObjectMapper mapper) {
@@ -47,8 +47,12 @@ public class JacksonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
-    if (response.body() == null) return null;
+    if (response.status() == 404) {
+      return Util.emptyValueOf(type);
+    }
+    if (response.body() == null) {
+      return null;
+    }
     Reader reader = response.body().asReader();
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);

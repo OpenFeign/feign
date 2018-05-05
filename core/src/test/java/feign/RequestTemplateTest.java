@@ -161,7 +161,9 @@ public class RequestTemplateTest {
         .hasHeaders(entry("Encoded", asList("{{dont_expand_me}}")));
   }
 
-  /** This ensures we don't mess up vnd types */
+  /**
+   * This ensures we don't mess up vnd types
+   */
   @Test
   public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
     RequestTemplate template = new RequestTemplate().method("GET")
@@ -226,7 +228,7 @@ public class RequestTemplateTest {
     RequestTemplate template = new RequestTemplate().method("POST")
         .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
-            "\"password\": \"{password}\"%7D");
+                "\"password\": \"{password}\"%7D");
 
     template = template.resolve(
         mapOf(
@@ -247,21 +249,21 @@ public class RequestTemplateTest {
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template = new RequestTemplate().method("POST")
-      .bodyTemplate(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+        .bodyTemplate(
+            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
 
     template = template.resolve(
-      mapOf(
-        "customer_name", "netflix",
-        "user_name", "denominator",
-        "password", "abc+123%25d8"
-      )
+        mapOf(
+            "customer_name", "netflix",
+            "user_name", "denominator",
+            "password", "abc+123%25d8"
+        )
     );
 
     assertThat(template)
-      .hasBody(
-        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}"
-      );
+        .hasBody(
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}"
+        );
   }
 
   @Test
@@ -272,9 +274,9 @@ public class RequestTemplateTest {
         .query("name", "{nameVariable}");
 
     template = template.resolve(mapOf(
-                                    "domainId", 1001,
-                                    "nameVariable", "denominator.io"
-                                )
+        "domainId", 1001,
+        "nameVariable", "denominator.io"
+        )
     );
 
     assertThat(template)
@@ -312,8 +314,8 @@ public class RequestTemplateTest {
   @Test
   public void encodeSlashTest() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")
-	    .append("/api/{vhost}")
-	    .decodeSlash(false);
+        .append("/api/{vhost}")
+        .decodeSlash(false);
 
     template.resolve(mapOf("vhost", "/"));
 
@@ -321,7 +323,9 @@ public class RequestTemplateTest {
         .hasUrl("/api/%2F");
   }
 
-  /** Implementations have a bug if they pass junk as the http method. */
+  /**
+   * Implementations have a bug if they pass junk as the http method.
+   */
   @Test
   public void uriStuffedIntoMethod() throws Exception {
     thrown.expect(IllegalArgumentException.class);
@@ -352,8 +356,8 @@ public class RequestTemplateTest {
   @Test
   public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() throws Exception {
     RequestTemplate template = new RequestTemplate()
-            .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
-            .query(true, "params[]", "encoded"); // stored as "param[]"
+        .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
+        .query(true, "params[]", "encoded"); // stored as "param[]"
 
     // We can't ensure consistent behavior, because decode("param[]") == decode("param%5B%5D")
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not+encoded&params[]=encoded");

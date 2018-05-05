@@ -47,11 +47,11 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final boolean closeAfterDecode;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-                                   List<RequestInterceptor> requestInterceptors, Logger logger,
-                                   Logger.Level logLevel, MethodMetadata metadata,
-                                   RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-                                   boolean closeAfterDecode) {
+      List<RequestInterceptor> requestInterceptors, Logger logger,
+      Logger.Level logLevel, MethodMetadata metadata,
+      RequestTemplate.Factory buildTemplateFromArgs, Options options,
+      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+      boolean closeAfterDecode) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -119,7 +119,7 @@ final class SynchronousMethodHandler implements MethodHandler {
           return response;
         }
         if (response.body().length() == null ||
-                response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+            response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
           shouldClose = false;
           return response;
         }
@@ -186,7 +186,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean closeAfterDecode;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode) {
+        Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -197,11 +197,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
 
     public MethodHandler create(Target<?> target, MethodMetadata md,
-                                RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options, Decoder decoder, ErrorDecoder errorDecoder) {
+        RequestTemplate.Factory buildTemplateFromArgs,
+        Options options, Decoder decoder, ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-                                          logLevel, md, buildTemplateFromArgs, options, decoder,
-                                          errorDecoder, decode404, closeAfterDecode);
+          logLevel, md, buildTemplateFromArgs, options, decoder,
+          errorDecoder, decode404, closeAfterDecode);
     }
   }
 }

@@ -84,7 +84,7 @@ public class JAXBCodecTest {
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-16\" "
-                                 + "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+        + "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
   }
 
   @Test
@@ -103,11 +103,11 @@ public class JAXBCodecTest {
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                                 "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost "
-                                 +
-                                 "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
-                                 +
-                                 "<value>Test</value></mockObject>");
+        "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost "
+        +
+        "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+        +
+        "<value>Test</value></mockObject>");
   }
 
   @Test
@@ -125,10 +125,10 @@ public class JAXBCodecTest {
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                                 "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
-                                 +
-                                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                                 "<value>Test</value></mockObject>");
+        "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
+        +
+        "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+        "<value>Test</value></mockObject>");
   }
 
   @Test
@@ -164,14 +164,14 @@ public class JAXBCodecTest {
     mock.value = "Test";
 
     String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject>"
-                     + "<value>Test</value></mockObject>";
+        + "<value>Test</value></mockObject>";
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(mockXml, UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(mockXml, UTF_8)
+        .build();
 
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
@@ -191,23 +191,25 @@ public class JAXBCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body("<foo/>", UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("<foo/>", UTF_8)
+        .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
         .decode(response, byte[].class)).isEmpty();
   }

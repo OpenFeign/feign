@@ -30,10 +30,10 @@ public class ResponseTest {
   @Test
   public void reasonPhraseIsOptional() {
     Response response = Response.builder()
-            .status(200)
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(new byte[0])
-            .build();
+        .status(200)
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(new byte[0])
+        .build();
 
     assertThat(response.reason()).isNull();
     assertThat(response.toString()).isEqualTo("HTTP/1.1 200\n\n");
@@ -45,10 +45,10 @@ public class ResponseTest {
     List<String> valueList = Collections.singletonList("application/json");
     headersMap.put("Content-Type", valueList);
     Response response = Response.builder()
-            .status(200)
-            .headers(headersMap)
-            .body(new byte[0])
-            .build();
+        .status(200)
+        .headers(headersMap)
+        .body(new byte[0])
+        .build();
     assertThat(response.headers().get("content-type")).isEqualTo(valueList);
     assertThat(response.headers().get("Content-Type")).isEqualTo(valueList);
   }
@@ -60,12 +60,13 @@ public class ResponseTest {
     headersMap.put("set-cookie", Arrays.asList("Cookie-C=Value"));
 
     Response response = Response.builder()
-            .status(200)
-            .headers(headersMap)
-            .body(new byte[0])
-            .build();
+        .status(200)
+        .headers(headersMap)
+        .body(new byte[0])
+        .build();
 
-    List<String> expectedHeaderValue = Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
+    List<String> expectedHeaderValue = Arrays
+        .asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
     assertThat(response.headers()).containsOnly(entry(("set-cookie"), expectedHeaderValue));
   }
 }

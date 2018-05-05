@@ -39,8 +39,8 @@ public abstract class Logger {
    * request and response text.
    *
    * @param configKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
-   * @param format    {@link java.util.Formatter format string}
-   * @param args      arguments applied to {@code format}
+   * @param format {@link java.util.Formatter format string}
+   * @param args arguments applied to {@code format}
    */
   protected abstract void log(String configKey, String format, Object... args);
 
@@ -74,7 +74,7 @@ public abstract class Logger {
   }
 
   protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                            long elapsedTime) throws IOException {
+      long elapsedTime) throws IOException {
     String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ?
         " " + response.reason() : "";
     int status = response.status();
@@ -108,7 +108,8 @@ public abstract class Logger {
     return response;
   }
 
-  protected IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
+  protected IOException logIOException(String configKey, Level logLevel, IOException ioe,
+      long elapsedTime) {
     log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
@@ -146,6 +147,7 @@ public abstract class Logger {
    * Logs to System.err.
    */
   public static class ErrorLogger extends Logger {
+
     @Override
     protected void log(String configKey, String format, Object... args) {
       System.err.printf(methodTag(configKey) + format + "%n", args);
@@ -170,7 +172,7 @@ public abstract class Logger {
 
     @Override
     protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+        long elapsedTime) throws IOException {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
         return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
       }
@@ -185,8 +187,8 @@ public abstract class Logger {
     }
 
     /**
-     * Helper that configures java.util.logging to sanely log messages at FINE level without additional
-     * formatting.
+     * Helper that configures java.util.logging to sanely log messages at FINE level without
+     * additional formatting.
      */
     public JavaLogger appendToFile(String logfile) {
       logger.setLevel(java.util.logging.Level.FINE);
@@ -214,7 +216,7 @@ public abstract class Logger {
 
     @Override
     protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+        long elapsedTime) throws IOException {
       return response;
     }
 

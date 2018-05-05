@@ -21,11 +21,12 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Expands headers supplied in the {@code value}.  Variables to the the right of the colon are expanded. <br>
+ * Expands headers supplied in the {@code value}.  Variables to the the right of the colon are
+ * expanded. <br>
  * <pre>
  * &#64;Headers("Content-Type: application/xml")
  * interface SoapApi {
- * ...   
+ * ...
  * &#64;RequestLine("GET /")
  * &#64;Headers("Cache-Control: max-age=640000")
  * ...
@@ -37,13 +38,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Param("token") String token);
  * ...
  * </pre>
- * <br> <strong>Notes:</strong>
- * <ul>
- *   <li>If you'd like curly braces literally in the header, urlencode them first.</li>
- *   <li>Headers do not overwrite each other. All headers with the same name will be included
- *   in the request.</li>
- * </ul>
- * <br><b>Relationship to JAXRS</b><br> <br> The following two forms are identical. <br><br> Feign:
+ * <br> <strong>Notes:</strong> <ul> <li>If you'd like curly braces literally in the header,
+ * urlencode them first.</li> <li>Headers do not overwrite each other. All headers with the same
+ * name will be included in the request.</li> </ul> <br><b>Relationship to JAXRS</b><br> <br> The
+ * following two forms are identical. <br><br> Feign:
  * <pre>
  * &#64;RequestLine("POST /")
  * &#64;Headers({

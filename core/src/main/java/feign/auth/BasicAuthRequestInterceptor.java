@@ -45,7 +45,7 @@ public class BasicAuthRequestInterceptor implements RequestInterceptor {
    *
    * @param username the username to use for authentication
    * @param password the password to use for authentication
-   * @param charset  the charset to use when encoding the credentials
+   * @param charset the charset to use when encoding the credentials
    */
   public BasicAuthRequestInterceptor(String username, String password, Charset charset) {
     checkNotNull(username, "username");

@@ -55,7 +55,7 @@ public class Slf4jLogger extends feign.Logger {
 
   @Override
   protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                            long elapsedTime) throws IOException {
+      long elapsedTime) throws IOException {
     if (logger.isDebugEnabled()) {
       return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
     }

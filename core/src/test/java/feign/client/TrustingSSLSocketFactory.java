@@ -50,6 +50,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
   private final String serverAlias;
   private final PrivateKey privateKey;
   private final X509Certificate[] certificateChain;
+
   private TrustingSSLSocketFactory(String serverAlias) {
     try {
       SSLContext sc = SSLContext.getInstance("SSL");

@@ -24,29 +24,31 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class OptionalDecoder implements Decoder {
-    final Decoder delegate;
 
-    public OptionalDecoder(Decoder delegate) {
-        Objects.requireNonNull(delegate, "Decoder must not be null. ");
-        this.delegate = delegate;
-    }
+  final Decoder delegate;
 
-    @Override public Object decode(Response response, Type type) throws IOException {
-        if(!isOptional(type)) {
-            return delegate.decode(response, type);
-        }
-        if(response.status() == 404 || response.status() == 204) {
-            return Optional.empty();
-        }
-        Type enclosedType = Util.resolveLastTypeParameter(type, Optional.class);
-        return Optional.of(delegate.decode(response, enclosedType));
-    }
+  public OptionalDecoder(Decoder delegate) {
+    Objects.requireNonNull(delegate, "Decoder must not be null. ");
+    this.delegate = delegate;
+  }
 
-    static boolean isOptional(Type type) {
-        if(!(type instanceof ParameterizedType)) {
-            return false;
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) type;
-        return parameterizedType.getRawType().equals(Optional.class);
+  @Override
+  public Object decode(Response response, Type type) throws IOException {
+    if (!isOptional(type)) {
+      return delegate.decode(response, type);
     }
+    if (response.status() == 404 || response.status() == 204) {
+      return Optional.empty();
+    }
+    Type enclosedType = Util.resolveLastTypeParameter(type, Optional.class);
+    return Optional.of(delegate.decode(response, enclosedType));
+  }
+
+  static boolean isOptional(Type type) {
+    if (!(type instanceof ParameterizedType)) {
+      return false;
+    }
+    ParameterizedType parameterizedType = (ParameterizedType) type;
+    return parameterizedType.getRawType().equals(Optional.class);
+  }
 }

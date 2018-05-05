@@ -52,8 +52,8 @@ import feign.Util;
 import static feign.Util.UTF_8;
 
 /**
- * This module directs Feign's http requests to Apache's
- * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
+ * This module directs Feign's http requests to Apache's <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>.
+ * Ex.
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -62,6 +62,7 @@ import static feign.Util.UTF_8;
  * Based on Square, Inc's Retrofit ApacheClient implementation
  */
 public final class ApacheHttpClient implements Client {
+
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
   private final HttpClient client;
@@ -87,15 +88,15 @@ public final class ApacheHttpClient implements Client {
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
-          UnsupportedEncodingException, MalformedURLException, URISyntaxException {
+      UnsupportedEncodingException, MalformedURLException, URISyntaxException {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
     //per request timeouts
     RequestConfig requestConfig = RequestConfig
-            .custom()
-            .setConnectTimeout(options.connectTimeoutMillis())
-            .setSocketTimeout(options.readTimeoutMillis())
-            .build();
+        .custom()
+        .setConnectTimeout(options.connectTimeoutMillis())
+        .setSocketTimeout(options.readTimeoutMillis())
+        .build();
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
@@ -103,8 +104,9 @@ public final class ApacheHttpClient implements Client {
     requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
     //request query params
-    List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
-    for (NameValuePair queryParam: queryParams) {
+    List<NameValuePair> queryParams = URLEncodedUtils
+        .parse(uri, requestBuilder.getCharset().name());
+    for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
 
@@ -152,7 +154,7 @@ public final class ApacheHttpClient implements Client {
 
   private ContentType getContentType(Request request) {
     ContentType contentType = ContentType.DEFAULT_TEXT;
-    for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
+    for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet()) {
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
@@ -163,6 +165,7 @@ public final class ApacheHttpClient implements Client {
           break;
         }
       }
+    }
     return contentType;
   }
 
@@ -186,11 +189,11 @@ public final class ApacheHttpClient implements Client {
     }
 
     return Response.builder()
-            .status(statusCode)
-            .reason(reason)
-            .headers(headers)
-            .body(toFeignBody(httpResponse))
-            .build();
+        .status(statusCode)
+        .reason(reason)
+        .headers(headers)
+        .body(toFeignBody(httpResponse))
+        .build();
   }
 
   Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
@@ -203,7 +206,7 @@ public final class ApacheHttpClient implements Client {
       @Override
       public Integer length() {
         return entity.getContentLength() >= 0 && entity.getContentLength() <= Integer.MAX_VALUE ?
-                (int) entity.getContentLength() : null;
+            (int) entity.getContentLength() : null;
       }
 
       @Override

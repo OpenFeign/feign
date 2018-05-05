@@ -34,126 +34,131 @@ import feign.Request;
 
 public class RequestKeyTest {
 
-	private RequestKey requestKey;
+  private RequestKey requestKey;
 
-	@Before
-	public void setUp() {
-		Map<String, Collection<String>> map = new HashMap<>();
-		map.put("my-header", Arrays.asList("val"));
-		requestKey = RequestKey.builder(HttpMethod.GET, "a").headers(map).charset(StandardCharsets.UTF_16)
-				.body("content").build();
-	}
+  @Before
+  public void setUp() {
+    Map<String, Collection<String>> map = new HashMap<>();
+    map.put("my-header", Arrays.asList("val"));
+    requestKey = RequestKey.builder(HttpMethod.GET, "a").headers(map)
+        .charset(StandardCharsets.UTF_16)
+        .body("content").build();
+  }
 
-	@Test
-	public void builder() throws Exception {
-		assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
-		assertThat(requestKey.getUrl(), equalTo("a"));
-		assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
-		assertThat(requestKey.getHeaders().get("my-header"), equalTo((Collection<String>) Arrays.asList("val")));
-		assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
-	}
+  @Test
+  public void builder() throws Exception {
+    assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
+    assertThat(requestKey.getUrl(), equalTo("a"));
+    assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
+    assertThat(requestKey.getHeaders().get("my-header"),
+        equalTo((Collection<String>) Arrays.asList("val")));
+    assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
+  }
 
-	@Test
-	public void create() throws Exception {
-		Map<String, Collection<String>> map = new HashMap<>();
-		map.put("my-header", Arrays.asList("val"));
-		Request request = Request.create("GET", "a", map, "content".getBytes(StandardCharsets.UTF_8),
-				StandardCharsets.UTF_16);
-		requestKey = RequestKey.create(request);
+  @Test
+  public void create() throws Exception {
+    Map<String, Collection<String>> map = new HashMap<>();
+    map.put("my-header", Arrays.asList("val"));
+    Request request = Request.create("GET", "a", map, "content".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_16);
+    requestKey = RequestKey.create(request);
 
-		assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
-		assertThat(requestKey.getUrl(), equalTo("a"));
-		assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
-		assertThat(requestKey.getHeaders().get("my-header"), equalTo((Collection<String>) Arrays.asList("val")));
-		assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
-		assertThat(requestKey.getBody(), equalTo("content".getBytes(StandardCharsets.UTF_8)));
-	}
+    assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
+    assertThat(requestKey.getUrl(), equalTo("a"));
+    assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
+    assertThat(requestKey.getHeaders().get("my-header"),
+        equalTo((Collection<String>) Arrays.asList("val")));
+    assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
+    assertThat(requestKey.getBody(), equalTo("content".getBytes(StandardCharsets.UTF_8)));
+  }
 
-	@Test
-	public void checkHashes() {
-		RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "b").build();
+  @Test
+  public void checkHashes() {
+    RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "b").build();
 
-		assertThat(requestKey1.hashCode(), not(equalTo(requestKey2.hashCode())));
-		assertThat(requestKey1, not(equalTo(requestKey2)));
-	}
+    assertThat(requestKey1.hashCode(), not(equalTo(requestKey2.hashCode())));
+    assertThat(requestKey1, not(equalTo(requestKey2)));
+  }
 
-	@Test
-	public void equalObject() {
-		assertThat(requestKey, not(equalTo(new Object())));
-	}
+  @Test
+  public void equalObject() {
+    assertThat(requestKey, not(equalTo(new Object())));
+  }
 
-	@Test
-	public void equalNull() {
-		assertThat(requestKey, not(equalTo(null)));
-	}
+  @Test
+  public void equalNull() {
+    assertThat(requestKey, not(equalTo(null)));
+  }
 
-	@Test
-	public void equalPost() {
-		RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.POST, "a").build();
+  @Test
+  public void equalPost() {
+    RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.POST, "a").build();
 
-		assertThat(requestKey1.hashCode(), not(equalTo(requestKey2.hashCode())));
-		assertThat(requestKey1, not(equalTo(requestKey2)));
-	}
+    assertThat(requestKey1.hashCode(), not(equalTo(requestKey2.hashCode())));
+    assertThat(requestKey1, not(equalTo(requestKey2)));
+  }
 
-	@Test
-	public void equalSelf() {
-		assertThat(requestKey.hashCode(), equalTo(requestKey.hashCode()));
-		assertThat(requestKey, equalTo(requestKey));
-	}
+  @Test
+  public void equalSelf() {
+    assertThat(requestKey.hashCode(), equalTo(requestKey.hashCode()));
+    assertThat(requestKey, equalTo(requestKey));
+  }
 
-	@Test
-	public void equalMinimum() {
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
+  @Test
+  public void equalMinimum() {
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
-		assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
-		assertThat(requestKey, equalTo(requestKey2));
-	}
+    assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
+    assertThat(requestKey, equalTo(requestKey2));
+  }
 
-	@Test
-	public void equalExtra() {
-		Map<String, Collection<String>> map = new HashMap<>();
-		map.put("my-other-header", Arrays.asList("other value"));
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(map)
-				.charset(StandardCharsets.ISO_8859_1).build();
+  @Test
+  public void equalExtra() {
+    Map<String, Collection<String>> map = new HashMap<>();
+    map.put("my-other-header", Arrays.asList("other value"));
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(map)
+        .charset(StandardCharsets.ISO_8859_1).build();
 
-		assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
-		assertThat(requestKey, equalTo(requestKey2));
-	}
+    assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
+    assertThat(requestKey, equalTo(requestKey2));
+  }
 
-	@Test
-	public void equalsExtended() {
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
+  @Test
+  public void equalsExtended() {
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
-		assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
-		assertThat(requestKey.equalsExtended(requestKey2), equalTo(true));
-	}
+    assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
+    assertThat(requestKey.equalsExtended(requestKey2), equalTo(true));
+  }
 
-	@Test
-	public void equalsExtendedExtra() {
-		Map<String, Collection<String>> map = new HashMap<>();
-		map.put("my-other-header", Arrays.asList("other value"));
-		RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(map)
-				.charset(StandardCharsets.ISO_8859_1).build();
+  @Test
+  public void equalsExtendedExtra() {
+    Map<String, Collection<String>> map = new HashMap<>();
+    map.put("my-other-header", Arrays.asList("other value"));
+    RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(map)
+        .charset(StandardCharsets.ISO_8859_1).build();
 
-		assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
-		assertThat(requestKey.equalsExtended(requestKey2), equalTo(false));
-	}
+    assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
+    assertThat(requestKey.equalsExtended(requestKey2), equalTo(false));
+  }
 
-	@Test
-	public void testToString() throws Exception {
-		assertThat(requestKey.toString(), startsWith("Request [GET a: "));
-		assertThat(requestKey.toString(), both(containsString(" with 1 ")).and(containsString(" UTF-16]")));
-	}
+  @Test
+  public void testToString() throws Exception {
+    assertThat(requestKey.toString(), startsWith("Request [GET a: "));
+    assertThat(requestKey.toString(),
+        both(containsString(" with 1 ")).and(containsString(" UTF-16]")));
+  }
 
-	@Test
-	public void testToStringSimple() throws Exception {
-		requestKey = RequestKey.builder(HttpMethod.GET, "a").build();
+  @Test
+  public void testToStringSimple() throws Exception {
+    requestKey = RequestKey.builder(HttpMethod.GET, "a").build();
 
-		assertThat(requestKey.toString(), startsWith("Request [GET a: "));
-		assertThat(requestKey.toString(), both(containsString(" without ")).and(containsString(" no charset")));
-	}
+    assertThat(requestKey.toString(), startsWith("Request [GET a: "));
+    assertThat(requestKey.toString(),
+        both(containsString(" without ")).and(containsString(" no charset")));
+  }
 
 }
 //

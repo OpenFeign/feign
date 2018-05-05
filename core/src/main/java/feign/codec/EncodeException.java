@@ -35,7 +35,7 @@ public class EncodeException extends FeignException {
 
   /**
    * @param message possibly null reason for the failure.
-   * @param cause   the cause of the error.
+   * @param cause the cause of the error.
    */
   public EncodeException(String message, Throwable cause) {
     super(message, checkNotNull(cause, "cause"));

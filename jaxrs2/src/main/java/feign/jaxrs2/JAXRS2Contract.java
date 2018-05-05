@@ -25,6 +25,7 @@ import java.lang.annotation.Annotation;
  * JAX-RS 2 README</a>.
  */
 public final class JAXRS2Contract extends JAXRSContract {
+
   @Override
   protected boolean isUnsupportedHttpParameterAnnotation(Annotation parameterAnnotation) {
     Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
@@ -33,6 +34,6 @@ public final class JAXRS2Contract extends JAXRSContract {
     // this will prevent interfaces from becoming unusable entirely due to single (unsupported) endpoints.
     // https://github.com/OpenFeign/feign/issues/669
     return (annotationType == Suspended.class ||
-            annotationType == Context.class);
+        annotationType == Context.class);
   }
 }

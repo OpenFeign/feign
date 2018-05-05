@@ -67,13 +67,13 @@ public class JAXRSContract extends Contract.BaseContract {
 
   @Override
   protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation,
-                                           Method method) {
+      Method method) {
     Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
     HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
     if (http != null) {
       checkState(data.template().method() == null,
-              "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
-              data.template().method(), http.value());
+          "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
+          data.template().method(), http.value());
       data.template().method(http.value());
     } else if (annotationType == Path.class) {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
@@ -86,7 +86,8 @@ public class JAXRSContract extends Contract.BaseContract {
       }
       // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
       // strip these out appropriately.
-      methodAnnotationValue = methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+      methodAnnotationValue = methodAnnotationValue
+          .replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().append(methodAnnotationValue);
     } else if (annotationType == Produces.class) {
       handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
@@ -112,8 +113,8 @@ public class JAXRSContract extends Contract.BaseContract {
   }
 
   /**
-   * Allows derived contracts to specify unsupported jax-rs parameter annotations which should be ignored.
-   * Required for JAX-RS 2 compatibility.
+   * Allows derived contracts to specify unsupported jax-rs parameter annotations which should be
+   * ignored. Required for JAX-RS 2 compatibility.
    */
   protected boolean isUnsupportedHttpParameterAnnotation(Annotation parameterAnnotation) {
     return false;
@@ -121,7 +122,7 @@ public class JAXRSContract extends Contract.BaseContract {
 
   @Override
   protected boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations,
-                                                  int paramIndex) {
+      int paramIndex) {
     boolean isHttpParam = false;
     for (Annotation parameterAnnotation : annotations) {
       Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
@@ -133,13 +134,13 @@ public class JAXRSContract extends Contract.BaseContract {
       } else if (annotationType == PathParam.class) {
         String name = PathParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
-                paramIndex);
+            paramIndex);
         nameParam(data, name, paramIndex);
         isHttpParam = true;
       } else if (annotationType == QueryParam.class) {
         String name = QueryParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s",
-                paramIndex);
+            paramIndex);
         Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
         data.template().query(name, query);
         nameParam(data, name, paramIndex);
@@ -147,7 +148,7 @@ public class JAXRSContract extends Contract.BaseContract {
       } else if (annotationType == HeaderParam.class) {
         String name = HeaderParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s",
-                paramIndex);
+            paramIndex);
         Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
         data.template().header(name, header);
         nameParam(data, name, paramIndex);
@@ -155,7 +156,7 @@ public class JAXRSContract extends Contract.BaseContract {
       } else if (annotationType == FormParam.class) {
         String name = FormParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "FormParam.value() was empty on parameter %s",
-                paramIndex);
+            paramIndex);
         data.formParams().add(name);
         nameParam(data, name, paramIndex);
         isHttpParam = true;

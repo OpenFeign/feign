@@ -58,15 +58,18 @@ import static java.lang.String.format;
  * </pre>
  */
 public interface Encoder {
-  /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */
+
+  /**
+   * Type literal for {@code Map<String, ?>}, indicating the object to encode is a form.
+   */
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
 
   /**
    * Converts objects to an appropriate representation in the template.
    *
-   * @param object   what to encode as the request body.
+   * @param object what to encode as the request body.
    * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
-   *                 indicates form encoding.
+   * indicates form encoding.
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
