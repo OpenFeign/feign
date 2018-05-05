@@ -50,7 +50,11 @@ public class JAXRSContractTest {
 
   private static final List<String> STRING_LIST = null;
   @Rule public final ExpectedException thrown = ExpectedException.none();
-  JAXRSContract contract = new JAXRSContract();
+  JAXRSContract contract = createContract();
+
+  protected JAXRSContract createContract() {
+    return new JAXRSContract();
+  }
 
   @Test
   public void httpMethods() throws Exception {
@@ -166,7 +170,7 @@ public class JAXRSContractTest {
 
     assertThat(md.bodyIndex()).isEqualTo(0);
     assertThat(md.bodyType())
-        .isEqualTo(getClass().getDeclaredField("STRING_LIST").getGenericType());
+        .isEqualTo(JAXRSContractTest.class.getDeclaredField("STRING_LIST").getGenericType());
   }
 
   @Test
