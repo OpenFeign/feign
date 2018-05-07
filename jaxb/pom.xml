@@ -42,5 +42,10 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.vmlens</groupId>
+      <artifactId>concurrent-junit</artifactId>
+      <version>1.0.2</version>
+    </dependency>
   </dependencies>
 </project>
