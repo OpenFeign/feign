@@ -14,7 +14,6 @@
 package feign;
 
 import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,13 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-
 import feign.Request.Options;
-
 import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_DEFLATE;
@@ -73,8 +69,7 @@ public interface Client {
     }
 
     HttpURLConnection convertAndSend(Request request, Options options) throws IOException {
-      final HttpURLConnection
-          connection =
+      final HttpURLConnection connection =
           (HttpURLConnection) new URL(request.url()).openConnection();
       if (connection instanceof HttpsURLConnection) {
         HttpsURLConnection sslCon = (HttpsURLConnection) connection;
@@ -92,11 +87,9 @@ public interface Client {
       connection.setRequestMethod(request.method());
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
-      boolean
-          gzipEncodedRequest =
+      boolean gzipEncodedRequest =
           contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
-      boolean
-          deflateEncodedRequest =
+      boolean deflateEncodedRequest =
           contentEncodingValues != null && contentEncodingValues.contains(ENCODING_DEFLATE);
 
       boolean hasAcceptHeader = false;
@@ -174,11 +167,11 @@ public interface Client {
         stream = connection.getInputStream();
       }
       return Response.builder()
-              .status(status)
-              .reason(reason)
-              .headers(headers)
-              .body(stream, length)
-              .build();
+          .status(status)
+          .reason(reason)
+          .headers(headers)
+          .body(stream, length)
+          .build();
     }
   }
 }

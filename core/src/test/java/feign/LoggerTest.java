@@ -15,7 +15,6 @@ package feign;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,13 +27,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.Statement;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import feign.Logger.Level;
 
 @RunWith(Enclosed.class)
@@ -46,7 +43,7 @@ public class LoggerTest {
 
   /** Ensure expected exception handling is done before logger rule. */
   @Rule
-  public final RuleChain chain= RuleChain.outerRule( server ).around( logger ).around( thrown );
+  public final RuleChain chain = RuleChain.outerRule(server).around(logger).around(thrown);
 
 
   interface SendsStuff {
@@ -55,8 +52,9 @@ public class LoggerTest {
     @Headers("Content-Type: application/json")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     String login(
-        @Param("customer_name") String customer,
-        @Param("user_name") String user, @Param("password") String password);
+                 @Param("customer_name") String customer,
+                 @Param("user_name") String user,
+                 @Param("password") String password);
   }
 
   @RunWith(Parameterized.class)
@@ -71,7 +69,7 @@ public class LoggerTest {
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.NONE, Arrays.asList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
@@ -124,7 +122,7 @@ public class LoggerTest {
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
@@ -156,7 +154,7 @@ public class LoggerTest {
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.NONE, Arrays.asList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
@@ -194,8 +192,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -216,7 +216,7 @@ public class LoggerTest {
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.NONE, Arrays.asList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
@@ -250,8 +250,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://robofu.abc");
@@ -265,18 +267,18 @@ public class LoggerTest {
 
   @RunWith(Parameterized.class)
   public static class FormatCharacterTest
-          extends LoggerTest {
+      extends LoggerTest {
 
     private final Level logLevel;
 
-    public FormatCharacterTest( Level logLevel, List<String> expectedMessages) {
+    public FormatCharacterTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.NONE, Arrays.asList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
@@ -310,8 +312,10 @@ public class LoggerTest {
             public void continueOrPropagate(RetryableException e) {
               throw e;
             }
-            @Override public Retryer clone() {
-                return this;
+
+            @Override
+            public Retryer clone() {
+              return this;
             }
           })
           .target(SendsStuff.class, "http://sna%fu.abc");
@@ -335,7 +339,7 @@ public class LoggerTest {
 
     @Parameters
     public static Iterable<Object[]> data() {
-      return Arrays.asList(new Object[][]{
+      return Arrays.asList(new Object[][] {
           {Level.NONE, Arrays.asList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
@@ -367,7 +371,7 @@ public class LoggerTest {
 
             @Override
             public Retryer clone() {
-                return this;
+              return this;
             }
           })
           .target(SendsStuff.class, "http://robofu.abc");
@@ -398,8 +402,8 @@ public class LoggerTest {
         public void evaluate() throws Throwable {
           base.evaluate();
           SoftAssertions softly = new SoftAssertions();
-          softly.assertThat( messages.size() ).isEqualTo( expectedMessages.size() );
-          for (int i = 0; i < messages.size() && i<expectedMessages.size(); i++) {
+          softly.assertThat(messages.size()).isEqualTo(expectedMessages.size());
+          for (int i = 0; i < messages.size() && i < expectedMessages.size(); i++) {
             softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
           }
           softly.assertAll();

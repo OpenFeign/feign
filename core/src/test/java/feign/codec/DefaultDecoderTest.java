@@ -17,16 +17,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import feign.Response;
-
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -73,18 +70,18 @@ public class DefaultDecoderTest {
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(headers)
-            .body(inputStream, content.length())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(headers)
+        .body(inputStream, content.length())
+        .build();
   }
 
   private Response nullBodyResponse() {
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
   }
 }

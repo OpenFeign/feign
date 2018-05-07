@@ -22,25 +22,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
 import okhttp3.mockwebserver.MockWebServer;
-
 import feign.Client;
 import feign.Feign;
 import feign.Param;
@@ -66,7 +62,8 @@ public class RibbonClientTest {
 
   @BeforeClass
   public static void disableSunRetry() throws Exception {
-    // The Sun HTTP Client retries all requests once on an IOException, which makes testing retry code harder than would
+    // The Sun HTTP Client retries all requests once on an IOException, which makes testing retry
+    // code harder than would
     // be ideal. We can only disable it for post, so lets at least do that.
     oldRetryConfig = System.setProperty(SUN_RETRY_PROPERTY, "false");
   }
@@ -91,11 +88,11 @@ public class RibbonClientTest {
     server2.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey(),
-                                    hostAndPort(server1.url("").url()) + "," + hostAndPort(
-                                        server2.url("").url()));
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(
+            server2.url("").url()));
 
     TestInterface api = Feign.builder().client(RibbonClient.create())
-            .target(TestInterface.class, "http://" + client());
+        .target(TestInterface.class, "http://" + client());
 
     api.post();
     api.post();
@@ -114,7 +111,7 @@ public class RibbonClientTest {
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api = Feign.builder().client(RibbonClient.create())
-            .target(TestInterface.class, "http://" + client());
+        .target(TestInterface.class, "http://" + client());
 
     api.post();
 
@@ -129,10 +126,9 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
-    TestInterface
-            api =
-            Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
-                    .target(TestInterface.class, "http://" + client());
+    TestInterface api =
+        Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://" + client());
 
     try {
       api.post();
@@ -140,7 +136,7 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    //TODO: why are these retrying?
+    // TODO: why are these retrying?
     assertThat(server1.getRequestCount()).isGreaterThanOrEqualTo(1);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
@@ -153,11 +149,12 @@ public class RibbonClientTest {
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(serverListKey(),
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
     getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetries", 1);
 
     TestInterface api = Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
-                    .target(TestInterface.class, "http://" + client());
+        .target(TestInterface.class, "http://" + client());
 
     try {
       api.post();
@@ -178,11 +175,12 @@ public class RibbonClientTest {
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(serverListKey(),
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
     getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetriesNextServer", 1);
 
     TestInterface api = Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
-                    .target(TestInterface.class, "http://" + client());
+        .target(TestInterface.class, "http://" + client());
 
     try {
       api.post();
@@ -197,10 +195,10 @@ public class RibbonClientTest {
   }
 
   /*
-          This test-case replicates a bug that occurs when using RibbonRequest with a query string.
-
-          The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
-          invalid characters (ex. space).
+   * This test-case replicates a bug that occurs when using RibbonRequest with a query string.
+   * 
+   * The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string
+   * contained invalid characters (ex. space).
    */
   @Test
   public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
@@ -213,7 +211,7 @@ public class RibbonClientTest {
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     TestInterface api = Feign.builder().client(RibbonClient.create())
-            .target(TestInterface.class, "http://" + client());
+        .target(TestInterface.class, "http://" + client());
 
     api.getWithQueryParameters(queryStringValue);
 
@@ -233,7 +231,8 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
-    TestInterface api = Feign.builder().client(RibbonClient.builder().delegate(trustSSLSockets).build())
+    TestInterface api =
+        Feign.builder().client(RibbonClient.builder().delegate(trustSSLSockets).build())
             .target(TestInterface.class, "https://" + client());
     api.post();
     assertEquals(1, server1.getRequestCount());
@@ -263,14 +262,14 @@ public class RibbonClientTest {
     server1.enqueue(new MockResponse().setResponseCode(502));
     server2.enqueue(new MockResponse().setResponseCode(503));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(serverListKey(),
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
     getConfigInstance().setProperty(client() + ".ribbon.MaxAutoRetriesNextServer", 1);
     getConfigInstance().setProperty(client() + ".ribbon.RetryableStatusCodes", "503,502");
 
-    TestInterface
-            api =
-            Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
-                    .target(TestInterface.class, "http://" + client());
+    TestInterface api =
+        Feign.builder().client(RibbonClient.create()).retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://" + client());
 
     try {
       api.post();
@@ -286,16 +285,17 @@ public class RibbonClientTest {
   @Test
   public void testFeignOptionsFollowRedirect() {
     String expectedLocation = server2.url("").url().toString();
-    server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", expectedLocation));
+    server1
+        .enqueue(new MockResponse().setResponseCode(302).setHeader("Location", expectedLocation));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
     Request.Options options = new Request.Options(1000, 1000, false);
     TestInterface api = Feign.builder()
-            .options(options)
-            .client(RibbonClient.create())
-            .retryer(Retryer.NEVER_RETRY)
-            .target(TestInterface.class, "http://" + client());
+        .options(options)
+        .client(RibbonClient.create())
+        .retryer(Retryer.NEVER_RETRY)
+        .target(TestInterface.class, "http://" + client());
 
     try {
       Response response = api.get();
@@ -314,18 +314,20 @@ public class RibbonClientTest {
   @Test
   public void testFeignOptionsNoFollowRedirect() {
     // 302 will say go to server 2
-    server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", server2.url("").url().toString()));
+    server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location",
+        server2.url("").url().toString()));
     // server 2 will send back 200 with "Hello" as body
     server2.enqueue(new MockResponse().setResponseCode(200).setBody("Hello"));
 
-    getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
+    getConfigInstance().setProperty(serverListKey(),
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
 
     Request.Options options = new Request.Options(1000, 1000, true);
     TestInterface api = Feign.builder()
-            .options(options)
-            .client(RibbonClient.create())
-            .retryer(Retryer.NEVER_RETRY)
-            .target(TestInterface.class, "http://" + client());
+        .options(options)
+        .client(RibbonClient.create())
+        .retryer(Retryer.NEVER_RETRY)
+        .target(TestInterface.class, "http://" + client());
 
     try {
       Response response = api.get();
@@ -337,7 +339,7 @@ public class RibbonClientTest {
     }
 
   }
-  
+
   @Test
   public void testFeignOptionsClientConfig() {
     Request.Options options = new Request.Options(1111, 22222);
@@ -345,7 +347,8 @@ public class RibbonClientTest {
     assertThat(config.get(CommonClientConfigKey.ConnectTimeout),
         equalTo(options.connectTimeoutMillis()));
     assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
-    assertThat(config.get(CommonClientConfigKey.FollowRedirects), equalTo(options.isFollowRedirects()));
+    assertThat(config.get(CommonClientConfigKey.FollowRedirects),
+        equalTo(options.isFollowRedirects()));
     assertEquals(3, config.getProperties().size());
   }
 

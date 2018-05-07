@@ -16,12 +16,9 @@ package feign.codec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.Arrays;
 import java.util.Date;
-
 import feign.RequestTemplate;
-
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

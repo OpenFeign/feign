@@ -15,10 +15,8 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
-
 import java.lang.reflect.Type;
 import java.util.Collections;
-
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 

@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-
 import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
@@ -47,73 +46,83 @@ public final class Response implements Closeable {
   private Response(Builder builder) {
     checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
     this.status = builder.status;
-    this.reason = builder.reason; //nullable
+    this.reason = builder.reason; // nullable
     this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
-    this.body = builder.body; //nullable
-    this.request = builder.request; //nullable
+    this.body = builder.body; // nullable
+    this.request = builder.request; // nullable
   }
 
   /**
-   * @deprecated  To be removed in Feign 10
+   * @deprecated To be removed in Feign 10
    */
   @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                InputStream inputStream, Integer length) {
+  public static Response create(int status,
+                                String reason,
+                                Map<String, Collection<String>> headers,
+                                InputStream inputStream,
+                                Integer length) {
     return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(InputStreamBody.orNull(inputStream, length))
-            .build();
+        .status(status)
+        .reason(reason)
+        .headers(headers)
+        .body(InputStreamBody.orNull(inputStream, length))
+        .build();
   }
 
   /**
-   * @deprecated  To be removed in Feign 10
+   * @deprecated To be removed in Feign 10
    */
   @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+  public static Response create(int status,
+                                String reason,
+                                Map<String, Collection<String>> headers,
                                 byte[] data) {
     return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(ByteArrayBody.orNull(data))
-            .build();
+        .status(status)
+        .reason(reason)
+        .headers(headers)
+        .body(ByteArrayBody.orNull(data))
+        .build();
   }
 
   /**
-   * @deprecated  To be removed in Feign 10
+   * @deprecated To be removed in Feign 10
    */
   @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                String text, Charset charset) {
+  public static Response create(int status,
+                                String reason,
+                                Map<String, Collection<String>> headers,
+                                String text,
+                                Charset charset) {
     return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(ByteArrayBody.orNull(text, charset))
-            .build();
+        .status(status)
+        .reason(reason)
+        .headers(headers)
+        .body(ByteArrayBody.orNull(text, charset))
+        .build();
   }
 
   /**
-   * @deprecated  To be removed in Feign 10
+   * @deprecated To be removed in Feign 10
    */
   @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
+  public static Response create(int status,
+                                String reason,
+                                Map<String, Collection<String>> headers,
                                 Body body) {
     return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(body)
-            .build();
+        .status(status)
+        .reason(reason)
+        .headers(headers)
+        .body(body)
+        .build();
   }
 
-  public Builder toBuilder(){
+  public Builder toBuilder() {
     return new Builder(this);
   }
 
-  public static Builder builder(){
+  public static Builder builder() {
     return new Builder();
   }
 
@@ -124,8 +133,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
 
-    Builder() {
-    }
+    Builder() {}
 
     Builder(Response source) {
       this.status = source.status;
@@ -135,7 +143,7 @@ public final class Response implements Closeable {
       this.request = source.request;
     }
 
-    /** @see Response#status*/
+    /** @see Response#status */
     public Builder status(int status) {
       this.status = status;
       return this;
@@ -177,11 +185,12 @@ public final class Response implements Closeable {
       return this;
     }
 
-    /** @see Response#request
-    *
-    * NOTE: will add null check in version 10 which may require changes
-    * to custom feign.Client or loggers
-    */
+    /**
+     * @see Response#request
+     *
+     *      NOTE: will add null check in version 10 which may require changes to custom feign.Client
+     *      or loggers
+     */
     public Builder request(Request request) {
       this.request = request;
       return this;
@@ -234,14 +243,16 @@ public final class Response implements Closeable {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
-    if (reason != null) builder.append(' ').append(reason);
+    if (reason != null)
+      builder.append(' ').append(reason);
     builder.append('\n');
     for (String field : headers.keySet()) {
       for (String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) builder.append('\n').append(body);
+    if (body != null)
+      builder.append('\n').append(body);
     return builder.toString();
   }
 
@@ -255,8 +266,11 @@ public final class Response implements Closeable {
     /**
      * length in bytes, if known. Null if unknown or greater than {@link Integer#MAX_VALUE}.
      *
-     * <br><br><br><b>Note</b><br> This is an integer as
-     * most implementations cannot do bodies greater than 2GB.
+     * <br>
+     * <br>
+     * <br>
+     * <b>Note</b><br>
+     * This is an integer as most implementations cannot do bodies greater than 2GB.
      */
     Integer length();
 
@@ -280,6 +294,7 @@ public final class Response implements Closeable {
 
     private final InputStream inputStream;
     private final Integer length;
+
     private InputStreamBody(InputStream inputStream, Integer length) {
       this.inputStream = inputStream;
       this.length = length;
@@ -362,8 +377,7 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
-    }
+    public void close() throws IOException {}
 
     @Override
     public String toString() {
@@ -372,7 +386,8 @@ public final class Response implements Closeable {
   }
 
   private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
-    Map<String, Collection<String>> result = new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
+    Map<String, Collection<String>> result =
+        new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
 
     for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
       String headerName = entry.getKey();

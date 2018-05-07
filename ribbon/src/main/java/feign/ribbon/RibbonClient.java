@@ -101,7 +101,7 @@ public class RibbonClient implements Client {
   private LBClient lbClient(String clientName) {
     return lbClientFactory.create(clientName);
   }
-  
+
   static class FeignOptionsClientConfig extends DefaultClientConfigImpl {
 
     public FeignOptionsClientConfig(Request.Options options) {
@@ -121,11 +121,10 @@ public class RibbonClient implements Client {
     }
 
   }
-  
+
   public static final class Builder {
 
-    Builder() {
-    }
+    Builder() {}
 
     private Client delegate;
     private LBClientFactory lbClientFactory;
@@ -143,8 +142,7 @@ public class RibbonClient implements Client {
     public RibbonClient build() {
       return new RibbonClient(
           delegate != null ? delegate : new Client.Default(null, null),
-          lbClientFactory != null ? lbClientFactory : new LBClientFactory.Default()
-      );
+          lbClientFactory != null ? lbClientFactory : new LBClientFactory.Default());
     }
   }
 }

@@ -16,10 +16,8 @@ package feign;
 import java.util.HashMap;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -33,10 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
@@ -86,13 +82,14 @@ public class FeignBuilderTest {
 
 
 
-  @Test public void testNoFollowRedirect() {
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location","/"));
+  @Test
+  public void testNoFollowRedirect() {
+    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", "/"));
 
     String url = "http://localhost:" + server.getPort();
     TestInterface noFollowApi = Feign.builder()
-                                     .options(new Request.Options(100, 600, false))
-                                     .target(TestInterface.class, url);
+        .options(new Request.Options(100, 600, false))
+        .target(TestInterface.class, url);
 
     Response response = noFollowApi.defaultMethodPassthrough();
     assertThat(response.status()).isEqualTo(302);
@@ -100,11 +97,11 @@ public class FeignBuilderTest {
         .isNotNull()
         .isEqualTo(Collections.singletonList("/"));
 
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location","/"));
+    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", "/"));
     server.enqueue(new MockResponse().setResponseCode(200));
     TestInterface defaultApi = Feign.builder()
-                                    .options(new Request.Options(100, 600, true))
-                                    .target(TestInterface.class, url);
+        .options(new Request.Options(100, 600, true))
+        .target(TestInterface.class, url);
     assertThat(defaultApi.defaultMethodPassthrough().status()).isEqualTo(200);
   }
 
@@ -205,7 +202,8 @@ public class FeignBuilderTest {
       }
     };
 
-    TestInterface api = Feign.builder().queryMapEncoder(customMapEncoder).target(TestInterface.class, url);
+    TestInterface api =
+        Feign.builder().queryMapEncoder(customMapEncoder).target(TestInterface.class, url);
     api.queryMapEncoded("ignored");
 
     assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("key1=value1", "key2=value2"));
@@ -299,11 +297,10 @@ public class FeignBuilderTest {
   /**
    * This test ensures that the doNotCloseAfterDecode flag functions.
    *
-   * It does so by creating a custom Decoder that lazily retrieves the
-   * response body when asked for it and pops the value into an Iterator.
+   * It does so by creating a custom Decoder that lazily retrieves the response body when asked for
+   * it and pops the value into an Iterator.
    *
-   * Without the doNoCloseAfterDecode flag, the test will fail with a
-   * "stream is closed" exception.
+   * Without the doNoCloseAfterDecode flag, the test will fail with a "stream is closed" exception.
    *
    * @throws Exception
    */
@@ -340,9 +337,9 @@ public class FeignBuilderTest {
     };
 
     TestInterface api = Feign.builder()
-            .decoder(decoder)
-            .doNotCloseAfterDecode()
-            .target(TestInterface.class, url);
+        .decoder(decoder)
+        .doNotCloseAfterDecode()
+        .target(TestInterface.class, url);
     Iterator<String> iterator = api.decodedLazyPost();
 
     assertTrue(iterator.hasNext());
@@ -353,8 +350,8 @@ public class FeignBuilderTest {
   }
 
   /**
-   * When {@link Feign.Builder#doNotCloseAfterDecode()} is enabled an an exception
-   * is thrown from the {@link Decoder}, the response should be closed.
+   * When {@link Feign.Builder#doNotCloseAfterDecode()} is enabled an an exception is thrown from
+   * the {@link Decoder}, the response should be closed.
    */
   @Test
   public void testDoNotCloseAfterDecodeDecoderFailure() throws Exception {
@@ -370,49 +367,50 @@ public class FeignBuilderTest {
 
     final AtomicBoolean closed = new AtomicBoolean();
     TestInterface api = Feign.builder()
-            .client(new Client() {
-              Client client = new Client.Default(null, null);
-              @Override
-              public Response execute(Request request, Request.Options options) throws IOException {
-                final Response original = client.execute(request, options);
-                return Response.builder()
-                        .status(original.status())
-                        .headers(original.headers())
-                        .reason(original.reason())
-                        .request(original.request())
-                        .body(new Response.Body() {
-                          @Override
-                          public Integer length() {
-                            return original.body().length();
-                          }
+        .client(new Client() {
+          Client client = new Client.Default(null, null);
 
-                          @Override
-                          public boolean isRepeatable() {
-                            return original.body().isRepeatable();
-                          }
+          @Override
+          public Response execute(Request request, Request.Options options) throws IOException {
+            final Response original = client.execute(request, options);
+            return Response.builder()
+                .status(original.status())
+                .headers(original.headers())
+                .reason(original.reason())
+                .request(original.request())
+                .body(new Response.Body() {
+                  @Override
+                  public Integer length() {
+                    return original.body().length();
+                  }
 
-                          @Override
-                          public InputStream asInputStream() throws IOException {
-                            return original.body().asInputStream();
-                          }
+                  @Override
+                  public boolean isRepeatable() {
+                    return original.body().isRepeatable();
+                  }
 
-                          @Override
-                          public Reader asReader() throws IOException {
-                            return original.body().asReader();
-                          }
+                  @Override
+                  public InputStream asInputStream() throws IOException {
+                    return original.body().asInputStream();
+                  }
 
-                          @Override
-                          public void close() throws IOException {
-                            closed.set(true);
-                            original.body().close();
-                          }
-                        })
-                        .build();
-              }
-            })
-            .decoder(angryDecoder)
-            .doNotCloseAfterDecode()
-            .target(TestInterface.class, url);
+                  @Override
+                  public Reader asReader() throws IOException {
+                    return original.body().asReader();
+                  }
+
+                  @Override
+                  public void close() throws IOException {
+                    closed.set(true);
+                    original.body().close();
+                  }
+                })
+                .build();
+          }
+        })
+        .decoder(angryDecoder)
+        .doNotCloseAfterDecode()
+        .target(TestInterface.class, url);
     try {
       api.decodedLazyPost();
       fail("Expected an exception");

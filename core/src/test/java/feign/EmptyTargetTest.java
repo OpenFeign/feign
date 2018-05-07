@@ -16,11 +16,8 @@ package feign;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.net.URI;
-
 import feign.Target.EmptyTarget;
-
 import static feign.assertj.FeignAssertions.assertThat;
 
 public class EmptyTargetTest {

@@ -26,8 +26,7 @@ import java.util.Map;
  */
 public class DoubleToIntMapTypeAdapter extends TypeAdapter<Map<String, Object>> {
   private final TypeAdapter<Map<String, Object>> delegate =
-      new Gson().getAdapter(new TypeToken<Map<String, Object>>() {
-      });
+      new Gson().getAdapter(new TypeToken<Map<String, Object>>() {});
 
   @Override
   public void write(JsonWriter out, Map<String, Object> value) throws IOException {

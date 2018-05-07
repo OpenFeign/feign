@@ -14,7 +14,6 @@
 package feign.benchmark;
 
 import java.util.List;
-
 import feign.Body;
 import feign.Headers;
 import feign.Param;
@@ -41,7 +40,8 @@ interface FeignTestInterface {
 
   @RequestLine("POST /")
   @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
-  void form(@Param("customer_name") String customer, @Param("user_name") String user,
+  void form(@Param("customer_name") String customer,
+            @Param("user_name") String user,
             @Param("password") String password);
 
   @RequestLine("POST /")

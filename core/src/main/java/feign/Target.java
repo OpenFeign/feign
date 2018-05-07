@@ -17,7 +17,11 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 
 /**
- * <br><br><b>relationship to JAXRS 2.0</b><br> <br> Similar to {@code
+ * <br>
+ * <br>
+ * <b>relationship to JAXRS 2.0</b><br>
+ * <br>
+ * Similar to {@code
  * javax.ws.rs.client.WebTarget}, as it produces requests. However, {@link RequestTemplate} is a
  * closer match to {@code WebTarget}.
  *
@@ -36,15 +40,24 @@ public interface Target<T> {
 
   /**
    * Targets a template to this target, adding the {@link #url() base url} and any target-specific
-   * headers or query parameters. <br> <br> For example: <br>
+   * headers or query parameters. <br>
+   * <br>
+   * For example: <br>
+   * 
    * <pre>
    * public Request apply(RequestTemplate input) {
-   *     input.insert(0, url());
-   *     input.replaceHeader(&quot;X-Auth&quot;, currentToken);
-   *     return input.asRequest();
+   *   input.insert(0, url());
+   *   input.replaceHeader(&quot;X-Auth&quot;, currentToken);
+   *   return input.asRequest();
    * }
    * </pre>
-   * <br> <br><br><b>relationship to JAXRS 2.0</b><br> <br> This call is similar to {@code
+   * 
+   * <br>
+   * <br>
+   * <br>
+   * <b>relationship to JAXRS 2.0</b><br>
+   * <br>
+   * This call is similar to {@code
    * javax.ws.rs.client.WebTarget.request()}, except that we expect transient, but necessary
    * decoration to be applied on invocation.
    */
@@ -95,8 +108,8 @@ public interface Target<T> {
       if (obj instanceof HardCodedTarget) {
         HardCodedTarget<?> other = (HardCodedTarget) obj;
         return type.equals(other.type)
-               && name.equals(other.name)
-               && url.equals(other.url);
+            && name.equals(other.name)
+            && url.equals(other.url);
       }
       return false;
     }
@@ -116,7 +129,7 @@ public interface Target<T> {
         return "HardCodedTarget(type=" + type.getSimpleName() + ", url=" + url + ")";
       }
       return "HardCodedTarget(type=" + type.getSimpleName() + ", name=" + name + ", url=" + url
-             + ")";
+          + ")";
     }
   }
 
@@ -167,7 +180,7 @@ public interface Target<T> {
       if (obj instanceof EmptyTarget) {
         EmptyTarget<?> other = (EmptyTarget) obj;
         return type.equals(other.type)
-               && name.equals(other.name);
+            && name.equals(other.name);
       }
       return false;
     }

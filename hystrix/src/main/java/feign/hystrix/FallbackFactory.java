@@ -16,14 +16,15 @@ package feign.hystrix;
 import feign.FeignException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import static feign.Util.checkNotNull;
 
 /**
  * Used to control the fallback given its cause.
  *
  * Ex.
- * <pre>{@code
+ * 
+ * <pre>
+ * {@code
  * // This instance will be invoked if there are errors of any kind.
  * FallbackFactory<GitHub> fallbackFactory = cause -> (owner, repo) -> {
  *   if (cause instanceof FeignException && ((FeignException) cause).status() == 403) {
@@ -47,7 +48,7 @@ public interface FallbackFactory<T> {
    * Returns an instance of the fallback appropriate for the given cause
    *
    * @param cause corresponds to {@link com.netflix.hystrix.AbstractCommand#getExecutionException()}
-   * often, but not always an instance of {@link FeignException}.
+   *        often, but not always an instance of {@link FeignException}.
    */
   T create(Throwable cause);
 

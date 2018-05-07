@@ -15,12 +15,9 @@ package feign;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import feign.Target.HardCodedTarget;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class TargetTest {
@@ -63,8 +60,7 @@ public class TargetTest {
             urlEncoded.method(),
             urlEncoded.url().replace("%2F", "/"),
             urlEncoded.headers(),
-            urlEncoded.body(), urlEncoded.charset()
-        );
+            urlEncoded.body(), urlEncoded.charset());
       }
     };
 

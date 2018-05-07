@@ -19,7 +19,6 @@ import java.net.ConnectException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import static org.hamcrest.CoreMatchers.isA;
 
 public class PropagateFirstIOExceptionTest {

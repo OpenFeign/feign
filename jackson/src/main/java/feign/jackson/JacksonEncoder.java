@@ -19,10 +19,8 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.lang.reflect.Type;
 import java.util.Collections;
-
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -37,9 +35,9 @@ public class JacksonEncoder implements Encoder {
 
   public JacksonEncoder(Iterable<Module> modules) {
     this(new ObjectMapper()
-             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-             .configure(SerializationFeature.INDENT_OUTPUT, true)
-             .registerModules(modules));
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .configure(SerializationFeature.INDENT_OUTPUT, true)
+        .registerModules(modules));
   }
 
   public JacksonEncoder(ObjectMapper mapper) {

@@ -14,19 +14,14 @@
 package feign;
 
 import com.google.gson.reflect.TypeToken;
-
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import java.lang.reflect.Type;
 import java.util.List;
-
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class BaseApiTest {
@@ -74,8 +69,7 @@ public class BaseApiTest {
           @Override
           public Object decode(Response response, Type type) {
             assertThat(type)
-                .isEqualTo(new TypeToken<Entity<String, Long>>() {
-                }.getType());
+                .isEqualTo(new TypeToken<Entity<String, Long>>() {}.getType());
             return null;
           }
         })
@@ -95,16 +89,14 @@ public class BaseApiTest {
           @Override
           public void encode(Object object, Type bodyType, RequestTemplate template) {
             assertThat(bodyType)
-                .isEqualTo(new TypeToken<Keys<String>>() {
-                }.getType());
+                .isEqualTo(new TypeToken<Keys<String>>() {}.getType());
           }
         })
         .decoder(new Decoder() {
           @Override
           public Object decode(Response response, Type type) {
             assertThat(type)
-                .isEqualTo(new TypeToken<Entities<String, Long>>() {
-                }.getType());
+                .isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());
             return null;
           }
         })

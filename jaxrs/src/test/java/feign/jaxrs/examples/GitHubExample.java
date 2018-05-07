@@ -14,11 +14,9 @@
 package feign.jaxrs.examples;
 
 import java.util.List;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-
 import feign.Feign;
 import feign.jaxrs.JAXRSContract;
 

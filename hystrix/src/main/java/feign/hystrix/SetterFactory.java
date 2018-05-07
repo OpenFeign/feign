@@ -16,9 +16,7 @@ package feign.hystrix;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
-
 import java.lang.reflect.Method;
-
 import feign.Feign;
 import feign.Target;
 
@@ -26,11 +24,14 @@ import feign.Target;
  * Used to control properties of a hystrix command. Use cases include reading from static
  * configuration or custom annotations.
  *
- * <p>This is parsed up-front, like {@link feign.Contract}, so will not be invoked for each command
+ * <p>
+ * This is parsed up-front, like {@link feign.Contract}, so will not be invoked for each command
  * invocation.
  *
- * <p>Note: when deciding the {@link com.netflix.hystrix.HystrixCommand.Setter#andCommandKey(HystrixCommandKey)
- * command key}, recall it lives in a shared cache, so make sure it is unique.
+ * <p>
+ * Note: when deciding the
+ * {@link com.netflix.hystrix.HystrixCommand.Setter#andCommandKey(HystrixCommandKey) command key},
+ * recall it lives in a shared cache, so make sure it is unique.
  */
 public interface SetterFactory {
 

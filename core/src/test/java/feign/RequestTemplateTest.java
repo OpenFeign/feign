@@ -16,11 +16,9 @@ package feign;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import static feign.RequestTemplate.expand;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
@@ -110,8 +108,7 @@ public class RequestTemplateTest {
     assertThat(template)
         .hasQueries(
             entry("Action", asList("DescribeRegions")),
-            entry("RegionName.1", asList("eu-west-1"))
-        );
+            entry("RegionName.1", asList("eu-west-1")));
   }
 
   @Test
@@ -124,8 +121,7 @@ public class RequestTemplateTest {
     assertThat(template)
         .hasQueries(
             entry("Query", asList("one")),
-            entry("Queries", asList("us-east-1", "eu-west-1"))
-        );
+            entry("Queries", asList("us-east-1", "eu-west-1")));
   }
 
   @Test
@@ -192,15 +188,13 @@ public class RequestTemplateTest {
         .query("type", "{type}");
 
     template = template.resolve(
-        mapOf("domainId", 1001, "name", "denominator.io", "type", "CNAME")
-    );
+        mapOf("domainId", 1001, "name", "denominator.io", "type", "CNAME"));
 
     assertThat(template)
         .hasUrl("/domains/1001/records")
         .hasQueries(
             entry("name", asList("denominator.io")),
-            entry("type", asList("CNAME"))
-        );
+            entry("type", asList("CNAME")));
   }
 
   @Test
@@ -217,8 +211,7 @@ public class RequestTemplateTest {
         .hasQueries(
             entry("provider", asList("foo")),
             entry("name", asList("denominator.io")),
-            entry("type", asList("CNAME"))
-        );
+            entry("type", asList("CNAME")));
   }
 
   @Test
@@ -226,42 +219,36 @@ public class RequestTemplateTest {
     RequestTemplate template = new RequestTemplate().method("POST")
         .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
-            "\"password\": \"{password}\"%7D");
+                "\"password\": \"{password}\"%7D");
 
     template = template.resolve(
         mapOf(
             "customer_name", "netflix",
             "user_name", "denominator",
-            "password", "password"
-        )
-    );
+            "password", "password"));
 
     assertThat(template)
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
-            entry("Content-Length", asList(String.valueOf(template.body().length)))
-        );
+            entry("Content-Length", asList(String.valueOf(template.body().length))));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template = new RequestTemplate().method("POST")
-      .bodyTemplate(
-        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+        .bodyTemplate(
+            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
 
     template = template.resolve(
-      mapOf(
-        "customer_name", "netflix",
-        "user_name", "denominator",
-        "password", "abc+123%25d8"
-      )
-    );
+        mapOf(
+            "customer_name", "netflix",
+            "user_name", "denominator",
+            "password", "abc+123%25d8"));
 
     assertThat(template)
-      .hasBody(
-        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}"
-      );
+        .hasBody(
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}");
   }
 
   @Test
@@ -272,16 +259,13 @@ public class RequestTemplateTest {
         .query("name", "{nameVariable}");
 
     template = template.resolve(mapOf(
-                                    "domainId", 1001,
-                                    "nameVariable", "denominator.io"
-                                )
-    );
+        "domainId", 1001,
+        "nameVariable", "denominator.io"));
 
     assertThat(template)
         .hasUrl("/domains/1001/records")
         .hasQueries(
-            entry("name", asList("denominator.io"))
-        );
+            entry("name", asList("denominator.io")));
   }
 
   @Test
@@ -312,8 +296,8 @@ public class RequestTemplateTest {
   @Test
   public void encodeSlashTest() throws Exception {
     RequestTemplate template = new RequestTemplate().method("GET")
-	    .append("/api/{vhost}")
-	    .decodeSlash(false);
+        .append("/api/{vhost}")
+        .decodeSlash(false);
 
     template.resolve(mapOf("vhost", "/"));
 
@@ -352,8 +336,8 @@ public class RequestTemplateTest {
   @Test
   public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() throws Exception {
     RequestTemplate template = new RequestTemplate()
-            .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
-            .query(true, "params[]", "encoded"); // stored as "param[]"
+        .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
+        .query(true, "params[]", "encoded"); // stored as "param[]"
 
     // We can't ensure consistent behavior, because decode("param[]") == decode("param%5B%5D")
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not+encoded&params[]=encoded");

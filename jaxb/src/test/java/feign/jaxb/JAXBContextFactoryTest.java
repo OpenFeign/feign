@@ -14,9 +14,7 @@
 package feign.jaxb;
 
 import org.junit.Test;
-
 import javax.xml.bind.Marshaller;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,8 +22,7 @@ public class JAXBContextFactoryTest {
 
   @Test
   public void buildsMarshallerWithJAXBEncodingProperty() throws Exception {
-    JAXBContextFactory
-        factory =
+    JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
@@ -41,7 +38,7 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertEquals("http://apihost http://apihost/schema.xsd",
-                 marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
+        marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
   }
 
   @Test
@@ -52,13 +49,12 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertEquals("http://apihost/schema.xsd",
-                 marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
+        marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
   }
 
   @Test
   public void buildsMarshallerWithFormattedOutputProperty() throws Exception {
-    JAXBContextFactory
-        factory =
+    JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
@@ -67,8 +63,7 @@ public class JAXBContextFactoryTest {
 
   @Test
   public void buildsMarshallerWithFragmentProperty() throws Exception {
-    JAXBContextFactory
-        factory =
+    JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerFragment(true).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);

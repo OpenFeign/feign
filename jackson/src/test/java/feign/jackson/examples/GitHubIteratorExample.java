@@ -17,7 +17,6 @@ import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
 import feign.jackson.JacksonIteratorDecoder;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;

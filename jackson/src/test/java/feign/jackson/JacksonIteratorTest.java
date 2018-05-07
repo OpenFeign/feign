@@ -20,7 +20,6 @@ import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
@@ -45,7 +43,8 @@ public class JacksonIteratorTest {
 
   @Test
   public void shouldDecodeObjects() throws IOException {
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]")).containsExactly(new User("bob"), new User("joe"));
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]"))
+        .containsExactly(new User("bob"), new User("joe"));
   }
 
   @Test
@@ -53,7 +52,8 @@ public class JacksonIteratorTest {
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(IOException.class));
 
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).containsOnly(new User("bob"));
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
+        .containsOnly(new User("bob"));
   }
 
   @Test

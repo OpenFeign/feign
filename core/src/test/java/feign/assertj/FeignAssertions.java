@@ -14,7 +14,6 @@
 package feign.assertj;
 
 import org.assertj.core.api.Assertions;
-
 import feign.RequestTemplate;
 
 public class FeignAssertions extends Assertions {

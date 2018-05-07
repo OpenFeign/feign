@@ -14,9 +14,7 @@
 package feign.ribbon;
 
 import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
-
 import com.netflix.client.ClientFactory;
 
 public class LBClientFactoryTest {

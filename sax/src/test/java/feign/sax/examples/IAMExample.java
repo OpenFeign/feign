@@ -14,7 +14,6 @@
 package feign.sax.examples;
 
 import org.xml.sax.helpers.DefaultHandler;
-
 import feign.Feign;
 import feign.Request;
 import feign.RequestLine;

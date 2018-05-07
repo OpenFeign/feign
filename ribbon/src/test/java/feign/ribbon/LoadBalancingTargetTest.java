@@ -15,16 +15,12 @@ package feign.ribbon;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URL;
-
 import feign.Feign;
 import feign.RequestLine;
-
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.junit.Assert.assertEquals;
 
@@ -49,12 +45,11 @@ public class LoadBalancingTargetTest {
     server2.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey,
-                                    hostAndPort(server1.url("").url()) + "," + hostAndPort(
-                                        server2.url("").url()));
+        hostAndPort(server1.url("").url()) + "," + hostAndPort(
+            server2.url("").url()));
 
     try {
-      LoadBalancingTarget<TestInterface>
-          target =
+      LoadBalancingTarget<TestInterface> target =
           LoadBalancingTarget.create(TestInterface.class, "http://" + name);
       TestInterface api = Feign.builder().target(target);
 
@@ -69,25 +64,24 @@ public class LoadBalancingTargetTest {
       getConfigInstance().clearProperty(serverListKey);
     }
   }
-  
+
   @Test
   public void loadBalancingTargetPath() throws InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
-  
+
     server1.enqueue(new MockResponse().setBody("success!"));
-  
+
     getConfigInstance().setProperty(serverListKey,
-            hostAndPort(server1.url("").url()));
-  
+        hostAndPort(server1.url("").url()));
+
     try {
-      LoadBalancingTarget<TestInterface>
-              target =
-              LoadBalancingTarget.create(TestInterface.class, "http://" + name + "/context-path");
+      LoadBalancingTarget<TestInterface> target =
+          LoadBalancingTarget.create(TestInterface.class, "http://" + name + "/context-path");
       TestInterface api = Feign.builder().target(target);
-    
+
       api.get();
-      
+
       assertEquals("http:///context-path", target.url());
       assertEquals("/context-path/servers", server1.takeRequest().getPath());
     } finally {
@@ -99,7 +93,7 @@ public class LoadBalancingTargetTest {
 
     @RequestLine("POST /")
     void post();
-    
+
     @RequestLine("GET /servers")
     void get();
   }

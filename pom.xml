@@ -442,6 +442,23 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.marvinformatics.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <version>2.2.0</version>
+        <configuration>
+          <lineEnding>LF</lineEnding>
+          <configFile>${main.basedir}/src/config/eclipse-java-google-style.xml</configFile>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

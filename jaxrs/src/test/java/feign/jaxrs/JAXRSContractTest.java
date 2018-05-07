@@ -16,14 +16,12 @@ package feign.jaxrs;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -37,17 +35,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import feign.MethodMetadata;
 import feign.Response;
-
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 /**
- * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected {@link feign
- * .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected
+ * {@link feign .RequestTemplate template} instances.
  */
 public class JAXRSContractTest {
 
@@ -91,31 +87,27 @@ public class JAXRSContractTest {
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
         .hasUrl("/")
         .hasQueries(
-            entry("Action", asList("GetUser"))
-        );
+            entry("Action", asList("GetUser")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
         .hasUrl("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08"))
-        );
+            entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
         .hasUrl("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")),
-            entry("limit", asList("1"))
-        );
+            entry("limit", asList("1")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "empty").template())
         .hasUrl("/")
         .hasQueries(
-            entry("flag", asList(new String[]{null})),
+            entry("flag", asList(new String[] {null})),
             entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08"))
-        );
+            entry("Version", asList("2010-05-08")));
   }
 
   @Test
@@ -124,8 +116,8 @@ public class JAXRSContractTest {
 
     assertThat(md.template())
         .hasHeaders(
-                entry("Content-Type", asList("application/json")),
-                entry("Accept", asList("application/xml")));
+            entry("Content-Type", asList("application/json")),
+            entry("Accept", asList("application/xml")));
   }
 
   @Test
@@ -149,7 +141,8 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
 
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("text/html")), entry("Content-Type", asList("application/xml")));
+        .hasHeaders(entry("Accept", asList("text/html")),
+            entry("Content-Type", asList("application/xml")));
   }
 
   @Test
@@ -173,7 +166,8 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesAndConsumes");
 
     assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/json")), entry("Accept", asList("text/html")));
+        .hasHeaders(entry("Content-Type", asList("application/json")),
+            entry("Accept", asList("text/html")));
   }
 
   @Test
@@ -197,28 +191,28 @@ public class JAXRSContractTest {
   @Test
   public void emptyPathOnType() throws Exception {
     assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template())
-            .hasUrl("");
+        .hasUrl("");
   }
 
   @Test
   public void emptyPathOnTypeSpecific() throws Exception {
     assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "get").template())
-            .hasUrl("/specific");
+        .hasUrl("/specific");
   }
 
   @Test
   public void parsePathMethod() throws Exception {
-    assertThat(parseAndValidateMetadata(PathOnType.class,"base").template())
+    assertThat(parseAndValidateMetadata(PathOnType.class, "base").template())
         .hasUrl("/base");
 
-    assertThat(parseAndValidateMetadata(PathOnType.class,"get").template())
+    assertThat(parseAndValidateMetadata(PathOnType.class, "get").template())
         .hasUrl("/base/specific");
   }
 
   @Test
   public void emptyPathOnMethod() throws Exception {
-    assertThat(parseAndValidateMetadata(PathOnType.class,"emptyPath").template())
-            .hasUrl("/base");
+    assertThat(parseAndValidateMetadata(PathOnType.class, "emptyPath").template())
+        .hasUrl("/base");
   }
 
   @Test
@@ -231,26 +225,26 @@ public class JAXRSContractTest {
 
   @Test
   public void pathParamWithSpaces() throws Exception {
-      assertThat(parseAndValidateMetadata(
-          PathOnType.class, "pathParamWithSpaces", String.class).template())
-          .hasUrl("/base/{param}");
+    assertThat(parseAndValidateMetadata(
+        PathOnType.class, "pathParamWithSpaces", String.class).template())
+            .hasUrl("/base/{param}");
   }
 
   @Test
   public void regexPathOnMethod() throws Exception {
-      assertThat(parseAndValidateMetadata(
-          PathOnType.class, "pathParamWithRegex", String.class).template())
-      .hasUrl("/base/regex/{param}");
+    assertThat(parseAndValidateMetadata(
+        PathOnType.class, "pathParamWithRegex", String.class).template())
+            .hasUrl("/base/regex/{param}");
 
-      assertThat(parseAndValidateMetadata(
-          PathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
-      .hasUrl("/base/regex/{param1}/{param2}");
+    assertThat(parseAndValidateMetadata(
+        PathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
+            .hasUrl("/base/regex/{param1}/{param2}");
   }
 
   @Test
   public void withPathAndURIParams() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(WithURIParam.class,
-                                                 "uriParam", String.class, URI.class, String.class);
+        "uriParam", String.class, URI.class, String.class);
 
     assertThat(md.indexToName()).containsExactly(
         entry(0, asList("1")),
@@ -264,14 +258,14 @@ public class JAXRSContractTest {
   public void pathAndQueryParams() throws Exception {
     MethodMetadata md =
         parseAndValidateMetadata(WithPathAndQueryParams.class,
-                                 "recordsByNameAndType", int.class, String.class, String.class);
+            "recordsByNameAndType", int.class, String.class, String.class);
 
     assertThat(md.template())
         .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
 
     assertThat(md.indexToName()).containsExactly(entry(0, asList("domainId")),
-                                                 entry(1, asList("name")),
-                                                 entry(2, asList("type")));
+        entry(1, asList("name")),
+        entry(2, asList("type")));
   }
 
   @Test
@@ -285,7 +279,7 @@ public class JAXRSContractTest {
   @Test
   public void formParamsParseIntoIndexToName() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-                                                 "login", String.class, String.class, String.class);
+        "login", String.class, String.class, String.class);
 
     assertThat(md.formParams())
         .containsExactly("customer_name", "user_name", "password");
@@ -293,8 +287,7 @@ public class JAXRSContractTest {
     assertThat(md.indexToName()).containsExactly(
         entry(0, asList("customer_name")),
         entry(1, asList("user_name")),
-        entry(2, asList("password"))
-    );
+        entry(2, asList("password")));
   }
 
   /**
@@ -303,7 +296,7 @@ public class JAXRSContractTest {
   @Test
   public void formParamsDoesNotSetBodyType() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-                                                 "login", String.class, String.class, String.class);
+        "login", String.class, String.class, String.class);
 
     assertThat(md.bodyType()).isNull();
   }
@@ -355,20 +348,21 @@ public class JAXRSContractTest {
 
   @Test
   public void classWithRootPathParsesCorrectly() throws Exception {
-      assertThat(parseAndValidateMetadata(ClassRootPath.class, "get").template())
-              .hasUrl("/specific");
+    assertThat(parseAndValidateMetadata(ClassRootPath.class, "get").template())
+        .hasUrl("/specific");
   }
 
   @Test
   public void classPathWithTrailingSlashParsesCorrectly() throws Exception {
-      assertThat(parseAndValidateMetadata(ClassPathWithTrailingSlash.class, "get").template())
-              .hasUrl("/base/specific");
+    assertThat(parseAndValidateMetadata(ClassPathWithTrailingSlash.class, "get").template())
+        .hasUrl("/base/specific");
   }
 
   @Test
   public void methodPathWithoutLeadingSlashParsesCorrectly() throws Exception {
-      assertThat(parseAndValidateMetadata(MethodWithFirstPathThenGetWithoutLeadingSlash.class, "get").template())
-              .hasUrl("/base/specific");
+    assertThat(parseAndValidateMetadata(MethodWithFirstPathThenGetWithoutLeadingSlash.class, "get")
+        .template())
+            .hasUrl("/base/specific");
   }
 
   interface Methods {
@@ -502,7 +496,8 @@ public class JAXRSContractTest {
 
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
-    Response pathParamWithMultipleRegex(@PathParam("param1") String param1, @PathParam("param2") String param2);
+    Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
+                                        @PathParam("param2") String param2);
   }
 
   interface WithURIParam {
@@ -528,8 +523,9 @@ public class JAXRSContractTest {
 
     @POST
     void login(
-        @FormParam("customer_name") String customer,
-        @FormParam("user_name") String user, @FormParam("password") String password);
+               @FormParam("customer_name") String customer,
+               @FormParam("user_name") String user,
+               @FormParam("password") String password);
 
     @GET
     Response emptyFormParam(@FormParam("") String empty);
@@ -570,29 +566,30 @@ public class JAXRSContractTest {
 
   @Path("/")
   interface ClassRootPath {
-      @GET
-      @Path("/specific")
-      Response get();
+    @GET
+    @Path("/specific")
+    Response get();
   }
 
   @Path("/base/")
   interface ClassPathWithTrailingSlash {
-      @GET
-      @Path("/specific")
-      Response get();
+    @GET
+    @Path("/specific")
+    Response get();
   }
 
   @Path("/base/")
   interface MethodWithFirstPathThenGetWithoutLeadingSlash {
-      @Path("specific")
-      @GET
-      Response get();
+    @Path("specific")
+    @GET
+    Response get();
   }
 
-  private MethodMetadata parseAndValidateMetadata(Class<?> targetType, String method,
+  private MethodMetadata parseAndValidateMetadata(Class<?> targetType,
+                                                  String method,
                                                   Class<?>... parameterTypes)
       throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(targetType,
-                                             targetType.getMethod(method, parameterTypes));
+        targetType.getMethod(method, parameterTypes));
   }
 }

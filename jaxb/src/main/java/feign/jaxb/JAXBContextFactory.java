@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -30,8 +29,7 @@ import javax.xml.bind.Unmarshaller;
  */
 public final class JAXBContextFactory {
 
-  private final ConcurrentHashMap<Class, JAXBContext>
-      jaxbContexts =
+  private final ConcurrentHashMap<Class, JAXBContext> jaxbContexts =
       new ConcurrentHashMap<Class, JAXBContext>(64);
   private final Map<String, Object> properties;
 

@@ -16,7 +16,6 @@ package feign.stream;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.Decoder;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -26,12 +25,16 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
 import static feign.Util.ensureClosed;
 
 /**
- * Iterator based decoder that support streaming. <p> <p>Example: <br>
- * <pre><code>
+ * Iterator based decoder that support streaming.
+ * <p>
+ * <p>
+ * Example: <br>
+ * 
+ * <pre>
+ * <code>
  * Feign.builder()
  *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
  *   .doNotCloseAfterDecode() // Required for streaming
@@ -39,7 +42,8 @@ import static feign.Util.ensureClosed;
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
- * }</code></pre>
+ * }</code>
+ * </pre>
  */
 public final class StreamDecoder implements Decoder {
 

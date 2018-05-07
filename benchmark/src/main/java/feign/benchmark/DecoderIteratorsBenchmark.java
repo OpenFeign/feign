@@ -21,7 +21,6 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonIteratorDecoder;
 import feign.stream.StreamDecoder;
 import org.openjdk.jmh.annotations.*;
-
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,18 +88,15 @@ public class DecoderIteratorsBenchmark {
     switch (api) {
       case "list":
         decoder = new JacksonDecoder();
-        type = new TypeReference<List<Car>>() {
-        }.getType();
+        type = new TypeReference<List<Car>>() {}.getType();
         break;
       case "iterator":
         decoder = JacksonIteratorDecoder.create();
-        type = new TypeReference<Iterator<Car>>() {
-        }.getType();
+        type = new TypeReference<Iterator<Car>>() {}.getType();
         break;
       case "stream":
         decoder = StreamDecoder.create(JacksonIteratorDecoder.create());
-        type = new TypeReference<Stream<Car>>() {
-        }.getType();
+        type = new TypeReference<Stream<Car>>() {}.getType();
         break;
       default:
         throw new IllegalStateException("Unknown api: " + api);
