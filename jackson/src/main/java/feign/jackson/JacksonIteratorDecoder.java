@@ -43,7 +43,8 @@ import java.util.Iterator;
  *
  * <p>Example: <br>
  *
- * <pre><code>
+ * <pre>
+ * <code>
  * Feign.builder()
  *   .decoder(JacksonIteratorDecoder.create())
  *   .doNotCloseAfterDecode() // Required to fetch the iterator after the response is processed, need to be close
@@ -51,7 +52,8 @@ import java.util.Iterator;
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Iterator<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
- * }</code></pre>
+ * }</code>
+ * </pre>
  */
 public final class JacksonIteratorDecoder implements Decoder {
 

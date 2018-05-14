@@ -110,7 +110,7 @@ public class Util {
     // Default methods are public non-abstract, non-synthetic, and non-static instance methods
     // declared in an interface.
     // method.isDefault() is not sufficient for our usage as it does not check
-    // for synthetic methods.  As a result, it picks up overridden methods as well as actual default
+    // for synthetic methods. As a result, it picks up overridden methods as well as actual default
     // methods.
     final int SYNTHETIC = 0x00001000;
     return ((method.getModifiers()

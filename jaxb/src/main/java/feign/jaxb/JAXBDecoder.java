@@ -35,13 +35,13 @@ import org.xml.sax.SAXException;
  *
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
- *      .withMarshallerJAXBEncoding("UTF-8")
- *      .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
- *      .build();
+ *     .withMarshallerJAXBEncoding("UTF-8")
+ *     .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
+ *     .build();
  *
  * api = Feign.builder()
- *            .decoder(new JAXBDecoder(jaxbFactory))
- *            .target(MyApi.class, "http://api");
+ *     .decoder(new JAXBDecoder(jaxbFactory))
+ *     .target(MyApi.class, "http://api");
  * </pre>
  *
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB

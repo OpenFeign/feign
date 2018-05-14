@@ -82,7 +82,7 @@ public final class HystrixFeign {
      * <pre>{@code
      * // When dealing with fallbacks, it is less tedious to keep interfaces small.
      * interface GitHub {
-     *   @RequestLine("GET /repos/{owner}/{repo}/contributors")
+     *   &#64;RequestLine("GET /repos/{owner}/{repo}/contributors")
      *   List<String> contributors(@Param("owner") String owner, @Param("repo") String repo);
      * }
      *

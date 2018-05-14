@@ -34,7 +34,8 @@ import java.util.stream.StreamSupport;
  *
  * <p>Example: <br>
  *
- * <pre><code>
+ * <pre>
+ * <code>
  * Feign.builder()
  *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
  *   .doNotCloseAfterDecode() // Required for streaming
@@ -42,7 +43,8 @@ import java.util.stream.StreamSupport;
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
- * }</code></pre>
+ * }</code>
+ * </pre>
  */
 public final class StreamDecoder implements Decoder {
 

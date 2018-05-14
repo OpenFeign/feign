@@ -44,11 +44,11 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *
  * <pre>
  * api = Feign.builder()
- *            .decoder(SAXDecoder.builder()
- *                               .registerContentHandler(ContentHandlerForFoo.class)
- *                               .registerContentHandler(ContentHandlerForBar.class)
- *                               .build())
- *            .target(MyApi.class, "http://api");
+ *     .decoder(SAXDecoder.builder()
+ *         .registerContentHandler(ContentHandlerForFoo.class)
+ *         .registerContentHandler(ContentHandlerForBar.class)
+ *         .build())
+ *     .target(MyApi.class, "http://api");
  * </pre>
  */
 public class SAXDecoder implements Decoder {

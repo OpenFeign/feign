@@ -26,7 +26,7 @@ import org.jvnet.animal_sniffer.IgnoreJRERequirement;
  */
 @IgnoreJRERequirement
 final class DefaultMethodHandler implements MethodHandler {
-  // Uses Java 7 MethodHandle based reflection.  As default methods will only exist when
+  // Uses Java 7 MethodHandle based reflection. As default methods will only exist when
   // run on a Java 8 JVM this will not affect use on legacy JVMs.
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
   private final MethodHandle unboundHandle;

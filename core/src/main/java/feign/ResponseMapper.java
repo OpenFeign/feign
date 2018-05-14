@@ -20,7 +20,7 @@ import java.lang.reflect.Type;
  *
  * <pre>{@code
  * new ResponseMapper() {
- *      @Override
+ *      &#64;Override
  *      public Response map(Response response, Type type) {
  *          try {
  *            return response

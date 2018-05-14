@@ -45,9 +45,9 @@ public interface Target<T> {
    *
    * <pre>
    * public Request apply(RequestTemplate input) {
-   *     input.insert(0, url());
-   *     input.replaceHeader(&quot;X-Auth&quot;, currentToken);
-   *     return input.asRequest();
+   *   input.insert(0, url());
+   *   input.replaceHeader(&quot;X-Auth&quot;, currentToken);
+   *   return input.asRequest();
    * }
    * </pre>
    *

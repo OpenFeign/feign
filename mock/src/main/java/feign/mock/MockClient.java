@@ -264,7 +264,7 @@ public class MockClient implements Client {
    * <pre>
    * &#64;After
    * public void tearDown() {
-   *     mockClient.verifyStatus();
+   *   mockClient.verifyStatus();
    * }
    * </pre>
    */

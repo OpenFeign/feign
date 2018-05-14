@@ -16,8 +16,8 @@ package feign.auth;
 import java.io.UnsupportedEncodingException;
 
 /**
- * copied from <a
- * href="https://github.com/square/okhttp/blob/master/okhttp-protocols/src/main/java/com/squareup/okhttp/internal/Base64.java">okhttp</a>
+ * copied from <a href=
+ * "https://github.com/square/okhttp/blob/master/okhttp-protocols/src/main/java/com/squareup/okhttp/internal/Base64.java">okhttp</a>
  *
  * @author Alexander Y. Kleymenov
  */
@@ -83,18 +83,18 @@ final class Base64 {
       }
       if ((chr >= 'A') && (chr <= 'Z')) {
         // char ASCII value
-        //  A    65    0
-        //  Z    90    25 (ASCII - 65)
+        // A 65 0
+        // Z 90 25 (ASCII - 65)
         bits = chr - 65;
       } else if ((chr >= 'a') && (chr <= 'z')) {
         // char ASCII value
-        //  a    97    26
-        //  z    122   51 (ASCII - 71)
+        // a 97 26
+        // z 122 51 (ASCII - 71)
         bits = chr - 71;
       } else if ((chr >= '0') && (chr <= '9')) {
         // char ASCII value
-        //  0    48    52
-        //  9    57    61 (ASCII + 4)
+        // 0 48 52
+        // 9 57 61 (ASCII + 4)
         bits = chr + 4;
       } else if (chr == '+') {
         bits = 62;

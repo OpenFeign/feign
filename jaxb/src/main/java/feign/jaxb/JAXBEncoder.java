@@ -28,13 +28,13 @@ import javax.xml.bind.Marshaller;
  *
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
- *      .withMarshallerJAXBEncoding("UTF-8")
- *      .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
- *      .build();
+ *     .withMarshallerJAXBEncoding("UTF-8")
+ *     .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
+ *     .build();
  *
  * api = Feign.builder()
- *            .encoder(new JAXBEncoder(jaxbFactory))
- *            .target(MyApi.class, "http://api");
+ *     .encoder(new JAXBEncoder(jaxbFactory))
+ *     .target(MyApi.class, "http://api");
  * </pre>
  *
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB

@@ -51,8 +51,9 @@ public class BasicAuthRequestInterceptor implements RequestInterceptor {
   }
 
   /*
-   * This uses a Sun internal method; if we ever encounter a case where this method is not available, the appropriate
-   * response would be to pull the necessary portions of Guava's BaseEncoding class into Util.
+   * This uses a Sun internal method; if we ever encounter a case where this method is not
+   * available, the appropriate response would be to pull the necessary portions of Guava's
+   * BaseEncoding class into Util.
    */
   private static String base64Encode(byte[] bytes) {
     return Base64.encode(bytes);

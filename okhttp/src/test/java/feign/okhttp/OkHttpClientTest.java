@@ -47,8 +47,8 @@ public class OkHttpClientTest extends AbstractClientTest {
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders(
-            "Accept: text/plain", "Content-Type: text/plain") // Note: OkHttp adds content length.
+        .hasHeaders("Accept: text/plain", "Content-Type: text/plain") // Note: OkHttp adds content
+        // length.
         .hasMethod("GET");
   }
 

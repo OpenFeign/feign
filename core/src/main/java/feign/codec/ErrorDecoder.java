@@ -40,9 +40,9 @@ import java.util.Map;
  *
  *   &#064;Override
  *   public Exception decode(String methodKey, Response response) {
- *    if (response.status() == 400)
- *        throw new IllegalArgumentException(&quot;bad zone name&quot;);
- *    return new ErrorDecoder.Default().decode(methodKey, response);
+ *     if (response.status() == 400)
+ *       throw new IllegalArgumentException(&quot;bad zone name&quot;);
+ *     return new ErrorDecoder.Default().decode(methodKey, response);
  *   }
  *
  * }

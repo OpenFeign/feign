@@ -210,11 +210,11 @@ public class RibbonClientTest {
   }
 
   /*
-         This test-case replicates a bug that occurs when using RibbonRequest with a query string.
-
-         The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string contained
-         invalid characters (ex. space).
-  */
+   * This test-case replicates a bug that occurs when using RibbonRequest with a query string.
+   *
+   * The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string
+   * contained invalid characters (ex. space).
+   */
   @Test
   public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
     String queryStringValue = "some string with space";

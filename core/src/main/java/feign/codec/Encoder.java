@@ -63,8 +63,7 @@ import java.lang.reflect.Type;
  *
  * <pre>
  * &#064;RequestLine(&quot;POST /&quot;)
- * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String
- * password);
+ * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
  */
 public interface Encoder {

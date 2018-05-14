@@ -28,8 +28,10 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>,
- * which enables SPDY and better network control. Ex.
+ * This module directs Feign's http requests to
+ * <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables SPDY and better network
+ * control. Ex.
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");

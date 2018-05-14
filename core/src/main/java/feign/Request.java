@@ -105,7 +105,10 @@ public final class Request {
     return builder.toString();
   }
 
-  /* Controls the per-request settings currently required to be implemented by all {@link Client clients} */
+  /*
+   * Controls the per-request settings currently required to be implemented by all {@link Client
+   * clients}
+   */
   public static class Options {
 
     private final int connectTimeoutMillis;

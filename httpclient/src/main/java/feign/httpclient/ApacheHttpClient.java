@@ -52,6 +52,7 @@ import org.apache.http.util.EntityUtils;
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
