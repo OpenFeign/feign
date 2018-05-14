@@ -18,7 +18,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -28,8 +27,8 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
 /**
- * Feign's purpose is to ease development against http apis that feign restfulness. <br> In
- * implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
+ * Feign's purpose is to ease development against http apis that feign restfulness. <br>
+ * In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
  * targeted} http apis.
  */
 public abstract class Feign {
@@ -39,11 +38,13 @@ public abstract class Feign {
   }
 
   /**
-   * Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
-   * >see tags</a>. This method exposes that format, in case you need to create the same value as
+   * Configuration keys are formatted as unresolved <a href=
+   * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html" >see
+   * tags</a>. This method exposes that format, in case you need to create the same value as
    * {@link MethodMetadata#configKey()} for correlation purposes.
    *
-   * <p>Here are some sample encodings:
+   * <p>
+   * Here are some sample encodings:
    *
    * <pre>
    * <ul>
@@ -161,11 +162,13 @@ public abstract class Feign {
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
-     * <p/> All first-party (ex gson) decoders return well-known empty values defined by {@link
-     * Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder) decoder}
-     * or make your own.
+     * <p/>
+     * All first-party (ex gson) decoders return well-known empty values defined by
+     * {@link Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder)
+     * decoder} or make your own.
      *
-     * <p/> This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * <p/>
+     * This flag only works with 404, as opposed to all or arbitrary status codes. This was an
      * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
      * fallback policy. If your server returns a different status for not-found, correct via a
      * custom {@link #client(Client) client}.
@@ -216,15 +219,14 @@ public abstract class Feign {
     }
 
     /**
-     * This flag indicates that the response should not be automatically closed
-     * upon completion of decoding the message. This should be set if you plan on
-     * processing the response into a lazy-evaluated construct, such as a
-     * {@link java.util.Iterator}.
+     * This flag indicates that the response should not be automatically closed upon completion of
+     * decoding the message. This should be set if you plan on processing the response into a
+     * lazy-evaluated construct, such as a {@link java.util.Iterator}.
      *
-     * </p>Feign standard decoders do not have built in support for this flag. If
-     * you are using this flag, you MUST also use a custom Decoder, and be sure to
-     * close all resources appropriately somewhere in the Decoder (you can use
-     * {@link Util#ensureClosed} for convenience).
+     * </p>
+     * Feign standard decoders do not have built in support for this flag. If you are using this
+     * flag, you MUST also use a custom Decoder, and be sure to close all resources appropriately
+     * somewhere in the Decoder (you can use {@link Util#ensureClosed} for convenience).
      *
      * @since 9.6
      *
@@ -245,10 +247,10 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel, decode404, closeAfterDecode);
+              logLevel, decode404, closeAfterDecode);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-                                  errorDecoder, synchronousMethodHandlerFactory);
+              errorDecoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }

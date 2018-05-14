@@ -15,7 +15,6 @@ package feign.benchmark;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -27,10 +26,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-
 import feign.Feign;
 import feign.Response;
 import io.netty.buffer.ByteBuf;

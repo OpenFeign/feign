@@ -18,9 +18,10 @@ import java.lang.reflect.Type;
 /**
  * Map function to apply to the response before decoding it.
  *
- * <pre>{@code
+ * <pre>
+ * {@code
  * new ResponseMapper() {
- *      @Override
+ *      &#64;Override
  *      public Response map(Response response, Type type) {
  *          try {
  *            return response
@@ -32,7 +33,8 @@ import java.lang.reflect.Type;
  *          }
  *      }
  *  };
- * }</pre>
+ * }
+ * </pre>
  */
 public interface ResponseMapper {
 

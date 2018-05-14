@@ -21,7 +21,6 @@ import com.netflix.client.RequestSpecificRetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -31,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -55,7 +53,7 @@ public final class LBClient extends
       return Collections.emptySet();
     }
     Set<Integer> codes = new LinkedHashSet<Integer>();
-    for (String codeString: statusCodesString.split(",")) {
+    for (String codeString : statusCodesString.split(",")) {
       codes.add(Integer.parseInt(codeString));
     }
     return codes;
@@ -72,14 +70,14 @@ public final class LBClient extends
 
   @Override
   public RibbonResponse execute(RibbonRequest request, IClientConfig configOverride)
-          throws IOException, ClientException {
+      throws IOException, ClientException {
     Request.Options options;
     if (configOverride != null) {
       options =
           new Request.Options(
               configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
               (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
-              configOverride.get(CommonClientConfigKey.FollowRedirects,followRedirects));
+              configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
       options = new Request.Options(connectTimeout, readTimeout);
     }
@@ -93,7 +91,8 @@ public final class LBClient extends
 
   @Override
   public RequestSpecificRetryHandler getRequestSpecificRetryHandler(
-      RibbonRequest request, IClientConfig requestConfig) {
+                                                                    RibbonRequest request,
+                                                                    IClientConfig requestConfig) {
     if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
       return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
     }
@@ -123,7 +122,8 @@ public final class LBClient extends
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       headers.putAll(request.headers());
       headers.put(Util.CONTENT_LENGTH, Arrays.asList(String.valueOf(bodyLength)));
-      return Request.create(request.method(), getUri().toASCIIString(), headers, body, request.charset());
+      return Request.create(request.method(), getUri().toASCIIString(), headers, body,
+          request.charset());
     }
 
     Client client() {

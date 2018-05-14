@@ -14,11 +14,8 @@
 package feign.codec;
 
 import org.junit.Test;
-
 import java.text.ParseException;
-
 import feign.codec.ErrorDecoder.RetryAfterDecoder;
-
 import static feign.codec.ErrorDecoder.RetryAfterDecoder.RFC822_FORMAT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
@@ -44,7 +41,7 @@ public class RetryAfterDecoderTest {
   @Test
   public void rfc822Parses() throws ParseException {
     assertEquals(RFC822_FORMAT.parse("Fri, 31 Dec 1999 23:59:59 GMT"),
-                 decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
+        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test

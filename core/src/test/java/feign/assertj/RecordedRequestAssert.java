@@ -18,14 +18,12 @@ import java.util.Collection;
 import java.util.Collections;
 import okhttp3.Headers;
 import okhttp3.mockwebserver.RecordedRequest;
-
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,9 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
-
 import feign.Util;
-
 import static org.assertj.core.data.MapEntry.entry;
 import static org.assertj.core.error.ShouldNotContain.shouldNotContain;
 

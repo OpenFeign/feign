@@ -15,16 +15,21 @@ package feign.codec;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-
 import feign.Feign;
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
 
 /**
- * Decodes an HTTP response into a single object of the given {@code type}. Invoked when {@link
- * Response#status()} is in the 2xx range and the return type is neither {@code void} nor {@code
- * Response}. <p/> <p/> Example Implementation:<br> <p/>
+ * Decodes an HTTP response into a single object of the given {@code type}. Invoked when
+ * {@link Response#status()} is in the 2xx range and the return type is neither {@code void} nor
+ * {@code
+ * Response}.
+ * <p/>
+ * <p/>
+ * Example Implementation:<br>
+ * <p/>
+ * 
  * <pre>
  * public class GsonDecoder implements Decoder {
  *   private final Gson gson = new Gson();
@@ -43,29 +48,32 @@ import feign.Util;
  *   }
  * }
  * </pre>
- * <br/> <h3>Implementation Note</h3> The {@code type} parameter will correspond to the {@link
- * java.lang.reflect.Method#getGenericReturnType() generic return type} of an {@link
- * feign.Target#type() interface} processed by {@link feign.Feign#newInstance(feign.Target)}.  When
- * writing your implementation of Decoder, ensure you also test parameterized types such as {@code
- * List<Foo>}.
- * <br/> <h3>Note on exception propagation</h3> Exceptions thrown by {@link Decoder}s get wrapped in
- * a {@link DecodeException} unless they are a subclass of {@link FeignException} already, and unless
+ * 
+ * <br/>
+ * <h3>Implementation Note</h3> The {@code type} parameter will correspond to the
+ * {@link java.lang.reflect.Method#getGenericReturnType() generic return type} of an
+ * {@link feign.Target#type() interface} processed by {@link feign.Feign#newInstance(feign.Target)}.
+ * When writing your implementation of Decoder, ensure you also test parameterized types such as
+ * {@code
+ * List<Foo>}. <br/>
+ * <h3>Note on exception propagation</h3> Exceptions thrown by {@link Decoder}s get wrapped in a
+ * {@link DecodeException} unless they are a subclass of {@link FeignException} already, and unless
  * the client was configured with {@link Feign.Builder#decode404()}.
  */
 public interface Decoder {
 
   /**
-   * Decodes an http response into an object corresponding to its {@link
-   * java.lang.reflect.Method#getGenericReturnType() generic return type}. If you need to wrap
-   * exceptions, please do so via {@link DecodeException}.
+   * Decodes an http response into an object corresponding to its
+   * {@link java.lang.reflect.Method#getGenericReturnType() generic return type}. If you need to
+   * wrap exceptions, please do so via {@link DecodeException}.
    *
    * @param response the response to decode
-   * @param type     {@link java.lang.reflect.Method#getGenericReturnType() generic return type} of
-   *                 the method corresponding to this {@code response}.
+   * @param type {@link java.lang.reflect.Method#getGenericReturnType() generic return type} of the
+   *        method corresponding to this {@code response}.
    * @return instance of {@code type}
-   * @throws IOException     will be propagated safely to the caller.
+   * @throws IOException will be propagated safely to the caller.
    * @throws DecodeException when decoding failed due to a checked exception besides IOException.
-   * @throws FeignException  when decoding succeeds, but conveys the operation failed.
+   * @throws FeignException when decoding succeeds, but conveys the operation failed.
    */
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
@@ -74,8 +82,10 @@ public interface Decoder {
 
     @Override
     public Object decode(Response response, Type type) throws IOException {
-      if (response.status() == 404) return Util.emptyValueOf(type);
-      if (response.body() == null) return null;
+      if (response.status() == 404)
+        return Util.emptyValueOf(type);
+      if (response.body() == null)
+        return null;
       if (byte[].class.equals(type)) {
         return Util.toByteArray(response.body().asInputStream());
       }

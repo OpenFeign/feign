@@ -19,13 +19,12 @@ import java.io.StringWriter;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
-
 import static feign.Util.UTF_8;
 import static feign.Util.decodeOrDefault;
 import static feign.Util.valuesOrEmpty;
 
 /**
- * Simple logging abstraction for debug messages.  Adapted from {@code retrofit.RestAdapter.Log}.
+ * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
  */
 public abstract class Logger {
 
@@ -39,8 +38,8 @@ public abstract class Logger {
    * request and response text.
    *
    * @param configKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
-   * @param format    {@link java.util.Formatter format string}
-   * @param args      arguments applied to {@code format}
+   * @param format {@link java.util.Formatter format string}
+   * @param args arguments applied to {@code format}
    */
   protected abstract void log(String configKey, String format, Object... args);
 
@@ -58,8 +57,7 @@ public abstract class Logger {
       if (request.body() != null) {
         bodyLength = request.body().length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-          String
-              bodyText =
+          String bodyText =
               request.charset() != null ? new String(request.body(), request.charset()) : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
@@ -73,10 +71,14 @@ public abstract class Logger {
     log(configKey, "---> RETRYING");
   }
 
-  protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                            long elapsedTime) throws IOException {
-    String reason = response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ?
-        " " + response.reason() : "";
+  protected Response logAndRebufferResponse(String configKey,
+                                            Level logLevel,
+                                            Response response,
+                                            long elapsedTime)
+      throws IOException {
+    String reason =
+        response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
+            : "";
     int status = response.status();
     log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
@@ -108,7 +110,10 @@ public abstract class Logger {
     return response;
   }
 
-  protected IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
+  protected IOException logIOException(String configKey,
+                                       Level logLevel,
+                                       IOException ioe,
+                                       long elapsedTime) {
     log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
@@ -157,8 +162,7 @@ public abstract class Logger {
    */
   public static class JavaLogger extends Logger {
 
-    final java.util.logging.Logger
-        logger =
+    final java.util.logging.Logger logger =
         java.util.logging.Logger.getLogger(Logger.class.getName());
 
     @Override
@@ -169,8 +173,11 @@ public abstract class Logger {
     }
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+    protected Response logAndRebufferResponse(String configKey,
+                                              Level logLevel,
+                                              Response response,
+                                              long elapsedTime)
+        throws IOException {
       if (logger.isLoggable(java.util.logging.Level.FINE)) {
         return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
       }
@@ -185,8 +192,8 @@ public abstract class Logger {
     }
 
     /**
-     * Helper that configures java.util.logging to sanely log messages at FINE level without additional
-     * formatting.
+     * Helper that configures java.util.logging to sanely log messages at FINE level without
+     * additional formatting.
      */
     public JavaLogger appendToFile(String logfile) {
       logger.setLevel(java.util.logging.Level.FINE);
@@ -209,17 +216,18 @@ public abstract class Logger {
   public static class NoOpLogger extends Logger {
 
     @Override
-    protected void logRequest(String configKey, Level logLevel, Request request) {
-    }
+    protected void logRequest(String configKey, Level logLevel, Request request) {}
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
-                                              long elapsedTime) throws IOException {
+    protected Response logAndRebufferResponse(String configKey,
+                                              Level logLevel,
+                                              Response response,
+                                              long elapsedTime)
+        throws IOException {
       return response;
     }
 
     @Override
-    protected void log(String configKey, String format, Object... args) {
-    }
+    protected void log(String configKey, String format, Object... args) {}
   }
 }

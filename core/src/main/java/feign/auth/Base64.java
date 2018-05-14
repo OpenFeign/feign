@@ -16,22 +16,22 @@ package feign.auth;
 import java.io.UnsupportedEncodingException;
 
 /**
- * copied from <a href="https://github.com/square/okhttp/blob/master/okhttp-protocols/src/main/java/com/squareup/okhttp/internal/Base64.java">okhttp</a>
+ * copied from <a href=
+ * "https://github.com/square/okhttp/blob/master/okhttp-protocols/src/main/java/com/squareup/okhttp/internal/Base64.java">okhttp</a>
  *
  * @author Alexander Y. Kleymenov
  */
 final class Base64 {
 
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-  private static final byte[] MAP = new byte[]{
+  private static final byte[] MAP = new byte[] {
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
       'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
       'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4',
       '5', '6', '7', '8', '9', '+', '/'
   };
 
-  private Base64() {
-  }
+  private Base64() {}
 
   public static byte[] decode(byte[] in) {
     return decode(in, in.length);
@@ -51,7 +51,7 @@ final class Base64 {
     byte chr;
     // compute the number of the padding characters
     // and adjust the length of the input
-    for (; ; len--) {
+    for (;; len--) {
       chr = in[len - 1];
       // skip the neutral characters
       if ((chr == '\n') || (chr == '\r') || (chr == ' ') || (chr == '\t')) {
@@ -79,18 +79,18 @@ final class Base64 {
       }
       if ((chr >= 'A') && (chr <= 'Z')) {
         // char ASCII value
-        //  A    65    0
-        //  Z    90    25 (ASCII - 65)
+        // A 65 0
+        // Z 90 25 (ASCII - 65)
         bits = chr - 65;
       } else if ((chr >= 'a') && (chr <= 'z')) {
         // char ASCII value
-        //  a    97    26
-        //  z    122   51 (ASCII - 71)
+        // a 97 26
+        // z 122 51 (ASCII - 71)
         bits = chr - 71;
       } else if ((chr >= '0') && (chr <= '9')) {
         // char ASCII value
-        //  0    48    52
-        //  9    57    61 (ASCII + 4)
+        // 0 48 52
+        // 9 57 61 (ASCII + 4)
         bits = chr + 4;
       } else if (chr == '+') {
         bits = 62;

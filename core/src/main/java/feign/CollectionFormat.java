@@ -18,8 +18,10 @@ import java.util.Collection;
 /**
  * Various ways to encode collections in URL parameters.
  *
- * <p>These specific cases are inspired by the
- * <a href="http://swagger.io/specification/">OpenAPI specification</a>.</p>
+ * <p>
+ * These specific cases are inspired by the <a href="http://swagger.io/specification/">OpenAPI
+ * specification</a>.
+ * </p>
  */
 public enum CollectionFormat {
   /** Comma separated values, eg foo=bar,baz */
@@ -43,18 +45,24 @@ public enum CollectionFormat {
   /**
    * Joins the field and possibly multiple values with the given separator.
    *
-   * <p>Calling EXPLODED.join("foo", ["bar"]) will return "foo=bar".</p>
+   * <p>
+   * Calling EXPLODED.join("foo", ["bar"]) will return "foo=bar".
+   * </p>
    *
-   * <p>Calling CSV.join("foo", ["bar", "baz"]) will return "foo=bar,baz". </p>
+   * <p>
+   * Calling CSV.join("foo", ["bar", "baz"]) will return "foo=bar,baz".
+   * </p>
    *
-   * <p>Null values are treated somewhat specially. With EXPLODED, the field
-   * is repeated without any "=" for backwards compatibility. With all other
-   * formats, null values are not included in the joined value list.</p>
+   * <p>
+   * Null values are treated somewhat specially. With EXPLODED, the field is repeated without any
+   * "=" for backwards compatibility. With all other formats, null values are not included in the
+   * joined value list.
+   * </p>
    *
    * @param field The field name corresponding to these values.
    * @param values A collection of value strings for the given field.
-   * @return The formatted char sequence of the field and joined values. If the
-   *         value collection is empty, an empty char sequence will be returned.
+   * @return The formatted char sequence of the field and joined values. If the value collection is
+   *         empty, an empty char sequence will be returned.
    */
   CharSequence join(String field, Collection<String> values) {
     StringBuilder builder = new StringBuilder();

@@ -15,10 +15,8 @@ package feign.codec;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-
 import feign.Response;
 import feign.Util;
-
 import static java.lang.String.format;
 
 public class StringDecoder implements Decoder {

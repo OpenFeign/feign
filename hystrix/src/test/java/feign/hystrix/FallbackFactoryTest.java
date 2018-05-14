@@ -23,13 +23,13 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class FallbackFactoryTest {
 
   interface TestInterface {
-    @RequestLine("POST /") String invoke();
+    @RequestLine("POST /")
+    String invoke();
   }
 
   @Rule
@@ -58,7 +58,8 @@ public class FallbackFactoryTest {
       this.cause = cause;
     }
 
-    @Override public String invoke() {
+    @Override
+    public String invoke() {
       return "foo";
     }
   }
@@ -81,7 +82,8 @@ public class FallbackFactoryTest {
 
     // old school
     api = target(new FallbackFactory<TestInterface>() {
-      @Override public TestInterface create(Throwable cause) {
+      @Override
+      public TestInterface create(Throwable cause) {
         return new FallbackApiWithCtor(cause);
       }
     });
@@ -92,7 +94,8 @@ public class FallbackFactoryTest {
   // retrofit so people don't have to track 2 classes
   static class FallbackApiRetro implements TestInterface, FallbackFactory<FallbackApiRetro> {
 
-    @Override public FallbackApiRetro create(Throwable cause) {
+    @Override
+    public FallbackApiRetro create(Throwable cause) {
       return new FallbackApiRetro(cause);
     }
 
@@ -106,7 +109,8 @@ public class FallbackFactoryTest {
       this.cause = cause;
     }
 
-    @Override public String invoke() {
+    @Override
+    public String invoke() {
       return cause != null ? cause.getMessage() : "foo";
     }
   }
@@ -135,7 +139,8 @@ public class FallbackFactoryTest {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     Logger logger = new Logger("", null) {
-      @Override public void log(Level level, String msg, Throwable thrown) {
+      @Override
+      public void log(Level level, String msg, Throwable thrown) {
         throw new AssertionError("logged eventhough not FINE level");
       }
     };
@@ -149,7 +154,8 @@ public class FallbackFactoryTest {
 
     AtomicBoolean logged = new AtomicBoolean();
     Logger logger = new Logger("", null) {
-      @Override public void log(Level level, String msg, Throwable thrown) {
+      @Override
+      public void log(Level level, String msg, Throwable thrown) {
         logged.set(true);
 
         assertThat(msg).isEqualTo("fallback due to: status 500 reading TestInterface#invoke()");

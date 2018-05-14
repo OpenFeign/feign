@@ -14,11 +14,9 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
-
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -76,18 +74,19 @@ public final class HystrixFeign {
      * Like {@link Feign#newInstance(Target)}, except with {@link HystrixCommand#getFallback()
      * fallback} support.
      *
-     * <p>Fallbacks are known values, which you return when there's an error invoking an http
-     * method. For example, you can return a cached result as opposed to raising an error to the
-     * caller. To use this feature, pass a safe implementation of your target interface as the last
-     * parameter.
+     * <p>
+     * Fallbacks are known values, which you return when there's an error invoking an http method.
+     * For example, you can return a cached result as opposed to raising an error to the caller. To
+     * use this feature, pass a safe implementation of your target interface as the last parameter.
      *
      * Here's an example:
+     * 
      * <pre>
      * {@code
      *
      * // When dealing with fallbacks, it is less tedious to keep interfaces small.
      * interface GitHub {
-     *   @RequestLine("GET /repos/{owner}/{repo}/contributors")
+     *   &#64;RequestLine("GET /repos/{owner}/{repo}/contributors")
      *   List<String> contributors(@Param("owner") String owner, @Param("repo") String repo);
      * }
      *
@@ -103,7 +102,8 @@ public final class HystrixFeign {
      * GitHub github = HystrixFeign.builder()
      *                             ...
      *                             .target(GitHub.class, "https://api.github.com", fallback);
-     * }</pre>
+     * }
+     * </pre>
      *
      * @see #target(Target, Object)
      */
@@ -115,7 +115,9 @@ public final class HystrixFeign {
      * Same as {@link #target(Class, String, T)}, except you can inspect a source exception before
      * creating a fallback object.
      */
-    public <T> T target(Class<T> apiType, String url, FallbackFactory<? extends T> fallbackFactory) {
+    public <T> T target(Class<T> apiType,
+                        String url,
+                        FallbackFactory<? extends T> fallbackFactory) {
       return target(new Target.HardCodedTarget<T>(apiType, url), fallbackFactory);
     }
 
@@ -138,9 +140,11 @@ public final class HystrixFeign {
     /** Configures components needed for hystrix integration. */
     Feign build(final FallbackFactory<?> nullableFallbackFactory) {
       super.invocationHandlerFactory(new InvocationHandlerFactory() {
-        @Override public InvocationHandler create(Target target,
-            Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, setterFactory, nullableFallbackFactory);
+        @Override
+        public InvocationHandler create(Target target,
+                                        Map<Method, MethodHandler> dispatch) {
+          return new HystrixInvocationHandler(target, dispatch, setterFactory,
+              nullableFallbackFactory);
         }
       });
       super.contract(new HystrixDelegatingContract(contract));

@@ -14,7 +14,6 @@
 package feign.gson.examples;
 
 import java.util.List;
-
 import feign.Feign;
 import feign.Param;
 import feign.RequestLine;

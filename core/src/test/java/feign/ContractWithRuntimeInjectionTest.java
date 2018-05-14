@@ -15,7 +15,6 @@ package feign;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
@@ -23,11 +22,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class ContractWithRuntimeInjectionTest {
@@ -100,7 +97,8 @@ public class ContractWithRuntimeInjectionTest {
       List<MethodMetadata> result = super.parseAndValidatateMetadata(targetType);
       for (MethodMetadata md : result) {
         Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
-        for (Map.Entry<Integer, Class<? extends Param.Expander>> entry : md.indexToExpanderClass().entrySet()) {
+        for (Map.Entry<Integer, Class<? extends Param.Expander>> entry : md.indexToExpanderClass()
+            .entrySet()) {
           indexToExpander.put(entry.getKey(), beanFactory.getBean(entry.getValue()));
         }
         md.indexToExpander(indexToExpander);

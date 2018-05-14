@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Test;
-
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,7 +66,8 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create((response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
+        .decoder(StreamDecoder.create(
+            (response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
@@ -105,8 +105,8 @@ public class StreamDecoderTest {
     TestCloseableIterator it = new TestCloseableIterator();
     StreamDecoder decoder = new StreamDecoder((r, t) -> it);
 
-    try (Stream<?> stream = (Stream) decoder.decode(response, new TypeReference<Stream<String>>() {
-    }.getType())) {
+    try (Stream<?> stream =
+        (Stream) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {
       assertThat(stream.collect(Collectors.toList())).hasSize(1);
       assertThat(it.called).isTrue();
     } finally {
@@ -118,15 +118,18 @@ public class StreamDecoderTest {
     boolean called;
     boolean closed;
 
-    @Override public void close() throws IOException {
+    @Override
+    public void close() throws IOException {
       this.closed = true;
     }
 
-    @Override public boolean hasNext() {
+    @Override
+    public boolean hasNext() {
       return !called;
     }
 
-    @Override public String next() {
+    @Override
+    public String next() {
       called = true;
       return "feign";
     }

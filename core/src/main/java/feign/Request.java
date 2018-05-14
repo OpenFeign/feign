@@ -17,7 +17,6 @@ import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
-
 import static feign.Util.checkNotNull;
 import static feign.Util.valuesOrEmpty;
 
@@ -30,8 +29,11 @@ public final class Request {
    * No parameters can be null except {@code body} and {@code charset}. All parameters must be
    * effectively immutable, via safe copies, not mutating or otherwise.
    */
-  public static Request create(String method, String url, Map<String, Collection<String>> headers,
-                               byte[] body, Charset charset) {
+  public static Request create(String method,
+                               String url,
+                               Map<String, Collection<String>> headers,
+                               byte[] body,
+                               Charset charset) {
     return new Request(method, url, headers, body, charset);
   }
 
@@ -42,7 +44,7 @@ public final class Request {
   private final Charset charset;
 
   Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
-          Charset charset) {
+      Charset charset) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
@@ -66,7 +68,7 @@ public final class Request {
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable.  When
+   * The character set with which the body is encoded, or null if unknown or not applicable. When
    * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
    * as a String.
    */
@@ -75,7 +77,7 @@ public final class Request {
   }
 
   /**
-   * If present, this is the replayable body to send to the server.  In some cases, this may be
+   * If present, this is the replayable body to send to the server. In some cases, this may be
    * interpretable as text.
    *
    * @see #charset()
@@ -99,7 +101,10 @@ public final class Request {
     return builder.toString();
   }
 
-  /* Controls the per-request settings currently required to be implemented by all {@link Client clients} */
+  /*
+   * Controls the per-request settings currently required to be implemented by all {@link Client
+   * clients}
+   */
   public static class Options {
 
     private final int connectTimeoutMillis;
@@ -112,7 +117,7 @@ public final class Request {
       this.followRedirects = followRedirects;
     }
 
-    public Options(int connectTimeoutMillis, int readTimeoutMillis){
+    public Options(int connectTimeoutMillis, int readTimeoutMillis) {
       this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 

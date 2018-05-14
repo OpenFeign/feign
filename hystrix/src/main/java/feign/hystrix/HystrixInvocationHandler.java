@@ -15,7 +15,6 @@ package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommand.Setter;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,14 +22,12 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import feign.Util;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
-
 import static feign.Util.checkNotNull;
 
 final class HystrixInvocationHandler implements InvocationHandler {
@@ -42,7 +39,7 @@ final class HystrixInvocationHandler implements InvocationHandler {
   private final Map<Method, Setter> setterMethodMap;
 
   HystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
-                           SetterFactory setterFactory, FallbackFactory<?> fallbackFactory) {
+      SetterFactory setterFactory, FallbackFactory<?> fallbackFactory) {
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
     this.fallbackFactory = fallbackFactory;
@@ -71,7 +68,8 @@ final class HystrixInvocationHandler implements InvocationHandler {
   /**
    * Process all methods in the target so that appropriate setters are created.
    */
-  static Map<Method, Setter> toSetters(SetterFactory setterFactory, Target<?> target,
+  static Map<Method, Setter> toSetters(SetterFactory setterFactory,
+                                       Target<?> target,
                                        Set<Method> methods) {
     Map<Method, Setter> result = new LinkedHashMap<Method, Setter>();
     for (Method method : methods) {
@@ -100,49 +98,50 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return toString();
     }
 
-    HystrixCommand<Object> hystrixCommand = new HystrixCommand<Object>(setterMethodMap.get(method)) {
-      @Override
-      protected Object run() throws Exception {
-        try {
-          return HystrixInvocationHandler.this.dispatch.get(method).invoke(args);
-        } catch (Exception e) {
-          throw e;
-        } catch (Throwable t) {
-          throw (Error) t;
-        }
-      }
-
-      @Override
-      protected Object getFallback() {
-        if (fallbackFactory == null) {
-          return super.getFallback();
-        }
-        try {
-          Object fallback = fallbackFactory.create(getExecutionException());
-          Object result = fallbackMethodMap.get(method).invoke(fallback, args);
-          if (isReturnsHystrixCommand(method)) {
-            return ((HystrixCommand) result).execute();
-          } else if (isReturnsObservable(method)) {
-            // Create a cold Observable
-            return ((Observable) result).toBlocking().first();
-          } else if (isReturnsSingle(method)) {
-            // Create a cold Observable as a Single
-            return ((Single) result).toObservable().toBlocking().first();
-          } else if (isReturnsCompletable(method)) {
-            ((Completable) result).await();
-            return null;
-          } else {
-            return result;
+    HystrixCommand<Object> hystrixCommand =
+        new HystrixCommand<Object>(setterMethodMap.get(method)) {
+          @Override
+          protected Object run() throws Exception {
+            try {
+              return HystrixInvocationHandler.this.dispatch.get(method).invoke(args);
+            } catch (Exception e) {
+              throw e;
+            } catch (Throwable t) {
+              throw (Error) t;
+            }
           }
-        } catch (IllegalAccessException e) {
-          // shouldn't happen as method is public due to being an interface
-          throw new AssertionError(e);
-        } catch (InvocationTargetException e) {
-          // Exceptions on fallback are tossed by Hystrix
-          throw new AssertionError(e.getCause());
-        }
-      }
-    };
+
+          @Override
+          protected Object getFallback() {
+            if (fallbackFactory == null) {
+              return super.getFallback();
+            }
+            try {
+              Object fallback = fallbackFactory.create(getExecutionException());
+              Object result = fallbackMethodMap.get(method).invoke(fallback, args);
+              if (isReturnsHystrixCommand(method)) {
+                return ((HystrixCommand) result).execute();
+              } else if (isReturnsObservable(method)) {
+                // Create a cold Observable
+                return ((Observable) result).toBlocking().first();
+              } else if (isReturnsSingle(method)) {
+                // Create a cold Observable as a Single
+                return ((Single) result).toObservable().toBlocking().first();
+              } else if (isReturnsCompletable(method)) {
+                ((Completable) result).await();
+                return null;
+              } else {
+                return result;
+              }
+            } catch (IllegalAccessException e) {
+              // shouldn't happen as method is public due to being an interface
+              throw new AssertionError(e);
+            } catch (InvocationTargetException e) {
+              // Exceptions on fallback are tossed by Hystrix
+              throw new AssertionError(e.getCause());
+            }
+          }
+        };
 
     if (Util.isDefault(method)) {
       return hystrixCommand.execute();

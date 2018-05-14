@@ -29,7 +29,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,17 +42,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import feign.Util;
-
 import static feign.Util.UTF_8;
 
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
+ * 
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -86,29 +84,30 @@ public final class ApacheHttpClient implements Client {
     return toFeignResponse(httpResponse).toBuilder().request(request).build();
   }
 
-  HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
-          UnsupportedEncodingException, MalformedURLException, URISyntaxException {
+  HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
+      throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
-    //per request timeouts
+    // per request timeouts
     RequestConfig requestConfig = RequestConfig
-            .custom()
-            .setConnectTimeout(options.connectTimeoutMillis())
-            .setSocketTimeout(options.readTimeoutMillis())
-            .build();
+        .custom()
+        .setConnectTimeout(options.connectTimeoutMillis())
+        .setSocketTimeout(options.readTimeoutMillis())
+        .build();
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
 
     requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
-    //request query params
-    List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
-    for (NameValuePair queryParam: queryParams) {
+    // request query params
+    List<NameValuePair> queryParams =
+        URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
+    for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
 
-    //request headers
+    // request headers
     boolean hasAcceptHeader = false;
     for (Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       String headerName = headerEntry.getKey();
@@ -126,12 +125,12 @@ public final class ApacheHttpClient implements Client {
         requestBuilder.addHeader(headerName, headerValue);
       }
     }
-    //some servers choke on the default accept string, so we'll set it to anything
+    // some servers choke on the default accept string, so we'll set it to anything
     if (!hasAcceptHeader) {
       requestBuilder.addHeader(ACCEPT_HEADER_NAME, "*/*");
     }
 
-    //request body
+    // request body
     if (request.body() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
@@ -186,11 +185,11 @@ public final class ApacheHttpClient implements Client {
     }
 
     return Response.builder()
-            .status(statusCode)
-            .reason(reason)
-            .headers(headers)
-            .body(toFeignBody(httpResponse))
-            .build();
+        .status(statusCode)
+        .reason(reason)
+        .headers(headers)
+        .body(toFeignBody(httpResponse))
+        .build();
   }
 
   Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
@@ -202,8 +201,9 @@ public final class ApacheHttpClient implements Client {
 
       @Override
       public Integer length() {
-        return entity.getContentLength() >= 0 && entity.getContentLength() <= Integer.MAX_VALUE ?
-                (int) entity.getContentLength() : null;
+        return entity.getContentLength() >= 0 && entity.getContentLength() <= Integer.MAX_VALUE
+            ? (int) entity.getContentLength()
+            : null;
       }
 
       @Override

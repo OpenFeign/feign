@@ -43,7 +43,7 @@ public class RetryableException extends FeignException {
 
   /**
    * Sometimes corresponds to the {@link feign.Util#RETRY_AFTER} header present in {@code 503}
-   * status. Other times parsed from an application-specific response.  Null if unknown.
+   * status. Other times parsed from an application-specific response. Null if unknown.
    */
   public Date retryAfter() {
     return retryAfter != null ? new Date(retryAfter) : null;

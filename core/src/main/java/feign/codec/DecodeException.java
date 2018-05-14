@@ -14,12 +14,11 @@
 package feign.codec;
 
 import feign.FeignException;
-
 import static feign.Util.checkNotNull;
 
 /**
  * Similar to {@code javax.websocket.DecodeException}, raised when a problem occurs decoding a
- * message.  Note that {@code DecodeException} is not an {@code IOException}, nor does it have one
+ * message. Note that {@code DecodeException} is not an {@code IOException}, nor does it have one
  * set as its cause.
  */
 public class DecodeException extends FeignException {
@@ -35,7 +34,7 @@ public class DecodeException extends FeignException {
 
   /**
    * @param message possibly null reason for the failure.
-   * @param cause   the cause of the error.
+   * @param cause the cause of the error.
    */
   public DecodeException(String message, Throwable cause) {
     super(message, checkNotNull(cause, "cause"));

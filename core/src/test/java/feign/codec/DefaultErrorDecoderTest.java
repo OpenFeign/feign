@@ -16,15 +16,12 @@ package feign.codec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import feign.FeignException;
 import feign.Response;
-
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,10 +41,10 @@ public class DefaultErrorDecoderTest {
     thrown.expectMessage("status 500 reading Service#foo()");
 
     Response response = Response.builder()
-            .status(500)
-            .reason("Internal server error")
-            .headers(headers)
-            .build();
+        .status(500)
+        .reason("Internal server error")
+        .headers(headers)
+        .build();
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -58,11 +55,11 @@ public class DefaultErrorDecoderTest {
     thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
 
     Response response = Response.builder()
-            .status(500)
-            .reason("Internal server error")
-            .headers(headers)
-            .body("hello world", UTF_8)
-            .build();
+        .status(500)
+        .reason("Internal server error")
+        .headers(headers)
+        .body("hello world", UTF_8)
+        .build();
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -70,10 +67,10 @@ public class DefaultErrorDecoderTest {
   @Test
   public void testFeignExceptionIncludesStatus() throws Throwable {
     Response response = Response.builder()
-            .status(400)
-            .reason("Bad request")
-            .headers(headers)
-            .build();
+        .status(400)
+        .reason("Bad request")
+        .headers(headers)
+        .build();
 
     Exception exception = errorDecoder.decode("Service#foo()", response);
 
@@ -88,10 +85,10 @@ public class DefaultErrorDecoderTest {
 
     headers.put(RETRY_AFTER, Arrays.asList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response = Response.builder()
-            .status(503)
-            .reason("Service Unavailable")
-            .headers(headers)
-            .build();
+        .status(503)
+        .reason("Service Unavailable")
+        .headers(headers)
+        .build();
 
     throw errorDecoder.decode("Service#foo()", response);
   }

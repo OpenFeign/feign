@@ -26,7 +26,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -41,8 +40,7 @@ import javax.net.ssl.X509TrustManager;
 public final class TrustingSSLSocketFactory extends SSLSocketFactory
     implements X509TrustManager, X509KeyManager {
 
-  private static final Map<String, SSLSocketFactory>
-      sslSocketFactories =
+  private static final Map<String, SSLSocketFactory> sslSocketFactories =
       new LinkedHashMap<String, SSLSocketFactory>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
   private final static String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_3DES_EDE_CBC_SHA"};
@@ -50,10 +48,11 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
   private final String serverAlias;
   private final PrivateKey privateKey;
   private final X509Certificate[] certificateChain;
+
   private TrustingSSLSocketFactory(String serverAlias) {
     try {
       SSLContext sc = SSLContext.getInstance("SSL");
-      sc.init(new KeyManager[]{this}, new TrustManager[]{this}, new SecureRandom());
+      sc.init(new KeyManager[] {this}, new TrustManager[] {this}, new SecureRandom());
       this.delegate = sc.getSocketFactory();
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -64,8 +63,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
       this.certificateChain = null;
     } else {
       try {
-        KeyStore
-            keyStore =
+        KeyStore keyStore =
             loadKeyStore(TrustingSSLSocketFactory.class.getResourceAsStream("/keystore.jks"));
         this.privateKey = (PrivateKey) keyStore.getKey(serverAlias, KEYSTORE_PASSWORD);
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
@@ -146,11 +144,9 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
     return null;
   }
 
-  public void checkClientTrusted(X509Certificate[] certs, String authType) {
-  }
+  public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
-  public void checkServerTrusted(X509Certificate[] certs, String authType) {
-  }
+  public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 
   @Override
   public String[] getClientAliases(String keyType, Principal[] issuers) {

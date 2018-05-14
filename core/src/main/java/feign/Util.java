@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import static java.lang.String.format;
 
 /**
@@ -84,7 +83,7 @@ public class Util {
    */
   public static final Type MAP_STRING_WILDCARD =
       new Types.ParameterizedTypeImpl(null, Map.class, String.class,
-          new Types.WildcardTypeImpl(new Type[]{Object.class}, new Type[0]));
+          new Types.WildcardTypeImpl(new Type[] {Object.class}, new Type[0]));
 
   private Util() { // no instances
   }
@@ -134,10 +133,12 @@ public class Util {
     // Default methods are public non-abstract, non-synthetic, and non-static instance methods
     // declared in an interface.
     // method.isDefault() is not sufficient for our usage as it does not check
-    // for synthetic methods.  As a result, it picks up overridden methods as well as actual default methods.
+    // for synthetic methods. As a result, it picks up overridden methods as well as actual default
+    // methods.
     final int SYNTHETIC = 0x00001000;
-    return ((method.getModifiers() & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC | SYNTHETIC)) ==
-            Modifier.PUBLIC) && method.getDeclaringClass().isInterface();
+    return ((method.getModifiers()
+        & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC | SYNTHETIC)) == Modifier.PUBLIC)
+        && method.getDeclaringClass().isInterface();
   }
 
   /**
@@ -183,22 +184,24 @@ public class Util {
 
   /**
    * Resolves the last type parameter of the parameterized {@code supertype}, based on the {@code
-   * genericContext}, into its upper bounds. <p/> Implementation copied from {@code
+   * genericContext}, into its upper bounds.
+   * <p/>
+   * Implementation copied from {@code
    * retrofit.RestMethodInfo}.
    *
    * @param genericContext Ex. {@link java.lang.reflect.Field#getGenericType()}
-   * @param supertype      Ex. {@code Decoder.class}
+   * @param supertype Ex. {@code Decoder.class}
    * @return in the example above, the type parameter of {@code Decoder}.
    * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type
-   *                               using {@code context}.
+   *         using {@code context}.
    */
   public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
       throws IllegalStateException {
     Type resolvedSuperType =
         Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
     checkState(resolvedSuperType instanceof ParameterizedType,
-               "could not resolve %s into a parameterized type %s",
-               genericContext, supertype);
+        "could not resolve %s into a parameterized type %s",
+        genericContext, supertype);
     Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
     for (int i = 0; i < types.length; i++) {
       Type type = types[i];
@@ -214,18 +217,19 @@ public class Util {
    * in the following list.
    *
    * <ul>
-   *   <li>{@code [Bb]oolean}</li>
-   *   <li>{@code byte[]}</li>
-   *   <li>{@code Collection}</li>
-   *   <li>{@code Iterator}</li>
-   *   <li>{@code List}</li>
-   *   <li>{@code Map}</li>
-   *   <li>{@code Set}</li>
+   * <li>{@code [Bb]oolean}</li>
+   * <li>{@code byte[]}</li>
+   * <li>{@code Collection}</li>
+   * <li>{@code Iterator}</li>
+   * <li>{@code List}</li>
+   * <li>{@code Map}</li>
+   * <li>{@code Set}</li>
    * </ul>
    *
-   * <p/> When {@link Feign.Builder#decode404() decoding HTTP 404 status}, you'll need to teach
-   * decoders a default empty value for a type. This method cheaply supports typical types by only
-   * looking at the raw type (vs type hierarchy). Decorate for sophistication.
+   * <p/>
+   * When {@link Feign.Builder#decode404() decoding HTTP 404 status}, you'll need to teach decoders
+   * a default empty value for a type. This method cheaply supports typical types by only looking at
+   * the raw type (vs type hierarchy). Decorate for sophistication.
    */
   public static Object emptyValueOf(Type type) {
     return EMPTIES.get(Types.getRawType(type));

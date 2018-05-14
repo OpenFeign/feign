@@ -17,13 +17,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
-
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -38,7 +36,7 @@ public class JacksonDecoder implements Decoder {
 
   public JacksonDecoder(Iterable<Module> modules) {
     this(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-             .registerModules(modules));
+        .registerModules(modules));
   }
 
   public JacksonDecoder(ObjectMapper mapper) {
@@ -47,8 +45,10 @@ public class JacksonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
-    if (response.body() == null) return null;
+    if (response.status() == 404)
+      return Util.emptyValueOf(type);
+    if (response.body() == null)
+      return null;
     Reader reader = response.body().asReader();
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);

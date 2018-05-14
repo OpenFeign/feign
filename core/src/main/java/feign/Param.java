@@ -14,13 +14,12 @@
 package feign;
 
 import java.lang.annotation.Retention;
-
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A named template parameter applied to {@link Headers}, {@linkplain RequestLine} or {@linkplain
- * Body}
+ * A named template parameter applied to {@link Headers}, {@linkplain RequestLine} or
+ * {@linkplain Body}
  */
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
@@ -37,8 +36,8 @@ public @interface Param {
   Class<? extends Expander> expander() default ToStringExpander.class;
 
   /**
-   * Specifies whether argument is already encoded
-   * The value is ignored for headers (headers are never encoded)
+   * Specifies whether argument is already encoded The value is ignored for headers (headers are
+   * never encoded)
    *
    * @see QueryMap#encoded
    */

@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
@@ -43,8 +42,7 @@ public final class MethodMetadata implements Serializable {
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
 
-  MethodMetadata() {
-  }
+  MethodMetadata() {}
 
   /**
    * Used as a reference to this method. For example, {@link Logger#log(String, String, Object...)
