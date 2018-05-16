@@ -18,7 +18,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.github.openfeign</groupId>
-        <version>9.8.0-SNAPSHOT</version>
+        <version>10.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
