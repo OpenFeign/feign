@@ -448,7 +448,7 @@
         <version>2.2.0</version>
         <configuration>
           <lineEnding>LF</lineEnding>
-          <configFile>${main.basedir}/src/config/eclipse-java-google-style.xml</configFile>
+          <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
         </configuration>
         <executions>
           <execution>
