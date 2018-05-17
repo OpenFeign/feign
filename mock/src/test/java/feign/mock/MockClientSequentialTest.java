@@ -31,6 +31,7 @@ import org.junit.Test;
 import feign.Body;
 import feign.Feign;
 import feign.FeignException;
+import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
@@ -42,6 +43,7 @@ public class MockClientSequentialTest {
 
   interface GitHub {
 
+    @Headers({"Name: {owner}"})
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
 
@@ -89,26 +91,29 @@ public class MockClientSequentialTest {
   }
 
   private GitHub githubSequential;
-
   private MockClient mockClientSequential;
 
   @Before
   public void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
-
+      RequestHeaders headers = RequestHeaders
+          .builder()
+          .add("Name", "netflix")
+          .build();
       mockClientSequential = new MockClient(true);
       githubSequential = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
           .client(mockClientSequential
-              .add(HttpMethod.GET, "/repos/netflix/feign/contributors", HttpsURLConnection.HTTP_OK,
-                  data)
+              .add(RequestKey
+                  .builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
+                  .headers(headers).build(), HttpsURLConnection.HTTP_OK, data)
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55",
                   HttpsURLConnection.HTTP_NOT_FOUND)
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
                   HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors",
                   Response.builder().status(HttpsURLConnection.HTTP_OK)
-                      .headers(MockClient.EMPTY_HEADERS).body(data)))
+                      .headers(RequestHeaders.EMPTY).body(data)))
           .target(new MockTarget<>(GitHub.class));
     }
   }

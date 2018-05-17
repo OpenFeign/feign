@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,8 +43,6 @@ public class MockClient implements Client {
     }
 
   }
-
-  public static final Map<String, Collection<String>> EMPTY_HEADERS = Collections.emptyMap();
 
   private final List<RequestResponse> responses = new ArrayList<RequestResponse>();
 
@@ -196,7 +193,7 @@ public class MockClient implements Client {
 
   public MockClient add(RequestKey requestKey, int status, byte[] responseBody) {
     return add(requestKey,
-        Response.builder().status(status).reason("Mocked").headers(EMPTY_HEADERS)
+        Response.builder().status(status).reason("Mocked").headers(RequestHeaders.EMPTY)
             .body(responseBody));
   }
 
@@ -255,7 +252,7 @@ public class MockClient implements Client {
 
   /**
    * To be called in an &#64;After method:
-   * 
+   *
    * <pre>
    * &#64;After
    * public void tearDown() {
@@ -275,5 +272,6 @@ public class MockClient implements Client {
   public void resetRequests() {
     requests.clear();
   }
+
 
 }

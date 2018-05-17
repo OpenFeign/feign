@@ -91,7 +91,6 @@ public class MockClientTest {
   }
 
   private GitHub github;
-
   private MockClient mockClient;
 
   @Before

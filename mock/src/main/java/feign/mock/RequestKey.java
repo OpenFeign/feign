@@ -31,7 +31,7 @@ public class RequestKey {
 
     private final String url;
 
-    private Map<String, Collection<String>> headers;
+    private RequestHeaders headers;
 
     private Charset charset;
 
@@ -42,7 +42,13 @@ public class RequestKey {
       this.url = url;
     }
 
+    @Deprecated
     public Builder headers(Map<String, Collection<String>> headers) {
+      this.headers = RequestHeaders.of(headers);
+      return this;
+    }
+
+    public Builder headers(RequestHeaders headers) {
       this.headers = headers;
       return this;
     }
@@ -87,7 +93,7 @@ public class RequestKey {
 
   private final String url;
 
-  private final Map<String, Collection<String>> headers;
+  private final RequestHeaders headers;
 
   private final Charset charset;
 
@@ -104,7 +110,7 @@ public class RequestKey {
   private RequestKey(Request request) {
     this.method = HttpMethod.valueOf(request.method());
     this.url = buildUrl(request);
-    this.headers = request.headers();
+    this.headers = RequestHeaders.of(request.headers());
     this.charset = request.charset();
     this.body = request.body();
   }
@@ -117,7 +123,7 @@ public class RequestKey {
     return url;
   }
 
-  public Map<String, Collection<String>> getHeaders() {
+  public RequestHeaders getHeaders() {
     return headers;
   }
 
@@ -140,21 +146,23 @@ public class RequestKey {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     final RequestKey other = (RequestKey) obj;
-    if (method != other.method)
+    if (method != other.method) {
       return false;
+    }
     if (url == null) {
-      if (other.url != null)
-        return false;
-    } else if (!url.equals(other.url))
-      return false;
-    return true;
+      return other.url == null;
+    } else
+      return url.equals(other.url);
   }
 
   public boolean equalsExtended(Object obj) {
@@ -173,7 +181,7 @@ public class RequestKey {
   @Override
   public String toString() {
     return String.format("Request [%s %s: %s headers and %s]", method, url,
-        headers == null ? "without" : "with " + headers.size(),
+        headers == null ? "without" : "with " + headers,
         charset == null ? "no charset" : "charset " + charset);
   }
 
