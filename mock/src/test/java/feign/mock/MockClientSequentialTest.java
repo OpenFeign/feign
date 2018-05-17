@@ -20,7 +20,14 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.fail;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.util.List;
+import javax.net.ssl.HttpsURLConnection;
+import org.junit.Before;
+import org.junit.Test;
 import feign.Body;
 import feign.Feign;
 import feign.FeignException;
@@ -31,14 +38,6 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
-import org.junit.Before;
-import org.junit.Test;
 
 public class MockClientSequentialTest {
 
@@ -50,8 +49,8 @@ public class MockClientSequentialTest {
 
     @RequestLine("GET /repos/{owner}/{repo}/contributors?client_id={client_id}")
     List<Contributor> contributors(@Param("client_id") String clientId,
-      @Param("owner") String owner,
-      @Param("repo") String repo);
+                                   @Param("owner") String owner,
+                                   @Param("repo") String repo);
 
     @RequestLine("PATCH /repos/{owner}/{repo}/contributors")
     List<Contributor> patchContributors(@Param("owner") String owner, @Param("repo") String repo);
@@ -59,9 +58,9 @@ public class MockClientSequentialTest {
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
     @Body("%7B\"login\":\"{login}\",\"type\":\"{type}\"%7D")
     Contributor create(@Param("owner") String owner,
-      @Param("repo") String repo,
-      @Param("login") String login,
-      @Param("type") String type);
+                       @Param("repo") String repo,
+                       @Param("login") String login,
+                       @Param("type") String type);
 
   }
 
@@ -83,7 +82,7 @@ public class MockClientSequentialTest {
 
     @Override
     public Object decode(Response response, Type type)
-      throws IOException, DecodeException, FeignException {
+        throws IOException, DecodeException, FeignException {
       assertThat(response.request(), notNullValue());
 
       return delegate.decode(response, type);
@@ -92,7 +91,6 @@ public class MockClientSequentialTest {
   }
 
   private GitHub githubSequential;
-
   private MockClient mockClientSequential;
 
   @Before
@@ -101,23 +99,23 @@ public class MockClientSequentialTest {
     try {
       byte[] data = toByteArray(input);
       RequestHeaders headers = RequestHeaders
-        .builder()
-        .add("Name", "netflix")
-        .build();
+          .builder()
+          .add("Name", "netflix")
+          .build();
       mockClientSequential = new MockClient(true);
       githubSequential = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
-        .client(mockClientSequential
-          .add(RequestKey
-            .builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
-            .headers(headers).build(), HttpsURLConnection.HTTP_OK, data)
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55",
-            HttpsURLConnection.HTTP_NOT_FOUND)
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
-            HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors",
-            Response.builder().status(HttpsURLConnection.HTTP_OK)
-              .headers(RequestHeaders.EMPTY).body(data)))
-        .target(new MockTarget<GitHub>(GitHub.class));
+          .client(mockClientSequential
+              .add(RequestKey
+                  .builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
+                  .headers(headers).build(), HttpsURLConnection.HTTP_OK, data)
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55",
+                  HttpsURLConnection.HTTP_NOT_FOUND)
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
+                  HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors",
+                  Response.builder().status(HttpsURLConnection.HTTP_OK)
+                      .headers(RequestHeaders.EMPTY).body(data)))
+          .target(new MockTarget<GitHub>(GitHub.class));
     } finally {
       input.close();
     }

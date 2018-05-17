@@ -14,13 +14,14 @@
 package feign.mock;
 
 import static feign.Util.UTF_8;
-
-import feign.Request;
-import feign.Util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import feign.Request;
+import feign.Util;
 
 public class RequestKey {
 
@@ -39,6 +40,12 @@ public class RequestKey {
     private Builder(HttpMethod method, String url) {
       this.method = method;
       this.url = url;
+    }
+
+    @Deprecated
+    public Builder headers(Map<String, Collection<String>> headers) {
+      this.headers = RequestHeaders.of(headers);
+      return this;
     }
 
     public Builder headers(RequestHeaders headers) {
@@ -153,22 +160,18 @@ public class RequestKey {
       return false;
     }
     if (url == null) {
-      if (other.url != null) {
-        return false;
-      }
-    } else if (!url.equals(other.url)) {
-      return false;
-    }
-    return true;
+      return other.url == null;
+    } else
+      return url.equals(other.url);
   }
 
   public boolean equalsExtended(Object obj) {
     if (equals(obj)) {
       RequestKey other = (RequestKey) obj;
       boolean headersEqual =
-        other.headers == null || headers == null || headers.equals(other.headers);
+          other.headers == null || headers == null || headers.equals(other.headers);
       boolean charsetEqual =
-        other.charset == null || charset == null || charset.equals(other.charset);
+          other.charset == null || charset == null || charset.equals(other.charset);
       boolean bodyEqual = other.body == null || body == null || Arrays.equals(other.body, body);
       return headersEqual && charsetEqual && bodyEqual;
     }
@@ -178,8 +181,8 @@ public class RequestKey {
   @Override
   public String toString() {
     return String.format("Request [%s %s: %s headers and %s]", method, url,
-      headers == null ? "without" : "with " + headers,
-      charset == null ? "no charset" : "charset " + charset);
+        headers == null ? "without" : "with " + headers,
+        charset == null ? "no charset" : "charset " + charset);
   }
 
 }

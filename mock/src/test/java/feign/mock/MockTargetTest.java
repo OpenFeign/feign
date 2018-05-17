@@ -15,7 +15,6 @@ package feign.mock;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
 

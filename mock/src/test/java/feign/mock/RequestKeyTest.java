@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
-
-import feign.Request;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import feign.Request;
 
 public class RequestKeyTest {
 
@@ -37,11 +36,11 @@ public class RequestKeyTest {
   @Before
   public void setUp() {
     RequestHeaders headers = RequestHeaders
-      .builder()
-      .add("my-header", "val").build();
+        .builder()
+        .add("my-header", "val").build();
     requestKey =
-      RequestKey.builder(HttpMethod.GET, "a").headers(headers).charset(Charset.forName("UTF-16"))
-        .body("content").build();
+        RequestKey.builder(HttpMethod.GET, "a").headers(headers).charset(Charset.forName("UTF-16"))
+            .body("content").build();
   }
 
   @Test
@@ -50,7 +49,7 @@ public class RequestKeyTest {
     assertThat(requestKey.getUrl(), equalTo("a"));
     assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(requestKey.getHeaders().fetch("my-header"),
-      equalTo((Collection<String>) Arrays.asList("val")));
+        equalTo((Collection<String>) Arrays.asList("val")));
     assertThat(requestKey.getCharset(), equalTo(Charset.forName("UTF-16")));
   }
 
@@ -59,14 +58,14 @@ public class RequestKeyTest {
     Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
     map.put("my-header", Arrays.asList("val"));
     Request request = Request.create("GET", "a", map, "content".getBytes(Charset.forName("UTF-8")),
-      Charset.forName("UTF-16"));
+        Charset.forName("UTF-16"));
     requestKey = RequestKey.create(request);
 
     assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
     assertThat(requestKey.getUrl(), equalTo("a"));
     assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(requestKey.getHeaders().fetch("my-header"),
-      equalTo((Collection<String>) Arrays.asList("val")));
+        equalTo((Collection<String>) Arrays.asList("val")));
     assertThat(requestKey.getCharset(), equalTo(Charset.forName("UTF-16")));
     assertThat(requestKey.getBody(), equalTo("content".getBytes(Charset.forName("UTF-8"))));
   }
@@ -116,10 +115,10 @@ public class RequestKeyTest {
   @Test
   public void equalExtra() {
     RequestHeaders headers = RequestHeaders
-      .builder()
-      .add("my-other-header", "other value").build();
+        .builder()
+        .add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers)
-      .charset(Charset.forName("ISO-8859-1")).build();
+        .charset(Charset.forName("ISO-8859-1")).build();
 
     assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
     assertThat(requestKey, equalTo(requestKey2));
@@ -136,10 +135,10 @@ public class RequestKeyTest {
   @Test
   public void equalsExtendedExtra() {
     RequestHeaders headers = RequestHeaders
-      .builder()
-      .add("my-other-header", "other value").build();
+        .builder()
+        .add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers)
-      .charset(Charset.forName("ISO-8859-1")).build();
+        .charset(Charset.forName("ISO-8859-1")).build();
 
     assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
     assertThat(requestKey.equalsExtended(requestKey2), equalTo(false));
@@ -149,7 +148,7 @@ public class RequestKeyTest {
   public void testToString() throws Exception {
     assertThat(requestKey.toString(), startsWith("Request [GET a: "));
     assertThat(requestKey.toString(),
-      both(containsString(" with my-header=[val] ")).and(containsString(" UTF-16]")));
+        both(containsString(" with my-header=[val] ")).and(containsString(" UTF-16]")));
   }
 
   @Test
@@ -158,7 +157,7 @@ public class RequestKeyTest {
 
     assertThat(requestKey.toString(), startsWith("Request [GET a: "));
     assertThat(requestKey.toString(),
-      both(containsString(" without ")).and(containsString(" no charset")));
+        both(containsString(" without ")).and(containsString(" no charset")));
   }
 
 }

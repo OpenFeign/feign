@@ -20,7 +20,15 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.fail;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.util.List;
+import javax.net.ssl.HttpsURLConnection;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 import feign.Body;
 import feign.Feign;
 import feign.FeignException;
@@ -31,15 +39,6 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
 
 public class MockClientTest {
 
@@ -50,8 +49,8 @@ public class MockClientTest {
 
     @RequestLine("GET /repos/{owner}/{repo}/contributors?client_id={client_id}")
     List<Contributor> contributors(@Param("client_id") String clientId,
-      @Param("owner") String owner,
-      @Param("repo") String repo);
+                                   @Param("owner") String owner,
+                                   @Param("repo") String repo);
 
     @RequestLine("PATCH /repos/{owner}/{repo}/contributors")
     List<Contributor> patchContributors(@Param("owner") String owner, @Param("repo") String repo);
@@ -59,9 +58,9 @@ public class MockClientTest {
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
     @Body("%7B\"login\":\"{login}\",\"type\":\"{type}\"%7D")
     Contributor create(@Param("owner") String owner,
-      @Param("repo") String repo,
-      @Param("login") String login,
-      @Param("type") String type);
+                       @Param("repo") String repo,
+                       @Param("login") String login,
+                       @Param("type") String type);
 
   }
 
@@ -83,7 +82,7 @@ public class MockClientTest {
 
     @Override
     public Object decode(Response response, Type type)
-      throws IOException, DecodeException, FeignException {
+        throws IOException, DecodeException, FeignException {
       assertThat(response.request(), notNullValue());
 
       return delegate.decode(response, type);
@@ -92,7 +91,6 @@ public class MockClientTest {
   }
 
   private GitHub github;
-
   private MockClient mockClient;
 
   @Before
@@ -102,22 +100,22 @@ public class MockClientTest {
       byte[] data = toByteArray(input);
       mockClient = new MockClient();
       github = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
-        .client(mockClient.ok(HttpMethod.GET, "/repos/netflix/feign/contributors", data)
-          .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55")
-          .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
-            new ByteArrayInputStream(data))
-          .ok(HttpMethod.POST, "/repos/netflix/feign/contributors",
-            "{\"login\":\"velo\",\"contributions\":0}")
-          .noContent(HttpMethod.PATCH, "/repos/velo/feign-mock/contributors")
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=1234567890",
-            HttpsURLConnection.HTTP_NOT_FOUND)
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-            HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-            HttpsURLConnection.HTTP_INTERNAL_ERROR, "")
-          .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-            HttpsURLConnection.HTTP_INTERNAL_ERROR, data))
-        .target(new MockTarget<GitHub>(GitHub.class));
+          .client(mockClient.ok(HttpMethod.GET, "/repos/netflix/feign/contributors", data)
+              .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55")
+              .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
+                  new ByteArrayInputStream(data))
+              .ok(HttpMethod.POST, "/repos/netflix/feign/contributors",
+                  "{\"login\":\"velo\",\"contributions\":0}")
+              .noContent(HttpMethod.PATCH, "/repos/velo/feign-mock/contributors")
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=1234567890",
+                  HttpsURLConnection.HTTP_NOT_FOUND)
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
+                  HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
+                  HttpsURLConnection.HTTP_INTERNAL_ERROR, "")
+              .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
+                  HttpsURLConnection.HTTP_INTERNAL_ERROR, data))
+          .target(new MockTarget<GitHub>(GitHub.class));
     } finally {
       input.close();
     }
@@ -160,14 +158,14 @@ public class MockClientTest {
   @Test
   public void verifyInvocation() {
     Contributor contribution =
-      github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
+        github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     // making sure it received a proper response
     assertThat(contribution, notNullValue());
     assertThat(contribution.login, equalTo("velo"));
     assertThat(contribution.contributions, equalTo(0));
 
     List<Request> results =
-      mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
+        mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
     assertThat(results, hasSize(1));
 
     byte[] body = mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
@@ -210,7 +208,7 @@ public class MockClientTest {
   public void verifyNotInvoked() {
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
     List<Request> results =
-      mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
+        mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
     assertThat(results, hasSize(0));
     try {
       mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors");
@@ -243,7 +241,7 @@ public class MockClientTest {
 
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     List<Request> results =
-      mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 2);
+        mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 2);
     assertThat(results, hasSize(2));
 
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");

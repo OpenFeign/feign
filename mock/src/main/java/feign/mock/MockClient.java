@@ -14,11 +14,6 @@
 package feign.mock;
 
 import static feign.Util.UTF_8;
-
-import feign.Client;
-import feign.Request;
-import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -29,6 +24,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import feign.Util;
 
 public class MockClient implements Client {
 
@@ -53,8 +52,7 @@ public class MockClient implements Client {
 
   private Iterator<RequestResponse> responseIterator;
 
-  public MockClient() {
-  }
+  public MockClient() {}
 
   public MockClient(boolean sequential) {
     this.sequential = sequential;
@@ -62,7 +60,7 @@ public class MockClient implements Client {
 
   @Override
   public synchronized Response execute(Request request, Request.Options options)
-    throws IOException {
+      throws IOException {
     RequestKey requestKey = RequestKey.create(request);
     Response.Builder responseBuilder;
     if (sequential) {
@@ -86,8 +84,8 @@ public class MockClient implements Client {
     RequestResponse expectedRequestResponse = responseIterator.next();
     if (!expectedRequestResponse.requestKey.equalsExtended(requestKey)) {
       throw new VerificationAssertionError("Expected %s, but was %s",
-        expectedRequestResponse.requestKey,
-        requestKey);
+          expectedRequestResponse.requestKey,
+          requestKey);
     }
 
     responseBuilder = expectedRequestResponse.responseBuilder;
@@ -118,14 +116,14 @@ public class MockClient implements Client {
     }
     if (responseBuilder == null) {
       responseBuilder =
-        Response.builder().status(HttpURLConnection.HTTP_NOT_FOUND).reason("Not mocker")
-          .headers(request.headers());
+          Response.builder().status(HttpURLConnection.HTTP_NOT_FOUND).reason("Not mocker")
+              .headers(request.headers());
     }
     return responseBuilder;
   }
 
   public MockClient ok(HttpMethod method, String url, InputStream responseBody)
-    throws IOException {
+      throws IOException {
     return ok(RequestKey.builder(method, url).build(), responseBody);
   }
 
@@ -158,7 +156,7 @@ public class MockClient implements Client {
   }
 
   public MockClient add(HttpMethod method, String url, int status, InputStream responseBody)
-    throws IOException {
+      throws IOException {
     return add(RequestKey.builder(method, url).build(), status, responseBody);
   }
 
@@ -175,17 +173,18 @@ public class MockClient implements Client {
   }
 
   /**
-   * @param response <ul>
-   * <li>the status defaults to 0, not 200!</li>
-   * <li>the internal feign-code requires the headers to be set</li>
-   * </ul>
+   * @param response
+   *        <ul>
+   *        <li>the status defaults to 0, not 200!</li>
+   *        <li>the internal feign-code requires the headers to be set</li>
+   *        </ul>
    */
   public MockClient add(HttpMethod method, String url, Response.Builder response) {
     return add(RequestKey.builder(method, url).build(), response);
   }
 
   public MockClient add(RequestKey requestKey, int status, InputStream responseBody)
-    throws IOException {
+      throws IOException {
     return add(requestKey, status, Util.toByteArray(responseBody));
   }
 
@@ -195,8 +194,8 @@ public class MockClient implements Client {
 
   public MockClient add(RequestKey requestKey, int status, byte[] responseBody) {
     return add(requestKey,
-      Response.builder().status(status).reason("Mocked").headers(RequestHeaders.EMPTY)
-        .body(responseBody));
+        Response.builder().status(status).reason("Mocked").headers(RequestHeaders.EMPTY)
+            .body(responseBody));
   }
 
   public MockClient add(RequestKey requestKey, int status) {
@@ -238,9 +237,9 @@ public class MockClient implements Client {
     List<Request> result = requests.get(requestKey);
     if (result.size() != times) {
       throw new VerificationAssertionError(
-        "Wanted: '%s' to be invoked: '%s' times but got: '%s'!",
-        requestKey,
-        times, result.size());
+          "Wanted: '%s' to be invoked: '%s' times but got: '%s'!",
+          requestKey,
+          times, result.size());
     }
 
     return result;
@@ -250,7 +249,7 @@ public class MockClient implements Client {
     RequestKey requestKey = RequestKey.builder(method, url).build();
     if (requests.containsKey(requestKey)) {
       throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!",
-        requestKey);
+          requestKey);
     }
   }
 
@@ -276,5 +275,6 @@ public class MockClient implements Client {
   public void resetRequests() {
     requests.clear();
   }
+
 
 }

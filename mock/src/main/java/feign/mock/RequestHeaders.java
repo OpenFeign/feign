@@ -26,8 +26,7 @@ public class RequestHeaders {
 
     private Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
 
-    private Builder() {
-    }
+    private Builder() {}
 
     public Builder add(String key, Collection<String> values) {
       if (!headers.containsKey(key)) {
@@ -57,11 +56,11 @@ public class RequestHeaders {
 
   }
 
+  public static final Map<String, Collection<String>> EMPTY = Collections.emptyMap();
+
   public static Builder builder() {
     return new Builder();
   }
-
-  public static final Map<String, Collection<String>> EMPTY = Collections.emptyMap();
 
   public static RequestHeaders of(Map<String, Collection<String>> headers) {
     return new RequestHeaders(headers);
@@ -92,7 +91,6 @@ public class RequestHeaders {
     return headers.get(key);
   }
 
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -119,4 +117,5 @@ public class RequestHeaders {
     }
     return "no";
   }
+
 }
