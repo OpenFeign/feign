@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class RequestKeyTest {
         .builder()
         .add("my-header", "val").build();
     requestKey =
-        RequestKey.builder(HttpMethod.GET, "a").headers(headers).charset(Charset.forName("UTF-16"))
+        RequestKey.builder(HttpMethod.GET, "a").headers(headers).charset(StandardCharsets.UTF_16)
             .body("content").build();
   }
 
@@ -50,15 +50,15 @@ public class RequestKeyTest {
     assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(requestKey.getHeaders().fetch("my-header"),
         equalTo((Collection<String>) Arrays.asList("val")));
-    assertThat(requestKey.getCharset(), equalTo(Charset.forName("UTF-16")));
+    assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
   }
 
   @Test
   public void create() throws Exception {
     Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
     map.put("my-header", Arrays.asList("val"));
-    Request request = Request.create("GET", "a", map, "content".getBytes(Charset.forName("UTF-8")),
-        Charset.forName("UTF-16"));
+    Request request = Request.create("GET", "a", map, "content".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_16);
     requestKey = RequestKey.create(request);
 
     assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
@@ -66,8 +66,8 @@ public class RequestKeyTest {
     assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(requestKey.getHeaders().fetch("my-header"),
         equalTo((Collection<String>) Arrays.asList("val")));
-    assertThat(requestKey.getCharset(), equalTo(Charset.forName("UTF-16")));
-    assertThat(requestKey.getBody(), equalTo("content".getBytes(Charset.forName("UTF-8"))));
+    assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
+    assertThat(requestKey.getBody(), equalTo("content".getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -118,7 +118,7 @@ public class RequestKeyTest {
         .builder()
         .add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers)
-        .charset(Charset.forName("ISO-8859-1")).build();
+        .charset(StandardCharsets.ISO_8859_1).build();
 
     assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
     assertThat(requestKey, equalTo(requestKey2));
@@ -138,7 +138,7 @@ public class RequestKeyTest {
         .builder()
         .add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers)
-        .charset(Charset.forName("ISO-8859-1")).build();
+        .charset(StandardCharsets.ISO_8859_1).build();
 
     assertThat(requestKey.hashCode(), equalTo(requestKey2.hashCode()));
     assertThat(requestKey.equalsExtended(requestKey2), equalTo(false));

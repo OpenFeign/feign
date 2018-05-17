@@ -95,8 +95,7 @@ public class MockClientSequentialTest {
 
   @Before
   public void setup() throws IOException {
-    InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json");
-    try {
+    try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
       RequestHeaders headers = RequestHeaders
           .builder()
@@ -115,9 +114,7 @@ public class MockClientSequentialTest {
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors",
                   Response.builder().status(HttpsURLConnection.HTTP_OK)
                       .headers(RequestHeaders.EMPTY).body(data)))
-          .target(new MockTarget<GitHub>(GitHub.class));
-    } finally {
-      input.close();
+          .target(new MockTarget<>(GitHub.class));
     }
   }
 

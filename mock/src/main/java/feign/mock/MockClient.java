@@ -122,8 +122,7 @@ public class MockClient implements Client {
     return responseBuilder;
   }
 
-  public MockClient ok(HttpMethod method, String url, InputStream responseBody)
-      throws IOException {
+  public MockClient ok(HttpMethod method, String url, InputStream responseBody) throws IOException {
     return ok(RequestKey.builder(method, url).build(), responseBody);
   }
 
@@ -236,8 +235,7 @@ public class MockClient implements Client {
 
     List<Request> result = requests.get(requestKey);
     if (result.size() != times) {
-      throw new VerificationAssertionError(
-          "Wanted: '%s' to be invoked: '%s' times but got: '%s'!",
+      throw new VerificationAssertionError("Wanted: '%s' to be invoked: '%s' times but got: '%s'!",
           requestKey,
           times, result.size());
     }
@@ -248,8 +246,7 @@ public class MockClient implements Client {
   public void verifyNever(HttpMethod method, String url) {
     RequestKey requestKey = RequestKey.builder(method, url).build();
     if (requests.containsKey(requestKey)) {
-      throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!",
-          requestKey);
+      throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!", requestKey);
     }
   }
 

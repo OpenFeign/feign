@@ -95,8 +95,7 @@ public class MockClientTest {
 
   @Before
   public void setup() throws IOException {
-    InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json");
-    try {
+    try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
       mockClient = new MockClient();
       github = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
@@ -115,9 +114,7 @@ public class MockClientTest {
                   HttpsURLConnection.HTTP_INTERNAL_ERROR, "")
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
                   HttpsURLConnection.HTTP_INTERNAL_ERROR, data))
-          .target(new MockTarget<GitHub>(GitHub.class));
-    } finally {
-      input.close();
+          .target(new MockTarget<>(GitHub.class));
     }
   }
 
