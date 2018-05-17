@@ -26,7 +26,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.net.ssl.*;
 
 /**
