@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,8 +43,6 @@ public class MockClient implements Client {
       this.responseBuilder = responseBuilder;
     }
   }
-
-  public static final Map<String, Collection<String>> EMPTY_HEADERS = Collections.emptyMap();
 
   private final List<RequestResponse> responses = new ArrayList<RequestResponse>();
 
@@ -201,7 +198,7 @@ public class MockClient implements Client {
         Response.builder()
             .status(status)
             .reason("Mocked")
-            .headers(EMPTY_HEADERS)
+            .headers(RequestHeaders.EMPTY)
             .body(responseBody));
   }
 

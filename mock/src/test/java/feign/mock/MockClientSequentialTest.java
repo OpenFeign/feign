@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import feign.Body;
 import feign.Feign;
 import feign.FeignException;
+import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
@@ -43,6 +44,7 @@ public class MockClientSequentialTest {
 
   interface GitHub {
 
+    @Headers({"Name: {owner}"})
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
 
@@ -89,14 +91,13 @@ public class MockClientSequentialTest {
   }
 
   private GitHub githubSequential;
-
   private MockClient mockClientSequential;
 
   @Before
   public void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
-
+      RequestHeaders headers = RequestHeaders.builder().add("Name", "netflix").build();
       mockClientSequential = new MockClient(true);
       githubSequential =
           Feign.builder()
@@ -104,8 +105,9 @@ public class MockClientSequentialTest {
               .client(
                   mockClientSequential
                       .add(
-                          HttpMethod.GET,
-                          "/repos/netflix/feign/contributors",
+                          RequestKey.builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
+                              .headers(headers)
+                              .build(),
                           HttpsURLConnection.HTTP_OK,
                           data)
                       .add(
@@ -122,7 +124,7 @@ public class MockClientSequentialTest {
                           "/repos/netflix/feign/contributors",
                           Response.builder()
                               .status(HttpsURLConnection.HTTP_OK)
-                              .headers(MockClient.EMPTY_HEADERS)
+                              .headers(RequestHeaders.EMPTY)
                               .body(data)))
               .target(new MockTarget<>(GitHub.class));
     }

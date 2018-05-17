@@ -16,7 +16,7 @@ package feign.mock;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
@@ -36,11 +36,10 @@ public class RequestKeyTest {
 
   @Before
   public void setUp() {
-    Map<String, Collection<String>> map = new HashMap<>();
-    map.put("my-header", Arrays.asList("val"));
+    RequestHeaders headers = RequestHeaders.builder().add("my-header", "val").build();
     requestKey =
         RequestKey.builder(HttpMethod.GET, "a")
-            .headers(map)
+            .headers(headers)
             .charset(StandardCharsets.UTF_16)
             .body("content")
             .build();
@@ -50,16 +49,16 @@ public class RequestKeyTest {
   public void builder() throws Exception {
     assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
     assertThat(requestKey.getUrl(), equalTo("a"));
-    assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
+    assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(
-        requestKey.getHeaders().get("my-header"),
+        requestKey.getHeaders().fetch("my-header"),
         equalTo((Collection<String>) Arrays.asList("val")));
     assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
   }
 
   @Test
   public void create() throws Exception {
-    Map<String, Collection<String>> map = new HashMap<>();
+    Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
     map.put("my-header", Arrays.asList("val"));
     Request request =
         Request.create(
@@ -68,9 +67,9 @@ public class RequestKeyTest {
 
     assertThat(requestKey.getMethod(), equalTo(HttpMethod.GET));
     assertThat(requestKey.getUrl(), equalTo("a"));
-    assertThat(requestKey.getHeaders().entrySet(), hasSize(1));
+    assertThat(requestKey.getHeaders().size(), is(1));
     assertThat(
-        requestKey.getHeaders().get("my-header"),
+        requestKey.getHeaders().fetch("my-header"),
         equalTo((Collection<String>) Arrays.asList("val")));
     assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
     assertThat(requestKey.getBody(), equalTo("content".getBytes(StandardCharsets.UTF_8)));
@@ -120,11 +119,10 @@ public class RequestKeyTest {
 
   @Test
   public void equalExtra() {
-    Map<String, Collection<String>> map = new HashMap<>();
-    map.put("my-other-header", Arrays.asList("other value"));
+    RequestHeaders headers = RequestHeaders.builder().add("my-other-header", "other value").build();
     RequestKey requestKey2 =
         RequestKey.builder(HttpMethod.GET, "a")
-            .headers(map)
+            .headers(headers)
             .charset(StandardCharsets.ISO_8859_1)
             .build();
 
@@ -142,11 +140,10 @@ public class RequestKeyTest {
 
   @Test
   public void equalsExtendedExtra() {
-    Map<String, Collection<String>> map = new HashMap<>();
-    map.put("my-other-header", Arrays.asList("other value"));
+    RequestHeaders headers = RequestHeaders.builder().add("my-other-header", "other value").build();
     RequestKey requestKey2 =
         RequestKey.builder(HttpMethod.GET, "a")
-            .headers(map)
+            .headers(headers)
             .charset(StandardCharsets.ISO_8859_1)
             .build();
 
@@ -158,7 +155,8 @@ public class RequestKeyTest {
   public void testToString() throws Exception {
     assertThat(requestKey.toString(), startsWith("Request [GET a: "));
     assertThat(
-        requestKey.toString(), both(containsString(" with 1 ")).and(containsString(" UTF-16]")));
+        requestKey.toString(),
+        both(containsString(" with my-header=[val] ")).and(containsString(" UTF-16]")));
   }
 
   @Test
