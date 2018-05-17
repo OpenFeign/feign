@@ -172,7 +172,6 @@ public class MockClientSequentialTest {
       githubSequential.contributors("7 7", "netflix", "feign");
       fail();
     } catch (VerificationAssertionError e) {
-      System.out.println(e.getMessage());
       assertThat(e.getMessage(), startsWith("Expected Request ["));
     }
   }
