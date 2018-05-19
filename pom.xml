@@ -27,9 +27,7 @@
     <module>gson</module>
     <module>httpclient</module>
     <module>hystrix</module>
-    <module>jackson-jaxb</module>
     <module>jackson</module>
-    <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
     <module>okhttp</module>
@@ -59,20 +57,20 @@
     <gson.version>2.5</gson.version>
 
     <junit.version>4.12</junit.version>
-    <!-- last version supporting JDK 7 -->
-    <assertj.version>1.7.1</assertj.version>
-    <jackson.version>2.6.4</jackson.version>
+    <jackson.version>2.9.6</jackson.version>
+    <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.15</animal-sniffer-maven-plugin.version>
-    <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
-    <maven-source-plugin.version>3.0.0</maven-source-plugin.version>
-    <maven-javadoc-plugin.version>2.10.3</maven-javadoc-plugin.version>
+    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
     <license-maven-plugin.version>3.0</license-maven-plugin.version>
-    <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
+    <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
+    <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
   </properties>
 
   <name>Feign (Parent)</name>
@@ -309,7 +307,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.20</version>
+          <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
@@ -463,6 +461,16 @@
   </build>
 
   <profiles>
+    <profile>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+
+      <modules>
+        <module>jackson-jaxb</module>
+        <module>jaxb</module>
+      </modules>
+    </profile>
     <profile>
       <id>release</id>
       <build>

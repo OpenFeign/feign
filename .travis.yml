@@ -12,8 +12,6 @@ before_install:
   # setup https authentication credentials, used by ./mvnw release:prepare
   - git config credential.helper "store --file=.git/credentials"
   - echo "https://$GH_TOKEN:@github.com" > .git/credentials
-  - ulimit -c unlimited -S
-  - 'wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh'
 
 install:
   # Override default travis to use the maven wrapper
@@ -35,8 +33,7 @@ matrix:
           packages:
             - oracle-java8-installer
     - os: linux
-      env: JDK='OpenJDK 10'
-      install: . ./install-jdk.sh -F 10
+      jdk: openjdk11
 
 # Don't build release tags. This avoids publish conflicts because the version commit exists both on master and the release tag.
 # See https://github.com/travis-ci/travis-ci/issues/1532
