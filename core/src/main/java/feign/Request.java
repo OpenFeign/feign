@@ -107,6 +107,8 @@ public final class Request {
    */
   public static class Options {
 
+    public static final Options DEFAULT = new Options();
+
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
     private final boolean followRedirects;

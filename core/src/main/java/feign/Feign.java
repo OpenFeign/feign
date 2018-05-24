@@ -13,11 +13,6 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -25,6 +20,12 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -104,7 +105,7 @@ public abstract class Feign {
     private Decoder decoder = new Decoder.Default();
     private QueryMapEncoder queryMapEncoder = new QueryMapEncoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Options options = new Options();
+    private Options options = Options.DEFAULT;
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
     private boolean decode404;

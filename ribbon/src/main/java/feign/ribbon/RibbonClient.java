@@ -14,8 +14,10 @@
 package feign.ribbon;
 
 import com.netflix.client.ClientException;
+import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.client.config.IClientConfig;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -78,10 +80,18 @@ public class RibbonClient implements Client {
       LBClient.RibbonRequest ribbonRequest =
           new LBClient.RibbonRequest(delegate, request, uriWithoutHost);
       return lbClient(clientName).executeWithLoadBalancer(ribbonRequest,
-          new FeignOptionsClientConfig(options)).toResponse();
+          requestConfig(options, clientName)).toResponse();
     } catch (ClientException e) {
       propagateFirstIOException(e);
       throw new RuntimeException(e);
+    }
+  }
+
+  private IClientConfig requestConfig(Request.Options options, String clientName) {
+    if (options == Request.Options.DEFAULT) {
+      return ClientFactory.getNamedConfig(clientName, LBClientFactory.DisableAutoRetriesByDefaultClientConfig.class);
+    } else {
+      return new FeignOptionsClientConfig(options);
     }
   }
 
