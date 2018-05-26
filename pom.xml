@@ -445,7 +445,7 @@
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
         <artifactId>formatter-maven-plugin</artifactId>
-        <version>2.2.0</version>
+        <version>2.7.0</version>
         <configuration>
           <lineEnding>LF</lineEnding>
           <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
