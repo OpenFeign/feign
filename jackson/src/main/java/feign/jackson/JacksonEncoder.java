@@ -15,6 +15,8 @@ package feign.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +30,7 @@ import feign.codec.Encoder;
 public class JacksonEncoder implements Encoder {
 
   private final ObjectMapper mapper;
+  private DefaultPrettyPrinter printer;
 
   public JacksonEncoder() {
     this(Collections.<Module>emptyList());
@@ -38,6 +41,10 @@ public class JacksonEncoder implements Encoder {
         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .registerModules(modules));
+    // Setup a pretty printer with an indenter of 2 spaces and UNIX newlines.
+    DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("  ", "\n");
+    printer = new DefaultPrettyPrinter();
+    printer.indentObjectsWith(indenter);
   }
 
   public JacksonEncoder(ObjectMapper mapper) {
@@ -48,7 +55,7 @@ public class JacksonEncoder implements Encoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      template.body(mapper.writerFor(javaType).writeValueAsString(object));
+      template.body(mapper.writerFor(javaType).with(printer).writeValueAsString(object));
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }
