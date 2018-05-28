@@ -146,19 +146,18 @@ public class JAXBCodecTest {
     RequestTemplate template = new RequestTemplate();
     encoder.encode(mock, MockObject.class, template);
 
-    String NEWLINE = System.getProperty("line.separator");
-
+    // RequestTemplate always expects a UNIX style newline.
     assertThat(template)
         .hasBody(
             new StringBuilder()
                 .append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-                .append(NEWLINE)
+                .append("\n")
                 .append("<mockObject>")
-                .append(NEWLINE)
+                .append("\n")
                 .append("    <value>Test</value>")
-                .append(NEWLINE)
+                .append("\n")
                 .append("</mockObject>")
-                .append(NEWLINE)
+                .append("\n")
                 .toString());
   }
 

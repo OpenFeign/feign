@@ -42,7 +42,8 @@ public class Slf4jLoggerTest {
   @Test
   public void useFeignLoggerByDefault() throws Exception {
     slf4j.logLevel("debug");
-    slf4j.expectMessages("DEBUG feign.Logger - [someMethod] This is my message\n");
+    slf4j.expectMessages(
+        "DEBUG feign.Logger - [someMethod] This is my message" + System.lineSeparator());
 
     logger = new Slf4jLogger();
     logger.log(CONFIG_KEY, "This is my message");
@@ -51,7 +52,8 @@ public class Slf4jLoggerTest {
   @Test
   public void useLoggerByNameIfRequested() throws Exception {
     slf4j.logLevel("debug");
-    slf4j.expectMessages("DEBUG named.logger - [someMethod] This is my message\n");
+    slf4j.expectMessages(
+        "DEBUG named.logger - [someMethod] This is my message" + System.lineSeparator());
 
     logger = new Slf4jLogger("named.logger");
     logger.log(CONFIG_KEY, "This is my message");
@@ -60,7 +62,8 @@ public class Slf4jLoggerTest {
   @Test
   public void useLoggerByClassIfRequested() throws Exception {
     slf4j.logLevel("debug");
-    slf4j.expectMessages("DEBUG feign.Feign - [someMethod] This is my message\n");
+    slf4j.expectMessages(
+        "DEBUG feign.Feign - [someMethod] This is my message" + System.lineSeparator());
 
     logger = new Slf4jLogger(Feign.class);
     logger.log(CONFIG_KEY, "This is my message");
@@ -69,7 +72,8 @@ public class Slf4jLoggerTest {
   @Test
   public void useSpecifiedLoggerIfRequested() throws Exception {
     slf4j.logLevel("debug");
-    slf4j.expectMessages("DEBUG specified.logger - [someMethod] This is my message\n");
+    slf4j.expectMessages(
+        "DEBUG specified.logger - [someMethod] This is my message" + System.lineSeparator());
 
     logger = new Slf4jLogger(LoggerFactory.getLogger("specified.logger"));
     logger.log(CONFIG_KEY, "This is my message");
@@ -89,9 +93,12 @@ public class Slf4jLoggerTest {
   public void logRequestsAndResponses() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
-        "DEBUG feign.Logger - [someMethod] A message with 2 formatting tokens.\n"
-            + "DEBUG feign.Logger - [someMethod] ---> GET http://api.example.com HTTP/1.1\n"
-            + "DEBUG feign.Logger - [someMethod] <--- HTTP/1.1 200 OK (273ms)\n");
+        "DEBUG feign.Logger - [someMethod] A message with 2 formatting tokens."
+            + System.lineSeparator()
+            + "DEBUG feign.Logger - [someMethod] ---> GET http://api.example.com HTTP/1.1"
+            + System.lineSeparator()
+            + "DEBUG feign.Logger - [someMethod] <--- HTTP/1.1 200 OK (273ms)"
+            + System.lineSeparator());
 
     logger = new Slf4jLogger();
     logger.log(CONFIG_KEY, "A message with %d formatting %s.", 2, "tokens");

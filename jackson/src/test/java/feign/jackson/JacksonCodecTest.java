@@ -48,15 +48,24 @@ public class JacksonCodecTest {
 
   private String zonesJson =
       "" //
-          + "[\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\"\n" //
-          + "  },\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\",\n" //
-          + "    \"id\": \"ABCD\"\n" //
-          + "  }\n" //
-          + "]\n";
+          + "["
+          + System.lineSeparator() //
+          + "  {"
+          + System.lineSeparator() //
+          + "    \"name\": \"denominator.io.\""
+          + System.lineSeparator() //
+          + "  },"
+          + System.lineSeparator() //
+          + "  {"
+          + System.lineSeparator() //
+          + "    \"name\": \"denominator.io.\","
+          + System.lineSeparator() //
+          + "    \"id\": \"ABCD\""
+          + System.lineSeparator() //
+          + "  }"
+          + System.lineSeparator() //
+          + "]"
+          + System.lineSeparator();
 
   @Test
   public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
@@ -69,8 +78,10 @@ public class JacksonCodecTest {
     assertThat(template)
         .hasBody(
             "" //
-                + "{\n" //
-                + "  \"foo\" : 1\n" //
+                + "{"
+                + System.lineSeparator() //
+                + "  \"foo\" : 1"
+                + System.lineSeparator() //
                 + "}");
   }
 
@@ -86,9 +97,12 @@ public class JacksonCodecTest {
     assertThat(template)
         .hasBody(
             "" //
-                + "{\n" //
-                + "  \"foo\" : 1,\n" //
-                + "  \"bar\" : [ 2, 3 ]\n" //
+                + "{"
+                + System.lineSeparator() //
+                + "  \"foo\" : 1,"
+                + System.lineSeparator() //
+                + "  \"bar\" : [ 2, 3 ]"
+                + System.lineSeparator() //
                 + "}");
   }
 
@@ -170,11 +184,16 @@ public class JacksonCodecTest {
     assertThat(template)
         .hasBody(
             "" //
-                + "[ {\n"
-                + "  \"name\" : \"DENOMINATOR.IO.\"\n"
-                + "}, {\n"
-                + "  \"name\" : \"DENOMINATOR.IO.\",\n"
-                + "  \"id\" : \"ABCD\"\n"
+                + "[ {"
+                + System.lineSeparator()
+                + "  \"name\" : \"DENOMINATOR.IO.\""
+                + System.lineSeparator()
+                + "}, {"
+                + System.lineSeparator()
+                + "  \"name\" : \"DENOMINATOR.IO.\","
+                + System.lineSeparator()
+                + "  \"id\" : \"ABCD\""
+                + System.lineSeparator()
                 + "} ]");
   }
 
