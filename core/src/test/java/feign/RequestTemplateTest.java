@@ -177,7 +177,7 @@ public class RequestTemplateTest {
     template.resolve(mapOf("var", ""));
 
     assertThat(template)
-        .hasHeaders(entry("Encoded", asList("")));
+        .hasNoHeader("Encoded");
   }
 
   @Test

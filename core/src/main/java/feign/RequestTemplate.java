@@ -266,7 +266,7 @@ public final class RequestTemplate implements Serializable {
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
-    safeCopy.putAll(headers);
+    safeCopy.putAll(headers());
     return Request.create(
         method, url + queryLine(),
         Collections.unmodifiableMap(safeCopy),
@@ -535,6 +535,8 @@ public final class RequestTemplate implements Serializable {
    * @see Request#headers()
    */
   public Map<String, Collection<String>> headers() {
+    headers.forEach((key, value) -> value.removeIf(e -> e == null || e.trim().equals("")));
+    headers.entrySet().removeIf(e -> e.getValue() == null || e.getValue().isEmpty());
     return Collections.unmodifiableMap(headers);
   }
 
