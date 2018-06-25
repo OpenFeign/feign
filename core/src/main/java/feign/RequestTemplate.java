@@ -535,7 +535,7 @@ public final class RequestTemplate implements Serializable {
    * @see Request#headers()
    */
   public Map<String, Collection<String>> headers() {
-    headers.forEach((key, value) -> value.removeIf(e -> e == null || e.trim().equals("")));
+    headers.forEach((key, value) -> value.removeIf(e -> e == null));
     headers.entrySet().removeIf(e -> e.getValue() == null || e.getValue().isEmpty());
     return Collections.unmodifiableMap(headers);
   }
