@@ -34,6 +34,7 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 import static feign.Util.toArray;
 import static feign.Util.valuesOrEmpty;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Builds a request to an http target. Not thread safe. <br>
@@ -535,9 +536,16 @@ public final class RequestTemplate implements Serializable {
    * @see Request#headers()
    */
   public Map<String, Collection<String>> headers() {
-    headers.forEach((key, value) -> value.removeIf(e -> e == null));
-    headers.entrySet().removeIf(e -> e.getValue() == null || e.getValue().isEmpty());
-    return Collections.unmodifiableMap(headers);
+
+    return Collections.unmodifiableMap(
+        headers.entrySet().stream().filter(h -> h.getValue() != null && !h.getValue().isEmpty())
+            .collect(toMap(
+                Entry::getKey,
+                Entry::getValue,
+                (e1, e2) -> {
+                  throw new IllegalStateException("headers should not have duplicated keys");
+                },
+                LinkedHashMap::new)));
   }
 
   /**
