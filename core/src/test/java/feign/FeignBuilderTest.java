@@ -13,26 +13,31 @@
  */
 package feign;
 
-import java.util.HashMap;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
+
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
@@ -257,6 +262,38 @@ public class FeignBuilderTest {
 
     assertThat(server.takeRequest())
         .hasBody("request data");
+  }
+
+  @Test
+  public void testProvideMethodHandlerFactory() throws Exception {
+    // The test MethodHandler doesn't actually make a request, just fakes it
+    String url = "http://localhost:1234";
+
+    final AtomicInteger callCount = new AtomicInteger();
+    MethodHandlerFactory factory = new MethodHandlerFactory() {
+      @Override
+      public MethodHandler create(Target<?> target, MethodMetadata md,
+          RequestTemplate.Factory buildTemplateFromArgs, Request.Options options,
+          Decoder decoder, ErrorDecoder errorDecoder) {
+        return new MethodHandler() {
+          @Override
+          public Object invoke(Object[] argv) {
+            callCount.incrementAndGet();
+            return Response.builder()
+                    .status(200)
+                    .headers(Collections.emptyMap())
+                    .body("response data", Charset.defaultCharset())
+                    .build();
+          }
+        };
+      }
+    };
+
+    TestInterface api =
+            Feign.builder().methodHandlerFactory(factory).target(TestInterface.class, url);
+    Response response = api.codecPost("request data");
+    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertEquals(1, callCount.get());
   }
 
   @Test
