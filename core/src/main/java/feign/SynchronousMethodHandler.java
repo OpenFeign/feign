@@ -173,7 +173,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
   }
 
-  static class Factory {
+  static class Factory implements MethodHandlerFactory {
 
     private final Client client;
     private final Retryer retryer;
@@ -194,6 +194,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.closeAfterDecode = closeAfterDecode;
     }
 
+    @Override
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,

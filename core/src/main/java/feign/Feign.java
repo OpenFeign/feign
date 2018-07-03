@@ -109,6 +109,7 @@ public abstract class Feign {
         new InvocationHandlerFactory.Default();
     private boolean decode404;
     private boolean closeAfterDecode = true;
+    private MethodHandlerFactory methodHandlerFactory;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -219,6 +220,14 @@ public abstract class Feign {
     }
 
     /**
+     * Allows you to override how reflective dispatch works inside of Feign.
+     */
+    public Builder methodHandlerFactory(MethodHandlerFactory methodHandlerFactory) {
+      this.methodHandlerFactory = methodHandlerFactory;
+      return this;
+    }
+
+    /**
      * This flag indicates that the response should not be automatically closed upon completion of
      * decoding the message. This should be set if you plan on processing the response into a
      * lazy-evaluated construct, such as a {@link java.util.Iterator}.
@@ -245,12 +254,13 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode);
+      if (methodHandlerFactory == null) {
+        this.methodHandlerFactory = new SynchronousMethodHandler.Factory(client, retryer,
+                requestInterceptors, logger, logLevel, decode404, closeAfterDecode);
+      }
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
+              errorDecoder, methodHandlerFactory);
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }

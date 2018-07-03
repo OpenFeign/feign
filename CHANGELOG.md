@@ -1,3 +1,9 @@
+### Version 9.8
+* Add configurable `MethodHandler` to `Feign.Builder`
+
+### Version 9.7
+* ???
+
 ### Version 9.6
 * Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.
 * Adds `JacksonIteratorDecoder` and `StreamDecoder` to decode responses as `java.util.Iterator` or `java.util.stream.Stream`.

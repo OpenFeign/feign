@@ -129,7 +129,7 @@ public class ReflectiveFeign extends Feign {
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
-    private final SynchronousMethodHandler.Factory factory;
+    private final MethodHandlerFactory factory;
 
     ParseHandlersByName(
         Contract contract,
@@ -138,7 +138,7 @@ public class ReflectiveFeign extends Feign {
         Decoder decoder,
         QueryMapEncoder queryMapEncoder,
         ErrorDecoder errorDecoder,
-        SynchronousMethodHandler.Factory factory) {
+        MethodHandlerFactory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
