@@ -36,7 +36,6 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
-    <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
   </modules>
