@@ -332,6 +332,9 @@ public abstract class AbstractClientTest {
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
     Response postWithContentType(String body, @Param("contentType") String contentType);
+
+    @RequestLine("GET /wsdl/testcase?wsdl")
+    Response getWsdl();
   }
 
 }

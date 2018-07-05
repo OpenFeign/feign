@@ -670,7 +670,10 @@ public final class RequestTemplate implements Serializable {
       }
       Collection<String> values = new ArrayList<String>();
       for (String value : entry.getValue()) {
-        if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
+        // Allow a pure param to be represented, e.g. /path/resource?wsdl
+        if (null == value) {
+          values.add(null);
+        } else if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
           Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
           // only add non-null expressions
           if (variableValue == null) {
