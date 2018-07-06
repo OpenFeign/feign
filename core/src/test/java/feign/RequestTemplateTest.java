@@ -19,6 +19,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Rule;
@@ -339,5 +341,31 @@ public class RequestTemplateTest {
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not+encoded&params[]=encoded");
     assertThat(template.queries()).doesNotContain(entry("params[]", asList("not encoded")));
     assertThat(template.queries()).contains(entry("params[]", asList("encoded")));
+  }
+
+  @Test
+  public void shouldRetrieveHeadersWithoutNull() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .header("key1", (String) null)
+            .header("key2", Collections.emptyList())
+            .header("key3", (Collection) null)
+            .header("key4", "valid")
+            .header("key5", "valid")
+            .header("key6", "valid")
+            .header("key7", "valid");
+
+    assertThat(template.headers()).hasSize(4);
+    assertThat(template.headers().keySet()).containsExactly("key4", "key5", "key6", "key7");
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotInsertHeadersImmutableMap() {
+    RequestTemplate template = new RequestTemplate().header("key1", "valid");
+
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().keySet()).containsExactly("key1");
+
+    template.headers().put("key2", asList("other value"));
   }
 }

@@ -83,4 +83,9 @@ public final class RequestTemplateAssert
     maps.assertContainsExactly(info, actual.headers(), entries);
     return this;
   }
+
+  public RequestTemplateAssert hasNoHeader(final String encoded) {
+    objects.assertNull(info, actual.headers().get(encoded));
+    return this;
+  }
 }
