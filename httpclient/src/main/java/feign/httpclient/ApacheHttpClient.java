@@ -20,6 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.Configurable;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.URIBuilder;
@@ -89,8 +90,7 @@ public final class ApacheHttpClient implements Client {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
     // per request timeouts
-    RequestConfig requestConfig = RequestConfig
-        .custom()
+    RequestConfig requestConfig = (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig()) : RequestConfig.custom())
         .setConnectTimeout(options.connectTimeoutMillis())
         .setSocketTimeout(options.readTimeoutMillis())
         .build();
