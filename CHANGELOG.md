@@ -1,3 +1,6 @@
+### Version 10.0
+* Feign baseline is now JDK 8
+
 ### Version 9.6
 * Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.
 * Adds `JacksonIteratorDecoder` and `StreamDecoder` to decode responses as `java.util.Iterator` or `java.util.stream.Stream`.

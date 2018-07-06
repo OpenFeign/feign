@@ -155,7 +155,7 @@ public class JacksonCodecTest {
     encoder.encode(zones, new TypeReference<List<Zone>>() {}.getType(), template);
 
     assertThat(template).hasBody("" //
-        + "[ {" + System.lineSeparator() 
+        + "[ {" + System.lineSeparator()
         + "  \"name\" : \"DENOMINATOR.IO.\"" + System.lineSeparator()
         + "}, {" + System.lineSeparator()
         + "  \"name\" : \"DENOMINATOR.IO.\"," + System.lineSeparator()
