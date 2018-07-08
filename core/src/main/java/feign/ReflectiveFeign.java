@@ -98,7 +98,16 @@ public class ReflectiveFeign extends Feign {
       } else if ("toString".equals(method.getName())) {
         return toString();
       }
-      return dispatch.get(method).invoke(args);
+
+      try {
+          return dispatch.get(method).invoke(args);
+      } catch (Throwable th) {
+        Throwable cause = th.getCause();
+        if (th instanceof RetryableException && cause != null) {
+          throw cause;
+        }
+        throw th;
+      }
     }
 
     @Override
