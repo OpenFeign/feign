@@ -334,7 +334,7 @@ public abstract class AbstractClientTest {
     Response postWithContentType(String body, @Param("contentType") String contentType);
 
     @RequestLine("GET /wsdl/testcase?wsdl")
-    Response getWsdl();
+    Response getRequestWithNameOnlyParameter();
   }
 
 }

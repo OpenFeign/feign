@@ -100,13 +100,13 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testWsdlApi() throws InterruptedException {
+  public void testGetRequestWithNameOnlyParameter() throws InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(200).setBody(""));
 
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Response response = api.getWsdl();
+    Response response = api.getRequestWithNameOnlyParameter();
 
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
