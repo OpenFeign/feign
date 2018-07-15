@@ -90,10 +90,12 @@ public final class ApacheHttpClient implements Client {
     RequestBuilder requestBuilder = RequestBuilder.create(request.method());
 
     // per request timeouts
-    RequestConfig requestConfig = (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig()) : RequestConfig.custom())
-        .setConnectTimeout(options.connectTimeoutMillis())
-        .setSocketTimeout(options.readTimeoutMillis())
-        .build();
+    RequestConfig requestConfig =
+        (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig())
+            : RequestConfig.custom())
+                .setConnectTimeout(options.connectTimeoutMillis())
+                .setSocketTimeout(options.readTimeoutMillis())
+                .build();
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
