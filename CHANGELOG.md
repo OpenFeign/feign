@@ -1,5 +1,6 @@
 ### Version 10.0
 * Feign baseline is now JDK 8
+* Removed @Deprecated methods marked for removal on feign 10
 
 ### Version 9.6
 * Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.

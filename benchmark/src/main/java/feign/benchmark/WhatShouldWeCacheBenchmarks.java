@@ -68,7 +68,13 @@ public class WhatShouldWeCacheBenchmarks {
           public Response execute(Request request, Request.Options options) throws IOException {
             Map<String, Collection<String>> headers =
                 new LinkedHashMap<String, Collection<String>>();
-            return Response.create(200, "ok", headers, (byte[]) null);
+            return Response.builder()
+                .body((byte[]) null)
+                .status(200)
+                .headers(headers)
+                .reason("ok")
+                .request(request)
+                .build();
           }
         };
     cachedFakeFeign = Feign.builder().client(fakeClient).build();
