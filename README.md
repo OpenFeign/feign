@@ -473,6 +473,37 @@ MyApi myApi = Feign.builder()
                  .target(MyApi.class, "https://api.hostname.com");
 ```
 
+### Error Handling
+If you need more control over handling unexpected responses, Feign instances can
+register a custom `ErrorDecoder` via the builder.
+
+```java
+MyApi myApi = Feign.builder()
+                 .errorDecoder(new MyErrorDecoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+All responses that result in an HTTP status not in the 2xx range will trigger the `ErrorDecoder`'s `decode` method, allowing
+you to handle the response, wrap the failure into a custom exception or perform any additional processing.
+If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
+`Retyer`.
+
+### Retry
+Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network
+related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`.  To customize this
+behavior, register a custom `Retryer` instance via the builder.
+
+```java
+MyApi myApi = Feign.builder()
+                 .retryer(new MyRetryer())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+`Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
+`false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be 
+created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
+If the retry is determined to be unsucessful, the last `RetryException` will be thrown.
+
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
 These allows Feign clients to contain logic that is not expressly defined by the underlying API.

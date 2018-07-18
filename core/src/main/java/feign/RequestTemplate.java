@@ -166,7 +166,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
-    Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
+    Map<String, Collection<String>> map = new LinkedHashMap<>();
     if (emptyToNull(queryLine) == null) {
       return map;
     }

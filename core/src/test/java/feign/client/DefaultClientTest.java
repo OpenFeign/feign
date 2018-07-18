@@ -13,6 +13,7 @@
  */
 package feign.client;
 
+import feign.FeignException;
 import java.io.IOException;
 import java.net.ProtocolException;
 import javax.net.ssl.HostnameVerifier;

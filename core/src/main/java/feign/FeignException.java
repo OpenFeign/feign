@@ -13,8 +13,8 @@
  */
 package feign;
 
-import java.io.IOException;
 import static java.lang.String.format;
+import java.io.IOException;
 
 /**
  * Origin exception type for all Http Apis.
@@ -61,7 +61,9 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
-        format("%s executing %s %s", cause.getMessage(), request.method(), request.url()), cause,
+        format("%s executing %s %s", cause.getMessage(), request.method(), request.url()),
+        request.method(),
+        cause,
         null);
   }
 }

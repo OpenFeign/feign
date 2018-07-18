@@ -13,6 +13,8 @@
  */
 package feign.jackson.jaxb;
 
+import feign.Request;
+import feign.Util;
 import org.junit.Test;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +44,7 @@ public class JacksonJaxbCodecTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body("{\"value\":\"Test\"}", UTF_8)
         .build();
@@ -57,6 +60,7 @@ public class JacksonJaxbCodecTest {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();

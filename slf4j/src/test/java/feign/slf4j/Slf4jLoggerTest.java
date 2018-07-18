@@ -13,6 +13,7 @@
  */
 package feign.slf4j;
 
+import feign.Util;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ public class Slf4jLoggerTest {
       Response.builder()
           .status(200)
           .reason("OK")
+          .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
           .headers(Collections.<String, Collection<String>>emptyMap())
           .body(new byte[0])
           .build();

@@ -13,17 +13,21 @@
  */
 package feign;
 
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
-import static feign.Util.checkNotNull;
-import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
  */
 public final class Request {
+
+  public enum Methods {
+    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+  }
 
   /**
    * No parameters can be null except {@code body} and {@code charset}. All parameters must be
@@ -37,7 +41,7 @@ public final class Request {
     return new Request(method, url, headers, body, charset);
   }
 
-  private final String method;
+  private final Methods method;
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final byte[] body;
@@ -45,7 +49,7 @@ public final class Request {
 
   Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
       Charset charset) {
-    this.method = checkNotNull(method, "method of %s", url);
+    this.method = Methods.valueOf(checkNotNull(method, "method of %s", url));
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
@@ -54,7 +58,7 @@ public final class Request {
 
   /* Method to invoke on the server. */
   public String method() {
-    return method;
+    return method.name();
   }
 
   /* Fully resolved URL including query. */
