@@ -95,7 +95,7 @@ public interface ErrorDecoder {
       if (retryAfter != null) {
         return new RetryableException(
             exception.getMessage(),
-            response.request().method(),
+            response.request().httpMethod(),
             exception,
             retryAfter);
       }

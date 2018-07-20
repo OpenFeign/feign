@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.Request.HttpMethod;
 import java.util.Date;
 
 /**
@@ -24,23 +25,23 @@ public class RetryableException extends FeignException {
   private static final long serialVersionUID = 1L;
 
   private final Long retryAfter;
-  private final String method;
+  private final HttpMethod httpMethod;
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
-  public RetryableException(String message, String method, Throwable cause, Date retryAfter) {
+  public RetryableException(String message, HttpMethod httpMethod, Throwable cause, Date retryAfter) {
     super(message, cause);
-    this.method = method;
+    this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
-  public RetryableException(String message, String method, Date retryAfter) {
+  public RetryableException(String message, HttpMethod httpMethod, Date retryAfter) {
     super(message);
-    this.method = method;
+    this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
@@ -52,7 +53,7 @@ public class RetryableException extends FeignException {
     return retryAfter != null ? new Date(retryAfter) : null;
   }
 
-  public String method() {
-    return this.method;
+  public HttpMethod method() {
+    return this.httpMethod;
   }
 }

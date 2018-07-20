@@ -128,7 +128,7 @@ public final class Response implements Closeable {
 
       /* don't keep the body, we don't want to tie up memory on large requests */
       this.request = Request.create(
-          request.method(), request.url(), request.headers(), null, request.charset());
+          request.httpMethod(), request.url(), request.headers(), null, request.charset());
       return this;
     }
 
