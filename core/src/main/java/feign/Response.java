@@ -124,11 +124,8 @@ public final class Response implements Closeable {
      * @see Response#request
      */
     public Builder request(Request request) {
-      checkNotNull(request, "the original request is required on all responses");
-
-      /* don't keep the body, we don't want to tie up memory on large requests */
-      this.request = Request.create(
-          request.httpMethod(), request.url(), request.headers(), null, request.charset());
+      checkNotNull(request, "request is required");
+      this.request = request;
       return this;
     }
 
@@ -170,7 +167,7 @@ public final class Response implements Closeable {
   }
 
   /**
-   * if present, the request that generated this response
+   * the request that generated this response
    */
   public Request request() {
     return request;
