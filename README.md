@@ -1,6 +1,3 @@
-# Contributors wanted
-Do you rely on Feign? Are you willing and able to ask hard questions and collaborate with others who raise issues and pull requests? Please get in touch with https://github.com/adriancole on Gitter.
-
 # Feign makes writing java http clients easier
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
