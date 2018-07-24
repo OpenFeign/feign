@@ -83,7 +83,7 @@ public final class ApacheHttpClient implements Client {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
     HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse).toBuilder().request(request).build();
+    return toFeignResponse(httpResponse, request);
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
@@ -169,7 +169,7 @@ public final class ApacheHttpClient implements Client {
     return contentType;
   }
 
-  Response toFeignResponse(HttpResponse httpResponse) throws IOException {
+  Response toFeignResponse(HttpResponse httpResponse, Request request) throws IOException {
     StatusLine statusLine = httpResponse.getStatusLine();
     int statusCode = statusLine.getStatusCode();
 
@@ -192,6 +192,7 @@ public final class ApacheHttpClient implements Client {
         .status(statusCode)
         .reason(reason)
         .headers(headers)
+        .request(request)
         .body(toFeignBody(httpResponse))
         .build();
   }

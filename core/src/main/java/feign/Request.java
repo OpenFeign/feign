@@ -24,9 +24,23 @@ import java.util.Map;
 /** An immutable request to an http server. */
 public final class Request {
 
+  public enum HttpMethod {
+    GET,
+    HEAD,
+    POST,
+    PUT,
+    DELETE,
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    PATCH
+  }
+
   /**
    * No parameters can be null except {@code body} and {@code charset}. All parameters must be
    * effectively immutable, via safe copies, not mutating or otherwise.
+   *
+   * @deprecated {@link #create(HttpMethod, String, Map, byte[], Charset)}
    */
   public static Request create(
       String method,
@@ -34,31 +48,66 @@ public final class Request {
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset) {
-    return new Request(method, url, headers, body, charset);
+    checkNotNull(method, "httpMethod of %s", method);
+    HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
+    return create(httpMethod, url, headers, body, charset);
   }
 
-  private final String method;
+  /**
+   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   *
+   * @param httpMethod for the request.
+   * @param url for the request.
+   * @param headers to include.
+   * @param body of the request, can be {@literal null}
+   * @param charset of the request, can be {@literal null}
+   * @return a Request
+   */
+  public static Request create(
+      HttpMethod httpMethod,
+      String url,
+      Map<String, Collection<String>> headers,
+      byte[] body,
+      Charset charset) {
+    return new Request(httpMethod, url, headers, body, charset);
+  }
+
+  private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final byte[] body;
   private final Charset charset;
 
   Request(
-      String method,
+      HttpMethod method,
       String url,
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset) {
-    this.method = checkNotNull(method, "method of %s", url);
+    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
 
-  /* Method to invoke on the server. */
+  /**
+   * Http Method for this request.
+   *
+   * @return the HttpMethod string
+   * @deprecated @see {@link #httpMethod()}
+   */
   public String method() {
-    return method;
+    return httpMethod.name();
+  }
+
+  /**
+   * Http Method for the request.
+   *
+   * @return the HttpMethod.
+   */
+  public HttpMethod httpMethod() {
+    return this.httpMethod;
   }
 
   /* Fully resolved URL including query. */
@@ -93,7 +142,7 @@ public final class Request {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
+    builder.append(httpMethod).append(' ').append(url).append(" HTTP/1.1\n");
     for (String field : headers.keySet()) {
       for (String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');

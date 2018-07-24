@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
+import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -476,7 +477,7 @@ public class FeignTest {
                   public Object decode(Response response, Type type) throws IOException {
                     String string = super.decode(response, type).toString();
                     if ("retry!".equals(string)) {
-                      throw new RetryableException(string, null);
+                      throw new RetryableException(string, HttpMethod.POST, null);
                     }
                     return string;
                   }
@@ -523,7 +524,7 @@ public class FeignTest {
                 new ErrorDecoder() {
                   @Override
                   public Exception decode(String methodKey, Response response) {
-                    return new RetryableException("play it again sam!", null);
+                    return new RetryableException("play it again sam!", HttpMethod.POST, null);
                   }
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -538,7 +539,13 @@ public class FeignTest {
     Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
     headers.put("Location", Arrays.asList("http://bar.com"));
     final Response response =
-        Response.builder().status(302).reason("Found").headers(headers).body(new byte[0]).build();
+        Response.builder()
+            .status(302)
+            .reason("Found")
+            .headers(headers)
+            .request(Request.create("GET", "/", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
 
     TestInterface api =
         Feign.builder()
@@ -739,6 +746,7 @@ public class FeignTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(new HashMap<String, Collection<String>>())
         .build();
   }

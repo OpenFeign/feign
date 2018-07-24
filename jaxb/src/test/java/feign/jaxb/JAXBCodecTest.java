@@ -17,8 +17,10 @@ import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -174,6 +176,7 @@ public class JAXBCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -199,6 +202,7 @@ public class JAXBCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("<foo/>", UTF_8)
             .build();
@@ -213,6 +217,7 @@ public class JAXBCodecTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat(

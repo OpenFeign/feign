@@ -32,6 +32,7 @@ public class ResponseTest {
         Response.builder()
             .status(200)
             .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 
@@ -45,7 +46,12 @@ public class ResponseTest {
     List<String> valueList = Collections.singletonList("application/json");
     headersMap.put("Content-Type", valueList);
     Response response =
-        Response.builder().status(200).headers(headersMap).body(new byte[0]).build();
+        Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
     assertThat(response.headers().get("content-type")).isEqualTo(valueList);
     assertThat(response.headers().get("Content-Type")).isEqualTo(valueList);
   }
@@ -57,7 +63,12 @@ public class ResponseTest {
     headersMap.put("set-cookie", Arrays.asList("Cookie-C=Value"));
 
     Response response =
-        Response.builder().status(200).headers(headersMap).body(new byte[0]).build();
+        Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
 
     List<String> expectedHeaderValue =
         Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");

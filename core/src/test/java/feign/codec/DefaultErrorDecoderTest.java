@@ -18,9 +18,12 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
+import feign.Util;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Rule;
@@ -41,7 +44,12 @@ public class DefaultErrorDecoderTest {
     thrown.expectMessage("status 500 reading Service#foo()");
 
     Response response =
-        Response.builder().status(500).reason("Internal server error").headers(headers).build();
+        Response.builder()
+            .status(500)
+            .reason("Internal server error")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .build();
 
     throw errorDecoder.decode("Service#foo()", response);
   }
@@ -55,6 +63,7 @@ public class DefaultErrorDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal server error")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(headers)
             .body("hello world", UTF_8)
             .build();
@@ -65,7 +74,12 @@ public class DefaultErrorDecoderTest {
   @Test
   public void testFeignExceptionIncludesStatus() throws Throwable {
     Response response =
-        Response.builder().status(400).reason("Bad request").headers(headers).build();
+        Response.builder()
+            .status(400)
+            .reason("Bad request")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .build();
 
     Exception exception = errorDecoder.decode("Service#foo()", response);
 
@@ -80,7 +94,12 @@ public class DefaultErrorDecoderTest {
 
     headers.put(RETRY_AFTER, Arrays.asList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response =
-        Response.builder().status(503).reason("Service Unavailable").headers(headers).build();
+        Response.builder()
+            .status(503)
+            .reason("Service Unavailable")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .build();
 
     throw errorDecoder.decode("Service#foo()", response);
   }

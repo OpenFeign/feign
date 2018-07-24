@@ -14,6 +14,7 @@
 package feign.benchmark;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import feign.Request;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -77,6 +78,7 @@ public class DecoderIteratorsBenchmark {
         Response.builder()
             .status(200)
             .reason("OK")
+            .request(Request.create("GET", "/", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(carsJson(Integer.valueOf(size)), Util.UTF_8)
             .build();

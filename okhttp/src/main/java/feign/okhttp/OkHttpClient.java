@@ -90,12 +90,14 @@ public final class OkHttpClient implements Client {
     return requestBuilder.build();
   }
 
-  private static feign.Response toFeignResponse(Response input) throws IOException {
+  private static feign.Response toFeignResponse(Response response, feign.Request request)
+      throws IOException {
     return feign.Response.builder()
-        .status(input.code())
-        .reason(input.message())
-        .headers(toMap(input.headers()))
-        .body(toBody(input.body()))
+        .status(response.code())
+        .reason(response.message())
+        .request(request)
+        .headers(toMap(response.headers()))
+        .body(toBody(response.body()))
         .build();
   }
 
@@ -162,6 +164,6 @@ public final class OkHttpClient implements Client {
     }
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response).toBuilder().request(input).build();
+    return toFeignResponse(response, input).toBuilder().request(input).build();
   }
 }

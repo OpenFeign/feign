@@ -14,13 +14,13 @@
 package feign.benchmark;
 
 import feign.Feign;
+import feign.Logger;
+import feign.Logger.Level;
 import feign.Response;
+import feign.Retryer;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.protocol.http.server.HttpServer;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
-import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.http.server.RequestHandler;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
@@ -53,21 +53,16 @@ public class RealRequestBenchmarks {
 
   @Setup
   public void setup() {
-    server =
-        RxNetty.createHttpServer(
-            SERVER_PORT,
-            new RequestHandler<ByteBuf, ByteBuf>() {
-              public rx.Observable handle(
-                  HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
-                return response.flush();
-              }
-            });
+    server = RxNetty.createHttpServer(SERVER_PORT, (request, response) -> response.flush());
     server.start();
     client = new OkHttpClient();
     client.retryOnConnectionFailure();
     okFeign =
         Feign.builder()
             .client(new feign.okhttp.OkHttpClient(client))
+            .logLevel(Level.NONE)
+            .logger(new Logger.ErrorLogger())
+            .retryer(new Retryer.Default())
             .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
     queryRequest =
         new Request.Builder()
@@ -90,7 +85,10 @@ public class RealRequestBenchmarks {
 
   /** How fast can we execute get commands synchronously using Feign? */
   @Benchmark
-  public Response query_feignUsingOkHttp() {
-    return okFeign.query();
+  public boolean query_feignUsingOkHttp() {
+    /* auto close the response */
+    try (Response ignored = okFeign.query()) {
+      return true;
+    }
   }
 }

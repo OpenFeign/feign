@@ -18,7 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import feign.Request;
 import feign.Response;
+import feign.Util;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.text.ParseException;
@@ -77,6 +79,7 @@ public class SAXDecoderTest {
     return Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(statusFailed, UTF_8)
         .build();
@@ -88,6 +91,7 @@ public class SAXDecoderTest {
         Response.builder()
             .status(204)
             .reason("OK")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertNull(decoder.decode(response, String.class));
@@ -100,6 +104,7 @@ public class SAXDecoderTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();

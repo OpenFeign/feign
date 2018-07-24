@@ -18,8 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import feign.Feign;
+import feign.Request;
 import feign.RequestLine;
 import feign.Response;
+import feign.Util;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -86,6 +88,7 @@ public class StreamDecoderTest {
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body("", UTF_8)
             .build();
 
