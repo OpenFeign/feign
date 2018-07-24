@@ -45,11 +45,12 @@ public final class Response implements Closeable {
 
   private Response(Builder builder) {
     checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
+    checkState(builder.request != null, "original request is required");
     this.status = builder.status;
+    this.request = builder.request;
     this.reason = builder.reason; // nullable
     this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
     this.body = builder.body; // nullable
-    this.request = builder.request; // nullable
   }
 
   public Builder toBuilder() {
@@ -121,11 +122,9 @@ public final class Response implements Closeable {
 
     /**
      * @see Response#request
-     *
-     *      NOTE: will add null check in version 10 which may require changes to custom feign.Client
-     *      or loggers
      */
     public Builder request(Request request) {
+      checkNotNull(request, "request is required");
       this.request = request;
       return this;
     }
@@ -168,7 +167,7 @@ public final class Response implements Closeable {
   }
 
   /**
-   * if present, the request that generated this response
+   * the request that generated this response
    */
   public Request request() {
     return request;

@@ -13,20 +13,22 @@
  */
 package feign.codec;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.w3c.dom.Document;
+import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.w3c.dom.Document;
+import feign.Request;
 import feign.Response;
-import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import feign.Util;
 
 public class DefaultDecoderTest {
 
@@ -73,6 +75,7 @@ public class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(headers)
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(inputStream, content.length())
         .build();
   }
@@ -82,6 +85,7 @@ public class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .build();
   }
 }

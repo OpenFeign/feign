@@ -65,7 +65,7 @@ public interface Client {
     @Override
     public Response execute(Request request, Options options) throws IOException {
       HttpURLConnection connection = convertAndSend(request, options);
-      return convertResponse(connection).toBuilder().request(request).build();
+      return convertResponse(connection, request);
     }
 
     HttpURLConnection convertAndSend(Request request, Options options) throws IOException {
@@ -84,7 +84,7 @@ public interface Client {
       connection.setReadTimeout(options.readTimeoutMillis());
       connection.setAllowUserInteraction(false);
       connection.setInstanceFollowRedirects(options.isFollowRedirects());
-      connection.setRequestMethod(request.method());
+      connection.setRequestMethod(request.httpMethod().name());
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
       boolean gzipEncodedRequest =
@@ -139,7 +139,7 @@ public interface Client {
       return connection;
     }
 
-    Response convertResponse(HttpURLConnection connection) throws IOException {
+    Response convertResponse(HttpURLConnection connection, Request request) throws IOException {
       int status = connection.getResponseCode();
       String reason = connection.getResponseMessage();
 
@@ -170,6 +170,7 @@ public interface Client {
           .status(status)
           .reason(reason)
           .headers(headers)
+          .request(request)
           .body(stream, length)
           .build();
     }
