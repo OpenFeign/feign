@@ -46,7 +46,7 @@ public final class Request {
   }
 
   /**
-   * Builds a Request.  All parameters must be effectively immutable, via safe copies.
+   * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
    * @param httpMethod for the request.
    * @param url for the request.

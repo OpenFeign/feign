@@ -15,15 +15,11 @@ package feign.client;
 
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.net.ProtocolException;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
-
 import org.junit.Test;
-
 import feign.Client;
 import feign.Feign;
 import feign.Feign.Builder;

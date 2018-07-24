@@ -43,7 +43,7 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
     return new FeignException(
-        format("%s reading %s %s", cause.getMessage(), request.httpMethod().name(), request.url()),
+        format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         cause);
   }
 
