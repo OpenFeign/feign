@@ -1,17 +1,15 @@
-/*
- * Copyright (C) 2008 Google Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
@@ -71,8 +69,8 @@ final class Types {
     } else {
       String className = type == null ? "null" : type.getClass().getName();
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-                                         + "GenericArrayType, but <" + type + "> is of type "
-                                         + className);
+          + "GenericArrayType, but <" + type + "> is of type "
+          + className);
     }
   }
 
@@ -93,8 +91,8 @@ final class Types {
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
       return equal(pa.getOwnerType(), pb.getOwnerType())
-             && pa.getRawType().equals(pb.getRawType())
-             && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+          && pa.getRawType().equals(pb.getRawType())
+          && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
     } else if (a instanceof GenericArrayType) {
       if (!(b instanceof GenericArrayType)) {
@@ -111,7 +109,7 @@ final class Types {
       WildcardType wa = (WildcardType) a;
       WildcardType wb = (WildcardType) b;
       return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-             && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+          && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
     } else if (a instanceof TypeVariable) {
       if (!(b instanceof TypeVariable)) {
@@ -120,7 +118,7 @@ final class Types {
       TypeVariable<?> va = (TypeVariable<?>) a;
       TypeVariable<?> vb = (TypeVariable<?>) b;
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
-             && va.getName().equals(vb.getName());
+          && va.getName().equals(vb.getName());
 
     } else {
       return false; // This isn't a type we support!
@@ -199,7 +197,7 @@ final class Types {
       throw new IllegalArgumentException();
     }
     return resolve(context, contextRawType,
-                   getGenericSupertype(context, contextRawType, supertype));
+        getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
@@ -216,15 +214,17 @@ final class Types {
         Class<?> original = (Class<?>) toResolve;
         Type componentType = original.getComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
-        return componentType == newComponentType ? original : new GenericArrayTypeImpl(
-            newComponentType);
+        return componentType == newComponentType ? original
+            : new GenericArrayTypeImpl(
+                newComponentType);
 
       } else if (toResolve instanceof GenericArrayType) {
         GenericArrayType original = (GenericArrayType) toResolve;
         Type componentType = original.getGenericComponentType();
         Type newComponentType = resolve(context, contextRawType, componentType);
-        return componentType == newComponentType ? original : new GenericArrayTypeImpl(
-            newComponentType);
+        return componentType == newComponentType ? original
+            : new GenericArrayTypeImpl(
+                newComponentType);
 
       } else if (toResolve instanceof ParameterizedType) {
         ParameterizedType original = (ParameterizedType) toResolve;
@@ -245,8 +245,8 @@ final class Types {
         }
 
         return changed
-               ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
-               : original;
+            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
+            : original;
 
       } else if (toResolve instanceof WildcardType) {
         WildcardType original = (WildcardType) toResolve;
@@ -256,12 +256,12 @@ final class Types {
         if (originalLowerBound.length == 1) {
           Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
           if (lowerBound != originalLowerBound[0]) {
-            return new WildcardTypeImpl(new Type[]{Object.class}, new Type[]{lowerBound});
+            return new WildcardTypeImpl(new Type[] {Object.class}, new Type[] {lowerBound});
           }
         } else if (originalUpperBound.length == 1) {
           Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
           if (upperBound != originalUpperBound[0]) {
-            return new WildcardTypeImpl(new Type[]{upperBound}, EMPTY_TYPE_ARRAY);
+            return new WildcardTypeImpl(new Type[] {upperBound}, EMPTY_TYPE_ARRAY);
           }
         }
         return original;
@@ -273,7 +273,9 @@ final class Types {
   }
 
   private static Type resolveTypeVariable(
-      Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
+                                          Type context,
+                                          Class<?> contextRawType,
+                                          TypeVariable<?> unknown) {
     Class<?> declaredByRaw = declaringClassOf(unknown);
 
     // We can't reduce this further.
@@ -382,7 +384,7 @@ final class Types {
     @Override
     public boolean equals(Object o) {
       return o instanceof GenericArrayType
-             && Types.equals(this, (GenericArrayType) o);
+          && Types.equals(this, (GenericArrayType) o);
     }
 
     @Override
@@ -435,11 +437,11 @@ final class Types {
     }
 
     public Type[] getUpperBounds() {
-      return new Type[]{upperBound};
+      return new Type[] {upperBound};
     }
 
     public Type[] getLowerBounds() {
-      return lowerBound != null ? new Type[]{lowerBound} : EMPTY_TYPE_ARRAY;
+      return lowerBound != null ? new Type[] {lowerBound} : EMPTY_TYPE_ARRAY;
     }
 
     @Override

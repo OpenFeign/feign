@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2018 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.ribbon;
 
 import java.net.URI;
@@ -6,12 +19,9 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.junit.Test;
-
 import feign.Request;
 import feign.ribbon.LBClient.RibbonRequest;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class LBClientTest {
@@ -33,7 +43,8 @@ public class LBClientTest {
     URI uri = new URI(urlWithEncodedJson);
     Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
     // create a Request for recreating another Request by toRequest()
-    Request requestOrigin = Request.create(method, uri.toASCIIString(), headers, null, Charset.forName("utf-8")); 
+    Request requestOrigin =
+        Request.create(method, uri.toASCIIString(), headers, null, Charset.forName("utf-8"));
     RibbonRequest ribbonRequest = new RibbonRequest(null, requestOrigin, uri);
 
     // use toRequest() recreate a Request
@@ -41,7 +52,9 @@ public class LBClientTest {
 
     // test that requestOrigin and requestRecreate are same except the header 'Content-Length'
     // ps, requestOrigin and requestRecreate won't be null
-    assertThat(requestOrigin.toString()).isEqualTo(String.format("%s %s HTTP/1.1\n", method, urlWithEncodedJson));
-    assertThat(requestRecreate.toString()).isEqualTo(String.format("%s %s HTTP/1.1\nContent-Length: 0\n", method, urlWithEncodedJson));
+    assertThat(requestOrigin.toString())
+        .isEqualTo(String.format("%s %s HTTP/1.1\n", method, urlWithEncodedJson));
+    assertThat(requestRecreate.toString()).isEqualTo(
+        String.format("%s %s HTTP/1.1\nContent-Length: 0\n", method, urlWithEncodedJson));
   }
 }

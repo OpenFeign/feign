@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2012-2018 The Feign Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+    in compliance with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License
+    is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+    or implied. See the License for the specific language governing permissions and limitations under
+    the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>9.5.2-SNAPSHOT</version>
+  <version>10.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -16,11 +31,13 @@
     <module>jackson</module>
     <module>jaxb</module>
     <module>jaxrs</module>
+    <module>jaxrs2</module>
     <module>okhttp</module>
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
-    <module>java8</module>
+    <module>mock</module>
+    <module>benchmark</module>
   </modules>
 
   <properties>
@@ -28,8 +45,8 @@
     <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
 
     <!-- default bytecode version for src/main -->
-    <main.java.version>1.6</main.java.version>
-    <main.signature.artifact>java16</main.signature.artifact>
+    <main.java.version>1.8</main.java.version>
+    <main.signature.artifact>java18</main.signature.artifact>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -50,6 +67,7 @@
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
     <maven-source-plugin.version>3.0.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>2.10.3</maven-javadoc-plugin.version>
+    <license-maven-plugin.version>3.0</license-maven-plugin.version>
     <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
@@ -91,6 +109,12 @@
       <id>spencergibb</id>
       <name>Spencer Gibb</name>
       <email>spencer@gibb.us</email>
+    </developer>
+    <developer>
+      <id>velo</id>
+      <name>Marvin Herman Froeder</name>
+      <email>velo br at gmail dot com</email>
+      <url>about.me/velo</url>
     </developer>
   </developers>
 
@@ -164,6 +188,19 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs2</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -267,6 +304,15 @@
             </archive>
           </configuration>
         </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.20</version>
+          <configuration>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -355,6 +401,63 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${license-maven-plugin.version}</version>
+        <configuration>
+          <!-- session.executionRootDirectory resolves properly even with nested modules -->
+          <header>${main.basedir}/src/etc/header.txt</header>
+          <excludes>
+            <exclude>.travis.yml</exclude>
+            <exclude>.editorconfig</exclude>
+            <exclude>.gitattributes</exclude>
+            <exclude>.gitignore</exclude>
+            <exclude>.mvn/**</exclude>
+            <exclude>mvnw*</exclude>
+            <exclude>etc/header.txt</exclude>
+            <exclude>**/.idea/**</exclude>
+            <exclude>LICENSE</exclude>
+            <exclude>**/*.md</exclude>
+            <exclude>bnd.bnd</exclude>
+            <exclude>src/test/resources/**</exclude>
+            <exclude>src/main/resources/**</exclude>
+          </excludes>
+          <strictCheck>true</strictCheck>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin-git</artifactId>
+            <version>${license-maven-plugin.version}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.marvinformatics.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <version>2.2.0</version>
+        <configuration>
+          <lineEnding>LF</lineEnding>
+          <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -365,6 +468,7 @@
         <plugins>
           <!-- Creates source jar -->
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
             <version>${maven-source-plugin.version}</version>
             <executions>
@@ -378,6 +482,7 @@
           </plugin>
 
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <version>${maven-javadoc-plugin.version}</version>
             <configuration>

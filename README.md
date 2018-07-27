@@ -2,16 +2,17 @@
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/OpenFeign/feign.svg?branch=master)](https://travis-ci.org/OpenFeign/feign)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/)
 
-Feign is a java to http client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to http apis regardless of [restfulness](http://www.slideshare.net/adrianfcole/99problems).
+Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
 
 ### Why Feign and not X?
 
-You can use tools like Jersey and CXF to write java clients for ReST or SOAP services.  You can write your own code on top of http transport libraries like Apache HC.  Feign aims to connect your code to http apis with minimal overhead and code. Via customizable decoders and error handling, you should be able to write to any text-based http api.
+Feign uses tools like Jersey and CXF to write java clients for ReST or SOAP services. Furthermore, Feign allows you to write your own code on top of http libraries such as Apache HC. Feign connects your code to http APIs with minimal overhead and code via customizable decoders and error handling, which can be written to any text-based http API.
 
 ### How does Feign work?
 
-Feign works by processing annotations into a templatized request.  Just before sending it off, arguments are applied to these templates in a straightforward fashion.  While this limits Feign to only supporting text-based apis, it dramatically simplified system aspects such as replaying requests.  It is also stupid easy to unit test your conversions knowing this.
+Feign works by processing annotations into a templatized request. Arguments are applied to these templates in a straightforward fashion before output.  Although Feign is limited to supporting text-based APIs, it dramatically simplifies system aspects such as replaying requests. Furthermore, Feign makes it easy to unit test your conversions knowing this.
 
 ### Basics
 
@@ -439,6 +440,66 @@ A Map parameter can be annotated with `QueryMap` to construct a query that uses 
 @RequestLine("GET /find")
 V find(@QueryMap Map<String, Object> queryMap);
 ```
+
+This may also be used to generate the query parameters from a POJO object using a `QueryMapEncoder`.
+
+```java
+@RequestLine("GET /find")
+V find(@QueryMap CustomPojo customPojo);
+```
+
+When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
+
+```java
+public class CustomPojo {
+  private final String name;
+  private final int number;
+
+  public CustomPojo (String name, int number) {
+    this.name = name;
+    this.number = number;
+  }
+}
+```
+
+To setup a custom `QueryMapEncoder`:
+
+```java
+MyApi myApi = Feign.builder()
+                 .queryMapEncoder(new MyCustomQueryMapEncoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+### Error Handling
+If you need more control over handling unexpected responses, Feign instances can
+register a custom `ErrorDecoder` via the builder.
+
+```java
+MyApi myApi = Feign.builder()
+                 .errorDecoder(new MyErrorDecoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+All responses that result in an HTTP status not in the 2xx range will trigger the `ErrorDecoder`'s `decode` method, allowing
+you to handle the response, wrap the failure into a custom exception or perform any additional processing.
+If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
+`Retyer`.
+
+### Retry
+Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network
+related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`.  To customize this
+behavior, register a custom `Retryer` instance via the builder.
+
+```java
+MyApi myApi = Feign.builder()
+                 .retryer(new MyRetryer())
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+`Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
+`false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be 
+created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
+If the retry is determined to be unsucessful, the last `RetryException` will be thrown.
 
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).

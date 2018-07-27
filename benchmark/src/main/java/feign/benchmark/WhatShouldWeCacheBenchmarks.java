@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2018 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.benchmark;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -10,14 +23,12 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -54,7 +65,13 @@ public class WhatShouldWeCacheBenchmarks {
     fakeClient = new Client() {
       public Response execute(Request request, Request.Options options) throws IOException {
         Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
-        return Response.create(200, "ok", headers, (byte[]) null);
+        return Response.builder()
+            .body((byte[]) null)
+            .status(200)
+            .headers(headers)
+            .reason("ok")
+            .request(request)
+            .build();
       }
     };
     cachedFakeFeign = Feign.builder().client(fakeClient).build();

@@ -1,59 +1,101 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
+import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
-
-import static feign.Util.checkNotNull;
-import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
  */
 public final class Request {
 
+  public enum HttpMethod {
+    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+  }
+
   /**
    * No parameters can be null except {@code body} and {@code charset}. All parameters must be
    * effectively immutable, via safe copies, not mutating or otherwise.
+   *
+   * @deprecated {@link #create(HttpMethod, String, Map, byte[], Charset)}
    */
-  public static Request create(String method, String url, Map<String, Collection<String>> headers,
-                               byte[] body, Charset charset) {
-    return new Request(method, url, headers, body, charset);
+  public static Request create(String method,
+                               String url,
+                               Map<String, Collection<String>> headers,
+                               byte[] body,
+                               Charset charset) {
+    checkNotNull(method, "httpMethod of %s", method);
+    HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
+    return create(httpMethod, url, headers, body, charset);
   }
 
-  private final String method;
+  /**
+   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   *
+   * @param httpMethod for the request.
+   * @param url for the request.
+   * @param headers to include.
+   * @param body of the request, can be {@literal null}
+   * @param charset of the request, can be {@literal null}
+   * @return a Request
+   */
+  public static Request create(HttpMethod httpMethod,
+                               String url,
+                               Map<String, Collection<String>> headers,
+                               byte[] body,
+                               Charset charset) {
+    return new Request(httpMethod, url, headers, body, charset);
+
+  }
+
+  private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final byte[] body;
   private final Charset charset;
 
-  Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
-          Charset charset) {
-    this.method = checkNotNull(method, "method of %s", url);
+  Request(HttpMethod method, String url, Map<String, Collection<String>> headers, byte[] body,
+      Charset charset) {
+    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
   }
 
-  /* Method to invoke on the server. */
+  /**
+   * Http Method for this request.
+   *
+   * @return the HttpMethod string
+   * @deprecated @see {@link #httpMethod()}
+   */
   public String method() {
-    return method;
+    return httpMethod.name();
+  }
+
+  /**
+   * Http Method for the request.
+   *
+   * @return the HttpMethod.
+   */
+  public HttpMethod httpMethod() {
+    return this.httpMethod;
   }
 
   /* Fully resolved URL including query. */
@@ -67,7 +109,7 @@ public final class Request {
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable.  When
+   * The character set with which the body is encoded, or null if unknown or not applicable. When
    * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
    * as a String.
    */
@@ -76,7 +118,7 @@ public final class Request {
   }
 
   /**
-   * If present, this is the replayable body to send to the server.  In some cases, this may be
+   * If present, this is the replayable body to send to the server. In some cases, this may be
    * interpretable as text.
    *
    * @see #charset()
@@ -88,7 +130,7 @@ public final class Request {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append(method).append(' ').append(url).append(" HTTP/1.1\n");
+    builder.append(httpMethod).append(' ').append(url).append(" HTTP/1.1\n");
     for (String field : headers.keySet()) {
       for (String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
@@ -100,15 +142,24 @@ public final class Request {
     return builder.toString();
   }
 
-  /* Controls the per-request settings currently required to be implemented by all {@link Client clients} */
+  /*
+   * Controls the per-request settings currently required to be implemented by all {@link Client
+   * clients}
+   */
   public static class Options {
 
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
+    private final boolean followRedirects;
 
-    public Options(int connectTimeoutMillis, int readTimeoutMillis) {
+    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
       this.connectTimeoutMillis = connectTimeoutMillis;
       this.readTimeoutMillis = readTimeoutMillis;
+      this.followRedirects = followRedirects;
+    }
+
+    public Options(int connectTimeoutMillis, int readTimeoutMillis) {
+      this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 
     public Options() {
@@ -131,6 +182,16 @@ public final class Request {
      */
     public int readTimeoutMillis() {
       return readTimeoutMillis;
+    }
+
+
+    /**
+     * Defaults to true. {@code false} tells the client to not follow the redirections.
+     *
+     * @see HttpURLConnection#getFollowRedirects()
+     */
+    public boolean isFollowRedirects() {
+      return followRedirects;
     }
   }
 }

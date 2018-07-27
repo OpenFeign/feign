@@ -1,17 +1,15 @@
-/*
- * Copyright 2014 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
@@ -24,7 +22,6 @@ import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
@@ -46,12 +43,14 @@ public class SynchronousMethodHandler implements MethodHandler {
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
+  private final boolean closeAfterDecode;
 
   public SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-                                   List<RequestInterceptor> requestInterceptors, Logger logger,
-                                   Logger.Level logLevel, MethodMetadata metadata,
-                                   RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404) {
+      List<RequestInterceptor> requestInterceptors, Logger logger,
+      Logger.Level logLevel, MethodMetadata metadata,
+      RequestTemplate.Factory buildTemplateFromArgs, Options options,
+      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+      boolean closeAfterDecode) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -65,6 +64,7 @@ public class SynchronousMethodHandler implements MethodHandler {
     this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
+    this.closeAfterDecode = closeAfterDecode;
   }
 
   @Override
@@ -95,8 +95,6 @@ public class SynchronousMethodHandler implements MethodHandler {
     long start = System.nanoTime();
     try {
       response = client.execute(request, options);
-      // ensure the request is set. TODO: remove in Feign 10
-      response.toBuilder().request(request).build();
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
@@ -110,15 +108,13 @@ public class SynchronousMethodHandler implements MethodHandler {
       if (logLevel != Logger.Level.NONE) {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
-        // ensure the request is set. TODO: remove in Feign 10
-        response.toBuilder().request(request).build();
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
           return response;
         }
         if (response.body().length() == null ||
-                response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+            response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
           shouldClose = false;
           return response;
         }
@@ -130,10 +126,14 @@ public class SynchronousMethodHandler implements MethodHandler {
         if (void.class == metadata.returnType()) {
           return null;
         } else {
-          return decode(response);
+          Object result = decode(response);
+          shouldClose = closeAfterDecode;
+          return result;
         }
       } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
-        return decode(response);
+        Object result = decode(response);
+        shouldClose = closeAfterDecode;
+        return result;
       } else {
         throw errorDecoder.decode(metadata.configKey(), response);
       }

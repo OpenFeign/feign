@@ -1,37 +1,34 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.codec;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.w3c.dom.Document;
-
+import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.w3c.dom.Document;
+import feign.Request;
 import feign.Response;
-
-import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import feign.Util;
 
 public class DefaultDecoderTest {
 
@@ -75,18 +72,20 @@ public class DefaultDecoderTest {
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(headers)
-            .body(inputStream, content.length())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(headers)
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body(inputStream, content.length())
+        .build();
   }
 
   private Response nullBodyResponse() {
     return Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .build();
   }
 }

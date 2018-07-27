@@ -1,3 +1,13 @@
+### Version 10.0
+* Feign baseline is now JDK 8
+* Removed @Deprecated methods marked for removal on feign 10
+* `RetryException` includes the `Method` used for the offending `Request`
+* `Response` objects now contain the `Request` used.
+
+### Version 9.6
+* Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.
+* Adds `JacksonIteratorDecoder` and `StreamDecoder` to decode responses as `java.util.Iterator` or `java.util.stream.Stream`.
+
 ### Version 9.5.1
 * When specified, Content-Type header is now included on OkHttp requests lacking a body.
 * Sets empty HttpEntity if apache request body is null.

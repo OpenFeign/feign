@@ -1,17 +1,15 @@
-/*
- * Copyright 2015 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.okhttp;
 
@@ -21,19 +19,19 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import feign.Client;
 
 /**
- * This module directs Feign's http requests to <a href="http://square.github.io/okhttp/">OkHttp</a>,
- * which enables SPDY and better network control. Ex.
+ * This module directs Feign's http requests to
+ * <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables SPDY and better network
+ * control. Ex.
+ * 
  * <pre>
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -92,13 +90,15 @@ public final class OkHttpClient implements Client {
     return requestBuilder.build();
   }
 
-  private static feign.Response toFeignResponse(Response input) throws IOException {
+  private static feign.Response toFeignResponse(Response response, feign.Request request)
+      throws IOException {
     return feign.Response.builder()
-            .status(input.code())
-            .reason(input.message())
-            .headers(toMap(input.headers()))
-            .body(toBody(input.body()))
-            .build();
+        .status(response.code())
+        .reason(response.message())
+        .request(request)
+        .headers(toMap(response.headers()))
+        .body(toBody(response.body()))
+        .build();
   }
 
   private static Map<String, Collection<String>> toMap(Headers headers) {
@@ -112,8 +112,9 @@ public final class OkHttpClient implements Client {
       }
       return null;
     }
-    final Integer length = input.contentLength() >= 0 && input.contentLength() <= Integer.MAX_VALUE ?
-            (int) input.contentLength() : null;
+    final Integer length = input.contentLength() >= 0 && input.contentLength() <= Integer.MAX_VALUE
+        ? (int) input.contentLength()
+        : null;
 
     return new feign.Response.Body() {
 
@@ -150,15 +151,16 @@ public final class OkHttpClient implements Client {
     okhttp3.OkHttpClient requestScoped;
     if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
         || delegate.readTimeoutMillis() != options.readTimeoutMillis()) {
-       requestScoped = delegate.newBuilder()
-               .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
-               .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
-               .build();
+      requestScoped = delegate.newBuilder()
+          .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
+          .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
+          .followRedirects(options.isFollowRedirects())
+          .build();
     } else {
       requestScoped = delegate;
     }
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response).toBuilder().request(input).build();
+    return toFeignResponse(response, input).toBuilder().request(input).build();
   }
 }

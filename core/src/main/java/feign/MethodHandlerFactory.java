@@ -1,5 +1,6 @@
 package feign;
 
+import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
@@ -31,6 +32,7 @@ public interface MethodHandlerFactory {
         private Logger logger;
         private Logger.Level logLevel;
         private boolean decode404;
+        private boolean closeAfterDecode;
 
         public Builder client(Client client) {
             this.client = client;
@@ -62,8 +64,13 @@ public interface MethodHandlerFactory {
             return this;
         }
 
+        public Builder closeAfterDecode(boolean closeAfterDecode) {
+            this.closeAfterDecode = closeAfterDecode;
+            return this;
+        }
+
         public MethodHandlerFactory build() {
-            return new Factory(client, retryer, requestInterceptors, logger, logLevel, decode404);
+            return new Factory(client, retryer, requestInterceptors, logger, logLevel, decode404, closeAfterDecode);
         }
     }
 
@@ -75,24 +82,29 @@ public interface MethodHandlerFactory {
         private final Logger logger;
         private final Logger.Level logLevel;
         private final boolean decode404;
+        private final boolean closeAfterDecode;
 
         Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-                Logger logger, Logger.Level logLevel, boolean decode404) {
+                Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode) {
             this.client = checkNotNull(client, "client");
             this.retryer = checkNotNull(retryer, "retryer");
             this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
             this.logger = checkNotNull(logger, "logger");
             this.logLevel = checkNotNull(logLevel, "logLevel");
             this.decode404 = decode404;
+            this.closeAfterDecode = closeAfterDecode;
         }
 
         @Override
-        public MethodHandler create(Target<?> target, MethodMetadata md,
+        public MethodHandler create(Target<?> target,
+                                    MethodMetadata md,
                                     RequestTemplate.Factory buildTemplateFromArgs,
-                                    Request.Options options, Decoder decoder, ErrorDecoder errorDecoder) {
+                                    Options options,
+                                    Decoder decoder,
+                                    ErrorDecoder errorDecoder) {
             return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-                                                       logLevel, md, buildTemplateFromArgs, options, decoder,
-                                                       errorDecoder, decode404);
+                logLevel, md, buildTemplateFromArgs, options, decoder,
+                errorDecoder, decode404, closeAfterDecode);
         }
     }
 }

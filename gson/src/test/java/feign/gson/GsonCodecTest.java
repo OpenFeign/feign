@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2018 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.gson;
 
@@ -19,9 +17,9 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
+import feign.Request;
+import feign.Util;
 import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,10 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import feign.RequestTemplate;
 import feign.Response;
-
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -50,9 +46,9 @@ public class GsonCodecTest {
     new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template).hasBody("" //
-                                 + "{\n" //
-                                 + "  \"foo\": 1\n" //
-                                 + "}");
+        + "{\n" //
+        + "  \"foo\": 1\n" //
+        + "}");
   }
 
   @Test
@@ -61,13 +57,14 @@ public class GsonCodecTest {
     map.put("foo", 1);
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body("{\"foo\": 1}", UTF_8)
-            .build();
-    assertEquals(new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {
-    }.getType()), map);
+        .status(200)
+        .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("{\"foo\": 1}", UTF_8)
+        .build();
+    assertEquals(
+        new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()), map);
   }
 
   @Test
@@ -78,17 +75,16 @@ public class GsonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
-    new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>() {
-    }.getType(), template);
+    new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>() {}.getType(), template);
 
-    assertThat(template).hasBody("" // 
-                                 + "{\n" //
-                                 + "  \"foo\": 1,\n" //
-                                 + "  \"bar\": [\n" //
-                                 + "    2,\n" //
-                                 + "    3\n" //
-                                 + "  ]\n" //
-                                 + "}");
+    assertThat(template).hasBody("" //
+        + "{\n" //
+        + "  \"foo\": 1,\n" //
+        + "  \"bar\": [\n" //
+        + "    2,\n" //
+        + "    3\n" //
+        + "  ]\n" //
+        + "}");
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -119,46 +115,49 @@ public class GsonCodecTest {
     zones.add(new Zone("denominator.io.", "ABCD"));
 
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(zonesJson, UTF_8)
-            .build();
-    assertEquals(zones, new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {
-    }.getType()));
+        .status(200)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body(zonesJson, UTF_8)
+        .build();
+    assertEquals(zones,
+        new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
   @Test
   public void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .build();
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
   @Test
   public void emptyBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
-            .status(204)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(new byte[0])
-            .build();
+        .status(204)
+        .reason("OK")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body(new byte[0])
+        .build();
     assertNull(new GsonDecoder().decode(response, String.class));
   }
 
   private String zonesJson = ""//
-                             + "[\n"//
-                             + "  {\n"//
-                             + "    \"name\": \"denominator.io.\"\n"//
-                             + "  },\n"//
-                             + "  {\n"//
-                             + "    \"name\": \"denominator.io.\",\n"//
-                             + "    \"id\": \"ABCD\"\n"//
-                             + "  }\n"//
-                             + "]\n";
+      + "[\n"//
+      + "  {\n"//
+      + "    \"name\": \"denominator.io.\"\n"//
+      + "  },\n"//
+      + "  {\n"//
+      + "    \"name\": \"denominator.io.\",\n"//
+      + "    \"id\": \"ABCD\"\n"//
+      + "  }\n"//
+      + "]\n";
 
   final TypeAdapter upperZone = new TypeAdapter<Zone>() {
 
@@ -193,13 +192,13 @@ public class GsonCodecTest {
 
     Response response =
         Response.builder()
-                .status(200)
-                .reason("OK")
-                .headers(Collections.<String, Collection<String>>emptyMap())
-                .body(zonesJson, UTF_8)
-                .build();
-    assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {
-    }.getType()));
+            .status(200)
+            .reason("OK")
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(zonesJson, UTF_8)
+            .build();
+    assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
   @Test
@@ -211,29 +210,29 @@ public class GsonCodecTest {
     zones.add(new Zone("denominator.io.", "abcd"));
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(zones, new TypeToken<List<Zone>>() {
-    }.getType(), template);
+    encoder.encode(zones, new TypeToken<List<Zone>>() {}.getType(), template);
 
     assertThat(template).hasBody("" //
-                                 + "[\n" //
-                                 + "  {\n" //
-                                 + "    \"name\": \"DENOMINATOR.IO.\"\n" //
-                                 + "  },\n" //
-                                 + "  {\n" //
-                                 + "    \"name\": \"DENOMINATOR.IO.\",\n" //
-                                 + "    \"id\": \"ABCD\"\n" //
-                                 + "  }\n" //
-                                 + "]");
+        + "[\n" //
+        + "  {\n" //
+        + "    \"name\": \"DENOMINATOR.IO.\"\n" //
+        + "  },\n" //
+        + "  {\n" //
+        + "    \"name\": \"DENOMINATOR.IO.\",\n" //
+        + "    \"id\": \"ABCD\"\n" //
+        + "  }\n" //
+        + "]");
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .build();
     assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 }

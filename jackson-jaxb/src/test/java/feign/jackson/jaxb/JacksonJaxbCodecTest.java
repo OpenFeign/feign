@@ -1,18 +1,29 @@
+/**
+ * Copyright 2012-2018 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.jackson.jaxb;
 
+import feign.Request;
+import feign.Util;
 import org.junit.Test;
-
 import java.util.Collection;
 import java.util.Collections;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import feign.RequestTemplate;
 import feign.Response;
-
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 
@@ -31,11 +42,12 @@ public class JacksonJaxbCodecTest {
   @Test
   public void decodeTest() throws Exception {
     Response response = Response.builder()
-            .status(200)
-            .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .body("{\"value\":\"Test\"}", UTF_8)
-            .build();
+        .status(200)
+        .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("{\"value\":\"Test\"}", UTF_8)
+        .build();
     JacksonJaxbJsonDecoder decoder = new JacksonJaxbJsonDecoder();
 
     assertThat(decoder.decode(response, MockObject.class))
@@ -46,10 +58,11 @@ public class JacksonJaxbCodecTest {
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
-            .status(404)
-            .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .build();
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
@@ -60,8 +73,7 @@ public class JacksonJaxbCodecTest {
     @XmlElement
     private String value;
 
-    MockObject() {
-    }
+    MockObject() {}
 
     MockObject(String value) {
       this.value = value;

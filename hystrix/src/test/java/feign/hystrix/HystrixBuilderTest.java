@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2018 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -5,17 +18,14 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
 import feign.FeignException;
 import feign.Headers;
 import feign.Param;
@@ -27,7 +37,6 @@ import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.observers.TestSubscriber;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 
@@ -37,6 +46,18 @@ public class HystrixBuilderTest {
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
+
+  @Test
+  public void defaultMethodReturningHystrixCommand() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.defaultMethodReturningCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("foo");
+  }
 
   @Test
   public void hystrixCommand() {
@@ -592,6 +613,10 @@ public class HystrixBuilderTest {
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     HystrixCommand<String> command();
+
+    default HystrixCommand<String> defaultMethodReturningCommand() {
+      return command();
+    }
 
     @RequestLine("GET /")
     @Headers("Accept: application/json")

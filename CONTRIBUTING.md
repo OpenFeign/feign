@@ -17,7 +17,10 @@ Pull requests eventually need to resolve to a single commit. The commit log shou
   * The unreleased minor version is often a good default.
 
 ## Code Style
-When submitting code, please ensure you follow the [Google Style Guide](http://google-styleguide.googlecode.com/svn/trunk/javaguide.html). For example, you can format code with IntelliJ 13 using [this file](https://google.github.io/styleguide/intellij-java-google-style.xml) and with IntelliJ 15 using [this file](https://raw.githubusercontent.com/garukun/styleguide/add-intellij-15-java/intellij-15-java-google-style.xml).
+
+When submitting code, please use the feign code format conventions. If you use Eclipse `m2eclipse` should take care of all settings automatically.
+You can also import formatter settings using the [`eclipse-java-style.xml`](https://github.com/OpenFeign/feign/blob/master/src/config/eclipse-java-style.xml) file.
+If using IntelliJ IDEA, you can use the [Eclipse Code Formatter Plugin](http://plugins.jetbrains.com/plugin/6546) to import the same file.
 
 ## License
 
@@ -30,13 +33,13 @@ If you are adding a new file it should have a header like this:
 ```
 /**
  * Copyright 2013 Netflix, Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
