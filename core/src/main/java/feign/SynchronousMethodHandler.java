@@ -16,7 +16,6 @@ package feign;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import feign.MethodHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.DecodeException;

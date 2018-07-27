@@ -22,7 +22,6 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
 import feign.MethodHandlerFactory.MethodHandler;
 import feign.Target;
 import feign.Util;

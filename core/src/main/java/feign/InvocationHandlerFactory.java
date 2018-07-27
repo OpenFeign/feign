@@ -16,7 +16,6 @@ package feign;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
-
 import feign.MethodHandlerFactory.MethodHandler;
 
 /**

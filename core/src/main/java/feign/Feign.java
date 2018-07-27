@@ -107,7 +107,8 @@ public abstract class Feign {
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
-    private MethodHandlerFactory.Builder methodHandlerFactoryBuilder = new MethodHandlerFactory.Builder();
+    private MethodHandlerFactory.Builder methodHandlerFactoryBuilder =
+        new MethodHandlerFactory.Builder();
     private FeignFactory feignFactory = new FeignFactory.Factory();
     private boolean decode404;
     private boolean closeAfterDecode = true;
@@ -257,21 +258,21 @@ public abstract class Feign {
 
     public Feign build() {
       MethodHandlerFactory methodHandlerFactory =
-        methodHandlerFactoryBuilder
-          .client(client)
-          .retryer(retryer)
-          .requestInterceptors(requestInterceptors)
-          .logger(logger)
-          .logLevel(logLevel)
-          .decode404(decode404)
-          .closeAfterDecode(closeAfterDecode)
-          .build();
+          methodHandlerFactoryBuilder
+              .client(client)
+              .retryer(retryer)
+              .requestInterceptors(requestInterceptors)
+              .logger(logger)
+              .logLevel(logLevel)
+              .decode404(decode404)
+              .closeAfterDecode(closeAfterDecode)
+              .build();
 
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-                                  errorDecoder, methodHandlerFactory);
+              errorDecoder, methodHandlerFactory);
 
-      return feignFactory.create(handlersByName, invocationHandlerFactory);
+      return feignFactory.create(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
 
