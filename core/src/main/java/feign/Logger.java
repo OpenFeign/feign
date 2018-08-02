@@ -44,7 +44,7 @@ public abstract class Logger {
   protected abstract void log(String configKey, String format, Object... args);
 
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP/1.1", request.method(), request.url());
+    log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {

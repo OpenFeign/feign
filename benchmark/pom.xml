@@ -53,11 +53,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-java8</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>mockwebserver</artifactId>
       <version>2.7.1</version>
@@ -71,17 +66,17 @@
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty</artifactId>
-      <version>0.4.14</version>
+      <version>0.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-buffer</artifactId>
+      <version>4.1.0.Beta7</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxjava</artifactId>
-      <version>1.0.17</version>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-codec-http</artifactId>
-      <version>4.1.0.Beta8</version>
+      <version>1.0.14</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>

@@ -13,6 +13,8 @@
  */
 package feign.client;
 
+import static org.hamcrest.core.Is.isA;
+import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.net.ProtocolException;
 import javax.net.ssl.HostnameVerifier;
@@ -24,8 +26,6 @@ import feign.Feign.Builder;
 import feign.RetryableException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
-import static org.hamcrest.core.Is.isA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.

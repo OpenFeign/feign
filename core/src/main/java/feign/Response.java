@@ -45,77 +45,12 @@ public final class Response implements Closeable {
 
   private Response(Builder builder) {
     checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
+    checkState(builder.request != null, "original request is required");
     this.status = builder.status;
+    this.request = builder.request;
     this.reason = builder.reason; // nullable
     this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
     this.body = builder.body; // nullable
-    this.request = builder.request; // nullable
-  }
-
-  /**
-   * @deprecated To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status,
-                                String reason,
-                                Map<String, Collection<String>> headers,
-                                InputStream inputStream,
-                                Integer length) {
-    return Response.builder()
-        .status(status)
-        .reason(reason)
-        .headers(headers)
-        .body(InputStreamBody.orNull(inputStream, length))
-        .build();
-  }
-
-  /**
-   * @deprecated To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status,
-                                String reason,
-                                Map<String, Collection<String>> headers,
-                                byte[] data) {
-    return Response.builder()
-        .status(status)
-        .reason(reason)
-        .headers(headers)
-        .body(ByteArrayBody.orNull(data))
-        .build();
-  }
-
-  /**
-   * @deprecated To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status,
-                                String reason,
-                                Map<String, Collection<String>> headers,
-                                String text,
-                                Charset charset) {
-    return Response.builder()
-        .status(status)
-        .reason(reason)
-        .headers(headers)
-        .body(ByteArrayBody.orNull(text, charset))
-        .build();
-  }
-
-  /**
-   * @deprecated To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status,
-                                String reason,
-                                Map<String, Collection<String>> headers,
-                                Body body) {
-    return Response.builder()
-        .status(status)
-        .reason(reason)
-        .headers(headers)
-        .body(body)
-        .build();
   }
 
   public Builder toBuilder() {
@@ -187,11 +122,9 @@ public final class Response implements Closeable {
 
     /**
      * @see Response#request
-     *
-     *      NOTE: will add null check in version 10 which may require changes to custom feign.Client
-     *      or loggers
      */
     public Builder request(Request request) {
+      checkNotNull(request, "request is required");
       this.request = request;
       return this;
     }
@@ -234,7 +167,7 @@ public final class Response implements Closeable {
   }
 
   /**
-   * if present, the request that generated this response
+   * the request that generated this response
    */
   public Request request() {
     return request;

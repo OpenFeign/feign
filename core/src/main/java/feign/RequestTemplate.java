@@ -34,6 +34,7 @@ import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 import static feign.Util.toArray;
 import static feign.Util.valuesOrEmpty;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Builds a request to an http target. Not thread safe. <br>
@@ -165,7 +166,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
-    Map<String, Collection<String>> map = new LinkedHashMap<String, Collection<String>>();
+    Map<String, Collection<String>> map = new LinkedHashMap<>();
     if (emptyToNull(queryLine) == null) {
       return map;
     }
@@ -266,7 +267,7 @@ public final class RequestTemplate implements Serializable {
   /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
   public Request request() {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
-    safeCopy.putAll(headers);
+    safeCopy.putAll(headers());
     return Request.create(
         method, url + queryLine(),
         Collections.unmodifiableMap(safeCopy),
@@ -535,7 +536,16 @@ public final class RequestTemplate implements Serializable {
    * @see Request#headers()
    */
   public Map<String, Collection<String>> headers() {
-    return Collections.unmodifiableMap(headers);
+
+    return Collections.unmodifiableMap(
+        headers.entrySet().stream().filter(h -> h.getValue() != null && !h.getValue().isEmpty())
+            .collect(toMap(
+                Entry::getKey,
+                Entry::getValue,
+                (e1, e2) -> {
+                  throw new IllegalStateException("headers should not have duplicated keys");
+                },
+                LinkedHashMap::new)));
   }
 
   /**

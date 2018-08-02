@@ -13,6 +13,8 @@
  */
 package feign.jaxb;
 
+import feign.Request;
+import feign.Util;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -140,17 +142,16 @@ public class JAXBCodecTest {
     RequestTemplate template = new RequestTemplate();
     encoder.encode(mock, MockObject.class, template);
 
-    String NEWLINE = System.getProperty("line.separator");
-
+    // RequestTemplate always expects a UNIX style newline.
     assertThat(template).hasBody(
         new StringBuilder().append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-            .append(NEWLINE)
+            .append("\n")
             .append("<mockObject>")
-            .append(NEWLINE)
+            .append("\n")
             .append("    <value>Test</value>")
-            .append(NEWLINE)
+            .append("\n")
             .append("</mockObject>")
-            .append(NEWLINE)
+            .append("\n")
             .toString());
   }
 
@@ -165,6 +166,7 @@ public class JAXBCodecTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(mockXml, UTF_8)
         .build();
@@ -189,6 +191,7 @@ public class JAXBCodecTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body("<foo/>", UTF_8)
         .build();
@@ -202,6 +205,7 @@ public class JAXBCodecTest {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
     assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
