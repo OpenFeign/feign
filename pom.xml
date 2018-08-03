@@ -73,6 +73,8 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <!-- remove after feign 10.0 release -->
+    <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
   </modules>
