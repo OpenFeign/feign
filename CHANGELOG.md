@@ -1,7 +1,8 @@
 ### Version 10.0
 * Feign baseline is now JDK 8
-* Removed @Deprecated methods marked for removal on feign 10
-* `RetryException` includes the `Method` used for the offending `Request`
+  - Feign is now being built and tested with OpenJDK 11 as well. Releases and code base will use JDK 8, we are just testing compatibility with JDK 11.
+* Removed @Deprecated methods marked for removal on feign 10.
+* `RetryException` includes the `Method` used for the offending `Request`.
 * `Response` objects now contain the `Request` used.
 
 ### Version 9.6
