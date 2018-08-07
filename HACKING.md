@@ -12,7 +12,7 @@ Code design is opinionated including below:
 
 ## How to request change
 The best way to approach something not yet supported is to ask on
-[gitter](https://gitter.im/Netflix/feign) or [raise an issue](https://github.com/Netflix/feign/issues).
+[gitter](https://gitter.im/OpenFeign/feign) or [raise an issue](https://github.com/OpenFeign/feign/issues).
 Asking for the feature you need (like how to deal with command groups)
 vs a specific implementation (like making a private type public) will
 give you more options to accomplish your goal.
