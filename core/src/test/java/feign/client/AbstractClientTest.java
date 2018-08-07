@@ -35,6 +35,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
 import static feign.Util.UTF_8;
 
@@ -93,7 +94,7 @@ public abstract class AbstractClientTest {
 
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
         .hasPath("/?foo=bar&foo=baz&qux=")
-        .hasHeaders("Foo: Bar", "Foo: Baz", "Qux: ", "Accept: */*", "Content-Length: 3")
+        .hasHeaders("Foo: Bar", "Foo: Baz", "Accept: */*", "Content-Length: 3")
         .hasBody("foo");
   }
 
@@ -283,6 +284,38 @@ public abstract class AbstractClientTest {
   }
 
   @Test
+  public void testHeadersWithNullParams() throws InterruptedException {
+    server.enqueue(new MockResponse().setBody("body"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.getWithHeaders(null);
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isEqualTo("OK");
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
+        .hasPath("/").hasNoHeaderNamed("Authorization");
+  }
+
+  @Test
+  public void testHeadersWithNotEmptyParams() throws InterruptedException {
+    server.enqueue(new MockResponse().setBody("body"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.getWithHeaders("token");
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isEqualTo("OK");
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
+        .hasPath("/").hasHeaders(entry("authorization", asList("token")));
+  }
+
+  @Test
   public void testAlternativeCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
@@ -315,6 +348,12 @@ public abstract class AbstractClientTest {
 
     @RequestLine("GET /?foo={multiFoo}")
     Response get(@Param("multiFoo") List<String> multiFoo);
+
+    @Headers({
+        "Authorization: {authorization}"
+    })
+    @RequestLine("GET /")
+    Response getWithHeaders(@Param("authorization") String authorization);
 
     @RequestLine(value = "GET /?foo={multiFoo}", collectionFormat = CollectionFormat.CSV)
     Response getCSV(@Param("multiFoo") List<String> multiFoo);

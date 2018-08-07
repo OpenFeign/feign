@@ -13,6 +13,9 @@
  */
 package feign.codec;
 
+import feign.Request;
+import feign.Util;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,6 +46,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 
@@ -57,6 +61,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .body("hello world", UTF_8)
         .build();
@@ -69,6 +74,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(400)
         .reason("Bad request")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 
@@ -87,6 +93,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(503)
         .reason("Service Unavailable")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 

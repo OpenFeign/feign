@@ -93,7 +93,11 @@ public interface ErrorDecoder {
       FeignException exception = errorStatus(methodKey, response);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
       if (retryAfter != null) {
-        return new RetryableException(exception.getMessage(), exception, retryAfter);
+        return new RetryableException(
+            exception.getMessage(),
+            response.request().httpMethod(),
+            exception,
+            retryAfter);
       }
       return exception;
     }

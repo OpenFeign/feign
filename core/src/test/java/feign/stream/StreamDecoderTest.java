@@ -16,9 +16,10 @@ package feign.stream;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
+import feign.Request;
 import feign.RequestLine;
 import feign.Response;
-import feign.jackson.JacksonIteratorDecoder;
+import feign.Util;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class StreamDecoderTest {
       + "]\n";
 
   @Test
-  public void simpleStreamTest() throws IOException, InterruptedException {
+  public void simpleStreamTest() {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
@@ -77,28 +78,12 @@ public class StreamDecoderTest {
   }
 
   @Test
-  public void simpleJsonStreamTest() throws IOException, InterruptedException {
-    MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody(carsJson));
-
-    ObjectMapper mapper = new ObjectMapper();
-
-    StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
-        .doNotCloseAfterDecode()
-        .target(StreamInterface.class, server.url("/").toString());
-
-    try (Stream<StreamInterface.Car> stream = api.getCars()) {
-      assertThat(stream.collect(Collectors.toList())).hasSize(2);
-    }
-  }
-
-  @Test
   public void shouldCloseIteratorWhenStreamClosed() throws IOException {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body("", UTF_8)
         .build();
 
@@ -119,7 +104,7 @@ public class StreamDecoderTest {
     boolean closed;
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       this.closed = true;
     }
 

@@ -14,7 +14,9 @@
 package feign.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.Request;
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import org.junit.Rule;
@@ -86,6 +88,7 @@ public class JacksonIteratorTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(inputStream, jsonBytes.length)
         .build();
@@ -109,6 +112,7 @@ public class JacksonIteratorTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(inputStream, jsonBytes.length)
         .build();
@@ -138,6 +142,7 @@ public class JacksonIteratorTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(json, UTF_8)
         .build();
