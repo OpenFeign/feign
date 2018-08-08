@@ -69,6 +69,10 @@ public class JAXBDecoder implements Decoder {
       return Util.emptyValueOf(type);
     if (response.body() == null)
       return null;
+    if (type instanceof ParameterizedType) {
+      ParameterizedType ptype = (ParameterizedType) type;
+      type = ptype.getRawType();
+    }
     if (!(type instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports decoding raw types. Found " + type);
