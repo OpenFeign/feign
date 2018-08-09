@@ -64,7 +64,7 @@ public final class JAXBContextFactory {
     }
   }
 
-  private JAXBContext getContext(Class<?> clazz) throws JAXBException {
+  public JAXBContext getContext(Class<?> clazz) throws JAXBException {
     JAXBContext jaxbContext = this.jaxbContexts.get(clazz);
     if (jaxbContext == null) {
       jaxbContext = JAXBContext.newInstance(clazz);
