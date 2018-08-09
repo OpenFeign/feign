@@ -15,6 +15,7 @@ package feign.jaxb;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.ParserConfigurationException;
@@ -69,7 +70,7 @@ public class JAXBDecoder implements Decoder {
       return Util.emptyValueOf(type);
     if (response.body() == null)
       return null;
-    if (type instanceof ParameterizedType) {
+    while(type instanceof ParameterizedType) {
       ParameterizedType ptype = (ParameterizedType) type;
       type = ptype.getRawType();
     }

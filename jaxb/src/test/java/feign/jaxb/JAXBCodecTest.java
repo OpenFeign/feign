@@ -179,8 +179,8 @@ public class JAXBCodecTest {
   @Test
   public void doesntDecodeParameterizedTypes() throws Exception {
     thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage(
-        "JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
+    //thrown.expectMessage(
+      //  "JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
 
     class ParameterizedHolder {
 
@@ -197,6 +197,44 @@ public class JAXBCodecTest {
         .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+  }
+
+  @XmlRootElement
+  static class Box<T> {
+
+    @XmlElement
+    private T t;
+
+    public void set(T t) { this.t=t;}
+
+  }
+
+  @Test
+  public void decodeAnnotatedParameterizedTypes() throws Exception  {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    Box<String> boxStr=new Box<>();
+    boxStr.set("hi");
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(boxStr, Box.class, template);
+    Box<Box<String>> boxBoxStr=new Box<>();
+
+    boxBoxStr.set(boxStr);
+    System.out.print(template.bodyTemplate());
+
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(template.body())
+        .build();
+
+    new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response,Box.class);
+
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
