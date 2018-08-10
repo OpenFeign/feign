@@ -288,6 +288,11 @@ public final class Response implements Closeable {
      * It is the responsibility of the caller to close the stream.
      */
     Reader asReader() throws IOException;
+
+    /**
+     * used for custom charset to build Reader
+     */
+    Reader asReader(Charset charset) throws IOException;
   }
 
   private static final class InputStreamBody implements Response.Body {
@@ -325,6 +330,11 @@ public final class Response implements Closeable {
     @Override
     public Reader asReader() throws IOException {
       return new InputStreamReader(inputStream, UTF_8);
+    }
+
+    @Override
+    public Reader asReader(Charset charset) throws IOException {
+      return new InputStreamReader(inputStream, charset == null ? UTF_8 : charset);
     }
 
     @Override
@@ -374,6 +384,11 @@ public final class Response implements Closeable {
     @Override
     public Reader asReader() throws IOException {
       return new InputStreamReader(asInputStream(), UTF_8);
+    }
+
+    @Override
+    public Reader asReader(Charset charset) throws IOException {
+      return new InputStreamReader(asInputStream(), charset == null ? UTF_8 : charset);
     }
 
     @Override

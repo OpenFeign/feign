@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -311,7 +312,7 @@ public class FeignBuilderTest {
     String url = "http://localhost:" + server.getPort();
     Decoder decoder = new Decoder() {
       @Override
-      public Iterator decode(Response response, Type type) {
+      public Iterator decode(final Response response, Type type) {
         return new Iterator() {
           private boolean called = false;
 
@@ -397,6 +398,11 @@ public class FeignBuilderTest {
                   @Override
                   public Reader asReader() throws IOException {
                     return original.body().asReader();
+                  }
+
+                  @Override
+                  public Reader asReader(Charset charset) throws IOException {
+                    return original.body().asReader(charset);
                   }
 
                   @Override

@@ -22,6 +22,7 @@ import okhttp3.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -138,6 +139,11 @@ public final class OkHttpClient implements Client {
 
       @Override
       public Reader asReader() throws IOException {
+        return input.charStream();
+      }
+
+      @Override
+      public Reader asReader(Charset charset) throws IOException {
         return input.charStream();
       }
     };
