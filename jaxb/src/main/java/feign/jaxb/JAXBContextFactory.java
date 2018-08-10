@@ -15,6 +15,7 @@ package feign.jaxb;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.xml.bind.JAXBContext;
@@ -71,6 +72,12 @@ public final class JAXBContextFactory {
       this.jaxbContexts.putIfAbsent(clazz, jaxbContext);
     }
     return jaxbContext;
+  }
+
+  public void preloadContextCache(List<Class<?>> classes) throws JAXBException {
+      for (Class<?> clazz:classes) {
+          getContext(clazz);
+      }
   }
 
   /**
