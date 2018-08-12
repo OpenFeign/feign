@@ -18,6 +18,7 @@ import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -35,13 +36,13 @@ import org.xml.sax.SAXException;
  *
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
- *     .withMarshallerJAXBEncoding("UTF-8")
- *     .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
+ *     .withMarshallerJAXBEncoding(&quot;UTF-8&quot;)
+ *     .withMarshallerSchemaLocation(&quot;http://apihost http://apihost/schema.xsd&quot;)
  *     .build();
  *
  * api = Feign.builder()
  *     .decoder(new JAXBDecoder(jaxbFactory))
- *     .target(MyApi.class, "http://api");
+ *     .target(MyApi.class, &quot;http://api&quot;);
  * </pre>
  *
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
@@ -66,6 +67,10 @@ public class JAXBDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 404) return Util.emptyValueOf(type);
     if (response.body() == null) return null;
+    while (type instanceof ParameterizedType) {
+      ParameterizedType ptype = (ParameterizedType) type;
+      type = ptype.getRawType();
+    }
     if (!(type instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports decoding raw types. Found " + type);
