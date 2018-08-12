@@ -47,8 +47,9 @@ public class JAXBCodecTest {
     new JAXBEncoder(new JAXBContextFactory.Builder().build())
         .encode(mock, MockObject.class, template);
 
-    assertThat(template).hasBody(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+    assertThat(template)
+        .hasBody(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
   }
 
   @Test
@@ -101,10 +102,8 @@ public class JAXBCodecTest {
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-        "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost "
-        +
-        "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
-        +
+        "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
+        "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
         "<value>Test</value></mockObject>");
   }
 
@@ -122,11 +121,12 @@ public class JAXBCodecTest {
     RequestTemplate template = new RequestTemplate();
     encoder.encode(mock, MockObject.class, template);
 
-    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-        "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
-        +
-        "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-        "<value>Test</value></mockObject>");
+    assertThat(template)
+        .hasBody(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
+                "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
+                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+                "<value>Test</value></mockObject>");
   }
 
   @Test
@@ -178,9 +178,11 @@ public class JAXBCodecTest {
 
   @Test
   public void doesntDecodeParameterizedTypes() throws Exception {
-    thrown.expect(UnsupportedOperationException.class);
+    thrown.expect(feign.codec.DecodeException.class);
     thrown.expectMessage(
-        "JAXB only supports decoding raw types. Found java.util.Map<java.lang.String, ?>");
+        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"+
+            "\tthis problem is related to the following location:\n"+
+            "\t\tat java.util.Map");
 
     class ParameterizedHolder {
 
@@ -197,6 +199,44 @@ public class JAXBCodecTest {
         .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+  }
+
+  @XmlRootElement
+  static class Box<T> {
+
+    @XmlElement
+    private T t;
+
+    public void set(T t) {
+      this.t = t;
+    }
+
+  }
+
+  @Test
+  public void decodeAnnotatedParameterizedTypes() throws Exception {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    Box<String> boxStr = new Box<>();
+    boxStr.set("hello");
+    Box<Box<String>> boxBoxStr = new Box<>();
+    boxBoxStr.set(boxStr);
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(boxBoxStr, Box.class, template);
+
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body(template.body())
+        .build();
+
+    new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
+
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
