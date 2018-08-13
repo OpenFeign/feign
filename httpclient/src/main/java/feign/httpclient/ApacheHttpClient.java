@@ -14,6 +14,8 @@
 package feign.httpclient;
 
 import static feign.Util.UTF_8;
+import static feign.Util.checkNotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -227,7 +229,8 @@ public final class ApacheHttpClient implements Client {
 
       @Override
       public Reader asReader(Charset charset) throws IOException {
-        return new InputStreamReader(asInputStream(), charset == null ? UTF_8 : charset);
+        checkNotNull(charset, "charset should not be null");
+        return new InputStreamReader(asInputStream(), charset);
       }
 
       @Override
