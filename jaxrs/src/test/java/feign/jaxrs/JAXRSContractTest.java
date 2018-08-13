@@ -121,6 +121,16 @@ public class JAXRSContractTest {
   }
 
   @Test
+  public void producesMultipleAddsAcceptHeader() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesMultiple");
+
+    assertThat(md.template())
+        .hasHeaders(
+            entry("Content-Type", asList("application/json")),
+            entry("Accept", asList("application/xml", "text/plain")));
+  }
+
+  @Test
   public void producesNada() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Produces.value() was empty on method producesNada");
@@ -143,6 +153,15 @@ public class JAXRSContractTest {
     assertThat(md.template())
         .hasHeaders(entry("Accept", asList("text/html")),
             entry("Content-Type", asList("application/xml")));
+  }
+
+  @Test
+  public void consumesMultipleAddsContentTypeHeader() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
+
+    assertThat(md.template())
+        .hasHeaders(entry("Accept", asList("text/html")),
+            entry("Content-Type", asList("application/xml", "application/json")));
   }
 
   @Test
@@ -425,6 +444,10 @@ public class JAXRSContractTest {
     Response produces();
 
     @GET
+    @Produces({"application/xml", "text/plain"})
+    Response producesMultiple();
+
+    @GET
     @Produces({})
     Response producesNada();
 
@@ -435,6 +458,10 @@ public class JAXRSContractTest {
     @POST
     @Consumes("application/xml")
     Response consumes();
+
+    @POST
+    @Consumes({"application/xml", "application/json"})
+    Response consumesMultiple();
 
     @POST
     @Consumes({})
