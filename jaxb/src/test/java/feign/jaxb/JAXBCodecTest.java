@@ -123,10 +123,10 @@ public class JAXBCodecTest {
 
     assertThat(template)
         .hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-                "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" " +
-                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                "<value>Test</value></mockObject>");
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" "
+                + "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
+                + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<value>Test</value></mockObject>");
   }
 
   @Test
@@ -180,9 +180,9 @@ public class JAXBCodecTest {
   public void doesntDecodeParameterizedTypes() throws Exception {
     thrown.expect(feign.codec.DecodeException.class);
     thrown.expectMessage(
-        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"+
-            "\tthis problem is related to the following location:\n"+
-            "\t\tat java.util.Map");
+        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"
+            + "\tthis problem is related to the following location:\n"
+            + "\t\tat java.util.Map");
 
     class ParameterizedHolder {
 

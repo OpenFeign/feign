@@ -472,6 +472,39 @@
         <module>jaxb</module>
       </modules>
     </profile>
+
+    <profile>
+      <id>validateCodeFormat</id>
+      <activation>
+        <property>
+          <name>validateFormat</name>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.marvinformatics.formatter</groupId>
+            <artifactId>formatter-maven-plugin</artifactId>
+            <version>2.2.0</version>
+            <configuration>
+              <lineEnding>LF</lineEnding>
+              <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
+            </configuration>
+            <executions>
+              <execution>
+                <id>validate-only</id>
+                <goals>
+                  <goal>validate</goal>
+                </goals>
+                <phase>initialize</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>release</id>
       <build>

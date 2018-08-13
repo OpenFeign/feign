@@ -159,7 +159,7 @@ if ! is_pull_request && build_started_by_tag; then
 fi
 
 # skip license on travis due to #1512
-./mvnw install -nsu -Dlicense.skip=true
+./mvnw install -nsu -Dlicense.skip=true -DvalidateFormat
 
 # If we are on a pull request, our only job is to run tests, which happened above via ./mvnw install
 if is_pull_request; then
