@@ -13,12 +13,6 @@
  */
 package feign;
 
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
-
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -32,6 +26,11 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import static feign.Util.UTF_8;
+import static feign.Util.checkNotNull;
+import static feign.Util.checkState;
+import static feign.Util.decodeOrDefault;
+import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -69,8 +68,7 @@ public final class Response implements Closeable {
         Body body;
         Request request;
 
-        Builder() {
-        }
+        Builder() {}
 
         Builder(Response source) {
             this.status = source.status;
@@ -80,57 +78,43 @@ public final class Response implements Closeable {
             this.request = source.request;
         }
 
-        /**
-         * @see Response#status
-         */
+        /** @see Response#status */
         public Builder status(int status) {
             this.status = status;
             return this;
         }
 
-        /**
-         * @see Response#reason
-         */
+        /** @see Response#reason */
         public Builder reason(String reason) {
             this.reason = reason;
             return this;
         }
 
-        /**
-         * @see Response#headers
-         */
+        /** @see Response#headers */
         public Builder headers(Map<String, Collection<String>> headers) {
             this.headers = headers;
             return this;
         }
 
-        /**
-         * @see Response#body
-         */
+        /** @see Response#body */
         public Builder body(Body body) {
             this.body = body;
             return this;
         }
 
-        /**
-         * @see Response#body
-         */
+        /** @see Response#body */
         public Builder body(InputStream inputStream, Integer length) {
             this.body = InputStreamBody.orNull(inputStream, length);
             return this;
         }
 
-        /**
-         * @see Response#body
-         */
+        /** @see Response#body */
         public Builder body(byte[] data) {
             this.body = ByteArrayBody.orNull(data);
             return this;
         }
 
-        /**
-         * @see Response#body
-         */
+        /** @see Response#body */
         public Builder body(String text, Charset charset) {
             this.body = ByteArrayBody.orNull(text, charset);
             return this;
@@ -152,7 +136,7 @@ public final class Response implements Closeable {
 
     /**
      * status code. ex {@code 200}
-     * <p>
+     *
      * See <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html" >rfc2616</a>
      */
     public int status() {
@@ -161,7 +145,7 @@ public final class Response implements Closeable {
 
     /**
      * Nullable and not set when using http/2
-     * <p>
+     *
      * See https://github.com/http2/http2-spec/issues/202
      */
     public String reason() {
@@ -214,7 +198,7 @@ public final class Response implements Closeable {
 
         /**
          * length in bytes, if known. Null if unknown or greater than {@link Integer#MAX_VALUE}.
-         * <p>
+         *
          * <br>
          * <br>
          * <br>
@@ -239,7 +223,7 @@ public final class Response implements Closeable {
         Reader asReader() throws IOException;
 
         /**
-         * for custom charset
+         *
          */
         Reader asReader(Charset charset) throws IOException;
     }
@@ -278,12 +262,13 @@ public final class Response implements Closeable {
 
         @Override
         public Reader asReader() throws IOException {
-            return asReader(UTF_8);
+            return new InputStreamReader(inputStream, UTF_8);
         }
 
+        @Override
         public Reader asReader(Charset charset) throws IOException {
             checkNotNull(charset, "charset should not be null");
-            return new InputStreamReader(asInputStream(), charset);
+            return new InputStreamReader(inputStream, charset);
         }
 
         @Override
@@ -335,14 +320,14 @@ public final class Response implements Closeable {
             return new InputStreamReader(asInputStream(), UTF_8);
         }
 
+        @Override
         public Reader asReader(Charset charset) throws IOException {
             checkNotNull(charset, "charset should not be null");
             return new InputStreamReader(asInputStream(), charset);
         }
 
         @Override
-        public void close() throws IOException {
-        }
+        public void close() throws IOException {}
 
         @Override
         public String toString() {

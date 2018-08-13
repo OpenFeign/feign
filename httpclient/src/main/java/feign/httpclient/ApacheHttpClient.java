@@ -13,23 +13,6 @@
  */
 package feign.httpclient;
 
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -47,10 +30,25 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import feign.Util;
+import static feign.Util.UTF_8;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -229,7 +227,7 @@ public final class ApacheHttpClient implements Client {
 
       @Override
       public Reader asReader(Charset charset) throws IOException {
-        checkNotNull(charset, "charset should not be null");
+        Util.checkNotNull(charset, "charset should not be null");
         return new InputStreamReader(asInputStream(), charset);
       }
 
