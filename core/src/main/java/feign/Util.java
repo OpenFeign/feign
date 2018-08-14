@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /** Utilities, typically copied in from guava, so as to avoid dependency conflicts. */
 public class Util {
@@ -122,6 +123,22 @@ public class Util {
   /** Adapted from {@code com.google.common.base.Strings#emptyToNull}. */
   public static String emptyToNull(String string) {
     return string == null || string.isEmpty() ? null : string;
+  }
+
+  /**
+   * Removes values from the array that meet the criteria for removal via the supplied {@link
+   * Predicate} value
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T[] removeValues(T[] values, Predicate<T> shouldRemove, Class<T> type) {
+    Collection<T> collection = new ArrayList<>(values.length);
+    for (T value : values) {
+      if (shouldRemove.negate().test(value)) {
+        collection.add(value);
+      }
+    }
+    T[] array = (T[]) Array.newInstance(type, collection.size());
+    return collection.toArray(array);
   }
 
   /** Adapted from {@code com.google.common.base.Strings#emptyToNull}. */

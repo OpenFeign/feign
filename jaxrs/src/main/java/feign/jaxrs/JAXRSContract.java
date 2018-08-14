@@ -15,6 +15,7 @@ package feign.jaxrs;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
+import static feign.Util.removeValues;
 
 import feign.Contract;
 import feign.MethodMetadata;
@@ -102,19 +103,19 @@ public class JAXRSContract extends Contract.BaseContract {
   }
 
   private void handleProducesAnnotation(MethodMetadata data, Produces produces, String name) {
-    String[] serverProduces = produces.value();
-    String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
-    checkState(clientAccepts != null, "Produces.value() was empty on %s", name);
+    String[] serverProduces =
+        removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+    checkState(serverProduces.length > 0, "Produces.value() was empty on %s", name);
     data.template().header(ACCEPT, (String) null); // remove any previous produces
-    data.template().header(ACCEPT, clientAccepts);
+    data.template().header(ACCEPT, serverProduces);
   }
 
   private void handleConsumesAnnotation(MethodMetadata data, Consumes consumes, String name) {
-    String[] serverConsumes = consumes.value();
-    String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
-    checkState(clientProduces != null, "Consumes.value() was empty on %s", name);
+    String[] serverConsumes =
+        removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+    checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", name);
     data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, clientProduces);
+    data.template().header(CONTENT_TYPE, serverConsumes);
   }
 
   /**
