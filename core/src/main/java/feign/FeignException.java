@@ -42,21 +42,16 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorReading(Request request, Response ignored, IOException cause) {
-    return new FeignException(
-        format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
-        cause);
+    final String message =
+        format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url());
+
+    return new FeignRequestException(message, cause, request);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
     String message = format("status %s reading %s", response.status(), methodKey);
-    try {
-      if (response.body() != null) {
-        String body = Util.toString(response.body().asReader());
-        message += "; content:\n" + body;
-      }
-    } catch (IOException ignored) { // NOPMD
-    }
-    return new FeignException(response.status(), message);
+
+    return new FeignResponseException(response.status(), message, response);
   }
 
   static FeignException errorExecuting(Request request, IOException cause) {

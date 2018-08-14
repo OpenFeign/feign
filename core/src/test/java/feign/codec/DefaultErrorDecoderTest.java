@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import feign.FeignException;
+import feign.FeignResponseException;
 import feign.Response;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
@@ -55,9 +56,6 @@ public class DefaultErrorDecoderTest {
 
   @Test
   public void throwsFeignExceptionIncludingBody() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
-
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
@@ -66,7 +64,12 @@ public class DefaultErrorDecoderTest {
         .body("hello world", UTF_8)
         .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    try {
+      throw errorDecoder.decode("Service#foo()", response);
+    } catch (FeignResponseException e) {
+      assertThat(e.getMessage()).isEqualTo("status 500 reading Service#foo()");
+      assertThat(e.responseBody()).isEqualTo("hello world");
+    }
   }
 
   @Test

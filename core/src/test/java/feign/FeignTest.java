@@ -512,6 +512,25 @@ public class FeignTest {
   }
 
   @Test
+  public void throwsFeignExceptionIncludingBody() {
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    TestInterface api = Feign.builder()
+        .decoder((response, type) -> {
+          throw new IOException("timeout");
+        })
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.body("Request body");
+    } catch (FeignRequestException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
+      assertThat(e.requestBody()).isEqualTo("Request body");
+    }
+  }
+
+  @Test
   public void ensureRetryerClonesItself() {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
@@ -775,6 +794,9 @@ public class FeignTest {
 
     @RequestLine("POST /")
     void body(List<String> contents);
+
+    @RequestLine("POST /")
+    String body(String content);
 
     @RequestLine("POST /")
     @Headers("Content-Encoding: gzip")

@@ -23,7 +23,7 @@ import org.junit.rules.ExpectedException;
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
-import feign.FeignException;
+import feign.FeignResponseException;
 import feign.Headers;
 import feign.Logger;
 import feign.Param;
@@ -113,8 +113,8 @@ public abstract class AbstractClientTest {
 
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
+    thrown.expect(FeignResponseException.class);
+    thrown.expectMessage("status 500 reading TestInterface#get()");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -122,6 +122,22 @@ public abstract class AbstractClientTest {
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.get();
+  }
+
+  @Test
+  public void parsesErrorResponseBody() {
+    String expectedResponseBody = "ARGHH";
+
+    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+    } catch (FeignResponseException e) {
+      assertThat(e.responseBody()).isEqualTo(expectedResponseBody);
+    }
   }
 
   @Test
