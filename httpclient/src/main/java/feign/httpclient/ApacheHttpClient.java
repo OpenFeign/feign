@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -52,7 +53,7 @@ import static feign.Util.UTF_8;
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
- * 
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -222,6 +223,12 @@ public final class ApacheHttpClient implements Client {
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
+      }
+
+      @Override
+      public Reader asReader(Charset charset) throws IOException {
+        Util.checkNotNull(charset, "charset should not be null");
+        return new InputStreamReader(asInputStream(), charset);
       }
 
       @Override

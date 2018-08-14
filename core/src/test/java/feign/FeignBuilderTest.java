@@ -21,6 +21,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -397,6 +398,11 @@ public class FeignBuilderTest {
                   @Override
                   public Reader asReader() throws IOException {
                     return original.body().asReader();
+                  }
+
+                  @Override
+                  public Reader asReader(Charset charset) throws IOException {
+                    return original.body().asReader(charset);
                   }
 
                   @Override
