@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -400,6 +401,11 @@ public class FeignBuilderTest {
                               @Override
                               public Reader asReader() throws IOException {
                                 return original.body().asReader();
+                              }
+
+                              @Override
+                              public Reader asReader(Charset charset) throws IOException {
+                                return original.body().asReader(charset);
                               }
 
                               @Override
