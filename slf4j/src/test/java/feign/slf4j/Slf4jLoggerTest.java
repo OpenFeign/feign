@@ -13,6 +13,7 @@
  */
 package feign.slf4j;
 
+import feign.Request.HttpMethod;
 import feign.Util;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,12 +30,13 @@ public class Slf4jLoggerTest {
 
   private static final String CONFIG_KEY = "someMethod()";
   private static final Request REQUEST =
-      new RequestTemplate().method("GET").append("http://api.example.com").request();
+      new RequestTemplate().method(HttpMethod.GET).target("http://api.example.com")
+          .resolve(Collections.emptyMap()).request();
   private static final Response RESPONSE =
       Response.builder()
           .status(200)
           .reason("OK")
-          .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
           .headers(Collections.<String, Collection<String>>emptyMap())
           .body(new byte[0])
           .build();

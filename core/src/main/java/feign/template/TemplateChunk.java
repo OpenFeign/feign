@@ -11,39 +11,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.mock;
+package feign.template;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Target;
+/**
+ * Represents the parts of a URI Template.
+ */
+abstract class TemplateChunk {
 
-public class MockTarget<E> implements Target<E> {
-
-  private final Class<E> type;
-
-  public MockTarget(Class<E> type) {
-    this.type = type;
-  }
+  public abstract String getValue();
 
   @Override
-  public Class<E> type() {
-    return type;
+  public String toString() {
+    return getValue();
   }
-
-  @Override
-  public String name() {
-    return type.getSimpleName();
-  }
-
-  @Override
-  public String url() {
-    return "";
-  }
-
-  @Override
-  public Request apply(RequestTemplate input) {
-    input.target(url());
-    return input.request();
-  }
-
 }

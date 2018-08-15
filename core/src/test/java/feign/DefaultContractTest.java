@@ -14,6 +14,7 @@
 package feign;
 
 import com.google.gson.reflect.TypeToken;
+import java.util.ArrayList;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,7 +86,7 @@ public class DefaultContractTest {
   public void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test
@@ -95,40 +96,40 @@ public class DefaultContractTest {
         .hasQueries();
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")),
             entry("limit", asList("1")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoAndOneEmpty").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
-            entry("flag", asList(new String[] {null})),
+            entry("flag", new ArrayList<>()),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "oneEmpty").template())
         .hasUrl("/")
         .hasQueries(
-            entry("flag", asList(new String[] {null})));
+            entry("flag", new ArrayList<>()));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoEmpty").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
-            entry("flag", asList(new String[] {null})),
-            entry("NoErrors", asList(new String[] {null})));
+            entry("flag", new ArrayList<>()),
+            entry("NoErrors", new ArrayList<>()));
   }
 
   @Test
@@ -544,7 +545,7 @@ public class DefaultContractTest {
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     String getQueues(@Param("vhost") String vhost);
 
-    @RequestLine("GET /api/{zoneId}")
+    @RequestLine(value = "GET /api/{zoneId}")
     String getZone(@Param("ZoneId") String vhost);
   }
 

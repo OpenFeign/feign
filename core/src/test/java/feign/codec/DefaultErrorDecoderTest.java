@@ -13,30 +13,31 @@
  */
 package feign.codec;
 
-import feign.Request;
-import feign.Util;
-import java.util.Collections;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import feign.FeignException;
-import feign.Response;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import feign.FeignException;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.Response;
+import feign.Util;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultErrorDecoderTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
 
-  ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+  private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
-  Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+  private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 
   @Test
   public void throwsFeignException() throws Throwable {
@@ -46,7 +47,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 
@@ -58,7 +59,7 @@ public class DefaultErrorDecoderTest {
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .body("hello world", UTF_8)
         .build();
@@ -72,11 +73,11 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void testFeignExceptionIncludesStatus() throws Throwable {
+  public void testFeignExceptionIncludesStatus() {
     Response response = Response.builder()
         .status(400)
         .reason("Bad request")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 
@@ -91,11 +92,11 @@ public class DefaultErrorDecoderTest {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 503 reading Service#foo()");
 
-    headers.put(RETRY_AFTER, Arrays.asList("Sat, 1 Jan 2000 00:00:00 GMT"));
+    headers.put(RETRY_AFTER, Collections.singletonList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response = Response.builder()
         .status(503)
         .reason("Service Unavailable")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(headers)
         .build();
 

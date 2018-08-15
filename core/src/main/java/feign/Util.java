@@ -344,4 +344,24 @@ public class Util {
       return defaultValue;
     }
   }
+
+  /**
+   * If the provided String is not null or empty.
+   *
+   * @param value to evaluate.
+   * @return true of the value is not null and not empty.
+   */
+  public static boolean isNotBlank(String value) {
+    return value != null && !value.isEmpty();
+  }
+
+  /**
+   * If the provided String is null or empty.
+   *
+   * @param value to evaluate.
+   * @return true if the value is null or empty.
+   */
+  public static boolean isBlank(String value) {
+    return value == null || value.isEmpty();
+  }
 }

@@ -16,6 +16,8 @@ package feign.codec;
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import feign.Request.HttpMethod;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
@@ -75,7 +77,7 @@ public class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(headers)
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(inputStream, content.length())
         .build();
   }
@@ -85,7 +87,7 @@ public class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(Collections.<String, Collection<String>>emptyMap())
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .build();
   }
 }

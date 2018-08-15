@@ -13,6 +13,10 @@
  */
 package feign;
 
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
+
+import feign.Request.HttpMethod;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -24,8 +28,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Defines what annotations and values are valid on interfaces.
@@ -65,7 +69,7 @@ public interface Contract {
             metadata.configKey());
         result.put(metadata.configKey(), metadata);
       }
-      return new ArrayList<MethodMetadata>(result.values());
+      return new ArrayList<>(result.values());
     }
 
     /**
@@ -209,6 +213,9 @@ public interface Contract {
   }
 
   class Default extends BaseContract {
+
+    static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.+)*");
+
     @Override
     protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       if (targetType.isAnnotationPresent(Headers.class)) {
@@ -231,23 +238,16 @@ public interface Contract {
         String requestLine = RequestLine.class.cast(methodAnnotation).value();
         checkState(emptyToNull(requestLine) != null,
             "RequestLine annotation was empty on method %s.", method.getName());
-        if (requestLine.indexOf(' ') == -1) {
-          checkState(requestLine.indexOf('/') == -1,
-              "RequestLine annotation didn't start with an HTTP verb on method %s.",
-              method.getName());
-          data.template().method(requestLine);
-          return;
-        }
-        data.template().method(requestLine.substring(0, requestLine.indexOf(' ')));
-        if (requestLine.indexOf(' ') == requestLine.lastIndexOf(' ')) {
-          // no HTTP version is ok
-          data.template().append(requestLine.substring(requestLine.indexOf(' ') + 1));
-        } else {
-          // skip HTTP version
-          data.template().append(
-              requestLine.substring(requestLine.indexOf(' ') + 1, requestLine.lastIndexOf(' ')));
-        }
 
+        Matcher requestLineMatcher = REQUEST_LINE_PATTERN.matcher(requestLine);
+        if (!requestLineMatcher.find()) {
+          throw new IllegalStateException(String.format(
+              "RequestLine annotation didn't start with an HTTP verb on method %s",
+              method.getName()));
+        } else {
+          data.template().method(HttpMethod.valueOf(requestLineMatcher.group(1)));
+          data.template().uri(requestLineMatcher.group(2));
+        }
         data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
         data.template()
             .collectionFormat(RequestLine.class.cast(methodAnnotation).collectionFormat());
@@ -288,10 +288,7 @@ public interface Contract {
           }
           data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
           isHttpAnnotation = true;
-          String varName = '{' + name + '}';
-          if (!data.template().url().contains(varName) &&
-              !searchMapValuesContainsSubstring(data.template().queries(), varName) &&
-              !searchMapValuesContainsSubstring(data.template().headers(), varName)) {
+          if (!data.template().hasRequestVariable(name)) {
             data.formParams().add(name);
           }
         } else if (annotationType == QueryMap.class) {
@@ -308,24 +305,6 @@ public interface Contract {
         }
       }
       return isHttpAnnotation;
-    }
-
-    private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,
-                                                                   String search) {
-      Collection<Collection<String>> values = map.values();
-      if (values == null) {
-        return false;
-      }
-
-      for (Collection<String> entry : values) {
-        for (String value : entry) {
-          if (value.contains(search)) {
-            return true;
-          }
-        }
-      }
-
-      return false;
     }
 
     private static Map<String, Collection<String>> toMap(String[] input) {

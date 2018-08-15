@@ -13,6 +13,7 @@
  */
 package feign.okhttp;
 
+import feign.Request.HttpMethod;
 import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -32,7 +33,7 @@ import feign.Client;
  * This module directs Feign's http requests to
  * <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables SPDY and better network
  * control. Ex.
- * 
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -76,7 +77,8 @@ public final class OkHttpClient implements Client {
     }
 
     byte[] inputBody = input.body();
-    boolean isMethodWithBody = "POST".equals(input.method()) || "PUT".equals(input.method());
+    boolean isMethodWithBody =
+        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod();
     if (isMethodWithBody) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
@@ -87,7 +89,7 @@ public final class OkHttpClient implements Client {
     }
 
     RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
-    requestBuilder.method(input.method(), body);
+    requestBuilder.method(input.httpMethod().name(), body);
     return requestBuilder.build();
   }
 

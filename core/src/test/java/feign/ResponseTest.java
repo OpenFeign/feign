@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.Request.HttpMethod;
 import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,7 +31,7 @@ public class ResponseTest {
     Response response = Response.builder()
         .status(200)
         .headers(Collections.<String, Collection<String>>emptyMap())
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(new byte[0])
         .build();
 
@@ -46,7 +47,7 @@ public class ResponseTest {
     Response response = Response.builder()
         .status(200)
         .headers(headersMap)
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(new byte[0])
         .build();
     assertThat(response.headers().get("content-type")).isEqualTo(valueList);
@@ -62,7 +63,7 @@ public class ResponseTest {
     Response response = Response.builder()
         .status(200)
         .headers(headersMap)
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(new byte[0])
         .build();
 

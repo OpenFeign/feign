@@ -57,7 +57,7 @@ public class RequestKeyTest {
   public void create() throws Exception {
     Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
     map.put("my-header", Arrays.asList("val"));
-    Request request = Request.create("GET", "a", map, "content".getBytes(StandardCharsets.UTF_8),
+    Request request = Request.create(Request.HttpMethod.GET, "a", map, "content".getBytes(StandardCharsets.UTF_8),
         StandardCharsets.UTF_16);
     requestKey = RequestKey.create(request);
 

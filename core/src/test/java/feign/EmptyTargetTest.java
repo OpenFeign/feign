@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.Request.HttpMethod;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +50,7 @@ public class EmptyTargetTest {
     thrown.expectMessage("Request with non-absolute URL not supported with empty target");
 
     EmptyTarget.create(UriInterface.class)
-        .apply(new RequestTemplate().method("GET").append("/relative"));
+        .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative"));
   }
 
   interface UriInterface {

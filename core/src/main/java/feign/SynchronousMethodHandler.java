@@ -156,7 +156,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     for (RequestInterceptor interceptor : requestInterceptors) {
       interceptor.apply(template);
     }
-    return target.apply(new RequestTemplate(template));
+    return target.apply(template);
   }
 
   Object decode(Response response) throws Throwable {

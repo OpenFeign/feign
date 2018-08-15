@@ -13,19 +13,20 @@
  */
 package feign.jackson.jaxb;
 
+import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
+
 import feign.Request;
+import feign.Request.HttpMethod;
+import feign.RequestTemplate;
+import feign.Response;
 import feign.Util;
-import org.junit.Test;
-import java.util.Collection;
 import java.util.Collections;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import feign.RequestTemplate;
-import feign.Response;
-import static feign.Util.UTF_8;
-import static feign.assertj.FeignAssertions.assertThat;
+import org.junit.Test;
 
 public class JacksonJaxbCodecTest {
 
@@ -44,8 +45,8 @@ public class JacksonJaxbCodecTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
         .body("{\"value\":\"Test\"}", UTF_8)
         .build();
     JacksonJaxbJsonDecoder decoder = new JacksonJaxbJsonDecoder();
@@ -54,14 +55,16 @@ public class JacksonJaxbCodecTest {
         .isEqualTo(new MockObject("Test"));
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
         .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
   }
@@ -73,7 +76,8 @@ public class JacksonJaxbCodecTest {
     @XmlElement
     private String value;
 
-    MockObject() {}
+    MockObject() {
+    }
 
     MockObject(String value) {
       this.value = value;
