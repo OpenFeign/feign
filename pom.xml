@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>10.0.0</version>
+  <version>10.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -96,7 +96,7 @@
     <url>https://github.com/openfeign/feign</url>
     <connection>scm:git:https://github.com/openfeign/feign.git</connection>
     <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
-    <tag>10.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
