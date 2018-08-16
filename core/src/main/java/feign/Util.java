@@ -150,7 +150,8 @@ public class Util {
   }
 
   /**
-   * Removes values from the array that meet the criteria for removal via the supplied {@link Predicate} value
+   * Removes values from the array that meet the criteria for removal via the supplied
+   * {@link Predicate} value
    */
   @SuppressWarnings("unchecked")
   public static <T> T[] removeValues(T[] values, Predicate<T> shouldRemove, Class<T> type) {
