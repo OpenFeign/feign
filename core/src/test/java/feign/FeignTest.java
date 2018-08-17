@@ -523,10 +523,10 @@ public class FeignTest {
 
     try {
       api.body("Request body");
-    } catch (FeignRequestException e) {
+    } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.requestBody()).isEqualTo("Request body");
+      assertThat(e.contentUTF8()).isEqualTo("Request body");
     }
   }
 

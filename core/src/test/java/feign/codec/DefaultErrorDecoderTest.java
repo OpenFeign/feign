@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import feign.FeignException;
-import feign.FeignResponseException;
 import feign.Response;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
@@ -66,9 +65,9 @@ public class DefaultErrorDecoderTest {
 
     try {
       throw errorDecoder.decode("Service#foo()", response);
-    } catch (FeignResponseException e) {
+    } catch (FeignException e) {
       assertThat(e.getMessage()).isEqualTo("status 500 reading Service#foo()");
-      assertThat(e.responseBody()).isEqualTo("hello world");
+      assertThat(e.contentUTF8()).isEqualTo("hello world");
     }
   }
 
