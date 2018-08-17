@@ -15,7 +15,6 @@ package feign;
 
 import static feign.Util.UTF_8;
 import static java.lang.String.format;
-
 import java.io.IOException;
 
 /**
