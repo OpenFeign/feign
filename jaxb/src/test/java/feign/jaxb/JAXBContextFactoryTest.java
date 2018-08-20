@@ -17,10 +17,10 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.Test;
 import javax.xml.bind.Marshaller;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -77,18 +77,17 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void testPreloadCache() throws Exception{
+  public void testPreloadCache() throws Exception {
 
+    List<Class<?>> classes = Arrays.asList(String.class, Integer.class);
     JAXBContextFactory factory =
-        new JAXBContextFactory.Builder().build();
+        new JAXBContextFactory.Builder().build(classes);
 
-    Field f = factory.getClass().getDeclaredField("jaxbContexts"); //NoSuchFieldException
-
+    Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
-    Map internalCache = (Map) f.get(factory); //IllegalAccessException
-    assertTrue(internalCache.isEmpty());
-    List<Class<?>> classes= Arrays.asList(String.class,Integer.class);
-    factory.preloadContextCache(classes);
+    Map internalCache = (Map) f.get(factory); // IllegalAccessException
+    assertFalse(internalCache.isEmpty());
+    assertTrue(internalCache.size() == classes.size());
     assertNotNull(internalCache.get(String.class));
     assertNotNull(internalCache.get(Integer.class));
 

@@ -65,7 +65,7 @@ public final class JAXBContextFactory {
     }
   }
 
-  public JAXBContext getContext(Class<?> clazz) throws JAXBException {
+  private JAXBContext getContext(Class<?> clazz) throws JAXBException {
     JAXBContext jaxbContext = this.jaxbContexts.get(clazz);
     if (jaxbContext == null) {
       jaxbContext = JAXBContext.newInstance(clazz);
@@ -74,10 +74,10 @@ public final class JAXBContextFactory {
     return jaxbContext;
   }
 
-  public void preloadContextCache(List<Class<?>> classes) throws JAXBException {
-      for (Class<?> clazz:classes) {
-          getContext(clazz);
-      }
+  private void preloadContextCache(List<Class<?>> classes) throws JAXBException {
+    for (Class<?> clazz : classes) {
+      getContext(clazz);
+    }
   }
 
   /**
@@ -128,10 +128,28 @@ public final class JAXBContextFactory {
     }
 
     /**
-     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance.
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance with a lazy loading cached
+     * context
      */
     public JAXBContextFactory build() {
       return new JAXBContextFactory(properties);
+    }
+
+    /**
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance. Pre-loads context cache with
+     * given classes
+     *
+     * @param classes
+     * @return ContextFactory with a pre-populated JAXBContext cache
+     * @throws JAXBException if provided classes can't be used for JAXBContext generation most
+     *         likely due to missing JAXB annotations
+     */
+    public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
+      JAXBContextFactory factory = new JAXBContextFactory(properties);
+      if (classes != null) {
+        factory.preloadContextCache(classes);
+      }
+      return factory;
     }
   }
 }
