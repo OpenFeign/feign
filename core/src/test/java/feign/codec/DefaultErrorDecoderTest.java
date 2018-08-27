@@ -56,9 +56,6 @@ public class DefaultErrorDecoderTest {
 
   @Test
   public void throwsFeignExceptionIncludingBody() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading Service#foo(); content:\nhello world");
-
     Response response =
         Response.builder()
             .status(500)
@@ -68,7 +65,12 @@ public class DefaultErrorDecoderTest {
             .body("hello world", UTF_8)
             .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    try {
+      throw errorDecoder.decode("Service#foo()", response);
+    } catch (FeignException e) {
+      assertThat(e.getMessage()).isEqualTo("status 500 reading Service#foo()");
+      assertThat(e.contentUTF8()).isEqualTo("hello world");
+    }
   }
 
   @Test
