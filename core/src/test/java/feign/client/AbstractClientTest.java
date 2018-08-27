@@ -114,7 +114,7 @@ public abstract class AbstractClientTest {
   @Test
   public void parsesErrorResponse() throws IOException, InterruptedException {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#get(); content:\n" + "ARGHH");
+    thrown.expectMessage("status 500 reading TestInterface#get()");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -122,6 +122,22 @@ public abstract class AbstractClientTest {
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.get();
+  }
+
+  @Test
+  public void parsesErrorResponseBody() {
+    String expectedResponseBody = "ARGHH";
+
+    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+    } catch (FeignException e) {
+      assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
+    }
   }
 
   @Test
