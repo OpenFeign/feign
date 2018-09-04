@@ -17,7 +17,6 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
-
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
@@ -72,7 +71,8 @@ public abstract class AbstractClientTest {
     assertEquals("foo", api.patch(""));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders(entry("Accept", "text/plain"), entry("Content-Length", "0"))
+        .hasHeaders(entry("Accept", Collections.singletonList("text/plain")),
+            entry("Content-Length", Collections.singletonList("0")))
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
   }

@@ -16,7 +16,6 @@ package feign.codec;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;

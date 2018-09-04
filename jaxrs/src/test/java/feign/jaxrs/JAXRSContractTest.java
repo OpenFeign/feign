@@ -14,6 +14,7 @@
 package feign.jaxrs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -128,8 +129,8 @@ public class JAXRSContractTest {
 
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml", "text/plain")));
+            entry("Content-Type", Collections.singletonList("application/json")),
+            entry("Accept", asList("application/xml", "text/html", "text/plain")));
   }
 
   @Test
@@ -164,8 +165,8 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
 
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("text/html")),
-            entry("Content-Type", asList("application/xml", "application/json")));
+        .hasHeaders(entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Accept", Collections.singletonList("text/html")));
   }
 
   @Test

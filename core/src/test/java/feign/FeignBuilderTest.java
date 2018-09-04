@@ -230,7 +230,7 @@ public class FeignBuilderTest {
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
     assertThat(server.takeRequest())
-        .hasHeaders(MapEntry.entry("Content-Type", "text/plain"))
+        .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasBody("request data");
   }
 

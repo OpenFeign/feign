@@ -15,7 +15,6 @@ package feign;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
-
 import feign.Request.HttpMethod;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

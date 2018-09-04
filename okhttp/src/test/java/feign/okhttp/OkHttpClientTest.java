@@ -22,6 +22,7 @@ import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import feign.Feign;
+import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
@@ -49,8 +50,8 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
-            MapEntry.entry("Accept", "text/plain"),
-            MapEntry.entry("Content-Type", "text/plain"))
+            MapEntry.entry("Accept", Collections.singletonList("text/plain")),
+            MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasMethod("GET");
   }
 

@@ -69,7 +69,7 @@ public class HeaderTemplate extends Template {
     Set<String> headerValues = new LinkedHashSet<>(headerTemplate.getValues());
     headerValues.addAll(StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
-        .collect(Collectors.toList()));
+        .collect(Collectors.toSet()));
     return create(headerTemplate.getName(), headerValues);
   }
 

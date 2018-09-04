@@ -15,7 +15,6 @@ package feign.jackson.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -76,8 +75,7 @@ public class JacksonJaxbCodecTest {
     @XmlElement
     private String value;
 
-    MockObject() {
-    }
+    MockObject() {}
 
     MockObject(String value) {
       this.value = value;

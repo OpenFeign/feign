@@ -196,7 +196,8 @@ public class GsonCodecTest {
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
     assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));

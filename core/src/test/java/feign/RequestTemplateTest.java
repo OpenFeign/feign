@@ -16,7 +16,6 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
-
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
 import java.util.Arrays;

@@ -16,7 +16,6 @@ package feign;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
-
 import feign.Request.HttpMethod;
 import feign.template.BodyTemplate;
 import feign.template.HeaderTemplate;
@@ -108,9 +107,19 @@ public final class RequestTemplate implements Serializable {
    * @return a new Request Template.
    */
   public static RequestTemplate from(RequestTemplate requestTemplate) {
-    return new RequestTemplate(requestTemplate.target, requestTemplate.uriTemplate,
-        requestTemplate.bodyTemplate, requestTemplate.method, requestTemplate.charset,
-        requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat);
+    RequestTemplate template =
+        new RequestTemplate(requestTemplate.target, requestTemplate.uriTemplate,
+            requestTemplate.bodyTemplate, requestTemplate.method, requestTemplate.charset,
+            requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat);
+
+    if (!requestTemplate.queries().isEmpty()) {
+      template.queries.putAll(requestTemplate.queries);
+    }
+
+    if (!requestTemplate.headers().isEmpty()) {
+      template.headers.putAll(requestTemplate.headers);
+    }
+    return template;
   }
 
   /**
@@ -162,7 +171,10 @@ public final class RequestTemplate implements Serializable {
      * resolved template.
      */
     if (!this.queries.isEmpty()) {
-      /* resolve the queries, appending them to the uri */
+      /*
+       * since we only want to keep resolved query values, reset any queries on the resolved copy
+       */
+      resolved.queries(Collections.emptyMap());
       StringBuilder query = new StringBuilder();
       Iterator<QueryTemplate> queryTemplates = this.queries.values().iterator();
 
@@ -195,6 +207,11 @@ public final class RequestTemplate implements Serializable {
 
     /* headers */
     if (!this.headers.isEmpty()) {
+      /*
+       * same as the query string, we only want to keep resolved values, so clear the header map on
+       * the resolved instance
+       */
+      resolved.headers(Collections.emptyMap());
       for (HeaderTemplate headerTemplate : this.headers.values()) {
         /* resolve the header */
         String header = headerTemplate.expand(variables);
@@ -414,7 +431,7 @@ public final class RequestTemplate implements Serializable {
       String queryString = uri.substring(queryMatcher.start() + 1);
 
       /* parse the query string */
-      this.extractQueryTemplates(queryString);
+      this.extractQueryTemplates(queryString, append);
 
       /* reduce the uri to the path */
       uri = uri.substring(0, queryMatcher.start());
@@ -456,7 +473,7 @@ public final class RequestTemplate implements Serializable {
        * target has a query string, we need to make sure that they are recorded as queries
        */
       int queryStart = queryStringMatcher.start();
-      this.extractQueryTemplates(target.substring(queryStart + 1));
+      this.extractQueryTemplates(target.substring(queryStart + 1), true);
 
       /* strip the query string */
       target = target.substring(0, queryStart);
@@ -833,7 +850,7 @@ public final class RequestTemplate implements Serializable {
     return result;
   }
 
-  private void extractQueryTemplates(String queryString) {
+  private void extractQueryTemplates(String queryString, boolean append) {
     /* split the query string up into name value pairs */
     Map<String, List<String>> queryParameters =
         Arrays.stream(queryString.split("&"))
@@ -844,6 +861,10 @@ public final class RequestTemplate implements Serializable {
                 Collectors.mapping(Entry::getValue, Collectors.toList())));
 
     /* add them to this template */
+    if (!append) {
+      /* clear the queries and use the new ones */
+      this.queries.clear();
+    }
     queryParameters.forEach(this::query);
   }
 

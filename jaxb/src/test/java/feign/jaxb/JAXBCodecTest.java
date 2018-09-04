@@ -16,7 +16,6 @@ package feign.jaxb;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
-
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;

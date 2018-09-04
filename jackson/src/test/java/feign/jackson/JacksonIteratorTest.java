@@ -16,7 +16,6 @@ package feign.jackson;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;

@@ -118,7 +118,7 @@ public class FeignTest {
     api.body(Arrays.asList("netflix", "denominator", "password"));
 
     assertThat(server.takeRequest())
-        .hasHeaders(entry("Content-Length", "32"))
+        .hasHeaders(entry("Content-Length", Collections.singletonList("32")))
         .hasBody("[netflix, denominator, password]");
   }
 
@@ -184,7 +184,7 @@ public class FeignTest {
     api.post();
 
     assertThat(server.takeRequest())
-        .hasHeaders(entry("X-Forwarded-For", "origin.host.com"));
+        .hasHeaders(entry("X-Forwarded-For", Collections.singletonList("origin.host.com")));
   }
 
   @Test
@@ -198,8 +198,9 @@ public class FeignTest {
 
     api.post();
 
-    assertThat(server.takeRequest()).hasHeaders(entry("X-Forwarded-For","origin.host.com"),
-        entry("User-Agent", "Feign"));
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("X-Forwarded-For", Collections.singletonList("origin.host.com")),
+            entry("User-Agent", Collections.singletonList("Feign")));
   }
 
   @Test
@@ -860,6 +861,7 @@ public class FeignTest {
     }
   }
 
+
   interface OtherTestInterface {
 
     @RequestLine("POST /")
@@ -872,6 +874,7 @@ public class FeignTest {
     void binaryRequestBody(byte[] contents);
   }
 
+
   static class ForwardedForInterceptor implements RequestInterceptor {
 
     @Override
@@ -880,6 +883,7 @@ public class FeignTest {
     }
   }
 
+
   static class UserAgentInterceptor implements RequestInterceptor {
 
     @Override
@@ -887,6 +891,7 @@ public class FeignTest {
       template.header("User-Agent", "Feign");
     }
   }
+
 
   static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
 
@@ -899,6 +904,7 @@ public class FeignTest {
     }
   }
 
+
   static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
 
     @Override
@@ -909,6 +915,7 @@ public class FeignTest {
       return super.decode(methodKey, response);
     }
   }
+
 
   static final class TestInterfaceBuilder {
 

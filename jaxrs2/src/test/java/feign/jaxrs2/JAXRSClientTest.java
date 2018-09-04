@@ -17,7 +17,6 @@ import static feign.Util.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.Headers;
@@ -28,6 +27,7 @@ import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import javax.ws.rs.ProcessingException;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
@@ -112,8 +112,8 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
-            MapEntry.entry("Accept", "text/plain"),
-            MapEntry.entry("Content-Type", "text/plain"))
+            MapEntry.entry("Accept", Collections.singletonList("text/plain")),
+            MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasMethod("GET");
   }
 
