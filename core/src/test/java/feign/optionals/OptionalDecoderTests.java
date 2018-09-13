@@ -27,7 +27,10 @@ public class OptionalDecoderTests {
 
   interface OptionalInterface {
     @RequestLine("GET /")
-    Optional<String> get();
+    Optional<String> getAsOptional();
+
+    @RequestLine("GET /")
+    String get();
   }
 
   @Test
@@ -41,8 +44,8 @@ public class OptionalDecoderTests {
         .decoder(new OptionalDecoder(new Decoder.Default()))
         .target(OptionalInterface.class, server.url("/").toString());
 
-    assertThat(api.get().isPresent()).isFalse();
-    assertThat(api.get().get()).isEqualTo("foo");
+    assertThat(api.getAsOptional().isPresent()).isFalse();
+    assertThat(api.getAsOptional().get()).isEqualTo("foo");
   }
 
   @Test
@@ -54,6 +57,45 @@ public class OptionalDecoderTests {
         .decoder(new OptionalDecoder(new Decoder.Default()))
         .target(OptionalInterface.class, server.url("/").toString());
 
-    assertThat(api.get().isPresent()).isFalse();
+    assertThat(api.getAsOptional().isPresent()).isFalse();
+  }
+
+  @Test
+  public void test200WithOptionalString() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+
+    final OptionalInterface api = Feign.builder()
+        .decoder(new OptionalDecoder(new Decoder.Default()))
+        .target(OptionalInterface.class, server.url("/").toString());
+
+    Optional<String> response = api.getAsOptional();
+
+    assertThat(response.isPresent()).isTrue();
+    assertThat(response).isEqualTo(Optional.of("foo"));
+  }
+
+  @Test
+  public void test200WhenResponseBodyIsNull() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200));
+
+    final OptionalInterface api = Feign.builder()
+        .decoder(new OptionalDecoder(((response, type) -> null)))
+        .target(OptionalInterface.class, server.url("/").toString());
+
+    assertThat(api.getAsOptional().isPresent()).isFalse();
+  }
+
+  @Test
+  public void test200WhenDecodingNoOptional() throws IOException, InterruptedException {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+
+    final OptionalInterface api = Feign.builder()
+        .decoder(new OptionalDecoder(new Decoder.Default()))
+        .target(OptionalInterface.class, server.url("/").toString());
+
+    assertThat(api.get()).isEqualTo("foo");
   }
 }
