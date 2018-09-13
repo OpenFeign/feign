@@ -36,6 +36,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>reactive</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
     <!-- remove after feign 10.0 release -->
