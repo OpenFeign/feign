@@ -54,6 +54,9 @@ public class JAXRSContract extends Contract.BaseContract {
         // added
         pathValue = pathValue.substring(0, pathValue.length() - 1);
       }
+      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
+      // strip these out appropriately.
+      pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().insert(0, pathValue);
     }
     Consumes consumes = clz.getAnnotation(Consumes.class);
