@@ -27,7 +27,7 @@ import java.util.stream.StreamSupport;
  * Template for HTTP Headers. Variables that are unresolved are ignored and Literals are not
  * encoded.
  */
-public class HeaderTemplate extends Template {
+public final class HeaderTemplate extends Template {
 
   /* cache a copy of the variables for lookup later */
   private Set<String> values;

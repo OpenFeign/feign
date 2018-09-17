@@ -25,7 +25,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class QueryTemplate extends Template {
+/**
+ * Template for a Query String parameter.
+ */
+public final class QueryTemplate extends Template {
 
   /* cache a copy of the variables for lookup later */
   private List<String> values;

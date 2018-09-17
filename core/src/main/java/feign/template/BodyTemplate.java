@@ -22,7 +22,7 @@ import java.util.Map;
  * Template for @{@link feign.Body} annotated Templates. Unresolved expressions are preserved as
  * literals and literals are not URI encoded.
  */
-public class BodyTemplate extends Template {
+public final class BodyTemplate extends Template {
 
   /**
    * Create a new Body Template.
