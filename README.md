@@ -24,23 +24,93 @@ interface GitHub {
   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
 }
 
-static class Contributor {
+public static class Contributor {
   String login;
   int contributions;
 }
 
-public static void main(String... args) {
-  GitHub github = Feign.builder()
-                       .decoder(new GsonDecoder())
-                       .target(GitHub.class, "https://api.github.com");
-
-  // Fetch and print a list of the contributors to this library.
-  List<Contributor> contributors = github.contributors("OpenFeign", "feign");
-  for (Contributor contributor : contributors) {
-    System.out.println(contributor.login + " (" + contributor.contributions + ")");
+public class MyApp {
+  public static void main(String... args) {
+    GitHub github = Feign.builder()
+                         .decoder(new GsonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+  
+    // Fetch and print a list of the contributors to this library.
+    List<Contributor> contributors = github.contributors("OpenFeign", "feign");
+    for (Contributor contributor : contributors) {
+      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    }
   }
 }
 ```
+
+### Client Interface
+
+Feign annotations annotations define the `Contract` between the interface and how the underlying client
+should work.  Feign's default contract defines the following annotations:
+
+| Annotation     | Interface Target | Usage |
+|----------------|------------------|-------|
+| `@RequestLine` | Method           | Defines the `HttpMethod` and `UriTemplate` for request.  `Expressions`, values wrapped in curly-braces `{expression}` are resolved using their corresponding `@Param` annotated parameters. |
+| `@Param`       | Parameter        | Defines a template variable, whose value will be used to resolve the corresponding template `Expression`, by name. |
+| `@Headers`     | Method, Type     | Defines a `HeaderTemplate`; a variation on a `UriTemplate`.  that uses `@Param` annotated values to resolve the corresponding `Expressions`.  When used on a `Type`, the template will be applied to every request.  When used on a `Method`, the template will apply only to the annotated method. |
+| `@QueryMap`    | Parameter        | Defines a `Map` of name-value pairs, or POJO, to expand into a query string. |
+| `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
+| `@Body`        | Parameter        | Defines which method parameter to include as the `Request Body`.  |
+| `@BodyTemplate`| Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
+
+### Expressions
+
+#### Expansion
+
+Feign `Expressions` represent Simple String Expressions (Level 1) as defined by [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570).  `Expressions` are expanded using
+their corresponding `Param` annotated method parameters.  
+
+*Example*
+
+```java
+public interface GitHub {
+  
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> getContributors(@Param("owner") String owner, @Param("repo") String repository);
+  
+  class Contributor {
+    String login;
+    int contributions;
+  }
+}
+
+public class MyApp {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                         .decoder(new GsonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+    
+    /* The owner and repository parameters will be used to expand the owner and repo expressions
+     * defined in the RequestLine.
+     * 
+     * the resulting uri will be https://api.github.com/repos/OpenFeign/feign/contributors
+     */
+    github.contributors("OpenFeign", "feign");
+  }
+}
+```
+
+Expressions must be enclosed in curly braces `{}` and may contain regular expression patterns, separated by a colon `:`  to restrict
+resolved values.  *Example* `owner` must be alphabetic only. `{owner:[a-zA-Z]*}`
+
+#### RequestLine Expansion 
+
+`RequestLine` templates follow the [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570) specification for Level 1 templates, which specifies the following:
+
+* Unresolved expressions are omitted.
+* All literals are pct-encoded, if not already encoded as marked `encoded` via a `@Param` annotation.
+
+#### Headers and HeaderMap Expansion 
+
+`Headers` and `HeaderMaps` are extensions of the [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570) specification
+with the following alterations.
+
 
 ### Customization
 
