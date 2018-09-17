@@ -44,9 +44,9 @@ public class MyApp {
 }
 ```
 
-### Client Interface
+### Interface Annotations
 
-Feign annotations annotations define the `Contract` between the interface and how the underlying client
+Feign annotations define the `Contract` between the interface and how the underlying client
 should work.  Feign's default contract defines the following annotations:
 
 | Annotation     | Interface Target | Usage |
@@ -56,12 +56,9 @@ should work.  Feign's default contract defines the following annotations:
 | `@Headers`     | Method, Type     | Defines a `HeaderTemplate`; a variation on a `UriTemplate`.  that uses `@Param` annotated values to resolve the corresponding `Expressions`.  When used on a `Type`, the template will be applied to every request.  When used on a `Method`, the template will apply only to the annotated method. |
 | `@QueryMap`    | Parameter        | Defines a `Map` of name-value pairs, or POJO, to expand into a query string. |
 | `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
-| `@Body`        | Parameter        | Defines which method parameter to include as the `Request Body`.  |
-| `@BodyTemplate`| Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
+| `@Body`        | Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
 
-### Expressions
-
-#### Expansion
+### Templates and Expressions
 
 Feign `Expressions` represent Simple String Expressions (Level 1) as defined by [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570).  `Expressions` are expanded using
 their corresponding `Param` annotated method parameters.  
@@ -97,21 +94,69 @@ public class MyApp {
 ```
 
 Expressions must be enclosed in curly braces `{}` and may contain regular expression patterns, separated by a colon `:`  to restrict
-resolved values.  *Example* `owner` must be alphabetic only. `{owner:[a-zA-Z]*}`
+resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 
-#### RequestLine Expansion 
+#### Request Parameter Expansion
 
-`RequestLine` templates follow the [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570) specification for Level 1 templates, which specifies the following:
+`RequestLine` and `QueryMap` templates follow the [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570) specification for Level 1 templates, which specifies the following:
 
 * Unresolved expressions are omitted.
-* All literals are pct-encoded, if not already encoded as marked `encoded` via a `@Param` annotation.
+* All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
 
-#### Headers and HeaderMap Expansion 
+See [Advanced Usage](#advanced-usage) for more examples.
 
-`Headers` and `HeaderMaps` are extensions of the [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570) specification
-with the following alterations.
+> **What about slashes? `/`**
+>
+> `@RequestLine` and `@QueryMap` templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.  
 
+##### Custom Expansion
 
+The `@Param` annotation has an optional property `expander` allowing for complete control over the individual parameter's expansion.
+The `expander` property must reference a class that implements the `Expander` interface:
+
+```java
+public interface Expander {
+    String expand(Object value);
+}
+```
+The result of this method adheres to the same rules stated above.  If the result is `null` or an empty string,
+the value is omitted.  If the value is not pct-encoded, it will be.  See [Custom @Param Expansion](#custom-param-expansion) for more examples.
+
+#### Request Headers Expansion 
+
+`Headers` and `HeaderMap` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion) 
+with the following alterations:
+
+* Unresolved expressions are omitted.  If the result is an empty header value, the entire header is removed.
+* No pct-encoding is performed.
+
+See [Headers](#headers) for examples.
+
+> **A Note on `@Param` parameters and their names**: 
+>
+> All expressions with the same name, regardless of their position on the `@RequestLine`, `@QueryMap`, `@BodyTemplate`, or `@Headers` will resolve to the same value.
+> In the following example, the value of `contentType`, will be used to resolve both the header and path expression:
+>
+> ```java
+> public interface ContentService {
+>   @RequestLine("GET /api/documents/{contentType}")
+>   @Headers("Accept {contentType}")
+>   String getDocumentByType(@Param("contentType") String type);
+> }
+>```
+> 
+> Keep this in mind when designing your interfaces.
+
+#### Request Body Expansion
+
+`Body` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion) 
+with the following alterations:
+
+* Unresolved expressions are omitted.
+* Expanded value will **not** be passed through an `Encoder` before being placed on the request body.
+* A `Content-Type` header must be specified.  See [Body Templates](#body-templates) for examples.
+
+---
 ### Customization
 
 Feign has several aspects that can be customized.  For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.  For example:
@@ -121,8 +166,14 @@ interface Bank {
   @RequestLine("POST /account/{id}")
   Account getAccountInfo(@Param("id") String id);
 }
-...
-Bank bank = Feign.builder().decoder(new AccountDecoder()).target(Bank.class, "https://api.examplebank.com");
+
+public class BankService {
+  public static void main(String[] args) {
+    Bank bank = Feign.builder().decoder(
+        new AccountDecoder())
+        .target(Bank.class, "https://api.examplebank.com");
+  }
+}
 ```
 
 ### Multiple Interfaces
@@ -131,12 +182,22 @@ Feign can produce multiple api interfaces.  These are defined as `Target<T>` (de
 For example, the following pattern might decorate each request with the current url and auth token from the identity service.
 
 ```java
-CloudDNS cloudDNS = Feign.builder().target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+public class CloudService {
+  public static void main(String[] args) {
+    CloudDNS cloudDNS = Feign.builder()
+      .target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
+  }
+  
+  class CloudIdentityTarget extends Target<CloudDNS> {
+    /* implementation of a Target */
+  }
+}
 ```
 
 ### Examples
 Feign includes example [GitHub](./example-github) and [Wikipedia](./example-wikipedia) clients. The denominator project can also be scraped for Feign in practice. Particularly, look at its [example daemon](https://github.com/Netflix/denominator/tree/master/example-daemon).
 
+---
 ### Integrations
 Feign intends to work well with other Open Source tools.  Modules are welcome to integrate with your favorite projects!
 
@@ -146,11 +207,15 @@ Feign intends to work well with other Open Source tools.  Modules are welcome to
 Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
 
 ```java
-GsonCodec codec = new GsonCodec();
-GitHub github = Feign.builder()
-                     .encoder(new GsonEncoder())
-                     .decoder(new GsonDecoder())
-                     .target(GitHub.class, "https://api.github.com");
+public class Example {
+  public static void main(String[] args) {
+    GsonCodec codec = new GsonCodec();
+    GitHub github = Feign.builder()
+                         .encoder(new GsonEncoder())
+                         .decoder(new GsonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 ### Jackson
@@ -159,10 +224,14 @@ GitHub github = Feign.builder()
 Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
 
 ```java
-GitHub github = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+      GitHub github = Feign.builder()
                      .encoder(new JacksonEncoder())
                      .decoder(new JacksonDecoder())
                      .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 ### Sax
@@ -170,11 +239,15 @@ GitHub github = Feign.builder()
 
 Here's an example of how to configure Sax response parsing:
 ```java
-api = Feign.builder()
-           .decoder(SAXDecoder.builder()
-                              .registerContentHandler(UserIdHandler.class)
-                              .build())
-           .target(Api.class, "https://apihost");
+public class Example {
+  public static void main(String[] args) {
+      Api api = Feign.builder()
+         .decoder(SAXDecoder.builder()
+                            .registerContentHandler(UserIdHandler.class)
+                            .build())
+         .target(Api.class, "https://apihost");
+    }
+}
 ```
 
 ### JAXB
@@ -183,10 +256,14 @@ api = Feign.builder()
 Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
 
 ```java
-api = Feign.builder()
-           .encoder(new JAXBEncoder())
-           .decoder(new JAXBDecoder())
-           .target(Api.class, "https://apihost");
+public class Example {
+  public static void main(String[] args) {
+    Api api = Feign.builder()
+             .encoder(new JAXBEncoder())
+             .decoder(new JAXBDecoder())
+             .target(Api.class, "https://apihost");
+  }
+}
 ```
 
 ### JAX-RS
@@ -198,11 +275,14 @@ interface GitHub {
   @GET @Path("/repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
 }
-```
-```java
-GitHub github = Feign.builder()
-                     .contract(new JAXRSContract())
-                     .target(GitHub.class, "https://api.github.com");
+
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                       .contract(new JAXRSContract())
+                       .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 ### OkHttp
 [OkHttpClient](./okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
@@ -210,9 +290,13 @@ GitHub github = Feign.builder()
 To use OkHttp with Feign, add the OkHttp module to your classpath. Then, configure Feign to use the OkHttpClient:
 
 ```java
-GitHub github = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
                      .client(new OkHttpClient())
                      .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 ### Ribbon
@@ -220,8 +304,13 @@ GitHub github = Feign.builder()
 
 Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
 ```java
-MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.class, "https://myAppProd");
-
+public class Example {
+  public static void main(String[] args) {
+    MyService api = Feign.builder()
+          .client(RibbonClient.create())
+          .target(MyService.class, "https://myAppProd");
+  }
+}
 ```
 
 ### Hystrix
@@ -230,8 +319,11 @@ MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.c
 To use Hystrix with Feign, add the Hystrix module to your classpath. Then use the `HystrixFeign` builder:
 
 ```java
-MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd");
-
+public class Example {
+  public static void main(String[] args) {
+    MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd");
+  }
+}
 ```
 
 ### SLF4J
@@ -240,9 +332,13 @@ MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppPro
 To use SLF4J with Feign, add both the SLF4J module and an SLF4J binding of your choice to your classpath.  Then, configure Feign to use the Slf4jLogger:
 
 ```java
-GitHub github = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
                      .logger(new Slf4jLogger())
                      .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 ### Decoders
@@ -253,9 +349,13 @@ If any methods in your interface return types besides `Response`, `String`, `byt
 Here's how to configure JSON decoding (using the `feign-gson` extension):
 
 ```java
-GitHub github = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 If you need to pre-process the response before give it to the Decoder, you can use the `mapAndDecode` builder method.
@@ -263,9 +363,13 @@ An example use case is dealing with an API that only serves jsonp, you will mayb
 send it to the Json decoder of your choice:
 
 ```java
-JsonpApi jsonpApi = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    JsonpApi jsonpApi = Feign.builder()
                          .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
                          .target(JsonpApi.class, "https://some-jsonp-api.com");
+  }
+}
 ```
 
 ### Encoders
@@ -277,8 +381,12 @@ interface LoginClient {
   @Headers("Content-Type: application/json")
   void login(String content);
 }
-...
-client.login("{\"user_name\": \"denominator\", \"password\": \"secret\"}");
+
+public class Example {
+  public static void main(String[] args) {
+    client.login("{\"user_name\": \"denominator\", \"password\": \"secret\"}");
+  }
+}
 ```
 
 By configuring an `Encoder`, you can send a type-safe request body. Here's an example using the `feign-gson` extension:
@@ -298,12 +406,16 @@ interface LoginClient {
   @RequestLine("POST /")
   void login(Credentials creds);
 }
-...
-LoginClient client = Feign.builder()
-                          .encoder(new GsonEncoder())
-                          .target(LoginClient.class, "https://foo.com");
 
-client.login(new Credentials("denominator", "secret"));
+public class Example {
+  public static void main(String[] args) {
+    LoginClient client = Feign.builder()
+                              .encoder(new GsonEncoder())
+                              .target(LoginClient.class, "https://foo.com");
+    
+    client.login(new Credentials("denominator", "secret"));
+  }
+}
 ```
 
 ### @Body templates
@@ -323,9 +435,13 @@ interface LoginClient {
   @Body("%7B\"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
   void json(@Param("user_name") String user, @Param("password") String password);
 }
-...
-client.xml("denominator", "secret"); // <login "user_name"="denominator" "password"="secret"/>
-client.json("denominator", "secret"); // {"user_name": "denominator", "password": "secret"}
+
+public class Example {
+  public static void main(String[] args) {
+    client.xml("denominator", "secret"); // <login "user_name"="denominator" "password"="secret"/>
+    client.json("denominator", "secret"); // {"user_name": "denominator", "password": "secret"}
+  }
+}
 ```
 
 ### Headers
@@ -343,16 +459,18 @@ Static headers can be set on an api interface or method using the `@Headers` ann
 interface BaseApi<V> {
   @Headers("Content-Type: application/json")
   @RequestLine("PUT /api/{key}")
-  void put(@Param("key") String, V value);
+  void put(@Param("key") String key, V value);
 }
 ```
 
 Methods can specify dynamic content for static headers using variable expansion in `@Headers`.
 
 ```java
- @RequestLine("POST /")
- @Headers("X-Ping: {token}")
- void post(@Param("token") String token);
+public interface Api {
+   @RequestLine("POST /")
+   @Headers("X-Ping: {token}")
+   void post(@Param("token") String token);
+}
 ```
 
 In cases where both the header field keys and values are dynamic and the range of possible keys cannot
@@ -361,8 +479,10 @@ metadata header fields such as "x-amz-meta-\*" or "x-goog-meta-\*"), a Map param
 with `HeaderMap` to construct a query that uses the contents of the map as its header parameters.
 
 ```java
- @RequestLine("POST /")
- void post(@HeaderMap Map<String, Object> headerMap);
+public interface Api {
+   @RequestLine("POST /")
+   void post(@HeaderMap Map<String, Object> headerMap);
+}
 ```
 
 These approaches specify header entries as part of the api and do not require any customizations
@@ -382,7 +502,7 @@ Headers can be set as part of a custom `Target`.
     public DynamicAuthTokenTarget(Class<T> clazz,
                                   UrlAndTokenProvider provider,
                                   ThreadLocal<String> requestIdProvider);
-    ...
+    
     @Override
     public Request apply(RequestTemplate input) {
       TokenIdAndPublicURL urlAndToken = provider.get();
@@ -395,9 +515,13 @@ Headers can be set as part of a custom `Target`.
       return input.request();
     }
   }
-  ...
-  Bank bank = Feign.builder()
-          .target(new DynamicAuthTokenTarget(Bank.class, provider, requestIdProvider));
+  
+  public class Example {
+    public static void main(String[] args) {
+      Bank bank = Feign.builder()
+              .target(new DynamicAuthTokenTarget(Bank.class, provider, requestIdProvider));
+    }
+  }
 ```
 
 These approaches depend on the custom `RequestInterceptor` or `Target` being set on the Feign
@@ -458,11 +582,15 @@ interface BarApi extends BaseApi<Bar> { }
 #### Logging
 You can log the http messages going to and from the target by setting up a `Logger`.  Here's the easiest way to do that:
 ```java
-GitHub github = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
                      .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
+  }
+}
 ```
 
 The SLF4JLogger (see above) may also be of interest.
@@ -478,20 +606,28 @@ static class ForwardedForInterceptor implements RequestInterceptor {
     template.header("X-Forwarded-For", "origin.host.com");
   }
 }
-...
-Bank bank = Feign.builder()
+
+public class Example {
+  public static void main(String[] args) {
+    Bank bank = Feign.builder()
                  .decoder(accountDecoder)
                  .requestInterceptor(new ForwardedForInterceptor())
                  .target(Bank.class, "https://api.examplebank.com");
+  }
+}
 ```
 
 Another common example of an interceptor would be authentication, such as using the built-in `BasicAuthRequestInterceptor`.
 
 ```java
-Bank bank = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    Bank bank = Feign.builder()
                  .decoder(accountDecoder)
                  .requestInterceptor(new BasicAuthRequestInterceptor(username, password))
                  .target(Bank.class, "https://api.examplebank.com");
+  }
+}
 ```
 
 #### Custom @Param Expansion
@@ -500,22 +636,28 @@ specifying a custom `Param.Expander`, users can control this behavior,
 for example formatting dates.
 
 ```java
-@RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
+public interface Api {
+  @RequestLine("GET /?since={date}") Result list(@Param(value = "date", expander = DateToMillis.class) Date date);
+}
 ```
 
 #### Dynamic Query Parameters
 A Map parameter can be annotated with `QueryMap` to construct a query that uses the contents of the map as its query parameters.
 
 ```java
-@RequestLine("GET /find")
-V find(@QueryMap Map<String, Object> queryMap);
+public interface Api {
+  @RequestLine("GET /find")
+  V find(@QueryMap Map<String, Object> queryMap);
+}
 ```
 
 This may also be used to generate the query parameters from a POJO object using a `QueryMapEncoder`.
 
 ```java
-@RequestLine("GET /find")
-V find(@QueryMap CustomPojo customPojo);
+public interface Api {
+  @RequestLine("GET /find")
+  V find(@QueryMap CustomPojo customPojo);
+}
 ```
 
 When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
@@ -535,9 +677,13 @@ public class CustomPojo {
 To setup a custom `QueryMapEncoder`:
 
 ```java
-MyApi myApi = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    MyApi myApi = Feign.builder()
                  .queryMapEncoder(new MyCustomQueryMapEncoder())
                  .target(MyApi.class, "https://api.hostname.com");
+  }
+}
 ```
 
 ### Error Handling
@@ -545,9 +691,13 @@ If you need more control over handling unexpected responses, Feign instances can
 register a custom `ErrorDecoder` via the builder.
 
 ```java
-MyApi myApi = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    MyApi myApi = Feign.builder()
                  .errorDecoder(new MyErrorDecoder())
                  .target(MyApi.class, "https://api.hostname.com");
+  }
+}
 ```
 
 All responses that result in an HTTP status not in the 2xx range will trigger the `ErrorDecoder`'s `decode` method, allowing
@@ -561,9 +711,13 @@ related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`. 
 behavior, register a custom `Retryer` instance via the builder.
 
 ```java
-MyApi myApi = Feign.builder()
+public class Example {
+  public static void main(String[] args) {
+    MyApi myApi = Feign.builder()
                  .retryer(new MyRetryer())
                  .target(MyApi.class, "https://api.hostname.com");
+  }
+}
 ```
 
 `Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
