@@ -39,7 +39,7 @@ public final class OptionalDecoder implements Decoder {
       return Optional.empty();
     }
     Type enclosedType = Util.resolveLastTypeParameter(type, Optional.class);
-    return Optional.of(delegate.decode(response, enclosedType));
+    return Optional.ofNullable(delegate.decode(response, enclosedType));
   }
 
   static boolean isOptional(Type type) {
