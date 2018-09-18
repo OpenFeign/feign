@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * URI Template Expression.
  */
-abstract class Expression extends TemplateChunk {
+abstract class Expression implements TemplateChunk {
 
   private String name;
   private Pattern pattern;

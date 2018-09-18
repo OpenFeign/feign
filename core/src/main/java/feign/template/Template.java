@@ -206,7 +206,7 @@ public abstract class Template {
   @Override
   public String toString() {
     return this.templateChunks.stream()
-        .map(TemplateChunk::toString).collect(Collectors.joining());
+        .map(TemplateChunk::getValue).collect(Collectors.joining());
   }
 
   public boolean allowUnresolved() {

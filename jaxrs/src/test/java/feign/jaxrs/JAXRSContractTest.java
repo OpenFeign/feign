@@ -77,7 +77,7 @@ public class JAXRSContractTest {
   public void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test
@@ -215,7 +215,7 @@ public class JAXRSContractTest {
   @Test
   public void emptyPathOnType() throws Exception {
     assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template())
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test

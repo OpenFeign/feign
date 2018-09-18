@@ -91,7 +91,7 @@ public class JAXRSClientTest extends AbstractClientTest {
         .containsEntry("Content-Length", asList("3"))
         .containsEntry("Foo", asList("Bar"));
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
     /* queries with no values are omitted from the uri. See RFC 6750 */
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")

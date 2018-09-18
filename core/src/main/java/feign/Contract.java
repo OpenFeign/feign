@@ -213,7 +213,7 @@ public interface Contract {
 
   class Default extends BaseContract {
 
-    static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.+)*");
+    static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.*)$");
 
     @Override
     protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {

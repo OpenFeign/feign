@@ -513,6 +513,10 @@ public final class RequestTemplate implements Serializable {
     if (this.uriTemplate != null) {
       path.append(this.uriTemplate.toString());
     }
+    if (path.length() == 0) {
+      /* no path indicates the root uri */
+      path.append("/");
+    }
     return path.toString();
 
   }

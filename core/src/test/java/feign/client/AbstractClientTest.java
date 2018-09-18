@@ -92,7 +92,7 @@ public abstract class AbstractClientTest {
         .containsEntry("Content-Length", Collections.singletonList("3"))
         .containsEntry("Foo", Collections.singletonList("Bar"));
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
     RecordedRequest recordedRequest = server.takeRequest();
     assertThat(recordedRequest.getMethod()).isEqualToIgnoringCase("POST");
@@ -207,7 +207,7 @@ public abstract class AbstractClientTest {
     assertThat(response.reason()).isEqualTo("OK");
     assertThat(response.body().length()).isNull();
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
   }
 
   @Test

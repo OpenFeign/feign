@@ -231,7 +231,7 @@ public class JAXBCodecTest {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(template.body())
         .build();

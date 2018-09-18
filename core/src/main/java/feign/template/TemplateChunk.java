@@ -16,12 +16,9 @@ package feign.template;
 /**
  * Represents the parts of a URI Template.
  */
-abstract class TemplateChunk {
+@FunctionalInterface
+interface TemplateChunk {
 
-  public abstract String getValue();
+  String getValue();
 
-  @Override
-  public String toString() {
-    return getValue();
-  }
 }

@@ -16,7 +16,7 @@ package feign.template;
 /**
  * URI Template Literal.
  */
-class Literal extends TemplateChunk {
+class Literal implements TemplateChunk {
 
   private final String value;
 
