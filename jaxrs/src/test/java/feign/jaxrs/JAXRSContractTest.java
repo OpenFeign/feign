@@ -255,7 +255,7 @@ public class JAXRSContractTest {
   }
 
   @Test
-  public void regexPathOnMethod() throws Exception {
+  public void regexPathOnMethodOrType() throws Exception {
     assertThat(parseAndValidateMetadata(
         PathOnType.class, "pathParamWithRegex", String.class).template())
             .hasUrl("/base/regex/{param}");
@@ -263,6 +263,10 @@ public class JAXRSContractTest {
     assertThat(parseAndValidateMetadata(
         PathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
             .hasUrl("/base/regex/{param1}/{param2}");
+
+    assertThat(parseAndValidateMetadata(
+        ComplexPathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
+            .hasUrl("/{baseparam}/regex/{param1}/{param2}");
   }
 
   @Test
@@ -531,6 +535,14 @@ public class JAXRSContractTest {
     Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
                                         @PathParam("param2") String param2);
   }
+
+  @Path("/{baseparam: [0-9]+}")
+  interface ComplexPathOnType {
+    
+    @GET
+    @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
+    Response pathParamWithMultipleRegex(@PathParam("param1") String param1, @PathParam("param2") String param2);
+  }  
 
   interface WithURIParam {
 
