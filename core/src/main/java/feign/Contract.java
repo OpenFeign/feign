@@ -333,7 +333,7 @@ public interface Contract {
           new LinkedHashMap<String, Collection<String>>(input.length);
       for (String header : input) {
         int colon = header.indexOf(':');
-        String name = header.substring(0, colon).trim();
+        String name = header.substring(0, colon);
         if (!result.containsKey(name)) {
           result.put(name, new ArrayList<String>(1));
         }
