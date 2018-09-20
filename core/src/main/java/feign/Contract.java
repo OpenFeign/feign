@@ -337,7 +337,7 @@ public interface Contract {
         if (!result.containsKey(name)) {
           result.put(name, new ArrayList<String>(1));
         }
-        result.get(name).add(header.substring(colon + 2));
+        result.get(name).add(header.substring(colon + 1).trim());
       }
       return result;
     }
