@@ -34,6 +34,7 @@ public final class QueryTemplate extends Template {
   private List<String> values;
   private final String name;
   private final CollectionFormat collectionFormat;
+  private boolean pure = false;
 
   /**
    * Create a new Query Template.
@@ -123,6 +124,11 @@ public final class QueryTemplate extends Template {
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toList());
+    if (this.values.isEmpty()) {
+      /* in this case, we have a pure parameter */
+      this.pure = true;
+
+    }
   }
 
   public List<String> getValues() {
@@ -151,6 +157,10 @@ public final class QueryTemplate extends Template {
   }
 
   private String queryString(String values) {
+    if (this.pure) {
+      return this.name;
+    }
+
     /* covert the comma separated values into a value query string */
     List<String> resolved = Arrays.stream(values.split(","))
         .filter(Util::isNotBlank)

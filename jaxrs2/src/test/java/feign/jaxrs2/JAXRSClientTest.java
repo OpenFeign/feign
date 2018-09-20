@@ -95,7 +95,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     /* queries with no values are omitted from the uri. See RFC 6750 */
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-        .hasPath("/?foo=bar&foo=baz")
+        .hasPath("/?foo=bar&foo=baz&qux")
         .hasBody("foo");
   }
 

@@ -834,7 +834,7 @@ public final class RequestTemplate implements Serializable {
         QueryTemplate queryTemplate = iterator.next();
         String query = queryTemplate.toString();
         if (query != null && !query.isEmpty()) {
-          queryString.append(queryTemplate.toString());
+          queryString.append(query);
           if (iterator.hasNext()) {
             queryString.append("&");
           }

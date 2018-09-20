@@ -108,6 +108,16 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithRelativeUriWithQuery() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .uri("/wsdl/testcase?wsdl")
+        .target("https://api.example.com");
+
+    assertThat(template).hasUrl("https://api.example.com/wsdl/testcase?wsdl");
+  }
+
+  @Test
   public void resolveTemplateWithBaseAndParameterizedQuery() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .uri("/?Action=DescribeRegions").query("RegionName.1", "{region}");

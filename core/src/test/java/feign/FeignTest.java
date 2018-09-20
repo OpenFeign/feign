@@ -316,7 +316,7 @@ public class FeignTest {
     api.queryMap(queryMap);
 
     assertThat(server.takeRequest())
-        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue");
+        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey");
   }
 
   @Test

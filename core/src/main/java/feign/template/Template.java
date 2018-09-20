@@ -151,6 +151,15 @@ public abstract class Template {
   }
 
   /**
+   * Flag to indicate that this template is a literal string, with no variable expressions.
+   *
+   * @return true if this template is made up entirely of literal strings.
+   */
+  public boolean isLiteral() {
+    return this.getVariables().isEmpty();
+  }
+
+  /**
    * Parse the template into {@link TemplateChunk}s.
    */
   private void parseTemplate() {

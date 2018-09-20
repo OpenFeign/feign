@@ -121,7 +121,7 @@ public class DefaultContractTest {
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "oneEmpty").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("flag", new ArrayList<>()));
 

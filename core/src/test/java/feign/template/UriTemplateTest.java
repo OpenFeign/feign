@@ -274,4 +274,12 @@ public class UriTemplateTest {
     String encoded = uriTemplate.expand(variables);
     assertThat(encoded).isEqualToIgnoringCase("https://www.example.com/me%2Fyou%2Ffirst");
   }
+
+  @Test
+  public void testLiteralTemplateWithQueryString() {
+    String template = "https://api.example.com?wsdl";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.emptyMap());
+    assertThat(expanded).isEqualToIgnoringCase("https://api.example.com?wsdl");
+  }
 }
