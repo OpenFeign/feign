@@ -25,8 +25,9 @@ import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
 /**
- * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each
- * context.
+ * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each context.
+ * Since JAXB contexts creation can be an expensive task, JAXB context can be preloaded on factory creation
+ * otherwise they will be created and cached dynamically when needed.
  */
 public final class JAXBContextFactory {
 
@@ -74,9 +75,16 @@ public final class JAXBContextFactory {
     return jaxbContext;
   }
 
+  /**
+   * Will preload factory's cache with JAXBContext for provided classes
+   * @param classes
+   * @throws JAXBException
+   */
   private void preloadContextCache(List<Class<?>> classes) throws JAXBException {
-    for (Class<?> clazz : classes) {
-      getContext(clazz);
+    if (classes != null && !classes.isEmpty()) {
+      for (Class<?> clazz : classes) {
+        getContext(clazz);
+      }
     }
   }
 
@@ -146,9 +154,7 @@ public final class JAXBContextFactory {
      */
     public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
       JAXBContextFactory factory = new JAXBContextFactory(properties);
-      if (classes != null) {
-        factory.preloadContextCache(classes);
-      }
+      factory.preloadContextCache(classes);
       return factory;
     }
   }
