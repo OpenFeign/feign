@@ -13,12 +13,15 @@
  */
 package feign.client;
 
+import static feign.assertj.FeignAssertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.net.ProtocolException;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
+import feign.Response;
+import feign.assertj.MockWebServerAssertions;
 import org.junit.Test;
 import feign.Client;
 import feign.Feign;
@@ -94,6 +97,22 @@ public class DefaultClientTest extends AbstractClientTest {
         .target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
+  }
+
+  @Test
+  public void testGetRequestWithNameOnlyParameter() throws InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(200).setBody(""));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.getRequestWithNameOnlyParameter();
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isEqualTo("OK");
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
+        .hasPath("/wsdl/testcase?wsdl");
   }
 
 }
