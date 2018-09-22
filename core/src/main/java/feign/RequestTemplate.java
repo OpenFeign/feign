@@ -95,7 +95,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   private static boolean isHttpUrl(CharSequence value) {
-    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0, 3));
+    return value.length() >= 4 && value.subSequence(0, 4).equals("http".substring(0, 4));
   }
 
   private static CharSequence removeTrailingSlash(CharSequence charSequence) {
