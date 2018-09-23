@@ -13,6 +13,7 @@
  */
 package feign.okhttp;
 
+import feign.Request.HttpMethod;
 import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -22,6 +23,7 @@ import okhttp3.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +33,7 @@ import feign.Client;
  * This module directs Feign's http requests to
  * <a href="http://square.github.io/okhttp/">OkHttp</a>, which enables SPDY and better network
  * control. Ex.
- * 
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -75,7 +77,8 @@ public final class OkHttpClient implements Client {
     }
 
     byte[] inputBody = input.body();
-    boolean isMethodWithBody = "POST".equals(input.method()) || "PUT".equals(input.method());
+    boolean isMethodWithBody =
+        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod();
     if (isMethodWithBody) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
@@ -86,16 +89,18 @@ public final class OkHttpClient implements Client {
     }
 
     RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
-    requestBuilder.method(input.method(), body);
+    requestBuilder.method(input.httpMethod().name(), body);
     return requestBuilder.build();
   }
 
-  private static feign.Response toFeignResponse(Response input) throws IOException {
+  private static feign.Response toFeignResponse(Response response, feign.Request request)
+      throws IOException {
     return feign.Response.builder()
-        .status(input.code())
-        .reason(input.message())
-        .headers(toMap(input.headers()))
-        .body(toBody(input.body()))
+        .status(response.code())
+        .reason(response.message())
+        .request(request)
+        .headers(toMap(response.headers()))
+        .body(toBody(response.body()))
         .build();
   }
 
@@ -140,6 +145,11 @@ public final class OkHttpClient implements Client {
       public Reader asReader() throws IOException {
         return input.charStream();
       }
+
+      @Override
+      public Reader asReader(Charset charset) throws IOException {
+        return asReader();
+      }
     };
   }
 
@@ -159,6 +169,6 @@ public final class OkHttpClient implements Client {
     }
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
-    return toFeignResponse(response).toBuilder().request(input).build();
+    return toFeignResponse(response, input).toBuilder().request(input).build();
   }
 }

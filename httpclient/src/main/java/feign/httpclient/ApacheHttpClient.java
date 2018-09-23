@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -52,7 +53,7 @@ import static feign.Util.UTF_8;
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
- * 
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -82,18 +83,20 @@ public final class ApacheHttpClient implements Client {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
     HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse).toBuilder().request(request).build();
+    return toFeignResponse(httpResponse, request);
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
-      throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
-    RequestBuilder requestBuilder = RequestBuilder.create(request.method());
+      throws URISyntaxException {
+    RequestBuilder requestBuilder = RequestBuilder.create(request.httpMethod().name());
 
     // per request timeouts
-    RequestConfig requestConfig = (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig()) : RequestConfig.custom())
-        .setConnectTimeout(options.connectTimeoutMillis())
-        .setSocketTimeout(options.readTimeoutMillis())
-        .build();
+    RequestConfig requestConfig =
+        (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig())
+            : RequestConfig.custom())
+                .setConnectTimeout(options.connectTimeoutMillis())
+                .setSocketTimeout(options.readTimeoutMillis())
+                .build();
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
@@ -165,7 +168,7 @@ public final class ApacheHttpClient implements Client {
     return contentType;
   }
 
-  Response toFeignResponse(HttpResponse httpResponse) throws IOException {
+  Response toFeignResponse(HttpResponse httpResponse, Request request) throws IOException {
     StatusLine statusLine = httpResponse.getStatusLine();
     int statusCode = statusLine.getStatusCode();
 
@@ -188,11 +191,12 @@ public final class ApacheHttpClient implements Client {
         .status(statusCode)
         .reason(reason)
         .headers(headers)
+        .request(request)
         .body(toFeignBody(httpResponse))
         .build();
   }
 
-  Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
+  Response.Body toFeignBody(HttpResponse httpResponse) {
     final HttpEntity entity = httpResponse.getEntity();
     if (entity == null) {
       return null;
@@ -219,6 +223,12 @@ public final class ApacheHttpClient implements Client {
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
+      }
+
+      @Override
+      public Reader asReader(Charset charset) throws IOException {
+        Util.checkNotNull(charset, "charset should not be null");
+        return new InputStreamReader(asInputStream(), charset);
       }
 
       @Override

@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.0.0-SNAPSHOT</version>
+    <version>10.0.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jaxb</artifactId>
@@ -43,4 +43,25 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <activation>
+        <jdk>11</jdk>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>--add-modules java.xml.bind</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>

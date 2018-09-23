@@ -59,7 +59,7 @@ public class IAMExample {
 
     @Override
     public Request apply(RequestTemplate in) {
-      in.insert(0, url());
+      in.target(url());
       return super.apply(in);
     }
   }

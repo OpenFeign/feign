@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Predicate;
 import static java.lang.String.format;
 
 /**
@@ -146,6 +147,22 @@ public class Util {
    */
   public static String emptyToNull(String string) {
     return string == null || string.isEmpty() ? null : string;
+  }
+
+  /**
+   * Removes values from the array that meet the criteria for removal via the supplied
+   * {@link Predicate} value
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T[] removeValues(T[] values, Predicate<T> shouldRemove, Class<T> type) {
+    Collection<T> collection = new ArrayList<>(values.length);
+    for (T value : values) {
+      if (shouldRemove.negate().test(value)) {
+        collection.add(value);
+      }
+    }
+    T[] array = (T[]) Array.newInstance(type, collection.size());
+    return collection.toArray(array);
   }
 
   /**
@@ -326,5 +343,25 @@ public class Util {
     } catch (CharacterCodingException ex) {
       return defaultValue;
     }
+  }
+
+  /**
+   * If the provided String is not null or empty.
+   *
+   * @param value to evaluate.
+   * @return true of the value is not null and not empty.
+   */
+  public static boolean isNotBlank(String value) {
+    return value != null && !value.isEmpty();
+  }
+
+  /**
+   * If the provided String is null or empty.
+   *
+   * @param value to evaluate.
+   * @return true if the value is null or empty.
+   */
+  public static boolean isBlank(String value) {
+    return value == null || value.isEmpty();
   }
 }

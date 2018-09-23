@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.template.UriUtils;
+import java.nio.charset.Charset;
 import java.util.Collection;
 
 /**
@@ -61,31 +63,32 @@ public enum CollectionFormat {
    *
    * @param field The field name corresponding to these values.
    * @param values A collection of value strings for the given field.
+   * @param charset to encode the sequence
    * @return The formatted char sequence of the field and joined values. If the value collection is
    *         empty, an empty char sequence will be returned.
    */
-  CharSequence join(String field, Collection<String> values) {
+  public CharSequence join(String field, Collection<String> values, Charset charset) {
     StringBuilder builder = new StringBuilder();
     int valueCount = 0;
     for (String value : values) {
       if (separator == null) {
         // exploded
         builder.append(valueCount++ == 0 ? "" : "&");
-        builder.append(field);
+        builder.append(UriUtils.queryEncode(field, charset));
         if (value != null) {
           builder.append('=');
-          builder.append(value);
+          builder.append(UriUtils.queryEncode(value, charset));
         }
       } else {
         // delimited with a separator character
         if (builder.length() == 0) {
-          builder.append(field);
+          builder.append(UriUtils.queryEncode(field, charset));
         }
         if (value == null) {
           continue;
         }
         builder.append(valueCount++ == 0 ? "=" : separator);
-        builder.append(value);
+        builder.append(UriUtils.queryEncode(value, charset));
       }
     }
     return builder;

@@ -94,8 +94,6 @@ final class SynchronousMethodHandler implements MethodHandler {
     long start = System.nanoTime();
     try {
       response = client.execute(request, options);
-      // ensure the request is set. TODO: remove in Feign 10
-      response.toBuilder().request(request).build();
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
@@ -109,8 +107,6 @@ final class SynchronousMethodHandler implements MethodHandler {
       if (logLevel != Logger.Level.NONE) {
         response =
             logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
-        // ensure the request is set. TODO: remove in Feign 10
-        response.toBuilder().request(request).build();
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
@@ -160,7 +156,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     for (RequestInterceptor interceptor : requestInterceptors) {
       interceptor.apply(template);
     }
-    return target.apply(new RequestTemplate(template));
+    return target.apply(template);
   }
 
   Object decode(Response response) throws Throwable {

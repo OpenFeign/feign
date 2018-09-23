@@ -13,6 +13,11 @@
  */
 package feign.jaxrs2;
 
+import static feign.Util.UTF_8;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import feign.Feign;
 import feign.Feign.Builder;
 import feign.Headers;
 import feign.RequestLine;
@@ -20,20 +25,18 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
-import feign.jaxrs2.JAXRSClient;
-import feign.Feign;
-import okhttp3.mockwebserver.MockResponse;
-import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import javax.ws.rs.ProcessingException;
-import static feign.Util.UTF_8;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import okhttp3.mockwebserver.MockResponse;
+import org.assertj.core.data.MapEntry;
 import org.junit.Assume;
+import org.junit.Test;
 
-/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
+/**
+ * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
+ */
 public class JAXRSClientTest extends AbstractClientTest {
 
   @Override
@@ -88,10 +91,11 @@ public class JAXRSClientTest extends AbstractClientTest {
         .containsEntry("Content-Length", asList("3"))
         .containsEntry("Foo", asList("Bar"));
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
+    /* queries with no values are omitted from the uri. See RFC 6750 */
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-        .hasPath("/?foo=bar&foo=baz&qux=")
+        .hasPath("/?foo=bar&foo=baz&qux")
         .hasBody("foo");
   }
 
@@ -107,8 +111,9 @@ public class JAXRSClientTest extends AbstractClientTest {
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders("Accept: text/plain", "Content-Type: text/plain") // Note: OkHttp adds content
-                                                                      // length.
+        .hasHeaders(
+            MapEntry.entry("Accept", Collections.singletonList("text/plain")),
+            MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasMethod("GET");
   }
 

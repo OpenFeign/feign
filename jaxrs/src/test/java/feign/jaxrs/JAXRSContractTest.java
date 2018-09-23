@@ -13,6 +13,8 @@
  */
 package feign.jaxrs;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,37 +77,37 @@ public class JAXRSContractTest {
   public void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test
   public void queryParamsInPathExtract() throws Exception {
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries();
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")),
             entry("limit", asList("1")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "empty").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
-            entry("flag", asList(new String[] {null})),
+            entry("flag", new ArrayList<>()),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
   }
@@ -114,10 +116,21 @@ public class JAXRSContractTest {
   public void producesAddsAcceptHeader() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
 
+    /* multiple @Produces annotations should be additive */
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml")));
+            entry("Accept", asList("application/xml", "text/html")));
+  }
+
+  @Test
+  public void producesMultipleAddsAcceptHeader() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesMultiple");
+
+    assertThat(md.template())
+        .hasHeaders(
+            entry("Content-Type", Collections.singletonList("application/json")),
+            entry("Accept", asList("application/xml", "text/html", "text/plain")));
   }
 
   @Test
@@ -140,9 +153,20 @@ public class JAXRSContractTest {
   public void consumesAddsContentTypeHeader() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
 
+    /* multiple @Consumes annotations are additive */
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("text/html")),
-            entry("Content-Type", asList("application/xml")));
+        .hasHeaders(
+            entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Accept", asList("text/html")));
+  }
+
+  @Test
+  public void consumesMultipleAddsContentTypeHeader() throws Exception {
+    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
+
+    assertThat(md.template())
+        .hasHeaders(entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Accept", Collections.singletonList("text/html")));
   }
 
   @Test
@@ -191,7 +215,7 @@ public class JAXRSContractTest {
   @Test
   public void emptyPathOnType() throws Exception {
     assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template())
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test
@@ -231,7 +255,7 @@ public class JAXRSContractTest {
   }
 
   @Test
-  public void regexPathOnMethod() throws Exception {
+  public void regexPathOnMethodOrType() throws Exception {
     assertThat(parseAndValidateMetadata(
         PathOnType.class, "pathParamWithRegex", String.class).template())
             .hasUrl("/base/regex/{param}");
@@ -239,6 +263,10 @@ public class JAXRSContractTest {
     assertThat(parseAndValidateMetadata(
         PathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
             .hasUrl("/base/regex/{param1}/{param2}");
+
+    assertThat(parseAndValidateMetadata(
+        ComplexPathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
+            .hasUrl("/{baseparam}/regex/{param1}/{param2}");
   }
 
   @Test
@@ -425,6 +453,10 @@ public class JAXRSContractTest {
     Response produces();
 
     @GET
+    @Produces({"application/xml", "text/plain"})
+    Response producesMultiple();
+
+    @GET
     @Produces({})
     Response producesNada();
 
@@ -435,6 +467,10 @@ public class JAXRSContractTest {
     @POST
     @Consumes("application/xml")
     Response consumes();
+
+    @POST
+    @Consumes({"application/xml", "application/json"})
+    Response consumesMultiple();
 
     @POST
     @Consumes({})
@@ -499,6 +535,14 @@ public class JAXRSContractTest {
     Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
                                         @PathParam("param2") String param2);
   }
+
+  @Path("/{baseparam: [0-9]+}")
+  interface ComplexPathOnType {
+    
+    @GET
+    @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
+    Response pathParamWithMultipleRegex(@PathParam("param1") String param1, @PathParam("param2") String param2);
+  }  
 
   interface WithURIParam {
 

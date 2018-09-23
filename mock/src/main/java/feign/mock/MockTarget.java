@@ -42,7 +42,7 @@ public class MockTarget<E> implements Target<E> {
 
   @Override
   public Request apply(RequestTemplate input) {
-    input.insert(0, url());
+    input.target(url());
     return input.request();
   }
 

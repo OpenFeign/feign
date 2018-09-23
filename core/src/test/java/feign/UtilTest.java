@@ -23,11 +23,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import feign.codec.Decoder;
+import static feign.Util.emptyToNull;
+import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 public class UtilTest {
+
+  @Test
+  public void removesEmptyStrings() {
+    String[] values = new String[] {"", null};
+    assertThat(removeValues(values, (value) -> emptyToNull(value) == null, String.class))
+        .isEmpty();
+  }
+
+  @Test
+  public void removesEvenNumbers() {
+    Integer[] values = new Integer[] {22, 23};
+    assertThat(removeValues(values, (number) -> number % 2 == 0, Integer.class))
+        .containsExactly(23);
+  }
 
   @Test
   public void emptyValueOf() throws Exception {

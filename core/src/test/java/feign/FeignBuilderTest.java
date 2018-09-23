@@ -16,11 +16,13 @@ package feign;
 import java.util.HashMap;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -228,7 +230,7 @@ public class FeignBuilderTest {
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
     assertThat(server.takeRequest())
-        .hasHeaders("Content-Type: text/plain")
+        .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasBody("request data");
   }
 
@@ -397,6 +399,11 @@ public class FeignBuilderTest {
                   @Override
                   public Reader asReader() throws IOException {
                     return original.body().asReader();
+                  }
+
+                  @Override
+                  public Reader asReader(Charset charset) throws IOException {
+                    return original.body().asReader(charset);
                   }
 
                   @Override

@@ -108,7 +108,7 @@ public class RequestKey {
   }
 
   private RequestKey(Request request) {
-    this.method = HttpMethod.valueOf(request.method());
+    this.method = HttpMethod.valueOf(request.httpMethod().name());
     this.url = buildUrl(request);
     this.headers = RequestHeaders.of(request.headers());
     this.charset = request.charset();

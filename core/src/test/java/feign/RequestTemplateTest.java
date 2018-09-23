@@ -13,19 +13,19 @@
  */
 package feign;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
+import feign.Request.HttpMethod;
+import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import static feign.RequestTemplate.expand;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RequestTemplateTest {
 
@@ -36,7 +36,7 @@ public class RequestTemplateTest {
    * Avoid depending on guava solely for map literals.
    */
   private static <K, V> Map<K, V> mapOf(K key, V val) {
-    Map<K, V> result = new LinkedHashMap<K, V>();
+    Map<K, V> result = new LinkedHashMap<>();
     result.put(key, val);
     return result;
   }
@@ -53,18 +53,24 @@ public class RequestTemplateTest {
     return result;
   }
 
+  private static String expand(String template, Map<String, Object> variables) {
+    RequestTemplate requestTemplate = new RequestTemplate();
+    requestTemplate.uri(template);
+    return requestTemplate.resolve(variables).url();
+  }
+
   @Test
-  public void expandNotUrlEncoded() {
+  public void expandUrlEncoded() {
     for (String val : Arrays.asList("apples", "sp ace", "unic???de", "qu?stion")) {
       assertThat(expand("/users/{user}", mapOf("user", val)))
-          .isEqualTo("/users/" + val);
+          .isEqualTo("/users/" + UriUtils.encode(val, Util.UTF_8));
     }
   }
 
   @Test
   public void expandMultipleParams() {
     assertThat(expand("/users/{user}/{repo}", mapOf("user", "unic???de", "repo", "foo")))
-        .isEqualTo("/users/unic???de/foo");
+        .isEqualTo("/users/unic%3F%3F%3Fde/foo");
   }
 
   @Test
@@ -76,15 +82,15 @@ public class RequestTemplateTest {
   @Test
   public void expandMissingParamProceeds() {
     assertThat(expand("/{user-dir}", mapOf("user_dir", "foo")))
-        .isEqualTo("/{user-dir}");
+        .isEqualTo("/");
   }
 
   @Test
   public void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
-    RequestTemplate template = new RequestTemplate().method("GET")
-        .append("{zoneId}");
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("{zoneId}");
 
-    template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
+    template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template)
         .hasUrl("/hostedzone/Z1PA6795UKMFR9");
@@ -92,101 +98,111 @@ public class RequestTemplateTest {
 
   @Test
   public void canInsertAbsoluteHref() {
-    RequestTemplate template = new RequestTemplate().method("GET")
-        .append("/hostedzone/Z1PA6795UKMFR9");
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("/hostedzone/Z1PA6795UKMFR9");
 
-    template.insert(0, "https://route53.amazonaws.com/2012-12-12");
+    template.target("https://route53.amazonaws.com/2012-12-12");
 
     assertThat(template)
         .hasUrl("https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9");
   }
 
   @Test
-  public void resolveTemplateWithBaseAndParameterizedQuery() {
-    RequestTemplate template = new RequestTemplate().method("GET")
-        .append("/?Action=DescribeRegions").query("RegionName.1", "{region}");
+  public void resolveTemplateWithRelativeUriWithQuery() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .uri("/wsdl/testcase?wsdl")
+        .target("https://api.example.com");
 
-    template.resolve(mapOf("region", "eu-west-1"));
+    assertThat(template).hasUrl("https://api.example.com/wsdl/testcase?wsdl");
+  }
+
+  @Test
+  public void resolveTemplateWithBaseAndParameterizedQuery() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("/?Action=DescribeRegions").query("RegionName.1", "{region}");
+
+    template = template.resolve(mapOf("region", "eu-west-1"));
 
     assertThat(template)
         .hasQueries(
-            entry("Action", asList("DescribeRegions")),
-            entry("RegionName.1", asList("eu-west-1")));
+            entry("Action", Collections.singletonList("DescribeRegions")),
+            entry("RegionName.1", Collections.singletonList("eu-west-1")));
   }
 
   @Test
   public void resolveTemplateWithBaseAndParameterizedIterableQuery() {
-    RequestTemplate template = new RequestTemplate().method("GET")
-        .append("/?Query=one").query("Queries", "{queries}");
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("/?Query=one").query("Queries", "{queries}");
 
-    template.resolve(mapOf("queries", Arrays.asList("us-east-1", "eu-west-1")));
+    template = template.resolve(mapOf("queries", Arrays.asList("us-east-1", "eu-west-1")));
 
     assertThat(template)
         .hasQueries(
-            entry("Query", asList("one")),
+            entry("Query", Collections.singletonList("one")),
             entry("Queries", asList("us-east-1", "eu-west-1")));
   }
 
   @Test
   public void resolveTemplateWithHeaderSubstitutions() {
-    RequestTemplate template = new RequestTemplate().method("GET")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Auth-Token", "{authToken}");
 
-    template.resolve(mapOf("authToken", "1234"));
+    template = template.resolve(mapOf("authToken", "1234"));
 
     assertThat(template)
-        .hasHeaders(entry("Auth-Token", asList("1234")));
+        .hasHeaders(entry("Auth-Token", Collections.singletonList("1234")));
   }
 
   @Test
   public void resolveTemplateWithHeaderSubstitutionsNotAtStart() {
-    RequestTemplate template = new RequestTemplate().method("GET")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Authorization", "Bearer {token}");
 
-    template.resolve(mapOf("token", "1234"));
+    template = template.resolve(mapOf("token", "1234"));
 
     assertThat(template)
-        .hasHeaders(entry("Authorization", asList("Bearer 1234")));
+        .hasHeaders(entry("Authorization", Collections.singletonList("Bearer 1234")));
   }
 
   @Test
   public void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
-    RequestTemplate template = new RequestTemplate().method("GET")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Encoded", "{{{{dont_expand_me}}");
 
     template.resolve(mapOf("dont_expand_me", "1234"));
 
     assertThat(template)
-        .hasHeaders(entry("Encoded", asList("{{dont_expand_me}}")));
+        .hasHeaders(entry("Encoded", Collections.singletonList("{{{{dont_expand_me}}")));
   }
 
   /** This ensures we don't mess up vnd types */
   @Test
   public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
-    RequestTemplate template = new RequestTemplate().method("GET")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Accept", "application/vnd.github.v3+{type}");
 
-    template.resolve(mapOf("type", "json"));
+    template = template.resolve(mapOf("type", "json"));
 
     assertThat(template)
-        .hasHeaders(entry("Accept", asList("application/vnd.github.v3+json")));
+        .hasHeaders(entry("Accept", Collections.singletonList("application/vnd.github.v3+json")));
   }
 
   @Test
   public void resolveTemplateWithHeaderEmptyResult() {
-    RequestTemplate template = new RequestTemplate().method("GET")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Encoded", "{var}");
 
-    template.resolve(mapOf("var", ""));
+    template = template.resolve(mapOf("var", ""));
 
     assertThat(template)
-        .hasHeaders(entry("Encoded", asList("")));
+        .hasNoHeader("Encoded");
   }
 
   @Test
-  public void resolveTemplateWithMixedRequestLineParams() throws Exception {
-    RequestTemplate template = new RequestTemplate().method("GET")//
-        .append("/domains/{domainId}/records")//
+  public void resolveTemplateWithMixedRequestLineParams() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)//
+        .uri("/domains/{domainId}/records")//
         .query("name", "{name}")//
         .query("type", "{type}");
 
@@ -194,32 +210,31 @@ public class RequestTemplateTest {
         mapOf("domainId", 1001, "name", "denominator.io", "type", "CNAME"));
 
     assertThat(template)
-        .hasUrl("/domains/1001/records")
         .hasQueries(
-            entry("name", asList("denominator.io")),
-            entry("type", asList("CNAME")));
+            entry("name", Collections.singletonList("denominator.io")),
+            entry("type", Collections.singletonList("CNAME")));
   }
 
   @Test
-  public void insertHasQueryParams() throws Exception {
-    RequestTemplate template = new RequestTemplate().method("GET")//
-        .append("/domains/1001/records")//
+  public void insertHasQueryParams() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)//
+        .uri("/domains/1001/records")//
         .query("name", "denominator.io")//
         .query("type", "CNAME");
 
-    template.insert(0, "https://host/v1.0/1234?provider=foo");
+    template.target("https://host/v1.0/1234?provider=foo");
 
     assertThat(template)
-        .hasUrl("https://host/v1.0/1234/domains/1001/records")
+        .hasPath("https://host/v1.0/1234/domains/1001/records")
         .hasQueries(
-            entry("provider", asList("foo")),
-            entry("name", asList("denominator.io")),
-            entry("type", asList("CNAME")));
+            entry("name", Collections.singletonList("denominator.io")),
+            entry("type", Collections.singletonList("CNAME")),
+            entry("provider", Collections.singletonList("foo")));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
-    RequestTemplate template = new RequestTemplate().method("POST")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
         .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
                 "\"password\": \"{password}\"%7D");
@@ -234,12 +249,13 @@ public class RequestTemplateTest {
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
-            entry("Content-Length", asList(String.valueOf(template.body().length))));
+            entry("Content-Length",
+                Collections.singletonList(String.valueOf(template.body().length))));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
-    RequestTemplate template = new RequestTemplate().method("POST")
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
         .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
 
@@ -251,13 +267,13 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasBody(
-            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}");
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc 123%d8\"}");
   }
 
   @Test
-  public void skipUnresolvedQueries() throws Exception {
-    RequestTemplate template = new RequestTemplate().method("GET")//
-        .append("/domains/{domainId}/records")//
+  public void skipUnresolvedQueries() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("/domains/{domainId}/records")//
         .query("optional", "{optional}")//
         .query("name", "{nameVariable}");
 
@@ -266,15 +282,14 @@ public class RequestTemplateTest {
         "nameVariable", "denominator.io"));
 
     assertThat(template)
-        .hasUrl("/domains/1001/records")
         .hasQueries(
-            entry("name", asList("denominator.io")));
+            entry("name", Collections.singletonList("denominator.io")));
   }
 
   @Test
-  public void allQueriesUnresolvable() throws Exception {
-    RequestTemplate template = new RequestTemplate().method("GET")//
-        .append("/domains/{domainId}/records")//
+  public void allQueriesUnresolvable() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)//
+        .uri("/domains/{domainId}/records")//
         .query("optional", "{optional}")//
         .query("optional2", "{optional2}");
 
@@ -287,67 +302,67 @@ public class RequestTemplateTest {
 
   @Test
   public void spaceEncodingInUrlParam() {
-    RequestTemplate template = new RequestTemplate().method("GET")//
-        .append("/api/{value1}?key={value2}");
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)//
+        .uri("/api/{value1}?key={value2}");
 
     template = template.resolve(mapOf("value1", "ABC 123", "value2", "XYZ 123"));
 
     assertThat(template.request().url())
-        .isEqualTo("/api/ABC%20123?key=XYZ+123");
+        .isEqualTo("/api/ABC%20123?key=XYZ%20123");
   }
 
   @Test
-  public void encodeSlashTest() throws Exception {
-    RequestTemplate template = new RequestTemplate().method("GET")
-        .append("/api/{vhost}")
+  public void encodeSlashTest() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .uri("/api/{vhost}")
         .decodeSlash(false);
 
-    template.resolve(mapOf("vhost", "/"));
+    template = template.resolve(mapOf("vhost", "/"));
 
     assertThat(template)
         .hasUrl("/api/%2F");
   }
 
   /** Implementations have a bug if they pass junk as the http method. */
+  @SuppressWarnings("deprecation")
   @Test
-  public void uriStuffedIntoMethod() throws Exception {
+  public void uriStuffedIntoMethod() {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
-
     new RequestTemplate().method("/path?queryParam={queryParam}");
   }
 
   @Test
-  public void encodedQueryClearedOnNull() throws Exception {
+  public void encodedQueryClearedOnNull() {
     RequestTemplate template = new RequestTemplate();
 
     template.query("param[]", "value");
-    assertThat(template).hasQueries(entry("param[]", asList("value")));
+    assertThat(template).hasQueries(entry("param[]", Collections.singletonList("value")));
 
     template.query("param[]", (String[]) null);
     assertThat(template.queries()).isEmpty();
   }
 
   @Test
-  public void encodedQuery() throws Exception {
-    RequestTemplate template = new RequestTemplate().query(true, "params[]", "foo%20bar");
-
-    assertThat(template.queryLine()).isEqualTo("?params[]=foo%20bar");
-    assertThat(template).hasQueries(entry("params[]", asList("foo bar")));
+  public void encodedQuery() {
+    RequestTemplate template = new RequestTemplate().query("params[]", "foo%20bar");
+    assertThat(template.queryLine()).isEqualTo("?params%5B%5D=foo%20bar");
+    assertThat(template).hasQueries(entry("params[]", Collections.singletonList("foo%20bar")));
   }
 
   @Test
-  public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() throws Exception {
+  public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() {
     RequestTemplate template = new RequestTemplate()
-        .query(false, "params[]", "not encoded") // stored as "param%5D%5B"
-        .query(true, "params[]", "encoded"); // stored as "param[]"
+        .query("params[]", "not encoded") // stored as "param%5D%5B"
+        .query("params[]", "encoded"); // stored as "param[]"
 
-    // We can't ensure consistent behavior, because decode("param[]") == decode("param%5B%5D")
-    assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not+encoded&params[]=encoded");
-    assertThat(template.queries()).doesNotContain(entry("params[]", asList("not encoded")));
-    assertThat(template.queries()).contains(entry("params[]", asList("encoded")));
+    assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not%20encoded&params%5B%5D=encoded");
+    Map<String, Collection<String>> queries = template.queries();
+    assertThat(queries).containsKey("params[]");
+    assertThat(queries.get("params[]")).contains("encoded").contains("not encoded");
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void shouldRetrieveHeadersWithoutNull() {
     RequestTemplate template = new RequestTemplate()
@@ -364,6 +379,7 @@ public class RequestTemplateTest {
 
   }
 
+  @SuppressWarnings("ConstantConditions")
   @Test(expected = UnsupportedOperationException.class)
   public void shouldNotInsertHeadersImmutableMap() {
     RequestTemplate template = new RequestTemplate()
@@ -372,6 +388,6 @@ public class RequestTemplateTest {
     assertThat(template.headers()).hasSize(1);
     assertThat(template.headers().keySet()).containsExactly("key1");
 
-    template.headers().put("key2", asList("other value"));
+    template.headers().put("key2", Collections.singletonList("other value"));
   }
 }
