@@ -11,38 +11,26 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.mock;
+package feign.template;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Target;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class MockTarget<E> implements Target<E> {
+import java.nio.charset.StandardCharsets;
+import org.junit.Test;
 
-  private final Class<E> type;
+public class UriUtilsTest {
 
-  public MockTarget(Class<E> type) {
-    this.type = type;
+  @Test
+  public void encodeSpaces() {
+    String value = "James Bond";
+    assertThat(UriUtils.encode(value, StandardCharsets.UTF_8))
+        .isEqualToIgnoringCase("James%20Bond");
   }
 
-  @Override
-  public Class<E> type() {
-    return type;
-  }
-
-  @Override
-  public String name() {
-    return type.getSimpleName();
-  }
-
-  @Override
-  public String url() {
-    return "";
-  }
-
-  @Override
-  public Request apply(RequestTemplate input) {
-    input.target(url());
-    return input.request();
+  @Test
+  public void ensureReservedAreNotEncoded() {
+    String value = "This Is Great!()~'";
+    assertThat(UriUtils.encode(value, StandardCharsets.UTF_8))
+        .isEqualToIgnoringCase("This%20Is%20Great!()~'");
   }
 }

@@ -58,7 +58,7 @@ public class TargetTest {
           public Request apply(RequestTemplate input) {
             Request urlEncoded = super.apply(input);
             return Request.create(
-                urlEncoded.method(),
+                urlEncoded.httpMethod(),
                 urlEncoded.url().replace("%2F", "/"),
                 urlEncoded.headers(),
                 urlEncoded.body(),

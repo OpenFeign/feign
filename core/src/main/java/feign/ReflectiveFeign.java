@@ -23,6 +23,7 @@ import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.template.UriUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -204,11 +205,11 @@ public class ReflectiveFeign extends Feign {
 
     @Override
     public RequestTemplate create(Object[] argv) {
-      RequestTemplate mutable = new RequestTemplate(metadata.template());
+      RequestTemplate mutable = RequestTemplate.from(metadata.template());
       if (metadata.urlIndex() != null) {
         int urlIndex = metadata.urlIndex();
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
-        mutable.insert(0, String.valueOf(argv[urlIndex]));
+        mutable.target(String.valueOf(argv[urlIndex]));
       }
       Map<String, Object> varBuilder = new LinkedHashMap<String, Object>();
       for (Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
@@ -306,38 +307,23 @@ public class ReflectiveFeign extends Feign {
             values.add(
                 nextObject == null
                     ? null
-                    : encoded
-                        ? nextObject.toString()
-                        : RequestTemplate.urlEncode(nextObject.toString()));
+                    : encoded ? nextObject.toString() : UriUtils.encode(nextObject.toString()));
           }
         } else {
           values.add(
               currValue == null
                   ? null
-                  : encoded
-                      ? currValue.toString()
-                      : RequestTemplate.urlEncode(currValue.toString()));
+                  : encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
         }
 
-        mutable.query(
-            true,
-            encoded ? currEntry.getKey() : RequestTemplate.urlEncode(currEntry.getKey()),
-            values);
+        mutable.query(encoded ? currEntry.getKey() : UriUtils.encode(currEntry.getKey()), values);
       }
       return mutable;
     }
 
     protected RequestTemplate resolve(
         Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
-      // Resolving which variable names are already encoded using their indices
-      Map<String, Boolean> variableToEncoded = new LinkedHashMap<String, Boolean>();
-      for (Entry<Integer, Boolean> entry : metadata.indexToEncoded().entrySet()) {
-        Collection<String> names = metadata.indexToName().get(entry.getKey());
-        for (String name : names) {
-          variableToEncoded.put(name, entry.getValue());
-        }
-      }
-      return mutable.resolve(variables, variableToEncoded);
+      return mutable.resolve(variables);
     }
   }
 

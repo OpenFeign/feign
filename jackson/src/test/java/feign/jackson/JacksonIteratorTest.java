@@ -19,6 +19,7 @@ import static org.hamcrest.core.Is.isA;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
@@ -26,7 +27,6 @@ import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -90,8 +90,9 @@ public class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
 
@@ -116,8 +117,9 @@ public class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
 
@@ -147,8 +149,9 @@ public class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
             .body(json, UTF_8)
             .build();
     return iterator(type, response);

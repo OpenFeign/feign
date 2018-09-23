@@ -218,7 +218,9 @@ public class RibbonClientTest {
   @Test
   public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
     String queryStringValue = "some string with space";
-    String expectedQueryStringValue = "some+string+with+space";
+
+    /* values must be pct encoded, see RFC 6750 */
+    String expectedQueryStringValue = "some%20string%20with%20space";
     String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
 
     server1.enqueue(new MockResponse().setBody("success!"));

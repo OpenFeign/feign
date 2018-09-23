@@ -14,6 +14,7 @@
 package feign.okhttp;
 
 import feign.Client;
+import feign.Request.HttpMethod;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -76,7 +77,8 @@ public final class OkHttpClient implements Client {
     }
 
     byte[] inputBody = input.body();
-    boolean isMethodWithBody = "POST".equals(input.method()) || "PUT".equals(input.method());
+    boolean isMethodWithBody =
+        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod();
     if (isMethodWithBody) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
@@ -87,7 +89,7 @@ public final class OkHttpClient implements Client {
     }
 
     RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
-    requestBuilder.method(input.method(), body);
+    requestBuilder.method(input.httpMethod().name(), body);
     return requestBuilder.build();
   }
 

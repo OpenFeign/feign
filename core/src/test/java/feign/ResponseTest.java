@@ -16,6 +16,7 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import feign.Request.HttpMethod;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +33,8 @@ public class ResponseTest {
         Response.builder()
             .status(200)
             .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 
@@ -49,7 +51,8 @@ public class ResponseTest {
         Response.builder()
             .status(200)
             .headers(headersMap)
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
     assertThat(response.headers().get("content-type")).isEqualTo(valueList);
@@ -66,7 +69,8 @@ public class ResponseTest {
         Response.builder()
             .status(200)
             .headers(headersMap)
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 

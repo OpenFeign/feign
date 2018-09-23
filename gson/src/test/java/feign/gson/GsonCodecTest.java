@@ -23,12 +23,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -39,8 +39,8 @@ import org.junit.Test;
 public class GsonCodecTest {
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() throws Exception {
-    Map<String, Object> map = new LinkedHashMap<String, Object>();
+  public void encodesMapObjectNumericalValuesAsInteger() {
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
@@ -56,15 +56,16 @@ public class GsonCodecTest {
 
   @Test
   public void decodesMapObjectNumericalValuesAsInteger() throws Exception {
-    Map<String, Object> map = new LinkedHashMap<String, Object>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
     Response response =
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .headers(Collections.<String, Collection<String>>emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
             .body("{\"foo\": 1}", UTF_8)
             .build();
     assertEquals(
@@ -72,9 +73,9 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() throws Exception {
+  public void encodesFormParams() {
 
-    Map<String, Object> form = new LinkedHashMap<String, Object>();
+    Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
@@ -124,8 +125,9 @@ public class GsonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
     assertEquals(
@@ -138,8 +140,9 @@ public class GsonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .build();
     assertNull(new GsonDecoder().decode(response, String.class));
   }
@@ -150,8 +153,9 @@ public class GsonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
     assertNull(new GsonDecoder().decode(response, String.class));
@@ -195,9 +199,9 @@ public class GsonCodecTest {
 
   @Test
   public void customDecoder() throws Exception {
-    GsonDecoder decoder = new GsonDecoder(Arrays.<TypeAdapter<?>>asList(upperZone));
+    GsonDecoder decoder = new GsonDecoder(Collections.singletonList(upperZone));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("DENOMINATOR.IO."));
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
@@ -205,18 +209,19 @@ public class GsonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
     assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
   }
 
   @Test
-  public void customEncoder() throws Exception {
-    GsonEncoder encoder = new GsonEncoder(Arrays.<TypeAdapter<?>>asList(upperZone));
+  public void customEncoder() {
+    GsonEncoder encoder = new GsonEncoder(Collections.singletonList(upperZone));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "abcd"));
 
@@ -244,8 +249,9 @@ public class GsonCodecTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .build();
     assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
   }

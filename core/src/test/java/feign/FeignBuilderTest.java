@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -229,7 +230,9 @@ public class FeignBuilderTest {
     Response response = api.codecPost("request data");
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
-    assertThat(server.takeRequest()).hasHeaders("Content-Type: text/plain").hasBody("request data");
+    assertThat(server.takeRequest())
+        .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
+        .hasBody("request data");
   }
 
   @Test

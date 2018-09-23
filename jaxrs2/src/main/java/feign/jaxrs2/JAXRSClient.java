@@ -57,7 +57,7 @@ public class JAXRSClient implements Client {
             .target(request.url())
             .request()
             .headers(toMultivaluedMap(request.headers()))
-            .method(request.method(), createRequestEntity(request));
+            .method(request.httpMethod().name(), createRequestEntity(request));
 
     return feign.Response.builder()
         .request(request)
@@ -116,11 +116,7 @@ public class JAXRSClient implements Client {
   private MultivaluedMap<String, Object> toMultivaluedMap(Map<String, Collection<String>> headers) {
     final MultivaluedHashMap<String, Object> mvHeaders = new MultivaluedHashMap<>();
 
-    headers
-        .entrySet()
-        .forEach(
-            entry ->
-                entry.getValue().stream().forEach(value -> mvHeaders.add(entry.getKey(), value)));
+    headers.forEach((key, value1) -> value1.forEach(value -> mvHeaders.add(key, value)));
 
     return mvHeaders;
   }

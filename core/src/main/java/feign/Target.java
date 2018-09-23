@@ -96,7 +96,7 @@ public interface Target<T> {
     @Override
     public Request apply(RequestTemplate input) {
       if (input.url().indexOf("http") != 0) {
-        input.insert(0, url());
+        input.target(url());
       }
       return input.request();
     }

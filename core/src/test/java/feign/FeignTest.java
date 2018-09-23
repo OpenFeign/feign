@@ -15,6 +15,7 @@ package feign;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -48,7 +49,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
-import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -116,7 +116,7 @@ public class FeignTest {
     api.body(Arrays.asList("netflix", "denominator", "password"));
 
     assertThat(server.takeRequest())
-        .hasHeaders("Content-Length: 32")
+        .hasHeaders(entry("Content-Length", Collections.singletonList("32")))
         .hasBody("[netflix, denominator, password]");
   }
 
@@ -184,7 +184,8 @@ public class FeignTest {
 
     api.post();
 
-    assertThat(server.takeRequest()).hasHeaders("X-Forwarded-For: origin.host.com");
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("X-Forwarded-For", Collections.singletonList("origin.host.com")));
   }
 
   @Test
@@ -200,7 +201,9 @@ public class FeignTest {
     api.post();
 
     assertThat(server.takeRequest())
-        .hasHeaders("X-Forwarded-For: origin.host.com", "User-Agent: Feign");
+        .hasHeaders(
+            entry("X-Forwarded-For", Collections.singletonList("origin.host.com")),
+            entry("User-Agent", Collections.singletonList("Feign")));
   }
 
   @Test
@@ -249,8 +252,8 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
         .hasHeaders(
-            MapEntry.entry("Content-Type", Arrays.asList("myContent")),
-            MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+            entry("Content-Type", Arrays.asList("myContent")),
+            entry("Custom-Header", Arrays.asList("fooValue")));
   }
 
   @Test
@@ -266,20 +269,22 @@ public class FeignTest {
     // header map should be additive for headers provided by annotations
     assertThat(server.takeRequest())
         .hasHeaders(
-            MapEntry.entry("Content-Encoding", Arrays.asList("deflate")),
-            MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+            entry("Content-Encoding", Arrays.asList("deflate")),
+            entry("Custom-Header", Arrays.asList("fooValue")));
 
     server.enqueue(new MockResponse());
     headerMap.put("Content-Encoding", "overrideFromMap");
 
     api.headerMapWithHeaderAnnotations(headerMap);
 
-    // if header map has entry that collides with annotation, value specified
-    // by header map should be used
+    /*
+     * @HeaderMap map values no longer override @Header parameters. This caused confusion as it is
+     * valid to have more than one value for a header.
+     */
     assertThat(server.takeRequest())
         .hasHeaders(
-            MapEntry.entry("Content-Encoding", Arrays.asList("overrideFromMap")),
-            MapEntry.entry("Custom-Header", Arrays.asList("fooValue")));
+            entry("Content-Encoding", Arrays.asList("deflate", "overrideFromMap")),
+            entry("Custom-Header", Arrays.asList("fooValue")));
   }
 
   @Test
@@ -306,11 +311,11 @@ public class FeignTest {
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
     queryMap.put("emptyListKey", new ArrayList<String>());
-    queryMap.put("emptyStringKey", "");
+    queryMap.put("emptyStringKey", ""); // empty values are ignored.
     api.queryMap(queryMap);
 
     assertThat(server.takeRequest())
-        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey=");
+        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey");
   }
 
   @Test
@@ -328,15 +333,15 @@ public class FeignTest {
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("name", "bob");
     api.queryMapWithQueryParams("alice", queryMap);
-    // query map keys take precedence over built-in parameters
-    assertThat(server.takeRequest()).hasPath("/?name=bob");
+    // queries are additive
+    assertThat(server.takeRequest()).hasPath("/?name=alice&name=bob");
 
     server.enqueue(new MockResponse());
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("name", null);
     api.queryMapWithQueryParams("alice", queryMap);
     // null value for a query map key removes query parameter
-    assertThat(server.takeRequest()).hasPath("/");
+    assertThat(server.takeRequest()).hasPath("/?name=alice");
   }
 
   @Test
@@ -404,10 +409,12 @@ public class FeignTest {
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
     assertEquals(
-        "TestInterface#post()", Feign.configKey(TestInterface.class.getDeclaredMethod("post")));
+        "TestInterface#post()",
+        Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")));
     assertEquals(
         "TestInterface#uriParam(String,URI,String)",
         Feign.configKey(
+            TestInterface.class,
             TestInterface.class.getDeclaredMethod(
                 "uriParam", String.class, URI.class, String.class)));
   }
@@ -564,21 +571,18 @@ public class FeignTest {
             .status(302)
             .reason("Found")
             .headers(headers)
-            .request(Request.create("GET", "/", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 
+    // fake client as Client.Default follows redirects.
     TestInterface api =
         Feign.builder()
-            .client(
-                new Client() { // fake client as Client.Default follows redirects.
-                  public Response execute(Request request, Request.Options options) {
-                    return response;
-                  }
-                })
+            .client((request, options) -> response)
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.response().headers().get("Location"), Arrays.asList("http://bar.com"));
+    assertEquals(
+        api.response().headers().get("Location"), Collections.singletonList("http://bar.com"));
   }
 
   private static class MockRetryer implements Retryer {
@@ -767,8 +771,8 @@ public class FeignTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
-        .request(Request.create("GET", "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(new HashMap<String, Collection<String>>())
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(new HashMap<>())
         .build();
   }
 

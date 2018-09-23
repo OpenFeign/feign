@@ -19,6 +19,7 @@ import static feign.Util.removeValues;
 
 import feign.Contract;
 import feign.MethodMetadata;
+import feign.Request;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class JAXRSContract extends Contract.BaseContract {
       // should
       // strip these out appropriately.
       pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().insert(0, pathValue);
+      data.template().uri(pathValue);
     }
     Consumes consumes = clz.getAnnotation(Consumes.class);
     if (consumes != null) {
@@ -83,7 +84,7 @@ public class JAXRSContract extends Contract.BaseContract {
           method.getName(),
           data.template().method(),
           http.value());
-      data.template().method(http.value());
+      data.template().method(Request.HttpMethod.valueOf(http.value()));
     } else if (annotationType == Path.class) {
       String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
       if (pathValue == null) {
@@ -98,7 +99,7 @@ public class JAXRSContract extends Contract.BaseContract {
       // strip these out appropriately.
       methodAnnotationValue =
           methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().append(methodAnnotationValue);
+      data.template().uri(methodAnnotationValue, true);
     } else if (annotationType == Produces.class) {
       handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
     } else if (annotationType == Consumes.class) {

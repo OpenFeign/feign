@@ -23,11 +23,11 @@ import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 import feign.Client;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -95,7 +95,7 @@ public final class LBClient
     if (clientConfig.get(CommonClientConfigKey.OkToRetryOnAllOperations, false)) {
       return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
     }
-    if (!request.toRequest().method().equals("GET")) {
+    if (request.toRequest().httpMethod() != HttpMethod.GET) {
       return new RequestSpecificRetryHandler(true, false, this.getRetryHandler(), requestConfig);
     } else {
       return new RequestSpecificRetryHandler(true, true, this.getRetryHandler(), requestConfig);
@@ -120,9 +120,9 @@ public final class LBClient
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       headers.putAll(request.headers());
-      headers.put(Util.CONTENT_LENGTH, Arrays.asList(String.valueOf(bodyLength)));
+      headers.put(Util.CONTENT_LENGTH, Collections.singletonList(String.valueOf(bodyLength)));
       return Request.create(
-          request.method(), getUri().toASCIIString(), headers, body, request.charset());
+          request.httpMethod(), getUri().toASCIIString(), headers, body, request.charset());
     }
 
     Client client() {

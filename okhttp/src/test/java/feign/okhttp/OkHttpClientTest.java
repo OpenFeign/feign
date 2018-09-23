@@ -24,7 +24,9 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
+import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
+import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
@@ -47,8 +49,9 @@ public class OkHttpClientTest extends AbstractClientTest {
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders("Accept: text/plain", "Content-Type: text/plain") // Note: OkHttp adds content
-        // length.
+        .hasHeaders(
+            MapEntry.entry("Accept", Collections.singletonList("text/plain")),
+            MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasMethod("GET");
   }
 

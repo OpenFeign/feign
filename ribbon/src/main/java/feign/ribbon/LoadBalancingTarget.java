@@ -105,7 +105,7 @@ public class LoadBalancingTarget<T> implements Target<T> {
   public Request apply(RequestTemplate input) {
     Server currentServer = lb.chooseServer(null);
     String url = format("%s://%s%s", scheme, currentServer.getHostPort(), path);
-    input.insert(0, url);
+    input.target(url);
     try {
       return input.request();
     } finally {

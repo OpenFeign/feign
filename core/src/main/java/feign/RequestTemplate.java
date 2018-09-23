@@ -15,559 +15,732 @@ package feign;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.UTF_8;
-import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.emptyToNull;
-import static feign.Util.toArray;
-import static feign.Util.valuesOrEmpty;
-import static java.util.stream.Collectors.toMap;
 
+import feign.Request.HttpMethod;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * Builds a request to an http target. Not thread safe. <br>
- * <br>
- * <br>
- * <b>relationship to JAXRS 2.0</b><br>
- * <br>
- * A combination of {@code javax.ws.rs.client.WebTarget} and {@code
- * javax.ws.rs.client.Invocation.Builder}, ensuring you can modify any part of the request. However,
- * this object is mutable, so needs to be guarded with the copy constructor.
+ * Request Builder for an HTTP Target.
+ *
+ * <p>This class is a variation on a UriTemplate, where, in addition to the uri, Headers and Query
+ * information also support template expressions.
  */
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 public final class RequestTemplate implements Serializable {
 
-  private static final long serialVersionUID = 1L;
-  private final Map<String, Collection<String>> queries =
-      new LinkedHashMap<String, Collection<String>>();
-  private final Map<String, Collection<String>> headers =
-      new LinkedHashMap<String, Collection<String>>();
-  private String method;
-  /* final to encourage mutable use vs replacing the object. */
-  private StringBuilder url = new StringBuilder();
-  private transient Charset charset;
+  private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
+  private final Map<String, QueryTemplate> queries = new LinkedHashMap<>();
+  private final Map<String, HeaderTemplate> headers = new LinkedHashMap<>();
+  private String target;
+  private boolean resolved = false;
+  private UriTemplate uriTemplate;
+  private BodyTemplate bodyTemplate;
+  private HttpMethod method;
+  private transient Charset charset = Util.UTF_8;
   private byte[] body;
-  private String bodyTemplate;
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
 
-  public RequestTemplate() {}
+  /** Create a new Request Template. */
+  public RequestTemplate() {
+    super();
+  }
 
-  /* Copy constructor. Use this when making templates. */
+  /**
+   * Create a new Request Template.
+   *
+   * @param target for the template.
+   * @param uriTemplate for the template.
+   * @param bodyTemplate for the template.
+   * @param method of the request.
+   * @param charset for the request.
+   * @param body of the request, may be null
+   * @param decodeSlash if the request uri should encode slash characters.
+   * @param collectionFormat when expanding collection based variables.
+   */
+  private RequestTemplate(
+      String target,
+      UriTemplate uriTemplate,
+      BodyTemplate bodyTemplate,
+      HttpMethod method,
+      Charset charset,
+      byte[] body,
+      boolean decodeSlash,
+      CollectionFormat collectionFormat) {
+    this.target = target;
+    this.uriTemplate = uriTemplate;
+    this.bodyTemplate = bodyTemplate;
+    this.method = method;
+    this.charset = charset;
+    this.body = body;
+    this.decodeSlash = decodeSlash;
+    this.collectionFormat =
+        (collectionFormat != null) ? collectionFormat : CollectionFormat.EXPLODED;
+  }
+
+  /**
+   * Create a Request Template from an existing Request Template.
+   *
+   * @param requestTemplate to copy from.
+   * @return a new Request Template.
+   */
+  public static RequestTemplate from(RequestTemplate requestTemplate) {
+    RequestTemplate template =
+        new RequestTemplate(
+            requestTemplate.target,
+            requestTemplate.uriTemplate,
+            requestTemplate.bodyTemplate,
+            requestTemplate.method,
+            requestTemplate.charset,
+            requestTemplate.body,
+            requestTemplate.decodeSlash,
+            requestTemplate.collectionFormat);
+
+    if (!requestTemplate.queries().isEmpty()) {
+      template.queries.putAll(requestTemplate.queries);
+    }
+
+    if (!requestTemplate.headers().isEmpty()) {
+      template.headers.putAll(requestTemplate.headers);
+    }
+    return template;
+  }
+
+  /**
+   * Create a Request Template from an existing Request Template.
+   *
+   * @param toCopy template.
+   * @deprecated replaced by {@link RequestTemplate#from(RequestTemplate)}
+   */
+  @Deprecated
   public RequestTemplate(RequestTemplate toCopy) {
     checkNotNull(toCopy, "toCopy");
+    this.target = toCopy.target;
     this.method = toCopy.method;
-    this.url.append(toCopy.url);
     this.queries.putAll(toCopy.queries);
     this.headers.putAll(toCopy.headers);
     this.charset = toCopy.charset;
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
-    this.collectionFormat = toCopy.collectionFormat;
-  }
-
-  private static String urlDecode(String arg) {
-    try {
-      return URLDecoder.decode(arg, UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  static String urlEncode(Object arg) {
-    try {
-      return URLEncoder.encode(String.valueOf(arg), UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static boolean isHttpUrl(CharSequence value) {
-    return value.length() >= 4 && value.subSequence(0, 3).equals("http".substring(0, 3));
-  }
-
-  private static CharSequence removeTrailingSlash(CharSequence charSequence) {
-    if (charSequence != null
-        && charSequence.length() > 0
-        && charSequence.charAt(charSequence.length() - 1) == '/') {
-      return charSequence.subSequence(0, charSequence.length() - 1);
-    } else {
-      return charSequence;
-    }
+    this.collectionFormat =
+        (toCopy.collectionFormat != null) ? toCopy.collectionFormat : CollectionFormat.EXPLODED;
+    this.uriTemplate = toCopy.uriTemplate;
+    this.resolved = false;
   }
 
   /**
-   * Expands a {@code template}, such as {@code username}, using the {@code variables} supplied. Any
-   * unresolved parameters will remain. <br>
-   * Note that if you'd like curly braces literally in the {@code template}, urlencode them first.
+   * Resolve all expressions using the variable value substitutions provided. Variable values will
+   * be pct-encoded, if they are not already.
    *
-   * @param template URI template that can be in level 1 <a
-   *     href="http://tools.ietf.org/html/rfc6570">RFC6570</a> form.
-   * @param variables to the URI template
-   * @return expanded template, leaving any unresolved parameters literal
+   * @param variables containing the variable values to use when resolving expressions.
+   * @return a new Request Template with all of the variables resolved.
    */
-  public static String expand(String template, Map<String, ?> variables) {
-    // skip expansion if there's no valid variables set. ex. {a} is the
-    // first valid
-    if (checkNotNull(template, "template").length() < 3) {
-      return template;
-    }
-    checkNotNull(variables, "variables for %s", template);
+  public RequestTemplate resolve(Map<String, ?> variables) {
 
-    boolean inVar = false;
-    StringBuilder var = new StringBuilder();
-    StringBuilder builder = new StringBuilder();
-    for (char c : template.toCharArray()) {
-      switch (c) {
-        case '{':
-          if (inVar) {
-            // '{{' is an escape: write the brace and don't interpret as a variable
-            builder.append("{");
-            inVar = false;
-            break;
-          }
-          inVar = true;
-          break;
-        case '}':
-          if (!inVar) { // then write the brace literally
-            builder.append('}');
-            break;
-          }
-          inVar = false;
-          String key = var.toString();
-          Object value = variables.get(var.toString());
-          if (value != null) {
-            builder.append(value);
-          } else {
-            builder.append('{').append(key).append('}');
-          }
-          var = new StringBuilder();
-          break;
-        default:
-          if (inVar) {
-            var.append(c);
-          } else {
-            builder.append(c);
-          }
-      }
-    }
-    return builder.toString();
-  }
+    StringBuilder uri = new StringBuilder();
 
-  private static Map<String, Collection<String>> parseAndDecodeQueries(String queryLine) {
-    Map<String, Collection<String>> map = new LinkedHashMap<>();
-    if (emptyToNull(queryLine) == null) {
-      return map;
+    /* create a new template form this one, but explicitly */
+    RequestTemplate resolved = RequestTemplate.from(this);
+
+    if (this.uriTemplate == null) {
+      /* create a new uri template using the default root */
+      this.uriTemplate = UriTemplate.create("", !this.decodeSlash, this.charset);
     }
-    if (queryLine.indexOf('&') == -1) {
-      putKV(queryLine, map);
-    } else {
-      char[] chars = queryLine.toCharArray();
-      int start = 0;
-      int i = 0;
-      for (; i < chars.length; i++) {
-        if (chars[i] == '&') {
-          putKV(queryLine.substring(start, i), map);
-          start = i + 1;
+
+    uri.append(this.uriTemplate.expand(variables));
+
+    /*
+     * for simplicity, combine the queries into the uri and use the resulting uri to seed the
+     * resolved template.
+     */
+    if (!this.queries.isEmpty()) {
+      /*
+       * since we only want to keep resolved query values, reset any queries on the resolved copy
+       */
+      resolved.queries(Collections.emptyMap());
+      StringBuilder query = new StringBuilder();
+      Iterator<QueryTemplate> queryTemplates = this.queries.values().iterator();
+
+      while (queryTemplates.hasNext()) {
+        QueryTemplate queryTemplate = queryTemplates.next();
+        String queryExpanded = queryTemplate.expand(variables);
+        if (Util.isNotBlank(queryExpanded)) {
+          query.append(queryTemplate.expand(variables));
+          if (queryTemplates.hasNext()) {
+            query.append("&");
+          }
         }
       }
-      putKV(queryLine.substring(start, i), map);
-    }
-    return map;
-  }
 
-  private static void putKV(String stringToParse, Map<String, Collection<String>> map) {
-    String key;
-    String value;
-    // note that '=' can be a valid part of the value
-    int firstEq = stringToParse.indexOf('=');
-    if (firstEq == -1) {
-      key = urlDecode(stringToParse);
-      value = null;
-    } else {
-      key = urlDecode(stringToParse.substring(0, firstEq));
-      value = urlDecode(stringToParse.substring(firstEq + 1));
+      String queryString = query.toString();
+      if (!queryString.isEmpty()) {
+        Matcher queryMatcher = QUERY_STRING_PATTERN.matcher(uri);
+        if (queryMatcher.find()) {
+          /* the uri already has a query, so any additional queries should be appended */
+          uri.append("&");
+        } else {
+          uri.append("?");
+        }
+        uri.append(queryString);
+      }
     }
-    Collection<String> values = map.containsKey(key) ? map.get(key) : new ArrayList<String>();
-    values.add(value);
-    map.put(key, values);
-  }
 
-  /** {@link #resolve(Map, Map)}, which assumes no parameter is encoded */
-  public RequestTemplate resolve(Map<String, ?> unencoded) {
-    return resolve(unencoded, Collections.<String, Boolean>emptyMap());
+    /* add the uri to result */
+    resolved.uri(uri.toString());
+
+    /* headers */
+    if (!this.headers.isEmpty()) {
+      /*
+       * same as the query string, we only want to keep resolved values, so clear the header map on
+       * the resolved instance
+       */
+      resolved.headers(Collections.emptyMap());
+      for (HeaderTemplate headerTemplate : this.headers.values()) {
+        /* resolve the header */
+        String header = headerTemplate.expand(variables);
+        if (!header.isEmpty()) {
+          /* split off the header values and add it to the resolved template */
+          String headerValues = header.substring(header.indexOf(" ") + 1);
+          if (!headerValues.isEmpty()) {
+            resolved.header(headerTemplate.getName(), headerValues);
+          }
+        }
+      }
+    }
+
+    if (this.bodyTemplate != null) {
+      resolved.body(this.bodyTemplate.expand(variables));
+    }
+
+    /* mark the new template resolved */
+    resolved.resolved = true;
+    return resolved;
   }
 
   /**
-   * Resolves any template parameters in the requests path, query, or headers against the supplied
-   * unencoded arguments. <br>
-   * <br>
-   * <br>
-   * <b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * This call is similar to {@code javax.ws.rs.client.WebTarget.resolveTemplates(templateValues,
-   * true)} , except that the template values apply to any part of the request, not just the URL
+   * Resolves all expressions, using the variables provided. Values not present in the {@code
+   * alreadyEncoded} map are pct-encoded.
+   *
+   * @param unencoded variable values to substitute.
+   * @param alreadyEncoded variable names.
+   * @return a resolved Request Template
+   * @deprecated use {@link RequestTemplate#resolve(Map)}. Values already encoded are recognized as
+   *     such and skipped.
    */
+  @SuppressWarnings("unused")
+  @Deprecated
   RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
-    replaceQueryValues(unencoded, alreadyEncoded);
-    Map<String, String> encoded = new LinkedHashMap<String, String>();
-    for (Entry<String, ?> entry : unencoded.entrySet()) {
-      final String key = entry.getKey();
-      final Object objectValue = entry.getValue();
-      String encodedValue = encodeValueIfNotEncoded(key, objectValue, alreadyEncoded);
-      encoded.put(key, encodedValue);
-    }
-    String resolvedUrl = expand(url.toString(), encoded).replace("+", "%20");
-    if (decodeSlash) {
-      resolvedUrl = resolvedUrl.replace("%2F", "/");
-    }
-    url = new StringBuilder(resolvedUrl);
-
-    Map<String, Collection<String>> resolvedHeaders =
-        new LinkedHashMap<String, Collection<String>>();
-    for (String field : headers.keySet()) {
-      Collection<String> resolvedValues = new ArrayList<String>();
-      for (String value : valuesOrEmpty(headers, field)) {
-        String resolved = expand(value, unencoded);
-        resolvedValues.add(resolved);
-      }
-      resolvedHeaders.put(field, resolvedValues);
-    }
-    headers.clear();
-    headers.putAll(resolvedHeaders);
-    if (bodyTemplate != null) {
-      body(urlDecode(expand(bodyTemplate, encoded)));
-    }
-    return this;
+    return this.resolve(unencoded);
   }
 
-  private String encodeValueIfNotEncoded(
-      String key, Object objectValue, Map<String, Boolean> alreadyEncoded) {
-    String value = String.valueOf(objectValue);
-    final Boolean isEncoded = alreadyEncoded.get(key);
-    if (isEncoded == null || !isEncoded) {
-      value = urlEncode(value);
-    }
-    return value;
-  }
-
-  /* roughly analogous to {@code javax.ws.rs.client.Target.request()}. */
+  /**
+   * Creates a {@link Request} from this template. The template must be resolved before calling this
+   * method, or an {@link IllegalStateException} will be thrown.
+   *
+   * @return a new Request instance.
+   * @throws IllegalStateException if this template has not been resolved.
+   */
   public Request request() {
-    Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
-    safeCopy.putAll(headers());
-    return Request.create(
-        method, url + queryLine(), Collections.unmodifiableMap(safeCopy), body, charset);
+    if (!this.resolved) {
+      throw new IllegalStateException("template has not been resolved.");
+    }
+    return Request.create(this.method, this.url(), this.headers(), this.body(), this.charset);
   }
 
-  /* @see Request#method() */
+  /**
+   * Set the Http Method.
+   *
+   * @param method to use.
+   * @return a RequestTemplate for chaining.
+   * @deprecated see {@link RequestTemplate#method(HttpMethod)}
+   */
+  @Deprecated
   public RequestTemplate method(String method) {
-    this.method = checkNotNull(method, "method");
-    checkArgument(method.matches("^[A-Z]+$"), "Invalid HTTP Method: %s", method);
+    checkNotNull(method, "method");
+    try {
+      this.method = HttpMethod.valueOf(method);
+    } catch (IllegalArgumentException iae) {
+      throw new IllegalArgumentException("Invalid HTTP Method: " + method);
+    }
     return this;
   }
 
-  /* @see Request#method() */
-  public String method() {
-    return method;
+  /**
+   * Set the Http Method.
+   *
+   * @param method to use.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate method(HttpMethod method) {
+    checkNotNull(method, "method");
+    this.method = method;
+    return this;
   }
 
+  /**
+   * The Request Http Method.
+   *
+   * @return Http Method.
+   */
+  public String method() {
+    return (method != null) ? method.name() : null;
+  }
+
+  /**
+   * Set whether do encode slash {@literal /} characters when resolving this template.
+   *
+   * @param decodeSlash if slash literals should not be encoded.
+   * @return a RequestTemplate for chaining.
+   */
   public RequestTemplate decodeSlash(boolean decodeSlash) {
     this.decodeSlash = decodeSlash;
+    this.uriTemplate =
+        UriTemplate.create(this.uriTemplate.toString(), !this.decodeSlash, this.charset);
     return this;
   }
 
+  /**
+   * If slash {@literal /} characters are not encoded when resolving.
+   *
+   * @return true if slash literals are not encoded, false otherwise.
+   */
   public boolean decodeSlash() {
     return decodeSlash;
   }
 
+  /**
+   * The Collection Format to use when resolving variables that represent {@link Iterable}s or
+   * {@link Collection}s
+   *
+   * @param collectionFormat to use.
+   * @return a RequestTemplate for chaining.
+   */
   public RequestTemplate collectionFormat(CollectionFormat collectionFormat) {
     this.collectionFormat = collectionFormat;
     return this;
   }
 
+  /**
+   * The Collection Format that will be used when resolving {@link Iterable} and {@link Collection}
+   * variables.
+   *
+   * @return the collection format set
+   */
+  @SuppressWarnings("unused")
   public CollectionFormat collectionFormat() {
     return collectionFormat;
   }
 
-  /* @see #url() */
+  /**
+   * Append the value to the template.
+   *
+   * <p>This method is poorly named and is used primarily to store the relative uri for the request.
+   * It has been replaced by {@link RequestTemplate#uri(String)} and will be removed in a future
+   * release.
+   *
+   * @param value to append.
+   * @return a RequestTemplate for chaining.
+   * @deprecated see {@link RequestTemplate#uri(String, boolean)}
+   */
+  @Deprecated
   public RequestTemplate append(CharSequence value) {
-    url.append(value);
-    url = pullAnyQueriesOutOfUrl(url);
-    return this;
-  }
-
-  /* @see #url() */
-  public RequestTemplate insert(int pos, CharSequence value) {
-    if (isHttpUrl(value)) {
-      value = removeTrailingSlash(value);
-      if (url.length() > 0 && url.charAt(0) != '/') {
-        url.insert(0, '/');
-      }
+    /* proxy to url */
+    if (this.uriTemplate != null) {
+      return this.uri(value.toString(), true);
     }
-    url.insert(pos, pullAnyQueriesOutOfUrl(new StringBuilder(value)));
+    return this.uri(value.toString());
+  }
+
+  /**
+   * Insert the value at the specified point in the template uri.
+   *
+   * <p>This method is poorly named has undocumented behavior. When the value contains a fully
+   * qualified http request url, the value is always inserted at the beginning of the uri.
+   *
+   * <p>Due to this, use of this method is not recommended and remains for backward compatibility.
+   * It has been replaced by {@link RequestTemplate#target(String)} and will be removed in a future
+   * release.
+   *
+   * @param pos in the uri to place the value.
+   * @param value to insert.
+   * @return a RequestTemplate for chaining.
+   * @deprecated see {@link RequestTemplate#target(String)}
+   */
+  @SuppressWarnings("unused")
+  @Deprecated
+  public RequestTemplate insert(int pos, CharSequence value) {
+    return target(value.toString());
+  }
+
+  /**
+   * Set the Uri for the request, replacing the existing uri if set.
+   *
+   * @param uri to use, must be a relative uri.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate uri(String uri) {
+    return this.uri(uri, false);
+  }
+
+  /**
+   * Set the uri for the request.
+   *
+   * @param uri to use, must be a relative uri.
+   * @param append if the uri should be appended, if the uri is already set.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate uri(String uri, boolean append) {
+    /* validate and ensure that the url is always a relative one */
+    if (UriUtils.isAbsolute(uri)) {
+      throw new IllegalArgumentException("url values must be not be absolute.");
+    }
+
+    if (uri == null) {
+      uri = "/";
+    } else if ((!uri.isEmpty() && !uri.startsWith("/") && !uri.startsWith("{"))) {
+      /* if the start of the url is a literal, it must begin with a slash. */
+      uri = "/" + uri;
+    }
+
+    /*
+     * templates may provide query parameters. since we want to manage those explicity, we will need
+     * to extract those out, leaving the uriTemplate with only the path to deal with.
+     */
+    Matcher queryMatcher = QUERY_STRING_PATTERN.matcher(uri);
+    if (queryMatcher.find()) {
+      String queryString = uri.substring(queryMatcher.start() + 1);
+
+      /* parse the query string */
+      this.extractQueryTemplates(queryString, append);
+
+      /* reduce the uri to the path */
+      uri = uri.substring(0, queryMatcher.start());
+    }
+
+    /* replace the uri template */
+    if (append && this.uriTemplate != null) {
+      this.uriTemplate = UriTemplate.append(this.uriTemplate, uri);
+    } else {
+      this.uriTemplate = UriTemplate.create(uri, !this.decodeSlash, this.charset);
+    }
     return this;
   }
 
+  /**
+   * Set the target host for this request.
+   *
+   * @param target host for this request. Must be an absolute target.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate target(String target) {
+    /* target can be empty */
+    if (Util.isBlank(target)) {
+      return this;
+    }
+
+    /* verify that the target contains the scheme, host and port */
+    if (!UriUtils.isAbsolute(target)) {
+      throw new IllegalArgumentException("target values must be absolute.");
+    }
+    if (target.endsWith("/")) {
+      target = target.substring(0, target.length() - 1);
+    }
+
+    /* no query strings allowed */
+    Matcher queryStringMatcher = QUERY_STRING_PATTERN.matcher(target);
+    if (queryStringMatcher.find()) {
+      /*
+       * target has a query string, we need to make sure that they are recorded as queries
+       */
+      int queryStart = queryStringMatcher.start();
+      this.extractQueryTemplates(target.substring(queryStart + 1), true);
+
+      /* strip the query string */
+      target = target.substring(0, queryStart);
+    }
+    this.target = target;
+    return this;
+  }
+
+  /**
+   * The URL for the request. If the template has not been resolved, the url will represent a uri
+   * template.
+   *
+   * @return the url
+   */
   public String url() {
+
+    /* build the fully qualified url with all query parameters */
+    StringBuilder url = new StringBuilder(this.path());
+    if (!this.queries.isEmpty()) {
+      url.append(this.queryLine());
+    }
+
     return url.toString();
   }
 
   /**
-   * Replaces queries with the specified {@code name} with the {@code values} supplied. <br>
-   * Values can be passed in decoded or in url-encoded form depending on the value of the {@code
-   * encoded} parameter. <br>
-   * When the {@code value} is {@code null}, all queries with the {@code configKey} are removed.
-   * <br>
-   * <br>
-   * <br>
-   * <b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * Like {@code WebTarget.query}, except the values can be templatized. <br>
-   * ex. <br>
+   * The Uri Path.
    *
-   * <pre>
-   * template.query(&quot;Signature&quot;, &quot;{signature}&quot;);
-   * </pre>
-   *
-   * <br>
-   * <b>Note:</b> behavior of RequestTemplate is not consistent if a query parameter with unsafe
-   * characters is passed as both encoded and unencoded, although no validation is performed. <br>
-   * ex. <br>
-   *
-   * <pre>
-   * template.query(true, &quot;param[]&quot;, &quot;value&quot;);
-   * template.query(false, &quot;param[]&quot;, &quot;value&quot;);
-   * </pre>
-   *
-   * @param encoded whether name and values are already url-encoded
-   * @param name the name of the query
-   * @param values can be a single null to imply removing all values. Else no values are expected to
-   *     be null.
-   * @see #queries()
+   * @return the uri path.
    */
-  public RequestTemplate query(boolean encoded, String name, String... values) {
-    return doQuery(encoded, name, values);
-  }
-
-  /* @see #query(boolean, String, String...) */
-  public RequestTemplate query(boolean encoded, String name, Iterable<String> values) {
-    return doQuery(encoded, name, values);
+  public String path() {
+    /* build the fully qualified url with all query parameters */
+    StringBuilder path = new StringBuilder();
+    if (this.target != null) {
+      path.append(this.target);
+    }
+    if (this.uriTemplate != null) {
+      path.append(this.uriTemplate.toString());
+    }
+    if (path.length() == 0) {
+      /* no path indicates the root uri */
+      path.append("/");
+    }
+    return path.toString();
   }
 
   /**
-   * Shortcut for {@code query(false, String, String...)}
+   * List all of the template variable expressions for this template.
    *
-   * @see #query(boolean, String, String...)
+   * @return a list of template variable names
+   */
+  public List<String> variables() {
+    /* combine the variables from the uri, query, header, and body templates */
+    List<String> variables = new ArrayList<>(this.uriTemplate.getVariables());
+
+    /* queries */
+    for (QueryTemplate queryTemplate : this.queries.values()) {
+      variables.addAll(queryTemplate.getVariables());
+    }
+
+    /* headers */
+    for (HeaderTemplate headerTemplate : this.headers.values()) {
+      variables.addAll(headerTemplate.getVariables());
+    }
+
+    /* body */
+    if (this.bodyTemplate != null) {
+      variables.addAll(this.bodyTemplate.getVariables());
+    }
+
+    return variables;
+  }
+
+  /**
+   * @see RequestTemplate#query(String, Iterable)
    */
   public RequestTemplate query(String name, String... values) {
-    return doQuery(false, name, values);
+    if (values == null) {
+      return query(name, Collections.emptyList());
+    }
+    return query(name, Arrays.asList(values));
   }
 
   /**
-   * Shortcut for {@code query(false, String, Iterable<String>)}
+   * Specify a Query String parameter, with the specified values. Values can be literals or template
+   * expressions.
    *
-   * @see #query(boolean, String, String...)
+   * @param name of the parameter.
+   * @param values for this parameter.
+   * @return a RequestTemplate for chaining.
    */
   public RequestTemplate query(String name, Iterable<String> values) {
-    return doQuery(false, name, values);
+    return appendQuery(name, values);
   }
 
-  private RequestTemplate doQuery(boolean encoded, String name, String... values) {
-    checkNotNull(name, "name");
-    String paramName = encoded ? name : encodeIfNotVariable(name);
-    queries.remove(paramName);
-    if (values != null && values.length > 0 && values[0] != null) {
-      ArrayList<String> paramValues = new ArrayList<String>();
-      for (String value : values) {
-        paramValues.add(encoded ? value : encodeIfNotVariable(value));
-      }
-      this.queries.put(paramName, paramValues);
+  /**
+   * Appends the query name and values.
+   *
+   * @param name of the parameter.
+   * @param values for the parameter, may be expressions.
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate appendQuery(String name, Iterable<String> values) {
+    if (!values.iterator().hasNext()) {
+      /* empty value, clear the existing values */
+      this.queries.remove(name);
+      return this;
     }
+
+    /* create a new query template out of the information here */
+    this.queries.compute(
+        name,
+        (key, queryTemplate) -> {
+          if (queryTemplate == null) {
+            return QueryTemplate.create(name, values, this.charset, this.collectionFormat);
+          } else {
+            return QueryTemplate.append(queryTemplate, values, this.collectionFormat);
+          }
+        });
+    // this.queries.put(name, QueryTemplate.create(name, values));
     return this;
   }
 
-  private RequestTemplate doQuery(boolean encoded, String name, Iterable<String> values) {
-    if (values != null) {
-      return doQuery(encoded, name, toArray(values, String.class));
-    }
-    return doQuery(encoded, name, (String[]) null);
-  }
-
-  private static String encodeIfNotVariable(String in) {
-    if (in == null || in.indexOf('{') == 0) {
-      return in;
-    }
-    return urlEncode(in);
-  }
-
   /**
-   * Replaces all existing queries with the newly supplied url decoded queries. <br>
-   * <br>
-   * <br>
-   * <b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * Like {@code WebTarget.queries}, except the values can be templatized. <br>
-   * ex. <br>
+   * Sets the Query Parameters.
    *
-   * <pre>
-   * template.queries(ImmutableMultimap.of(&quot;Signature&quot;, &quot;{signature}&quot;));
-   * </pre>
-   *
-   * @param queries if null, remove all queries. else value to replace all queries with.
-   * @see #queries()
+   * @param queries to use for this request.
+   * @return a RequestTemplate for chaining.
    */
+  @SuppressWarnings("unused")
   public RequestTemplate queries(Map<String, Collection<String>> queries) {
     if (queries == null || queries.isEmpty()) {
       this.queries.clear();
     } else {
-      for (Entry<String, Collection<String>> entry : queries.entrySet()) {
-        query(entry.getKey(), toArray(entry.getValue(), String.class));
-      }
+      queries.forEach(this::query);
     }
     return this;
   }
 
   /**
-   * Returns an immutable copy of the url decoded queries.
+   * Return an immutable Map of all Query Parameters and their values.
    *
-   * @see Request#url()
+   * @return registered Query Parameters.
    */
   public Map<String, Collection<String>> queries() {
-    Map<String, Collection<String>> decoded = new LinkedHashMap<String, Collection<String>>();
-    for (String field : queries.keySet()) {
-      Collection<String> decodedValues = new ArrayList<String>();
-      for (String value : valuesOrEmpty(queries, field)) {
-        if (value != null) {
-          decodedValues.add(urlDecode(value));
-        } else {
-          decodedValues.add(null);
-        }
-      }
-      decoded.put(urlDecode(field), decodedValues);
-    }
-    return Collections.unmodifiableMap(decoded);
+    Map<String, Collection<String>> queryMap = new LinkedHashMap<>();
+    this.queries.forEach(
+        (key, queryTemplate) -> {
+          List<String> values = new ArrayList<>(queryTemplate.getValues());
+
+          /* add the expanded collection, but lock it */
+          queryMap.put(key, Collections.unmodifiableList(values));
+        });
+
+    return Collections.unmodifiableMap(queryMap);
   }
 
   /**
-   * Replaces headers with the specified {@code configKey} with the {@code values} supplied. <br>
-   * When the {@code value} is {@code null}, all headers with the {@code configKey} are removed.
-   * <br>
-   * <br>
-   * <br>
-   * <b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * Like {@code WebTarget.queries} and {@code javax.ws.rs.client.Invocation.Builder.header}, except
-   * the values can be templatized. <br>
-   * ex. <br>
-   *
-   * <pre>
-   * template.query(&quot;X-Application-Version&quot;, &quot;{version}&quot;);
-   * </pre>
-   *
-   * @param name the name of the header
-   * @param values can be a single null to imply removing all values. Else no values are expected to
-   *     be null.
-   * @see #headers()
+   * @see RequestTemplate#header(String, Iterable)
    */
   public RequestTemplate header(String name, String... values) {
-    checkNotNull(name, "header name");
-    if (values == null || (values.length == 1 && values[0] == null)) {
-      headers.remove(name);
-    } else {
-      List<String> headers = new ArrayList<String>();
-      headers.addAll(Arrays.asList(values));
-      this.headers.put(name, headers);
-    }
-    return this;
-  }
-
-  /* @see #header(String, String...) */
-  public RequestTemplate header(String name, Iterable<String> values) {
-    if (values != null) {
-      return header(name, toArray(values, String.class));
-    }
-    return header(name, (String[]) null);
+    return header(name, Arrays.asList(values));
   }
 
   /**
-   * Replaces all existing headers with the newly supplied headers. <br>
-   * <br>
-   * <br>
-   * <b>relationship to JAXRS 2.0</b><br>
-   * <br>
-   * Like {@code Invocation.Builder.headers(MultivaluedMap)}, except the values can be templatized.
-   * <br>
-   * ex. <br>
+   * Specify a Header, with the specified values. Values can be literals or template expressions.
    *
-   * <pre>
-   * template.headers(mapOf(&quot;X-Application-Version&quot;, asList(&quot;{version}&quot;)));
-   * </pre>
+   * @param name of the header.
+   * @param values for this header.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate header(String name, Iterable<String> values) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+    if (values == null) {
+      values = Collections.emptyList();
+    }
+
+    return appendHeader(name, values);
+  }
+
+  /**
+   * Create a Header Template.
    *
-   * @param headers if null, remove all headers. else value to replace all headers with.
-   * @see #headers()
+   * @param name of the header
+   * @param values for the header, may be expressions.
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate appendHeader(String name, Iterable<String> values) {
+    this.headers.compute(
+        name,
+        (headerName, headerTemplate) -> {
+          if (headerTemplate == null) {
+            return HeaderTemplate.create(headerName, values);
+          } else {
+            return HeaderTemplate.append(headerTemplate, values);
+          }
+        });
+    return this;
+  }
+
+  /**
+   * Headers for this Request.
+   *
+   * @param headers to use.
+   * @return a RequestTemplate for chaining.
    */
   public RequestTemplate headers(Map<String, Collection<String>> headers) {
-    if (headers == null || headers.isEmpty()) {
-      this.headers.clear();
+    if (headers != null && !headers.isEmpty()) {
+      headers.forEach(this::header);
     } else {
-      this.headers.putAll(headers);
+      this.headers.clear();
     }
     return this;
   }
 
   /**
-   * Returns an immutable copy of the current headers.
+   * Returns an immutable copy of the Headers for this request.
    *
-   * @see Request#headers()
+   * @return the currently applied headers.
    */
   public Map<String, Collection<String>> headers() {
+    Map<String, Collection<String>> headerMap = new LinkedHashMap<>();
+    this.headers.forEach(
+        (key, headerTemplate) -> {
+          List<String> values = new ArrayList<>(headerTemplate.getValues());
 
-    return Collections.unmodifiableMap(
-        headers.entrySet().stream()
-            .filter(h -> h.getValue() != null && !h.getValue().isEmpty())
-            .collect(
-                toMap(
-                    Entry::getKey,
-                    Entry::getValue,
-                    (e1, e2) -> {
-                      throw new IllegalStateException("headers should not have duplicated keys");
-                    },
-                    LinkedHashMap::new)));
+          /* add the expanded collection, but only if it has values */
+          if (!values.isEmpty()) {
+            headerMap.put(key, Collections.unmodifiableList(values));
+          }
+        });
+    return Collections.unmodifiableMap(headerMap);
   }
 
   /**
-   * replaces the {@link feign.Util#CONTENT_LENGTH} header. <br>
-   * Usually populated by an {@link feign.codec.Encoder}.
+   * Sets the Body and Charset for this request.
    *
-   * @see Request#body()
+   * @param bodyData to send, can be null.
+   * @param charset of the encoded data.
+   * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(byte[] bodyData, Charset charset) {
+
+    /*
+     * since the body is being set directly, we need to clear out any existing body template
+     * information to prevent unintended side effects.
+     */
     this.bodyTemplate = null;
     this.charset = charset;
     this.body = bodyData;
+
+    /* calculate the content length based on the data provided */
     int bodyLength = bodyData != null ? bodyData.length : 0;
     header(CONTENT_LENGTH, String.valueOf(bodyLength));
+
     return this;
   }
 
   /**
-   * replaces the {@link feign.Util#CONTENT_LENGTH} header. <br>
-   * Usually populated by an {@link feign.codec.Encoder}.
+   * Set the Body for this request. Charset is assumed to be UTF_8. Data must be encoded.
    *
-   * @see Request#body()
+   * @param bodyText to send.
+   * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(String bodyText) {
     byte[] bodyData = bodyText != null ? bodyText.getBytes(UTF_8) : null;
@@ -575,83 +748,43 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable. When
-   * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
-   * as a String.
+   * Charset of the Request Body, if known.
+   *
+   * @return the currently applied Charset.
    */
   public Charset charset() {
     return charset;
   }
 
   /**
-   * @see Request#body()
+   * The Request Body.
+   *
+   * @return the request body.
    */
   public byte[] body() {
     return body;
   }
 
   /**
-   * populated by {@link Body}
+   * Specify the Body Template to use. Can contain literals and expressions.
    *
-   * @see Request#body()
+   * @param bodyTemplate to use.
+   * @return a RequestTemplate for chaining.
    */
   public RequestTemplate bodyTemplate(String bodyTemplate) {
-    this.bodyTemplate = bodyTemplate;
-    this.charset = null;
+    this.bodyTemplate = BodyTemplate.create(bodyTemplate);
+    this.charset = Util.UTF_8;
     this.body = null;
     return this;
   }
 
   /**
-   * @see Request#body()
-   * @see #expand(String, Map)
+   * Body Template to resolve.
+   *
+   * @return the unresolved body template.
    */
   public String bodyTemplate() {
-    return bodyTemplate;
-  }
-
-  /** if there are any query params in the URL, this will extract them out. */
-  private StringBuilder pullAnyQueriesOutOfUrl(StringBuilder url) {
-    // parse out queries
-    int queryIndex = url.indexOf("?");
-    if (queryIndex != -1) {
-      String queryLine = url.substring(queryIndex + 1);
-      Map<String, Collection<String>> firstQueries = parseAndDecodeQueries(queryLine);
-      if (!queries.isEmpty()) {
-        firstQueries.putAll(queries);
-        queries.clear();
-      }
-      // Since we decode all queries, we want to use the
-      // query()-method to re-add them to ensure that all
-      // logic (such as url-encoding) are executed, giving
-      // a valid queryLine()
-      for (String key : firstQueries.keySet()) {
-        Collection<String> values = firstQueries.get(key);
-        if (allValuesAreNull(values)) {
-          // Queries where all values are null will
-          // be ignored by the query(key, value)-method
-          // So we manually avoid this case here, to ensure that
-          // we still fulfill the contract (ex. parameters without values)
-          queries.put(urlEncode(key), values);
-        } else {
-          query(key, values);
-        }
-      }
-      return new StringBuilder(url.substring(0, queryIndex));
-    }
-    return url;
-  }
-
-  private boolean allValuesAreNull(Collection<String> values) {
-    if (values == null || values.isEmpty()) {
-      return true;
-    }
-    for (String val : values) {
-      if (val != null) {
-        return false;
-      }
-    }
-    return true;
+    return (bodyTemplate != null) ? bodyTemplate.toString() : null;
   }
 
   @Override
@@ -659,66 +792,101 @@ public final class RequestTemplate implements Serializable {
     return request().toString();
   }
 
-  /** {@link #replaceQueryValues(Map, Map)}, which assumes no parameter is encoded */
-  public void replaceQueryValues(Map<String, ?> unencoded) {
-    replaceQueryValues(unencoded, Collections.<String, Boolean>emptyMap());
+  /**
+   * Return if the variable exists on the uri, query, or headers, in this template.
+   *
+   * @param variable to look for.
+   * @return true if the variable exists, false otherwise.
+   */
+  public boolean hasRequestVariable(String variable) {
+    return this.getRequestVariables().contains(variable);
   }
 
   /**
-   * Replaces query values which are templated with corresponding values from the {@code unencoded}
-   * map. Any unresolved queries are removed.
+   * Retrieve all uri, header, and query template variables.
+   *
+   * @return a List of all the variable names.
    */
-  void replaceQueryValues(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
-    Iterator<Entry<String, Collection<String>>> iterator = queries.entrySet().iterator();
-    while (iterator.hasNext()) {
-      Entry<String, Collection<String>> entry = iterator.next();
-      if (entry.getValue() == null) {
-        continue;
-      }
-      Collection<String> values = new ArrayList<String>();
-      for (String value : entry.getValue()) {
-        if (value.indexOf('{') == 0 && value.indexOf('}') == value.length() - 1) {
-          Object variableValue = unencoded.get(value.substring(1, value.length() - 1));
-          // only add non-null expressions
-          if (variableValue == null) {
-            continue;
+  public Collection<String> getRequestVariables() {
+    final Collection<String> variables = new LinkedHashSet<>(this.uriTemplate.getVariables());
+    this.queries.values().forEach(queryTemplate -> variables.addAll(queryTemplate.getVariables()));
+    this.headers
+        .values()
+        .forEach(headerTemplate -> variables.addAll(headerTemplate.getVariables()));
+    return variables;
+  }
+
+  /**
+   * If this template has been resolved.
+   *
+   * @return true if the template has been resolved, false otherwise.
+   */
+  @SuppressWarnings("unused")
+  public boolean resolved() {
+    return this.resolved;
+  }
+
+  /**
+   * The Query String for the template. Expressions are not resolved.
+   *
+   * @return the Query String.
+   */
+  public String queryLine() {
+    StringBuilder queryString = new StringBuilder();
+
+    if (!this.queries.isEmpty()) {
+      Iterator<QueryTemplate> iterator = this.queries.values().iterator();
+      while (iterator.hasNext()) {
+        QueryTemplate queryTemplate = iterator.next();
+        String query = queryTemplate.toString();
+        if (query != null && !query.isEmpty()) {
+          queryString.append(query);
+          if (iterator.hasNext()) {
+            queryString.append("&");
           }
-          if (variableValue instanceof Iterable) {
-            for (Object val : Iterable.class.cast(variableValue)) {
-              String encodedValue = encodeValueIfNotEncoded(entry.getKey(), val, alreadyEncoded);
-              values.add(encodedValue);
-            }
-          } else {
-            String encodedValue =
-                encodeValueIfNotEncoded(entry.getKey(), variableValue, alreadyEncoded);
-            values.add(encodedValue);
-          }
-        } else {
-          values.add(value);
         }
       }
-      if (values.isEmpty()) {
-        iterator.remove();
-      } else {
-        entry.setValue(values);
-      }
     }
+    /* remove any trailing ampersands */
+    String result = queryString.toString();
+    if (result.endsWith("&")) {
+      result = result.substring(0, result.length() - 1);
+    }
+
+    if (!result.isEmpty()) {
+      result = "?" + result;
+    }
+
+    return result;
   }
 
-  public String queryLine() {
-    if (queries.isEmpty()) {
-      return "";
+  private void extractQueryTemplates(String queryString, boolean append) {
+    /* split the query string up into name value pairs */
+    Map<String, List<String>> queryParameters =
+        Arrays.stream(queryString.split("&"))
+            .map(this::splitQueryParameter)
+            .collect(
+                Collectors.groupingBy(
+                    SimpleImmutableEntry::getKey,
+                    LinkedHashMap::new,
+                    Collectors.mapping(Entry::getValue, Collectors.toList())));
+
+    /* add them to this template */
+    if (!append) {
+      /* clear the queries and use the new ones */
+      this.queries.clear();
     }
-    StringBuilder queryBuilder = new StringBuilder("?");
-    for (String field : queries.keySet()) {
-      Collection<String> values = valuesOrEmpty(queries, field);
-      CharSequence fieldAndValues = collectionFormat.join(field, values);
-      queryBuilder.append(queryBuilder.length() == 1 || fieldAndValues.length() == 0 ? "" : "&");
-      queryBuilder.append(fieldAndValues);
-    }
-    return queryBuilder.toString();
+    queryParameters.forEach(this::query);
   }
 
+  private SimpleImmutableEntry<String, String> splitQueryParameter(String pair) {
+    int eq = pair.indexOf("=");
+    final String name = (eq > 0) ? pair.substring(0, eq) : pair;
+    final String value = (eq > 0 && eq < pair.length()) ? pair.substring(eq + 1) : null;
+    return new SimpleImmutableEntry<>(name, value);
+  }
+
+  /** Factory for creating RequestTemplate. */
   interface Factory {
 
     /** create a request template using args passed to a method invocation. */

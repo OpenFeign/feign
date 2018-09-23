@@ -45,6 +45,12 @@ public final class RequestTemplateAssert
     return this;
   }
 
+  public RequestTemplateAssert hasPath(String expected) {
+    isNotNull();
+    objects.assertEqual(info, actual.path(), expected);
+    return this;
+  }
+
   public RequestTemplateAssert hasBody(String utf8Expected) {
     isNotNull();
     if (actual.bodyTemplate() != null) {
