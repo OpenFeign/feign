@@ -13,6 +13,8 @@
  */
 package feign.jaxrs;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,37 +77,37 @@ public class JAXRSContractTest {
   public void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test
   public void queryParamsInPathExtract() throws Exception {
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries();
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")),
             entry("limit", asList("1")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "empty").template())
-        .hasUrl("/")
+        .hasPath("/")
         .hasQueries(
-            entry("flag", asList(new String[] {null})),
+            entry("flag", new ArrayList<>()),
             entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
   }
@@ -114,10 +116,11 @@ public class JAXRSContractTest {
   public void producesAddsAcceptHeader() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
 
+    /* multiple @Produces annotations should be additive */
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml")));
+            entry("Accept", asList("application/xml", "text/html")));
   }
 
   @Test
@@ -126,8 +129,8 @@ public class JAXRSContractTest {
 
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml", "text/plain")));
+            entry("Content-Type", Collections.singletonList("application/json")),
+            entry("Accept", asList("application/xml", "text/html", "text/plain")));
   }
 
   @Test
@@ -150,9 +153,11 @@ public class JAXRSContractTest {
   public void consumesAddsContentTypeHeader() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
 
+    /* multiple @Consumes annotations are additive */
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("text/html")),
-            entry("Content-Type", asList("application/xml")));
+        .hasHeaders(
+            entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Accept", asList("text/html")));
   }
 
   @Test
@@ -160,8 +165,8 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
 
     assertThat(md.template())
-        .hasHeaders(entry("Accept", asList("text/html")),
-            entry("Content-Type", asList("application/xml", "application/json")));
+        .hasHeaders(entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Accept", Collections.singletonList("text/html")));
   }
 
   @Test
@@ -210,7 +215,7 @@ public class JAXRSContractTest {
   @Test
   public void emptyPathOnType() throws Exception {
     assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template())
-        .hasUrl("");
+        .hasUrl("/");
   }
 
   @Test

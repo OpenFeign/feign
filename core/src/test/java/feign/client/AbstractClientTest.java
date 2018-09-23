@@ -13,13 +13,10 @@
  */
 package feign.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.Assert.assertEquals;
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
@@ -31,13 +28,17 @@ import feign.RequestLine;
 import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static feign.Util.UTF_8;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * {@link AbstractClientTest} can be extended to run a set of tests against any {@link Client}
@@ -70,7 +71,8 @@ public abstract class AbstractClientTest {
     assertEquals("foo", api.patch(""));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders("Accept: text/plain", "Content-Length: 0") // Note: OkHttp adds content length.
+        .hasHeaders(entry("Accept", Collections.singletonList("text/plain")),
+            entry("Content-Length", Collections.singletonList("0")))
         .hasNoHeaderNamed("Content-Type")
         .hasMethod("PATCH");
   }
@@ -87,15 +89,17 @@ public abstract class AbstractClientTest {
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
     assertThat(response.headers())
-        .containsEntry("Content-Length", asList("3"))
-        .containsEntry("Foo", asList("Bar"));
+        .containsEntry("Content-Length", Collections.singletonList("3"))
+        .containsEntry("Foo", Collections.singletonList("Bar"));
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
-    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-        .hasPath("/?foo=bar&foo=baz&qux=")
-        .hasHeaders("Foo: Bar", "Foo: Baz", "Accept: */*", "Content-Length: 3")
-        .hasBody("foo");
+    RecordedRequest recordedRequest = server.takeRequest();
+    assertThat(recordedRequest.getMethod()).isEqualToIgnoringCase("POST");
+    assertThat(recordedRequest.getHeader("Foo")).isEqualToIgnoringCase("Bar, Baz");
+    assertThat(recordedRequest.getHeader("Accept")).isEqualToIgnoringCase("*/*");
+    assertThat(recordedRequest.getHeader("Content-Length")).isEqualToIgnoringCase("3");
+    assertThat(recordedRequest.getBody().readUtf8()).isEqualToIgnoringCase("foo");
   }
 
   @Test
@@ -112,7 +116,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesErrorResponse() throws IOException, InterruptedException {
+  public void parsesErrorResponse() {
     thrown.expect(FeignException.class);
     thrown.expectMessage("status 500 reading TestInterface#get()");
 
@@ -141,7 +145,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void safeRebuffering() throws IOException, InterruptedException {
+  public void safeRebuffering() {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = newBuilder()
@@ -157,7 +161,7 @@ public abstract class AbstractClientTest {
 
   /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
   @Test
-  public void safeRebuffering_noContent() throws IOException, InterruptedException {
+  public void safeRebuffering_noContent() {
     server.enqueue(new MockResponse().setResponseCode(204));
 
     TestInterface api = newBuilder()
@@ -192,7 +196,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesResponseMissingLength() throws IOException, InterruptedException {
+  public void parsesResponseMissingLength() throws IOException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
     TestInterface api = newBuilder()
@@ -203,17 +207,16 @@ public abstract class AbstractClientTest {
     assertThat(response.reason()).isEqualTo("OK");
     assertThat(response.body().length()).isNull();
     assertThat(response.body().asInputStream())
-        .hasContentEqualTo(new ByteArrayInputStream("foo".getBytes(UTF_8)));
+        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
   }
 
   @Test
-  public void postWithSpacesInPath() throws IOException, InterruptedException {
+  public void postWithSpacesInPath() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    Response response = api.post("current documents", "foo");
+    api.post("current documents", "foo");
 
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
         .hasPath("/path/current%20documents/resource")
@@ -221,7 +224,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testVeryLongResponseNullLength() throws Exception {
+  public void testVeryLongResponseNullLength() {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA")
         .addHeader("Content-Length", Long.MAX_VALUE));
@@ -234,7 +237,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testResponseLength() throws Exception {
+  public void testResponseLength() {
     server.enqueue(new MockResponse()
         .setBody("test"));
     TestInterface api = newBuilder()
@@ -290,7 +293,7 @@ public abstract class AbstractClientTest {
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Response response = api.get(Arrays.asList(new String[] {"bar", "baz"}));
+    Response response = api.get(Arrays.asList("bar", "baz"));
 
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
@@ -328,7 +331,7 @@ public abstract class AbstractClientTest {
     assertThat(response.reason()).isEqualTo("OK");
 
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET")
-        .hasPath("/").hasHeaders(entry("authorization", asList("token")));
+        .hasPath("/").hasHeaders(entry("authorization", Collections.singletonList("token")));
   }
 
   @Test
@@ -338,7 +341,7 @@ public abstract class AbstractClientTest {
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Response response = api.getCSV(Arrays.asList(new String[] {"bar", "baz"}));
+    Response response = api.getCSV(Arrays.asList("bar", "baz"));
 
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
@@ -348,6 +351,7 @@ public abstract class AbstractClientTest {
         .hasOneOfPath("/?foo=bar,baz", "/?foo=bar%2Cbaz");
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   public interface TestInterface {
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")

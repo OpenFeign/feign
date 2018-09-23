@@ -87,8 +87,8 @@ public final class ApacheHttpClient implements Client {
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
-      throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
-    RequestBuilder requestBuilder = RequestBuilder.create(request.method());
+      throws URISyntaxException {
+    RequestBuilder requestBuilder = RequestBuilder.create(request.httpMethod().name());
 
     // per request timeouts
     RequestConfig requestConfig =
@@ -196,7 +196,7 @@ public final class ApacheHttpClient implements Client {
         .build();
   }
 
-  Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
+  Response.Body toFeignBody(HttpResponse httpResponse) {
     final HttpEntity entity = httpResponse.getEntity();
     if (entity == null) {
       return null;

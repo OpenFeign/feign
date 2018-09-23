@@ -11,39 +11,39 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.mock;
+package feign.template;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Target;
+/**
+ * URI Template Literal.
+ */
+class Literal implements TemplateChunk {
 
-public class MockTarget<E> implements Target<E> {
+  private final String value;
 
-  private final Class<E> type;
+  /**
+   * Create a new Literal.
+   *
+   * @param value of the literal.
+   * @return the new Literal.
+   */
+  public static Literal create(String value) {
+    return new Literal(value);
+  }
 
-  public MockTarget(Class<E> type) {
-    this.type = type;
+  /**
+   * Create a new Literal.
+   *
+   * @param value of the literal.
+   */
+  Literal(String value) {
+    if (value == null || value.isEmpty()) {
+      throw new IllegalArgumentException("a value is required.");
+    }
+    this.value = value;
   }
 
   @Override
-  public Class<E> type() {
-    return type;
+  public String getValue() {
+    return this.value;
   }
-
-  @Override
-  public String name() {
-    return type.getSimpleName();
-  }
-
-  @Override
-  public String url() {
-    return "";
-  }
-
-  @Override
-  public Request apply(RequestTemplate input) {
-    input.target(url());
-    return input.request();
-  }
-
 }

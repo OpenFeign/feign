@@ -16,6 +16,7 @@ package feign;
 import java.util.HashMap;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import java.io.IOException;
@@ -229,7 +230,7 @@ public class FeignBuilderTest {
     assertEquals(Util.toString(response.body().asReader()), "response data");
 
     assertThat(server.takeRequest())
-        .hasHeaders("Content-Type: text/plain")
+        .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
         .hasBody("request data");
   }
 

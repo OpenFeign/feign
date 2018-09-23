@@ -13,6 +13,7 @@
  */
 package feign.ribbon;
 
+import feign.Request.HttpMethod;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -39,7 +40,7 @@ public class LBClientTest {
     // test for RibbonRequest.toRequest()
     // the url has a query whose value is an encoded json string
     String urlWithEncodedJson = "http://test.feign.com/p?q=%7b%22a%22%3a1%7d";
-    String method = "GET";
+    HttpMethod method = HttpMethod.GET;
     URI uri = new URI(urlWithEncodedJson);
     Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
     // create a Request for recreating another Request by toRequest()
