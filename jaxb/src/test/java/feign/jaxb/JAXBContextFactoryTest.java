@@ -14,8 +14,14 @@
 package feign.jaxb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import javax.xml.bind.Marshaller;
 import org.junit.Test;
 
@@ -72,5 +78,20 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertTrue((Boolean) marshaller.getProperty(Marshaller.JAXB_FRAGMENT));
+  }
+
+  @Test
+  public void testPreloadCache() throws Exception {
+
+    List<Class<?>> classes = Arrays.asList(String.class, Integer.class);
+    JAXBContextFactory factory = new JAXBContextFactory.Builder().build(classes);
+
+    Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
+    f.setAccessible(true);
+    Map internalCache = (Map) f.get(factory); // IllegalAccessException
+    assertFalse(internalCache.isEmpty());
+    assertTrue(internalCache.size() == classes.size());
+    assertNotNull(internalCache.get(String.class));
+    assertNotNull(internalCache.get(Integer.class));
   }
 }
