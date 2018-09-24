@@ -28,12 +28,16 @@
     <module>httpclient</module>
     <module>hystrix</module>
     <module>jackson</module>
+    <module>jackson-jaxb</module>
+    <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
     <module>okhttp</module>
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>example-github</module>
+    <module>example-wikipedia</module>
     <!-- remove after feign 10.0 release -->
     <module>java8</module>
     <module>mock</module>
