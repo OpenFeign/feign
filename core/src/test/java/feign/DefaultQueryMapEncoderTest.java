@@ -31,103 +31,49 @@ public class DefaultQueryMapEncoderTest {
   private final QueryMapEncoder encoder = new QueryMapEncoder.Default();
 
   @Test
-  public void testDefaultEncoder_normalClassWithValues() {
+  public void testEncodesObject_visibleFields() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
-    expected.put("fooAppendBar", "foozbarz");
-    NormalObject normalObject = new NormalObject("fooz","barz");
+    expected.put("baz", "bazz");
+    VisibleFieldsObject object = new VisibleFieldsObject();
+    object.foo = "fooz";
+    object.bar = "barz";
+    object.baz = "bazz";
 
-    Map<String, Object> encodedMap = encoder.encode(normalObject);
-
+    Map<String, Object> encodedMap = encoder.encode(object);
     assertEquals("Unexpected encoded query map", expected, encodedMap);
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithOutValues() {
-    NormalObject normalObject = new NormalObject(null, null);
-
-    Map<String, Object> encodedMap = encoder.encode(normalObject);
-
-    assertTrue("Non-empty map generated from null getter: " + encodedMap, encodedMap.isEmpty());
+  public void testEncodesObject_visibleFields_emptyObject() {
+    VisibleFieldsObject object = new VisibleFieldsObject();
+    Map<String, Object> encodedMap = encoder.encode(object);
+    assertTrue("Non-empty map generated from null fields: " + encodedMap, encodedMap.isEmpty());
   }
 
   @Test
-  public void testDefaultEncoder_haveSuperClass() {
+  public void testEncodesObject_nonVisibleFields() {
     Map<String, Object> expected = new HashMap<>();
-    expected.put("page", 1);
-    expected.put("size", 10);
-    expected.put("query", "queryString");
-    SubClass subClass = new SubClass();
-    subClass.setPage(1);
-    subClass.setSize(10);
-    subClass.setQuery("queryString");
+    expected.put("foo", "fooz");
+    expected.put("bar", "barz");
+    QueryMapEncoderObject object = new QueryMapEncoderObject("fooz", "barz");
 
-    Map<String, Object> encodedMap = encoder.encode(subClass);
-
+    Map<String, Object> encodedMap = encoder.encode(object);
     assertEquals("Unexpected encoded query map", expected, encodedMap);
   }
 
-
-  static class NormalObject {
-
-    private NormalObject(String foo, String bar) {
-      this.foo = foo;
-      this.bar = bar;
-    }
-
-    private String foo;
-    private String bar;
-
-    public String getFoo() {
-      return foo;
-    }
-
-    public String getBar() {
-      return bar;
-    }
-
-    public String getFooAppendBar() {
-      if (foo != null && bar != null) {
-        return foo + bar;
-      }
-      return null;
-    }
+  @Test
+  public void testEncodesObject_nonVisibleFields_emptyObject() {
+    QueryMapEncoderObject object = new QueryMapEncoderObject(null, null);
+    Map<String, Object> encodedMap = encoder.encode(object);
+    assertTrue("Non-empty map generated from null fields", encodedMap.isEmpty());
   }
 
-  static class SuperClass {
-    private int page;
-    private int size;
-
-    public int getPage() {
-      return page;
-    }
-
-    public void setPage(int page) {
-      this.page = page;
-    }
-
-    public int getSize() {
-      return size;
-    }
-
-    public void setSize(int size) {
-      this.size = size;
-    }
+  static class VisibleFieldsObject {
+    String foo;
+    String bar;
+    String baz;
   }
-
-  static class SubClass extends SuperClass {
-
-    private String query;
-
-    public String getQuery() {
-      return query;
-    }
-
-    public void setQuery(String query) {
-      this.query = query;
-    }
-  }
-
 }
 

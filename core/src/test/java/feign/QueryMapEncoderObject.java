@@ -13,13 +13,12 @@
  */
 package feign;
 
-public class CustomPojo {
+class QueryMapEncoderObject {
+  private final String foo;
+  private final String bar;
 
-  private final String name;
-  private final Integer number;
-
-  CustomPojo(String name, Integer number) {
-    this.name = name;
-    this.number = number;
+  QueryMapEncoderObject(String foo, String bar) {
+    this.foo = foo;
+    this.bar = bar;
   }
 }

@@ -13,13 +13,38 @@
  */
 package feign;
 
-public class CustomPojo {
+public class PropertyPojo {
 
-  private final String name;
-  private final Integer number;
+  private String name;
 
-  CustomPojo(String name, Integer number) {
-    this.name = name;
-    this.number = number;
+  public static class ChildPojoClass extends PropertyPojo {
+    private Integer number;
+
+    private String address;
+
+    public Integer getNumber() {
+      return number;
+    }
+
+    public void setNumber(Integer number) {
+      this.number = number;
+    }
+
+    public void setAddress(String address) {
+      this.address = address;
+    }
+
+    private String getAddress() {
+      return address;
+    }
   }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
 }
