@@ -18,7 +18,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
+
 
 /**
  * Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe.
@@ -67,10 +71,51 @@ public interface Client {
       HttpURLConnection connection = convertAndSend(request, options);
       return convertResponse(connection, request);
     }
-
+    
     HttpURLConnection convertAndSend(Request request, Options options) throws IOException {
-      final HttpURLConnection connection =
-          (HttpURLConnection) new URL(request.url()).openConnection();
+      return convertAndSend(request, options, null, false);
+    }
+
+    Response convertResponse(HttpURLConnection connection, Request request) throws IOException {
+      int status = connection.getResponseCode();
+      String reason = connection.getResponseMessage();
+
+      if (status < 0) {
+        throw new IOException(format("Invalid status(%s) executing %s %s", status,
+            connection.getRequestMethod(), connection.getURL()));
+      }
+
+      Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+      for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
+        // response message
+        if (field.getKey() != null) {
+          headers.put(field.getKey(), field.getValue());
+        }
+      }
+
+      Integer length = connection.getContentLength();
+      if (length == -1) {
+        length = null;
+      }
+      InputStream stream;
+      if (status >= 400) {
+        stream = connection.getErrorStream();
+      } else {
+        stream = connection.getInputStream();
+      }
+      return Response.builder()
+          .status(status)
+          .reason(reason)
+          .headers(headers)
+          .request(request)
+          .body(stream, length)
+          .build();
+    }
+    
+    protected HttpURLConnection convertAndSend(Request request, Options options, Proxy proxy, boolean needAuthentication) throws IOException {
+      final boolean useProxy = proxy != null;
+      final URL url = new URL(request.url()); 
+      final HttpURLConnection connection =  (HttpURLConnection) (useProxy ? url.openConnection(proxy) : url.openConnection());
       if (connection instanceof HttpsURLConnection) {
         HttpsURLConnection sslCon = (HttpsURLConnection) connection;
         if (sslContextFactory != null) {
@@ -85,6 +130,10 @@ public interface Client {
       connection.setAllowUserInteraction(false);
       connection.setInstanceFollowRedirects(options.isFollowRedirects());
       connection.setRequestMethod(request.httpMethod().name());
+      
+      if(useProxy && needAuthentication) {
+        connection.addRequestProperty("Proxy-Authorization", credentials());
+      }
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
       boolean gzipEncodedRequest =
@@ -138,41 +187,48 @@ public interface Client {
       }
       return connection;
     }
+    
+    protected String credentials() {
+      throw new IllegalStateException("Default Feign client has no proxy!");
+    }
+  }
+  
+  public static class Proxied extends Default {
 
-    Response convertResponse(HttpURLConnection connection, Request request) throws IOException {
-      int status = connection.getResponseCode();
-      String reason = connection.getResponseMessage();
+    private final Proxy proxy;
+    private final String credentials;
+    private final boolean needAuthentication;
+    
+    public Proxied(SSLSocketFactory sslContextFactory, HostnameVerifier hostnameVerifier, Proxy proxy) {
+      super(sslContextFactory, hostnameVerifier);
+      this.proxy = proxy;
+      this.credentials = null;
+      this.needAuthentication = false;
+    }
+   
+    public Proxied(SSLSocketFactory sslContextFactory, HostnameVerifier hostnameVerifier, Proxy proxy, String proxyUser, String proxyPassword) {
+      super(sslContextFactory, hostnameVerifier);
+      this.proxy = proxy;
+      this.needAuthentication = true;
+      this.credentials = basic(proxyUser, proxyPassword);
+    }
 
-      if (status < 0) {
-        throw new IOException(format("Invalid status(%s) executing %s %s", status,
-            connection.getRequestMethod(), connection.getURL()));
-      }
+    @Override
+    protected HttpURLConnection convertAndSend(Request request, Options options)
+        throws IOException {
+      return convertAndSend(request, options, proxy, needAuthentication);
+    }
 
-      Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
-      for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
-        // response message
-        if (field.getKey() != null) {
-          headers.put(field.getKey(), field.getValue());
-        }
-      }
+    @Override
+    protected String credentials() {
+      return credentials;
+    }
 
-      Integer length = connection.getContentLength();
-      if (length == -1) {
-        length = null;
-      }
-      InputStream stream;
-      if (status >= 400) {
-        stream = connection.getErrorStream();
-      } else {
-        stream = connection.getInputStream();
-      }
-      return Response.builder()
-          .status(status)
-          .reason(reason)
-          .headers(headers)
-          .request(request)
-          .body(stream, length)
-          .build();
+    private String basic(String username, String password) {
+      String token = username + ":" + password;
+      byte[] bytes = token.getBytes(Charset.forName("ISO-8859-1"));
+      String encoded = Base64.getEncoder().encodeToString(bytes);
+      return "Basic " + encoded;
     }
   }
 }
