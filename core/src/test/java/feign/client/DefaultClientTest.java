@@ -32,7 +32,7 @@ import okhttp3.mockwebserver.SocketPolicy;
  */
 public class DefaultClientTest extends AbstractClientTest {
 
-  Client disableHostnameVerification =
+  protected Client disableHostnameVerification =
       new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
         @Override
         public boolean verify(String s, SSLSession sslSession) {
