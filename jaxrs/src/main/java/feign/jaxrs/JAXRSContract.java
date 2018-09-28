@@ -20,7 +20,10 @@ import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 import static feign.Util.removeValues;
@@ -116,7 +119,7 @@ public class JAXRSContract extends Contract.BaseContract {
         removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
     checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", name);
     data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, serverConsumes);
+    data.template().header(CONTENT_TYPE, serverConsumes[0]);
   }
 
   /**

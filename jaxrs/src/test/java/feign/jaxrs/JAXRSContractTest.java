@@ -120,7 +120,7 @@ public class JAXRSContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml", "text/html")));
+            entry("Accept", asList("application/xml")));
   }
 
   @Test
@@ -130,7 +130,7 @@ public class JAXRSContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", Collections.singletonList("application/json")),
-            entry("Accept", asList("application/xml", "text/html", "text/plain")));
+            entry("Accept", asList("application/xml", "text/plain")));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class JAXRSContractTest {
     /* multiple @Consumes annotations are additive */
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Content-Type", asList("application/xml")),
             entry("Accept", asList("text/html")));
   }
 
@@ -165,7 +165,7 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
 
     assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/xml", "application/json")),
+        .hasHeaders(entry("Content-Type", asList("application/xml")),
             entry("Accept", Collections.singletonList("text/html")));
   }
 
