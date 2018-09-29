@@ -23,7 +23,7 @@ Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathPar
 #### `@Produces`
 Adds all values into the `Accept` header.
 #### `@Consumes`
-Adds all values into the `Content-Type` header.
+Adds the first value as the `Content-Type` header.
 ### Parameter Annotations
 #### `@PathParam`
 Links the value of the corresponding parameter to a template variable declared in the path.
