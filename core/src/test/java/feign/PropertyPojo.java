@@ -13,28 +13,38 @@
  */
 package feign;
 
-import feign.qeuryMap.FieldQueryMapEncoder;
-import feign.qeuryMap.PropertyQueryMapEncoder;
+public class PropertyPojo {
 
-import java.util.Map;
+  private String name;
 
-/**
- * A QueryMapEncoder encodes Objects into maps of query parameter names to values.
- */
-public interface QueryMapEncoder {
+  public static class ChildPojoClass extends PropertyPojo {
+    private Integer number;
 
-  /**
-   * Encodes the given object into a query map.
-   *
-   * @param object the object to encode
-   * @return the map represented by the object
-   */
-  Map<String, Object> encode(Object object);
+    private String address;
 
-  /**
-   * @deprecated use {@link PropertyQueryMapEncoder} instead.
-   */
-  @Deprecated
-  class Default extends FieldQueryMapEncoder {
+    public Integer getNumber() {
+      return number;
+    }
+
+    public void setNumber(Integer number) {
+      this.number = number;
+    }
+
+    public void setAddress(String address) {
+      this.address = address;
+    }
+
+    private String getAddress() {
+      return address;
+    }
   }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
 }
