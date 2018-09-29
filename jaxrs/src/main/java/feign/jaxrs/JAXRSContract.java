@@ -24,6 +24,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import javax.ws.rs.*;
 
 /**
@@ -111,7 +112,7 @@ public class JAXRSContract extends Contract.BaseContract {
     String[] serverProduces =
         removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
     checkState(serverProduces.length > 0, "Produces.value() was empty on %s", name);
-    data.template().header(ACCEPT, (String) null); // remove any previous produces
+    data.template().header(ACCEPT, Collections.emptyList()); // remove any previous produces
     data.template().header(ACCEPT, serverProduces);
   }
 
@@ -119,8 +120,8 @@ public class JAXRSContract extends Contract.BaseContract {
     String[] serverConsumes =
         removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
     checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", name);
-    data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, serverConsumes);
+    data.template().header(CONTENT_TYPE, Collections.emptyList()); // remove any previous consumes
+    data.template().header(CONTENT_TYPE, serverConsumes[0]);
   }
 
   /**

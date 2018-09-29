@@ -86,7 +86,7 @@ public final class RequestTemplateAssert
 
   public RequestTemplateAssert hasHeaders(MapEntry... entries) {
     isNotNull();
-    maps.assertContainsExactly(info, actual.headers(), entries);
+    maps.assertContainsOnly(info, actual.headers(), entries);
     return this;
   }
 

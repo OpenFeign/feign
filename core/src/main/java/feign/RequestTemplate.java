@@ -666,6 +666,11 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   private RequestTemplate appendHeader(String name, Iterable<String> values) {
+    if (!values.iterator().hasNext()) {
+      /* empty value, clear the existing values */
+      this.headers.remove(name);
+      return this;
+    }
     this.headers.compute(
         name,
         (headerName, headerTemplate) -> {
