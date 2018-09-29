@@ -634,8 +634,7 @@ public final class RequestTemplate implements Serializable {
    * @see RequestTemplate#header(String, Iterable)
    */
   public RequestTemplate header(String name, String... values) {
-    boolean clearValues = values == null || (values.length == 1 && values[0] == null);
-    return header(name, clearValues ? null : Arrays.asList(values));
+    return header(name, Arrays.asList(values));
   }
 
   /**
@@ -650,8 +649,7 @@ public final class RequestTemplate implements Serializable {
       throw new IllegalArgumentException("name is required.");
     }
     if (values == null) {
-      headers.remove(name);
-      return this;
+      values = Collections.emptyList();
     }
 
     return appendHeader(name, values);
@@ -665,6 +663,11 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   private RequestTemplate appendHeader(String name, Iterable<String> values) {
+    if (!values.iterator().hasNext()) {
+      /* empty value, clear the existing values */
+      this.headers.remove(name);
+      return this;
+    }
     this.headers.compute(name, (headerName, headerTemplate) -> {
       if (headerTemplate == null) {
         return HeaderTemplate.create(headerName, values);
