@@ -103,12 +103,12 @@ In the example above, the `sendPhoto` method uses the `photo` parameter using th
 
 * `File` will use the File's extension to detect the `Content-Type`.
 * `byte[]` will use `application/octet-stream` as `Content-Type`.
-* `FormData` will use the `FormData`'s `Content-Type`.
+* `FormData` will use the `FormData`'s `Content-Type` and `fileName`.
 
-`FormData` is custom object that wraps a `byte[]` and defines a `Content-Type` like this:
+`FormData` is custom object that wraps a `byte[]` and defines a `Content-Type` and `fileName` like this:
 
 ```java
-    FormData formData = new FormData("image/png", myDataAsByteArray);
+    FormData formData = new FormData("image/png", "filename.png", myDataAsByteArray);
     someApi.sendPhoto(true, formData);
 ```
 
