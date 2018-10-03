@@ -71,7 +71,8 @@ public class BasicClientTest {
 
   @Test
   public void testUpload() throws Exception {
-    val path = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = api.upload(path.toFile());
@@ -80,7 +81,8 @@ public class BasicClientTest {
 
   @Test
   public void testUploadWithParam() throws Exception {
-    val path = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = api.upload(10, Boolean.TRUE, path.toFile());
@@ -106,9 +108,12 @@ public class BasicClientTest {
 
   @Test
   public void testMultipleFilesArray() throws Exception {
-    val path1 = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path1 =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(this.getClass().getClassLoader().getResource("another_file.txt").toURI());
+    val path2 =
+        Paths.get(
+            Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     Assert.assertTrue(Files.exists(path2));
 
     val stringResponse = api.uploadWithArray(new File[] {path1.toFile(), path2.toFile()});
@@ -117,9 +122,12 @@ public class BasicClientTest {
 
   @Test
   public void testMultipleFilesList() throws Exception {
-    val path1 = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path1 =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(this.getClass().getClassLoader().getResource("another_file.txt").toURI());
+    val path2 =
+        Paths.get(
+            Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     Assert.assertTrue(Files.exists(path2));
 
     val stringResponse = api.uploadWithList(asList(path1.toFile(), path2.toFile()));
@@ -128,9 +136,12 @@ public class BasicClientTest {
 
   //  @Test
   public void testMultipleManyFiles() throws Exception {
-    val path1 = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path1 =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(this.getClass().getClassLoader().getResource("another_file.txt").toURI());
+    val path2 =
+        Paths.get(
+            Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     Assert.assertTrue(Files.exists(path2));
 
     val stringResponse = api.uploadWithManyFiles(path1.toFile(), path2.toFile());
@@ -141,7 +152,8 @@ public class BasicClientTest {
   public void testUploadWithJson() throws Exception {
     val dto = new Dto("Artem", 11);
 
-    val path = Paths.get(this.getClass().getClassLoader().getResource("file.txt").toURI());
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val response = api.uploadWithJson(dto, path.toFile());
@@ -151,7 +163,8 @@ public class BasicClientTest {
 
   @Test
   public void testUnknownTypeFile() throws Exception {
-    val path = Paths.get(this.getClass().getClassLoader().getResource("file.abc").toURI());
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = api.uploadUnknownType(path.toFile());

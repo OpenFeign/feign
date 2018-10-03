@@ -18,12 +18,6 @@ limitations under the License.
 
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.5.9.RELEASE</version>
-  </parent>
-
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
   <version>3.3.0</version>
@@ -32,7 +26,7 @@ limitations under the License.
   <name>Open Feign Forms Parent</name>
   <description>Simple encoder for Netflix Feign project, which adds forms support (urlencoded and multipart)</description>
   <url>https://github.com/OpenFeign/feign-form</url>
-  <inceptionYear>2017</inceptionYear>
+  <inceptionYear>2016</inceptionYear>
 
   <licenses>
     <license>
@@ -119,30 +113,36 @@ limitations under the License.
 
   <dependencies>
     <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-core</artifactId>
-      <version>9.6.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+      <version>1.18.2</version>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <scope>test</scope>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-core</artifactId>
+      <version>9.5.0</version>
+      <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
-      <version>9.6.0</version>
+      <version>9.5.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <version>1.5.14.RELEASE</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <version>1.5.14.RELEASE</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -176,7 +176,7 @@ limitations under the License.
               <goals>
                 <goal>check</goal>
               </goals>
-              <phase>compile</phase>
+              <phase>package</phase>
             </execution>
           </executions>
         </plugin>
@@ -220,7 +220,7 @@ limitations under the License.
               <goals>
                 <goal>check</goal>
               </goals>
-              <phase>validate</phase>
+              <phase>package</phase>
               <configuration>
                 <configLocation>${project.basedir}/../.codestyle/checkstyle.xml</configLocation>
                 <consoleOutput>true</consoleOutput>
@@ -271,6 +271,7 @@ limitations under the License.
 
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
         <executions>
           <!--Ensure main source tree compiles to Java ${main.java.version} bytecode.-->
           <execution>
@@ -341,7 +342,7 @@ limitations under the License.
             <goals>
               <goal>sign</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>install</phase>
           </execution>
         </executions>
       </plugin>
