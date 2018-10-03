@@ -36,11 +36,14 @@ limitations under the License.
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-form</artifactId>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
+      <version>4.3.18.RELEASE</version>
       <scope>compile</scope>
     </dependency>
 
@@ -53,8 +56,8 @@ limitations under the License.
 
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-feign</artifactId>
-      <version>1.4.4.RELEASE</version>
+      <artifactId>spring-cloud-starter-openfeign</artifactId>
+      <version>1.4.5.RELEASE</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

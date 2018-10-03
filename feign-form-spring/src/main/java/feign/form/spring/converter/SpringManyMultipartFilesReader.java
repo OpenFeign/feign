@@ -85,7 +85,17 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
   @Override
   protected MultipartFile[] readInternal (Class<? extends MultipartFile[]> clazz, HttpInputMessage inputMessage
   ) throws IOException {
-    val boundaryBytes = getMultiPartBoundary(inputMessage.getHeaders().getContentType());
+    val headers = inputMessage.getHeaders();
+    if (headers == null) {
+      throw new HttpMessageNotReadableException("There are no headers at all.");
+    }
+
+    MediaType contentType = headers.getContentType();
+    if (contentType == null) {
+      throw new HttpMessageNotReadableException("Content-Type is missing.");
+    }
+
+    val boundaryBytes = getMultiPartBoundary(contentType);
     MultipartStream multipartStream = new MultipartStream(inputMessage.getBody(), boundaryBytes, bufSize, null);
 
     val multiparts = new LinkedList<ByteArrayMultipartFile>();
