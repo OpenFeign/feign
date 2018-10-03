@@ -187,6 +187,6 @@ public class Server {
     val status = file != null
                  ? OK
                  : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getContentType());
+    return ResponseEntity.status(status).body(file.getOriginalFilename() + ':' + file.getContentType());
   }
 }

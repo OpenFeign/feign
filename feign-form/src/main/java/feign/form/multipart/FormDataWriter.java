@@ -35,7 +35,7 @@ public class FormDataWriter extends AbstractWriter {
   @Override
   protected void write (Output output, String key, Object value) throws Exception {
     val formData = (FormData) value;
-    writeFileMetadata(output, key, null, formData.getContentType());
+    writeFileMetadata(output, key, formData.getFileName(), formData.getContentType());
     output.write(formData.getData());
   }
 }

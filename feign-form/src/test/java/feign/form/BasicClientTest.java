@@ -161,8 +161,8 @@ public class BasicClientTest {
 
   @Test
   public void testFormData() throws Exception {
-      val formData = new FormData("application/custom-type", "Allo".getBytes("UTF-8"));
+      val formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
       val stringResponse = api.uploadFormData(formData);
-      Assert.assertEquals("application/custom-type", stringResponse);
+      Assert.assertEquals("popa.txt:application/custom-type", stringResponse);
   }
 }
