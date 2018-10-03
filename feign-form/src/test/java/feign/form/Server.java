@@ -165,6 +165,7 @@ public class Server {
   @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadFormData(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getContentType());
+    return ResponseEntity.status(status)
+        .body(file.getOriginalFilename() + ':' + file.getContentType());
   }
 }

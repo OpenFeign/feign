@@ -32,5 +32,7 @@ public class FormData {
 
   String contentType;
 
+  String fileName;
+
   byte[] data;
 }
