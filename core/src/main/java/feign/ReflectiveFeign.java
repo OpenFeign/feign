@@ -100,15 +100,7 @@ public class ReflectiveFeign extends Feign {
         return toString();
       }
 
-      try {
-          return dispatch.get(method).invoke(args);
-      } catch (Throwable th) {
-        Throwable cause = th.getCause();
-        if (th instanceof RetryableException && cause != null) {
-          throw cause;
-        }
-        throw th;
-      }
+      return dispatch.get(method).invoke(args);
     }
 
     @Override

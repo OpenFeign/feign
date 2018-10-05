@@ -43,13 +43,14 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
   private final boolean closeAfterDecode;
+  private final boolean propagateExceptions;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, Logger logger,
-      Logger.Level logLevel, MethodMetadata metadata,
-      RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-      boolean closeAfterDecode) {
+                                   List<RequestInterceptor> requestInterceptors, Logger logger,
+                                   Logger.Level logLevel, MethodMetadata metadata,
+                                   RequestTemplate.Factory buildTemplateFromArgs, Options options,
+                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+                                   boolean closeAfterDecode, boolean propagateExceptions) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -64,6 +65,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
     this.closeAfterDecode = closeAfterDecode;
+    this.propagateExceptions = propagateExceptions;
   }
 
   @Override
@@ -74,7 +76,16 @@ final class SynchronousMethodHandler implements MethodHandler {
       try {
         return executeAndDecode(template);
       } catch (RetryableException e) {
-        retryer.continueOrPropagate(e);
+        try {
+          retryer.continueOrPropagate(e);
+        } catch (RetryableException th) {
+          Throwable cause = th.getCause();
+          if (propagateExceptions && cause != null) {
+            throw cause;
+          } else {
+            throw th;
+          }
+        }
         if (logLevel != Logger.Level.NONE) {
           logger.logRetry(metadata.configKey(), logLevel);
         }
@@ -178,9 +189,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Logger.Level logLevel;
     private final boolean decode404;
     private final boolean closeAfterDecode;
+    private final boolean propagateExceptions;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode) {
+            Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
+            boolean propagateExceptions) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -188,6 +201,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.decode404 = decode404;
       this.closeAfterDecode = closeAfterDecode;
+      this.propagateExceptions = propagateExceptions;
     }
 
     public MethodHandler create(Target<?> target,
@@ -198,7 +212,7 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
           logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, decode404, closeAfterDecode);
+          errorDecoder, decode404, closeAfterDecode, propagateExceptions);
     }
   }
 }

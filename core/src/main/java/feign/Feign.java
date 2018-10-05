@@ -109,6 +109,7 @@ public abstract class Feign {
         new InvocationHandlerFactory.Default();
     private boolean decode404;
     private boolean closeAfterDecode = true;
+    private boolean propagateExceptions = false;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -236,6 +237,11 @@ public abstract class Feign {
       return this;
     }
 
+    public Builder propagateExceptions() {
+      this.propagateExceptions = true;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -247,7 +253,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode);
+              logLevel, decode404, closeAfterDecode, propagateExceptions);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);

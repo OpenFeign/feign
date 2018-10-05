@@ -567,11 +567,12 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
+            .propagateExceptions()
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(new ErrorDecoder() {
               @Override
               public Exception decode(String methodKey, Response response) {
-                return new RetryableException("play it again sam!",
+                return new RetryableException("play it again sam!", HttpMethod.POST,
                         new TestInterfaceException(message), null);
               }
             }).target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -589,11 +590,12 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
+            .propagateExceptions()
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(new ErrorDecoder() {
               @Override
               public Exception decode(String methodKey, Response response) {
-                return new RetryableException(message, null);
+                return new RetryableException(message, HttpMethod.POST, null);
               }
             }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
