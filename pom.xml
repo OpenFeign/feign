@@ -479,11 +479,6 @@
 
     <profile>
       <id>validateCodeFormat</id>
-      <activation>
-        <property>
-          <name>validateFormat</name>
-        </property>
-      </activation>
 
       <build>
         <plugins>
