@@ -17,11 +17,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
@@ -56,8 +54,7 @@ public class WikipediaExample {
 
   public static void main(String... args) throws InterruptedException {
     Gson gson = new GsonBuilder()
-        .registerTypeAdapter(new TypeToken<Response<Page>>() {
-        }.getType(), pagesAdapter)
+        .registerTypeAdapter(new TypeToken<Response<Page>>() {}.getType(), pagesAdapter)
         .create();
 
     Wikipedia wikipedia = Feign.builder()
@@ -77,7 +74,7 @@ public class WikipediaExample {
    * this will lazily continue searches, making new http calls as necessary.
    *
    * @param wikipedia used to search
-   * @param query     see {@link Wikipedia#search(String)}.
+   * @param query see {@link Wikipedia#search(String)}.
    */
   static Iterator<Page> lazySearch(final Wikipedia wikipedia, final String query) {
     final Response<Page> first = wikipedia.search(query);
