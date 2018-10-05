@@ -46,11 +46,11 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final boolean propagateExceptions;
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-                                   List<RequestInterceptor> requestInterceptors, Logger logger,
-                                   Logger.Level logLevel, MethodMetadata metadata,
-                                   RequestTemplate.Factory buildTemplateFromArgs, Options options,
-                                   Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-                                   boolean closeAfterDecode, boolean propagateExceptions) {
+      List<RequestInterceptor> requestInterceptors, Logger logger,
+      Logger.Level logLevel, MethodMetadata metadata,
+      RequestTemplate.Factory buildTemplateFromArgs, Options options,
+      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+      boolean closeAfterDecode, boolean propagateExceptions) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
