@@ -19,7 +19,7 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.*;
-import feign.qeuryMap.PropertyQueryMapEncoder;
+import feign.qeuryMap.BeanQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -769,7 +769,7 @@ public class FeignTest {
 
   @Test
   public void queryMapPropertyPojoWithFullGetterProperty() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new PropertyQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -785,7 +785,7 @@ public class FeignTest {
 
   @Test
   public void queryMapPropertyPojoWithPartialGetterProperty() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new PropertyQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -801,7 +801,7 @@ public class FeignTest {
 
   @Test
   public void queryMapPropertyPojoWithEmptyGetterProperty() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new PropertyQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();

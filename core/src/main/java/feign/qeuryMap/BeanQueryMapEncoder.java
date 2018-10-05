@@ -28,7 +28,7 @@ import java.util.*;
  *
  * order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out
  */
-public class PropertyQueryMapEncoder implements QueryMapEncoder {
+public class BeanQueryMapEncoder implements QueryMapEncoder {
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata =
       new HashMap<Class<?>, ObjectParamMetadata>();
 

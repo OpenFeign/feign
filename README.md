@@ -690,6 +690,18 @@ public class Example {
 }
 ```
 
+Default `QeuryMapEncoder` use `Field` property and it does not support field that extend from super class. We recommend that you use `BeanQueryMapEncoder` who will be generated using java beans accessible getter property as query parameter names.
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    MyApi myApi = Feign.builder()
+                 .queryMapEncoder(new BeanQeuryMapEncoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+  }
+}
+```
+
 ### Error Handling
 If you need more control over handling unexpected responses, Feign instances can
 register a custom `ErrorDecoder` via the builder.

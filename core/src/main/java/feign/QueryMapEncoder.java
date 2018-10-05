@@ -14,7 +14,7 @@
 package feign;
 
 import feign.qeuryMap.FieldQueryMapEncoder;
-import feign.qeuryMap.PropertyQueryMapEncoder;
+import feign.qeuryMap.BeanQueryMapEncoder;
 
 import java.util.Map;
 
@@ -32,7 +32,7 @@ public interface QueryMapEncoder {
   Map<String, Object> encode(Object object);
 
   /**
-   * @deprecated use {@link PropertyQueryMapEncoder} instead.
+   * @deprecated use {@link BeanQueryMapEncoder} instead.
    */
   @Deprecated
   class Default extends FieldQueryMapEncoder {

@@ -28,7 +28,7 @@ public class PropertyQueryMapEncoderTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
 
-  private final QueryMapEncoder encoder = new PropertyQueryMapEncoder();
+  private final QueryMapEncoder encoder = new BeanQueryMapEncoder();
 
   @Test
   public void testDefaultEncoder_normalClassWithValues() {
