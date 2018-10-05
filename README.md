@@ -727,7 +727,9 @@ public class Example {
 `Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
 `false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be 
 created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
-If the retry is determined to be unsucessful, the last `RetryException` will be thrown.
+
+If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
+cause that led to the unsuccessful retry, build your Feign client with the `propagateExceptions()` option.
 
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
