@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 import static feign.Util.removeValues;
@@ -58,7 +57,8 @@ public class JAXRSContract extends Contract.BaseContract {
         // added
         pathValue = pathValue.substring(0, pathValue.length() - 1);
       }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
+      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
+      // should
       // strip these out appropriately.
       pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().uri(pathValue);
