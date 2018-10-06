@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import java.util.HashMap;
 import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,7 +35,7 @@ public class PropertyQueryMapEncoderTest {
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
     expected.put("fooAppendBar", "foozbarz");
-    NormalObject normalObject = new NormalObject("fooz","barz");
+    NormalObject normalObject = new NormalObject("fooz", "barz");
 
     Map<String, Object> encodedMap = encoder.encode(normalObject);
 

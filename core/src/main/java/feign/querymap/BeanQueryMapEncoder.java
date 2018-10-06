@@ -22,11 +22,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
- * the query map will be generated using java beans accessible getter property as query parameter names.
+ * the query map will be generated using java beans accessible getter property as query parameter
+ * names.
  *
  * eg: "/uri?name={name}&number={number}"
  *
- * order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out
+ * order of included query parameters not guaranteed, and as usual, if any value is null, it will be
+ * left out
  */
 public class BeanQueryMapEncoder implements QueryMapEncoder {
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata =
@@ -66,7 +68,8 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
       this.objectProperties = Collections.unmodifiableList(objectProperties);
     }
 
-    private static ObjectParamMetadata parseObjectType(Class<?> type) throws IntrospectionException {
+    private static ObjectParamMetadata parseObjectType(Class<?> type)
+        throws IntrospectionException {
       List<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
 
       for (PropertyDescriptor pd : Introspector.getBeanInfo(type).getPropertyDescriptors()) {

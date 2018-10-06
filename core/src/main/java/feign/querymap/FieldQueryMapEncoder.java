@@ -23,7 +23,8 @@ import java.util.*;
  *
  * eg: "/uri?name={name}&number={number}"
  *
- * order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out
+ * order of included query parameters not guaranteed, and as usual, if any value is null, it will be
+ * left out
  */
 public class FieldQueryMapEncoder implements QueryMapEncoder {
 

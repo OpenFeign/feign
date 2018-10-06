@@ -27,13 +27,11 @@ import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
