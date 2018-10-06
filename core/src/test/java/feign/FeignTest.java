@@ -768,12 +768,12 @@ public class FeignTest {
   }
 
   @Test
-  public void queryMapPropertyPojoWithFullGetterProperty() throws Exception {
+  public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
-    propertyPojo.setAddress("address");
+    propertyPojo.setPrivateGetterProperty("privateGetterProperty");
     propertyPojo.setName("Name");
     propertyPojo.setNumber(1);
 
@@ -784,12 +784,11 @@ public class FeignTest {
   }
 
   @Test
-  public void queryMapPropertyPojoWithPartialGetterProperty() throws Exception {
+  public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
-    propertyPojo.setAddress("address");
     propertyPojo.setName(null);
     propertyPojo.setNumber(1);
 
@@ -800,7 +799,7 @@ public class FeignTest {
   }
 
   @Test
-  public void queryMapPropertyPojoWithEmptyGetterProperty() throws Exception {
+  public void beanQueryMapEncoderWithEmptyParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 

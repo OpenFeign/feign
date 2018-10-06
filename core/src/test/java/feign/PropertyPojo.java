@@ -20,7 +20,7 @@ public class PropertyPojo {
   public static class ChildPojoClass extends PropertyPojo {
     private Integer number;
 
-    private String address;
+    private String privateGetterProperty;
 
     public Integer getNumber() {
       return number;
@@ -30,12 +30,12 @@ public class PropertyPojo {
       this.number = number;
     }
 
-    public void setAddress(String address) {
-      this.address = address;
+    public void setPrivateGetterProperty(String privateGetterProperty) {
+      this.privateGetterProperty = privateGetterProperty;
     }
 
-    private String getAddress() {
-      return address;
+    private String getPrivateGetterProperty() {
+      return privateGetterProperty;
     }
   }
 
