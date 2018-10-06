@@ -690,6 +690,18 @@ public class Example {
 }
 ```
 
+When annotating objects with @QueryMap, the default encoder uses reflection to inspect provided objects Fields to expand the objects values into a query string. If you prefer that the query string be built using getter and setter methods, as defined in the Java Beans API, please use the BeanQueryMapEncoder
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    MyApi myApi = Feign.builder()
+                 .queryMapEncoder(new BeanQueryMapEncoder())
+                 .target(MyApi.class, "https://api.hostname.com");
+  }
+}
+```
+
 ### Error Handling
 If you need more control over handling unexpected responses, Feign instances can
 register a custom `ErrorDecoder` via the builder.
