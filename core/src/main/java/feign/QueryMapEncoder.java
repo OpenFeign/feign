@@ -20,6 +20,10 @@ import java.util.Map;
 
 /**
  * A QueryMapEncoder encodes Objects into maps of query parameter names to values.
+ *
+ * @see FieldQueryMapEncoder
+ * @see BeanQueryMapEncoder
+ *
  */
 public interface QueryMapEncoder {
 
@@ -33,8 +37,11 @@ public interface QueryMapEncoder {
 
   /**
    * @deprecated use {@link BeanQueryMapEncoder} instead.
+   * default encoder uses reflection to inspect provided objects Fields to
+   * expand the objects values into a query string. If you prefer that the
+   * query string be built using getter and setter methods, as defined in the
+   * Java Beans API, please use the {@link BeanQueryMapEncoder}
    */
-  @Deprecated
   class Default extends FieldQueryMapEncoder {
   }
 }
