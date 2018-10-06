@@ -13,8 +13,8 @@
  */
 package feign;
 
-import feign.qeuryMap.FieldQueryMapEncoder;
-import feign.qeuryMap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
+import feign.querymap.BeanQueryMapEncoder;
 
 import java.util.Map;
 

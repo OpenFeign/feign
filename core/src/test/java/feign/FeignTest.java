@@ -19,7 +19,7 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.*;
-import feign.qeuryMap.BeanQueryMapEncoder;
+import feign.querymap.BeanQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;

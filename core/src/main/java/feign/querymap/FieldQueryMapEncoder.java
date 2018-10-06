@@ -11,24 +11,22 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.qeuryMap;
+package feign.querymap;
 
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
- * the query map will be generated using java beans accessible getter property as query parameter names.
+ * the query map will be generated using member variable names as query parameter names.
  *
  * eg: "/uri?name={name}&number={number}"
  *
  * order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out
  */
-public class BeanQueryMapEncoder implements QueryMapEncoder {
+public class FieldQueryMapEncoder implements QueryMapEncoder {
+
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata =
       new HashMap<Class<?>, ObjectParamMetadata>();
 
@@ -36,20 +34,20 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
   public Map<String, Object> encode(Object object) throws EncodeException {
     try {
       ObjectParamMetadata metadata = getMetadata(object.getClass());
-      Map<String, Object> propertyNameToValue = new HashMap<String, Object>();
-      for (PropertyDescriptor pd : metadata.objectProperties) {
-        Object value = pd.getReadMethod().invoke(object);
+      Map<String, Object> fieldNameToValue = new HashMap<String, Object>();
+      for (Field field : metadata.objectFields) {
+        Object value = field.get(object);
         if (value != null && value != object) {
-          propertyNameToValue.put(pd.getName(), value);
+          fieldNameToValue.put(field.getName(), value);
         }
       }
-      return propertyNameToValue;
-    } catch (IllegalAccessException | IntrospectionException | InvocationTargetException e) {
+      return fieldNameToValue;
+    } catch (IllegalAccessException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
   }
 
-  private ObjectParamMetadata getMetadata(Class<?> objectType) throws IntrospectionException {
+  private ObjectParamMetadata getMetadata(Class<?> objectType) {
     ObjectParamMetadata metadata = classToMetadata.get(objectType);
     if (metadata == null) {
       metadata = ObjectParamMetadata.parseObjectType(objectType);
@@ -60,23 +58,21 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
 
   private static class ObjectParamMetadata {
 
-    private final List<PropertyDescriptor> objectProperties;
+    private final List<Field> objectFields;
 
-    private ObjectParamMetadata(List<PropertyDescriptor> objectProperties) {
-      this.objectProperties = Collections.unmodifiableList(objectProperties);
+    private ObjectParamMetadata(List<Field> objectFields) {
+      this.objectFields = Collections.unmodifiableList(objectFields);
     }
 
-    private static ObjectParamMetadata parseObjectType(Class<?> type) throws IntrospectionException {
-      List<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
-
-      for (PropertyDescriptor pd : Introspector.getBeanInfo(type).getPropertyDescriptors()) {
-        boolean isGetterMethod = pd.getReadMethod() != null && !"class".equals(pd.getName());
-        if (isGetterMethod) {
-          properties.add(pd);
+    private static ObjectParamMetadata parseObjectType(Class<?> type) {
+      List<Field> fields = new ArrayList<Field>();
+      for (Field field : type.getDeclaredFields()) {
+        if (!field.isAccessible()) {
+          field.setAccessible(true);
         }
+        fields.add(field);
       }
-
-      return new ObjectParamMetadata(properties);
+      return new ObjectParamMetadata(fields);
     }
   }
 }
