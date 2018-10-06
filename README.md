@@ -690,13 +690,13 @@ public class Example {
 }
 ```
 
-Default `QeuryMapEncoder` use `Field` property and it does not support field that extend from super class. We recommend that you use `BeanQueryMapEncoder` who will be generated using java beans accessible getter property as query parameter names.
+When annotating objects with @QueryMap, the default encoder uses reflection to inspect provided objects Fields to expand the objects values into a query string. If you prefer that the query string be built using getter and setter methods, as defined in the Java Beans API, please use the BeanQueryMapEncoder
 
 ```java
 public class Example {
   public static void main(String[] args) {
     MyApi myApi = Feign.builder()
-                 .queryMapEncoder(new BeanQeuryMapEncoder())
+                 .queryMapEncoder(new BeanQueryMapEncoder())
                  .target(MyApi.class, "https://api.hostname.com");
   }
 }
