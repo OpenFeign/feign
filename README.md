@@ -288,6 +288,7 @@ public class Example {
   }
 }
 ```
+
 ### OkHttp
 [OkHttpClient](./okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
 
@@ -315,6 +316,17 @@ public class Example {
           .target(MyService.class, "https://myAppProd");
   }
 }
+```
+
+### Java 11 Http2
+[JavaHttp2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
+
+To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the JavaHttp2Client:
+
+```java
+GitHub github = Feign.builder()
+                     .client(new JavaHttp2Client())
+                     .target(GitHub.class, "https://api.github.com");
 ```
 
 ### Hystrix

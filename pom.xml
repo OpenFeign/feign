@@ -73,7 +73,7 @@
     <license-maven-plugin.version>3.0</license-maven-plugin.version>
     <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-    <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
+    <maven-bundle-plugin.version>4.0.0</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
   </properties>
@@ -317,6 +317,13 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
           </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>7.0-beta</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -474,6 +481,29 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>java11</id>
+      <activation>
+        <jdk>11</jdk>
+      </activation>
+
+      <modules>
+        <module>java11</module>
+      </modules>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <!-- so far we don't have a way to release using java 11 -->
+              <dryRun>true</dryRun>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
 
     <profile>
       <id>validateCodeFormat</id>
