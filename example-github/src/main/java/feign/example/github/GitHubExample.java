@@ -49,10 +49,10 @@ public class GitHubExample {
     /** Lists all contributors for all repos owned by a user. */
     default List<String> contributors(String owner) {
       return repos(owner).stream()
-                         .flatMap(repo -> contributors(owner, repo.name).stream())
-                         .map(c -> c.login)
-                         .distinct()
-                         .collect(Collectors.toList());
+          .flatMap(repo -> contributors(owner, repo.name).stream())
+          .map(c -> c.login)
+          .distinct()
+          .collect(Collectors.toList());
     }
 
     static GitHub connect() {
