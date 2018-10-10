@@ -32,7 +32,9 @@ matrix:
        apt:
          packages:
            - oracle-java8-installer
-    - os: linux
+   - os: linux
+     jdk: openjdk8
+   - os: linux
      jdk: openjdk11
 
 # Don't build release tags. This avoids publish conflicts because the version commit exists both on master and the release tag.

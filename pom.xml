@@ -315,6 +315,7 @@
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
       </plugins>
@@ -474,14 +475,27 @@
 
   <profiles>
     <profile>
+      <id>java11</id>
       <activation>
-        <jdk>1.8</jdk>
+        <jdk>11</jdk>
       </activation>
 
       <modules>
-        <module>jackson-jaxb</module>
-        <module>jaxb</module>
+        <module>java11</module>
       </modules>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <!-- so far we don't have a way to release using java 11 -->
+              <dryRun>true</dryRun>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
 
     <profile>
