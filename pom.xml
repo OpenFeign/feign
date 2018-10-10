@@ -474,29 +474,6 @@
   </build>
 
   <profiles>
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>11</jdk>
-      </activation>
-
-      <modules>
-        <module>java11</module>
-      </modules>
-
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-release-plugin</artifactId>
-            <configuration>
-              <!-- so far we don't have a way to release using java 11 -->
-              <dryRun>true</dryRun>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
 
     <profile>
       <id>validateCodeFormat</id>
