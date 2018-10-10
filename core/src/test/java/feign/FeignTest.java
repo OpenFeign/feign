@@ -25,25 +25,12 @@ import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
+import feign.codec.*;
+import feign.querymap.BeanQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -788,6 +775,53 @@ public class FeignTest {
     assertEquals(api.post(), "RESPONSE!");
   }
 
+  @Test
+  public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .target("http://localhost:" + server.getPort());
+
+    PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
+    propertyPojo.setPrivateGetterProperty("privateGetterProperty");
+    propertyPojo.setName("Name");
+    propertyPojo.setNumber(1);
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyPojo(propertyPojo);
+    assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("name=Name", "number=1"));
+  }
+
+  @Test
+  public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .target("http://localhost:" + server.getPort());
+
+    PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
+    propertyPojo.setName(null);
+    propertyPojo.setNumber(1);
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyPojo(propertyPojo);
+    assertThat(server.takeRequest()).hasQueryParams("number=1");
+  }
+
+  @Test
+  public void beanQueryMapEncoderWithEmptyParams() throws Exception {
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .target("http://localhost:" + server.getPort());
+
+    PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyPojo(propertyPojo);
+    assertThat(server.takeRequest()).hasQueryParams("/");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -862,6 +896,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPojo(@QueryMap CustomPojo object);
+
+    @RequestLine("GET /")
+    void queryMapPropertyPojo(@QueryMap PropertyPojo object);
 
     class DateToMillis implements Param.Expander {
 
@@ -961,6 +998,11 @@ public class FeignTest {
 
     TestInterfaceBuilder decode404() {
       delegate.decode404();
+      return this;
+    }
+
+    TestInterfaceBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
+      delegate.queryMapEncoder(queryMapEncoder);
       return this;
     }
 
