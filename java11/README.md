@@ -1,4 +1,4 @@
-# feign-java1
+# feign-java11
 
 This module directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
 

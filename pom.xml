@@ -319,6 +319,7 @@
           </configuration>
           <dependencies>
             <dependency>
+              <!-- surefire uses ASM to do some bytecode magic... need to bump version to be java 11 compatible -->
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm</artifactId>
               <version>7.0-beta</version>

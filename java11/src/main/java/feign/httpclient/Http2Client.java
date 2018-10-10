@@ -32,8 +32,9 @@ import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 
-public class JavaHttp2Client implements Client {
+public class Http2Client implements Client {
 
+  @Override
   public Response execute(Request request, Options options) throws IOException {
     final HttpClient client = HttpClient.newBuilder()
         .followRedirects(Redirect.ALWAYS)
@@ -82,6 +83,8 @@ public class JavaHttp2Client implements Client {
   }
 
   /**
+   * There is a bunch o headers that the http2 client do not allow to be set.
+   *
    * @see jdk.internal.net.http.common.Utils.DISALLOWED_HEADERS_SET
    */
   private static final Set<String> DISALLOWED_HEADERS_SET;

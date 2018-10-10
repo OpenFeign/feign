@@ -14,7 +14,7 @@
 package feign.httpclient.test;
 
 import feign.*;
-import feign.httpclient.JavaHttp2Client;
+import feign.httpclient.Http2Client;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,7 +22,7 @@ import org.junit.Test;
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-public class JavaHttp2ClientTest {
+public class Http2ClientTest {
 
   public interface TestInterface {
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
@@ -60,7 +60,7 @@ public class JavaHttp2ClientTest {
   }
 
   public Feign.Builder newBuilder() {
-    return Feign.builder().client(new JavaHttp2Client());
+    return Feign.builder().client(new Http2Client());
   }
 
 }
