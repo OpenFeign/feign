@@ -20,7 +20,9 @@ import javax.ws.rs.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 import static feign.Util.removeValues;
@@ -55,7 +57,8 @@ public class JAXRSContract extends Contract.BaseContract {
         // added
         pathValue = pathValue.substring(0, pathValue.length() - 1);
       }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
+      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
+      // should
       // strip these out appropriately.
       pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
       data.template().uri(pathValue);
@@ -107,7 +110,7 @@ public class JAXRSContract extends Contract.BaseContract {
     String[] serverProduces =
         removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
     checkState(serverProduces.length > 0, "Produces.value() was empty on %s", name);
-    data.template().header(ACCEPT, (String) null); // remove any previous produces
+    data.template().header(ACCEPT, Collections.emptyList()); // remove any previous produces
     data.template().header(ACCEPT, serverProduces);
   }
 
@@ -115,8 +118,8 @@ public class JAXRSContract extends Contract.BaseContract {
     String[] serverConsumes =
         removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
     checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", name);
-    data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, serverConsumes);
+    data.template().header(CONTENT_TYPE, Collections.emptyList()); // remove any previous consumes
+    data.template().header(CONTENT_TYPE, serverConsumes[0]);
   }
 
   /**

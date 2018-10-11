@@ -70,4 +70,30 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <activation>
+        <jdk>11</jdk>
+      </activation>
+
+      <!--
+        JAXB was removed from java SDK on JEP 320
+        http://openjdk.java.net/jeps/320
+       -->
+      <dependencies>
+        <dependency>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+          <version>2.3.1</version>
+        </dependency>
+        <dependency>
+          <groupId>org.glassfish.jaxb</groupId>
+          <artifactId>jaxb-runtime</artifactId>
+          <version>2.4.0-b180830.0438</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+
 </project>

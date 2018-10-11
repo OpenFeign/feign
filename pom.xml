@@ -28,12 +28,16 @@
     <module>httpclient</module>
     <module>hystrix</module>
     <module>jackson</module>
+    <module>jackson-jaxb</module>
+    <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
     <module>okhttp</module>
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>example-github</module>
+    <module>example-wikipedia</module>
     <!-- remove after feign 10.0 release -->
     <module>java8</module>
     <module>mock</module>
@@ -61,7 +65,7 @@
     <jackson.version>2.9.6</jackson.version>
     <assertj.version>3.10.0</assertj.version>
 
-    <animal-sniffer-maven-plugin.version>1.15</animal-sniffer-maven-plugin.version>
+    <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
     <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -311,6 +315,7 @@
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
       </plugins>
@@ -354,6 +359,13 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.0-beta</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <!-- Ensures checksums are added to published jars -->
@@ -462,24 +474,9 @@
   </build>
 
   <profiles>
-    <profile>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-
-      <modules>
-        <module>jackson-jaxb</module>
-        <module>jaxb</module>
-      </modules>
-    </profile>
 
     <profile>
       <id>validateCodeFormat</id>
-      <activation>
-        <property>
-          <name>validateFormat</name>
-        </property>
-      </activation>
 
       <build>
         <plugins>

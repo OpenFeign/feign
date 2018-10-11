@@ -16,21 +16,24 @@ package feign.example.wikipedia;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.IOException;
 
 abstract class ResponseAdapter<X> extends TypeAdapter<WikipediaExample.Response<X>> {
 
   /**
-   * name of the key inside the {@code query} dict which holds the elements desired.  ex. {@code
+   * name of the key inside the {@code query} dict which holds the elements desired. ex. {@code
    * pages}.
    */
   protected abstract String query();
 
   /**
-   * Parses the contents of a result object. <p/> <br> ex. If {@link #query()} is {@code pages},
-   * then this would parse the value of each key in the dict {@code pages}. In the example below,
-   * this would first start at line {@code 3}. <p/>
+   * Parses the contents of a result object.
+   * <p/>
+   * <br>
+   * ex. If {@link #query()} is {@code pages}, then this would parse the value of each key in the
+   * dict {@code pages}. In the example below, this would first start at line {@code 3}.
+   * <p/>
+   * 
    * <pre>
    * "pages": {
    *   "2576129": {

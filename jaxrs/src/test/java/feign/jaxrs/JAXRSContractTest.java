@@ -120,7 +120,7 @@ public class JAXRSContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml", "text/html")));
+            entry("Accept", asList("application/xml")));
   }
 
   @Test
@@ -130,7 +130,7 @@ public class JAXRSContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", Collections.singletonList("application/json")),
-            entry("Accept", asList("application/xml", "text/html", "text/plain")));
+            entry("Accept", asList("application/xml", "text/plain")));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class JAXRSContractTest {
     /* multiple @Consumes annotations are additive */
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/xml", "application/json")),
+            entry("Content-Type", asList("application/xml")),
             entry("Accept", asList("text/html")));
   }
 
@@ -165,7 +165,7 @@ public class JAXRSContractTest {
     MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
 
     assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/xml", "application/json")),
+        .hasHeaders(entry("Content-Type", asList("application/xml")),
             entry("Accept", Collections.singletonList("text/html")));
   }
 
@@ -265,8 +265,9 @@ public class JAXRSContractTest {
             .hasUrl("/base/regex/{param1}/{param2}");
 
     assertThat(parseAndValidateMetadata(
-        ComplexPathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
-            .hasUrl("/{baseparam}/regex/{param1}/{param2}");
+        ComplexPathOnType.class, "pathParamWithMultipleRegex", String.class, String.class)
+            .template())
+                .hasUrl("/{baseparam}/regex/{param1}/{param2}");
   }
 
   @Test
@@ -538,11 +539,12 @@ public class JAXRSContractTest {
 
   @Path("/{baseparam: [0-9]+}")
   interface ComplexPathOnType {
-    
+
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
-    Response pathParamWithMultipleRegex(@PathParam("param1") String param1, @PathParam("param2") String param2);
-  }  
+    Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
+                                        @PathParam("param2") String param2);
+  }
 
   interface WithURIParam {
 

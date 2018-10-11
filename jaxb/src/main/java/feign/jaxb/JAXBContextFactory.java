@@ -15,6 +15,7 @@ package feign.jaxb;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.xml.bind.JAXBContext;
@@ -25,7 +26,8 @@ import javax.xml.bind.Unmarshaller;
 
 /**
  * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each
- * context.
+ * context. Since JAXB contexts creation can be an expensive task, JAXB context can be preloaded on
+ * factory creation otherwise they will be created and cached dynamically when needed.
  */
 public final class JAXBContextFactory {
 
@@ -71,6 +73,20 @@ public final class JAXBContextFactory {
       this.jaxbContexts.putIfAbsent(clazz, jaxbContext);
     }
     return jaxbContext;
+  }
+
+  /**
+   * Will preload factory's cache with JAXBContext for provided classes
+   * 
+   * @param classes
+   * @throws JAXBException
+   */
+  private void preloadContextCache(List<Class<?>> classes) throws JAXBException {
+    if (classes != null && !classes.isEmpty()) {
+      for (Class<?> clazz : classes) {
+        getContext(clazz);
+      }
+    }
   }
 
   /**
@@ -121,10 +137,26 @@ public final class JAXBContextFactory {
     }
 
     /**
-     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance.
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance with a lazy loading cached
+     * context
      */
     public JAXBContextFactory build() {
       return new JAXBContextFactory(properties);
+    }
+
+    /**
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance. Pre-loads context cache with
+     * given classes
+     *
+     * @param classes
+     * @return ContextFactory with a pre-populated JAXBContext cache
+     * @throws JAXBException if provided classes can't be used for JAXBContext generation most
+     *         likely due to missing JAXB annotations
+     */
+    public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
+      JAXBContextFactory factory = new JAXBContextFactory(properties);
+      factory.preloadContextCache(classes);
+      return factory;
     }
   }
 }
