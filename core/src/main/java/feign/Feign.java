@@ -26,6 +26,8 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
+import static feign.ExceptionPropagationPolicy.NONE;
+
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
  * In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
@@ -109,7 +111,7 @@ public abstract class Feign {
         new InvocationHandlerFactory.Default();
     private boolean decode404;
     private boolean closeAfterDecode = true;
-    private boolean propagateExceptions = false;
+    private ExceptionPropagationPolicy propagationPolicy = NONE;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -237,8 +239,8 @@ public abstract class Feign {
       return this;
     }
 
-    public Builder propagateExceptions() {
-      this.propagateExceptions = true;
+    public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
+      this.propagationPolicy = propagationPolicy;
       return this;
     }
 
@@ -253,7 +255,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode, propagateExceptions);
+              logLevel, decode404, closeAfterDecode, propagationPolicy);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);

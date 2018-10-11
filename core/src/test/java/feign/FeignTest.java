@@ -46,6 +46,8 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
 import feign.Feign.ResponseMappingDecoder;
+
+import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -567,7 +569,7 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
-            .propagateExceptions()
+            .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(new ErrorDecoder() {
               @Override
@@ -590,7 +592,7 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
-            .propagateExceptions()
+            .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(new ErrorDecoder() {
               @Override

@@ -729,7 +729,7 @@ public class Example {
 created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
 
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
-cause that led to the unsuccessful retry, build your Feign client with the `propagateExceptions()` option.
+cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
 
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
