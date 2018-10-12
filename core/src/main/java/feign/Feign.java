@@ -25,7 +25,6 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-
 import static feign.ExceptionPropagationPolicy.NONE;
 
 /**

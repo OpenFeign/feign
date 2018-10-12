@@ -21,7 +21,6 @@ import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -194,8 +193,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final ExceptionPropagationPolicy propagationPolicy;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-            Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
-            ExceptionPropagationPolicy propagationPolicy) {
+        Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
+        ExceptionPropagationPolicy propagationPolicy) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");

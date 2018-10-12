@@ -37,7 +37,6 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
-
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -560,15 +559,15 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
-            .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
-            .errorDecoder(new ErrorDecoder() {
-              @Override
-              public Exception decode(String methodKey, Response response) {
-                return new RetryableException("play it again sam!", HttpMethod.POST,
-                        new TestInterfaceException(message), null);
-              }
-            }).target(TestInterface.class, "http://localhost:" + server.getPort());
+        .exceptionPropagationPolicy(UNWRAP)
+        .retryer(new Retryer.Default(1, 1, 2))
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return new RetryableException("play it again sam!", HttpMethod.POST,
+                new TestInterfaceException(message), null);
+          }
+        }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.post();
   }
@@ -583,14 +582,14 @@ public class FeignTest {
     thrown.expectMessage(message);
 
     TestInterface api = Feign.builder()
-            .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
-            .errorDecoder(new ErrorDecoder() {
-              @Override
-              public Exception decode(String methodKey, Response response) {
-                return new RetryableException(message, HttpMethod.POST, null);
-              }
-            }).target(TestInterface.class, "http://localhost:" + server.getPort());
+        .exceptionPropagationPolicy(UNWRAP)
+        .retryer(new Retryer.Default(1, 1, 2))
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return new RetryableException(message, HttpMethod.POST, null);
+          }
+        }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.post();
   }
