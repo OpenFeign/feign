@@ -319,13 +319,13 @@ public class Example {
 ```
 
 ### Java 11 Http2
-[JavaHttp2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
+[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
 
-To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the JavaHttp2Client:
+To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
 
 ```java
 GitHub github = Feign.builder()
-                     .client(new JavaHttp2Client())
+                     .client(new Http2Client())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
