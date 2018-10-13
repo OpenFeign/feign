@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
  * @author Bob Lee
  * @author Jesse Wilson
  */
-final class Types {
+public final class Types {
 
   private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
@@ -38,7 +38,7 @@ final class Types {
     // No instances.
   }
 
-  static Class<?> getRawType(Type type) {
+  public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // Type is a normal class.
       return (Class<?>) type;
