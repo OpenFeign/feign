@@ -15,21 +15,21 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>parent</artifactId>
-        <groupId>io.github.openfeign</groupId>
-        <version>10.0.2-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>parent</artifactId>
+    <version>10.0.2-SNAPSHOT</version>
+  </parent>
 
-    <!-- remove after feign 10.0 release -->
-    <artifactId>feign-java8</artifactId>
-    <name>Feign Java 8</name>
-    <description>Feign Java 8</description>
+  <!-- remove after feign 10.0 release -->
+  <artifactId>feign-java8</artifactId>
+  <name>Feign Java 8</name>
+  <description>Feign Java 8</description>
 
-    <properties>
-        <main.basedir>${project.basedir}/..</main.basedir>
-    </properties>
+  <properties>
+    <main.basedir>${project.basedir}/..</main.basedir>
+  </properties>
 
   <distributionManagement>
     <relocation>

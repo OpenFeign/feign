@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     Copyright 2012-2018 The Feign Authors
@@ -72,4 +73,3 @@
     </plugins>
   </build>
 </project>
-

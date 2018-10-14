@@ -22,6 +22,9 @@
   <version>10.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <name>Feign (Parent)</name>
+  <description>Feign makes writing java http clients easier</description>
+
   <modules>
     <module>core</module>
     <module>gson</module>
@@ -78,9 +81,6 @@
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
   </properties>
-
-  <name>Feign (Parent)</name>
-  <description>Feign makes writing java http clients easier</description>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
 
@@ -332,8 +332,8 @@
 
     <plugins>
       <plugin>
-        <inherited>true</inherited>
         <artifactId>maven-compiler-plugin</artifactId>
+        <inherited>true</inherited>
         <executions>
           <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
           <execution>
@@ -446,6 +446,14 @@
           </excludes>
           <strictCheck>true</strictCheck>
         </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
         <dependencies>
           <dependency>
             <groupId>com.mycila</groupId>
@@ -453,14 +461,6 @@
             <version>${license-maven-plugin.version}</version>
           </dependency>
         </dependencies>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>compile</phase>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
@@ -472,10 +472,31 @@
         </configuration>
         <executions>
           <execution>
+            <phase>verify</phase>
             <goals>
               <goal>format</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <version>2.8.0</version>
+        <configuration>
+          <keepBlankLines>true</keepBlankLines>
+          <lineSeparator>\n</lineSeparator>
+          <sortOrderFile>src/config/pomSortOrder.xml</sortOrderFile>
+          <createBackupFile>false</createBackupFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>format</id>
             <phase>verify</phase>
+            <goals>
+              <goal>sort</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
