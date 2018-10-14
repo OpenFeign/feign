@@ -56,10 +56,6 @@
     <main.java.version>1.8</main.java.version>
     <main.signature.artifact>java18</main.signature.artifact>
 
-    <!-- default bytecode version for src/test -->
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-
     <main.basedir>${project.basedir}</main.basedir>
 
     <okhttp3.version>3.6.0</okhttp3.version>
@@ -334,20 +330,10 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
-        <executions>
-          <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
-          <execution>
-            <id>default-compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <configuration>
-              <source>${main.java.version}</source>
-              <target>${main.java.version}</target>
-            </configuration>
-          </execution>
-        </executions>
+        <configuration>
+          <source>${main.java.version}</source>
+          <target>${main.java.version}</target>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -522,6 +508,13 @@
             <configuration>
               <!-- so far we don't have a way to release using java 11 -->
               <dryRun>true</dryRun>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
+            <configuration>
+              <release>${main.java.version}</release>
             </configuration>
           </plugin>
         </plugins>
