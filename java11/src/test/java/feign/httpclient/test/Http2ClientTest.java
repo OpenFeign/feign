@@ -13,52 +13,60 @@
  */
 package feign.httpclient.test;
 
-import feign.*;
-import feign.httpclient.Http2Client;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Test;
+import java.io.IOException;
+import feign.*;
+import feign.client.AbstractClientTest;
+import feign.httpclient.Http2Client;
+import okhttp3.mockwebserver.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-public class Http2ClientTest {
+public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
-    Response post(String var1);
-
-    @RequestLine("POST /path/{to}/resource")
-    @Headers({"Accept: text/plain"})
-    Response post(@Param("to") String var1, String var2);
-
-    @RequestLine("GET /")
-    @Headers({"Accept: text/plain"})
-    String get();
-
     @RequestLine("PATCH /patch")
     @Headers({"Accept: text/plain"})
     String patch(String var1);
-
-    @RequestLine("POST")
-    String noPostBody();
-
-    @RequestLine("PUT")
-    String noPutBody();
-
-    @RequestLine("POST /?foo=bar&foo=baz&qux=")
-    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
-    Response postWithContentType(String var1, @Param("contentType") String var2);
   }
 
+  @Override
   @Test
   public void testPatch() throws Exception {
-    TestInterface api = newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     Assertions.assertThat(api.patch(""))
         .contains("https://nghttp2.org/httpbin/patch");
   }
 
+
+  @Override
+  @Test
+  public void reasonPhraseIsOptional() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse()
+        .addHeader("Reason-Phrase", "There is A reason")
+        .setStatus("HTTP/1.1 " + 200));
+
+    final AbstractClientTest.TestInterface api = newBuilder()
+        .target(AbstractClientTest.TestInterface.class, "http://localhost:" + server.getPort());
+
+    final Response response = api.post("foo");
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isEqualTo("There is A reason");
+  }
+
+
+  @Override
+  @Test
+  public void testVeryLongResponseNullLength() {
+    // client is too smart to fall for a body that is 8 bytes long
+  }
+
+  @Override
   public Feign.Builder newBuilder() {
     return Feign.builder().client(new Http2Client());
   }
