@@ -24,40 +24,6 @@
 
   <name>Feign (Parent)</name>
   <description>Feign makes writing java http clients easier</description>
-  <url>https://github.com/openfeign/feign</url>
-  <inceptionYear>2012</inceptionYear>
-
-  <organization>
-    <name>OpenFeign</name>
-    <url>https://github.com/openfeign</url>
-  </organization>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <id>adriancole</id>
-      <name>Adrian Cole</name>
-      <email>acole@pivotal.io</email>
-    </developer>
-    <developer>
-      <id>spencergibb</id>
-      <name>Spencer Gibb</name>
-      <email>spencer@gibb.us</email>
-    </developer>
-    <developer>
-      <id>velo</id>
-      <name>Marvin Herman Froeder</name>
-      <email>velo br at gmail dot com</email>
-      <url>about.me/velo</url>
-    </developer>
-  </developers>
 
   <modules>
     <module>core</module>
@@ -81,29 +47,6 @@
     <module>mock</module>
     <module>benchmark</module>
   </modules>
-
-  <scm>
-    <connection>scm:git:https://github.com/openfeign/feign.git</connection>
-    <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
-    <tag>HEAD</tag>
-    <url>https://github.com/openfeign/feign</url>
-  </scm>
-
-  <issueManagement>
-    <system>Github</system>
-    <url>https://github.com/openfeign/feign/issues</url>
-  </issueManagement>
-
-  <distributionManagement>
-    <repository>
-      <id>bintray</id>
-      <url>https://api.bintray.com/maven/openfeign/maven/feign/;publish=1</url>
-    </repository>
-    <snapshotRepository>
-      <id>jfrog-snapshots</id>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -138,6 +81,63 @@
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
   </properties>
+  <url>https://github.com/openfeign/feign</url>
+  <inceptionYear>2012</inceptionYear>
+
+  <organization>
+    <name>OpenFeign</name>
+    <url>https://github.com/openfeign</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>https://github.com/openfeign/feign</url>
+    <connection>scm:git:https://github.com/openfeign/feign.git</connection>
+    <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>adriancole</id>
+      <name>Adrian Cole</name>
+      <email>acole@pivotal.io</email>
+    </developer>
+    <developer>
+      <id>spencergibb</id>
+      <name>Spencer Gibb</name>
+      <email>spencer@gibb.us</email>
+    </developer>
+    <developer>
+      <id>velo</id>
+      <name>Marvin Herman Froeder</name>
+      <email>velo br at gmail dot com</email>
+      <url>about.me/velo</url>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <repository>
+      <id>bintray</id>
+      <url>https://api.bintray.com/maven/openfeign/maven/feign/;publish=1</url>
+    </repository>
+    <snapshotRepository>
+      <id>jfrog-snapshots</id>
+      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <issueManagement>
+    <system>Github</system>
+    <url>https://github.com/openfeign/feign/issues</url>
+  </issueManagement>
 
   <dependencyManagement>
     <dependencies>
@@ -338,10 +338,10 @@
           <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
           <execution>
             <id>default-compile</id>
+            <phase>compile</phase>
             <goals>
               <goal>compile</goal>
             </goals>
-            <phase>compile</phase>
             <configuration>
               <source>${main.java.version}</source>
               <target>${main.java.version}</target>
@@ -361,13 +361,6 @@
             <version>1.0</version>
           </signature>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>7.0-beta</version>
-          </dependency>
-        </dependencies>
         <executions>
           <execution>
             <goals>
@@ -375,6 +368,13 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.0-beta</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <!-- Ensures checksums are added to published jars -->
@@ -415,10 +415,10 @@
         <executions>
           <execution>
             <id>bundle-manifest</id>
+            <phase>process-classes</phase>
             <goals>
               <goal>manifest</goal>
             </goals>
-            <phase>process-classes</phase>
           </execution>
         </executions>
       </plugin>
@@ -446,6 +446,14 @@
           </excludes>
           <strictCheck>true</strictCheck>
         </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
         <dependencies>
           <dependency>
             <groupId>com.mycila</groupId>
@@ -453,14 +461,6 @@
             <version>${license-maven-plugin.version}</version>
           </dependency>
         </dependencies>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>compile</phase>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
@@ -472,10 +472,31 @@
         </configuration>
         <executions>
           <execution>
+            <phase>verify</phase>
             <goals>
               <goal>format</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <version>2.8.0</version>
+        <configuration>
+          <keepBlankLines>true</keepBlankLines>
+          <lineSeparator>\n</lineSeparator>
+          <sortOrderFile>src/config/pomSortOrder.xml</sortOrderFile>
+          <createBackupFile>false</createBackupFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>format</id>
             <phase>verify</phase>
+            <goals>
+              <goal>sort</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

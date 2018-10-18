@@ -27,14 +27,14 @@
   <name>Feign Java 8</name>
   <description>Feign Java 8</description>
 
+  <properties>
+    <main.basedir>${project.basedir}/..</main.basedir>
+  </properties>
+
   <distributionManagement>
     <relocation>
       <artifactId>feign-core</artifactId>
     </relocation>
   </distributionManagement>
-
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
 
 </project>
