@@ -40,7 +40,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java8.util.function.Predicate;
 import java8.util.function.Predicates;
-
 import static java.lang.String.format;
 
 /**
