@@ -15,6 +15,7 @@
 package feign.template;
 
 import feign.Util;
+import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -122,7 +123,7 @@ public final class Expressions {
         for (Object item : ((Iterable) variable)) {
           items.add((encode) ? encode(item) : item.toString());
         }
-        expanded.append(String.join(",", items));
+        expanded.append(StringUtils.join(items, ","));
       } else {
         expanded.append((encode) ? encode(variable) : variable);
       }
