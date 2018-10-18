@@ -13,19 +13,19 @@
  */
 package feign.httpclient;
 
-import feign.Client;
-import feign.Request;
+import feign.*;
 import feign.Request.Options;
-import feign.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.*;
@@ -34,10 +34,43 @@ import java.util.stream.Collectors;
 
 public class Http2Client implements Client {
 
+  private final HttpClient client;
+
+  public Http2Client() {
+    this(HttpClient.newBuilder().followRedirects(Redirect.ALWAYS).version(Version.HTTP_2).build());
+  }
+
+  public Http2Client(HttpClient client) {
+    this.client = Util.checkNotNull(client, "http cliet must be not unll");
+  }
+
   @Override
   public Response execute(Request request, Options options) throws IOException {
-    final HttpClient client = HttpClient.newBuilder().followRedirects(Redirect.ALWAYS).build();
+    final HttpRequest httpRequest = newRequestBuilder(request).build();
 
+    HttpResponse<byte[]> httpResponse;
+    try {
+      httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
+    } catch (final InterruptedException e) {
+      throw new IOException("Invalid uri " + request.url(), e);
+    }
+
+    final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
+
+    final Response response =
+        Response.builder()
+            .body(
+                new ByteArrayInputStream(httpResponse.body()),
+                length.isPresent() ? (int) length.getAsLong() : null)
+            .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))
+            .request(request)
+            .status(httpResponse.statusCode())
+            .headers(castMapCollectType(httpResponse.headers().map()))
+            .build();
+    return response;
+  }
+
+  private Builder newRequestBuilder(Request request) throws IOException {
     URI uri;
     try {
       uri = new URI(request.url());
@@ -52,35 +85,26 @@ public class Http2Client implements Client {
       body = BodyPublishers.ofByteArray(request.body());
     }
 
-    final HttpRequest httpRequest =
-        HttpRequest.newBuilder()
-            .uri(uri)
-            .method(request.method(), body)
-            .headers(asString(filterRestrictedHeaders(request.headers())))
-            .build();
+    final Builder requestBuilder = HttpRequest.newBuilder().uri(uri).version(Version.HTTP_2);
 
-    HttpResponse<byte[]> httpResponse;
-    try {
-      httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
-    } catch (final InterruptedException e) {
-      throw new IOException("Invalid uri " + request.url(), e);
+    final Map<String, Collection<String>> headers = filterRestrictedHeaders(request.headers());
+    if (!headers.isEmpty()) {
+      requestBuilder.headers(asString(headers));
     }
 
-    System.out.println(httpResponse.headers().map());
-
-    final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
-
-    final Response response =
-        Response.builder()
-            .body(
-                new ByteArrayInputStream(httpResponse.body()),
-                length.isPresent() ? (int) length.getAsLong() : null)
-            .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
-            .request(request)
-            .status(httpResponse.statusCode())
-            .headers(castMapCollectType(httpResponse.headers().map()))
-            .build();
-    return response;
+    switch (request.httpMethod()) {
+      case GET:
+        return requestBuilder.GET();
+      case POST:
+        return requestBuilder.POST(body);
+      case PUT:
+        return requestBuilder.PUT(body);
+      case DELETE:
+        return requestBuilder.DELETE();
+      default:
+        // fall back scenario, http implementations may restrict some methods
+        return requestBuilder.method(request.httpMethod().toString(), body);
+    }
   }
 
   /**
@@ -111,9 +135,14 @@ public class Http2Client implements Client {
 
   private Map<String, Collection<String>> filterRestrictedHeaders(
       Map<String, Collection<String>> headers) {
-    return headers.keySet().stream()
-        .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
-        .collect(Collectors.toMap(Function.identity(), headers::get));
+    final Map<String, Collection<String>> filteredHeaders =
+        headers.keySet().stream()
+            .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
+            .collect(Collectors.toMap(Function.identity(), headers::get));
+
+    filteredHeaders.computeIfAbsent("Accept", key -> List.of("*/*"));
+
+    return filteredHeaders;
   }
 
   private Map<String, Collection<String>> castMapCollectType(Map<String, List<String>> map) {
