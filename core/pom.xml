@@ -33,6 +33,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>net.sourceforge.streamsupport</groupId>
+      <artifactId>streamsupport</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.jvnet</groupId>
       <artifactId>animal-sniffer-annotation</artifactId>
       <optional>true</optional>
@@ -63,6 +69,7 @@
       <version>${jackson.version}</version>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <build>

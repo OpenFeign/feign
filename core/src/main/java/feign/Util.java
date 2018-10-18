@@ -38,7 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Predicate;
+import java8.util.function.Predicate;
+import java8.util.function.Predicates;
+
 import static java.lang.String.format;
 
 /**
@@ -157,7 +159,7 @@ public class Util {
   public static <T> T[] removeValues(T[] values, Predicate<T> shouldRemove, Class<T> type) {
     Collection<T> collection = new ArrayList<>(values.length);
     for (T value : values) {
-      if (shouldRemove.negate().test(value)) {
+      if (Predicates.negate(shouldRemove).test(value)) {
         collection.add(value);
       }
     }
