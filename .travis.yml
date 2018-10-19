@@ -4,7 +4,6 @@
 dist: trusty
 sudo: false
 language: java
-jdk: oraclejdk8
 before_install:
   # Parameters used during release
   - git config user.name "$GH_USER"
@@ -26,12 +25,6 @@ cache:
 
 matrix:
  include:
-   - os: linux
-     jdk: oraclejdk8
-     addons:
-       apt:
-         packages:
-           - oracle-java8-installer
    - os: linux
      jdk: openjdk8
    - os: linux
