@@ -230,7 +230,8 @@ public class MockClient implements Client {
 
     RequestKey requestKey = RequestKey.builder(method, url).build();
     if (!requests.containsKey(requestKey)) {
-      throw new VerificationAssertionError("Wanted: '%s' but never invoked!", requestKey);
+      throw new VerificationAssertionError("Wanted: '%s' but never invoked! Got: %s", requestKey,
+          requests.keySet());
     }
 
     List<Request> result = requests.get(requestKey);
