@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -287,10 +288,12 @@ public class Util {
     }
     try {
       StringBuilder to = new StringBuilder();
-      CharBuffer buf = CharBuffer.allocate(BUF_SIZE);
-      while (reader.read(buf) != -1) {
+      CharBuffer charBuf = CharBuffer.allocate(BUF_SIZE);
+      // must cast to super class Buffer otherwise break when running with java 11
+      Buffer buf = charBuf;
+      while (reader.read(charBuf) != -1) {
         buf.flip();
-        to.append(buf);
+        to.append(charBuf);
         buf.clear();
       }
       return to.toString();
