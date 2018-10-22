@@ -206,6 +206,10 @@ public class MockClient implements Client {
     return this;
   }
 
+  /**
+   * @deprecated use {@link #add(HttpMethod, String, feign.Response.Builder)} instead
+   */
+  @Deprecated
   public MockClient add(HttpMethod method, String url, Response response) {
     return this.add(method, url, response.toBuilder());
   }
