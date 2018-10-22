@@ -104,6 +104,7 @@ public class ReflectiveFeign extends Feign {
       } else if ("toString".equals(method.getName())) {
         return toString();
       }
+
       return dispatch.get(method).invoke(args);
     }
 

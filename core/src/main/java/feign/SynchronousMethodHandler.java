@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
@@ -44,6 +45,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
   private final boolean closeAfterDecode;
+  private final ExceptionPropagationPolicy propagationPolicy;
 
   private SynchronousMethodHandler(
       Target<?> target,
@@ -58,7 +60,8 @@ final class SynchronousMethodHandler implements MethodHandler {
       Decoder decoder,
       ErrorDecoder errorDecoder,
       boolean decode404,
-      boolean closeAfterDecode) {
+      boolean closeAfterDecode,
+      ExceptionPropagationPolicy propagationPolicy) {
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -73,6 +76,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.decoder = checkNotNull(decoder, "decoder for %s", target);
     this.decode404 = decode404;
     this.closeAfterDecode = closeAfterDecode;
+    this.propagationPolicy = propagationPolicy;
   }
 
   @Override
@@ -83,7 +87,16 @@ final class SynchronousMethodHandler implements MethodHandler {
       try {
         return executeAndDecode(template);
       } catch (RetryableException e) {
-        retryer.continueOrPropagate(e);
+        try {
+          retryer.continueOrPropagate(e);
+        } catch (RetryableException th) {
+          Throwable cause = th.getCause();
+          if (propagationPolicy == UNWRAP && cause != null) {
+            throw cause;
+          } else {
+            throw th;
+          }
+        }
         if (logLevel != Logger.Level.NONE) {
           logger.logRetry(metadata.configKey(), logLevel);
         }
@@ -187,6 +200,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Logger.Level logLevel;
     private final boolean decode404;
     private final boolean closeAfterDecode;
+    private final ExceptionPropagationPolicy propagationPolicy;
 
     Factory(
         Client client,
@@ -195,7 +209,8 @@ final class SynchronousMethodHandler implements MethodHandler {
         Logger logger,
         Logger.Level logLevel,
         boolean decode404,
-        boolean closeAfterDecode) {
+        boolean closeAfterDecode,
+        ExceptionPropagationPolicy propagationPolicy) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -203,6 +218,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.decode404 = decode404;
       this.closeAfterDecode = closeAfterDecode;
+      this.propagationPolicy = propagationPolicy;
     }
 
     public MethodHandler create(
@@ -225,7 +241,8 @@ final class SynchronousMethodHandler implements MethodHandler {
           decoder,
           errorDecoder,
           decode404,
-          closeAfterDecode);
+          closeAfterDecode,
+          propagationPolicy);
     }
   }
 }

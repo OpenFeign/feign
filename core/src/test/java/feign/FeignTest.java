@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -25,7 +26,12 @@ import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
-import feign.codec.*;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.codec.StringDecoder;
 import feign.querymap.BeanQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -524,7 +530,7 @@ public class FeignTest {
   }
 
   @Test
-  public void ensureRetryerClonesItself() {
+  public void ensureRetryerClonesItself() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
@@ -547,6 +553,60 @@ public class FeignTest {
     api.post();
     api.post(); // if retryer instance was reused, this statement will throw an exception
     assertEquals(4, server.getRequestCount());
+  }
+
+  @Test
+  public void throwsOriginalExceptionAfterFailedRetries() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
+
+    final String message = "the innerest";
+    thrown.expect(TestInterfaceException.class);
+    thrown.expectMessage(message);
+
+    TestInterface api =
+        Feign.builder()
+            .exceptionPropagationPolicy(UNWRAP)
+            .retryer(new Retryer.Default(1, 1, 2))
+            .errorDecoder(
+                new ErrorDecoder() {
+                  @Override
+                  public Exception decode(String methodKey, Response response) {
+                    return new RetryableException(
+                        "play it again sam!",
+                        HttpMethod.POST,
+                        new TestInterfaceException(message),
+                        null);
+                  }
+                })
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post();
+  }
+
+  @Test
+  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
+
+    String message = "play it again sam!";
+    thrown.expect(RetryableException.class);
+    thrown.expectMessage(message);
+
+    TestInterface api =
+        Feign.builder()
+            .exceptionPropagationPolicy(UNWRAP)
+            .retryer(new Retryer.Default(1, 1, 2))
+            .errorDecoder(
+                new ErrorDecoder() {
+                  @Override
+                  public Exception decode(String methodKey, Response response) {
+                    return new RetryableException(message, HttpMethod.POST, null);
+                  }
+                })
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.post();
   }
 
   @Test
@@ -764,7 +824,7 @@ public class FeignTest {
   }
 
   @Test
-  public void mapAndDecodeExecutesMapFunction() {
+  public void mapAndDecodeExecutesMapFunction() throws Exception {
     server.enqueue(new MockResponse().setBody("response!"));
 
     TestInterface api =
@@ -828,7 +888,7 @@ public class FeignTest {
     Response response();
 
     @RequestLine("POST /")
-    String post();
+    String post() throws TestInterfaceException;
 
     @RequestLine("POST /")
     @Body(
@@ -906,6 +966,12 @@ public class FeignTest {
       public String expand(Object value) {
         return String.valueOf(((Date) value).getTime());
       }
+    }
+  }
+
+  class TestInterfaceException extends Exception {
+    TestInterfaceException(String message) {
+      super(message);
     }
   }
 
