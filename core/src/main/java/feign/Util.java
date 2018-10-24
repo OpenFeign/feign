@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import static java.lang.String.format;
@@ -276,6 +277,7 @@ public class Util {
     empties.put(List.class, Collections.emptyList());
     empties.put(Map.class, Collections.emptyMap());
     empties.put(Set.class, Collections.emptySet());
+    empties.put(Optional.class, Optional.empty());
     EMPTIES = Collections.unmodifiableMap(empties);
   }
 

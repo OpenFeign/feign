@@ -1,0 +1,40 @@
+diff --git a/core/src/main/java/feign/Util.java b/core/src/main/java/feign/Util.java
+index 986da55..39dbbde 100644
+--- a/core/src/main/java/feign/Util.java
++++ b/core/src/main/java/feign/Util.java
+@@ -37,6 +37,7 @@ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.NoSuchElementException;
++import java.util.Optional;
+ import java.util.Set;
+ import java.util.function.Predicate;
+ import static java.lang.String.format;
+@@ -275,6 +276,7 @@ public class Util {
+     empties.put(List.class, Collections.emptyList());
+     empties.put(Map.class, Collections.emptyMap());
+     empties.put(Set.class, Collections.emptySet());
++    empties.put(Optional.class, Optional.empty());
+     EMPTIES = Collections.unmodifiableMap(empties);
+   }
+ 
+diff --git a/core/src/test/java/feign/UtilTest.java b/core/src/test/java/feign/UtilTest.java
+index b231459..675fdb5 100644
+--- a/core/src/test/java/feign/UtilTest.java
++++ b/core/src/test/java/feign/UtilTest.java
+@@ -21,6 +21,7 @@ import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Optional;
+ import java.util.Set;
+ import feign.codec.Decoder;
+ import static feign.Util.emptyToNull;
+@@ -55,6 +56,7 @@ public class UtilTest {
+     assertEquals(Collections.emptyList(), Util.emptyValueOf(List.class));
+     assertEquals(Collections.emptyMap(), Util.emptyValueOf(Map.class));
+     assertEquals(Collections.emptySet(), Util.emptyValueOf(Set.class));
++    assertEquals(Optional.empty(), Util.emptyValueOf(Optional.class));
+   }
+ 
+   /** In other words, {@code List<String>} is as empty as {@code List<?>}. */
