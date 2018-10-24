@@ -62,6 +62,15 @@ public class JAXRSClientTest extends AbstractClientTest {
     }
   }
 
+  @Override
+  public void noResponseBodyForPatch() {
+    try {
+      super.noResponseBodyForPatch();
+    } catch (final IllegalStateException e) {
+      Assume.assumeNoException("JaxRS client do not support PATCH requests", e);
+    }
+  }
+
   @Test
   public void reasonPhraseIsOptional() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));

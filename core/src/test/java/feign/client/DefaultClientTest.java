@@ -83,6 +83,13 @@ public class DefaultClientTest extends AbstractClientTest {
     super.testPatch();
   }
 
+  @Test
+  @Override
+  public void noResponseBodyForPatch() {
+    thrown.expect(RetryableException.class);
+    thrown.expectCause(isA(ProtocolException.class));
+    super.noResponseBodyForPatch();
+  }
 
   @Test
   public void canOverrideHostnameVerifier() throws IOException, InterruptedException {

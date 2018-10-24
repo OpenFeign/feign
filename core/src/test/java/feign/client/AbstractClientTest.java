@@ -195,6 +195,20 @@ public abstract class AbstractClientTest {
     api.noPutBody();
   }
 
+  /**
+   * Some client implementation tests should override this test if the PATCH operation is
+   * unsupported.
+   */
+  @Test
+  public void noResponseBodyForPatch() {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.noPatchBody();
+  }
+
   @Test
   public void parsesResponseMissingLength() throws IOException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
@@ -387,6 +401,9 @@ public abstract class AbstractClientTest {
 
     @RequestLine("PUT")
     String noPutBody();
+
+    @RequestLine("PATCH")
+    String noPatchBody();
 
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
