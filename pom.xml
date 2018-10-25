@@ -443,6 +443,7 @@
             <exclude>bnd.bnd</exclude>
             <exclude>src/test/resources/**</exclude>
             <exclude>src/main/resources/**</exclude>
+            <exclude>src/main/java/feign/java8/**</exclude>
           </excludes>
           <strictCheck>true</strictCheck>
         </configuration>
