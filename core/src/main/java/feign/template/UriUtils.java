@@ -118,7 +118,7 @@ public class UriUtils {
    */
   private static String urlEncode(String value, Charset charset) {
     try {
-      String encoded = URLEncoder.encode(value, charset.toString());
+      String encoded = URLEncoder.encode(value, charset.name());
 
       /*
        * url encoding is not equivalent to URI encoding, there are few differences, namely dealing
