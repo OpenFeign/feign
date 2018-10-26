@@ -1,5 +1,6 @@
 ### Version 10.1
-* Feign-ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1
+* Supports PATCH without a body paramter
+* Feign-Ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1
 
 ### Version 10.0
 * Feign baseline is now JDK 8

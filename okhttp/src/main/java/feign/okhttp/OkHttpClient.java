@@ -13,13 +13,6 @@
  */
 package feign.okhttp;
 
-import feign.Request.HttpMethod;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -28,6 +21,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import feign.Client;
+import feign.Request.HttpMethod;
+import okhttp3.*;
 
 /**
  * This module directs Feign's http requests to
@@ -78,7 +73,8 @@ public final class OkHttpClient implements Client {
 
     byte[] inputBody = input.body();
     boolean isMethodWithBody =
-        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod();
+        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
+            || HttpMethod.PATCH == input.httpMethod();
     if (isMethodWithBody) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
