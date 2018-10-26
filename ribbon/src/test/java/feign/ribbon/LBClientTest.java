@@ -55,9 +55,8 @@ public class LBClientTest {
     // test that requestOrigin and requestRecreate are same except the header 'Content-Length'
     // ps, requestOrigin and requestRecreate won't be null
     assertThat(requestOrigin.toString())
-        .isEqualTo(String.format("%s %s HTTP/1.1\n", method, urlWithEncodedJson));
+        .contains(String.format("%s %s HTTP/1.1\n", method, urlWithEncodedJson));
     assertThat(requestRecreate.toString())
-        .isEqualTo(
-            String.format("%s %s HTTP/1.1\nContent-Length: 0\n", method, urlWithEncodedJson));
+        .contains(String.format("%s %s HTTP/1.1\nContent-Length: 0\n", method, urlWithEncodedJson));
   }
 }

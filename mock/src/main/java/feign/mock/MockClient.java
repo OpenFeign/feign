@@ -84,7 +84,7 @@ public class MockClient implements Client {
     RequestResponse expectedRequestResponse = responseIterator.next();
     if (!expectedRequestResponse.requestKey.equalsExtended(requestKey)) {
       throw new VerificationAssertionError(
-          "Expected %s, but was %s", expectedRequestResponse.requestKey, requestKey);
+          "Expected: \n%s,\nbut was: \n%s", expectedRequestResponse.requestKey, requestKey);
     }
 
     responseBuilder = expectedRequestResponse.responseBuilder;

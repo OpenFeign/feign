@@ -18,7 +18,6 @@ import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
 
 import feign.Request.HttpMethod;
-import feign.template.BodyTemplate;
 import feign.template.HeaderTemplate;
 import feign.template.QueryTemplate;
 import feign.template.UriTemplate;
@@ -55,10 +54,9 @@ public final class RequestTemplate implements Serializable {
   private String target;
   private boolean resolved = false;
   private UriTemplate uriTemplate;
-  private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
-  private byte[] body;
+  private Request.Body body = Request.Body.empty();
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
 
@@ -82,15 +80,13 @@ public final class RequestTemplate implements Serializable {
   private RequestTemplate(
       String target,
       UriTemplate uriTemplate,
-      BodyTemplate bodyTemplate,
       HttpMethod method,
       Charset charset,
-      byte[] body,
+      Request.Body body,
       boolean decodeSlash,
       CollectionFormat collectionFormat) {
     this.target = target;
     this.uriTemplate = uriTemplate;
-    this.bodyTemplate = bodyTemplate;
     this.method = method;
     this.charset = charset;
     this.body = body;
@@ -110,7 +106,6 @@ public final class RequestTemplate implements Serializable {
         new RequestTemplate(
             requestTemplate.target,
             requestTemplate.uriTemplate,
-            requestTemplate.bodyTemplate,
             requestTemplate.method,
             requestTemplate.charset,
             requestTemplate.body,
@@ -142,7 +137,6 @@ public final class RequestTemplate implements Serializable {
     this.headers.putAll(toCopy.headers);
     this.charset = toCopy.charset;
     this.body = toCopy.body;
-    this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
     this.collectionFormat =
         (toCopy.collectionFormat != null) ? toCopy.collectionFormat : CollectionFormat.EXPLODED;
@@ -230,9 +224,7 @@ public final class RequestTemplate implements Serializable {
       }
     }
 
-    if (this.bodyTemplate != null) {
-      resolved.body(this.bodyTemplate.expand(variables));
-    }
+    resolved.body(this.body.expand(variables));
 
     /* mark the new template resolved */
     resolved.resolved = true;
@@ -266,7 +258,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.body(), this.charset);
+    return Request.create(this.method, this.url(), this.headers(), this.requestBody());
   }
 
   /**
@@ -542,9 +534,7 @@ public final class RequestTemplate implements Serializable {
     }
 
     /* body */
-    if (this.bodyTemplate != null) {
-      variables.addAll(this.bodyTemplate.getVariables());
-    }
+    variables.addAll(this.body.getVariables());
 
     return variables;
   }
@@ -723,20 +713,11 @@ public final class RequestTemplate implements Serializable {
    * @param bodyData to send, can be null.
    * @param charset of the encoded data.
    * @return a RequestTemplate for chaining.
+   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
+  @Deprecated
   public RequestTemplate body(byte[] bodyData, Charset charset) {
-
-    /*
-     * since the body is being set directly, we need to clear out any existing body template
-     * information to prevent unintended side effects.
-     */
-    this.bodyTemplate = null;
-    this.charset = charset;
-    this.body = bodyData;
-
-    /* calculate the content length based on the data provided */
-    int bodyLength = bodyData != null ? bodyData.length : 0;
-    header(CONTENT_LENGTH, String.valueOf(bodyLength));
+    this.body(Request.Body.encoded(bodyData, charset));
 
     return this;
   }
@@ -746,10 +727,29 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyText to send.
    * @return a RequestTemplate for chaining.
+   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
+  @Deprecated
   public RequestTemplate body(String bodyText) {
     byte[] bodyData = bodyText != null ? bodyText.getBytes(UTF_8) : null;
     return body(bodyData, UTF_8);
+  }
+
+  /**
+   * Set the Body for this request.
+   *
+   * @param body to send.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate body(Request.Body body) {
+    this.body = body;
+
+    header(CONTENT_LENGTH);
+    if (body.length() > 0) {
+      header(CONTENT_LENGTH, String.valueOf(body.length()));
+    }
+
+    return this;
   }
 
   /**
@@ -757,7 +757,7 @@ public final class RequestTemplate implements Serializable {
    *
    * @return the currently applied Charset.
    */
-  public Charset charset() {
+  public Charset requestCharset() {
     return charset;
   }
 
@@ -765,9 +765,11 @@ public final class RequestTemplate implements Serializable {
    * The Request Body.
    *
    * @return the request body.
+   * @deprecated replaced by {@link RequestTemplate#requestBody()}
    */
+  @Deprecated
   public byte[] body() {
-    return body;
+    return body.asBytes();
   }
 
   /**
@@ -775,11 +777,11 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyTemplate to use.
    * @return a RequestTemplate for chaining.
+   * @deprecated replaced by {@link RequestTemplate#body(feign.Request.Body)}
    */
+  @Deprecated
   public RequestTemplate bodyTemplate(String bodyTemplate) {
-    this.bodyTemplate = BodyTemplate.create(bodyTemplate);
-    this.charset = Util.UTF_8;
-    this.body = null;
+    this.body(Request.Body.bodyTemplate(bodyTemplate, Util.UTF_8));
     return this;
   }
 
@@ -789,7 +791,7 @@ public final class RequestTemplate implements Serializable {
    * @return the unresolved body template.
    */
   public String bodyTemplate() {
-    return (bodyTemplate != null) ? bodyTemplate.toString() : null;
+    return body.bodyTemplate();
   }
 
   @Override
@@ -889,6 +891,10 @@ public final class RequestTemplate implements Serializable {
     final String name = (eq > 0) ? pair.substring(0, eq) : pair;
     final String value = (eq > 0 && eq < pair.length()) ? pair.substring(eq + 1) : null;
     return new SimpleImmutableEntry<>(name, value);
+  }
+
+  public Request.Body requestBody() {
+    return this.body;
   }
 
   /** Factory for creating RequestTemplate. */
