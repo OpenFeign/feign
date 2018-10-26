@@ -1,3 +1,6 @@
+### Version 10.1
+* Feign-ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1
+
 ### Version 10.0
 * Feign baseline is now JDK 8
   - Feign is now being built and tested with OpenJDK 11 as well. Releases and code base will use JDK 8, we are just testing compatibility with JDK 11.
