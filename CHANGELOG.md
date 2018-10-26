@@ -1,3 +1,6 @@
+### Version 10.1
+* Supports PATCH without a body paramter
+
 ### Version 10.0
 * Feign baseline is now JDK 8
   - Feign is now being built and tested with OpenJDK 11 as well. Releases and code base will use JDK 8, we are just testing compatibility with JDK 11.

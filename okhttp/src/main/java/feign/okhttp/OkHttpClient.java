@@ -22,12 +22,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 
 /**
  * This module directs Feign's http requests to
@@ -78,7 +73,9 @@ public final class OkHttpClient implements Client {
 
     byte[] inputBody = input.body();
     boolean isMethodWithBody =
-        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod();
+        HttpMethod.POST == input.httpMethod()
+            || HttpMethod.PUT == input.httpMethod()
+            || HttpMethod.PATCH == input.httpMethod();
     if (isMethodWithBody) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {

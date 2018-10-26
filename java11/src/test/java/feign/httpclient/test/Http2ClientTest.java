@@ -30,6 +30,10 @@ public class Http2ClientTest extends AbstractClientTest {
     @RequestLine("PATCH /patch")
     @Headers({"Accept: text/plain"})
     String patch(String var1);
+
+    @RequestLine("PATCH /patch")
+    @Headers({"Accept: text/plain"})
+    String patch();
   }
 
   @Override
@@ -38,6 +42,14 @@ public class Http2ClientTest extends AbstractClientTest {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     Assertions.assertThat(api.patch("")).contains("https://nghttp2.org/httpbin/patch");
+  }
+
+  @Override
+  @Test
+  public void noResponseBodyForPatch() {
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    Assertions.assertThat(api.patch()).contains("https://nghttp2.org/httpbin/patch");
   }
 
   @Override
