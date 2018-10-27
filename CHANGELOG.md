@@ -1,6 +1,11 @@
 ### Version 10.1
-* Supports PATCH without a body paramter
-* Feign-Ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1
+* Refactoring RequestTemplate to RFC6570 (#778)
+* Allow JAXB context caching in factory (#761)
+* Reactive Wrapper Support (#795)
+* Introduced native http2 client using Java 11 (#806)
+* Unwrap RetryableException and throw cause (#737)
+* Supports PATCH without a body paramter (#824)
+* Feign-Ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1 (#826)
 
 ### Version 10.0
 * Feign baseline is now JDK 8
