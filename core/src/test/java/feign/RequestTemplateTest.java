@@ -104,6 +104,19 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithBinaryBody() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("{zoneId}")
+            .body(new byte[] {7, 3, -3, -7}, null);
+
+    template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
+
+    assertThat(template).hasUrl("/hostedzone/Z1PA6795UKMFR9");
+  }
+
+  @Test
   public void canInsertAbsoluteHref() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).uri("/hostedzone/Z1PA6795UKMFR9");
