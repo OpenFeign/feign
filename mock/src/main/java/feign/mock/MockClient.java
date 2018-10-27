@@ -206,6 +206,10 @@ public class MockClient implements Client {
     return this;
   }
 
+  /**
+   * @deprecated use {@link #add(HttpMethod, String, feign.Response.Builder)} instead
+   */
+  @Deprecated
   public MockClient add(HttpMethod method, String url, Response response) {
     return this.add(method, url, response.toBuilder());
   }
@@ -230,7 +234,8 @@ public class MockClient implements Client {
 
     RequestKey requestKey = RequestKey.builder(method, url).build();
     if (!requests.containsKey(requestKey)) {
-      throw new VerificationAssertionError("Wanted: '%s' but never invoked!", requestKey);
+      throw new VerificationAssertionError("Wanted: '%s' but never invoked! Got: %s", requestKey,
+          requests.keySet());
     }
 
     List<Request> result = requests.get(requestKey);
