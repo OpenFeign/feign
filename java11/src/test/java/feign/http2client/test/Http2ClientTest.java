@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.httpclient.test;
+package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.Assertions;
@@ -19,7 +19,7 @@ import org.junit.Test;
 import java.io.IOException;
 import feign.*;
 import feign.client.AbstractClientTest;
-import feign.httpclient.Http2Client;
+import feign.http2client.Http2Client;
 import okhttp3.mockwebserver.MockResponse;
 
 /**
