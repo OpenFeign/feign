@@ -5,18 +5,18 @@ jdk:
   - oraclejdk8
 
 install:
-  mvn --settings .settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -Dgpg.skip -B -V
+  ./mvnw --settings .settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -Dgpg.skip -B -V
 
 script:
-  mvn --settings .settings.xml clean verify -DskipTests=false -Dmaven.javadoc.skip=true -Dgpg.skip -B -U
+  ./mvnw --settings .settings.xml clean verify -DskipTests=false -Dmaven.javadoc.skip=true -Dgpg.skip -B -U
 
 before_deploy:
-  - mvn help:evaluate -N -Dexpression=project.version | grep -v '\['
-  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[')
+  - ./mvnw help:evaluate -N -Dexpression=project.version | grep -v '\['
+  - export project_version=$(./mvnw help:evaluate -N -Dexpression=project.version | grep -v '\[')
   - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
   - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
   - sed -i -- "s/\${env.SONATYPE_PASSWORD}/$SONATYPE_PASSWORD/g" .settings.xml
-  - mvn --settings .settings.xml clean deploy -DskipTests=true -Dmaven.javadoc.skip=false -B -U
+  - ./mvnw --settings .settings.xml clean deploy -DskipTests=true -Dmaven.javadoc.skip=false -B -U
 
 deploy:
   provider: releases
