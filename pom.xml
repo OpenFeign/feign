@@ -23,7 +23,7 @@ limitations under the License.
 
   <groupId>io.github.openfeign.form</groupId>
   <artifactId>parent</artifactId>
-  <version>3.4.0</version>
+  <version>3.4.1</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -63,7 +63,7 @@ limitations under the License.
     <url>https://github.com/OpenFeign/feign-form</url>
     <connection>scm:git:https://github.com/OpenFeign/feign-form.git</connection>
     <developerConnection>scm:git:https://github.com/OpenFeign/feign-form.git</developerConnection>
-    <tag>3.4.0</tag>
+    <tag>3.4.1</tag>
   </scm>
 
   <distributionManagement>

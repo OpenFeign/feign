@@ -27,7 +27,7 @@ limitations under the License.
   <parent>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>parent</artifactId>
-    <version>3.4.0</version>
+    <version>3.4.1</version>
   </parent>
 
   <name>Open Feign Forms Extension for Spring</name>

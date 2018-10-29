@@ -16,8 +16,14 @@
 
 package feign.form;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 /**
  * This object encapsulates a byte array and its associated content type.
@@ -26,7 +32,11 @@ import lombok.Value;
  * @author Guillaume Simard
  * @since 24.03.2018
  */
-@Value
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 @SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class FormData {
 
