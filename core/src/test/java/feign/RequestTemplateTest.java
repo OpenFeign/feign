@@ -17,12 +17,9 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.*;
-
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
-
 import java.util.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

@@ -18,7 +18,6 @@ import feign.template.HeaderTemplate;
 import feign.template.QueryTemplate;
 import feign.template.UriTemplate;
 import feign.template.UriUtils;
-
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -27,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import static feign.Util.*;
 
 /**
