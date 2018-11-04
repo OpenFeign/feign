@@ -46,6 +46,8 @@
     <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
+
+    <module>bom</module>
   </modules>
 
   <properties>
