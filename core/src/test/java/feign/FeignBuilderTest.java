@@ -131,6 +131,22 @@ public class FeignBuilderTest {
   }
 
   @Test
+  public void testHttpNotFoundError() {
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    String url = "http://localhost:" + server.getPort() + "/";
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+
+    try {
+      api.getBodyAsString();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException.NotFound e) {
+      assertThat(e.status()).isEqualTo(404);
+    }
+
+  }
+
+  @Test
   public void testUrlPathConcatNoInitialSlashOnPath() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
@@ -432,6 +448,9 @@ public class FeignBuilderTest {
 
     @RequestLine("GET api/thing")
     Response getNoInitialSlashOnSlash();
+
+    @RequestLine("GET api/thing")
+    String getBodyAsString();
 
     @RequestLine(value = "GET /api/querymap/object")
     String queryMapEncoded(@QueryMap Object object);
