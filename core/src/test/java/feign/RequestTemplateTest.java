@@ -16,14 +16,11 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.Assert.*;
 
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -335,6 +332,27 @@ public class RequestTemplateTest {
     template = template.resolve(mapOf("value1", "ABC 123", "value2", "XYZ 123"));
 
     assertThat(template.request().url()).isEqualTo("/api/ABC%20123?key=XYZ%20123");
+  }
+
+  @Test
+  public void useCaseInsensitiveHeaderFieldNames() {
+    final RequestTemplate template = new RequestTemplate();
+
+    final String value = "value1";
+    template.header("TEST", value);
+
+    final String value2 = "value2";
+    template.header("tEST", value2);
+
+    final Collection<String> test = template.headers().get("test");
+
+    final String assertionMessage = "Header field names should be case insensitive";
+
+    assertNotNull(assertionMessage, test);
+    assertTrue(assertionMessage, test.contains(value));
+    assertTrue(assertionMessage, test.contains(value2));
+    assertEquals(1, template.headers().size());
+    assertEquals(2, template.headers().get("tesT").size());
   }
 
   @Test

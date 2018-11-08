@@ -13,9 +13,7 @@
  */
 package feign;
 
-import static feign.Util.CONTENT_LENGTH;
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
+import static feign.Util.*;
 
 import feign.Request.HttpMethod;
 import feign.template.HeaderTemplate;
@@ -24,16 +22,8 @@ import feign.template.UriTemplate;
 import feign.template.UriUtils;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +40,7 @@ public final class RequestTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
   private final Map<String, QueryTemplate> queries = new LinkedHashMap<>();
-  private final Map<String, HeaderTemplate> headers = new LinkedHashMap<>();
+  private final Map<String, HeaderTemplate> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private String target;
   private boolean resolved = false;
   private UriTemplate uriTemplate;
@@ -70,7 +60,6 @@ public final class RequestTemplate implements Serializable {
    *
    * @param target for the template.
    * @param uriTemplate for the template.
-   * @param bodyTemplate for the template.
    * @param method of the request.
    * @param charset for the request.
    * @param body of the request, may be null
@@ -694,7 +683,7 @@ public final class RequestTemplate implements Serializable {
    * @return the currently applied headers.
    */
   public Map<String, Collection<String>> headers() {
-    Map<String, Collection<String>> headerMap = new LinkedHashMap<>();
+    Map<String, Collection<String>> headerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     this.headers.forEach(
         (key, headerTemplate) -> {
           List<String> values = new ArrayList<>(headerTemplate.getValues());

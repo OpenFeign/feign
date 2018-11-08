@@ -82,8 +82,8 @@ public class LoggerTest {
               Level.HEADERS,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
                   "\\[SendsStuff#login\\] content-length: 3",
@@ -93,8 +93,8 @@ public class LoggerTest {
               Level.FULL,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
                       + " \"denominator\", \"password\": \"password\"\\}",
@@ -185,8 +185,8 @@ public class LoggerTest {
               Level.HEADERS,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out"
                       + " \\([0-9]+ms\\)")
@@ -195,8 +195,8 @@ public class LoggerTest {
               Level.FULL,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
                       + " \"denominator\", \"password\": \"password\"\\}",
@@ -263,8 +263,8 @@ public class LoggerTest {
               Level.HEADERS,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc"
                       + " \\([0-9]+ms\\)")
@@ -273,8 +273,8 @@ public class LoggerTest {
               Level.FULL,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
                       + " \"denominator\", \"password\": \"password\"\\}",
@@ -339,8 +339,8 @@ public class LoggerTest {
               Level.HEADERS,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
                   "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc"
                       + " \\([0-9]+ms\\)")
@@ -349,8 +349,8 @@ public class LoggerTest {
               Level.FULL,
               Arrays.asList(
                   "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
-                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] Content-Length: 80",
+                  "\\[SendsStuff#login\\] Content-Type: application/json",
                   "\\[SendsStuff#login\\] ",
                   "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\":"
                       + " \"denominator\", \"password\": \"password\"\\}",
