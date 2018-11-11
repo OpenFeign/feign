@@ -157,7 +157,7 @@ public final class RecordedRequestAssert
     Set<String> found = new LinkedHashSet<String>();
     for (String header : actual.getHeaders().names()) {
       for (String name : names) {
-        if (header.toLowerCase().startsWith(name.toLowerCase() + ":")) {
+        if (header.equalsIgnoreCase(name)) {
           found.add(header);
         }
       }

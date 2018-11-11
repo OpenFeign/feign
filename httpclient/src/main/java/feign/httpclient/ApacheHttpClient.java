@@ -153,7 +153,7 @@ public final class ApacheHttpClient implements Client {
   }
 
   private ContentType getContentType(Request request) {
-    ContentType contentType = ContentType.DEFAULT_TEXT;
+    ContentType contentType = null;
     for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
         Collection<String> values = entry.getValue();
