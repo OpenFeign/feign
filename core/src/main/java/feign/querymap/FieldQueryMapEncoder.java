@@ -17,6 +17,7 @@ import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * the query map will be generated using member variable names as query parameter names.
@@ -66,14 +67,11 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type) {
-      List<Field> fields = new ArrayList<Field>();
-      for (Field field : type.getDeclaredFields()) {
-        if (!field.isAccessible()) {
-          field.setAccessible(true);
-        }
-        fields.add(field);
-      }
-      return new ObjectParamMetadata(fields);
+      return new ObjectParamMetadata(
+          Arrays.stream(type.getDeclaredFields())
+              .filter(field -> !field.isSynthetic())
+              .peek(field -> field.setAccessible(true))
+              .collect(Collectors.toList()));
     }
   }
 }

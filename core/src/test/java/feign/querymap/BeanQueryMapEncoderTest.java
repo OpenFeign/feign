@@ -23,7 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class PropertyQueryMapEncoderTest {
+/** Test for {@link BeanQueryMapEncoder} */
+public class BeanQueryMapEncoderTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
