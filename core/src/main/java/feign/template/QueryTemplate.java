@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public final class QueryTemplate extends Template {
 
   /* cache a copy of the variables for lookup later */
   private List<String> values;
-  private final String name;
+  private final Template name;
   private final CollectionFormat collectionFormat;
   private boolean pure = false;
 
@@ -119,7 +120,7 @@ public final class QueryTemplate extends Template {
       Charset charset,
       CollectionFormat collectionFormat) {
     super(template, false, true, true, charset);
-    this.name = name;
+    this.name = new Template(name, false, true, false, charset);
     this.collectionFormat = collectionFormat;
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
@@ -136,12 +137,12 @@ public final class QueryTemplate extends Template {
   }
 
   public String getName() {
-    return name;
+    return name.toString();
   }
 
   @Override
   public String toString() {
-    return this.queryString(super.toString());
+    return this.queryString(this.name.toString(), super.toString());
   }
 
   /**
@@ -153,12 +154,13 @@ public final class QueryTemplate extends Template {
    */
   @Override
   public String expand(Map<String, ?> variables) {
-    return this.queryString(super.expand(variables));
+    String name = this.name.expand(variables);
+    return this.queryString(name, super.expand(variables));
   }
 
-  private String queryString(String values) {
+  private String queryString(String name, String values) {
     if (this.pure) {
-      return this.name;
+      return name;
     }
 
     /* covert the comma separated values into a value query string */
@@ -167,7 +169,7 @@ public final class QueryTemplate extends Template {
         .collect(Collectors.toList());
 
     if (!resolved.isEmpty()) {
-      return this.collectionFormat.join(this.name, resolved, this.getCharset()).toString();
+      return this.collectionFormat.join(name, resolved, this.getCharset()).toString();
     }
 
     /* nothing to return, all values are unresolved */

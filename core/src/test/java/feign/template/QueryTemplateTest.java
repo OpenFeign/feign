@@ -71,4 +71,27 @@ public class QueryTemplateTest {
     assertThat(expanded).isEqualToIgnoringCase("name=James,Jason");
   }
 
+  @Test
+  public void expandName() {
+    QueryTemplate template =
+        QueryTemplate.create("{name}", Arrays.asList("James", "Jason"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("name", "firsts"));
+    assertThat(expanded).isEqualToIgnoringCase("firsts=James&firsts=Jason");
+  }
+
+  @Test
+  public void expandPureParameter() {
+    QueryTemplate template =
+        QueryTemplate.create("{name}", Collections.emptyList(), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("name", "firsts"));
+    assertThat(expanded).isEqualToIgnoringCase("firsts");
+  }
+
+  @Test
+  public void expandPureParameterWithSlash() {
+    QueryTemplate template =
+        QueryTemplate.create("/path/{name}", Collections.emptyList(), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("name", "firsts"));
+    assertThat(expanded).isEqualToIgnoringCase("/path/firsts");
+  }
 }

@@ -15,6 +15,7 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
+import java.util.Collections;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
