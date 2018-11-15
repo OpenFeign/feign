@@ -34,7 +34,7 @@ public final class BodyTemplate extends Template {
   }
 
   private BodyTemplate(String value, Charset charset) {
-    super(value, false, false, false, charset);
+    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
   }
 
   @Override

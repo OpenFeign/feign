@@ -132,7 +132,9 @@ public class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(String.valueOf(md.template().requestBody().asBytes().length))));
   }
 
   @Test
@@ -142,7 +144,9 @@ public class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(String.valueOf(md.template().requestBody().asBytes().length))));
   }
 
   @Test
@@ -152,7 +156,9 @@ public class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(String.valueOf(md.template().requestBody().asBytes().length))));
   }
 
   @Test

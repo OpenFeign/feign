@@ -70,6 +70,6 @@ public class UriTemplate extends Template {
    * @param charset to use when encoding.
    */
   private UriTemplate(String template, boolean encodeSlash, Charset charset) {
-    super(template, false, true, encodeSlash, charset);
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, encodeSlash, charset);
   }
 }
