@@ -56,7 +56,7 @@ public class JAXBEncoder implements Encoder {
           "JAXB only supports encoding raw types. Found " + bodyType);
     }
     try {
-      Marshaller marshaller = jaxbContextFactory.createMarshaller((Class) bodyType);
+      Marshaller marshaller = jaxbContextFactory.createMarshaller((Class<?>) bodyType);
       StringWriter stringWriter = new StringWriter();
       marshaller.marshal(object, stringWriter);
       template.body(stringWriter.toString());
