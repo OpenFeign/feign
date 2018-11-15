@@ -94,4 +94,12 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("/path/firsts");
   }
+
+  @Test
+  public void expandNameUnresolved() {
+    QueryTemplate template =
+        QueryTemplate.create("{parameter}", Arrays.asList("James", "Jason"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("name", "firsts"));
+    assertThat(expanded).isEqualToIgnoringCase("%7Bparameter%7D=James&%7Bparameter%7D=Jason");
+  }
 }

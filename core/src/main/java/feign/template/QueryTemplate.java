@@ -119,7 +119,8 @@ public final class QueryTemplate extends Template {
       Charset charset,
       CollectionFormat collectionFormat) {
     super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, charset);
-    this.name = new Template(name, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, false, charset);
+    this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
+        false, charset);
     this.collectionFormat = collectionFormat;
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
