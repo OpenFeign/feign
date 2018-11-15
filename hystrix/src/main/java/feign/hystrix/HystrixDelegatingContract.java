@@ -21,6 +21,7 @@ import feign.MethodMetadata;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -63,6 +64,9 @@ public final class HystrixDelegatingContract implements Contract {
       } else if (type instanceof ParameterizedType
           && ((ParameterizedType) type).getRawType().equals(Completable.class)) {
         metadata.returnType(void.class);
+      } else if (type instanceof ParameterizedType
+          && ((ParameterizedType) type).getRawType().equals(CompletableFuture.class)) {
+        metadata.returnType(resolveLastTypeParameter(type, CompletableFuture.class));
       }
     }
 

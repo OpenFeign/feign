@@ -27,6 +27,9 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -131,14 +134,20 @@ final class HystrixInvocationHandler implements InvocationHandler {
               } else if (isReturnsCompletable(method)) {
                 ((Completable) result).await();
                 return null;
+              } else if (isReturnsCompletableFuture(method)) {
+                return ((Future) result).get();
               } else {
                 return result;
               }
             } catch (IllegalAccessException e) {
               // shouldn't happen as method is public due to being an interface
               throw new AssertionError(e);
-            } catch (InvocationTargetException e) {
+            } catch (InvocationTargetException | ExecutionException e) {
               // Exceptions on fallback are tossed by Hystrix
+              throw new AssertionError(e.getCause());
+            } catch (InterruptedException e) {
+              // Exceptions on fallback are tossed by Hystrix
+              Thread.currentThread().interrupt();
               throw new AssertionError(e.getCause());
             }
           }
@@ -156,6 +165,8 @@ final class HystrixInvocationHandler implements InvocationHandler {
       return hystrixCommand.toObservable().toSingle();
     } else if (isReturnsCompletable(method)) {
       return hystrixCommand.toObservable().toCompletable();
+    } else if (isReturnsCompletableFuture(method)) {
+      return new ObservableCompletableFuture<>(hystrixCommand);
     }
     return hystrixCommand.execute();
   }
@@ -170,6 +181,10 @@ final class HystrixInvocationHandler implements InvocationHandler {
 
   private boolean isReturnsObservable(Method method) {
     return Observable.class.isAssignableFrom(method.getReturnType());
+  }
+
+  private boolean isReturnsCompletableFuture(Method method) {
+    return CompletableFuture.class.isAssignableFrom(method.getReturnType());
   }
 
   private boolean isReturnsSingle(Method method) {

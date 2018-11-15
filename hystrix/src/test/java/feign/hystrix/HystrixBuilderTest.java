@@ -30,6 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.api.Assertions;
@@ -431,6 +435,66 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void completableFutureEmptyBody()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    completable.get(5, TimeUnit.SECONDS);
+  }
+
+  @Test
+  public void completableFutureWithBody()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    assertThat(completable.get(5, TimeUnit.SECONDS)).isEqualTo("foo");
+  }
+
+  @Test
+  public void completableFutureFailWithoutFallback() throws TimeoutException, InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api =
+        HystrixFeign.builder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    try {
+      completable.get(5, TimeUnit.SECONDS);
+    } catch (ExecutionException e) {
+      assertThat(e).hasCauseInstanceOf(HystrixRuntimeException.class);
+    }
+  }
+
+  @Test
+  public void completableFutureFallback()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    assertThat(completable.get(5, TimeUnit.SECONDS)).isEqualTo("fallback");
+  }
+
+  @Test
   public void rxCompletableEmptyBody() {
     server.enqueue(new MockResponse());
 
@@ -655,6 +719,9 @@ public class HystrixBuilderTest {
 
     @RequestLine("GET /")
     Completable completable();
+
+    @RequestLine("GET /")
+    CompletableFuture<String> completableFuture();
   }
 
   class FallbackTestInterface implements TestInterface {
@@ -739,6 +806,11 @@ public class HystrixBuilderTest {
     @Override
     public Completable completable() {
       return Completable.complete();
+    }
+
+    @Override
+    public CompletableFuture<String> completableFuture() {
+      return CompletableFuture.completedFuture("fallback");
     }
   }
 }
