@@ -39,6 +39,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>soap</module>
     <module>reactive</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
@@ -51,6 +52,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+
+    <!-- specifying jvm arguments -->
+    <jvm.options>-Duser.language=en</jvm.options>
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
@@ -317,6 +321,7 @@
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
+            <argLine>${jvm.options}</argLine>
           </configuration>
           <dependencies>
             <dependency>

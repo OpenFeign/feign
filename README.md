@@ -342,6 +342,28 @@ public class Example {
 }
 ```
 
+### SOAP
+[SOAP](./soap) includes an encoder and decoder you can use with an XML API.
+
+
+This module adds support for encoding and decoding SOAP Body objects via JAXB and SOAPMessage. It also provides SOAPFault decoding capabilities by wrapping them into the original `javax.xml.ws.soap.SOAPFaultException`, so that you'll only need to catch `SOAPFaultException` in order to handle SOAPFault.
+
+Add `SOAPEncoder` and/or `SOAPDecoder` to your `Feign.Builder` like so:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    Api api = Feign.builder()
+	     .encoder(new SOAPEncoder(jaxbFactory))
+	     .decoder(new SOAPDecoder(jaxbFactory))
+	     .errorDecoder(new SOAPErrorDecoder())
+	     .target(MyApi.class, "http://api");
+  }
+}
+```
+
+NB: you may also need to add `SOAPErrorDecoder` if SOAP Faults are returned in response with error http codes (4xx, 5xx, ...)
+
 ### SLF4J
 [SLF4JModule](./slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
 

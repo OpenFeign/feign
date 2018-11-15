@@ -21,10 +21,8 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -86,17 +84,13 @@ public class JAXBDecoder implements Decoder {
           "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
       saxParserFactory.setNamespaceAware(namespaceAware);
 
-      Source source =
-          new SAXSource(
-              saxParserFactory.newSAXParser().getXMLReader(),
-              new InputSource(response.body().asInputStream()));
-      Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
-      return unmarshaller.unmarshal(source);
-    } catch (JAXBException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (ParserConfigurationException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (SAXException e) {
+      return jaxbContextFactory
+          .createUnmarshaller((Class<?>) type)
+          .unmarshal(
+              new SAXSource(
+                  saxParserFactory.newSAXParser().getXMLReader(),
+                  new InputSource(response.body().asInputStream())));
+    } catch (JAXBException | ParserConfigurationException | SAXException e) {
       throw new DecodeException(e.toString(), e);
     } finally {
       if (response.body() != null) {

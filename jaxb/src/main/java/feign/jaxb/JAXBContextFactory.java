@@ -14,9 +14,9 @@
 package feign.jaxb;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -31,8 +31,7 @@ import javax.xml.bind.Unmarshaller;
  */
 public final class JAXBContextFactory {
 
-  private final ConcurrentHashMap<Class, JAXBContext> jaxbContexts =
-      new ConcurrentHashMap<Class, JAXBContext>(64);
+  private final ConcurrentHashMap<Class<?>, JAXBContext> jaxbContexts = new ConcurrentHashMap<>(64);
   private final Map<String, Object> properties;
 
   private JAXBContextFactory(Map<String, Object> properties) {
@@ -41,24 +40,19 @@ public final class JAXBContextFactory {
 
   /** Creates a new {@link javax.xml.bind.Unmarshaller} that handles the supplied class. */
   public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
-    return ctx.createUnmarshaller();
+    return getContext(clazz).createUnmarshaller();
   }
 
   /** Creates a new {@link javax.xml.bind.Marshaller} that handles the supplied class. */
   public Marshaller createMarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
-    Marshaller marshaller = ctx.createMarshaller();
+    Marshaller marshaller = getContext(clazz).createMarshaller();
     setMarshallerProperties(marshaller);
     return marshaller;
   }
 
   private void setMarshallerProperties(Marshaller marshaller) throws PropertyException {
-    Iterator<String> keys = properties.keySet().iterator();
-
-    while (keys.hasNext()) {
-      String key = keys.next();
-      marshaller.setProperty(key, properties.get(key));
+    for (Entry<String, Object> en : properties.entrySet()) {
+      marshaller.setProperty(en.getKey(), en.getValue());
     }
   }
 
@@ -85,10 +79,10 @@ public final class JAXBContextFactory {
     }
   }
 
-  /** Creates instances of {@link feign.jaxb.JAXBContextFactory} */
+  /** Creates instances of {@link feign.jaxb.JAXBContextFactory}. */
   public static class Builder {
 
-    private final Map<String, Object> properties = new HashMap<String, Object>(5);
+    private final Map<String, Object> properties = new HashMap<>(10);
 
     /** Sets the jaxb.encoding property of any Marshaller created by this factory. */
     public Builder withMarshallerJAXBEncoding(String value) {
@@ -119,6 +113,22 @@ public final class JAXBContextFactory {
     /** Sets the jaxb.fragment property of any Marshaller created by this factory. */
     public Builder withMarshallerFragment(Boolean value) {
       properties.put(Marshaller.JAXB_FRAGMENT, value);
+      return this;
+    }
+
+    /**
+     * Sets the given property of any Marshaller created by this factory.
+     *
+     * <p>Example : <br>
+     * <br>
+     * <code>
+     *    new JAXBContextFactory.Builder()
+     *      .withProperty("com.sun.xml.internal.bind.xmlHeaders", "&lt;!DOCTYPE Example SYSTEM \&quot;example.dtd\&quot;&gt;")
+     *      .build();
+     * </code>
+     */
+    public Builder withProperty(String key, Object value) {
+      properties.put(key, value);
       return this;
     }
 
