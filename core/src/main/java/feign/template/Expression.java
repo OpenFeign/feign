@@ -68,4 +68,9 @@ abstract class Expression implements TemplateChunk {
     }
     return "{" + this.name + "}";
   }
+
+  @Override
+  public String toString() {
+    return this.getValue();
+  }
 }

@@ -28,13 +28,13 @@ import java.util.stream.Collectors;
  * <a href="https://tools.ietf.org/html/rfc6570">RFC 6570</a>, with some relaxed rules, allowing the
  * concept to be used in areas outside of the uri.
  */
-public abstract class Template {
+public class Template {
 
   private static final Logger logger = Logger.getLogger(Template.class.getName());
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)(\\?)");
   private final String template;
   private final boolean allowUnresolved;
-  private final boolean encode;
+  private final EncodingOptions encode;
   private final boolean encodeSlash;
   private final Charset charset;
   private final List<TemplateChunk> templateChunks = new ArrayList<>();
@@ -48,12 +48,13 @@ public abstract class Template {
    * @param encodeSlash if slash characters should be encoded.
    */
   Template(
-      String value, boolean allowUnresolved, boolean encode, boolean encodeSlash, Charset charset) {
+      String value, ExpansionOptions allowUnresolved, EncodingOptions encode, boolean encodeSlash,
+      Charset charset) {
     if (value == null) {
       throw new IllegalArgumentException("template is required.");
     }
     this.template = value;
-    this.allowUnresolved = allowUnresolved;
+    this.allowUnresolved = ExpansionOptions.ALLOW_UNRESOLVED == allowUnresolved;
     this.encode = encode;
     this.encodeSlash = encodeSlash;
     this.charset = charset;
@@ -78,7 +79,7 @@ public abstract class Template {
         Expression expression = (Expression) chunk;
         Object value = variables.get(expression.getName());
         if (value != null) {
-          String expanded = expression.expand(value, this.encode);
+          String expanded = expression.expand(value, this.encode.isEncodingRequired());
           if (!this.encodeSlash) {
             logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
             expanded = expanded.replaceAll("\\%2F", "/");
@@ -105,7 +106,7 @@ public abstract class Template {
    * @return the encoded value.
    */
   private String encode(String value) {
-    return this.encode ? UriUtils.encode(value, this.charset) : value;
+    return this.encode.isEncodingRequired() ? UriUtils.encode(value, this.charset) : value;
   }
 
   /**
@@ -116,7 +117,7 @@ public abstract class Template {
    * @return the encoded value
    */
   private String encode(String value, boolean query) {
-    if (this.encode) {
+    if (this.encode.isEncodingRequired()) {
       return query ? UriUtils.queryEncode(value, this.charset)
           : UriUtils.pathEncode(value, this.charset);
     } else {
@@ -218,15 +219,11 @@ public abstract class Template {
         .map(TemplateChunk::getValue).collect(Collectors.joining());
   }
 
-  public boolean allowUnresolved() {
-    return allowUnresolved;
-  }
-
   public boolean encode() {
-    return encode;
+    return encode.isEncodingRequired();
   }
 
-  public boolean encodeSlash() {
+  boolean encodeSlash() {
     return encodeSlash;
   }
 
@@ -313,6 +310,24 @@ public abstract class Template {
       }
       throw new IllegalStateException("No More Elements");
     }
+  }
+
+  public enum EncodingOptions {
+    REQUIRED(true), NOT_REQUIRED(false);
+
+    private boolean shouldEncode;
+
+    EncodingOptions(boolean shouldEncode) {
+      this.shouldEncode = shouldEncode;
+    }
+
+    public boolean isEncodingRequired() {
+      return this.shouldEncode;
+    }
+  }
+
+  public enum ExpansionOptions {
+    ALLOW_UNRESOLVED, REQUIRED
   }
 
 }

@@ -79,7 +79,7 @@ public final class HeaderTemplate extends Template {
    * @param template to parse.
    */
   private HeaderTemplate(String template, String name, Iterable<String> values, Charset charset) {
-    super(template, false, false, false, charset);
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset);
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toSet());
