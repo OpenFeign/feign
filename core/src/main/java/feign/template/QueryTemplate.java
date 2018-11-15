@@ -19,7 +19,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -119,8 +118,8 @@ public final class QueryTemplate extends Template {
       Iterable<String> values,
       Charset charset,
       CollectionFormat collectionFormat) {
-    super(template, false, true, true, charset);
-    this.name = new Template(name, false, true, false, charset);
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, charset);
+    this.name = new Template(name, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, false, charset);
     this.collectionFormat = collectionFormat;
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
