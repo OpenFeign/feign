@@ -28,9 +28,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class UtilTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void removesEmptyStrings() {
@@ -122,6 +127,114 @@ public class UtilTest {
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
     assertEquals(Object.class, last);
+  }
+
+  @Test
+  public void checkArgumentInputFalseNotNullNullOutputIllegalArgumentException() {
+    // Arrange
+    final boolean expression = false;
+    final String errorMessageTemplate = "";
+    final Object[] errorMessageArgs = null;
+    // Act
+    thrown.expect(IllegalArgumentException.class);
+    Util.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
+    // Method is not expected to return due to exception thrown
+  }
+
+  @Test
+  public void checkNotNullInputNullNotNullNullOutputNullPointerException() {
+    // Arrange
+    final Object reference = null;
+    final String errorMessageTemplate = "";
+    final Object[] errorMessageArgs = null;
+    // Act
+    thrown.expect(NullPointerException.class);
+    Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
+    // Method is not expected to return due to exception thrown
+  }
+
+  @Test
+  public void checkNotNullInputZeroNotNull0OutputZero() {
+    // Arrange
+    final Object reference = 0;
+    final String errorMessageTemplate = "   ";
+    final Object[] errorMessageArgs = {};
+    // Act
+    final Object retval = Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
+    // Assert result
+    Assert.assertEquals(new Integer(0), retval);
+  }
+
+  @Test
+  public void checkStateInputFalseNotNullNullOutputIllegalStateException() {
+    // Arrange
+    final boolean expression = false;
+    final String errorMessageTemplate = "";
+    final Object[] errorMessageArgs = null;
+    // Act
+    thrown.expect(IllegalStateException.class);
+    Util.checkState(expression, errorMessageTemplate, errorMessageArgs);
+    // Method is not expected to return due to exception thrown
+  }
+
+  @Test
+  public void emptyToNullInputNotNullOutputNotNull() {
+    // Arrange
+    final String string = "AAAAAAAA";
+    // Act
+    final String retval = Util.emptyToNull(string);
+    // Assert result
+    Assert.assertEquals("AAAAAAAA", retval);
+  }
+
+  @Test
+  public void emptyToNullInputNullOutputNull() {
+    // Arrange
+    final String string = null;
+    // Act
+    final String retval = Util.emptyToNull(string);
+    // Assert result
+    Assert.assertNull(retval);
+  }
+
+  @Test
+  public void isBlankInputNotNullOutputFalse() {
+    // Arrange
+    final String value = "AAAAAAAA";
+    // Act
+    final boolean retval = Util.isBlank(value);
+    // Assert result
+    Assert.assertEquals(false, retval);
+  }
+
+  @Test
+  public void isBlankInputNullOutputTrue() {
+    // Arrange
+    final String value = null;
+    // Act
+    final boolean retval = Util.isBlank(value);
+    // Assert result
+    Assert.assertEquals(true, retval);
+  }
+
+  @Test
+  public void isNotBlankInputNotNullOutputFalse() {
+    // Arrange
+    final String value = "";
+    // Act
+    final boolean retval = Util.isNotBlank(value);
+    // Assert result
+    Assert.assertEquals(false, retval);
+  }
+
+  @Test
+  public void isNotBlankInputNotNullOutputTrue() {
+    // Arrange
+    final String value = "AAAAAAAA";
+    // Act
+    final boolean retval = Util.isNotBlank(value);
+    // Assert result
+    Assert.assertEquals(true, retval);
   }
 
   interface LastTypeParameter {
