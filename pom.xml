@@ -84,6 +84,7 @@
     <maven-bundle-plugin.version>4.0.0</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+    <bom-generator.version>0.14.3</bom-generator.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
@@ -443,6 +444,7 @@
             <exclude>mvnw*</exclude>
             <exclude>etc/header.txt</exclude>
             <exclude>**/.idea/**</exclude>
+            <exclude>**/target/**</exclude>
             <exclude>LICENSE</exclude>
             <exclude>**/*.md</exclude>
             <exclude>bnd.bnd</exclude>
@@ -504,6 +506,56 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>io.sundr</groupId>
+        <artifactId>sundr-maven-plugin</artifactId>
+        <version>${bom-generator.version}</version>
+        <inherited>false</inherited>
+        <configuration>
+          <bomTemplateUrl>file://${project.basedir}/src/config/bom.xml</bomTemplateUrl>
+          <boms>
+            <bom>
+              <artifactId>feign-bom</artifactId>
+              <name>Feign (Bill Of Materials)</name>
+
+              <properties>
+                <license.skip>true</license.skip>
+              </properties>
+
+              <modules>
+                <includes>
+                  <include>io.github.openfeign:*</include>
+                </includes>
+                <excludes>
+                  <exclude>*:feign-example-*</exclude>
+                  <exclude>*:feign-benchmark</exclude>
+                </excludes>
+              </modules>
+            </bom>
+          </boms>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-bom</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>sundr-codegen</artifactId>
+            <version>${bom-generator.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>com.sun</groupId>
+                <artifactId>tools</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
