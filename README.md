@@ -753,7 +753,7 @@ public class Example {
 All responses that result in an HTTP status not in the 2xx range will trigger the `ErrorDecoder`'s `decode` method, allowing
 you to handle the response, wrap the failure into a custom exception or perform any additional processing.
 If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
-`Retyer`.
+`Retryer`.
 
 ### Retry
 Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network
