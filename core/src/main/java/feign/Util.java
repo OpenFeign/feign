@@ -39,9 +39,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /** Utilities, typically copied in from guava, so as to avoid dependency conflicts. */
 public class Util {
@@ -222,35 +224,23 @@ public class Util {
    * looking at the raw type (vs type hierarchy). Decorate for sophistication.
    */
   public static Object emptyValueOf(Type type) {
-    return EMPTIES.get(Types.getRawType(type));
+    return EMPTIES.getOrDefault(Types.getRawType(type), () -> null).get();
   }
 
-  private static final Map<Class<?>, Object> EMPTIES;
+  private static final Map<Class<?>, Supplier<Object>> EMPTIES;
 
   static {
-    Map<Class<?>, Object> empties = new LinkedHashMap<Class<?>, Object>();
-    empties.put(boolean.class, false);
-    empties.put(Boolean.class, false);
-    empties.put(byte[].class, new byte[0]);
-    empties.put(Collection.class, Collections.emptyList());
-    empties.put(
-        Iterator.class,
-        new Iterator<Object>() { // Collections.emptyIterator is a 1.7 api
-          public boolean hasNext() {
-            return false;
-          }
-
-          public Object next() {
-            throw new NoSuchElementException();
-          }
-
-          public void remove() {
-            throw new IllegalStateException();
-          }
-        });
-    empties.put(List.class, Collections.emptyList());
-    empties.put(Map.class, Collections.emptyMap());
-    empties.put(Set.class, Collections.emptySet());
+    final Map<Class<?>, Supplier<Object>> empties = new LinkedHashMap<Class<?>, Supplier<Object>>();
+    empties.put(boolean.class, () -> false);
+    empties.put(Boolean.class, () -> false);
+    empties.put(byte[].class, () -> new byte[0]);
+    empties.put(Collection.class, Collections::emptyList);
+    empties.put(Iterator.class, Collections::emptyIterator);
+    empties.put(List.class, Collections::emptyList);
+    empties.put(Map.class, Collections::emptyMap);
+    empties.put(Set.class, Collections::emptySet);
+    empties.put(Optional.class, Optional::empty);
+    empties.put(Stream.class, Stream::empty);
     EMPTIES = Collections.unmodifiableMap(empties);
   }
 

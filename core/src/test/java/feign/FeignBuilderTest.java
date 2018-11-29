@@ -35,8 +35,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.data.MapEntry;
@@ -65,12 +67,45 @@ public class FeignBuilderTest {
   public void testDecode404() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setResponseCode(400));
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().decode404().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
+    assertThat(api.decodedLazyPost()).isEmpty(); // empty, not null!
+    assertThat(api.optionalContent()).isEmpty(); // empty, not null!
+    assertThat(api.streamPost()).isEmpty(); // empty, not null!
+    assertThat(api.decodedPost()).isNull(); // null, not empty!
+
+    try { // ensure other 400 codes are not impacted.
+      api.decodedPost();
+      failBecauseExceptionWasNotThrown(FeignException.class);
+    } catch (FeignException e) {
+      assertThat(e.status()).isEqualTo(400);
+    }
+  }
+
+  /** Shows exception handling isn't required to coerce 204 to null or empty */
+  @Test
+  public void testDecode204() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse().setResponseCode(400));
+
+    String url = "http://localhost:" + server.getPort();
+    TestInterface api = Feign.builder().target(TestInterface.class, url);
+
+    assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
+    assertThat(api.decodedLazyPost()).isEmpty(); // empty, not null!
+    assertThat(api.optionalContent()).isEmpty(); // empty, not null!
+    assertThat(api.streamPost()).isEmpty(); // empty, not null!
     assertThat(api.decodedPost()).isNull(); // null, not empty!
 
     try { // ensure other 400 codes are not impacted.
@@ -470,6 +505,12 @@ public class FeignBuilderTest {
 
     @RequestLine("POST /")
     Iterator<String> decodedLazyPost();
+
+    @RequestLine("POST /")
+    Optional<String> optionalContent();
+
+    @RequestLine("POST /")
+    Stream<String> streamPost();
 
     @RequestLine(value = "GET /api/queues/{vhost}", decodeSlash = false)
     byte[] getQueues(@Param("vhost") String vhost);

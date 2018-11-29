@@ -88,7 +88,7 @@ public interface Decoder {
 
     @Override
     public Object decode(Response response, Type type) throws IOException {
-      if (response.status() == 404) return Util.emptyValueOf(type);
+      if (response.status() == 404 || response.status() == 204) return Util.emptyValueOf(type);
       if (response.body() == null) return null;
       if (byte[].class.equals(type)) {
         return Util.toByteArray(response.body().asInputStream());

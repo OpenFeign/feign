@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -60,6 +61,7 @@ public class UtilTest {
     assertEquals(Collections.emptyList(), Util.emptyValueOf(List.class));
     assertEquals(Collections.emptyMap(), Util.emptyValueOf(Map.class));
     assertEquals(Collections.emptySet(), Util.emptyValueOf(Set.class));
+    assertEquals(Optional.empty(), Util.emptyValueOf(Optional.class));
   }
 
   /** In other words, {@code List<String>} is as empty as {@code List<?>}. */
