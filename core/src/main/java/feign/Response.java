@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
@@ -49,7 +50,9 @@ public final class Response implements Closeable {
     this.status = builder.status;
     this.request = builder.request;
     this.reason = builder.reason; // nullable
-    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
+    this.headers = (builder.headers != null)
+        ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
+        : new LinkedHashMap<>();
     this.body = builder.body; // nullable
   }
 
