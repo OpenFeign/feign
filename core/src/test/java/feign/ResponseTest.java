@@ -71,4 +71,14 @@ public class ResponseTest {
         Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
     assertThat(response.headers()).containsOnly(entry(("set-cookie"), expectedHeaderValue));
   }
+
+  @Test
+  public void headersAreOptional() {
+    Response response = Response.builder()
+        .status(200)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body(new byte[0])
+        .build();
+    assertThat(response.headers()).isNotNull().isEmpty();
+  }
 }
