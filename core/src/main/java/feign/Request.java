@@ -82,6 +82,10 @@ public final class Request {
       return new Request.Body(null, null, null);
     }
 
+    public Charset charset() {
+      return this.encoding;
+    }
+
   }
 
   public enum HttpMethod {
@@ -187,7 +191,7 @@ public final class Request {
    * @deprecated use {@link #requestBody()} instead
    */
   public Charset charset() {
-    return body.encoding;
+    return body.charset();
   }
 
   /**
