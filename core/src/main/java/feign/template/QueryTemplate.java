@@ -15,7 +15,6 @@ package feign.template;
 
 import feign.CollectionFormat;
 import feign.Util;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,11 +40,10 @@ public final class QueryTemplate extends Template {
    *
    * @param name of the query parameter.
    * @param values in the template.
-   * @param charset for the template.
    * @return a QueryTemplate.
    */
-  public static QueryTemplate create(String name, Iterable<String> values, Charset charset) {
-    return create(name, values, charset, CollectionFormat.EXPLODED);
+  public static QueryTemplate create(String name, Iterable<String> values) {
+    return create(name, values, CollectionFormat.EXPLODED);
   }
 
   /**
@@ -53,13 +51,11 @@ public final class QueryTemplate extends Template {
    *
    * @param name of the query parameter.
    * @param values in the template.
-   * @param charset for the template.
    * @param collectionFormat to use.
    * @return a QueryTemplate
    */
   public static QueryTemplate create(String name,
                                      Iterable<String> values,
-                                     Charset charset,
                                      CollectionFormat collectionFormat) {
     if (name == null || name.isEmpty()) {
       throw new IllegalArgumentException("name is required.");
@@ -83,7 +79,7 @@ public final class QueryTemplate extends Template {
       }
     }
 
-    return new QueryTemplate(template.toString(), name, remaining, charset, collectionFormat);
+    return new QueryTemplate(template.toString(), name, remaining, collectionFormat);
   }
 
   /**
@@ -100,7 +96,7 @@ public final class QueryTemplate extends Template {
     queryValues.addAll(StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toList()));
-    return create(queryTemplate.getName(), queryValues, queryTemplate.getCharset(),
+    return create(queryTemplate.getName(), queryValues,
         collectionFormat);
   }
 
@@ -116,11 +112,10 @@ public final class QueryTemplate extends Template {
       String template,
       String name,
       Iterable<String> values,
-      Charset charset,
       CollectionFormat collectionFormat) {
-    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, charset);
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, Util.UTF_8);
     this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
-        false, charset);
+        false, Util.UTF_8);
     this.collectionFormat = collectionFormat;
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)

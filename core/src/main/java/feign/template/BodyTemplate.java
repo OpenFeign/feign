@@ -31,15 +31,16 @@ public final class BodyTemplate extends Template {
    * @return a Body Template instance.
    */
   public static BodyTemplate create(String template) {
-    return new BodyTemplate(template, Util.UTF_8);
+    return new BodyTemplate(template);
   }
 
-  private BodyTemplate(String value, Charset charset) {
-    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
+  private BodyTemplate(String value) {
+    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false,
+        Util.UTF_8);
   }
 
   @Override
   public String expand(Map<String, ?> variables) {
-    return UriUtils.decode(super.expand(variables), Util.UTF_8);
+    return UriUtils.decode(super.expand(variables), this.getCharset());
   }
 }

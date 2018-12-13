@@ -17,72 +17,13 @@ import static feign.Util.checkNotNull;
 import static feign.Util.valuesOrEmpty;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
-import java.util.*;
-import feign.template.BodyTemplate;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * An immutable request to an http server.
  */
 public final class Request {
-
-  public static class Body {
-
-    private final byte[] data;
-    private final Charset encoding;
-    private final BodyTemplate bodyTemplate;
-
-    private Body(byte[] data, Charset encoding, BodyTemplate bodyTemplate) {
-      super();
-      this.data = data;
-      this.encoding = encoding;
-      this.bodyTemplate = bodyTemplate;
-    }
-
-    public Request.Body expand(Map<String, ?> variables) {
-      if (bodyTemplate == null)
-        return this;
-
-      return encoded(bodyTemplate.expand(variables).getBytes(encoding), encoding);
-    }
-
-    public List<String> getVariables() {
-      if (bodyTemplate == null)
-        return Collections.emptyList();
-      return bodyTemplate.getVariables();
-    }
-
-    public static Request.Body encoded(byte[] bodyData, Charset encoding) {
-      return new Request.Body(bodyData, encoding, null);
-    }
-
-    public int length() {
-      /* calculate the content length based on the data provided */
-      return data != null ? data.length : 0;
-    }
-
-    public byte[] asBytes() {
-      return data;
-    }
-
-    public static Request.Body bodyTemplate(String bodyTemplate, Charset encoding) {
-      return new Request.Body(null, encoding, BodyTemplate.create(bodyTemplate));
-    }
-
-    public String bodyTemplate() {
-      return (bodyTemplate != null) ? bodyTemplate.toString() : null;
-    }
-
-    public String asString() {
-      return encoding != null && data != null
-          ? new String(data, encoding)
-          : "Binary data";
-    }
-
-    public static Body empty() {
-      return new Request.Body(null, null, null);
-    }
-
-  }
 
   public enum HttpMethod {
     GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
@@ -119,23 +60,8 @@ public final class Request {
                                Map<String, Collection<String>> headers,
                                byte[] body,
                                Charset charset) {
-    return create(httpMethod, url, headers, Body.encoded(body, charset));
-  }
+    return new Request(httpMethod, url, headers, body, charset);
 
-  /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
-   *
-   * @param httpMethod for the request.
-   * @param url for the request.
-   * @param headers to include.
-   * @param body of the request, can be {@literal null}
-   * @return a Request
-   */
-  public static Request create(HttpMethod httpMethod,
-                               String url,
-                               Map<String, Collection<String>> headers,
-                               Body body) {
-    return new Request(httpMethod, url, headers, body);
   }
 
   private final HttpMethod httpMethod;
@@ -143,11 +69,12 @@ public final class Request {
   private final Map<String, Collection<String>> headers;
   private final Body body;
 
-  Request(HttpMethod method, String url, Map<String, Collection<String>> headers, Body body) {
+  Request(HttpMethod method, String url, Map<String, Collection<String>> headers, byte[] body,
+      Charset charset) {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
+    this.body = new Body(body, charset);
   }
 
   /**
@@ -183,11 +110,9 @@ public final class Request {
    * The character set with which the body is encoded, or null if unknown or not applicable. When
    * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
    * as a String.
-   *
-   * @deprecated use {@link #requestBody()} instead
    */
   public Charset charset() {
-    return body.encoding;
+    return this.body.encoding();
   }
 
   /**
@@ -195,15 +120,20 @@ public final class Request {
    * interpretable as text.
    *
    * @see #charset()
-   * @deprecated use {@link #requestBody()} instead
    */
   public byte[] body() {
-    return body.data;
+    return this.body.data();
   }
 
-  public Body requestBody() {
-    return body;
+  /**
+   * Size of the Request Body.
+   *
+   * @return size of the request body.
+   */
+  public int contentLength() {
+    return this.body.length();
   }
+
 
   @Override
   public String toString() {
@@ -214,13 +144,14 @@ public final class Request {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) {
-      builder.append('\n').append(body.asString());
+    if (!this.body.empty()) {
+      builder.append('\n')
+          .append(this.charset() != null ? new String(this.body(), this.charset()) : "Binary data");
     }
     return builder.toString();
   }
 
-  /*
+  /**
    * Controls the per-request settings currently required to be implemented by all {@link Client
    * clients}
    */
@@ -270,6 +201,63 @@ public final class Request {
      */
     public boolean isFollowRedirects() {
       return followRedirects;
+    }
+  }
+
+
+  /**
+   * Represents the Body of the request.
+   */
+  public static class Body {
+
+    private final byte[] data;
+    private final Charset encoding;
+
+    /**
+     * Creates a new Request Body.
+     *
+     * @param data of the body, can be {@literal null}
+     * @param encoding for the body, can be {@literal null}
+     */
+    public Body(byte[] data, Charset encoding) {
+      this.data = data;
+      this.encoding = encoding;
+    }
+
+    /**
+     * Amount of data in this Request.
+     *
+     * @return the length of the data.
+     */
+    public int length() {
+      return (this.empty()) ? 0 : this.data.length;
+    }
+
+    /**
+     * If this body contains any data.
+     *
+     * @return {@literal true} if data is present, {@literal false} otherwise.
+     */
+    public boolean empty() {
+      return this.data == null || this.data.length == 0;
+    }
+
+    /**
+     * Encoding for this Request Body.
+     *
+     * @return the current Charset, can be {@literal null}
+     */
+    public Charset encoding() {
+      return this.encoding;
+    }
+
+    /**
+     * Request Data.
+     *
+     * @return request data, can be {@literal null}
+     */
+    public byte[] data() {
+      return this.data;
     }
   }
 }

@@ -28,24 +28,24 @@ public class UriTemplateTest {
   @Test
   public void emptyRelativeTemplate() {
     String template = "/";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.expand(Collections.emptyMap())).isEqualToIgnoringCase("/");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void nullTemplate() {
-    UriTemplate.create(null, Util.UTF_8);
+    UriTemplate.create(null);
   }
 
   @Test
   public void emptyTemplate() {
-    UriTemplate.create("", Util.UTF_8);
+    UriTemplate.create("");
   }
 
   @Test
   public void simpleTemplate() {
     String template = "https://www.example.com/foo/{bar}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
 
     /* verify that the template has 1 variables names foo */
     List<String> uriTemplateVariables = uriTemplate.getVariables();
@@ -62,7 +62,7 @@ public class UriTemplateTest {
   @Test
   public void simpleTemplateMultipleExpressions() {
     String template = "https://www.example.com/{foo}/{bar}/details";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
 
     /* verify that the template has 2 variables names foo and bar */
     List<String> uriTemplateVariables = uriTemplate.getVariables();
@@ -81,7 +81,7 @@ public class UriTemplateTest {
   @Test
   public void simpleTemplateMultipleSequentialExpressions() {
     String template = "https://www.example.com/{foo}{bar}/{baz}/details";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
 
     /* verify that the template has 2 variables names foo and bar */
     List<String> uriTemplateVariables = uriTemplate.getVariables();
@@ -101,7 +101,7 @@ public class UriTemplateTest {
   @Test
   public void simpleTemplateUnresolvedVariablesAreRemoved() {
     String template = "https://www.example.com/{foo}?name={name}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.getVariables()).contains("foo", "name").hasSize(2);
 
     Map<String, Object> variables = new LinkedHashMap<>();
@@ -114,7 +114,7 @@ public class UriTemplateTest {
   @Test
   public void missingVariablesOnPathAreRemoved() {
     String template = "https://www.example.com/{foo}/items?name={name}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.getVariables()).contains("foo", "name").hasSize(2);
 
     Map<String, Object> variables = new LinkedHashMap<>();
@@ -128,7 +128,7 @@ public class UriTemplateTest {
   @Test
   public void simpleTemplateWithRegularExpressions() {
     String template = "https://www.example.com/{foo:[0-9]{4}}/{bar}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.getVariables()).contains("foo", "bar").hasSize(2);
 
     Map<String, Object> variables = new LinkedHashMap<>();
@@ -142,7 +142,7 @@ public class UriTemplateTest {
   @Test(expected = IllegalArgumentException.class)
   public void simpleTemplateWithRegularExpressionsValidation() {
     String template = "https://www.example.com/{foo:[0-9]{4}}/{bar}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.getVariables()).contains("foo", "bar").hasSize(2);
 
     Map<String, Object> variables = new LinkedHashMap<>();
@@ -158,7 +158,7 @@ public class UriTemplateTest {
   public void nestedExpressionsAreLiterals() {
     /* the template of {foo{bar}}, will be treated as literals as nested templates are ignored */
     String template = "https://www.example.com/{foo{bar}}/{baz}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.getVariables()).contains("baz").hasSize(1);
 
     Map<String, Object> variables = new LinkedHashMap<>();
@@ -173,7 +173,7 @@ public class UriTemplateTest {
   @Test
   public void literalTemplate() {
     String template = "https://www.example.com/do/stuff";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     String expandedTemplate = uriTemplate.expand(Collections.emptyMap());
     assertThat(expandedTemplate).isEqualToIgnoringCase(template);
     assertThat(URI.create(expandedTemplate)).isNotNull();
@@ -182,21 +182,21 @@ public class UriTemplateTest {
   @Test(expected = IllegalArgumentException.class)
   public void rejectEmptyExpressions() {
     String template = "https://www.example.com/{}/things";
-    UriTemplate.create(template, Util.UTF_8);
+    UriTemplate.create(template);
     fail("Should not accept empty expressions");
   }
 
   @Test
   public void testToString() {
     String template = "https://www.example.com/foo/{bar}/{baz:[0-9]}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.toString()).isEqualToIgnoringCase(template);
   }
 
   @Test
   public void encodeVariables() {
     String template = "https://www.example.com/{first}/{last}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     Map<String, Object> variables = new LinkedHashMap<>();
     variables.put("first", "John Jacob");
     variables.put("last", "Jingleheimer Schmidt");
@@ -208,7 +208,7 @@ public class UriTemplateTest {
   @Test
   public void encodeLiterals() {
     String template = "https://www.example.com/A Team";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     String expandedTemplate = uriTemplate.expand(Collections.emptyMap());
     assertThat(expandedTemplate)
         .isEqualToIgnoringCase("https://www.example.com/A%20Team");
@@ -217,7 +217,7 @@ public class UriTemplateTest {
   @Test
   public void ensurePlusIsSupportedOnPath() {
     String template = "https://www.example.com/sam+adams/beer/{type}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     String expanded = uriTemplate.expand(Collections.emptyMap());
     assertThat(expanded).isEqualToIgnoringCase("https://www.example.com/sam+adams/beer/");
   }
@@ -225,20 +225,20 @@ public class UriTemplateTest {
   @Test
   public void incompleteTemplateIsALiteral() {
     String template = "https://www.example.com/testing/foo}}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     assertThat(uriTemplate.expand(Collections.emptyMap()))
         .isEqualToIgnoringCase("https://www.example.com/testing/foo%7D%7D");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void substituteNullMap() {
-    UriTemplate.create("stuff", Util.UTF_8).expand(null);
+    UriTemplate.create("stuff").expand(null);
   }
 
   @Test
   public void skipAlreadyEncodedLiteral() {
     String template = "https://www.example.com/A%20Team";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     String expandedTemplate = uriTemplate.expand(Collections.emptyMap());
     assertThat(expandedTemplate)
         .isEqualToIgnoringCase("https://www.example.com/A%20Team");
@@ -247,8 +247,8 @@ public class UriTemplateTest {
   @Test
   public void skipAlreadyEncodedVariable() {
     String template = "https://www.example.com/testing/{foo}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
-    String encodedVariable = UriUtils.encode("Johnny Appleseed", Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
+    String encodedVariable = UriUtils.encode("Johnny Appleseed");
     Map<String, Object> variables = new LinkedHashMap<>();
     variables.put("foo", encodedVariable);
     assertThat(uriTemplate.expand(variables))
@@ -258,7 +258,7 @@ public class UriTemplateTest {
   @Test
   public void skipSlashes() {
     String template = "https://www.example.com/{path}";
-    UriTemplate uriTemplate = UriTemplate.create(template, false, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template, false);
     Map<String, Object> variables = new LinkedHashMap<>();
     variables.put("path", "me/you/first");
     String encoded = uriTemplate.expand(variables);
@@ -268,7 +268,7 @@ public class UriTemplateTest {
   @Test
   public void encodeSlashes() {
     String template = "https://www.example.com/{path}";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     Map<String, Object> variables = new LinkedHashMap<>();
     variables.put("path", "me/you/first");
     String encoded = uriTemplate.expand(variables);
@@ -278,7 +278,7 @@ public class UriTemplateTest {
   @Test
   public void testLiteralTemplateWithQueryString() {
     String template = "https://api.example.com?wsdl";
-    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template);
     String expanded = uriTemplate.expand(Collections.emptyMap());
     assertThat(expanded).isEqualToIgnoringCase("https://api.example.com?wsdl");
   }

@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.querymap.FieldQueryMapEncoder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,7 +27,7 @@ public class DefaultQueryMapEncoderTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
 
-  private final QueryMapEncoder encoder = new QueryMapEncoder.Default();
+  private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
 
   @Test
   public void testEncodesObject_visibleFields() {

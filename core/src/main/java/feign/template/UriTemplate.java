@@ -13,6 +13,7 @@
  */
 package feign.template;
 
+import feign.Util;
 import java.nio.charset.Charset;
 
 /**
@@ -31,11 +32,10 @@ public class UriTemplate extends Template {
    * Create a Uri Template.
    *
    * @param template representing the uri.
-   * @param charset for encoding.
    * @return a new Uri Template instance.
    */
-  public static UriTemplate create(String template, Charset charset) {
-    return new UriTemplate(template, true, charset);
+  public static UriTemplate create(String template) {
+    return new UriTemplate(template, true);
   }
 
   /**
@@ -43,11 +43,10 @@ public class UriTemplate extends Template {
    *
    * @param template representing the uri
    * @param encodeSlash flag if slash characters should be encoded.
-   * @param charset for the template.
    * @return a new Uri Template instance.
    */
-  public static UriTemplate create(String template, boolean encodeSlash, Charset charset) {
-    return new UriTemplate(template, encodeSlash, charset);
+  public static UriTemplate create(String template, boolean encodeSlash) {
+    return new UriTemplate(template, encodeSlash);
   }
 
   /**
@@ -58,8 +57,7 @@ public class UriTemplate extends Template {
    * @return a new UriTemplate with the fragment appended.
    */
   public static UriTemplate append(UriTemplate uriTemplate, String fragment) {
-    return new UriTemplate(uriTemplate.toString() + fragment, uriTemplate.encodeSlash(),
-        uriTemplate.getCharset());
+    return new UriTemplate(uriTemplate.toString() + fragment, uriTemplate.encodeSlash());
   }
 
   /**
@@ -67,9 +65,8 @@ public class UriTemplate extends Template {
    *
    * @param template for the uri.
    * @param encodeSlash flag for encoding slash characters.
-   * @param charset to use when encoding.
    */
-  private UriTemplate(String template, boolean encodeSlash, Charset charset) {
-    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, encodeSlash, charset);
+  private UriTemplate(String template, boolean encodeSlash) {
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, encodeSlash, Util.UTF_8);
   }
 }

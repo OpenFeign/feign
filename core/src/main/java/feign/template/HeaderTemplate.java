@@ -34,6 +34,7 @@ public final class HeaderTemplate extends Template {
   private String name;
 
   public static HeaderTemplate create(String name, Iterable<String> values) {
+
     if (name == null || name.isEmpty()) {
       throw new IllegalArgumentException("name is required.");
     }
@@ -55,7 +56,7 @@ public final class HeaderTemplate extends Template {
         template.append(", ");
       }
     }
-    return new HeaderTemplate(template.toString(), name, values, Util.UTF_8);
+    return new HeaderTemplate(template.toString(), name, values);
   }
 
   /**
@@ -78,8 +79,8 @@ public final class HeaderTemplate extends Template {
    *
    * @param template to parse.
    */
-  private HeaderTemplate(String template, String name, Iterable<String> values, Charset charset) {
-    super(template, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset);
+  private HeaderTemplate(String template, String name, Iterable<String> values) {
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, Util.UTF_8);
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toSet());

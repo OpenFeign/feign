@@ -26,14 +26,14 @@ public class QueryTemplateTest {
   @Test
   public void templateToQueryString() {
     QueryTemplate template =
-        QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"), Util.UTF_8);
+        QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"));
     assertThat(template.toString()).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
   }
 
   @Test
   public void expandSingleValue() {
     QueryTemplate template =
-        QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+        QueryTemplate.create("name", Collections.singletonList("{value}"));
     String expanded = template.expand(Collections.singletonMap("value", "Magnum P.I."));
     assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
   }
@@ -41,7 +41,7 @@ public class QueryTemplateTest {
   @Test
   public void expandMultipleValues() {
     QueryTemplate template =
-        QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"), Util.UTF_8);
+        QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"));
     String expanded = template.expand(Collections.emptyMap());
     assertThat(expanded).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
   }
@@ -49,7 +49,7 @@ public class QueryTemplateTest {
   @Test
   public void unresolvedQuery() {
     QueryTemplate template =
-        QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+        QueryTemplate.create("name", Collections.singletonList("{value}"));
     String expanded = template.expand(Collections.emptyMap());
     assertThat(expanded).isNullOrEmpty();
   }
@@ -57,7 +57,7 @@ public class QueryTemplateTest {
   @Test
   public void unresolvedMultiValueQueryTemplates() {
     QueryTemplate template =
-        QueryTemplate.create("name", Arrays.asList("{bob}", "{james}", "{jason}"), Util.UTF_8);
+        QueryTemplate.create("name", Arrays.asList("{bob}", "{james}", "{jason}"));
     String expanded = template.expand(Collections.emptyMap());
     assertThat(expanded).isNullOrEmpty();
   }
@@ -66,7 +66,7 @@ public class QueryTemplateTest {
   public void collectionFormat() {
     QueryTemplate template =
         QueryTemplate
-            .create("name", Arrays.asList("James", "Jason"), Util.UTF_8, CollectionFormat.CSV);
+            .create("name", Arrays.asList("James", "Jason"), CollectionFormat.CSV);
     String expanded = template.expand(Collections.emptyMap());
     assertThat(expanded).isEqualToIgnoringCase("name=James,Jason");
   }
@@ -74,7 +74,7 @@ public class QueryTemplateTest {
   @Test
   public void expandName() {
     QueryTemplate template =
-        QueryTemplate.create("{name}", Arrays.asList("James", "Jason"), Util.UTF_8);
+        QueryTemplate.create("{name}", Arrays.asList("James", "Jason"));
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("firsts=James&firsts=Jason");
   }
@@ -82,7 +82,7 @@ public class QueryTemplateTest {
   @Test
   public void expandPureParameter() {
     QueryTemplate template =
-        QueryTemplate.create("{name}", Collections.emptyList(), Util.UTF_8);
+        QueryTemplate.create("{name}", Collections.emptyList());
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("firsts");
   }
@@ -90,7 +90,7 @@ public class QueryTemplateTest {
   @Test
   public void expandPureParameterWithSlash() {
     QueryTemplate template =
-        QueryTemplate.create("/path/{name}", Collections.emptyList(), Util.UTF_8);
+        QueryTemplate.create("/path/{name}", Collections.emptyList());
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("/path/firsts");
   }
@@ -98,7 +98,7 @@ public class QueryTemplateTest {
   @Test
   public void expandNameUnresolved() {
     QueryTemplate template =
-        QueryTemplate.create("{parameter}", Arrays.asList("James", "Jason"), Util.UTF_8);
+        QueryTemplate.create("{parameter}", Arrays.asList("James", "Jason"));
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("%7Bparameter%7D=James&%7Bparameter%7D=Jason");
   }
