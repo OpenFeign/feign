@@ -44,7 +44,7 @@ public class Http2Client implements Client {
   }
 
   public Http2Client(HttpClient client) {
-    this.client = Util.checkNotNull(client, "HttpClient must be not null");
+    this.client = Util.checkNotNull(client, "HttpClient must not be null");
   }
 
   @Override
