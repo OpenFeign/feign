@@ -27,11 +27,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,8 +51,6 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @Controller
 @SpringBootApplication
 public class Server {
-
-  @Autowired private ObjectMapper objectMapper;
 
   @RequestMapping(value = "/form", method = POST)
   public ResponseEntity<Void> form(
@@ -142,11 +138,9 @@ public class Server {
     return ResponseEntity.status(status).body(null);
   }
 
-  @PostMapping(path = "/upload/with_json", consumes = MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<Long> uploadWithJson(
-      @RequestPart("dto") String dtoString, @RequestPart("file") MultipartFile file)
+  @PostMapping(path = "/upload/with_dto", consumes = MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Long> uploadWithDto(Dto dto, @RequestPart("file") MultipartFile file)
       throws IOException {
-    val dto = objectMapper.readValue(dtoString, Dto.class);
     val status = dto != null && dto.getName().equals("Artem") ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getSize());
   }

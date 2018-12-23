@@ -112,3 +112,4 @@ nb-configuration.xml
 log*.txt*
 .DS_Store
 .vscode/
+popa.txt

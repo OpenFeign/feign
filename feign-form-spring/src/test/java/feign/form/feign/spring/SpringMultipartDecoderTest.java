@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
-    properties = {"server.port=8080", "feign.hystrix.enabled=false"})
+    properties = {"server.port=8081", "feign.hystrix.enabled=false"})
 public class SpringMultipartDecoderTest {
 
   @Autowired private DownloadClient downloadClient;

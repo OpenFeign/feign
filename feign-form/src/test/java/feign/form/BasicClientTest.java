@@ -149,14 +149,14 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testUploadWithJson() throws Exception {
+  public void testUploadWithDto() throws Exception {
     val dto = new Dto("Artem", 11);
 
     val path =
         Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
-    val response = api.uploadWithJson(dto, path.toFile());
+    val response = api.uploadWithDto(dto, path.toFile());
     Assert.assertNotNull(response);
     Assert.assertEquals(200, response.status());
   }
