@@ -1,6 +1,9 @@
 
 package feign.form.feign.spring;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
+import feign.Logger;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import org.springframework.beans.factory.ObjectFactory;
@@ -16,13 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-
 import lombok.val;
 
 @FeignClient(
     name = "multipart-download-support-service",
-    url = "http://localhost:8080",
+    url = "http://localhost:8081",
     configuration = DownloadClient.ClientConfiguration.class
 )
 public interface DownloadClient {
@@ -55,6 +56,11 @@ public interface DownloadClient {
                     return httpMessageConverters;
                 }
             });
+        }
+
+        @Bean
+        public Logger.Level feignLoggerLevel () {
+            return Logger.Level.FULL;
         }
     }
 }

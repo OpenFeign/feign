@@ -17,7 +17,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
         webEnvironment = DEFINED_PORT,
         classes = Server.class,
         properties = {
-                "server.port=8080",
+                "server.port=8081",
                 "feign.hystrix.enabled=false"
         }
 )

@@ -20,8 +20,8 @@ import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +34,7 @@ import feign.form.multipart.FormDataWriter;
 import feign.form.multipart.ManyFilesWriter;
 import feign.form.multipart.Output;
 import feign.form.multipart.ParameterWriter;
+import feign.form.multipart.PojoWriter;
 import feign.form.multipart.SingleFileWriter;
 import feign.form.multipart.Writer;
 
@@ -47,7 +48,7 @@ import lombok.val;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class MultipartFormContentProcessor implements ContentProcessor {
 
-  List<Writer> writers;
+  LinkedList<Writer> writers;
 
   Writer defaultPerocessor;
 
@@ -57,12 +58,13 @@ public class MultipartFormContentProcessor implements ContentProcessor {
    * @param delegate specific delegate encoder for cases, when this processor couldn't handle request parameter.
    */
   public MultipartFormContentProcessor (Encoder delegate) {
-    writers = new ArrayList<Writer>(6);
+    writers = new LinkedList<Writer>();
     addWriter(new ByteArrayWriter());
     addWriter(new FormDataWriter());
     addWriter(new SingleFileWriter());
     addWriter(new ManyFilesWriter());
     addWriter(new ParameterWriter());
+    addWriter(new PojoWriter());
 
     defaultPerocessor = new DelegateWriter(delegate);
   }
@@ -111,10 +113,42 @@ public class MultipartFormContentProcessor implements ContentProcessor {
     writers.add(writer);
   }
 
+  /**
+   * Adds {@link Writer} instance in runtime
+   * at the beginning of writers list.
+   *
+   * @param writer additional writer.
+   */
+  public final void addFirstWriter (Writer writer) {
+    writers.addFirst(writer);
+  }
+
+  /**
+   * Adds {@link Writer} instance in runtime
+   * at the end of writers list.
+   *
+   * @param writer additional writer.
+   */
+  public final void addLastWriter (Writer writer) {
+    writers.addLast(writer);
+  }
+
+  /**
+   * Returns the <b>unmodifiable</b> list of all writers.
+   *
+   * @return writers list.
+   */
   public final List<Writer> getWriters () {
     return Collections.unmodifiableList(writers);
   }
 
+  /**
+   * Replaces the writer at the specified position with new element.
+   *
+   * @param index  index of the element for replace.
+   *
+   * @param writer writer to be stored at specified position.
+   */
   public final void setWriter (int index, Writer writer) {
     writers.set(index, writer);
   }

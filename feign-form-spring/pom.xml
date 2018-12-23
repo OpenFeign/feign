@@ -64,8 +64,18 @@ limitations under the License.
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
       <version>2.1.0.RC3</version>
-      <!-- <version>2.0.2.RELEASE</version> -->
       <scope>test</scope>
+      <exclusions>
+      <exclusion>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-form-spring</artifactId>
+      </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.appulse</groupId>
+      <artifactId>logging-java</artifactId>
+      <version>1.1.0</version>
     </dependency>
   </dependencies>
 

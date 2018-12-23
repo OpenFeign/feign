@@ -54,8 +54,8 @@ public class SpringFormEncoder extends FormEncoder {
     super(delegate);
 
     val processor = (MultipartFormContentProcessor) getContentProcessor(MULTIPART);
-    processor.addWriter(new SpringSingleMultipartFileWriter());
-    processor.addWriter(new SpringManyMultipartFilesWriter());
+    processor.addFirstWriter(new SpringSingleMultipartFileWriter());
+    processor.addFirstWriter(new SpringManyMultipartFilesWriter());
   }
 
   @Override

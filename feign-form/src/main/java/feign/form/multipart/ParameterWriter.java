@@ -32,7 +32,7 @@ public class ParameterWriter extends AbstractWriter {
       return false;
     }
     return value instanceof Number ||
-         value instanceof String;
+           value instanceof String;
   }
 
   @Override

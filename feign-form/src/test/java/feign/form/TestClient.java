@@ -63,9 +63,9 @@ public interface TestClient {
   @Headers("Content-Type: multipart/form-data")
   String uploadWithManyFiles (@Param("files") File file1, @Param("files") File file2);
 
-  @RequestLine("POST /upload/with_json")
+  @RequestLine("POST /upload/with_dto")
   @Headers("Content-Type: multipart/form-data")
-  Response uploadWithJson (@Param("dto") Dto dto, @Param("file") File file);
+  Response uploadWithDto (@Param("1") Dto dto, @Param("file") File file);
 
   @RequestLine("POST /upload/unknown_type")
   @Headers("Content-Type: multipart/form-data")

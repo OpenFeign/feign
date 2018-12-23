@@ -69,8 +69,10 @@ public class FormEncoder implements Encoder {
   public FormEncoder (Encoder delegate) {
     this.delegate = delegate;
 
-    val list = asList(new MultipartFormContentProcessor(delegate),
-              new UrlencodedFormContentProcessor());
+    val list = asList(
+        new MultipartFormContentProcessor(delegate),
+        new UrlencodedFormContentProcessor()
+    );
 
     processors = new HashMap<ContentType, ContentProcessor>(list.size(), 1.F);
     for (ContentProcessor processor : list) {

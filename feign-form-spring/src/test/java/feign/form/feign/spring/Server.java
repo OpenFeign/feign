@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+
 /**
  * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
  * @since 22.08.2016
