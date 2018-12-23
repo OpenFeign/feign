@@ -40,6 +40,7 @@ public class PojoWriter extends AbstractWriter {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void write(Output output, String boundary, String key, Object value) throws Exception {
     val result = new HashMap<String, Object>();
     if (value instanceof Map) {
