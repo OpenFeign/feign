@@ -5,9 +5,9 @@ import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
-import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.netflix.feign.support.SpringDecoder;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +21,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import lombok.val;
 
 @FeignClient(
-        name = "multipart-download-support-service",
-        url = "http://localhost:8080",
-        configuration = DownloadClient.ClientConfiguration.class
+    name = "multipart-download-support-service",
+    url = "http://localhost:8080",
+    configuration = DownloadClient.ClientConfiguration.class
 )
 public interface DownloadClient {
 

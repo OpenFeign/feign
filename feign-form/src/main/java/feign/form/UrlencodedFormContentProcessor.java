@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import feign.Request;
 import feign.RequestTemplate;
 
 import lombok.SneakyThrows;
@@ -36,12 +37,12 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
 
   @Override
   public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws Exception {
-    val body = new StringBuilder();
+    val bodyData = new StringBuilder();
     for (Entry<String, Object> entry : data.entrySet()) {
-      if (body.length() > 0) {
-        body.append('&');
+      if (bodyData.length() > 0) {
+        bodyData.append('&');
       }
-      body.append(createKeyValuePair(entry, charset));
+      bodyData.append(createKeyValuePair(entry, charset));
     }
 
     val contentTypeValue = new StringBuilder()
@@ -49,8 +50,12 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
         .append("; charset=").append(charset.name())
         .toString();
 
+    val bytes = bodyData.toString().getBytes(charset);
+    val body = Request.Body.encoded(bytes, charset);
+
+    template.header(CONTENT_TYPE_HEADER, new String[0]); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeValue);
-    template.body(body.toString().getBytes(charset), charset);
+    template.body(body);
   }
 
   @Override
