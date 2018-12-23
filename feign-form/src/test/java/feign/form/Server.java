@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 /**
  * @author Artem Labazin
@@ -166,6 +167,20 @@ public class Server {
                  ? OK
                  : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getOriginalFilename());
+  }
+
+  @PostMapping(
+          path = "/upload/byte_array_parameter",
+          consumes = MULTIPART_FORM_DATA_VALUE
+  )
+  // We just want the request because when there's a filename part of the Content-Disposition header spring
+  // will treat it as a file (available through getFile()) and when it doesn't have the filename part it's
+  // available in the parameter (getParameter())
+  public ResponseEntity<String> uploadByteArrayParameter (MultipartHttpServletRequest request) {
+    val status = request.getFile("file") == null && request.getParameter("file") != null
+            ? OK
+            : I_AM_A_TEAPOT;
+    return ResponseEntity.status(status).build();
   }
 
   @PostMapping(

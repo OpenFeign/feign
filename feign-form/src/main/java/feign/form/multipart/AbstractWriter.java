@@ -59,10 +59,11 @@ public abstract class AbstractWriter implements Writer {
    */
   @SneakyThrows
   protected void writeFileMetadata (Output output, String name, String fileName, String contentType) {
-    val contentDesposition = new StringBuilder()
-        .append("Content-Disposition: form-data; name=\"").append(name).append("\"; ")
-        .append("filename=\"").append(fileName).append("\"")
-        .toString();
+    val contentDespositionBuilder = new StringBuilder()
+        .append("Content-Disposition: form-data; name=\"").append(name).append("\"");
+    if (fileName != null) {
+      contentDespositionBuilder.append("; ").append("filename=\"").append(fileName).append("\"");
+    }
 
     String fileContentType = contentType;
     if (fileContentType == null) {
@@ -75,7 +76,7 @@ public abstract class AbstractWriter implements Writer {
     }
 
     val string = new StringBuilder()
-        .append(contentDesposition).append(CRLF)
+        .append(contentDespositionBuilder.toString()).append(CRLF)
         .append("Content-Type: ").append(fileContentType).append(CRLF)
         .append("Content-Transfer-Encoding: binary").append(CRLF)
         .append(CRLF)
