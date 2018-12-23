@@ -19,6 +19,7 @@ package feign.form;
 import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.form.multipart.ByteArrayWriter;
@@ -86,10 +87,14 @@ public class MultipartFormContentProcessor implements ContentProcessor {
             .append(boundary)
             .toString();
 
+    template.header(CONTENT_TYPE_HEADER, new String[0]); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeHeaderValue);
+
     // Feign's clients try to determine binary/string content by charset presence
     // so, I set it to null (in spite of availability charset) for backward compatibility.
-    template.body(output.toByteArray(), null);
+    val bytes = output.toByteArray();
+    val body = Request.Body.encoded(bytes, null);
+    template.body(body);
 
     output.close();
   }
