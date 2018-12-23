@@ -36,6 +36,7 @@ import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
@@ -121,7 +122,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
     if (!StringUtils.isEmpty(boundaryString)) {
       return boundaryString.getBytes(UTF_8);
     } else {
-      throw new HttpMessageNotReadableException("Content-Type missing boundary information.");
+      throw new HttpMessageConversionException("Content-Type missing boundary information.");
     }
   }
 
@@ -141,7 +142,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
     );
 
     if (!contentDisposition.containsKey("form-data")) {
-      throw new HttpMessageNotReadableException("Content-Disposition is not of type form-data.");
+      throw new HttpMessageConversionException("Content-Disposition is not of type form-data.");
     }
 
     val bodyStream = new ByteArrayOutputStream();

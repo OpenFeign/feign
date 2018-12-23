@@ -45,7 +45,10 @@ public abstract class AbstractWriter implements Writer {
    *
    * @throws Exception in case of write errors
    */
-  @SuppressWarnings({"PMD.UncommentedEmptyMethodBody", "PMD.EmptyMethodInAbstractClassShouldBeAbstract"})
+  @SuppressWarnings({
+      "PMD.UncommentedEmptyMethodBody",
+      "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
+  })
   protected void write (Output output, String key, Object value) throws Exception {
   }
 
