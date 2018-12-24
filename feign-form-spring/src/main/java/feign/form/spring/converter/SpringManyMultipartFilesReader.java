@@ -109,7 +109,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
       }
       multiparts.add(multiPart);
     }
-    return multiparts.toArray(new ByteArrayMultipartFile[multiparts.size()]);
+    return multiparts.toArray(new ByteArrayMultipartFile[0]);
   }
 
   @Override
@@ -119,11 +119,10 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
 
   private byte[] getMultiPartBoundary (MediaType contentType) {
     val boundaryString = unquote(contentType.getParameter("boundary"));
-    if (!StringUtils.isEmpty(boundaryString)) {
-      return boundaryString.getBytes(UTF_8);
-    } else {
+    if (StringUtils.isEmpty(boundaryString)) {
       throw new HttpMessageConversionException("Content-Type missing boundary information.");
     }
+    return boundaryString.getBytes(UTF_8);
   }
 
   private ByteArrayMultipartFile readMultiPart (MultipartStream multipartStream) throws IOException {

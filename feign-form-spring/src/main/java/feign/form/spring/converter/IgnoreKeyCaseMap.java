@@ -28,9 +28,9 @@ final class IgnoreKeyCaseMap extends HashMap<String, String> {
   private static final long serialVersionUID = -2321516556941546746L;
 
   private static String normalizeKey (Object key) {
-    return key != null
-           ? key.toString().toUpperCase(new Locale("en_US"))
-           : null;
+    return key == null
+           ? null
+           : key.toString().toUpperCase(new Locale("en_US"));
   }
 
   @Override

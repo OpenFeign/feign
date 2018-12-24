@@ -18,6 +18,7 @@ package feign.form.spring;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.codec.EncodeException;
 import feign.form.multipart.AbstractWriter;
 import feign.form.multipart.Output;
 
@@ -35,7 +36,7 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
   SpringSingleMultipartFileWriter fileWriter = new SpringSingleMultipartFileWriter();
 
   @Override
-  public void write (Output output, String boundary, String key, Object value) throws Exception {
+  public void write (Output output, String boundary, String key, Object value) throws EncodeException {
     if (value instanceof MultipartFile[]) {
       val files = (MultipartFile[]) value;
       for (val file : files) {

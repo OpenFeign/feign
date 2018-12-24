@@ -22,6 +22,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.HashMap;
 
+import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,8 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import lombok.val;
 
 /**
  * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
@@ -52,7 +51,7 @@ public class SpringFormEncoderTest {
   private Client client;
 
   @Test
-  public void upload1Test() throws Exception {
+  public void upload1Test () throws Exception {
     val folder = "test_folder";
     val file = new MockMultipartFile("file", "test".getBytes(UTF_8));
     val message = "message test";

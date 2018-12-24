@@ -29,6 +29,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
 import java.util.List;
+
 import lombok.val;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -50,9 +51,10 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
  */
 @Controller
 @SpringBootApplication
-public final class Server {
+@SuppressWarnings("checkstyle:DesignForExtension")
+public class Server {
 
-  @RequestMapping(value = "/form", method = POST)
+  @RequestMapping(path = "/form", method = POST)
   public ResponseEntity<Void> form (@RequestParam("key1") String key1,
                                     @RequestParam("key2") String key2
   ) {
@@ -62,7 +64,7 @@ public final class Server {
     return ResponseEntity.status(status).body(null);
   }
 
-  @RequestMapping(value = "/upload/{id}", method = POST)
+  @RequestMapping(path = "/upload/{id}", method = POST)
   @ResponseStatus(OK)
   public ResponseEntity<Long> upload (@PathVariable("id") Integer id,
                                       @RequestParam("public") Boolean isPublic,
@@ -83,7 +85,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(value = "/upload", method = POST)
+  @RequestMapping(path = "/upload", method = POST)
   public ResponseEntity<Long> upload (@RequestParam("file") MultipartFile file) {
     HttpStatus status;
     if (file.getSize() == 0) {
@@ -96,7 +98,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(value = "/upload/files", method = POST)
+  @RequestMapping(path = "/upload/files", method = POST)
   public ResponseEntity<Long> upload (@RequestParam("files") MultipartFile[] files) {
     HttpStatus status;
     if (files[0].getSize() == 0 || files[1].getSize() == 0) {
@@ -110,7 +112,7 @@ public final class Server {
     return ResponseEntity.status(status).body(files[0].getSize() + files[1].getSize());
   }
 
-  @RequestMapping(value = "/json", method = POST, consumes = APPLICATION_JSON_VALUE)
+  @RequestMapping(path = "/json", method = POST, consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<String> json (@RequestBody Dto dto) {
     HttpStatus status;
     if (!dto.getName().equals("Artem")) {
@@ -123,7 +125,7 @@ public final class Server {
     return ResponseEntity.status(status).body("ok");
   }
 
-  @RequestMapping(value = "/query_map")
+  @RequestMapping("/query_map")
   public ResponseEntity<Integer> queryMap (@RequestParam("filter") List<String> filters) {
     val status = filters != null && !filters.isEmpty()
                  ? OK
@@ -131,7 +133,7 @@ public final class Server {
     return ResponseEntity.status(status).body(filters.size());
   }
 
-  @RequestMapping(value = "/wild-card-map", method = POST, consumes = APPLICATION_FORM_URLENCODED_VALUE)
+  @RequestMapping(path = "/wild-card-map", method = POST, consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Integer> wildCardMap (@RequestParam("key1") String key1, @RequestParam("key2") String key2) {
     val status = key1.equals(key2)
                  ? OK
@@ -139,10 +141,7 @@ public final class Server {
     return ResponseEntity.status(status).body(null);
   }
 
-  @PostMapping(
-      path = "/upload/with_dto",
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
+  @PostMapping(path = "/upload/with_dto", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<Long> uploadWithDto (Dto dto, @RequestPart("file") MultipartFile file
   ) throws IOException {
     val status = dto != null && dto.getName().equals("Artem")
@@ -151,10 +150,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @PostMapping(
-      path = "/upload/byte_array",
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
+  @PostMapping(path = "/upload/byte_array", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadByteArray (@RequestPart("file") MultipartFile file) {
     val status = file != null
                  ? OK
@@ -162,10 +158,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getOriginalFilename());
   }
 
-  @PostMapping(
-          path = "/upload/byte_array_parameter",
-          consumes = MULTIPART_FORM_DATA_VALUE
-  )
+  @PostMapping(path = "/upload/byte_array_parameter", consumes = MULTIPART_FORM_DATA_VALUE)
   // We just want the request because when there's a filename part of the Content-Disposition header spring
   // will treat it as a file (available through getFile()) and when it doesn't have the filename part it's
   // available in the parameter (getParameter())
@@ -176,10 +169,7 @@ public final class Server {
     return ResponseEntity.status(status).build();
   }
 
-  @PostMapping(
-      path = "/upload/unknown_type",
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
+  @PostMapping(path = "/upload/unknown_type", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadUnknownType (@RequestPart("file") MultipartFile file) {
     val status = file != null
                  ? OK
@@ -187,10 +177,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getContentType());
   }
 
-  @PostMapping(
-    path = "/upload/form_data",
-    consumes = MULTIPART_FORM_DATA_VALUE
-  )
+  @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadFormData (@RequestPart("file") MultipartFile file) {
     val status = file != null
                  ? OK

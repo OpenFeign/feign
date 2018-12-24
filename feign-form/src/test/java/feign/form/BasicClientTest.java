@@ -28,12 +28,12 @@ import java.util.Map;
 
 import feign.Feign;
 import feign.jackson.JacksonEncoder;
+import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import lombok.val;
 
 /**
  * @author Artem Labazin
@@ -125,17 +125,6 @@ public class BasicClientTest {
     Assert.assertTrue(Files.exists(path2));
 
     val stringResponse = API.uploadWithList(asList(path1.toFile(), path2.toFile()));
-    Assert.assertEquals(Files.size(path1) + Files.size(path2), Long.parseLong(stringResponse));
-  }
-
-//  @Test
-  public void testMultipleManyFiles () throws Exception {
-    val path1 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
-    Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
-    Assert.assertTrue(Files.exists(path2));
-
-    val stringResponse = API.uploadWithManyFiles(path1.toFile(), path2.toFile());
     Assert.assertEquals(Files.size(path1) + Files.size(path2), Long.parseLong(stringResponse));
   }
 

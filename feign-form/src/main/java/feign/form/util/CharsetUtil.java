@@ -17,6 +17,7 @@
 package feign.form.util;
 
 import java.nio.charset.Charset;
+import java.rmi.UnexpectedException;
 
 /**
  *
@@ -26,6 +27,7 @@ public final class CharsetUtil {
 
   public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-  private CharsetUtil () {
+  private CharsetUtil () throws UnexpectedException {
+    throw new UnexpectedException("It is not allowed to instantiate this class");
   }
 }

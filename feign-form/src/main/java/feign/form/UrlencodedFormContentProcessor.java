@@ -20,12 +20,13 @@ import static feign.form.ContentType.URLENCODED;
 
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import feign.Request;
 import feign.RequestTemplate;
-
+import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -36,7 +37,7 @@ import lombok.val;
 public class UrlencodedFormContentProcessor implements ContentProcessor {
 
   @Override
-  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws Exception {
+  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException {
     val bodyData = new StringBuilder();
     for (Entry<String, Object> entry : data.entrySet()) {
       if (bodyData.length() > 0) {
@@ -53,7 +54,7 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
     val bytes = bodyData.toString().getBytes(charset);
     val body = Request.Body.encoded(bytes, charset);
 
-    template.header(CONTENT_TYPE_HEADER, new String[0]); // reset header
+    template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeValue);
     template.body(body);
   }

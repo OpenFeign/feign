@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 import feign.RequestTemplate;
+import feign.codec.EncodeException;
 
 /**
  * Interface for content processors.
@@ -42,9 +43,9 @@ public interface ContentProcessor {
    * @param charset   request charset from 'Content-Type' header (UTF-8 by default).
    * @param data      reqeust data.
    *
-   * @throws Exception in case of...exception
+   * @throws EncodeException in case of any encode exception
    */
-  void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws Exception;
+  void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException;
 
   /**
    * Returns supported {@link ContentType} of this processor.

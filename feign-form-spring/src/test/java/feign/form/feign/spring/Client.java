@@ -20,13 +20,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import java.util.Map;
+
 import feign.Logger;
 import feign.Response;
 import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
-
-import java.util.Map;
-
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -94,7 +93,7 @@ public interface Client {
   )
   Response upload5 (Dto dto);
 
-  public static class ClientConfiguration {
+  class ClientConfiguration {
 
     @Autowired
     private ObjectFactory<HttpMessageConverters> messageConverters;
@@ -106,7 +105,7 @@ public interface Client {
 
     @Bean
     public Logger.Level feignLogger () {
-        return Logger.Level.FULL;
+      return Logger.Level.FULL;
     }
   }
 }

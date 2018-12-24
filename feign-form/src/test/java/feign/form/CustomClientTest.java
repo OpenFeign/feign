@@ -16,22 +16,23 @@
 
 package feign.form;
 
-import static feign.form.ContentType.MULTIPART;
 import static feign.Logger.Level.FULL;
+import static feign.form.ContentType.MULTIPART;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
-import feign.form.multipart.ByteArrayWriter;
-import feign.form.multipart.Output;
 import feign.Headers;
-import feign.jackson.JacksonEncoder;
 import feign.Param;
 import feign.RequestLine;
+import feign.codec.EncodeException;
+import feign.form.multipart.ByteArrayWriter;
+import feign.form.multipart.Output;
+import feign.jackson.JacksonEncoder;
 import lombok.val;
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -51,8 +52,7 @@ public class CustomClientTest {
   static {
     val encoder = new FormEncoder(new JacksonEncoder());
     val processor = (MultipartFormContentProcessor) encoder.getContentProcessor(MULTIPART);
-    processor.setWriter(0, new CustomByteArrayWriter());
-
+    processor.addFirstWriter(new CustomByteArrayWriter());
 
     API = Feign.builder()
         .encoder(encoder)
@@ -72,7 +72,7 @@ public class CustomClientTest {
   private static class CustomByteArrayWriter extends ByteArrayWriter {
 
     @Override
-    protected void write (Output output, String key, Object value) throws Exception {
+    protected void write (Output output, String key, Object value) throws EncodeException {
       writeFileMetadata(output, key, "popa.txt", null);
 
       val bytes = (byte[]) value;

@@ -18,14 +18,18 @@ package feign.form.multipart;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
+import feign.codec.EncodeException;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 /**
  *
  * @author Artem Labazin
  */
+@Slf4j
 public class SingleFileWriter extends AbstractWriter {
 
   @Override
@@ -34,7 +38,7 @@ public class SingleFileWriter extends AbstractWriter {
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws Exception {
+  protected void write (Output output, String key, Object value) throws EncodeException {
     val file = (File) value;
     writeFileMetadata(output, key, file.getName(), null);
 
@@ -42,13 +46,21 @@ public class SingleFileWriter extends AbstractWriter {
     try {
       input = new FileInputStream(file);
       val buf = new byte[1024];
-      int length;
-      while ((length = input.read(buf)) > 0) {
+      int length = input.read(buf);
+      while (length > 0) {
         output.write(buf, 0, length);
+        length = input.read(buf);
       }
+    } catch (IOException ex) {
+      val message = String.format("Writing file's '%s' content error", file.getName());
+      throw new EncodeException(message, ex);
     } finally {
       if (input != null) {
-        input.close();
+        try {
+          input.close();
+        } catch (IOException ex) {
+          log.error("Closing file '{}' error", file.getName(), ex);
+        }
       }
     }
   }

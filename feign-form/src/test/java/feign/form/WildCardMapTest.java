@@ -29,8 +29,8 @@ import feign.RequestLine;
 import feign.Response;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -41,11 +41,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 )
 public class WildCardMapTest {
 
-  private static FormUrlEncodedApi API;
+  private static FormUrlEncodedApi api;
 
   @BeforeClass
   public static void configureClient () {
-    API = Feign.builder()
+    api = Feign.builder()
         .encoder(new FormEncoder())
         .logger(new Logger.JavaLogger().appendToFile("log.txt"))
         .logLevel(FULL)
@@ -63,7 +63,7 @@ public class WildCardMapTest {
           put("key2", "1");
         }
     };
-    Response response = API.wildCardMap(param);
+    Response response = api.wildCardMap(param);
     Assert.assertEquals(200, response.status());
   }
 
@@ -79,7 +79,7 @@ public class WildCardMapTest {
           put("key2", "2");
         }
     };
-    Response response = API.wildCardMap(param);
+    Response response = api.wildCardMap(param);
     Assert.assertEquals(418, response.status());
   }
 

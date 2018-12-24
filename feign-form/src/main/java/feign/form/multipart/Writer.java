@@ -16,6 +16,8 @@
 
 package feign.form.multipart;
 
+import feign.codec.EncodeException;
+
 /**
  *
  * @author Artem Labazin
@@ -29,8 +31,10 @@ public interface Writer {
    * @param boundary  data boundary.
    * @param key       name for piece of data.
    * @param value     piece of data.
+   *
+   * @throws EncodeException in case of any encode exception
    */
-  void write (Output output, String boundary, String key, Object value) throws Exception;
+  void write (Output output, String boundary, String key, Object value) throws EncodeException;
 
   /**
    * Answers on question - "could this writer properly write the value".

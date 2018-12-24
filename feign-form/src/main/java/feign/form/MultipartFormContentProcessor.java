@@ -19,14 +19,17 @@ package feign.form;
 import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import feign.Request;
 import feign.RequestTemplate;
+import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.DelegateWriter;
@@ -48,7 +51,7 @@ import lombok.val;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class MultipartFormContentProcessor implements ContentProcessor {
 
-  LinkedList<Writer> writers;
+  Deque<Writer> writers;
 
   Writer defaultPerocessor;
 
@@ -70,7 +73,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   }
 
   @Override
-  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws Exception {
+  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException {
     val boundary = Long.toHexString(System.currentTimeMillis());
     val output = new Output(charset);
 
@@ -87,7 +90,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
         .append("; boundary=").append(boundary)
         .toString();
 
-    template.header(CONTENT_TYPE_HEADER, new String[0]); // reset header
+    template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeHeaderValue);
 
     // Feign's clients try to determine binary/string content by charset presence
@@ -96,7 +99,11 @@ public class MultipartFormContentProcessor implements ContentProcessor {
     val body = Request.Body.encoded(bytes, null);
     template.body(body);
 
-    output.close();
+    try {
+      output.close();
+    } catch (IOException ex) {
+      throw new EncodeException("Output closing error", ex);
+    }
   }
 
   @Override
@@ -134,23 +141,12 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   }
 
   /**
-   * Returns the <b>unmodifiable</b> list of all writers.
+   * Returns the <b>unmodifiable</b> collection of all writers.
    *
-   * @return writers list.
+   * @return writers collection.
    */
-  public final List<Writer> getWriters () {
-    return Collections.unmodifiableList(writers);
-  }
-
-  /**
-   * Replaces the writer at the specified position with new element.
-   *
-   * @param index  index of the element for replace.
-   *
-   * @param writer writer to be stored at specified position.
-   */
-  public final void setWriter (int index, Writer writer) {
-    writers.set(index, writer);
+  public final Collection<Writer> getWriters () {
+    return Collections.unmodifiableCollection(writers);
   }
 
   private Writer findApplicableWriter (Object value) {
