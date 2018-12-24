@@ -44,7 +44,7 @@ public abstract class AbstractWriter implements Writer {
    * @param key     name for piece of data.
    * @param value   piece of data.
    *
-   * @throws Exception in case of write errors
+   * @throws EncodeException in case of write errors
    */
   @SuppressWarnings({
       "PMD.UncommentedEmptyMethodBody",
