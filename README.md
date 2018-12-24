@@ -11,13 +11,11 @@ Include the dependency to your project's pom.xml file:
 
 ```xml
 <dependencies>
-    ...
-    <dependency>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form</artifactId>
-        <version>3.5.0</version>
-    </dependency>
-    ...
+  <dependency>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form</artifactId>
+    <version>3.5.0</version>
+  </dependency>
 </dependencies>
 ```
 
@@ -27,16 +25,16 @@ Add `FormEncoder` to your `Feign.Builder` like so:
 
 ```java
 SomeApi github = Feign.builder()
-                     .encoder(new FormEncoder())
-                     .target(SomeApi.class, "http://api.some.org");
+                      .encoder(new FormEncoder())
+                      .target(SomeApi.class, "http://api.some.org");
 ```
 
 Moreover, you can decorate the existing encoder, for example JsonEncoder like this:
 
 ```java
 SomeApi github = Feign.builder()
-                     .encoder(new FormEncoder(new JacksonEncoder()))
-                     .target(SomeApi.class, "http://api.some.org");
+                      .encoder(new FormEncoder(new JacksonEncoder()))
+                      .target(SomeApi.class, "http://api.some.org");
 ```
 
 And use them together:
@@ -44,14 +42,13 @@ And use them together:
 ```java
 interface SomeApi {
 
-    @RequestLine("POST /json")
-    @Headers("Content-Type: application/json")
-    void json (Dto dto);
+  @RequestLine("POST /json")
+  @Headers("Content-Type: application/json")
+  void json (Dto dto);
 
-    @RequestLine("POST /form")
-    @Headers("Content-Type: application/x-www-form-urlencoded")
-    void from (@Param("field1") String field1, @Param("field2") String field2);
-
+  @RequestLine("POST /form")
+  @Headers("Content-Type: application/x-www-form-urlencoded")
+  void from (@Param("field1") String field1, @Param("field2") String field2);
 }
 ```
 
@@ -62,14 +59,21 @@ You can specify two types of encoding forms by `Content-Type` header.
 ```java
 interface SomeApi {
 
-    ...
+  @RequestLine("POST /authorization")
+  @Headers("Content-Type: application/x-www-form-urlencoded")
+  void authorization (@Param("email") String email, @Param("password") String password);
 
-    @RequestLine("POST /authorization")
-    @Headers("Content-Type: application/x-www-form-urlencoded")
-    void authorization (@Param("email") String email, @Param("password") String password);
+  // Group all parameters within a POJO
+  @RequestLine("POST /user")
+  @Headers("Content-Type: application/x-www-form-urlencoded")
+  void addUser (User user);
 
-    ...
+  class User {
 
+    Integer id;
+
+    String name;
+  }
 }
 ```
 
@@ -78,38 +82,47 @@ interface SomeApi {
 ```java
 interface SomeApi {
 
-    ...
+  // File parameter
+  @RequestLine("POST /send_photo")
+  @Headers("Content-Type: multipart/form-data")
+  void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") File photo);
 
-    // File parameter
-    @RequestLine("POST /send_photo")
-    @Headers("Content-Type: multipart/form-data")
-    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") File photo);
+  // byte[] parameter
+  @RequestLine("POST /send_photo")
+  @Headers("Content-Type: multipart/form-data")
+  void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") byte[] photo);
 
-    // byte[] parameter
-    @RequestLine("POST /send_photo")
-    @Headers("Content-Type: multipart/form-data")
-    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") byte[] photo);
+  // FormData parameter
+  @RequestLine("POST /send_photo")
+  @Headers("Content-Type: multipart/form-data")
+  void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") FormData photo);
 
-    // FormData parameter
-    @RequestLine("POST /send_photo")
-    @Headers("Content-Type: multipart/form-data")
-    void sendPhoto (@Param("is_public") Boolean isPublic, @Param("photo") FormData photo);
-    ...
+  // Group all parameters within a POJO
+  @RequestLine("POST /send_photo")
+  @Headers("Content-Type: multipart/form-data")
+  void sendPhoto (MyPojo pojo);
 
+  class MyPojo {
+
+    Boolean isPublic;
+
+    File photo;
+  }
 }
 ```
 
 In the example above, the `sendPhoto` method uses the `photo` parameter using three different supported types.
 
-* `File` will use the File's extension to detect the `Content-Type`.
-* `byte[]` will use `application/octet-stream` as `Content-Type`.
-* `FormData` will use the `FormData`'s `Content-Type` and `fileName`.
+* `File` will use the File's extension to detect the `Content-Type`;
+* `byte[]` will use `application/octet-stream` as `Content-Type`;
+* `FormData` will use the `FormData`'s `Content-Type` and `fileName`;
+* Client's custom POJO for grouping parameters (including types above).
 
 `FormData` is custom object that wraps a `byte[]` and defines a `Content-Type` and `fileName` like this:
 
 ```java
-    FormData formData = new FormData("image/png", "filename.png", myDataAsByteArray);
-    someApi.sendPhoto(true, formData);
+  FormData formData = new FormData("image/png", "filename.png", myDataAsByteArray);
+  someApi.sendPhoto(true, formData);
 ```
 
 ### Spring MultipartFile and Spring Cloud Netflix @FeignClient support
@@ -120,51 +133,55 @@ Include the dependencies to your project's pom.xml file:
 
 ```xml
 <dependencies>
-    ...
-    <dependency>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form</artifactId>
-        <version>3.5.0</version>
-    </dependency>
-    <dependency>
-        <groupId>io.github.openfeign.form</groupId>
-        <artifactId>feign-form-spring</artifactId>
-        <version>3.5.0</version>
-    </dependency>
-    ...
+  <dependency>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form</artifactId>
+    <version>3.5.0</version>
+  </dependency>
+  <dependency>
+    <groupId>io.github.openfeign.form</groupId>
+    <artifactId>feign-form-spring</artifactId>
+    <version>3.5.0</version>
+  </dependency>
 </dependencies>
 ```
 
 ```java
-@FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
+@FeignClient(
+    name = "file-upload-service",
+    configuration = FileUploadServiceClient.MultipartSupportConfig.class
+)
 public interface FileUploadServiceClient extends IFileUploadServiceClient {
 
-    public class MultipartSupportConfig {
+  public class MultipartSupportConfig {
 
-        @Autowired
-        private ObjectFactory<HttpMessageConverters> messageConverters;
+    @Autowired
+    private ObjectFactory<HttpMessageConverters> messageConverters;
 
-        @Bean
-        public Encoder feignFormEncoder() {
-            return new SpringFormEncoder(new SpringEncoder(messageConverters));
-        }
+    @Bean
+    public Encoder feignFormEncoder () {
+      return new SpringFormEncoder(new SpringEncoder(messageConverters));
     }
+  }
 }
 ```
 
 Or, if you don't need Spring's standard encoder:
 
 ```java
-@FeignClient(name = "file-upload-service", configuration = FileUploadServiceClient.MultipartSupportConfig.class)
+@FeignClient(
+    name = "file-upload-service",
+    configuration = FileUploadServiceClient.MultipartSupportConfig.class
+)
 public interface FileUploadServiceClient extends IFileUploadServiceClient {
 
-    public class MultipartSupportConfig {
+  public class MultipartSupportConfig {
 
-        @Bean
-        public Encoder feignFormEncoder() {
-            return new SpringFormEncoder();
-        }
+    @Bean
+    public Encoder feignFormEncoder () {
+      return new SpringFormEncoder();
     }
+  }
 }
 ```
 
@@ -174,38 +191,41 @@ To use this feature, include SpringManyMultipartFilesReader in the list of messa
 
 ```java
 @FeignClient(
-        name = "${feign.name}",
-        url = "${feign.url}"
-        configuration = DownloadClient.ClientConfiguration.class)
+    name = "${feign.name}",
+    url = "${feign.url}"
+    configuration = DownloadClient.ClientConfiguration.class
+)
 public interface DownloadClient {
 
-    @RequestMapping(
-            value = "/multipart/download/{fileId}",
-            method = GET)
-    MultipartFile[] download(@PathVariable("fileId") String fileId);
+  @RequestMapping("/multipart/download/{fileId}")
+  MultipartFile[] download(@PathVariable("fileId") String fileId);
 
-    class ClientConfiguration {
+  class ClientConfiguration {
 
-        @Autowired
-        private ObjectFactory<HttpMessageConverters> messageConverters;
+    @Autowired
+    private ObjectFactory<HttpMessageConverters> messageConverters;
 
-        @Bean
-        public Decoder feignDecoder () {
-            final List<HttpMessageConverter<?>> springConverters = messageConverters.getObject().getConverters();
-            final List<HttpMessageConverter<?>> decoderConverters
-                    = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+    @Bean
+    public Decoder feignDecoder () {
+      List<HttpMessageConverter<?>> springConverters =
+            messageConverters.getObject().getConverters();
 
-            decoderConverters.addAll(springConverters);
-            decoderConverters.add(new SpringManyMultipartFilesReader(4096));
-            final HttpMessageConverters httpMessageConverters = new HttpMessageConverters(decoderConverters);
+      List<HttpMessageConverter<?>> decoderConverters =
+            new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1;
 
-            return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
-                @Override
-                public HttpMessageConverters getObject() {
-                    return httpMessageConverters;
-                }
-            });
+      decoderConverters.addAll(springConverters);
+      decoderConverters.add(new SpringManyMultipartFilesReader(4096));
+
+      HttpMessageConverters httpMessageConverters = new HttpMessageConverters(decoderConverters);
+
+      return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
+
+        @Override
+        public HttpMessageConverters getObject() {
+          return httpMessageConverters;
         }
+      });
     }
+  }
 }
 ```
