@@ -16,12 +16,13 @@
 
 package feign.form.feign.spring;
 
-import static feign.form.util.CharsetUtil.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import java.io.IOException;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -91,6 +92,14 @@ public class Server {
       @RequestBody Map<String, Object> map,
       @RequestParam String userName) {
     return userName + ':' + id + ':' + map.size();
+  }
+
+  @RequestMapping(path = "/multipart/upload5", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
+  void upload5(Dto dto) throws IOException {
+    assert "field 1 value".equals(dto.getField1());
+    assert 42 == dto.getField2();
+
+    assert "Hello world".equals(new String(dto.getFile().getBytes(), UTF_8));
   }
 
   @RequestMapping(

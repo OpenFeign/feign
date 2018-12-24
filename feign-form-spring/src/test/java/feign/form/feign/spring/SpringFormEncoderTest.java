@@ -17,6 +17,7 @@
 package feign.form.feign.spring;
 
 import static feign.form.util.CharsetUtil.UTF_8;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.util.HashMap;
@@ -37,7 +38,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
-    properties = {"server.port=8080", "feign.hystrix.enabled=false"})
+    properties = {
+      "server.port=8080",
+      "feign.hystrix.enabled=false",
+      "logging.level.feign.form.feign.spring.Client=DEBUG"
+    })
 public class SpringFormEncoderTest {
 
   @Autowired private Client client;
@@ -90,5 +95,14 @@ public class SpringFormEncoderTest {
     val response = client.upload4(id, map, userName);
 
     Assert.assertEquals(userName + ':' + id + ':' + map.size(), response);
+  }
+
+  @Test
+  public void upload5Test() throws Exception {
+    val file = new MockMultipartFile("popa.txt", "Hello world".getBytes(UTF_8));
+    val dto = new Dto("field 1 value", 42, file);
+
+    val response = client.upload5(dto);
+    assertEquals(200, response.status());
   }
 }

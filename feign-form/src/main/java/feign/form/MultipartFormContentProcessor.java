@@ -62,7 +62,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
     addWriter(new SingleFileWriter());
     addWriter(new ManyFilesWriter());
     addWriter(new ParameterWriter());
-    addWriter(new PojoWriter());
+    addWriter(new PojoWriter(writers));
 
     defaultPerocessor = new DelegateWriter(delegate);
   }

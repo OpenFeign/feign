@@ -21,6 +21,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import feign.Logger;
+import feign.Response;
 import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
 import java.util.Map;
@@ -81,6 +82,9 @@ public interface Client {
       @PathVariable("id") String id,
       @RequestBody Map<Object, Object> map,
       @RequestParam("userName") String userName);
+
+  @RequestMapping(path = "/multipart/upload5", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
+  Response upload5(Dto dto);
 
   public static class ClientConfiguration {
 
