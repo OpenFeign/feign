@@ -16,47 +16,40 @@
 
 package feign.form.multipart;
 
+import static feign.form.util.PojoUtil.isUserPojo;
+import static feign.form.util.PojoUtil.toMap;
 import static lombok.AccessLevel.PRIVATE;
 
-import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.List;
+import feign.codec.EncodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
+/**
+ * @author Artem Labazin
+ */
 @RequiredArgsConstructor
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class PojoWriter extends AbstractWriter {
 
-  List<Writer> writers;
+  Iterable<Writer> writers;
 
   @Override
   public boolean isApplicable(Object object) {
-    val type = object.getClass();
-    val packageName = type.getPackage().getName();
-    return !packageName.startsWith("java.");
+    return isUserPojo(object);
   }
 
   @Override
-  public void write(Output output, String boundary, String key, Object object) throws Exception {
-    val type = object.getClass();
-    for (val field : type.getDeclaredFields()) {
-      AccessController.doPrivileged(new SetAccessibleAction(field));
-
-      val value = field.get(object);
-      if (value == null) {
-        continue;
-      }
-
-      val writer = findApplicableWriter(value);
+  public void write(Output output, String boundary, String key, Object object)
+      throws EncodeException {
+    val map = toMap(object);
+    for (val entry : map.entrySet()) {
+      val writer = findApplicableWriter(entry.getValue());
       if (writer == null) {
         continue;
       }
 
-      val name = field.getName();
-      writer.write(output, boundary, name, value);
+      writer.write(output, boundary, entry.getKey(), entry.getValue());
     }
   }
 
@@ -67,18 +60,5 @@ public class PojoWriter extends AbstractWriter {
       }
     }
     return null;
-  }
-
-  @RequiredArgsConstructor
-  @FieldDefaults(level = PRIVATE, makeFinal = true)
-  private class SetAccessibleAction implements PrivilegedAction<Object> {
-
-    Field field;
-
-    @Override
-    public Object run() {
-      field.setAccessible(true);
-      return null;
-    }
   }
 }

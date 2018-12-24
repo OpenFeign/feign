@@ -49,10 +49,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @EnableFeignClients
 @SpringBootApplication
+@SuppressWarnings("checkstyle:DesignForExtension")
 public class Server {
 
   @RequestMapping(
-      value = "/multipart/upload1/{folder}",
+      path = "/multipart/upload1/{folder}",
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE)
   @SneakyThrows
@@ -64,7 +65,7 @@ public class Server {
   }
 
   @RequestMapping(
-      value = "/multipart/upload2/{folder}",
+      path = "/multipart/upload2/{folder}",
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE)
   @SneakyThrows
@@ -76,7 +77,7 @@ public class Server {
   }
 
   @RequestMapping(
-      value = "/multipart/upload3/{folder}",
+      path = "/multipart/upload3/{folder}",
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE)
   public String upload3(
@@ -103,7 +104,7 @@ public class Server {
   }
 
   @RequestMapping(
-      value = "/multipart/download/{fileId}",
+      path = "/multipart/download/{fileId}",
       method = GET,
       produces = MULTIPART_FORM_DATA_VALUE)
   public MultiValueMap<String, Object> download(@PathVariable("fileId") String fileId) {

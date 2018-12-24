@@ -37,11 +37,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 public class WildCardMapTest {
 
-  private static FormUrlEncodedApi API;
+  private static FormUrlEncodedApi api;
 
   @BeforeClass
   public static void configureClient() {
-    API =
+    api =
         Feign.builder()
             .encoder(new FormEncoder())
             .logger(new Logger.JavaLogger().appendToFile("log.txt"))
@@ -61,7 +61,7 @@ public class WildCardMapTest {
             put("key2", "1");
           }
         };
-    Response response = API.wildCardMap(param);
+    Response response = api.wildCardMap(param);
     Assert.assertEquals(200, response.status());
   }
 
@@ -77,7 +77,7 @@ public class WildCardMapTest {
             put("key2", "2");
           }
         };
-    Response response = API.wildCardMap(param);
+    Response response = api.wildCardMap(param);
     Assert.assertEquals(418, response.status());
   }
 

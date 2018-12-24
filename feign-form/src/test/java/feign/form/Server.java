@@ -50,16 +50,17 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
  */
 @Controller
 @SpringBootApplication
-public final class Server {
+@SuppressWarnings("checkstyle:DesignForExtension")
+public class Server {
 
-  @RequestMapping(value = "/form", method = POST)
+  @RequestMapping(path = "/form", method = POST)
   public ResponseEntity<Void> form(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
     val status = !key1.equals(key2) ? BAD_REQUEST : OK;
     return ResponseEntity.status(status).body(null);
   }
 
-  @RequestMapping(value = "/upload/{id}", method = POST)
+  @RequestMapping(path = "/upload/{id}", method = POST)
   @ResponseStatus(OK)
   public ResponseEntity<Long> upload(
       @PathVariable("id") Integer id,
@@ -80,7 +81,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(value = "/upload", method = POST)
+  @RequestMapping(path = "/upload", method = POST)
   public ResponseEntity<Long> upload(@RequestParam("file") MultipartFile file) {
     HttpStatus status;
     if (file.getSize() == 0) {
@@ -93,7 +94,7 @@ public final class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(value = "/upload/files", method = POST)
+  @RequestMapping(path = "/upload/files", method = POST)
   public ResponseEntity<Long> upload(@RequestParam("files") MultipartFile[] files) {
     HttpStatus status;
     if (files[0].getSize() == 0 || files[1].getSize() == 0) {
@@ -109,7 +110,7 @@ public final class Server {
     return ResponseEntity.status(status).body(files[0].getSize() + files[1].getSize());
   }
 
-  @RequestMapping(value = "/json", method = POST, consumes = APPLICATION_JSON_VALUE)
+  @RequestMapping(path = "/json", method = POST, consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<String> json(@RequestBody Dto dto) {
     HttpStatus status;
     if (!dto.getName().equals("Artem")) {
@@ -122,14 +123,14 @@ public final class Server {
     return ResponseEntity.status(status).body("ok");
   }
 
-  @RequestMapping(value = "/query_map")
+  @RequestMapping("/query_map")
   public ResponseEntity<Integer> queryMap(@RequestParam("filter") List<String> filters) {
     val status = filters != null && !filters.isEmpty() ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(filters.size());
   }
 
   @RequestMapping(
-      value = "/wild-card-map",
+      path = "/wild-card-map",
       method = POST,
       consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Integer> wildCardMap(

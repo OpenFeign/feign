@@ -26,6 +26,7 @@ import feign.Feign;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
+import feign.codec.EncodeException;
 import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.Output;
 import feign.jackson.JacksonEncoder;
@@ -48,7 +49,7 @@ public class CustomClientTest {
   static {
     val encoder = new FormEncoder(new JacksonEncoder());
     val processor = (MultipartFormContentProcessor) encoder.getContentProcessor(MULTIPART);
-    processor.setWriter(0, new CustomByteArrayWriter());
+    processor.addFirstWriter(new CustomByteArrayWriter());
 
     API =
         Feign.builder()
@@ -69,7 +70,7 @@ public class CustomClientTest {
   private static class CustomByteArrayWriter extends ByteArrayWriter {
 
     @Override
-    protected void write(Output output, String key, Object value) throws Exception {
+    protected void write(Output output, String key, Object value) throws EncodeException {
       writeFileMetadata(output, key, "popa.txt", null);
 
       val bytes = (byte[]) value;

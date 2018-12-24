@@ -86,7 +86,7 @@ public interface Client {
   @RequestMapping(path = "/multipart/upload5", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
   Response upload5(Dto dto);
 
-  public static class ClientConfiguration {
+  class ClientConfiguration {
 
     @Autowired private ObjectFactory<HttpMessageConverters> messageConverters;
 

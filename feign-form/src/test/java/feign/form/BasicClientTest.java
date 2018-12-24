@@ -134,20 +134,6 @@ public class BasicClientTest {
     Assert.assertEquals(Files.size(path1) + Files.size(path2), Long.parseLong(stringResponse));
   }
 
-  //  @Test
-  public void testMultipleManyFiles() throws Exception {
-    val path1 =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
-    Assert.assertTrue(Files.exists(path1));
-    val path2 =
-        Paths.get(
-            Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
-    Assert.assertTrue(Files.exists(path2));
-
-    val stringResponse = API.uploadWithManyFiles(path1.toFile(), path2.toFile());
-    Assert.assertEquals(Files.size(path1) + Files.size(path2), Long.parseLong(stringResponse));
-  }
-
   @Test
   public void testUploadWithDto() throws Exception {
     val dto = new Dto("Artem", 11);

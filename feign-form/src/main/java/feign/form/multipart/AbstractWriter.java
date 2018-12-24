@@ -18,6 +18,7 @@ package feign.form.multipart;
 
 import static feign.form.ContentProcessor.CRLF;
 
+import feign.codec.EncodeException;
 import java.net.URLConnection;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -28,7 +29,8 @@ import lombok.val;
 public abstract class AbstractWriter implements Writer {
 
   @Override
-  public void write(Output output, String boundary, String key, Object value) throws Exception {
+  public void write(Output output, String boundary, String key, Object value)
+      throws EncodeException {
     output.write("--").write(boundary).write(CRLF);
     write(output, key, value);
     output.write(CRLF);
@@ -46,7 +48,7 @@ public abstract class AbstractWriter implements Writer {
     "PMD.UncommentedEmptyMethodBody",
     "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
   })
-  protected void write(Output output, String key, Object value) throws Exception {}
+  protected void write(Output output, String key, Object value) throws EncodeException {}
 
   /**
    * Writes file's metadata.

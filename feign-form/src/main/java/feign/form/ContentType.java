@@ -16,7 +16,10 @@
 
 package feign.form;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
@@ -24,12 +27,14 @@ import lombok.val;
  *
  * @author Artem Labazin
  */
+@Getter
+@FieldDefaults(level = PRIVATE, makeFinal = true)
 public enum ContentType {
   UNDEFINED("undefined"),
   URLENCODED("application/x-www-form-urlencoded"),
   MULTIPART("multipart/form-data");
 
-  @Getter private final String header;
+  String header;
 
   ContentType(String header) {
     this.header = header;

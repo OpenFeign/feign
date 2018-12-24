@@ -18,6 +18,7 @@ package feign.form.multipart;
 
 import static feign.form.ContentProcessor.CRLF;
 
+import feign.codec.EncodeException;
 import lombok.val;
 
 /**
@@ -34,7 +35,7 @@ public class ParameterWriter extends AbstractWriter {
   }
 
   @Override
-  protected void write(Output output, String key, Object value) throws Exception {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     val string =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")

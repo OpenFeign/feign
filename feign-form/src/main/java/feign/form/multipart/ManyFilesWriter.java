@@ -18,6 +18,7 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.codec.EncodeException;
 import java.io.File;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -31,7 +32,8 @@ public class ManyFilesWriter extends AbstractWriter {
   SingleFileWriter fileWriter = new SingleFileWriter();
 
   @Override
-  public void write(Output output, String boundary, String key, Object value) throws Exception {
+  public void write(Output output, String boundary, String key, Object value)
+      throws EncodeException {
     if (value instanceof File[]) {
       val files = (File[]) value;
       for (val file : files) {
