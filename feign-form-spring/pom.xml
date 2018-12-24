@@ -62,18 +62,18 @@ limitations under the License.
       <artifactId>spring-cloud-starter-openfeign</artifactId>
       <version>2.1.0.RC3</version>
       <scope>test</scope>
-      <exclusions>
+      <!-- <exclusions>
         <exclusion>
           <groupId>${project.groupId}</groupId>
           <artifactId>feign-form-spring</artifactId>
         </exclusion>
-      </exclusions>
+      </exclusions> -->
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>io.appulse</groupId>
       <artifactId>logging-java</artifactId>
       <version>1.1.0</version>
-    </dependency>
+    </dependency> -->
   </dependencies>
 
   <repositories>
@@ -110,14 +110,13 @@ limitations under the License.
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>

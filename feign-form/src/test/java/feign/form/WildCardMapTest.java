@@ -19,7 +19,11 @@ package feign.form;
 import static feign.Logger.Level.FULL;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
-import feign.*;
+import feign.Feign;
+import feign.Headers;
+import feign.Logger;
+import feign.RequestLine;
+import feign.Response;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
