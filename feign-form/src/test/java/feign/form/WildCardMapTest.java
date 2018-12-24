@@ -16,73 +16,77 @@
 
 package feign.form;
 
-import feign.*;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import static feign.Logger.Level.FULL;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static feign.Logger.Level.FULL;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+import feign.Feign;
+import feign.Headers;
+import feign.Logger;
+import feign.RequestLine;
+import feign.Response;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.junit.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        webEnvironment = DEFINED_PORT,
-        classes = Server.class
+    webEnvironment = DEFINED_PORT,
+    classes = Server.class
 )
 public class WildCardMapTest {
 
-    private static FormUrlEncodedApi API;
+  private static FormUrlEncodedApi API;
 
-    @BeforeClass
-    public static void configureClient () {
-        API = Feign.builder()
-                .encoder(new FormEncoder())
-                .logger(new Logger.JavaLogger().appendToFile("log.txt"))
-                .logLevel(FULL)
-                .target(FormUrlEncodedApi.class, "http://localhost:8080");
-    }
+  @BeforeClass
+  public static void configureClient () {
+    API = Feign.builder()
+        .encoder(new FormEncoder())
+        .logger(new Logger.JavaLogger().appendToFile("log.txt"))
+        .logLevel(FULL)
+        .target(FormUrlEncodedApi.class, "http://localhost:8080");
+  }
 
-    @Test
-    public void testOk () {
-        Map<String, Object> param = new HashMap<String, Object>() {
+  @Test
+  public void testOk () {
+    Map<String, Object> param = new HashMap<String, Object>() {
 
-            private static final long serialVersionUID = 3109256773218160485L;
+        private static final long serialVersionUID = 3109256773218160485L;
 
-            {
-                put("key1", "1");
-                put("key2", "1");
-            }
-        };
-        Response response = API.wildCardMap(param);
-        Assert.assertEquals(200, response.status());
-    }
+        {
+          put("key1", "1");
+          put("key2", "1");
+        }
+    };
+    Response response = API.wildCardMap(param);
+    Assert.assertEquals(200, response.status());
+  }
 
-    @Test
-    public void testBadRequest () {
-        Map<String, Object> param = new HashMap<String, Object>() {
+  @Test
+  public void testBadRequest () {
+    Map<String, Object> param = new HashMap<String, Object>() {
 
-            private static final long serialVersionUID = 3109256773218160485L;
+        private static final long serialVersionUID = 3109256773218160485L;
 
-            {
+        {
 
-                put("key1", "1");
-                put("key2", "2");
-            }
-        };
-        Response response = API.wildCardMap(param);
-        Assert.assertEquals(418, response.status());
-    }
+          put("key1", "1");
+          put("key2", "2");
+        }
+    };
+    Response response = API.wildCardMap(param);
+    Assert.assertEquals(418, response.status());
+  }
 
-    interface FormUrlEncodedApi {
+  interface FormUrlEncodedApi {
 
-        @RequestLine("POST /wild-card-map")
-        @Headers("Content-Type: application/x-www-form-urlencoded")
-        Response wildCardMap (Map<String, ?> param);
-    }
+    @RequestLine("POST /wild-card-map")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    Response wildCardMap (Map<String, ?> param);
+  }
 }

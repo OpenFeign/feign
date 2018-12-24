@@ -150,6 +150,58 @@ limitations under the License.
       <version>2.1.1.RELEASE</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.3.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>5.3.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.11.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>2.23.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>2.23.4</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+      <version>1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>3.1.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.2</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -166,9 +218,9 @@ limitations under the License.
         </plugin>
 
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>3.0.5</version>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>3.1.8</version>
           <configuration>
             <effort>Max</effort>
             <threshold>Low</threshold>
@@ -177,8 +229,8 @@ limitations under the License.
           </configuration>
           <executions>
             <execution>
-              <id>analyze-compile</id>
-              <phase>package</phase>
+              <id>spotbugs-validation</id>
+              <phase>verify</phase>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -188,11 +240,13 @@ limitations under the License.
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-pmd-plugin</artifactId>
-          <version>3.8</version>
+          <version>3.11.0</version>
           <configuration>
             <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
             <targetJdk>${maven.compiler.source}</targetJdk>
-            <verbose>true</verbose>
+            <failOnViolation>true</failOnViolation>
+            <printFailingErrors>true</printFailingErrors>
+            <analysisCache>true</analysisCache>
             <linkXRef>false</linkXRef>
             <rulesets>
               <ruleset>${project.basedir}/../.codestyle/pmd.xml</ruleset>
@@ -200,7 +254,8 @@ limitations under the License.
           </configuration>
           <executions>
             <execution>
-              <phase>package</phase>
+              <id>pmd-validation</id>
+              <phase>verify</phase>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -211,7 +266,7 @@ limitations under the License.
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>2.17</version>
+          <version>3.0.0</version>
           <dependencies>
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
@@ -221,8 +276,8 @@ limitations under the License.
           </dependencies>
           <executions>
             <execution>
-              <id>validate</id>
-              <phase>package</phase>
+              <id>checkstyle-validation</id>
+              <phase>verify</phase>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -233,7 +288,7 @@ limitations under the License.
                 <failOnViolation>true</failOnViolation>
                 <linkXRef>false</linkXRef>
                 <propertyExpansion>codestyleFolder=${project.basedir}/../.codestyle</propertyExpansion>
-                <!-- <includeTestSourceDirectory>true</includeTestSourceDirectory> -->
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
               </configuration>
             </execution>
           </executions>
@@ -257,11 +312,54 @@ limitations under the License.
       </plugin>
 
       <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>2.2.5</version>
+        <executions>
+          <execution>
+            <id>git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <runOnlyOnce>true</runOnlyOnce>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <verbose>false</verbose>
+          <prefix>git</prefix>
+          <generateGitPropertiesFilename>
+            ${project.build.outputDirectory}/git.properties
+          </generateGitPropertiesFilename>
+          <dateFormat>yyyy-MM-dd'T'HH:mm:ssZ</dateFormat>
+          <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+          <excludeProperties>
+            <excludeProperty>git.build.user.*</excludeProperty>
+            <excludeProperty>git.build.host</excludeProperty>
+            <excludeProperty>git.commit.user.*</excludeProperty>
+            <excludeProperty>git.total.commit.count</excludeProperty>
+            <excludeProperty>git.closest.tag.commit.count</excludeProperty>
+            <excludeProperty>git.closest.tag.name</excludeProperty>
+          </excludeProperties>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.4</version>
+        <version>3.0.1</version>
         <configuration>
+          <additionalOptions>-Xdoclint:none</additionalOptions>
           <additionalparam>-Xdoclint:none</additionalparam>
+          <breakiterator>true</breakiterator>
+          <charset>UTF-8</charset>
+          <docencoding>UTF-8</docencoding>
+          <encoding>UTF-8</encoding>
+          <failOnError>true</failOnError>
+          <show>protected</show>
+          <source>${java.version}</source>
+          <version>true</version>
         </configuration>
         <executions>
           <execution>

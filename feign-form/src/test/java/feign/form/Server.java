@@ -50,7 +50,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
  */
 @Controller
 @SpringBootApplication
-public class Server {
+public final class Server {
 
   @RequestMapping(value = "/form", method = POST)
   public ResponseEntity<Void> form (@RequestParam("key1") String key1,
