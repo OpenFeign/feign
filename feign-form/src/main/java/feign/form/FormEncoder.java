@@ -17,11 +17,16 @@
 package feign.form;
 
 import static feign.form.util.CharsetUtil.UTF_8;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +36,8 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -85,13 +92,22 @@ public class FormEncoder implements Encoder {
   public void encode (Object object, Type bodyType, RequestTemplate template) throws EncodeException {
     String contentTypeValue = getContentTypeValue(template.headers());
     val contentType = ContentType.of(contentTypeValue);
-    if (!MAP_STRING_WILDCARD.equals(bodyType) || !processors.containsKey(contentType)) {
+    if (!processors.containsKey(contentType)) {
+      delegate.encode(object, bodyType, template);
+      return;
+    }
+
+    Map<String, Object> data;
+    if (MAP_STRING_WILDCARD.equals(bodyType)) {
+      data = (Map<String, Object>) object;
+    } else if (isUserPojo(object)) {
+      data = convertPojoToMap(object);
+    } else {
       delegate.encode(object, bodyType, template);
       return;
     }
 
     val charset = getCharset(contentTypeValue);
-    val data = (Map<String, Object>) object;
     try {
       processors.get(contentType).process(template, charset, data);
     } catch (Exception ex) {
@@ -131,5 +147,44 @@ public class FormEncoder implements Encoder {
     return matcher.find()
          ? Charset.forName(matcher.group(1))
          : UTF_8;
+  }
+
+  private boolean isUserPojo (Object object) {
+    val type = object.getClass();
+    val packageName = type.getPackage().getName();
+    return !packageName.startsWith("java.");
+  }
+
+  @SneakyThrows
+  private Map<String, Object> convertPojoToMap (Object object) {
+    Map<String, Object> result = new HashMap<String, Object>();
+    val type = object.getClass();
+    for (val field : type.getDeclaredFields()) {
+      val modifiers = field.getModifiers();
+      if (isFinal(modifiers) || isStatic(modifiers)) {
+        continue;
+      }
+      AccessController.doPrivileged(new SetAccessibleAction(field));
+
+      val fieldValue = field.get(object);
+      if (fieldValue == null) {
+        continue;
+      }
+      result.put(field.getName(), fieldValue);
+    }
+    return result;
+  }
+
+  @RequiredArgsConstructor
+  @FieldDefaults(level = PRIVATE, makeFinal = true)
+  private class SetAccessibleAction implements PrivilegedAction<Object> {
+
+    Field field;
+
+    @Override
+    public Object run () {
+      field.setAccessible(true);
+      return null;
+    }
   }
 }
