@@ -45,7 +45,7 @@ public final class Response implements Closeable {
   private final Request request;
 
   private Response(Builder builder) {
-    checkState(builder.status >= 100, "Invalid status code: %s", builder.status);
+    checkState(builder.status >= 100 && builder.status < 600, "Invalid status code: %s", builder.status);
     checkState(builder.request != null, "original request is required");
     this.status = builder.status;
     this.request = builder.request;
