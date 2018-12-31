@@ -100,8 +100,7 @@ public class ResponseTest {
         .status(600)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body((Response.Body) null)
-        .build()
-    );
+        .build());
 
     assertThat(thrown).isInstanceOf(IllegalStateException.class);
     assertThat(thrown).hasMessage("Invalid status code: 600");
