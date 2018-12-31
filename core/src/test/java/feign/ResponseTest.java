@@ -81,4 +81,15 @@ public class ResponseTest {
         .build();
     assertThat(response.headers()).isNotNull().isEmpty();
   }
+
+  @Test
+  public void support1xxStatusCodes() {
+    Response response = Response.builder()
+            .status(103)
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body((Response.Body) null)
+            .build();
+
+    assertThat(response.status()).isEqualTo(103);
+  }
 }
