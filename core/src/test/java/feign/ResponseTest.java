@@ -86,21 +86,22 @@ public class ResponseTest {
   @Test
   public void support1xxStatusCodes() {
     Response response = Response.builder()
-            .status(103)
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .body((Response.Body) null)
-            .build();
+        .status(103)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body((Response.Body) null)
+        .build();
 
     assertThat(response.status()).isEqualTo(103);
   }
 
   @Test
   public void statusCodesBeyond5xxAreNotSupported() {
-    Throwable thrown = catchThrowable( () -> Response.builder()
-            .status(600)
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .body((Response.Body) null)
-            .build());
+    Throwable thrown = catchThrowable(() -> Response.builder()
+        .status(600)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body((Response.Body) null)
+        .build()
+    );
 
     assertThat(thrown).isInstanceOf(IllegalStateException.class);
     assertThat(thrown).hasMessage("Invalid status code: 600");
