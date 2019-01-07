@@ -211,7 +211,7 @@ public interface DownloadClient {
             messageConverters.getObject().getConverters();
 
       List<HttpMessageConverter<?>> decoderConverters =
-            new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1;
+            new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
       decoderConverters.addAll(springConverters);
       decoderConverters.add(new SpringManyMultipartFilesReader(4096));
