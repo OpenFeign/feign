@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -226,6 +226,15 @@ public interface Contract {
         data.template().headers(null); // to clear
         data.template().headers(headers);
       }
+      if (targetType.isAnnotationPresent(ApiTimeout.class)) {
+        ApiTimeout apiAnnotation = targetType.getAnnotation(ApiTimeout.class);
+        int connectTimeoutMillis = apiAnnotation.connectTimeoutMillis();
+        int readTimeoutMillis = apiAnnotation.readTimeoutMillis();
+        checkState(connectTimeoutMillis > 0 && readTimeoutMillis > 0,
+            "Api timeout annotation contains negative params on type %s.",
+            targetType.getName());
+        data.options(new RequestOptions(connectTimeoutMillis, readTimeoutMillis));
+      }
     }
 
     @Override
@@ -265,6 +274,14 @@ public interface Contract {
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
             method.getName());
         data.template().headers(toMap(headersOnMethod));
+      } else if (annotationType == ApiTimeout.class) {
+        ApiTimeout apiAnnotation = ApiTimeout.class.cast(methodAnnotation);
+        int connectTimeoutMillis = apiAnnotation.connectTimeoutMillis();
+        int readTimeoutMillis = apiAnnotation.readTimeoutMillis();
+        checkState(connectTimeoutMillis > 0 && readTimeoutMillis > 0,
+            "Api timeout annotation contains negative params on method %s.",
+            method.getName());
+        data.options(new RequestOptions(connectTimeoutMillis, readTimeoutMillis));
       }
     }
 

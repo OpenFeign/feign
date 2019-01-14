@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,11 +15,7 @@ package feign;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
@@ -41,6 +37,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
+  private Optional<RequestOptions> options = Optional.empty();
 
   MethodMetadata() {}
 
@@ -162,5 +159,17 @@ public final class MethodMetadata implements Serializable {
    */
   public Map<Integer, Expander> indexToExpander() {
     return indexToExpander;
+  }
+
+  /**
+   * When exists, this settings will be used to construct custom {@link Request.Options} for method
+   */
+  public Optional<RequestOptions> options() {
+    return options;
+  }
+
+  public MethodMetadata options(RequestOptions options) {
+    this.options = Optional.ofNullable(options);
+    return this;
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -865,5 +865,59 @@ public class DefaultContractTest {
     assertThat(mds.get(0).template().queries()).containsExactly(
         entry("q", asList("body:{body}")));
     assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
+  }
+
+  static final int INTERFACE_CONNECT_TIMEOUT = 15 * 1000;
+  static final int DEFAULT_READ_TIMEOUT = 60 * 1000;
+  static final int METHOD_CONNECT_TIMEOUT = 20 * 1000;
+  static final int METHOD_READ_TIMEOUT = 30 * 1000;
+
+  @ApiTimeout(connectTimeoutMillis = INTERFACE_CONNECT_TIMEOUT)
+  interface ApiTimeoutInterface {
+
+    @ApiTimeout(connectTimeoutMillis = METHOD_CONNECT_TIMEOUT,
+        readTimeoutMillis = METHOD_READ_TIMEOUT)
+    @RequestLine("GET /api/withApiTimeout")
+    String withApiTimeout();
+
+    @RequestLine("GET /api/withoutApiTimeout")
+    String withoutApiTimeout();
+  }
+
+  @Test
+  public void requestOptionsOnInterfaceParsed() {
+    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(ApiTimeoutInterface.class);
+
+    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (MethodMetadata m : mds) {
+      byConfigKey.put(m.configKey(), m);
+    }
+
+    assertThat(byConfigKey)
+        .containsOnlyKeys("ApiTimeoutInterface#withApiTimeout()",
+            "ApiTimeoutInterface#withoutApiTimeout()");
+    MethodMetadata md = byConfigKey.get("ApiTimeoutInterface#withApiTimeout()");
+    assertThat(md.options()).isPresent();
+    assertThat(md.options().get()).isEqualToComparingFieldByField(
+        new RequestOptions(METHOD_CONNECT_TIMEOUT, METHOD_READ_TIMEOUT));
+
+    md = byConfigKey.get("ApiTimeoutInterface#withoutApiTimeout()");
+    assertThat(md.options()).isPresent();
+    assertThat(md.options().get()).isEqualToComparingFieldByField(
+        new RequestOptions(INTERFACE_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT));
+  }
+
+  interface WithoutApiTimeoutInterface {
+
+    @RequestLine("GET /api/resource")
+    String getSomething();
+  }
+
+  @Test
+  public void requestOptionsOnInterfaceNotDefined() {
+    List<MethodMetadata> mds =
+        contract.parseAndValidatateMetadata(WithoutApiTimeoutInterface.class);
+
+    assertThat(mds.get(0).options()).isEmpty();
   }
 }
