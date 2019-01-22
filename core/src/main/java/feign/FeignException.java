@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -26,17 +26,20 @@ public class FeignException extends RuntimeException {
   private int status;
   private byte[] content;
 
-  protected FeignException(String message, Throwable cause) {
+  protected FeignException(int status, String message, Throwable cause) {
     super(message, cause);
+    this.status = status;
   }
 
-  protected FeignException(String message, Throwable cause, byte[] content) {
+  protected FeignException(int status, String message, Throwable cause, byte[] content) {
     super(message, cause);
+    this.status = status;
     this.content = content;
   }
 
-  protected FeignException(String message) {
+  protected FeignException(int status, String message) {
     super(message);
+    this.status = status;
   }
 
   protected FeignException(int status, String message, byte[] content) {
@@ -57,8 +60,9 @@ public class FeignException extends RuntimeException {
     return new String(content, UTF_8);
   }
 
-  static FeignException errorReading(Request request, Response ignored, IOException cause) {
+  static FeignException errorReading(Request request, Response response, IOException cause) {
     return new FeignException(
+        response.status(),
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         cause,
         request.body());
@@ -119,6 +123,7 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
+        -1,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,

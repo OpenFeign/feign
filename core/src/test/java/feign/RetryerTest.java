@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -28,7 +28,7 @@ public class RetryerTest {
 
   @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
-    RetryableException e = new RetryableException(null, null, null);
+    RetryableException e = new RetryableException(-1, null, null, null);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
     assertEquals(0, retryer.sleptForMillis);
@@ -61,14 +61,14 @@ public class RetryerTest {
       }
     };
 
-    retryer.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
+    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
     assertEquals(2, retryer.attempt);
     assertEquals(1000, retryer.sleptForMillis);
   }
 
   @Test(expected = RetryableException.class)
   public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(null, null, new Date(5000)));
+    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
   }
 
   @Test
@@ -77,7 +77,7 @@ public class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(null, null, new Date(System.currentTimeMillis() + 5000));
+        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000));
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't
