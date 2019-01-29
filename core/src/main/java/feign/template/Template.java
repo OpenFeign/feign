@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.template;
 
+import feign.template.UriUtils.FragmentType;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,9 +81,9 @@ public class Template {
         Object value = variables.get(expression.getName());
         if (value != null) {
           String expanded = expression.expand(value, this.encode.isEncodingRequired());
-          if (!this.encodeSlash) {
+          if (this.encodeSlash) {
             logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
-            expanded = expanded.replaceAll("\\%2F", "/");
+            expanded = expanded.replaceAll("/", "%2F");
           }
           resolved.append(expanded);
         } else {
@@ -200,7 +201,9 @@ public class Template {
 
       if (chunk.startsWith("{")) {
         /* it's an expression, defer encoding until resolution */
-        Expression expression = Expressions.create(chunk);
+        FragmentType type = (query) ? FragmentType.QUERY : FragmentType.PATH_SEGMENT;
+
+        Expression expression = Expressions.create(chunk, type);
         if (expression == null) {
           this.templateChunks.add(Literal.create(encode(chunk, query)));
         } else {

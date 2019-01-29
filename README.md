@@ -113,6 +113,14 @@ See [Advanced Usage](#advanced-usage) for more examples.
 >
 > `@RequestLine` and `@QueryMap` templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.  
 
+> **What about plus? `+`**
+>
+> Per the URI specification, a `+` sign is allowed in both the path and query segments of a URI, however, handling of
+> the symbol on the query can be inconsistent.  In some legacy systems, the `+` is equivalent to the a space.  Feign takes the approach of modern systems, where a
+> `+` symbol should not represent a space and is explicitly encoded as `%2B` when found on a query string.
+>
+> If you wish to use `+` as a space, then use the literal ` ` character or encode the value directly as `%20`
+ 
 ##### Custom Expansion
 
 The `@Param` annotation has an optional property `expander` allowing for complete control over the individual parameter's expansion.
