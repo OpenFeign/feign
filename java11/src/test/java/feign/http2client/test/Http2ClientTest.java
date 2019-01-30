@@ -15,6 +15,7 @@ package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 import java.io.IOException;
 import feign.*;
@@ -25,6 +26,7 @@ import okhttp3.mockwebserver.MockResponse;
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
+@Ignore
 public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {
