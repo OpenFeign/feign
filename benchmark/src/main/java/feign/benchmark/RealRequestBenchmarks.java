@@ -19,7 +19,6 @@ import feign.Logger.Level;
 import feign.Response;
 import feign.Retryer;
 import io.netty.buffer.ByteBuf;
-import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.protocol.http.server.HttpServer;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -53,8 +52,8 @@ public class RealRequestBenchmarks {
 
   @Setup
   public void setup() {
-    server = RxNetty.createHttpServer(SERVER_PORT, (request, response) -> response.flush());
-    server.start();
+
+    server = HttpServer.newServer(SERVER_PORT).start((request, response) -> null);
     client = new OkHttpClient();
     client.retryOnConnectionFailure();
     okFeign =
