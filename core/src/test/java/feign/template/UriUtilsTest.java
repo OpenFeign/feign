@@ -16,7 +16,6 @@ package feign.template;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import java.nio.charset.Charset;
 import org.junit.Test;
 
@@ -24,19 +23,22 @@ public class UriUtilsTest {
 
 
   /**
-   * Verify that values outside of the allowed characters in a path segment are pct-encoded.
-   * The list of approved characters used are those listed in
-   * <a href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
+   * Verify that values outside of the allowed characters in a path segment are pct-encoded. The
+   * list of approved characters used are those listed in <a
+   * href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
    */
   @Test
   public void pctEncodeReservedPathCharacters() {
-    /* the only not allowed characters are the general delimiters, with the exception of
-     * slash, question, colon and at */
+    /*
+     * the only not allowed characters are the general delimiters, with the exception of slash,
+     * question, colon and at
+     */
     String reservedPath = "/api/user@host:port#section[a-z]/data";
     String reservedPathEncoded = UriUtils.pathEncode(reservedPath, UTF_8);
 
-    /* the result should be the path, with the slash and question retained, but all other
-     * special characters encoded
+    /*
+     * the result should be the path, with the slash and question retained, but all other special
+     * characters encoded
      */
     assertThat(reservedPathEncoded).isEqualTo("/api/user@host:port%23section%5Ba-z%5D/data");
 
@@ -44,8 +46,8 @@ public class UriUtilsTest {
 
   /**
    * Verify that the list of allowed characters in a path segment are not pct-encoded, as they don't
-   * have to be.  The list of approved characters used are those listed in
-   * <a href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
+   * have to be. The list of approved characters used are those listed in <a
+   * href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
    */
   @Test
   public void ensureApprovedPathParametersAreNotEncoded() {
@@ -64,8 +66,8 @@ public class UriUtilsTest {
    * This differs from {@link UriUtils#queryParamEncode(String, Charset)} in that this method
    * adheres to specification exactly, whereas the other is more restrictive.
    *
-   * The list of approved characters used are those listed in
-   * <a href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
+   * The list of approved characters used are those listed in <a
+   * href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
    */
   @Test
   public void pctEncodeQueryString() {
@@ -75,12 +77,12 @@ public class UriUtilsTest {
   }
 
   /**
-   * Verify that a value meant for a query string parameter is pct-encoded using the defined
-   * query set of allowed characters, including equals, ampersands and question marks as in
-   * Feign, we manage the creation of the key value pair.
+   * Verify that a value meant for a query string parameter is pct-encoded using the defined query
+   * set of allowed characters, including equals, ampersands and question marks as in Feign, we
+   * manage the creation of the key value pair.
    *
-   * The list of approved characters used are those listed in
-   *  <a href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
+   * The list of approved characters used are those listed in <a
+   * href="https://tools.ietf.org/html/rfc3986#appendix-A>RFC 3986 Appendix A</a>
    */
   @Test
   public void pctEncodeQueryParameterValue() {

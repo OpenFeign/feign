@@ -229,7 +229,7 @@ public class UriUtils {
     QUERY {
       @Override
       boolean isAllowed(int c) {
-        /* although plus signs are allowed, their use is inconsistent.  force encoding */
+        /* although plus signs are allowed, their use is inconsistent. force encoding */
         if (c == '+') {
           return false;
         }
@@ -251,11 +251,11 @@ public class UriUtils {
     abstract boolean isAllowed(int c);
 
     protected boolean isAlpha(int c) {
-      return (c >='a' &&  c<= 'z' || c >= 'A' && c <= 'Z');
+      return (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z');
     }
 
     protected boolean isDigit(int c) {
-      return (c >='0' &&  c<= '9');
+      return (c >= '0' && c <= '9');
     }
 
     protected boolean isGenericDelimiter(int c) {
