@@ -62,14 +62,7 @@ public class RealRequestBenchmarks {
   public void setup() {
 
     server = HttpServer.newServer(SERVER_PORT)
-        .start((request, response) -> {
-          return null;
-        });
-
-            //(request, response) -> {
-            //  response.writeStringAndFlushOnEach(Observable.just("OK"))).awaitShutdown();
-            //server = RxNetty.createHttpServer(SERVER_PORT, (request, response) -> response.flush());
-            // server.start();
+        .start((request, response) -> null);
     client = new OkHttpClient();
     client.retryOnConnectionFailure();
     okFeign = Feign.builder()

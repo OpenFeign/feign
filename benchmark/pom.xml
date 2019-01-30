@@ -57,6 +57,11 @@
       <artifactId>mockwebserver</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <version>1.60</version>
+    </dependency>
+    <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty-http</artifactId>
       <version>0.5.2</version>
