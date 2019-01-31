@@ -144,7 +144,7 @@ See [Headers](#headers) for examples.
 > ```java
 > public interface ContentService {
 >   @RequestLine("GET /api/documents/{contentType}")
->   @Headers("Accept {contentType}")
+>   @Headers("Accept: {contentType}")
 >   String getDocumentByType(@Param("contentType") String type);
 > }
 >```
