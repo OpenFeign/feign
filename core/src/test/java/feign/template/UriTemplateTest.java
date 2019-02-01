@@ -223,6 +223,15 @@ public class UriTemplateTest {
   }
 
   @Test
+  public void ensurePlusInEncodedAs2BOnQuery() {
+    String template = "https://www.example.com/beer?type={type}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    Map<String, Object> parameters = Collections.singletonMap("type", "sam+adams");
+    String expanded = uriTemplate.expand(parameters);
+    assertThat(expanded).isEqualToIgnoringCase("https://www.example.com/beer?type=sam%2Badams");
+  }
+
+  @Test
   public void incompleteTemplateIsALiteral() {
     String template = "https://www.example.com/testing/foo}}";
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);

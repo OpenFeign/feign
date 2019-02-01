@@ -768,7 +768,7 @@ public class FeignTest {
     api.encodedQueryParam("5.2FSi+");
 
     assertThat(server.takeRequest())
-        .hasPath("/?trim=5.2FSi+");
+        .hasPath("/?trim=5.2FSi%2B");
   }
 
   @Test

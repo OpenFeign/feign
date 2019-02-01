@@ -14,6 +14,7 @@
 package feign.template;
 
 import feign.Util;
+import feign.template.UriUtils.FragmentType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,11 +29,10 @@ public final class Expressions {
 
   static {
     expressions = new LinkedHashMap<>();
-    expressions.put(Pattern.compile("\\+(\\w[-\\w.]*[ ]*)(:(.+))?"), ReservedExpression.class);
     expressions.put(Pattern.compile("(\\w[-\\w.]*[ ]*)(:(.+))?"), SimpleExpression.class);
   }
 
-  public static Expression create(final String value) {
+  public static Expression create(final String value, final FragmentType type) {
 
     /* remove the start and end braces */
     final String expression = stripBraces(value);
@@ -53,7 +53,6 @@ public final class Expressions {
 
     Entry<Pattern, Class<? extends Expression>> matchedExpression = matchedExpressionEntry.get();
     Pattern expressionPattern = matchedExpression.getKey();
-    Class<? extends Expression> expressionType = matchedExpression.getValue();
 
     /* create a new regular expression matcher for the expression */
     String variableName = null;
@@ -68,7 +67,7 @@ public final class Expressions {
       }
     }
 
-    return new SimpleExpression(variableName, variablePattern);
+    return new SimpleExpression(variableName, variablePattern, type);
   }
 
   private static String stripBraces(String expression) {
@@ -82,35 +81,20 @@ public final class Expressions {
   }
 
   /**
-   * Expression that does not encode reserved characters. This expression adheres to RFC 6570
-   * <a href="https://tools.ietf.org/html/rfc6570#section-3.2.3">Reserved Expansion (Level 2)</a>
-   * specification.
-   */
-  public static class ReservedExpression extends SimpleExpression {
-    private final String RESERVED_CHARACTERS = ":/?#[]@!$&\'()*+,;=";
-
-    ReservedExpression(String expression, String pattern) {
-      super(expression, pattern);
-    }
-
-    @Override
-    String encode(Object value) {
-      return UriUtils.encodeReserved(value.toString(), RESERVED_CHARACTERS, Util.UTF_8);
-    }
-  }
-
-  /**
    * Expression that adheres to Simple String Expansion as outlined in <a
    * href="https://tools.ietf.org/html/rfc6570#section-3.2.2>Simple String Expansion (Level 1)</a>
    */
   static class SimpleExpression extends Expression {
 
-    SimpleExpression(String expression, String pattern) {
+    private final FragmentType type;
+
+    SimpleExpression(String expression, String pattern, FragmentType type) {
       super(expression, pattern);
+      this.type = type;
     }
 
     String encode(Object value) {
-      return UriUtils.encode(value.toString(), Util.UTF_8);
+      return UriUtils.encodeReserved(value.toString(), type, Util.UTF_8);
     }
 
     @Override
