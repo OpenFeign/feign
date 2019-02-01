@@ -14,6 +14,7 @@
 package feign;
 
 import feign.Request.HttpMethod;
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.entry;
 
 public class ResponseTest {
@@ -95,14 +95,15 @@ public class ResponseTest {
   }
 
   @Test
-  public void statusCodesBeyond5xxAreNotSupported() {
-    Throwable thrown = catchThrowable(() -> Response.builder()
-        .status(600)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .body((Response.Body) null)
-        .build());
+  public void statusCodesOfAnyValueAreAllowed() {
+    Lists.list(600, 50, 35600).forEach(statusCode -> {
+      Response response = Response.builder()
+          .status(statusCode)
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .body((Response.Body) null)
+          .build();
 
-    assertThat(thrown).isInstanceOf(IllegalStateException.class);
-    assertThat(thrown).hasMessage("Invalid status code: 600");
+      assertThat(response.status()).isEqualTo(statusCode);
+    });
   }
 }
