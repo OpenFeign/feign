@@ -13,14 +13,13 @@
  */
 package feign;
 
+import static feign.assertj.MockWebServerAssertions.assertThat;
+import feign.Target.HardCodedTarget;
 import java.net.URI;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
-import feign.Target.HardCodedTarget;
-import org.springframework.stereotype.Repository;
-import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class TargetTest {
 

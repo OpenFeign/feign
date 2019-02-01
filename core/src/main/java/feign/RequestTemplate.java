@@ -464,7 +464,7 @@ public final class RequestTemplate implements Serializable {
       this.target = targetUri.getScheme() + "://" + targetUri.getAuthority() + targetUri.getPath();
     } catch (IllegalArgumentException iae) {
       /* the uri provided is not a valid one, we can't continue */
-      throw new FeignException("Target is not a valid URI.", iae);
+      throw new IllegalArgumentException("Target is not a valid URI.", iae);
     }
     return this;
   }
