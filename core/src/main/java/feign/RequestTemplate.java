@@ -19,6 +19,7 @@ import feign.template.QueryTemplate;
 import feign.template.UriTemplate;
 import feign.template.UriUtils;
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
@@ -399,7 +400,8 @@ public final class RequestTemplate implements Serializable {
 
     if (uri == null) {
       uri = "/";
-    } else if ((!uri.isEmpty() && !uri.startsWith("/") && !uri.startsWith("{"))) {
+    } else if ((!uri.isEmpty() && !uri.startsWith("/") && !uri.startsWith("{")
+        && !uri.startsWith("?"))) {
       /* if the start of the url is a literal, it must begin with a slash. */
       uri = "/" + uri;
     }
@@ -447,20 +449,23 @@ public final class RequestTemplate implements Serializable {
     if (target.endsWith("/")) {
       target = target.substring(0, target.length() - 1);
     }
+    try {
+      /* parse the target */
+      URI targetUri = URI.create(target);
 
-    /* no query strings allowed */
-    Matcher queryStringMatcher = QUERY_STRING_PATTERN.matcher(target);
-    if (queryStringMatcher.find()) {
-      /*
-       * target has a query string, we need to make sure that they are recorded as queries
-       */
-      int queryStart = queryStringMatcher.start();
-      this.extractQueryTemplates(target.substring(queryStart + 1), true);
+      if (Util.isNotBlank(targetUri.getRawQuery())) {
+        /*
+         * target has a query string, we need to make sure that they are recorded as queries
+         */
+        this.extractQueryTemplates(targetUri.getRawQuery(), true);
+      }
 
       /* strip the query string */
-      target = target.substring(0, queryStart);
+      this.target = targetUri.getScheme() + "://" + targetUri.getAuthority() + targetUri.getPath();
+    } catch (IllegalArgumentException iae) {
+      /* the uri provided is not a valid one, we can't continue */
+      throw new FeignException("Target is not a valid URI.", iae);
     }
-    this.target = target;
     return this;
   }
 
