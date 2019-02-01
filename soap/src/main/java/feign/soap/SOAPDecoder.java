@@ -44,14 +44,14 @@ import feign.jaxb.JAXBContextFactory;
  * <pre>
  *
  * public interface MyApi {
- * 
+ *
  *    &#64;RequestLine("POST /getObject")
  *    &#64;Headers({
  *      "SOAPAction: getObject",
  *      "Content-Type: text/xml"
  *    })
  *    MyJaxbObjectResponse getObject(MyJaxbObjectRequest request);
- *    
+ *
  * }
  *
  * ...
@@ -73,7 +73,7 @@ import feign.jaxb.JAXBContextFactory;
  *    log.info(faultException.getFault().getFaultString());
  * }
  * </pre>
- * 
+ *
  * </p>
  *
  * @see SOAPErrorDecoder
@@ -123,7 +123,7 @@ public class SOAPDecoder implements Decoder {
             .unmarshal(message.getSOAPBody().extractContentAsDocument());
       }
     } catch (SOAPException | JAXBException e) {
-      throw new DecodeException(e.toString(), e);
+      throw new DecodeException(response.status(), e.toString(), e);
     } finally {
       if (response.body() != null) {
         response.body().close();

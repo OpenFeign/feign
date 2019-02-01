@@ -37,7 +37,7 @@ import static feign.Util.resolveLastTypeParameter;
  * Decodes responses using SAX, which is supported both in normal JVM environments, as well Android.
  * <br>
  * <h4>Basic example with with Feign.Builder</h4> <br>
- * 
+ *
  * <pre>
  * api = Feign.builder()
  *     .decoder(SAXDecoder.builder()
@@ -87,7 +87,7 @@ public class SAXDecoder implements Decoder {
       }
       return handler.result();
     } catch (SAXException e) {
-      throw new DecodeException(e.getMessage(), e);
+      throw new DecodeException(response.status(), e.getMessage(), e);
     }
   }
 

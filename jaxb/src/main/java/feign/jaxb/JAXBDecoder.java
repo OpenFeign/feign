@@ -32,13 +32,13 @@ import org.xml.sax.SAXException;
  * <p>
  * Basic example with with Feign.Builder:
  * </p>
- * 
+ *
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *     .withMarshallerJAXBEncoding(&quot;UTF-8&quot;)
  *     .withMarshallerSchemaLocation(&quot;http://apihost http://apihost/schema.xsd&quot;)
  *     .build();
- * 
+ *
  * api = Feign.builder()
  *     .decoder(new JAXBDecoder(jaxbFactory))
  *     .target(MyApi.class, &quot;http://api&quot;);
@@ -92,7 +92,7 @@ public class JAXBDecoder implements Decoder {
           saxParserFactory.newSAXParser().getXMLReader(),
           new InputSource(response.body().asInputStream())));
     } catch (JAXBException | ParserConfigurationException | SAXException e) {
-      throw new DecodeException(e.toString(), e);
+      throw new DecodeException(response.status(), e.toString(), e);
     } finally {
       if (response.body() != null) {
         response.body().close();

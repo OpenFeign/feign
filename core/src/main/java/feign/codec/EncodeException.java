@@ -13,8 +13,8 @@
  */
 package feign.codec;
 
-import feign.FeignException;
 import static feign.Util.checkNotNull;
+import feign.FeignException;
 
 /**
  * Similar to {@code javax.websocket.EncodeException}, raised when a problem occurs encoding a
@@ -29,7 +29,7 @@ public class EncodeException extends FeignException {
    * @param message the reason for the failure.
    */
   public EncodeException(String message) {
-    super(checkNotNull(message, "message"));
+    super(-1, checkNotNull(message, "message"));
   }
 
   /**
@@ -37,6 +37,6 @@ public class EncodeException extends FeignException {
    * @param cause the cause of the error.
    */
   public EncodeException(String message, Throwable cause) {
-    super(message, checkNotNull(cause, "cause"));
+    super(-1, message, checkNotNull(cause, "cause"));
   }
 }
