@@ -186,4 +186,5 @@ public class JAXRSContract extends Contract.BaseContract {
     }
     stringCollection.add(String.format("{%s}", name));
     return Collections.unmodifiableList(stringCollection);
+  }
 }
