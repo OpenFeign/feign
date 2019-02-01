@@ -90,7 +90,11 @@ public interface ErrorDecoder {
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
       if (retryAfter != null) {
         return new RetryableException(
-            exception.getMessage(), response.request().httpMethod(), exception, retryAfter);
+            response.status(),
+            exception.getMessage(),
+            response.request().httpMethod(),
+            exception,
+            retryAfter);
       }
       return exception;
     }

@@ -25,17 +25,20 @@ public class FeignException extends RuntimeException {
   private int status;
   private byte[] content;
 
-  protected FeignException(String message, Throwable cause) {
+  protected FeignException(int status, String message, Throwable cause) {
     super(message, cause);
+    this.status = status;
   }
 
-  protected FeignException(String message, Throwable cause, byte[] content) {
+  protected FeignException(int status, String message, Throwable cause, byte[] content) {
     super(message, cause);
+    this.status = status;
     this.content = content;
   }
 
-  protected FeignException(String message) {
+  protected FeignException(int status, String message) {
     super(message);
+    this.status = status;
   }
 
   protected FeignException(int status, String message, byte[] content) {
@@ -56,8 +59,9 @@ public class FeignException extends RuntimeException {
     return new String(content, UTF_8);
   }
 
-  static FeignException errorReading(Request request, Response ignored, IOException cause) {
+  static FeignException errorReading(Request request, Response response, IOException cause) {
     return new FeignException(
+        response.status(),
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         cause,
         request.body());
@@ -118,6 +122,7 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
+        -1,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,

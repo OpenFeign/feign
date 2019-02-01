@@ -31,6 +31,7 @@ public class StringDecoder implements Decoder {
     if (String.class.equals(type)) {
       return Util.toString(body.asReader());
     }
-    throw new DecodeException(format("%s is not a type supported by this decoder.", type));
+    throw new DecodeException(
+        response.status(), format("%s is not a type supported by this decoder.", type));
   }
 }

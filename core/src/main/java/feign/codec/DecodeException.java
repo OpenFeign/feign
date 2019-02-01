@@ -29,15 +29,15 @@ public class DecodeException extends FeignException {
   /**
    * @param message the reason for the failure.
    */
-  public DecodeException(String message) {
-    super(checkNotNull(message, "message"));
+  public DecodeException(int status, String message) {
+    super(status, checkNotNull(message, "message"));
   }
 
   /**
    * @param message possibly null reason for the failure.
    * @param cause the cause of the error.
    */
-  public DecodeException(String message, Throwable cause) {
-    super(message, checkNotNull(cause, "cause"));
+  public DecodeException(int status, String message, Throwable cause) {
+    super(status, message, checkNotNull(cause, "cause"));
   }
 }

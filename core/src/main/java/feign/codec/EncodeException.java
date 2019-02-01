@@ -30,7 +30,7 @@ public class EncodeException extends FeignException {
    * @param message the reason for the failure.
    */
   public EncodeException(String message) {
-    super(checkNotNull(message, "message"));
+    super(-1, checkNotNull(message, "message"));
   }
 
   /**
@@ -38,6 +38,6 @@ public class EncodeException extends FeignException {
    * @param cause the cause of the error.
    */
   public EncodeException(String message, Throwable cause) {
-    super(message, checkNotNull(cause, "cause"));
+    super(-1, message, checkNotNull(cause, "cause"));
   }
 }
