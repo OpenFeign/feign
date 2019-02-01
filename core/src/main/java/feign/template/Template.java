@@ -13,6 +13,7 @@
  */
 package feign.template;
 
+import feign.template.UriUtils.FragmentType;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,9 +84,9 @@ public class Template {
         Object value = variables.get(expression.getName());
         if (value != null) {
           String expanded = expression.expand(value, this.encode.isEncodingRequired());
-          if (!this.encodeSlash) {
+          if (this.encodeSlash) {
             logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
-            expanded = expanded.replaceAll("\\%2F", "/");
+            expanded = expanded.replaceAll("/", "%2F");
           }
           resolved.append(expanded);
         } else {
@@ -202,7 +203,9 @@ public class Template {
 
       if (chunk.startsWith("{")) {
         /* it's an expression, defer encoding until resolution */
-        Expression expression = Expressions.create(chunk);
+        FragmentType type = (query) ? FragmentType.QUERY : FragmentType.PATH_SEGMENT;
+
+        Expression expression = Expressions.create(chunk, type);
         if (expression == null) {
           this.templateChunks.add(Literal.create(encode(chunk, query)));
         } else {

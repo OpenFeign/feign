@@ -14,17 +14,17 @@
 package feign.template;
 
 import feign.Util;
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UriUtils {
 
-  private static final String QUERY_RESERVED_CHARACTERS = "?/,=";
-  private static final String PATH_RESERVED_CHARACTERS = "/=@:!$&\'(),;~";
+  // private static final String QUERY_RESERVED_CHARACTERS = "=";
+  // private static final String PATH_RESERVED_CHARACTERS = "/=@:!$&\'(),;~";
   private static final Pattern PCT_ENCODED_PATTERN = Pattern.compile("%[0-9A-Fa-f][0-9A-Fa-f]");
 
   /**
@@ -44,7 +44,7 @@ public class UriUtils {
    * @return the encoded value.
    */
   public static String encode(String value) {
-    return encodeReserved(value, "", Util.UTF_8);
+    return encodeReserved(value, FragmentType.URI, Util.UTF_8);
   }
 
   /**
@@ -55,7 +55,7 @@ public class UriUtils {
    * @return the encoded value.
    */
   public static String encode(String value, Charset charset) {
-    return encodeReserved(value, "", charset);
+    return encodeReserved(value, FragmentType.URI, charset);
   }
 
   /**
@@ -83,7 +83,13 @@ public class UriUtils {
    * @return the encoded path fragment.
    */
   public static String pathEncode(String path, Charset charset) {
-    return encodeReserved(path, PATH_RESERVED_CHARACTERS, charset);
+    return encodeReserved(path, FragmentType.PATH_SEGMENT, charset);
+
+    /*
+     * path encoding is not equivalent to query encoding, there are few differences, namely dealing
+     * with spaces, !, ', (, ), and ~ characters. we will need to manually process those values.
+     */
+    // return encoded.replaceAll("\\+", "%20");
   }
 
   /**
@@ -94,7 +100,21 @@ public class UriUtils {
    * @return the encoded query fragment.
    */
   public static String queryEncode(String query, Charset charset) {
-    return encodeReserved(query, QUERY_RESERVED_CHARACTERS, charset);
+    return encodeReserved(query, FragmentType.QUERY, charset);
+
+    /* spaces will be encoded as 'plus' symbols here, we want them pct-encoded */
+    // return encoded.replaceAll("\\+", "%20");
+  }
+
+  /**
+   * Uri Encode a Query Parameter name or value.
+   *
+   * @param queryParam containing the query parameter.
+   * @param charset to use.
+   * @return the encoded query fragment.
+   */
+  public static String queryParamEncode(String queryParam, Charset charset) {
+    return encodeReserved(queryParam, FragmentType.QUERY_PARAM, charset);
   }
 
   /**
@@ -108,50 +128,20 @@ public class UriUtils {
   }
 
   /**
-   * Uri Encode a String using the provided charset.
-   *
-   * @param value to encode.
-   * @param charset to use.
-   * @return the encoded value.
-   */
-  private static String urlEncode(String value, Charset charset) {
-    try {
-      String encoded = URLEncoder.encode(value, charset.toString());
-
-      /*
-       * url encoding is not equivalent to URI encoding, there are few differences, namely dealing
-       * with spaces, !, ', (, ), and ~ characters. we will need to manually process those values.
-       */
-      return encoded
-          .replaceAll("\\+", "%20")
-          .replaceAll("\\%21", "!")
-          .replaceAll("\\%27", "'")
-          .replaceAll("\\%28", "(")
-          .replaceAll("\\%29", ")")
-          .replaceAll("\\%7E", "~")
-          .replaceAll("\\%2B", "+");
-
-    } catch (UnsupportedEncodingException uee) {
-      /* since the encoding is not supported, return the original value */
-      return value;
-    }
-  }
-
-  /**
    * Encodes the value, preserving all reserved characters.. Values that are already pct-encoded are
    * ignored.
    *
    * @param value inspect.
-   * @param reserved characters to preserve.
+   * @param type identifying which uri fragment rules to apply.
    * @param charset to use.
    * @return a new String with the reserved characters preserved.
    */
-  public static String encodeReserved(String value, String reserved, Charset charset) {
+  public static String encodeReserved(String value, FragmentType type, Charset charset) {
     /* value is encoded, we need to split it up and skip the parts that are already encoded */
     Matcher matcher = PCT_ENCODED_PATTERN.matcher(value);
 
     if (!matcher.find()) {
-      return encodeChunk(value, reserved, charset);
+      return encodeChunk(value, type, charset);
     }
 
     int length = value.length();
@@ -162,7 +152,7 @@ public class UriUtils {
       String before = value.substring(index, matcher.start());
 
       /* encode it */
-      encoded.append(encodeChunk(before, reserved, charset));
+      encoded.append(encodeChunk(before, type, charset));
 
       /* append the encoded value */
       encoded.append(matcher.group());
@@ -173,7 +163,7 @@ public class UriUtils {
 
     /* append the rest of the string */
     String tail = value.substring(index, length);
-    encoded.append(encodeChunk(tail, reserved, charset));
+    encoded.append(encodeChunk(tail, type, charset));
     return encoded.toString();
   }
 
@@ -181,39 +171,124 @@ public class UriUtils {
    * Encode a Uri Chunk, ensuring that all reserved characters are also encoded.
    *
    * @param value to encode.
-   * @param reserved characters to evaluate.
+   * @param type identifying which uri fragment rules to apply.
    * @param charset to use.
    * @return an encoded uri chunk.
    */
-  private static String encodeChunk(String value, String reserved, Charset charset) {
-    StringBuilder encoded = null;
-    int length = value.length();
-    int index = 0;
-    for (int i = 0; i < length; i++) {
-      char character = value.charAt(i);
-      if (reserved.indexOf(character) != -1) {
-        if (encoded == null) {
-          encoded = new StringBuilder(length + 8);
-        }
+  private static String encodeChunk(String value, FragmentType type, Charset charset) {
+    byte[] data = value.getBytes(charset);
+    ByteArrayOutputStream encoded = new ByteArrayOutputStream();
 
-        if (i != index) {
-          /* we are in the middle of the value, so we need to encode mid string */
-          encoded.append(urlEncode(value.substring(index, i), charset));
-        }
-        encoded.append(character);
-        index = i + 1;
+    for (byte b : data) {
+      if (type.isAllowed(b)) {
+        encoded.write(b);
+      } else {
+        /* percent encode the byte */
+        pctEncode(b, encoded);
       }
     }
+    return new String(encoded.toByteArray());
+  }
 
-    /* if there are no reserved characters, encode the original value */
-    if (encoded == null) {
-      return urlEncode(value, charset);
+  /**
+   * Percent Encode the provided byte.
+   *
+   * @param data to encode
+   * @param bos with the output stream to use.
+   */
+  private static void pctEncode(byte data, ByteArrayOutputStream bos) {
+    bos.write('%');
+    char hex1 = Character.toUpperCase(Character.forDigit((data >> 4) & 0xF, 16));
+    char hex2 = Character.toUpperCase(Character.forDigit(data & 0xF, 16));
+    bos.write(hex1);
+    bos.write(hex2);
+  }
+
+  enum FragmentType {
+    URI {
+      @Override
+      boolean isAllowed(int c) {
+        return isUnreserved(c);
+      }
+    },
+    RESERVED {
+      @Override
+      boolean isAllowed(int c) {
+        return isUnreserved(c) || isReserved(c);
+      }
+    },
+    PATH_SEGMENT {
+      @Override
+      boolean isAllowed(int c) {
+        return this.isPchar(c) || (c == '/');
+      }
+    },
+    QUERY {
+      @Override
+      boolean isAllowed(int c) {
+        /* although plus signs are allowed, their use is inconsistent. force encoding */
+        if (c == '+') {
+          return false;
+        }
+
+        return this.isPchar(c) || c == '/' || c == '?';
+      }
+    },
+    QUERY_PARAM {
+      @Override
+      boolean isAllowed(int c) {
+        /* explicitly encode equals, ampersands, questions */
+        if (c == '=' || c == '&' || c == '?') {
+          return false;
+        }
+        return QUERY.isAllowed(c);
+      }
+    };
+
+    abstract boolean isAllowed(int c);
+
+    protected boolean isAlpha(int c) {
+      return (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z');
     }
 
-    /* encode the rest of the string */
-    if (index < length) {
-      encoded.append(urlEncode(value.substring(index, length), charset));
+    protected boolean isDigit(int c) {
+      return (c >= '0' && c <= '9');
     }
-    return encoded.toString();
+
+    protected boolean isGenericDelimiter(int c) {
+      return (c == ':')
+          || (c == '/')
+          || (c == '?')
+          || (c == '#')
+          || (c == '[')
+          || (c == ']')
+          || (c == '@');
+    }
+
+    protected boolean isSubDelimiter(int c) {
+      return (c == '!')
+          || (c == '$')
+          || (c == '&')
+          || (c == '\'')
+          || (c == '(')
+          || (c == ')')
+          || (c == '*')
+          || (c == '+')
+          || (c == ',')
+          || (c == ';')
+          || (c == '=');
+    }
+
+    protected boolean isUnreserved(int c) {
+      return this.isAlpha(c) || this.isDigit(c) || c == '-' || c == '.' || c == '_' || c == '~';
+    }
+
+    protected boolean isReserved(int c) {
+      return this.isGenericDelimiter(c) || this.isSubDelimiter(c);
+    }
+
+    protected boolean isPchar(int c) {
+      return this.isUnreserved(c) || this.isSubDelimiter(c) || c == ':' || c == '@';
+    }
   }
 }
