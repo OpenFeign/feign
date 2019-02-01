@@ -14,6 +14,7 @@
 package feign.jaxrs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
@@ -394,6 +395,18 @@ public class JAXRSContractTest {
             .hasUrl("/base/specific");
   }
 
+
+  @Test
+  public void producesWithHeaderParamContainAllHeaders() throws Exception {
+    assertThat(parseAndValidateMetadata(MixedAnnotations.class, "getWithHeaders",
+        String.class, String.class, String.class)
+            .template())
+                .hasHeaders(entry("Accept", Arrays.asList("{Accept}", "application/json")))
+                .hasQueries(
+                    entry("multiple", Arrays.asList("stuff", "{multiple}")),
+                    entry("another", Collections.singletonList("{another}")));
+  }
+
   interface Methods {
 
     @POST
@@ -637,5 +650,15 @@ public class JAXRSContractTest {
       throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(targetType,
         targetType.getMethod(method, parameterTypes));
+  }
+
+  interface MixedAnnotations {
+
+    @GET
+    @Path("/api/stuff?multiple=stuff")
+    @Produces("application/json")
+    Response getWithHeaders(@HeaderParam("Accept") String accept,
+                            @QueryParam("multiple") String multiple,
+                            @QueryParam("another") String another);
   }
 }
