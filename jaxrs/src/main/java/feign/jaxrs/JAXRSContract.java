@@ -180,10 +180,10 @@ public class JAXRSContract extends Contract.BaseContract {
 
   // Not using override as the super-type's method is deprecated and will be removed.
   protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-    if (possiblyNull == null) {
-      possiblyNull = new ArrayList<String>();
+    List<String> stringCollection = new ArrayList<>();
+    if (possiblyNull != null && !"Accept".equals(name) && !"Content-Type".equals(name)) {
+         stringCollection.addAll(possiblyNull);
     }
-    possiblyNull.add(String.format("{%s}", name));
-    return possiblyNull;
-  }
+    stringCollection.add(String.format("{%s}", name));
+    return Collections.unmodifiableList(stringCollection);
 }
