@@ -540,7 +540,8 @@ public class FeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST, null);
+            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
+                null);
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
