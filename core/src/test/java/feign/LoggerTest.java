@@ -318,7 +318,7 @@ public class LoggerTest {
               return this;
             }
           })
-          .target(SendsStuff.class, "http://sna%fu.abc");
+          .target(SendsStuff.class, "http://sna%25fu.abc");
 
       thrown.expect(FeignException.class);
 
