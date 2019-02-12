@@ -22,8 +22,6 @@ import feign.MethodMetadata;
 import feign.Request;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import javax.ws.rs.*;
 
@@ -155,7 +153,7 @@ public class JAXRSContract extends Contract.BaseContract {
         String name = QueryParam.class.cast(parameterAnnotation).value();
         checkState(
             emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s", paramIndex);
-        Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+        String query = addTemplatedParam(name);
         data.template().query(name, query);
         nameParam(data, name, paramIndex);
         isHttpParam = true;
@@ -163,7 +161,7 @@ public class JAXRSContract extends Contract.BaseContract {
         String name = HeaderParam.class.cast(parameterAnnotation).value();
         checkState(
             emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s", paramIndex);
-        Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
+        String header = addTemplatedParam(name);
         data.template().header(name, header);
         nameParam(data, name, paramIndex);
         isHttpParam = true;
@@ -180,11 +178,7 @@ public class JAXRSContract extends Contract.BaseContract {
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.
-  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-    if (possiblyNull == null) {
-      possiblyNull = new ArrayList<String>();
-    }
-    possiblyNull.add(String.format("{%s}", name));
-    return possiblyNull;
+  private String addTemplatedParam(String name) {
+    return String.format("{%s}", name);
   }
 }
