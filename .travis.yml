@@ -50,11 +50,11 @@ env:
   # Ex. travis encrypt BINTRAY_KEY=xxx-https://bintray.com/profile/edit-xxx --add
   - secure: "WND+fjAqpdHArSbXAK7l0dpQLrX0hL/XymV02rhe0pVT1g0J1V32ncqDCVnn/73wTiECTen6y3o1vq3ByIdT9tUErt3o8oEROQsI/cVX9IhvJ/DtcW1lqafXKmQZwDQsifVxhKroW1VuZQbGrKnqVUzfqx5OzxgoNVWpkkxhf50="
   # Ex. travis encrypt GH_USER_EMAIL=for_github@domain.com --add
-  - secure: "KS/vYN2LZzIiFXVuPoStNG2343Jn7TzTEa3sWBlih075I8TNO1WUlGTzuQH/9xLRZ7wvjXYWQrQmPmA9jXEF6BCmVC3QYZPbXS/CR6L5O3EvFxX0oFE0NkUZ2ZiIIh1uRIjwIVqb715ktHO52XFZjEt69z97YQtS76CvRJtRKFI="
+  - secure: "dG1Qt8bqe3TsmLOmYpWYsI55N0zLWCsupdpS7zMOedpM2q0laac56uc2gGV6qQIPdJQdCWzr9CE/h1nG4lJdJfreC13reQ3PDF79Yh8tMvdO1iwrSeIQ7eeRY6hs72GUtdIhfwetUgwCgIJpmBHS7O3yJhxQAOmu5twAuABiuSE="
   # Ex. travis encrypt GH_USER=your_github_account --add
-  - secure: "DW7Q0jChnosR9hBcugAeqfy48VFHRRDPOve1c1XVSmla7VgGgSDlIy8p/vTLEpquWHabRPSbkDisLBPcJxjyXnSx3EobNO8tcQXzQs45aRmcdLrmWOjJpmoNA3wQ6VQX9w9lKoXr6tBVyBuhQfX/QvOls1sRT/bSzstrffhHHv0="
+  - secure: "DY28uU8wadasLCWSpl6KJyilGAAjSKzr3VPQ8by02eLDaAgCVq5KeYM0tjM804Rzhq3bjcXofaldj9QpWNTYC5SL6IIN5I5W+dWIZ8JzZ/rjOZgtJMMr4zcjOc5set9MsTUirB694m3c8bzhQZkah9YwUa/OuX1D8Ym/806igsE="
   # Ex. travis encrypt GH_TOKEN=XXX-https://github.com/settings/tokens-XXX --add
-  - secure: "bXCvr8DvpIbamiiR5XiEqyA6LIQWBmdKCpm0h5M4aUjmfpT18L5PcarxCu147l/yZiituitw4Ywz+nc4j4UKxtz9Oe84ouiDRZ2ynKZhUBOap3RWa7vOJ1Pj9sz20uSvyibX3R2b7lyOlk8PEhVywbhfWb6UE+bqMxQ10lgx6n8="
+  - secure: "NmydUhuJLZ/Eg0cpCz6eZiYvsLHtSYrLIAOT2VHfUdzl/Q3PGXoodTpTqRkW7Uuj5lSYYw6cQnhiTly2dvomQYj+es5hSfIzFLvlF0x7L+aFX2IySJhn2Cg8tp5H0hn2UL8t6jDfmdJrLwGKT6EsiXYIgt4dPWJ7ZZ1SRDFp2Cg="
   # Ex. travis encrypt SONATYPE_USER=your_sonatype_account
   - secure: "ONAU76S0WBGcQGf0mr7KxKQjFvhhu73GNuQG8j47pxhJojNlNpWBbu+EGkgaInWKMtO89iBtpicVlXZc06HtbSqv7L93gbMo+xgp5daLlQg4gocDixjB1I2oPPITFFoztu76nOA1IBWRLTKu+w+Y2tKOmzWm+5v2UKD6fz7SYoo="
   # Ex. travis encrypt SONATYPE_PASSWORD=your_sonatype_password
