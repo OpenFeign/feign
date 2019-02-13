@@ -24,8 +24,8 @@ cache:
   directories:
   - $HOME/.m2
 
-matrix:
- include:
+#matrix:
+# include:
    # - os: linux
    #  jdk: oraclejdk8
    #  addons:
