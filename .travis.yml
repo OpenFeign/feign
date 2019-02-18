@@ -27,11 +27,11 @@ cache:
 matrix:
   include:
     - os: linux
-    jdk: oraclejdk8
-    addons:
-      apt:
-        packages:
-          - oracle-java8-installer
+      jdk: oraclejdk8
+      addons:
+        apt:
+          packages:
+            - oracle-java8-installer
     - os: linux
       jdk: openjdk8
     - os: linux
