@@ -63,6 +63,22 @@ public class QueryTemplateTest {
   }
 
   @Test
+  public void explicitNullValuesAreRemoved() {
+    QueryTemplate template =
+        QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("value", null));
+    assertThat(expanded).isNullOrEmpty();
+  }
+
+  @Test
+  public void emptyParameterRemains() {
+    QueryTemplate template =
+        QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("value", ""));
+    assertThat(expanded).isEqualToIgnoringCase("name=");
+  }
+
+  @Test
   public void collectionFormat() {
     QueryTemplate template =
         QueryTemplate

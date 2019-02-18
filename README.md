@@ -107,6 +107,52 @@ resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 * Unresolved expressions are omitted.
 * All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
 
+#### Undefined vs. Empty Values ####
+
+Undefined expressions are expressions where the value for the expression is an explicit `null` or no value is provided.
+Per [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570), it is possible to provide an empty value
+for an expression.  When Feign resolves an expression, it first determines if the value is defined, if it is then
+the query parameter will remain.  If the expression is undefined, the query parameter is removed.  See below
+for a complete breakdown.
+
+*Empty String*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   parameters.put("param", "");
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test?param=
+```
+
+*Missing*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test
+```
+
+*Undefined*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   parameters.put("param", null);
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test
+```
+
 See [Advanced Usage](#advanced-usage) for more examples.
 
 > **What about slashes? `/`**
