@@ -189,16 +189,25 @@ public class SOAPCodecTest {
 
     assertThat(template)
         .hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-                + "<SOAP-ENV:Envelope"
-                + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-                + "    <SOAP-ENV:Header/>\n"
-                + "    <SOAP-ENV:Body>\n"
-                + "        <GetPrice>\n"
-                + "            <Item>Apples</Item>\n"
-                + "        </GetPrice>\n"
-                + "    </SOAP-ENV:Body>\n"
-                + "</SOAP-ENV:Envelope>\n");
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+                + System.lineSeparator()
+                + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+                + System.lineSeparator()
+                + "    <SOAP-ENV:Header/>"
+                + System.lineSeparator()
+                + "    <SOAP-ENV:Body>"
+                + System.lineSeparator()
+                + "        <GetPrice>"
+                + System.lineSeparator()
+                + "            <Item>Apples</Item>"
+                + System.lineSeparator()
+                + "        </GetPrice>"
+                + System.lineSeparator()
+                + "    </SOAP-ENV:Body>"
+                + System.lineSeparator()
+                + "</SOAP-ENV:Envelope>"
+                + System.lineSeparator()
+                + "");
   }
 
   @Test
