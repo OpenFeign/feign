@@ -87,6 +87,7 @@
     <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
     <bom-generator.version>0.14.3</bom-generator.version>
+    <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
@@ -547,14 +548,13 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <groupId>io.sundr</groupId>
         <artifactId>sundr-maven-plugin</artifactId>
         <version>${bom-generator.version}</version>
         <inherited>false</inherited>
         <configuration>
-          <bomTemplateUrl>file://${project.basedir}/src/config/bom.xml</bomTemplateUrl>
+          <bomTemplateUrl>${bom.template.file.path}</bomTemplateUrl>
           <boms>
             <bom>
               <artifactId>feign-bom</artifactId>
@@ -601,6 +601,17 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os>
+          <family>Windows</family>
+        </os>
+      </activation>
+      <properties>
+        <bom.template.file.path>file:///${project.basedir}/src/config/bom.xml</bom.template.file.path>
+      </properties>
+    </profile>
     <profile>
       <id>java11</id>
       <activation>

@@ -22,20 +22,20 @@ script:
 
 cache:
   directories:
-  - $HOME/.m2
+    - $HOME/.m2
 
-#matrix:
-# include:
-   # - os: linux
-   #  jdk: oraclejdk8
-   #  addons:
-   #    apt:
-   #      packages:
-   #        - oracle-java8-installer
-   #- os: linux
-   #  jdk: openjdk8
-   #- os: linux
-   #  jdk: openjdk11
+matrix:
+  include:
+    - os: linux
+    jdk: oraclejdk8
+    addons:
+      apt:
+        packages:
+          - oracle-java8-installer
+    - os: linux
+      jdk: openjdk8
+    - os: linux
+      jdk: openjdk11
 
 # Don't build release tags. This avoids publish conflicts because the version commit exists both on master and the release tag.
 # See https://github.com/travis-ci/travis-ci/issues/1532
@@ -45,18 +45,18 @@ branches:
 
 env:
   global:
-  # Ex. travis encrypt BINTRAY_USER=your_github_account
-  - secure: "VeTOgXwhZLf8uwlnYpB9tuY+NV6kiooRN0FMDoWCXuPPSz/tX2mqmshBXDYsJu0EcRtZb21MkbQwbdJ8Th9K/bvj4sGNK1PrBm9Hmz6e2AvAcxn3ROv86GMTkd7O25OsipTT+/qWrbR3s3lHQxYo5WMsrlEmJ/EF5y5Go5wx90c="
-  # Ex. travis encrypt BINTRAY_KEY=xxx-https://bintray.com/profile/edit-xxx --add
-  - secure: "WND+fjAqpdHArSbXAK7l0dpQLrX0hL/XymV02rhe0pVT1g0J1V32ncqDCVnn/73wTiECTen6y3o1vq3ByIdT9tUErt3o8oEROQsI/cVX9IhvJ/DtcW1lqafXKmQZwDQsifVxhKroW1VuZQbGrKnqVUzfqx5OzxgoNVWpkkxhf50="
-  # Ex. travis encrypt GH_USER_EMAIL=for_github@domain.com --add
-  - secure: "dG1Qt8bqe3TsmLOmYpWYsI55N0zLWCsupdpS7zMOedpM2q0laac56uc2gGV6qQIPdJQdCWzr9CE/h1nG4lJdJfreC13reQ3PDF79Yh8tMvdO1iwrSeIQ7eeRY6hs72GUtdIhfwetUgwCgIJpmBHS7O3yJhxQAOmu5twAuABiuSE="
-  # Ex. travis encrypt GH_USER=your_github_account --add
-  - secure: "DY28uU8wadasLCWSpl6KJyilGAAjSKzr3VPQ8by02eLDaAgCVq5KeYM0tjM804Rzhq3bjcXofaldj9QpWNTYC5SL6IIN5I5W+dWIZ8JzZ/rjOZgtJMMr4zcjOc5set9MsTUirB694m3c8bzhQZkah9YwUa/OuX1D8Ym/806igsE="
-  # Ex. travis encrypt GH_TOKEN=XXX-https://github.com/settings/tokens-XXX --add
-  - secure: "NmydUhuJLZ/Eg0cpCz6eZiYvsLHtSYrLIAOT2VHfUdzl/Q3PGXoodTpTqRkW7Uuj5lSYYw6cQnhiTly2dvomQYj+es5hSfIzFLvlF0x7L+aFX2IySJhn2Cg8tp5H0hn2UL8t6jDfmdJrLwGKT6EsiXYIgt4dPWJ7ZZ1SRDFp2Cg="
-  # Ex. travis encrypt SONATYPE_USER=your_sonatype_account
-  - secure: "ONAU76S0WBGcQGf0mr7KxKQjFvhhu73GNuQG8j47pxhJojNlNpWBbu+EGkgaInWKMtO89iBtpicVlXZc06HtbSqv7L93gbMo+xgp5daLlQg4gocDixjB1I2oPPITFFoztu76nOA1IBWRLTKu+w+Y2tKOmzWm+5v2UKD6fz7SYoo="
-  # Ex. travis encrypt SONATYPE_PASSWORD=your_sonatype_password
-  - secure: "UaVTxnw8klS36WLAdcmubqrHIgS4o5NcIqQMPIihk0tv3VEvCJSGvc2b7EPyQZMvm5TR3mXq5IJUAHp8j3seAHfYWmLIZWzvn7Y5mLRw8Kh9up7GzXl8Idui0AEHAAL2mfvE9smlOKPS5D13LKc6tOGFER66itHW3Jg1QoijDmQ="
+    # Ex. travis encrypt BINTRAY_USER=your_github_account
+    - secure: "VeTOgXwhZLf8uwlnYpB9tuY+NV6kiooRN0FMDoWCXuPPSz/tX2mqmshBXDYsJu0EcRtZb21MkbQwbdJ8Th9K/bvj4sGNK1PrBm9Hmz6e2AvAcxn3ROv86GMTkd7O25OsipTT+/qWrbR3s3lHQxYo5WMsrlEmJ/EF5y5Go5wx90c="
+    # Ex. travis encrypt BINTRAY_KEY=xxx-https://bintray.com/profile/edit-xxx --add
+    - secure: "WND+fjAqpdHArSbXAK7l0dpQLrX0hL/XymV02rhe0pVT1g0J1V32ncqDCVnn/73wTiECTen6y3o1vq3ByIdT9tUErt3o8oEROQsI/cVX9IhvJ/DtcW1lqafXKmQZwDQsifVxhKroW1VuZQbGrKnqVUzfqx5OzxgoNVWpkkxhf50="
+    # Ex. travis encrypt GH_USER_EMAIL=for_github@domain.com --add
+    - secure: "dG1Qt8bqe3TsmLOmYpWYsI55N0zLWCsupdpS7zMOedpM2q0laac56uc2gGV6qQIPdJQdCWzr9CE/h1nG4lJdJfreC13reQ3PDF79Yh8tMvdO1iwrSeIQ7eeRY6hs72GUtdIhfwetUgwCgIJpmBHS7O3yJhxQAOmu5twAuABiuSE="
+    # Ex. travis encrypt GH_USER=your_github_account --add
+    - secure: "DY28uU8wadasLCWSpl6KJyilGAAjSKzr3VPQ8by02eLDaAgCVq5KeYM0tjM804Rzhq3bjcXofaldj9QpWNTYC5SL6IIN5I5W+dWIZ8JzZ/rjOZgtJMMr4zcjOc5set9MsTUirB694m3c8bzhQZkah9YwUa/OuX1D8Ym/806igsE="
+    # Ex. travis encrypt GH_TOKEN=XXX-https://github.com/settings/tokens-XXX --add
+    - secure: "NmydUhuJLZ/Eg0cpCz6eZiYvsLHtSYrLIAOT2VHfUdzl/Q3PGXoodTpTqRkW7Uuj5lSYYw6cQnhiTly2dvomQYj+es5hSfIzFLvlF0x7L+aFX2IySJhn2Cg8tp5H0hn2UL8t6jDfmdJrLwGKT6EsiXYIgt4dPWJ7ZZ1SRDFp2Cg="
+    # Ex. travis encrypt SONATYPE_USER=your_sonatype_account
+    - secure: "ONAU76S0WBGcQGf0mr7KxKQjFvhhu73GNuQG8j47pxhJojNlNpWBbu+EGkgaInWKMtO89iBtpicVlXZc06HtbSqv7L93gbMo+xgp5daLlQg4gocDixjB1I2oPPITFFoztu76nOA1IBWRLTKu+w+Y2tKOmzWm+5v2UKD6fz7SYoo="
+    # Ex. travis encrypt SONATYPE_PASSWORD=your_sonatype_password
+    - secure: "UaVTxnw8klS36WLAdcmubqrHIgS4o5NcIqQMPIihk0tv3VEvCJSGvc2b7EPyQZMvm5TR3mXq5IJUAHp8j3seAHfYWmLIZWzvn7Y5mLRw8Kh9up7GzXl8Idui0AEHAAL2mfvE9smlOKPS5D13LKc6tOGFER66itHW3Jg1QoijDmQ="
 
