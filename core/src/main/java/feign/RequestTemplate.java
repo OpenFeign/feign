@@ -167,7 +167,7 @@ public final class RequestTemplate implements Serializable {
         QueryTemplate queryTemplate = queryTemplates.next();
         String queryExpanded = queryTemplate.expand(variables);
         if (Util.isNotBlank(queryExpanded)) {
-          query.append(queryTemplate.expand(variables));
+          query.append(queryExpanded);
           if (queryTemplates.hasNext()) {
             query.append("&");
           }
