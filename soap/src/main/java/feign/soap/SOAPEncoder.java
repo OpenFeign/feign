@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -104,7 +105,7 @@ public class SOAPEncoder implements Encoder {
     this.jaxbContextFactory = jaxbContextFactory;
     this.writeXmlDeclaration = true;
     this.formattedOutput = false;
-    this.charsetEncoding = Charset.defaultCharset();
+    this.charsetEncoding = StandardCharsets.UTF_8;
     this.soapProtocol = DEFAULT_SOAP_PROTOCOL;
   }
 
@@ -147,7 +148,7 @@ public class SOAPEncoder implements Encoder {
     private JAXBContextFactory jaxbContextFactory;
     public boolean formattedOutput = false;
     private boolean writeXmlDeclaration = true;
-    private Charset charsetEncoding = Charset.defaultCharset();
+    private Charset charsetEncoding = StandardCharsets.UTF_8;
     private String soapProtocol = DEFAULT_SOAP_PROTOCOL;
 
     /** The {@link JAXBContextFactory} for body part. */
