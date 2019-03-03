@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public class DelegateWriter extends AbstractWriter {
 
   Encoder delegate;
 
-  ParameterWriter parameterWriter = new ParameterWriter();
+  SingleParameterWriter parameterWriter = new SingleParameterWriter();
 
   @Override
   public boolean isApplicable (Object value) {

@@ -18,8 +18,6 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.io.File;
-
 import feign.codec.EncodeException;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -29,34 +27,35 @@ import lombok.val;
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)
-public class ManyFilesWriter extends AbstractWriter {
+public class ManyParametersWriter extends AbstractWriter {
 
-  SingleFileWriter fileWriter = new SingleFileWriter();
+  SingleParameterWriter parameterWriter = new SingleParameterWriter();
 
   @Override
   public boolean isApplicable (Object value) {
-    if (value instanceof File[]) {
-      return true;
+    if (value.getClass().isArray()) {
+      Object[] values = (Object[]) value;
+      return values.length > 0 && parameterWriter.isApplicable(values[0]);
     }
     if (!(value instanceof Iterable)) {
       return false;
     }
     val iterable = (Iterable<?>) value;
     val iterator = iterable.iterator();
-    return iterator.hasNext() && iterator.next() instanceof File;
+    return iterator.hasNext() && parameterWriter.isApplicable(iterator.next());
   }
 
   @Override
   public void write (Output output, String boundary, String key, Object value) throws EncodeException {
-    if (value instanceof File[]) {
-      val files = (File[]) value;
-      for (val file : files) {
-        fileWriter.write(output, boundary, key, file);
+    if (value.getClass().isArray()) {
+      val objects = (Object[]) value;
+      for (val object : objects) {
+        parameterWriter.write(output, boundary, key, object);
       }
     } else if (value instanceof Iterable) {
       val iterable = (Iterable<?>) value;
-      for (val file : iterable) {
-        fileWriter.write(output, boundary, key, file);
+      for (val object : iterable) {
+        parameterWriter.write(output, boundary, key, object);
       }
     }
   }

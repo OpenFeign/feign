@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,13 @@ import lombok.val;
  *
  * @author Artem Labazin
  */
-public class ParameterWriter extends AbstractWriter {
+public class SingleParameterWriter extends AbstractWriter {
 
   @Override
   public boolean isApplicable (Object value) {
-    if (value == null) {
-      return false;
-    }
     return value instanceof Number ||
-           value instanceof String;
+           value instanceof CharSequence ||
+           value instanceof Boolean;
   }
 
   @Override

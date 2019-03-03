@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ package feign.form;
 import static feign.Logger.Level.FULL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 
 import feign.Feign;
@@ -154,5 +156,19 @@ public class BasicClientTest {
     val formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
     val stringResponse = API.uploadFormData(formData);
     Assert.assertEquals("popa.txt:application/custom-type", stringResponse);
+  }
+
+  @Test
+  public void testSubmitRepeatableQueryParam () throws Exception {
+    val names = new String[] { "Milada", "Thais" };
+    val stringResponse = API.submitRepeatableQueryParam(names);
+    assertThat(stringResponse).isEqualTo("Milada and Thais");
+  }
+
+  @Test
+  public void testSubmitRepeatableFormParam () throws Exception {
+    val names = Arrays.asList("Milada", "Thais");
+    val stringResponse = API.submitRepeatableFormParam(names);
+    assertThat(stringResponse).isEqualTo("Milada and Thais");
   }
 }

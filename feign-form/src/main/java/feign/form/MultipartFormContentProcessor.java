@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,11 @@ import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.DelegateWriter;
 import feign.form.multipart.FormDataWriter;
 import feign.form.multipart.ManyFilesWriter;
+import feign.form.multipart.ManyParametersWriter;
 import feign.form.multipart.Output;
-import feign.form.multipart.ParameterWriter;
 import feign.form.multipart.PojoWriter;
 import feign.form.multipart.SingleFileWriter;
+import feign.form.multipart.SingleParameterWriter;
 import feign.form.multipart.Writer;
 
 import lombok.experimental.FieldDefaults;
@@ -66,7 +67,8 @@ public class MultipartFormContentProcessor implements ContentProcessor {
     addWriter(new FormDataWriter());
     addWriter(new SingleFileWriter());
     addWriter(new ManyFilesWriter());
-    addWriter(new ParameterWriter());
+    addWriter(new SingleParameterWriter());
+    addWriter(new ManyParametersWriter());
     addWriter(new PojoWriter(writers));
 
     defaultPerocessor = new DelegateWriter(delegate);
@@ -78,6 +80,9 @@ public class MultipartFormContentProcessor implements ContentProcessor {
     val output = new Output(charset);
 
     for (val entry : data.entrySet()) {
+      if (entry == null || entry.getKey() == null || entry.getValue() == null) {
+        continue;
+      }
       val writer = findApplicableWriter(entry.getValue());
       writer.write(output, boundary, entry.getKey(), entry.getValue());
     }

@@ -4,7 +4,7 @@
           "http://checkstyle.sourceforge.net/dtds/configuration_1_3.dtd">
 
 <!--
-Copyright 2018 Artem Labazin
+Copyright 2019 the original author or authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -382,7 +382,6 @@ limitations under the License.
       <property name="forceStrictCondition" value="false"/>
     </module>
     <module name="OuterTypeFilename"/>
-    <module name="TodoComment"/>
     <module name="UncommentedMain">
       <property name="excludedClasses" value="\.Main$"/>
     </module>

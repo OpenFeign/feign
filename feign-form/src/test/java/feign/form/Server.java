@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import lombok.val;
@@ -164,8 +165,8 @@ public class Server {
   // available in the parameter (getParameter())
   public ResponseEntity<String> uploadByteArrayParameter (MultipartHttpServletRequest request) {
     val status = request.getFile("file") == null && request.getParameter("file") != null
-            ? OK
-            : I_AM_A_TEAPOT;
+                 ? OK
+                 : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).build();
   }
 
@@ -183,5 +184,38 @@ public class Server {
                  ? OK
                  : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getOriginalFilename() + ':' + file.getContentType());
+  }
+
+  @PostMapping(path = "/submit/url", consumes = APPLICATION_FORM_URLENCODED_VALUE)
+  public ResponseEntity<String> submitRepeatableQueryParam (@RequestParam("names") String[] names) {
+    val response = new StringBuilder();
+    if (names != null && names.length == 2) {
+      response
+          .append(names[0])
+          .append(" and ")
+          .append(names[1]);
+    }
+    val status = response.length() > 0
+                 ? OK
+                 : I_AM_A_TEAPOT;
+
+    return ResponseEntity.status(status).body(response.toString());
+  }
+
+  @PostMapping(path = "/submit/form", consumes = MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> submitRepeatableFormParam (@RequestParam("names") Collection<String> names) {
+    val response = new StringBuilder();
+    if (names != null && names.size() == 2) {
+      val iterator = names.iterator();
+      response
+          .append(iterator.next())
+          .append(" and ")
+          .append(iterator.next());
+    }
+    val status = response.length() > 0
+                 ? OK
+                 : I_AM_A_TEAPOT;
+
+    return ResponseEntity.status(status).body(response.toString());
   }
 }
