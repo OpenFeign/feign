@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Artem Labazin
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,13 +35,25 @@ import lombok.val;
  */
 public class UrlencodedFormContentProcessor implements ContentProcessor {
 
+  private static final char QUERY_DELIMITER = '&';
+
+  private static final char EQUAL_SIGN = '=';
+
+  @SneakyThrows
+  private static String encode(Object string, Charset charset) {
+    return URLEncoder.encode(string.toString(), charset.name());
+  }
+
   @Override
   public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
       throws EncodeException {
     val bodyData = new StringBuilder();
     for (Entry<String, Object> entry : data.entrySet()) {
+      if (entry == null || entry.getKey() == null) {
+        continue;
+      }
       if (bodyData.length() > 0) {
-        bodyData.append('&');
+        bodyData.append(QUERY_DELIMITER);
       }
       bodyData.append(createKeyValuePair(entry, charset));
     }
@@ -65,12 +78,47 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
     return URLENCODED;
   }
 
-  @SneakyThrows
   private String createKeyValuePair(Entry<String, Object> entry, Charset charset) {
+    String encodedKey = encode(entry.getKey(), charset);
+    Object value = entry.getValue();
+
+    if (value == null) {
+      return encodedKey;
+    } else if (value.getClass().isArray()) {
+      return createKeyValuePairFromArray(encodedKey, value, charset);
+    } else if (value instanceof Collection) {
+      return createKeyValuePairFromCollection(encodedKey, value, charset);
+    }
     return new StringBuilder()
-        .append(URLEncoder.encode(entry.getKey(), charset.name()))
-        .append('=')
-        .append(URLEncoder.encode(entry.getValue().toString(), charset.name()))
+        .append(encodedKey)
+        .append(EQUAL_SIGN)
+        .append(encode(value, charset))
         .toString();
+  }
+
+  @SuppressWarnings("unchecked")
+  private String createKeyValuePairFromCollection(String key, Object values, Charset charset) {
+    val collection = (Collection) values;
+    val array = collection.toArray(new Object[0]);
+    return createKeyValuePairFromArray(key, array, charset);
+  }
+
+  private String createKeyValuePairFromArray(String key, Object values, Charset charset) {
+    val result = new StringBuilder();
+    val array = (Object[]) values;
+
+    for (int index = 0; index < array.length; index++) {
+      val value = array[index];
+      if (value == null) {
+        continue;
+      }
+
+      if (index > 0) {
+        result.append(QUERY_DELIMITER);
+      }
+
+      result.append(key).append(EQUAL_SIGN).append(encode(value, charset));
+    }
+    return result.toString();
   }
 }

@@ -14,7 +14,7 @@ Include the dependency to your project's pom.xml file:
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form</artifactId>
-    <version>3.5.0</version>
+    <version>3.6.0</version>
   </dependency>
 </dependencies>
 ```
@@ -48,7 +48,7 @@ interface SomeApi {
 
   @RequestLine("POST /form")
   @Headers("Content-Type: application/x-www-form-urlencoded")
-  void from (@Param("field1") String field1, @Param("field2") String field2);
+  void from (@Param("field1") String field1, @Param("field2") String[] values);
 }
 ```
 
@@ -136,12 +136,12 @@ Include the dependencies to your project's pom.xml file:
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form</artifactId>
-    <version>3.5.0</version>
+    <version>3.6.0</version>
   </dependency>
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form-spring</artifactId>
-    <version>3.5.0</version>
+    <version>3.6.0</version>
   </dependency>
 </dependencies>
 ```

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright 2018 Artem Labazin
+Copyright 2019 the original author or authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ limitations under the License.
   <parent>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>parent</artifactId>
-    <version>3.5.0</version>
+    <version>3.6.0</version>
   </parent>
 
   <artifactId>feign-form-spring</artifactId>
@@ -40,27 +40,27 @@ limitations under the License.
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-      <version>5.1.3.RELEASE</version>
+      <version>5.1.5.RELEASE</version>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
-      <version>1.3.3</version>
+      <version>1.4</version>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <version>2.1.1.RELEASE</version>
+      <version>2.1.3.RELEASE</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>2.1.0.RC3</version>
+      <version>2.1.0.RELEASE</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -71,37 +71,16 @@ limitations under the License.
     </dependency>
   </dependencies>
 
-  <repositories>
-    <repository>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>http://repo.spring.io/milestone</url>
-    </repository>
-  </repositories>
-
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>${maven-bundle-plugin.version}</version>
         <configuration>
           <instructions>
             <Export-Package>feign.form.spring</Export-Package>
           </instructions>
         </configuration>
-        <executions>
-          <execution>
-            <id>bundle-manifest</id>
-            <goals>
-              <goal>manifest</goal>
-            </goals>
-            <phase>process-classes</phase>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>

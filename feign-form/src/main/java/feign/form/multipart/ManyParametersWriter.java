@@ -18,35 +18,45 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
  * @author Artem Labazin
  */
-@RequiredArgsConstructor
 @FieldDefaults(level = PRIVATE, makeFinal = true)
-public class DelegateWriter extends AbstractWriter {
-
-  Encoder delegate;
+public class ManyParametersWriter extends AbstractWriter {
 
   SingleParameterWriter parameterWriter = new SingleParameterWriter();
 
   @Override
   public boolean isApplicable(Object value) {
-    return true;
+    if (value.getClass().isArray()) {
+      Object[] values = (Object[]) value;
+      return values.length > 0 && parameterWriter.isApplicable(values[0]);
+    }
+    if (!(value instanceof Iterable)) {
+      return false;
+    }
+    val iterable = (Iterable<?>) value;
+    val iterator = iterable.iterator();
+    return iterator.hasNext() && parameterWriter.isApplicable(iterator.next());
   }
 
   @Override
-  protected void write(Output output, String key, Object value) throws EncodeException {
-    val fake = new RequestTemplate();
-    delegate.encode(value, value.getClass(), fake);
-    val bytes = fake.requestBody().asBytes();
-    val string = new String(bytes, output.getCharset()).replaceAll("\n", "");
-    parameterWriter.write(output, key, string);
+  public void write(Output output, String boundary, String key, Object value)
+      throws EncodeException {
+    if (value.getClass().isArray()) {
+      val objects = (Object[]) value;
+      for (val object : objects) {
+        parameterWriter.write(output, boundary, key, object);
+      }
+    } else if (value instanceof Iterable) {
+      val iterable = (Iterable<?>) value;
+      for (val object : iterable) {
+        parameterWriter.write(output, boundary, key, object);
+      }
+    }
   }
 }
