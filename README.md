@@ -43,7 +43,7 @@ Notes:
 
 - [spring-cloud-openfeign](https://github.com/spring-cloud/spring-cloud-openfeign) uses `OpenFeign` **9.\*** till **v2.0.3.RELEASE** and uses **10.\*** after. Anyway, the dependency already has suitable `feign-form` version, see [dependency pom](https://github.com/spring-cloud/spring-cloud-openfeign/blob/master/spring-cloud-openfeign-dependencies/pom.xml#L19), so you don't need to specify it separately;
 
-- `spring-cloud-starter-feign` is **deprecated** dependency and it always uses `OpenFeign` **9.\*** versions.
+- `spring-cloud-starter-feign` is a **deprecated** dependency and it always uses the `OpenFeign`'s **9.\*** versions.
 
 ## Usage
 
