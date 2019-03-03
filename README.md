@@ -2,22 +2,48 @@
 
 [![build_status](https://travis-ci.org/OpenFeign/feign-form.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-form)
 [![maven_central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form)
+[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This module adds support for encoding **application/x-www-form-urlencoded** and **multipart/form-data** forms.
 
 ## Add dependency
 
-Include the dependency to your project's pom.xml file:
+Include the dependency to your app:
+
+**Maven**:
 
 ```xml
 <dependencies>
+  ...
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form</artifactId>
     <version>3.7.0</version>
   </dependency>
+  ...
 </dependencies>
 ```
+
+**Gradle**:
+
+```groovy
+compile 'io.github.openfeign.form:feign-form:3.7.0'
+```
+
+## Requirements
+
+The `feign-form` extension depend on `OpenFeign` and its *concrete* versions:
+
+- all `feign-form` releases before **3.5.0** works with `OpenFeign` **9.\*** versions;
+- starting from `feign-form`'s version **3.5.0**, the module works with `OpenFeign` **10.\*** versions.
+
+> **IMPORTANT:** there is no backward compatibility and no any gurantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
+
+Notes:
+
+- [spring-cloud-openfeign](https://github.com/spring-cloud/spring-cloud-openfeign) uses `OpenFeign` **9.\*** till **v2.0.3.RELEASE** and uses **10.\*** after. Anyway, the dependency already has suitable `feign-form` version, see [dependency pom](https://github.com/spring-cloud/spring-cloud-openfeign/blob/master/spring-cloud-openfeign-dependencies/pom.xml#L19), so you don't need to specify it separately;
+
+- `spring-cloud-starter-feign` is **deprecated** dependency and it always uses `OpenFeign` **9.\*** versions.
 
 ## Usage
 
