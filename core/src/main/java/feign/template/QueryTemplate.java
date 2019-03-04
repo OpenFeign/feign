@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,6 +32,7 @@ import java.util.stream.StreamSupport;
  */
 public final class QueryTemplate extends Template {
 
+  public static final String UNDEF = "undef";
   /* cache a copy of the variables for lookup later */
   private List<String> values;
   private final Template name;
@@ -158,6 +161,20 @@ public final class QueryTemplate extends Template {
     return this.queryString(name, super.expand(variables));
   }
 
+  @Override
+  protected String resolveExpression(Expression expression, Map<String, ?> variables) {
+    if (variables.containsKey(expression.getName())) {
+      if (variables.get(expression.getName()) == null) {
+        /* explicit undefined */
+        return UNDEF;
+      }
+      return super.resolveExpression(expression, variables);
+    }
+
+    /* mark the variable as undefined */
+    return UNDEF;
+  }
+
   private String queryString(String name, String values) {
     if (this.pure) {
       return name;
@@ -165,7 +182,8 @@ public final class QueryTemplate extends Template {
 
     /* covert the comma separated values into a value query string */
     List<String> resolved = Arrays.stream(values.split(","))
-        .filter(Util::isNotBlank)
+        .filter(Objects::nonNull)
+        .filter(s -> !UNDEF.equalsIgnoreCase(s))
         .collect(Collectors.toList());
 
     if (!resolved.isEmpty()) {
