@@ -13,6 +13,7 @@
  */
 package feign.template;
 
+import feign.Util;
 import feign.template.UriUtils.FragmentType;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -80,20 +81,9 @@ public class Template {
     StringBuilder resolved = new StringBuilder();
     for (TemplateChunk chunk : this.templateChunks) {
       if (chunk instanceof Expression) {
-        Expression expression = (Expression) chunk;
-        Object value = variables.get(expression.getName());
-        if (value != null) {
-          String expanded = expression.expand(value, this.encode.isEncodingRequired());
-          if (this.encodeSlash) {
-            logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
-            expanded = expanded.replaceAll("/", "%2F");
-          }
-          resolved.append(expanded);
-        } else {
-          if (this.allowUnresolved) {
-            /* unresolved variables are treated as literals */
-            resolved.append(encode(expression.toString()));
-          }
+        String resolvedExpression = this.resolveExpression((Expression) chunk, variables);
+        if (resolvedExpression != null) {
+          resolved.append(resolvedExpression);
         }
       } else {
         /* chunk is a literal value */
@@ -101,6 +91,27 @@ public class Template {
       }
     }
     return resolved.toString();
+  }
+
+  protected String resolveExpression(Expression expression, Map<String, ?> variables) {
+    String resolved = null;
+    Object value = variables.get(expression.getName());
+    if (value != null) {
+      String expanded = expression.expand(value, this.encode.isEncodingRequired());
+      if (Util.isNotBlank(expanded)) {
+        if (this.encodeSlash) {
+          logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
+          expanded = expanded.replaceAll("/", "%2F");
+        }
+        resolved = expanded;
+      }
+    } else {
+      if (this.allowUnresolved) {
+        /* unresolved variables are treated as literals */
+        resolved = encode(expression.toString());
+      }
+    }
+    return resolved;
   }
 
   /**
