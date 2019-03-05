@@ -60,7 +60,7 @@ public class FeignException extends RuntimeException {
     if (content != null) {
       return new String(content, UTF_8);
     } else {
-      return null;
+      return "";
     }
   }
 

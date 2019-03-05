@@ -541,7 +541,7 @@ public class FeignTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo(null);
+      assertThat(e.contentUTF8()).isEqualTo("");
     }
   }
 
