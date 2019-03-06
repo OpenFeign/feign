@@ -70,7 +70,7 @@ public class UriUtils {
     try {
       /* there is nothing special between uri and url decoding */
       return URLDecoder.decode(value, charset.name());
-    } catch (UnsupportedEncodingException uee) {
+    } catch (IllegalArgumentException | UnsupportedEncodingException uee) {
       /* since the encoding is not supported, return the original value */
       return value;
     }
