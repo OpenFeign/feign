@@ -69,9 +69,16 @@ public class UriUtils {
   public static String decode(String value, Charset charset) {
     try {
       /* there is nothing special between uri and url decoding */
+      /*
+         URLDecoder.decode()
+         UnsupportedEncodingException ( if character encoding needs to be consulted, but named character encoding is not supported)
+         UnsupportedCharsetException
+         IllegalArgumentException (value contains % invalid )
+      */
       return URLDecoder.decode(value, charset.name());
-    } catch (UnsupportedEncodingException uee) {
+    } catch (IllegalArgumentException | UnsupportedEncodingException uee) {
       /* since the encoding is not supported, return the original value */
+      // decode exception return the original value
       return value;
     }
   }
