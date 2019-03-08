@@ -56,7 +56,11 @@ public class FeignException extends RuntimeException {
   }
 
   public String contentUTF8() {
-    return new String(content, UTF_8);
+    if (content != null) {
+      return new String(content, UTF_8);
+    } else {
+      return "";
+    }
   }
 
   static FeignException errorReading(Request request, Response response, IOException cause) {
