@@ -16,8 +16,11 @@ package feign;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import feign.Target.HardCodedTarget;
 import java.net.URI;
+
+import feign.template.UriUtils;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -106,4 +109,48 @@ public class TargetTest {
 
     assertThat(server.takeRequest()).hasPath("/path?query=param").hasQueryParams("query=param");
   }
+
+  /**
+   * Per <a href="https://github.com/OpenFeign/feign/issues/916">#916</a> Body contains % , as JSON, decode fail,
+   * Here's how.
+   */
+  interface UriPostTarget {
+
+    @RequestLine("POST /{path}")
+    @Body("{body}")
+    Response post(@Param("path") String path, @Param("body") String body);
+
+  }
+
+  @Test
+  public void baseCaseBodyNoPercentEncoded() throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    String baseUrl = server.url("/default").toString();
+
+    UriPostTarget uriPostTarget = Feign.builder().target(UriPostTarget.class, baseUrl);
+
+    String body = "{\"percent\":\"100\",\"username\":\"lee\"}";
+    uriPostTarget.post("post", body);
+
+    assertThat(server.takeRequest()).hasPath("/default/post").hasBody(body);
+  }
+
+  @Test
+  public void baseCaseBodyHasPercentNoEncodedException() throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    String baseUrl = server.url("/default").toString();
+
+    UriPostTarget uriPostTarget = Feign.builder().target(UriPostTarget.class, baseUrl);
+
+    String body = "{\"percent\":\"100%\",\"username\":\"lee\"}";
+    try {
+      uriPostTarget.post("post", body);
+      assertThat(server.takeRequest()).hasPath("/default/post").hasBody(body);
+    } catch (Exception e) {
+      Assert.assertEquals("URLDecoder: Illegal hex characters in escape (%) pattern - For input string: \"\",\"", e.getMessage());
+    }
+  }
+
 }
