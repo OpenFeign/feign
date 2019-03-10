@@ -16,7 +16,6 @@ package feign;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import feign.Target.HardCodedTarget;
 import java.net.URI;
-
 import feign.template.UriUtils;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -111,8 +110,8 @@ public class TargetTest {
   }
 
   /**
-   * Per <a href="https://github.com/OpenFeign/feign/issues/916">#916</a> Body contains % , as JSON, decode fail,
-   * Here's how.
+   * Per <a href="https://github.com/OpenFeign/feign/issues/916">#916</a> Body contains % , as JSON,
+   * decode fail, Here's how.
    */
   interface UriPostTarget {
 
@@ -149,7 +148,9 @@ public class TargetTest {
       uriPostTarget.post("post", body);
       assertThat(server.takeRequest()).hasPath("/default/post").hasBody(body);
     } catch (Exception e) {
-      Assert.assertEquals("URLDecoder: Illegal hex characters in escape (%) pattern - For input string: \"\",\"", e.getMessage());
+      Assert.assertEquals(
+          "URLDecoder: Illegal hex characters in escape (%) pattern - For input string: \"\",\"",
+          e.getMessage());
     }
   }
 
