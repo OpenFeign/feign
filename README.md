@@ -73,7 +73,7 @@ their corresponding `Param` annotated method parameters.
 public interface GitHub {
   
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
-  List<Contributor> getContributors(@Param("owner") String owner, @Param("repo") String repository);
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repository);
   
   class Contributor {
     String login;
