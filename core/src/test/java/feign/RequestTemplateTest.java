@@ -16,10 +16,16 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -97,8 +103,7 @@ public class RequestTemplateTest {
   public void resolveTemplateWithBinaryBody() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .uri("{zoneId}")
-        .body(new byte[] {7, 3, -3, -7}, null);
-
+        .body(Request.Body.encoded(new byte[] {7, 3, -3, -7}, null));
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template)
@@ -185,7 +190,9 @@ public class RequestTemplateTest {
         .hasHeaders(entry("Encoded", Collections.singletonList("{{{{dont_expand_me}}")));
   }
 
-  /** This ensures we don't mess up vnd types */
+  /**
+   * This ensures we don't mess up vnd types
+   */
   @Test
   public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
@@ -244,9 +251,10 @@ public class RequestTemplateTest {
   @Test
   public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .bodyTemplate(
+        .body(Request.Body.bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
-                "\"password\": \"{password}\"%7D");
+                "\"password\": \"{password}\"%7D",
+            Util.UTF_8));
 
     template = template.resolve(
         mapOf(
@@ -259,14 +267,15 @@ public class RequestTemplateTest {
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
             entry("Content-Length",
-                Collections.singletonList(String.valueOf(template.body().length))));
+                Collections.singletonList(String.valueOf(template.requestBody().length()))));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .bodyTemplate(
-            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+        .body(Request.Body.bodyTemplate(
+            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D",
+            Util.UTF_8));
 
     template = template.resolve(
         mapOf(
@@ -276,7 +285,7 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasBody(
-            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc 123%d8\"}");
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}");
   }
 
   @Test
@@ -353,7 +362,9 @@ public class RequestTemplateTest {
         .hasUrl("/api/%2F");
   }
 
-  /** Implementations have a bug if they pass junk as the http method. */
+  /**
+   * Implementations have a bug if they pass junk as the http method.
+   */
   @SuppressWarnings("deprecation")
   @Test
   public void uriStuffedIntoMethod() {
