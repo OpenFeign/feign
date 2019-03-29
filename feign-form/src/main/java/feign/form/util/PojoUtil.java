@@ -20,6 +20,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.form.FormProperty;
 import java.lang.reflect.Field;
 import java.rmi.UnexpectedException;
 import java.security.AccessController;
@@ -62,7 +63,12 @@ public final class PojoUtil {
       if (fieldValue == null) {
         continue;
       }
-      result.put(field.getName(), fieldValue);
+
+      val propertyKey =
+          field.isAnnotationPresent(FormProperty.class)
+              ? field.getAnnotation(FormProperty.class).value()
+              : field.getName();
+      result.put(propertyKey, fieldValue);
     }
     return result;
   }
