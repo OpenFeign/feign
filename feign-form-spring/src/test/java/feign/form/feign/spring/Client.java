@@ -108,13 +108,6 @@ public interface Client {
   )
   String upload6Collection (@RequestPart List<MultipartFile> files);
 
-//  @RequestMapping(
-//      path = "/multipart/upload6",
-//      method = POST,
-//      consumes = MULTIPART_FORM_DATA_VALUE
-//  )
-//  String upload6Arguments (@RequestPart("popa1") MultipartFile file1, @RequestPart("popa2") MultipartFile file2);
-
   class ClientConfiguration {
 
     @Autowired

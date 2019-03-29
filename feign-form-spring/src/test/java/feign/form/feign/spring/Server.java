@@ -121,17 +121,17 @@ public class Server {
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE
   )
-   public ResponseEntity<String> upload6 (@RequestParam("popa1") MultipartFile popa1,
-                                          @RequestParam("popa2") MultipartFile popa2
-   ) throws Exception {
-     HttpStatus status = I_AM_A_TEAPOT;
-     String result = "";
-     if (popa1 != null && popa2 != null) {
-       status = OK;
-       result = new String(popa1.getBytes()) + new String(popa2.getBytes());
-     }
-     return ResponseEntity.status(status).body(result);
-   }
+  public ResponseEntity<String> upload6 (@RequestParam("popa1") MultipartFile popa1,
+                                         @RequestParam("popa2") MultipartFile popa2
+  ) throws Exception {
+    HttpStatus status = I_AM_A_TEAPOT;
+    String result = "";
+    if (popa1 != null && popa2 != null) {
+      status = OK;
+      result = new String(popa1.getBytes()) + new String(popa2.getBytes());
+    }
+    return ResponseEntity.status(status).body(result);
+  }
 
   @RequestMapping(
       path = "/multipart/download/{fileId}",
