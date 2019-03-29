@@ -130,6 +130,7 @@ interface SomeApi {
 
   class MyPojo {
 
+    @FormProperty("is_public")
     Boolean isPublic;
 
     File photo;
