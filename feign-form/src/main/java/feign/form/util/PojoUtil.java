@@ -69,8 +69,9 @@ public final class PojoUtil {
       }
 
       val propertyKey = field.isAnnotationPresent(FormProperty.class)
-          ? field.getAnnotation(FormProperty.class).value()
-          : field.getName();
+                        ? field.getAnnotation(FormProperty.class).value()
+                        : field.getName();
+
       result.put(propertyKey, fieldValue);
     }
     return result;

@@ -37,5 +37,4 @@ public class FormDto {
   String firstName;
 
   Integer age;
-
 }

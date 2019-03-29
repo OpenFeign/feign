@@ -39,8 +39,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        webEnvironment = DEFINED_PORT,
-        classes = Server.class
+    webEnvironment = DEFINED_PORT,
+    classes = Server.class
 )
 public class FormPropertyTest {
 
@@ -48,10 +48,10 @@ public class FormPropertyTest {
 
   static {
     API = Feign.builder()
-            .encoder(new FormEncoder(new JacksonEncoder()))
-            .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
-            .logLevel(FULL)
-            .target(FormClient.class, "http://localhost:8080");
+        .encoder(new FormEncoder(new JacksonEncoder()))
+        .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
+        .logLevel(FULL)
+        .target(FormClient.class, "http://localhost:8080");
   }
 
   @Test
@@ -71,7 +71,5 @@ public class FormPropertyTest {
     @RequestLine("POST /form-data")
     @Headers("Content-Type: application/x-www-form-urlencoded")
     String postData (FormDto dto);
-
   }
-
 }
