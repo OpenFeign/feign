@@ -45,7 +45,7 @@ public class SingleFileWriter extends AbstractWriter {
     InputStream input = null;
     try {
       input = new FileInputStream(file);
-      val buf = new byte[1024];
+      val buf = new byte[4096];
       int length = input.read(buf);
       while (length > 0) {
         output.write(buf, 0, length);

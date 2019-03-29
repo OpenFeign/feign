@@ -64,7 +64,7 @@ limitations under the License.
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>2.1.0.RELEASE</version>
+      <version>2.1.1.RELEASE</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -87,7 +87,7 @@ limitations under the License.
         </configuration>
       </plugin>
 
-      <plugin>
+     <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
       </plugin>

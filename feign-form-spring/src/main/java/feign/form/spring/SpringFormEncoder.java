@@ -20,6 +20,7 @@ import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -60,13 +61,36 @@ public class SpringFormEncoder extends FormEncoder {
 
   @Override
   public void encode (Object object, Type bodyType, RequestTemplate template) throws EncodeException {
-    if (!bodyType.equals(MultipartFile.class)) {
+    if (bodyType.equals(MultipartFile[].class)) {
+      val files = (MultipartFile[]) object;
+      val data = new HashMap<String, Object>(files.length, 1.F);
+      for (val file : files) {
+        data.put(file.getName(), file);
+      }
+      super.encode(data, MAP_STRING_WILDCARD, template);
+    } else if (bodyType.equals(MultipartFile.class)) {
+      val file = (MultipartFile) object;
+      val data = singletonMap(file.getName(), object);
+      super.encode(data, MAP_STRING_WILDCARD, template);
+    } else if (isMultipartFileCollection(object)) {
+      val iterable = (Iterable<?>) object;
+      val data = new HashMap<String, Object>();
+      for (val item : iterable) {
+        val file = (MultipartFile) item;
+        data.put(file.getName(), file);
+      }
+      super.encode(data, MAP_STRING_WILDCARD, template);
+    } else {
       super.encode(object, bodyType, template);
-      return;
     }
+  }
 
-    val file = (MultipartFile) object;
-    val data = singletonMap(file.getName(), object);
-    super.encode(data, MAP_STRING_WILDCARD, template);
+  private boolean isMultipartFileCollection (Object object) {
+    if (!(object instanceof Iterable)) {
+      return false;
+    }
+    val iterable = (Iterable<?>) object;
+    val iterator = iterable.iterator();
+    return iterator.hasNext() && iterator.next() instanceof MultipartFile;
   }
 }

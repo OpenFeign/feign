@@ -20,6 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import java.util.List;
 import java.util.Map;
 
 import feign.Logger;
@@ -92,6 +93,27 @@ public interface Client {
       consumes = MULTIPART_FORM_DATA_VALUE
   )
   Response upload5 (Dto dto);
+
+  @RequestMapping(
+      path = "/multipart/upload6",
+      method = POST,
+      consumes = MULTIPART_FORM_DATA_VALUE
+  )
+  String upload6Array (@RequestPart MultipartFile[] files);
+
+  @RequestMapping(
+      path = "/multipart/upload6",
+      method = POST,
+      consumes = MULTIPART_FORM_DATA_VALUE
+  )
+  String upload6Collection (@RequestPart List<MultipartFile> files);
+
+//  @RequestMapping(
+//      path = "/multipart/upload6",
+//      method = POST,
+//      consumes = MULTIPART_FORM_DATA_VALUE
+//  )
+//  String upload6Arguments (@RequestPart("popa1") MultipartFile file1, @RequestPart("popa2") MultipartFile file2);
 
   class ClientConfiguration {
 

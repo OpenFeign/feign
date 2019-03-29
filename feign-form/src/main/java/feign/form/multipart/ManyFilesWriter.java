@@ -58,6 +58,8 @@ public class ManyFilesWriter extends AbstractWriter {
       for (val file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
+    } else {
+      throw new IllegalArgumentException();
     }
   }
 }

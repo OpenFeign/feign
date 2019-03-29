@@ -38,7 +38,6 @@ public class SpringSingleMultipartFileWriter extends AbstractWriter {
   @Override
   protected void write (Output output, String key, Object value) throws EncodeException {
     val file = (MultipartFile) value;
-
     writeFileMetadata(output, key, file.getOriginalFilename(), file.getContentType());
 
     byte[] bytes;

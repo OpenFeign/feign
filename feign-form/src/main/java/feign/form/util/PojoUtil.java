@@ -21,6 +21,7 @@ import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.rmi.UnexpectedException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -48,6 +49,11 @@ public final class PojoUtil {
     val type = object.getClass();
     val packageName = type.getPackage().getName();
     return !packageName.startsWith("java.");
+  }
+
+  public static boolean isUserPojo (@NonNull Type type) {
+    val typeName = type.toString();
+    return !typeName.startsWith("class java.");
   }
 
   @SneakyThrows
