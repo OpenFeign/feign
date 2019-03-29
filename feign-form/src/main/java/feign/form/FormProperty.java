@@ -16,20 +16,21 @@
 
 package feign.form;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
  * @author marembo
  */
 @Documented
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
+@Target(FIELD)
+@Retention(RUNTIME)
 public @interface FormProperty {
 
-  /** The key for the form value */
+  /** The name of the property. */
   String value();
 }
