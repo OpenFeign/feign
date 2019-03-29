@@ -29,6 +29,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import feign.form.FormProperty;
+
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
@@ -65,7 +67,11 @@ public final class PojoUtil {
       if (fieldValue == null) {
         continue;
       }
-      result.put(field.getName(), fieldValue);
+
+      val propertyKey = field.isAnnotationPresent(FormProperty.class)
+          ? field.getAnnotation(FormProperty.class).value()
+          : field.getName();
+      result.put(propertyKey, fieldValue);
     }
     return result;
   }
