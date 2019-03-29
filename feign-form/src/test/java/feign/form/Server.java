@@ -221,7 +221,7 @@ public class Server {
 
   @PostMapping(path = "/form-data", consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<String> submitPostData (@RequestParam("f_name") String firstName,
-                                               @RequestParam("age") Integer age) {
+                                                @RequestParam("age") Integer age) {
     val response = new StringBuilder();
     if (firstName != null && age != null) {
       response
@@ -235,5 +235,4 @@ public class Server {
 
     return ResponseEntity.status(status).body(response.toString());
   }
-
 }

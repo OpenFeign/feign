@@ -212,7 +212,7 @@ public interface FileUploadServiceClient extends IFileUploadServiceClient {
 }
 ```
 
-Thanks to [tf-haotri-pham](https://github.com/tf-haotri-pham) for his featur, which makes use of Apache commons-fileupload library, which handles the parsing of the multipart response. The body data parts are held as byte arrays in memory.
+Thanks to [tf-haotri-pham](https://github.com/tf-haotri-pham) for his feature, which makes use of Apache commons-fileupload library, which handles the parsing of the multipart response. The body data parts are held as byte arrays in memory.
 
 To use this feature, include SpringManyMultipartFilesReader in the list of message converters for the Decoder and have the Feign client return an array of MultipartFile:
 
