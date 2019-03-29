@@ -34,6 +34,19 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
   SpringSingleMultipartFileWriter fileWriter = new SpringSingleMultipartFileWriter();
 
   @Override
+  public boolean isApplicable(Object value) {
+    if (value instanceof MultipartFile[]) {
+      return true;
+    }
+    if (!(value instanceof Iterable)) {
+      return false;
+    }
+    val iterable = (Iterable<?>) value;
+    val iterator = iterable.iterator();
+    return iterator.hasNext() && iterator.next() instanceof MultipartFile;
+  }
+
+  @Override
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
     if (value instanceof MultipartFile[]) {
@@ -46,24 +59,8 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
       for (val file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
+    } else {
+      throw new IllegalArgumentException();
     }
-  }
-
-  @Override
-  public boolean isApplicable(Object value) {
-    if (value == null) {
-      return false;
-    }
-    if (value instanceof MultipartFile[]) {
-      return true;
-    }
-    if (value instanceof Iterable) {
-      val iterable = (Iterable<?>) value;
-      val iterator = iterable.iterator();
-      if (iterator.hasNext() && iterator.next() instanceof MultipartFile) {
-        return true;
-      }
-    }
-    return false;
   }
 }

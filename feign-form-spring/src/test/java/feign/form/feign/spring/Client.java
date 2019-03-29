@@ -24,6 +24,7 @@ import feign.Logger;
 import feign.Response;
 import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +86,20 @@ public interface Client {
 
   @RequestMapping(path = "/multipart/upload5", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
   Response upload5(Dto dto);
+
+  @RequestMapping(path = "/multipart/upload6", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload6Array(@RequestPart MultipartFile[] files);
+
+  @RequestMapping(path = "/multipart/upload6", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload6Collection(@RequestPart List<MultipartFile> files);
+
+  //  @RequestMapping(
+  //      path = "/multipart/upload6",
+  //      method = POST,
+  //      consumes = MULTIPART_FORM_DATA_VALUE
+  //  )
+  //  String upload6Arguments (@RequestPart("popa1") MultipartFile file1, @RequestPart("popa2")
+  // MultipartFile file2);
 
   class ClientConfiguration {
 

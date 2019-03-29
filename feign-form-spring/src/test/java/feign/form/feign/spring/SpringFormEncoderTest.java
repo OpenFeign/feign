@@ -17,10 +17,12 @@
 package feign.form.feign.spring;
 
 import static feign.form.util.CharsetUtil.UTF_8;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.util.HashMap;
+import java.util.List;
 import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
@@ -105,4 +108,34 @@ public class SpringFormEncoderTest {
     val response = client.upload5(dto);
     assertEquals(200, response.status());
   }
+
+  @Test
+  public void upload6ArrayTest() throws Exception {
+    val file1 = new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8));
+    val file2 = new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8));
+
+    val response = client.upload6Array(new MultipartFile[] {file1, file2});
+    Assert.assertEquals("Hello world", response);
+  }
+
+  @Test
+  public void upload6CollectionTest() throws Exception {
+    List<MultipartFile> list =
+        asList(
+            (MultipartFile) new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8)),
+            (MultipartFile)
+                new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8)));
+
+    val response = client.upload6Collection(list);
+    Assert.assertEquals("Hello world", response);
+  }
+
+  //  @Test
+  //  public void upload6ArgumentsTest () throws Exception {
+  //    val file1 = new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8));
+  //    val file2 = new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8));
+  //
+  //    val response = client.upload6Arguments(file1, file2);
+  //    Assert.assertEquals("Hello world", response);
+  //  }
 }

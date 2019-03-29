@@ -89,7 +89,7 @@ public class FormEncoder implements Encoder {
     Map<String, Object> data;
     if (MAP_STRING_WILDCARD.equals(bodyType)) {
       data = (Map<String, Object>) object;
-    } else if (isUserPojo(object)) {
+    } else if (isUserPojo(bodyType)) {
       data = toMap(object);
     } else {
       delegate.encode(object, bodyType, template);
