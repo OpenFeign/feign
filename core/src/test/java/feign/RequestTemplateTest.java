@@ -17,12 +17,16 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.*;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import feign.Request.HttpMethod;
+import feign.template.UriUtils;
 
 public class RequestTemplateTest {
 
@@ -419,5 +423,25 @@ public class RequestTemplateTest {
     assertThat(template.headers().keySet()).containsExactly("key1");
 
     template.headers().put("key2", Collections.singletonList("other value"));
+  }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInUri() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .uri("/path#fragment")
+        .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("/path?key1=value1#fragment");
+  }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInTarget() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .target("https://example.com/path#fragment")
+        .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("https://example.com/path?key1=value1#fragment");
   }
 }
