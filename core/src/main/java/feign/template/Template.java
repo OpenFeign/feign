@@ -32,6 +32,13 @@ import java.util.stream.Collectors;
  */
 public class Template {
 
+  /*
+   * special delimiter for collection based expansion, in an attempt to avoid accidental splitting
+   * for resolved values. semi-colon was chosen because it is a reserved character that must be
+   * pct-encoded and should not appear unencoded.
+   */
+  static final String COLLECTION_DELIMITER = ";";
+
   private static final Logger logger = Logger.getLogger(Template.class.getName());
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)(\\?)");
   private final String template;

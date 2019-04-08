@@ -29,8 +29,7 @@ import java.util.stream.StreamSupport;
 /** Template for a Query String parameter. */
 public final class QueryTemplate extends Template {
 
-  public static final String UNDEF = "undef";
-  /* cache a copy of the variables for lookup later */
+  private static final String UNDEF = "undef";
   private List<String> values;
   private final Template name;
   private final CollectionFormat collectionFormat;
@@ -59,7 +58,7 @@ public final class QueryTemplate extends Template {
    */
   public static QueryTemplate create(
       String name, Iterable<String> values, Charset charset, CollectionFormat collectionFormat) {
-    if (name == null || name.isEmpty()) {
+    if (Util.isBlank(name)) {
       throw new IllegalArgumentException("name is required.");
     }
 
@@ -78,7 +77,7 @@ public final class QueryTemplate extends Template {
     while (iterator.hasNext()) {
       template.append(iterator.next());
       if (iterator.hasNext()) {
-        template.append(",");
+        template.append(COLLECTION_DELIMITER);
       }
     }
 
@@ -179,7 +178,7 @@ public final class QueryTemplate extends Template {
 
     /* covert the comma separated values into a value query string */
     List<String> resolved =
-        Arrays.stream(values.split(","))
+        Arrays.stream(values.split(COLLECTION_DELIMITER))
             .filter(Objects::nonNull)
             .filter(s -> !UNDEF.equalsIgnoreCase(s))
             .collect(Collectors.toList());

@@ -104,7 +104,7 @@ public final class Expressions {
         for (Object item : ((Iterable) variable)) {
           items.add((encode) ? encode(item) : item.toString());
         }
-        expanded.append(String.join(",", items));
+        expanded.append(String.join(Template.COLLECTION_DELIMITER, items));
       } else {
         expanded.append((encode) ? encode(variable) : variable);
       }

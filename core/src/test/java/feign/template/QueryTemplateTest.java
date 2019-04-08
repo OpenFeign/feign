@@ -117,4 +117,47 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
     assertThat(expanded).isEqualToIgnoringCase("%7Bparameter%7D=James&%7Bparameter%7D=Jason");
   }
+
+  @Test
+  public void expandSingleValueWithComma() {
+    QueryTemplate template =
+        QueryTemplate.create("collection", Collections.singletonList("{collection}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("collection", "one,two,three"));
+    assertThat(expanded).isEqualToIgnoringCase("collection=one,two,three");
+  }
+
+  @Test
+  public void expandSingleValueWithPipe() {
+    QueryTemplate template =
+        QueryTemplate.create("collection", Collections.singletonList("{collection}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("collection", "one|two|three"));
+    assertThat(expanded).isEqualToIgnoringCase("collection=one%7Ctwo%7Cthree");
+  }
+
+  @Test
+  public void expandSingleValueWithSpace() {
+    QueryTemplate template =
+        QueryTemplate.create("collection", Collections.singletonList("{collection}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("collection", "one two three"));
+    assertThat(expanded).isEqualToIgnoringCase("collection=one%20two%20three");
+  }
+
+  @Test
+  public void expandSingleValueWithTab() {
+    QueryTemplate template =
+        QueryTemplate.create("collection", Collections.singletonList("{collection}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("collection", "one\ttwo\tthree"));
+    assertThat(expanded).isEqualToIgnoringCase("collection=one%09two%09three");
+  }
+
+  @Test
+  public void expandSingleValueWithJson() {
+    QueryTemplate template =
+        QueryTemplate.create("json", Collections.singletonList("{json}"), Util.UTF_8);
+    String expanded =
+        template.expand(
+            Collections.singletonMap("json", "{\"name\":\"feign\",\"version\": \"10\"}"));
+    assertThat(expanded)
+        .isEqualToIgnoringCase("json=%7B%22name%22:%22feign%22,%22version%22:%20%2210%22%7D");
+  }
 }
