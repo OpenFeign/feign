@@ -441,4 +441,26 @@ public class RequestTemplateTest {
 
     template.headers().put("key2", Collections.singletonList("other value"));
   }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInUri() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("/path#fragment")
+            .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("/path?key1=value1#fragment");
+  }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInTarget() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("https://example.com/path#fragment")
+            .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("https://example.com/path?key1=value1#fragment");
+  }
 }
