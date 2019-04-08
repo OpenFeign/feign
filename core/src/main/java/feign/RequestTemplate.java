@@ -43,6 +43,7 @@ public final class RequestTemplate implements Serializable {
   private final Map<String, QueryTemplate> queries = new LinkedHashMap<>();
   private final Map<String, HeaderTemplate> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private String target;
+  private String fragment;
   private boolean resolved = false;
   private UriTemplate uriTemplate;
   private HttpMethod method;
@@ -70,6 +71,7 @@ public final class RequestTemplate implements Serializable {
    * @param collectionFormat when expanding collection based variables.
    */
   private RequestTemplate(String target,
+      String fragment,
       UriTemplate uriTemplate,
       HttpMethod method,
       Charset charset,
@@ -77,6 +79,7 @@ public final class RequestTemplate implements Serializable {
       boolean decodeSlash,
       CollectionFormat collectionFormat) {
     this.target = target;
+    this.fragment = fragment;
     this.uriTemplate = uriTemplate;
     this.method = method;
     this.charset = charset;
@@ -94,7 +97,8 @@ public final class RequestTemplate implements Serializable {
    */
   public static RequestTemplate from(RequestTemplate requestTemplate) {
     RequestTemplate template =
-        new RequestTemplate(requestTemplate.target, requestTemplate.uriTemplate,
+        new RequestTemplate(requestTemplate.target, requestTemplate.fragment,
+            requestTemplate.uriTemplate,
             requestTemplate.method, requestTemplate.charset,
             requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat);
 
@@ -118,6 +122,7 @@ public final class RequestTemplate implements Serializable {
   public RequestTemplate(RequestTemplate toCopy) {
     checkNotNull(toCopy, "toCopy");
     this.target = toCopy.target;
+    this.fragment = toCopy.fragment;
     this.method = toCopy.method;
     this.queries.putAll(toCopy.queries);
     this.headers.putAll(toCopy.headers);
@@ -421,6 +426,12 @@ public final class RequestTemplate implements Serializable {
       uri = uri.substring(0, queryMatcher.start());
     }
 
+    int fragmentIndex = uri.indexOf('#');
+    if (fragmentIndex > -1) {
+      fragment = uri.substring(fragmentIndex);
+      uri = uri.substring(0, fragmentIndex);
+    }
+
     /* replace the uri template */
     if (append && this.uriTemplate != null) {
       this.uriTemplate = UriTemplate.append(this.uriTemplate, uri);
@@ -462,6 +473,9 @@ public final class RequestTemplate implements Serializable {
 
       /* strip the query string */
       this.target = targetUri.getScheme() + "://" + targetUri.getAuthority() + targetUri.getPath();
+      if (targetUri.getFragment() != null) {
+        this.fragment = "#" + targetUri.getFragment();
+      }
     } catch (IllegalArgumentException iae) {
       /* the uri provided is not a valid one, we can't continue */
       throw new IllegalArgumentException("Target is not a valid URI.", iae);
@@ -481,6 +495,9 @@ public final class RequestTemplate implements Serializable {
     StringBuilder url = new StringBuilder(this.path());
     if (!this.queries.isEmpty()) {
       url.append(this.queryLine());
+    }
+    if (fragment != null) {
+      url.append(fragment);
     }
 
     return url.toString();
