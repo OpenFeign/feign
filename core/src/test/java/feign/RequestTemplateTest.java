@@ -16,11 +16,17 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -93,8 +99,7 @@ public class RequestTemplateTest {
         new RequestTemplate()
             .method(HttpMethod.GET)
             .uri("{zoneId}")
-            .body(new byte[] {7, 3, -3, -7}, null);
-
+            .body(Request.Body.encoded(new byte[] {7, 3, -3, -7}, null));
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template).hasUrl("/hostedzone/Z1PA6795UKMFR9");
@@ -251,9 +256,11 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
-            .bodyTemplate(
-                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
-                    + "\"password\": \"{password}\"%7D");
+            .body(
+                Request.Body.bodyTemplate(
+                    "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
+                        + "\"password\": \"{password}\"%7D",
+                    Util.UTF_8));
 
     template =
         template.resolve(
@@ -269,7 +276,7 @@ public class RequestTemplateTest {
         .hasHeaders(
             entry(
                 "Content-Length",
-                Collections.singletonList(String.valueOf(template.body().length))));
+                Collections.singletonList(String.valueOf(template.requestBody().length()))));
   }
 
   @Test
@@ -277,9 +284,11 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
-            .bodyTemplate(
-                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\","
-                    + " \"password\": \"{password}\"%7D");
+            .body(
+                Request.Body.bodyTemplate(
+                    "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\","
+                        + " \"password\": \"{password}\"%7D",
+                    Util.UTF_8));
 
     template =
         template.resolve(
@@ -290,8 +299,8 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasBody(
-            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc"
-                + " 123%d8\"}");
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
+                + " \"abc+123%25d8\"}");
   }
 
   @Test
