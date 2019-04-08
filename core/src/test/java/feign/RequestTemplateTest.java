@@ -158,6 +158,22 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithMixedCollectionFormatsByQuery() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .collectionFormat(CollectionFormat.EXPLODED)
+        .uri("/api/collections")
+        .query("keys", "{keys}") // default collection format
+        .query("values[]", Collections.singletonList("{values[]}"), CollectionFormat.CSV);
+
+    template = template.resolve(mapOf("keys", Arrays.asList("one", "two"),
+        "values[]", Arrays.asList("1", "2")));
+
+    assertThat(template.url())
+        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1,2");
+  }
+
+  @Test
   public void resolveTemplateWithHeaderSubstitutions() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Auth-Token", "{authToken}");

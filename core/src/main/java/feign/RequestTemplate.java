@@ -543,6 +543,7 @@ public final class RequestTemplate implements Serializable {
     return query(name, Arrays.asList(values));
   }
 
+
   /**
    * Specify a Query String parameter, with the specified values. Values can be literals or template
    * expressions.
@@ -552,7 +553,21 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate query(String name, Iterable<String> values) {
-    return appendQuery(name, values);
+    return appendQuery(name, values, this.collectionFormat);
+  }
+
+  /**
+   * Specify a Query String parameter, with the specified values.  Values can be literals or
+   * template expressions.
+   *
+   * @param name of the parameter.
+   * @param values for this parameter.
+   * @param collectionFormat to use when resolving collection based expressions.
+   * @return a Request Template for chaining.
+   */
+  public RequestTemplate query(String name, Iterable<String> values,
+      CollectionFormat collectionFormat) {
+    return appendQuery(name, values, collectionFormat);
   }
 
   /**
@@ -560,9 +575,11 @@ public final class RequestTemplate implements Serializable {
    *
    * @param name of the parameter.
    * @param values for the parameter, may be expressions.
+   * @param collectionFormat to use when resolving collection based query variables.
    * @return a RequestTemplate for chaining.
    */
-  private RequestTemplate appendQuery(String name, Iterable<String> values) {
+  private RequestTemplate appendQuery(String name, Iterable<String> values,
+      CollectionFormat collectionFormat) {
     if (!values.iterator().hasNext()) {
       /* empty value, clear the existing values */
       this.queries.remove(name);
@@ -572,12 +589,11 @@ public final class RequestTemplate implements Serializable {
     /* create a new query template out of the information here */
     this.queries.compute(name, (key, queryTemplate) -> {
       if (queryTemplate == null) {
-        return QueryTemplate.create(name, values, this.charset, this.collectionFormat);
+        return QueryTemplate.create(name, values, this.charset, collectionFormat);
       } else {
-        return QueryTemplate.append(queryTemplate, values, this.collectionFormat);
+        return QueryTemplate.append(queryTemplate, values, collectionFormat);
       }
     });
-    // this.queries.put(name, QueryTemplate.create(name, values));
     return this;
   }
 

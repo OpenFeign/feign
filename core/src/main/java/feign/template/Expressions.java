@@ -29,7 +29,17 @@ public final class Expressions {
 
   static {
     expressions = new LinkedHashMap<>();
-    expressions.put(Pattern.compile("(\\w[-\\w.]*[ ]*)(:(.+))?"), SimpleExpression.class);
+
+    /*
+     * basic pattern for variable names. this is compliant with RFC 6570 Simple Expressions ONLY
+     * with the following additional values allowed without required pct-encoding:
+     *
+     * - brackets - dashes
+     *
+     * see https://tools.ietf.org/html/rfc6570#section-2.3 for more information.
+     */
+    expressions.put(Pattern.compile("(\\w[-\\w.\\[\\]]*[ ]*)(:(.+))?"),
+        SimpleExpression.class);
   }
 
   public static Expression create(final String value, final FragmentType type) {
