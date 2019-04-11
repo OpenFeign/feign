@@ -216,7 +216,11 @@ public class ReflectiveFeign extends Feign {
             value = expandElements(indexToExpander.get(i), value);
           }
           for (String name : entry.getValue()) {
-            varBuilder.put(name, value);
+            Object expandValue = value;
+            if(indexToExpander.containsKey(i)){
+              expandValue = indexToExpander.get(i).expandWithName(name, value);
+            }
+            varBuilder.put(name, expandValue);
           }
         }
       }
