@@ -212,11 +212,12 @@ public class ReflectiveFeign extends Feign {
         int i = entry.getKey();
         Object value = argv[entry.getKey()];
         if (value != null) { // Null values are skipped.
-          if (indexToExpander.containsKey(i)) {
-            value = expandElements(indexToExpander.get(i), value);
-          }
+          Object expandValue = value;
           for (String name : entry.getValue()) {
-            varBuilder.put(name, value);
+            if (indexToExpander.containsKey(i)) {
+                expandValue = expandElementsWithName(indexToExpander.get(i), value, name);
+            }
+            varBuilder.put(name, expandValue);
           }
         }
       }
@@ -254,6 +255,13 @@ public class ReflectiveFeign extends Feign {
         return expandIterable(expander, (Iterable) value);
       }
       return expander.expand(value);
+    }
+
+    private Object expandElementsWithName(Expander expander, Object value, String name) {
+      if (value instanceof Iterable) {
+        return expandIterable(expander, (Iterable) value);
+      }
+      return expander.expandWithName(value, name);
     }
 
     private List<String> expandIterable(Expander expander, Iterable value) {

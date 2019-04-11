@@ -49,6 +49,14 @@ public @interface Param {
      * Expands the value into a string. Does not accept or return null.
      */
     String expand(Object value);
+
+    /**
+     * support get value with name
+     */
+    default String expandWithName(Object value, String name) {
+      return expand(value);
+    }
+
   }
 
   final class ToStringExpander implements Expander {
@@ -57,5 +65,6 @@ public @interface Param {
     public String expand(Object value) {
       return value.toString();
     }
+
   }
 }
