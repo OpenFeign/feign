@@ -35,7 +35,7 @@ compile 'io.github.openfeign.form:feign-form:3.8.0'
 The `feign-form` extension depend on `OpenFeign` and its *concrete* versions:
 
 - all `feign-form` releases before **3.5.0** works with `OpenFeign` **9.\*** versions;
-- starting from `feign-form`'s version **3.5.0**, the module works with `OpenFeign` **10.\*** versions.
+- starting from `feign-form`'s version **3.5.0**, the module works with `OpenFeign` **10.1.0** versions and greater.
 
 > **IMPORTANT:** there is no backward compatibility and no any gurantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
 
