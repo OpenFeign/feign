@@ -41,14 +41,14 @@
     <module>slf4j</module>
     <module>soap</module>
     <module>reactive</module>
+    <module>form</module>
+    <module>form-spring</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
     <!-- remove after feign 10.0 release -->
     <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
-    <module>feign-form</module>
-    <module>feign-form-spring</module>
   </modules>
 
   <properties>
