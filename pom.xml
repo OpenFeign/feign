@@ -47,6 +47,8 @@
     <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
+    <module>feign-form</module>
+    <module>feign-form-spring</module>
   </modules>
 
   <properties>
@@ -128,6 +130,17 @@
       <name>Marvin Herman Froeder</name>
       <email>velo br at gmail dot com</email>
       <url>about.me/velo</url>
+    </developer>
+    <developer>
+      <name>Artem Labazin</name>
+      <email>xxlabaza@gmail.com</email>
+    </developer>
+    <developer>
+      <name>Tomasz Juchniewicz</name>
+      <email>tjuchniewicz@gmail.com</email>
+    </developer>
+    <developer>
+      <name>Guillaume Simard</name>
     </developer>
   </developers>
 
