@@ -14,7 +14,6 @@
 package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -18,13 +18,11 @@ import static lombok.AccessLevel.PRIVATE;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 import org.apache.commons.fileupload.MultipartStream;
@@ -65,24 +63,25 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
    *
    * @param bufSize The size of the buffer (in bytes) to read the HTTP multipart body.
    */
-  public SpringManyMultipartFilesReader (int bufSize) {
+  public SpringManyMultipartFilesReader(int bufSize) {
     super(MULTIPART_FORM_DATA);
     this.bufSize = bufSize;
   }
 
   @Override
-  protected boolean canWrite (MediaType mediaType) {
+  protected boolean canWrite(MediaType mediaType) {
     return false; // Class NOT meant for writing multipart/form-data HTTP bodies
   }
 
   @Override
-  protected boolean supports (Class<?> clazz) {
+  protected boolean supports(Class<?> clazz) {
     return MultipartFile[].class == clazz;
   }
 
   @Override
-  protected MultipartFile[] readInternal (Class<? extends MultipartFile[]> clazz, HttpInputMessage inputMessage
-  ) throws IOException {
+  protected MultipartFile[] readInternal(Class<? extends MultipartFile[]> clazz,
+                                         HttpInputMessage inputMessage)
+      throws IOException {
     val headers = inputMessage.getHeaders();
     if (headers == null) {
       throw new HttpMessageNotReadableException("There are no headers at all.", inputMessage);
@@ -94,15 +93,18 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
     }
 
     val boundaryBytes = getMultiPartBoundary(contentType);
-    MultipartStream multipartStream = new MultipartStream(inputMessage.getBody(), boundaryBytes, bufSize, null);
+    MultipartStream multipartStream =
+        new MultipartStream(inputMessage.getBody(), boundaryBytes, bufSize, null);
 
     val multiparts = new LinkedList<ByteArrayMultipartFile>();
-    for (boolean nextPart = multipartStream.skipPreamble(); nextPart; nextPart = multipartStream.readBoundary()) {
+    for (boolean nextPart = multipartStream.skipPreamble(); nextPart; nextPart =
+        multipartStream.readBoundary()) {
       ByteArrayMultipartFile multiPart;
       try {
         multiPart = readMultiPart(multipartStream);
       } catch (Exception e) {
-        throw new HttpMessageNotReadableException("Multipart body could not be read.", e, inputMessage);
+        throw new HttpMessageNotReadableException("Multipart body could not be read.", e,
+            inputMessage);
       }
       multiparts.add(multiPart);
     }
@@ -110,11 +112,13 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
   }
 
   @Override
-  protected void writeInternal (MultipartFile[] byteArrayMultipartFiles, HttpOutputMessage outputMessage) {
-    throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support writing to HTTP body.");
+  protected void writeInternal(MultipartFile[] byteArrayMultipartFiles,
+                               HttpOutputMessage outputMessage) {
+    throw new UnsupportedOperationException(
+        getClass().getSimpleName() + " does not support writing to HTTP body.");
   }
 
-  private byte[] getMultiPartBoundary (MediaType contentType) {
+  private byte[] getMultiPartBoundary(MediaType contentType) {
     val boundaryString = unquote(contentType.getParameter("boundary"));
     if (StringUtils.isEmpty(boundaryString)) {
       throw new HttpMessageConversionException("Content-Type missing boundary information.");
@@ -122,20 +126,18 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
     return boundaryString.getBytes(UTF_8);
   }
 
-  private ByteArrayMultipartFile readMultiPart (MultipartStream multipartStream) throws IOException {
+  private ByteArrayMultipartFile readMultiPart(MultipartStream multipartStream) throws IOException {
     val multiPartHeaders = splitIntoKeyValuePairs(
         multipartStream.readHeaders(),
         NEWLINES_PATTERN,
         COLON_PATTERN,
-        false
-    );
+        false);
 
     val contentDisposition = splitIntoKeyValuePairs(
         multiPartHeaders.get(CONTENT_DISPOSITION),
         SEMICOLON_PATTERN,
         EQUALITY_SIGN_PATTERN,
-        true
-    );
+        true);
 
     if (!contentDisposition.containsKey("form-data")) {
       throw new HttpMessageConversionException("Content-Disposition is not of type form-data.");
@@ -147,13 +149,13 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
         contentDisposition.get("name"),
         contentDisposition.get("filename"),
         multiPartHeaders.get(CONTENT_TYPE),
-        bodyStream.toByteArray()
-    );
+        bodyStream.toByteArray());
   }
 
-  private Map<String, String> splitIntoKeyValuePairs (String str, Pattern entriesSeparatorPattern,
-                                                      Pattern keyValueSeparatorPattern, boolean unquoteValue
-  ) {
+  private Map<String, String> splitIntoKeyValuePairs(String str,
+                                                     Pattern entriesSeparatorPattern,
+                                                     Pattern keyValueSeparatorPattern,
+                                                     boolean unquoteValue) {
     val keyValuePairs = new IgnoreKeyCaseMap();
     if (!StringUtils.isEmpty(str)) {
       val tokens = entriesSeparatorPattern.split(str);
@@ -161,27 +163,27 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
         val pair = keyValueSeparatorPattern.split(token.trim(), 2);
         val key = pair[0].trim();
         val value = pair.length > 1
-                    ? pair[1].trim()
-                    : "";
+            ? pair[1].trim()
+            : "";
 
         keyValuePairs.put(key, unquoteValue
-                               ? unquote(value)
-                               : value);
+            ? unquote(value)
+            : value);
       }
     }
     return keyValuePairs;
   }
 
-  private String unquote (String value) {
+  private String unquote(String value) {
     if (value == null) {
       return null;
     }
     return isSurroundedBy(value, "\"") || isSurroundedBy(value, "'")
-         ? value.substring(1, value.length() - 1)
-         : value;
+        ? value.substring(1, value.length() - 1)
+        : value;
   }
 
-  private boolean isSurroundedBy (String value, String preSuffix) {
+  private boolean isSurroundedBy(String value, String preSuffix) {
     return value.length() > 1 && value.startsWith(preSuffix) && value.endsWith(preSuffix);
   }
 }

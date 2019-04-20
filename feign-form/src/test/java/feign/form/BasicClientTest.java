@@ -18,13 +18,11 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
-
 import feign.Feign;
 import feign.jackson.JacksonEncoder;
 import lombok.val;
@@ -41,8 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
-    classes = Server.class
-)
+    classes = Server.class)
 public class BasicClientTest {
 
   private static final TestClient API;
@@ -56,7 +53,7 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testForm () {
+  public void testForm() {
     val response = API.form("1", "1");
 
     Assert.assertNotNull(response);
@@ -64,7 +61,7 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testFormException () {
+  public void testFormException() {
     val response = API.form("1", "2");
 
     Assert.assertNotNull(response);
@@ -72,8 +69,9 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testUpload () throws Exception {
-    val path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+  public void testUpload() throws Exception {
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = API.upload(path.toFile());
@@ -81,8 +79,9 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testUploadWithParam () throws Exception {
-    val path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+  public void testUploadWithParam() throws Exception {
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = API.upload(10, Boolean.TRUE, path.toFile());
@@ -90,7 +89,7 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testJson () {
+  public void testJson() {
     val dto = new Dto("Artem", 11);
     val stringResponse = API.json(dto);
 
@@ -98,29 +97,34 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testQueryMap () {
-    Map<String, Object> value = singletonMap("filter", (Object) asList("one", "two", "three", "four"));
+  public void testQueryMap() {
+    Map<String, Object> value =
+        singletonMap("filter", (Object) asList("one", "two", "three", "four"));
 
     val stringResponse = API.queryMap(value);
     Assert.assertEquals("4", stringResponse);
   }
 
   @Test
-  public void testMultipleFilesArray () throws Exception {
-    val path1 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+  public void testMultipleFilesArray() throws Exception {
+    val path1 =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
+    val path2 = Paths.get(
+        Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     Assert.assertTrue(Files.exists(path2));
 
-    val stringResponse = API.uploadWithArray(new File[] { path1.toFile(), path2.toFile() });
+    val stringResponse = API.uploadWithArray(new File[] {path1.toFile(), path2.toFile()});
     Assert.assertEquals(Files.size(path1) + Files.size(path2), Long.parseLong(stringResponse));
   }
 
   @Test
-  public void testMultipleFilesList () throws Exception {
-    val path1 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+  public void testMultipleFilesList() throws Exception {
+    val path1 =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path1));
-    val path2 = Paths.get(Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
+    val path2 = Paths.get(
+        Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     Assert.assertTrue(Files.exists(path2));
 
     val stringResponse = API.uploadWithList(asList(path1.toFile(), path2.toFile()));
@@ -128,10 +132,11 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testUploadWithDto () throws Exception {
+  public void testUploadWithDto() throws Exception {
     val dto = new Dto("Artem", 11);
 
-    val path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val response = API.uploadWithDto(dto, path.toFile());
@@ -140,8 +145,9 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testUnknownTypeFile () throws Exception {
-    val path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
+  public void testUnknownTypeFile() throws Exception {
+    val path =
+        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
     Assert.assertTrue(Files.exists(path));
 
     val stringResponse = API.uploadUnknownType(path.toFile());
@@ -149,21 +155,21 @@ public class BasicClientTest {
   }
 
   @Test
-  public void testFormData () throws Exception {
+  public void testFormData() throws Exception {
     val formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
     val stringResponse = API.uploadFormData(formData);
     Assert.assertEquals("popa.txt:application/custom-type", stringResponse);
   }
 
   @Test
-  public void testSubmitRepeatableQueryParam () throws Exception {
-    val names = new String[] { "Milada", "Thais" };
+  public void testSubmitRepeatableQueryParam() throws Exception {
+    val names = new String[] {"Milada", "Thais"};
     val stringResponse = API.submitRepeatableQueryParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");
   }
 
   @Test
-  public void testSubmitRepeatableFormParam () throws Exception {
+  public void testSubmitRepeatableFormParam() throws Exception {
     val names = Arrays.asList("Milada", "Thais");
     val stringResponse = API.submitRepeatableFormParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");

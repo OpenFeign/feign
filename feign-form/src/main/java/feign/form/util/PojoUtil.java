@@ -16,7 +16,6 @@ package feign.form.util;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.rmi.UnexpectedException;
@@ -24,11 +23,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.annotation.Nullable;
-
 import feign.form.FormProperty;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
@@ -42,19 +38,19 @@ import lombok.val;
  */
 public final class PojoUtil {
 
-  public static boolean isUserPojo (@NonNull Object object) {
+  public static boolean isUserPojo(@NonNull Object object) {
     val type = object.getClass();
     val packageName = type.getPackage().getName();
     return !packageName.startsWith("java.");
   }
 
-  public static boolean isUserPojo (@NonNull Type type) {
+  public static boolean isUserPojo(@NonNull Type type) {
     val typeName = type.toString();
     return !typeName.startsWith("class java.");
   }
 
   @SneakyThrows
-  public static Map<String, Object> toMap (@NonNull Object object) {
+  public static Map<String, Object> toMap(@NonNull Object object) {
     val result = new HashMap<String, Object>();
     val type = object.getClass();
     val setAccessibleAction = new SetAccessibleAction();
@@ -72,15 +68,15 @@ public final class PojoUtil {
       }
 
       val propertyKey = field.isAnnotationPresent(FormProperty.class)
-                        ? field.getAnnotation(FormProperty.class).value()
-                        : field.getName();
+          ? field.getAnnotation(FormProperty.class).value()
+          : field.getName();
 
       result.put(propertyKey, fieldValue);
     }
     return result;
   }
 
-  private PojoUtil () throws UnexpectedException {
+  private PojoUtil() throws UnexpectedException {
     throw new UnexpectedException("It is not allowed to instantiate this class");
   }
 
@@ -93,7 +89,7 @@ public final class PojoUtil {
     Field field;
 
     @Override
-    public Object run () {
+    public Object run() {
       field.setAccessible(true);
       return null;
     }

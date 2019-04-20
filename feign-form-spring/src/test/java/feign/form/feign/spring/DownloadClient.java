@@ -14,7 +14,6 @@
 package feign.form.feign.spring;
 
 import java.util.ArrayList;
-
 import feign.Logger;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
@@ -33,12 +32,11 @@ import org.springframework.web.multipart.MultipartFile;
 @FeignClient(
     name = "multipart-download-support-service",
     url = "http://localhost:8081",
-    configuration = DownloadClient.ClientConfiguration.class
-)
+    configuration = DownloadClient.ClientConfiguration.class)
 public interface DownloadClient {
 
   @RequestMapping("/multipart/download/{fileId}")
-  MultipartFile[] download (@PathVariable("fileId") String fileId);
+  MultipartFile[] download(@PathVariable("fileId") String fileId);
 
   class ClientConfiguration {
 
@@ -46,7 +44,7 @@ public interface DownloadClient {
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
-    public Decoder feignDecoder () {
+    public Decoder feignDecoder() {
       val springConverters = messageConverters.getObject().getConverters();
       val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
@@ -58,14 +56,14 @@ public interface DownloadClient {
       return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
 
         @Override
-        public HttpMessageConverters getObject () {
-            return httpMessageConverters;
+        public HttpMessageConverters getObject() {
+          return httpMessageConverters;
         }
       });
     }
 
     @Bean
-    public Logger.Level feignLoggerLevel () {
+    public Logger.Level feignLoggerLevel() {
       return Logger.Level.FULL;
     }
   }

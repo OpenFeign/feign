@@ -14,7 +14,6 @@
 package feign.form.multipart;
 
 import static feign.form.ContentProcessor.CRLF;
-
 import feign.codec.EncodeException;
 import lombok.val;
 
@@ -25,17 +24,18 @@ import lombok.val;
 public class SingleParameterWriter extends AbstractWriter {
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     return value instanceof Number ||
-           value instanceof CharSequence ||
-           value instanceof Boolean;
+        value instanceof CharSequence ||
+        value instanceof Boolean;
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws EncodeException {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     val string = new StringBuilder()
         .append("Content-Disposition: form-data; name=\"").append(key).append('"').append(CRLF)
-        .append("Content-Type: text/plain; charset=").append(output.getCharset().name()).append(CRLF)
+        .append("Content-Type: text/plain; charset=").append(output.getCharset().name())
+        .append(CRLF)
         .append(CRLF)
         .append(value.toString())
         .toString();

@@ -22,12 +22,12 @@ import feign.codec.EncodeException;
 public class ByteArrayWriter extends AbstractWriter {
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     return value instanceof byte[];
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws EncodeException {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     writeFileMetadata(output, key, null, null);
 
     byte[] bytes = (byte[]) value;

@@ -24,14 +24,14 @@ public interface Writer {
   /**
    * Processing form data to request body.
    *
-   * @param output    output writer.
-   * @param boundary  data boundary.
-   * @param key       name for piece of data.
-   * @param value     piece of data.
+   * @param output output writer.
+   * @param boundary data boundary.
+   * @param key name for piece of data.
+   * @param value piece of data.
    *
    * @throws EncodeException in case of any encode exception
    */
-  void write (Output output, String boundary, String key, Object value) throws EncodeException;
+  void write(Output output, String boundary, String key, Object value) throws EncodeException;
 
   /**
    * Answers on question - "could this writer properly write the value".
@@ -40,5 +40,5 @@ public interface Writer {
    *
    * @return {@code true} - if could write this object, otherwise {@code true}
    */
-  boolean isApplicable (Object value);
+  boolean isApplicable(Object value);
 }

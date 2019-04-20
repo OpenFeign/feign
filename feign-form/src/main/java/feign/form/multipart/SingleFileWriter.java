@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import feign.codec.EncodeException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,12 +29,12 @@ import lombok.val;
 public class SingleFileWriter extends AbstractWriter {
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     return value instanceof File;
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws EncodeException {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     val file = (File) value;
     writeFileMetadata(output, key, file.getName(), null);
 

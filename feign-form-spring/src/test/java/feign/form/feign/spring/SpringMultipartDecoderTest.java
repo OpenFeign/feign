@@ -14,7 +14,6 @@
 package feign.form.feign.spring;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,15 +31,14 @@ import org.springframework.web.multipart.MultipartFile;
     properties = {
         "server.port=8081",
         "feign.hystrix.enabled=false"
-    }
-)
+    })
 public class SpringMultipartDecoderTest {
 
   @Autowired
   private DownloadClient downloadClient;
 
   @Test
-  public void downloadTest () throws Exception {
+  public void downloadTest() throws Exception {
     MultipartFile[] downloads = downloadClient.download("123");
 
     Assert.assertEquals(2, downloads.length);
@@ -50,7 +48,7 @@ public class SpringMultipartDecoderTest {
     Assert.assertTrue(MediaType.TEXT_PLAIN.includes(infoContentType));
     Assert.assertNotNull(infoContentType.getCharset());
     Assert.assertEquals("The text for file ID 123. Testing unicode €",
-            IOUtils.toString(downloads[0].getInputStream(), infoContentType.getCharset().name()));
+        IOUtils.toString(downloads[0].getInputStream(), infoContentType.getCharset().name()));
 
     Assert.assertEquals("testfile.txt", downloads[1].getOriginalFilename());
     Assert.assertEquals(MediaType.APPLICATION_OCTET_STREAM_VALUE, downloads[1].getContentType());

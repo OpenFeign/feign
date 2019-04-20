@@ -14,14 +14,12 @@
 package feign.form;
 
 import static feign.form.ContentType.URLENCODED;
-
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -39,12 +37,13 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
   private static final char EQUAL_SIGN = '=';
 
   @SneakyThrows
-  private static String encode (Object string, Charset charset) {
+  private static String encode(Object string, Charset charset) {
     return URLEncoder.encode(string.toString(), charset.name());
   }
 
   @Override
-  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException {
+  public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
+      throws EncodeException {
     val bodyData = new StringBuilder();
     for (Entry<String, Object> entry : data.entrySet()) {
       if (entry == null || entry.getKey() == null) {
@@ -70,11 +69,11 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
   }
 
   @Override
-  public ContentType getSupportedContentType () {
+  public ContentType getSupportedContentType() {
     return URLENCODED;
   }
 
-  private String createKeyValuePair (Entry<String, Object> entry, Charset charset) {
+  private String createKeyValuePair(Entry<String, Object> entry, Charset charset) {
     String encodedKey = encode(entry.getKey(), charset);
     Object value = entry.getValue();
 
@@ -93,13 +92,13 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
   }
 
   @SuppressWarnings("unchecked")
-  private String createKeyValuePairFromCollection (String key, Object values, Charset charset) {
+  private String createKeyValuePairFromCollection(String key, Object values, Charset charset) {
     val collection = (Collection) values;
     val array = collection.toArray(new Object[0]);
     return createKeyValuePairFromArray(key, array, charset);
   }
 
-  private String createKeyValuePairFromArray (String key, Object values, Charset charset) {
+  private String createKeyValuePairFromArray(String key, Object values, Charset charset) {
     val result = new StringBuilder();
     val array = (Object[]) values;
 

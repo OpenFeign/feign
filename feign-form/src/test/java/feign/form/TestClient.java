@@ -17,7 +17,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import feign.Headers;
 import feign.Param;
 import feign.QueryMap;
@@ -32,52 +31,54 @@ public interface TestClient {
 
   @RequestLine("POST /form")
   @Headers("Content-Type: application/x-www-form-urlencoded")
-  Response form (@Param("key1") String key1, @Param("key2") String key2);
+  Response form(@Param("key1") String key1, @Param("key2") String key2);
 
   @RequestLine("POST /upload/{id}")
   @Headers("Content-Type: multipart/form-data")
-  String upload (@Param("id") Integer id, @Param("public") Boolean isPublic, @Param("file") File file);
+  String upload(@Param("id") Integer id,
+                @Param("public") Boolean isPublic,
+                @Param("file") File file);
 
   @RequestLine("POST /upload")
   @Headers("Content-Type: multipart/form-data")
-  String upload (@Param("file") File file);
+  String upload(@Param("file") File file);
 
   @RequestLine("POST /json")
   @Headers("Content-Type: application/json")
-  String json (Dto dto);
+  String json(Dto dto);
 
   @RequestLine("POST /query_map")
-  String queryMap (@QueryMap Map<String, Object> value);
+  String queryMap(@QueryMap Map<String, Object> value);
 
   @RequestLine("POST /upload/files")
   @Headers("Content-Type: multipart/form-data")
-  String uploadWithArray (@Param("files") File[] files);
+  String uploadWithArray(@Param("files") File[] files);
 
   @RequestLine("POST /upload/files")
   @Headers("Content-Type: multipart/form-data")
-  String uploadWithList (@Param("files") List<File> files);
+  String uploadWithList(@Param("files") List<File> files);
 
   @RequestLine("POST /upload/files")
   @Headers("Content-Type: multipart/form-data")
-  String uploadWithManyFiles (@Param("files") File file1, @Param("files") File file2);
+  String uploadWithManyFiles(@Param("files") File file1, @Param("files") File file2);
 
   @RequestLine("POST /upload/with_dto")
   @Headers("Content-Type: multipart/form-data")
-  Response uploadWithDto (@Param("1") Dto dto, @Param("file") File file);
+  Response uploadWithDto(@Param("1") Dto dto, @Param("file") File file);
 
   @RequestLine("POST /upload/unknown_type")
   @Headers("Content-Type: multipart/form-data")
-  String uploadUnknownType (@Param("file") File file);
+  String uploadUnknownType(@Param("file") File file);
 
   @RequestLine("POST /upload/form_data")
   @Headers("Content-Type: multipart/form-data")
-  String uploadFormData (@Param("file") FormData formData);
+  String uploadFormData(@Param("file") FormData formData);
 
   @RequestLine("POST /submit/url")
   @Headers("Content-Type: application/x-www-form-urlencoded")
-  String submitRepeatableQueryParam (@Param("names") String[] names);
+  String submitRepeatableQueryParam(@Param("names") String[] names);
 
   @RequestLine("POST /submit/form")
   @Headers("Content-Type: multipart/form-data")
-  String submitRepeatableFormParam (@Param("names") Collection<String> names);
+  String submitRepeatableFormParam(@Param("names") Collection<String> names);
 }

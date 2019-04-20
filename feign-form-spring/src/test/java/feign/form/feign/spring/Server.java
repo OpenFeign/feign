@@ -20,10 +20,8 @@ import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-
 import java.io.IOException;
 import java.util.Map;
-
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -58,55 +56,47 @@ public class Server {
   @RequestMapping(
       path = "/multipart/upload1/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
+      consumes = MULTIPART_FORM_DATA_VALUE)
   @SneakyThrows
-  public String upload1 (@PathVariable("folder") String folder,
-                         @RequestPart MultipartFile file,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
+  public String upload1(@PathVariable("folder") String folder,
+                        @RequestPart MultipartFile file,
+                        @RequestParam(value = "message", required = false) String message) {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }
 
   @RequestMapping(
       path = "/multipart/upload2/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
+      consumes = MULTIPART_FORM_DATA_VALUE)
   @SneakyThrows
-  public String upload2 (@RequestBody MultipartFile file,
-                         @PathVariable("folder") String folder,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
+  public String upload2(@RequestBody MultipartFile file,
+                        @PathVariable("folder") String folder,
+                        @RequestParam(value = "message", required = false) String message) {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }
 
   @RequestMapping(
       path = "/multipart/upload3/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  public String upload3 (@RequestBody MultipartFile file,
-                         @PathVariable("folder") String folder,
-                         @RequestParam(value = "message", required = false) String message
-  ) {
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  public String upload3(@RequestBody MultipartFile file,
+                        @PathVariable("folder") String folder,
+                        @RequestParam(value = "message", required = false) String message) {
     return file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder;
   }
 
   @RequestMapping(path = "/multipart/upload4/{id}", method = POST)
-  public String upload4 (@PathVariable("id") String id,
-                         @RequestBody Map<String, Object> map,
-                         @RequestParam String userName
-  ) {
+  public String upload4(@PathVariable("id") String id,
+                        @RequestBody Map<String, Object> map,
+                        @RequestParam String userName) {
     return userName + ':' + id + ':' + map.size();
   }
 
   @RequestMapping(
       path = "/multipart/upload5",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  void upload5 (Dto dto) throws IOException {
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  void upload5(Dto dto) throws IOException {
     assert "field 1 value".equals(dto.getField1());
     assert 42 == dto.getField2();
 
@@ -116,11 +106,10 @@ public class Server {
   @RequestMapping(
       path = "/multipart/upload6",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  public ResponseEntity<String> upload6 (@RequestParam("popa1") MultipartFile popa1,
-                                         @RequestParam("popa2") MultipartFile popa2
-  ) throws Exception {
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> upload6(@RequestParam("popa1") MultipartFile popa1,
+                                        @RequestParam("popa2") MultipartFile popa2)
+      throws Exception {
     HttpStatus status = I_AM_A_TEAPOT;
     String result = "";
     if (popa1 != null && popa2 != null) {
@@ -133,9 +122,8 @@ public class Server {
   @RequestMapping(
       path = "/multipart/download/{fileId}",
       method = GET,
-      produces = MULTIPART_FORM_DATA_VALUE
-  )
-  public MultiValueMap<String, Object> download (@PathVariable("fileId") String fileId) {
+      produces = MULTIPART_FORM_DATA_VALUE)
+  public MultiValueMap<String, Object> download(@PathVariable("fileId") String fileId) {
     val multiParts = new LinkedMultiValueMap<String, Object>();
 
     val infoString = "The text for file ID " + fileId + ". Testing unicode €";

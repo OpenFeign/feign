@@ -15,16 +15,13 @@ package feign.form.spring;
 
 import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
-
 import java.lang.reflect.Type;
 import java.util.HashMap;
-
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
-
 import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,16 +36,16 @@ public class SpringFormEncoder extends FormEncoder {
   /**
    * Constructor with the default Feign's encoder as a delegate.
    */
-  public SpringFormEncoder () {
+  public SpringFormEncoder() {
     this(new Encoder.Default());
   }
 
   /**
    * Constructor with specified delegate encoder.
    *
-   * @param delegate  delegate encoder, if this encoder couldn't encode object.
+   * @param delegate delegate encoder, if this encoder couldn't encode object.
    */
-  public SpringFormEncoder (Encoder delegate) {
+  public SpringFormEncoder(Encoder delegate) {
     super(delegate);
 
     val processor = (MultipartFormContentProcessor) getContentProcessor(MULTIPART);
@@ -57,7 +54,8 @@ public class SpringFormEncoder extends FormEncoder {
   }
 
   @Override
-  public void encode (Object object, Type bodyType, RequestTemplate template) throws EncodeException {
+  public void encode(Object object, Type bodyType, RequestTemplate template)
+      throws EncodeException {
     if (bodyType.equals(MultipartFile[].class)) {
       val files = (MultipartFile[]) object;
       val data = new HashMap<String, Object>(files.length, 1.F);
@@ -82,7 +80,7 @@ public class SpringFormEncoder extends FormEncoder {
     }
   }
 
-  private boolean isMultipartFileCollection (Object object) {
+  private boolean isMultipartFileCollection(Object object) {
     if (!(object instanceof Iterable)) {
       return false;
     }

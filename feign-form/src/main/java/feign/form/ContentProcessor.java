@@ -15,7 +15,6 @@ package feign.form;
 
 import java.nio.charset.Charset;
 import java.util.Map;
-
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 
@@ -36,18 +35,19 @@ public interface ContentProcessor {
   /**
    * Processes a request.
    *
-   * @param template  Feign's request template.
-   * @param charset   request charset from 'Content-Type' header (UTF-8 by default).
-   * @param data      reqeust data.
+   * @param template Feign's request template.
+   * @param charset request charset from 'Content-Type' header (UTF-8 by default).
+   * @param data reqeust data.
    *
    * @throws EncodeException in case of any encode exception
    */
-  void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException;
+  void process(RequestTemplate template, Charset charset, Map<String, Object> data)
+      throws EncodeException;
 
   /**
    * Returns supported {@link ContentType} of this processor.
    *
    * @return supported content type enum value.
    */
-  ContentType getSupportedContentType ();
+  ContentType getSupportedContentType();
 }

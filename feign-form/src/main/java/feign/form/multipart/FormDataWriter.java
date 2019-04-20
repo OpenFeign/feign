@@ -15,7 +15,6 @@ package feign.form.multipart;
 
 import feign.codec.EncodeException;
 import feign.form.FormData;
-
 import lombok.val;
 
 /**
@@ -26,12 +25,12 @@ import lombok.val;
 public class FormDataWriter extends AbstractWriter {
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     return value instanceof FormData;
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws EncodeException {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     val formData = (FormData) value;
     writeFileMetadata(output, key, formData.getFileName(), formData.getContentType());
     output.write(formData.getData());

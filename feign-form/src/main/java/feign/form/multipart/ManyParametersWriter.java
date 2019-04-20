@@ -14,7 +14,6 @@
 package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import feign.codec.EncodeException;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -29,7 +28,7 @@ public class ManyParametersWriter extends AbstractWriter {
   SingleParameterWriter parameterWriter = new SingleParameterWriter();
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     if (value.getClass().isArray()) {
       Object[] values = (Object[]) value;
       return values.length > 0 && parameterWriter.isApplicable(values[0]);
@@ -43,7 +42,8 @@ public class ManyParametersWriter extends AbstractWriter {
   }
 
   @Override
-  public void write (Output output, String boundary, String key, Object value) throws EncodeException {
+  public void write(Output output, String boundary, String key, Object value)
+      throws EncodeException {
     if (value.getClass().isArray()) {
       val objects = (Object[]) value;
       for (val object : objects) {

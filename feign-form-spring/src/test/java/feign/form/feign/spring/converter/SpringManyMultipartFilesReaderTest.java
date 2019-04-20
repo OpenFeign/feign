@@ -16,11 +16,9 @@ package feign.form.feign.spring.converter;
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
@@ -36,9 +34,10 @@ public class SpringManyMultipartFilesReaderTest {
   private static final String DUMMY_MULTIPART_BOUNDARY = "Boundary_4_574237629_1500021738802";
 
   @Test
-  public void readMultipartFormDataTest () throws IOException {
+  public void readMultipartFormDataTest() throws IOException {
     val multipartFilesReader = new SpringManyMultipartFilesReader(4096);
-    val multipartFiles = multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());
+    val multipartFiles =
+        multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());
 
     Assert.assertEquals(2, multipartFiles.length);
 
@@ -48,35 +47,36 @@ public class SpringManyMultipartFilesReaderTest {
 
     Assert.assertEquals(MediaType.TEXT_PLAIN_VALUE, multipartFiles[1].getContentType());
     Assert.assertEquals("form-item-2-file-1", multipartFiles[1].getOriginalFilename());
-    Assert.assertEquals("Plain text", IOUtils.toString(multipartFiles[1].getInputStream(), "US-ASCII"));
+    Assert.assertEquals("Plain text",
+        IOUtils.toString(multipartFiles[1].getInputStream(), "US-ASCII"));
   }
 
   public static class ValidMultipartMessage implements HttpInputMessage {
 
     @Override
-    public InputStream getBody () throws IOException {
+    public InputStream getBody() throws IOException {
       val multipartBody = "--" + DUMMY_MULTIPART_BOUNDARY + "\r\n" +
-                          "Content-Type: application/json\r\n" +
-                          "Content-Disposition: form-data; name=\"form-item-1\"\r\n" +
-                          "\r\n" +
-                          "{\"id\":1}" + "\r\n" +
-                          "--" + DUMMY_MULTIPART_BOUNDARY + "\r\n" +
-                          "content-type: text/plain\r\n" +
-                          "content-disposition: Form-Data; Filename=\"form-item-2-file-1\"; Name=\"form-item-2\"\r\n" +
-                          "\r\n" +
-                          "Plain text" + "\r\n" +
-                          "--" + DUMMY_MULTIPART_BOUNDARY + "--\r\n";
+          "Content-Type: application/json\r\n" +
+          "Content-Disposition: form-data; name=\"form-item-1\"\r\n" +
+          "\r\n" +
+          "{\"id\":1}" + "\r\n" +
+          "--" + DUMMY_MULTIPART_BOUNDARY + "\r\n" +
+          "content-type: text/plain\r\n" +
+          "content-disposition: Form-Data; Filename=\"form-item-2-file-1\"; Name=\"form-item-2\"\r\n"
+          +
+          "\r\n" +
+          "Plain text" + "\r\n" +
+          "--" + DUMMY_MULTIPART_BOUNDARY + "--\r\n";
 
       return new ByteArrayInputStream(multipartBody.getBytes("US-ASCII"));
     }
 
     @Override
-    public HttpHeaders getHeaders () {
+    public HttpHeaders getHeaders() {
       val httpHeaders = new HttpHeaders();
       httpHeaders.put(
           CONTENT_TYPE,
-          singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY)
-      );
+          singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY));
       return httpHeaders;
     }
   }

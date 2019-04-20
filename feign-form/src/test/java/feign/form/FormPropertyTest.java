@@ -17,7 +17,6 @@ import static feign.Logger.Level.FULL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-
 import feign.Feign;
 import feign.Headers;
 import feign.RequestLine;
@@ -37,8 +36,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
-    classes = Server.class
-)
+    classes = Server.class)
 public class FormPropertyTest {
 
   private static final FormClient API;
@@ -52,7 +50,7 @@ public class FormPropertyTest {
   }
 
   @Test
-  public void test () {
+  public void test() {
     val dto = new FormDto("Amigo", 23);
     val stringResponse = API.postData(dto);
 
@@ -67,6 +65,6 @@ public class FormPropertyTest {
 
     @RequestLine("POST /form-data")
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    String postData (FormDto dto);
+    String postData(FormDto dto);
   }
 }

@@ -14,7 +14,6 @@
 package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +22,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 /**
- * This object encapsulates a byte array and its associated content type.
- * Use if if you want to specify the content type of your provided byte array.
+ * This object encapsulates a byte array and its associated content type. Use if if you want to
+ * specify the content type of your provided byte array.
  *
  * @author Guillaume Simard
  * @since 24.03.2018

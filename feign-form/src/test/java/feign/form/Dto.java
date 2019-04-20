@@ -14,9 +14,7 @@
 package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import java.io.Serializable;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

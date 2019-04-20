@@ -17,10 +17,8 @@ import static feign.form.util.CharsetUtil.UTF_8;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-
 import java.util.HashMap;
 import java.util.List;
-
 import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
@@ -40,18 +38,17 @@ import org.springframework.web.multipart.MultipartFile;
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
     properties = {
-      "server.port=8080",
-      "feign.hystrix.enabled=false",
-      "logging.level.feign.form.feign.spring.Client=DEBUG"
-    }
-)
+        "server.port=8080",
+        "feign.hystrix.enabled=false",
+        "logging.level.feign.form.feign.spring.Client=DEBUG"
+    })
 public class SpringFormEncoderTest {
 
   @Autowired
   private Client client;
 
   @Test
-  public void upload1Test () throws Exception {
+  public void upload1Test() throws Exception {
     val folder = "test_folder";
     val file = new MockMultipartFile("file", "test".getBytes(UTF_8));
     val message = "message test";
@@ -62,7 +59,7 @@ public class SpringFormEncoderTest {
   }
 
   @Test
-  public void upload2Test () throws Exception {
+  public void upload2Test() throws Exception {
     val folder = "test_folder";
     val file = new MockMultipartFile("file", "test".getBytes(UTF_8));
     val message = "message test";
@@ -73,23 +70,23 @@ public class SpringFormEncoderTest {
   }
 
   @Test
-  public void uploadFileNameAndContentTypeTest () throws Exception {
+  public void uploadFileNameAndContentTypeTest() throws Exception {
     val folder = "test_folder";
     val file = new MockMultipartFile(
         "file",
         "hello.dat",
         "application/octet-stream",
-        "test".getBytes(UTF_8)
-    );
+        "test".getBytes(UTF_8));
     val message = "message test";
 
     val response = client.upload3(file, folder, message);
 
-    Assert.assertEquals(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder, response);
+    Assert.assertEquals(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder,
+        response);
   }
 
   @Test
-  public void upload4Test () throws Exception {
+  public void upload4Test() throws Exception {
     val map = new HashMap<Object, Object>();
     map.put("one", 1);
     map.put("two", 2);
@@ -103,7 +100,7 @@ public class SpringFormEncoderTest {
   }
 
   @Test
-  public void upload5Test () throws Exception {
+  public void upload5Test() throws Exception {
     val file = new MockMultipartFile("popa.txt", "Hello world".getBytes(UTF_8));
     val dto = new Dto("field 1 value", 42, file);
 
@@ -112,20 +109,19 @@ public class SpringFormEncoderTest {
   }
 
   @Test
-  public void upload6ArrayTest () throws Exception {
+  public void upload6ArrayTest() throws Exception {
     val file1 = new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8));
     val file2 = new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8));
 
-    val response = client.upload6Array(new MultipartFile[] { file1, file2 });
+    val response = client.upload6Array(new MultipartFile[] {file1, file2});
     Assert.assertEquals("Hello world", response);
   }
 
   @Test
-  public void upload6CollectionTest () throws Exception {
+  public void upload6CollectionTest() throws Exception {
     List<MultipartFile> list = asList(
         (MultipartFile) new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8)),
-        (MultipartFile) new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8))
-    );
+        (MultipartFile) new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8)));
 
     val response = client.upload6Collection(list);
     Assert.assertEquals("Hello world", response);

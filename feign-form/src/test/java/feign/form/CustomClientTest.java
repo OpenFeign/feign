@@ -18,7 +18,6 @@ import static feign.form.ContentType.MULTIPART;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-
 import feign.Feign;
 import feign.Headers;
 import feign.Param;
@@ -40,8 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
-    classes = Server.class
-)
+    classes = Server.class)
 public class CustomClientTest {
 
   private static final CustomClient API;
@@ -59,7 +57,7 @@ public class CustomClientTest {
   }
 
   @Test
-  public void test () {
+  public void test() {
     val stringResponse = API.uploadByteArray(new byte[0]);
 
     assertNotNull(stringResponse);
@@ -69,7 +67,7 @@ public class CustomClientTest {
   private static class CustomByteArrayWriter extends ByteArrayWriter {
 
     @Override
-    protected void write (Output output, String key, Object value) throws EncodeException {
+    protected void write(Output output, String key, Object value) throws EncodeException {
       writeFileMetadata(output, key, "popa.txt", null);
 
       val bytes = (byte[]) value;
@@ -81,6 +79,6 @@ public class CustomClientTest {
 
     @RequestLine("POST /upload/byte_array")
     @Headers("Content-Type: multipart/form-data")
-    String uploadByteArray (@Param("file") byte[] bytes);
+    String uploadByteArray(@Param("file") byte[] bytes);
   }
 }

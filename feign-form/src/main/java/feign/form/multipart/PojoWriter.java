@@ -16,7 +16,6 @@ package feign.form.multipart;
 import static feign.form.util.PojoUtil.isUserPojo;
 import static feign.form.util.PojoUtil.toMap;
 import static lombok.AccessLevel.PRIVATE;
-
 import feign.codec.EncodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,12 +32,13 @@ public class PojoWriter extends AbstractWriter {
   Iterable<Writer> writers;
 
   @Override
-  public boolean isApplicable (Object object) {
+  public boolean isApplicable(Object object) {
     return isUserPojo(object);
   }
 
   @Override
-  public void write (Output output, String boundary, String key, Object object) throws EncodeException {
+  public void write(Output output, String boundary, String key, Object object)
+      throws EncodeException {
     val map = toMap(object);
     for (val entry : map.entrySet()) {
       val writer = findApplicableWriter(entry.getValue());
@@ -50,7 +50,7 @@ public class PojoWriter extends AbstractWriter {
     }
   }
 
-  private Writer findApplicableWriter (Object value) {
+  private Writer findApplicableWriter(Object value) {
     for (val writer : writers) {
       if (writer.isApplicable(value)) {
         return writer;

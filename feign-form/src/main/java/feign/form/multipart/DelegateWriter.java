@@ -14,11 +14,9 @@
 package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -36,12 +34,12 @@ public class DelegateWriter extends AbstractWriter {
   SingleParameterWriter parameterWriter = new SingleParameterWriter();
 
   @Override
-  public boolean isApplicable (Object value) {
+  public boolean isApplicable(Object value) {
     return true;
   }
 
   @Override
-  protected void write (Output output, String key, Object value) throws EncodeException {
+  protected void write(Output output, String key, Object value) throws EncodeException {
     val fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
     val bytes = fake.requestBody().asBytes();

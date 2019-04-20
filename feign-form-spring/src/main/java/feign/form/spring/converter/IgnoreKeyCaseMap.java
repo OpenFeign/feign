@@ -17,36 +17,36 @@ import java.util.HashMap;
 import java.util.Locale;
 
 /**
- * A Map<String, String> implementation that normalizes the key to UPPER CASE, so
- * that value retrieval via the key is case insensitive.
+ * A Map<String, String> implementation that normalizes the key to UPPER CASE, so that value
+ * retrieval via the key is case insensitive.
  */
 final class IgnoreKeyCaseMap extends HashMap<String, String> {
 
   private static final long serialVersionUID = -2321516556941546746L;
 
-  private static String normalizeKey (Object key) {
+  private static String normalizeKey(Object key) {
     return key == null
-           ? null
-           : key.toString().toUpperCase(new Locale("en_US"));
+        ? null
+        : key.toString().toUpperCase(new Locale("en_US"));
   }
 
   @Override
-  public boolean containsKey (Object key) {
+  public boolean containsKey(Object key) {
     return super.containsKey(normalizeKey(key));
   }
 
   @Override
-  public String get (Object key) {
+  public String get(Object key) {
     return super.get(normalizeKey(key));
   }
 
   @Override
-  public String put (String key, String value) {
+  public String put(String key, String value) {
     return super.put(normalizeKey(key), value);
   }
 
   @Override
-  public String remove (Object key) {
+  public String remove(Object key) {
     return super.remove(normalizeKey(key));
   }
 }

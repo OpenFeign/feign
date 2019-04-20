@@ -14,7 +14,6 @@
 package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -28,13 +27,12 @@ import lombok.val;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public enum ContentType {
 
-  UNDEFINED("undefined"),
-  URLENCODED("application/x-www-form-urlencoded"),
-  MULTIPART("multipart/form-data");
+  UNDEFINED("undefined"), URLENCODED("application/x-www-form-urlencoded"), MULTIPART(
+      "multipart/form-data");
 
   String header;
 
-  ContentType (String header) {
+  ContentType(String header) {
     this.header = header;
   }
 
@@ -43,9 +41,10 @@ public enum ContentType {
    *
    * @param str string representation of content type.
    *
-   * @return {@link ContentType} instance or {@link ContentType#UNDEFINED}, if there is no such content type.
+   * @return {@link ContentType} instance or {@link ContentType#UNDEFINED}, if there is no such
+   *         content type.
    */
-  public static ContentType of (String str) {
+  public static ContentType of(String str) {
     if (str == null) {
       return UNDEFINED;
     }

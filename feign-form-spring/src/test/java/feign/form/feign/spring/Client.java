@@ -16,10 +16,8 @@ package feign.form.feign.spring;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-
 import java.util.List;
 import java.util.Map;
-
 import feign.Logger;
 import feign.Response;
 import feign.codec.Encoder;
@@ -44,66 +42,58 @@ import org.springframework.web.multipart.MultipartFile;
 @FeignClient(
     name = "multipart-support-service",
     url = "http://localhost:8080",
-    configuration = Client.ClientConfiguration.class
-)
+    configuration = Client.ClientConfiguration.class)
 public interface Client {
 
   @RequestMapping(
       value = "/multipart/upload1/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  String upload1 (@PathVariable("folder") String folder,
-                  @RequestPart MultipartFile file,
-                  @RequestParam(value = "message", required = false) String message);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload1(@PathVariable("folder") String folder,
+                 @RequestPart MultipartFile file,
+                 @RequestParam(value = "message", required = false) String message);
 
   @RequestMapping(
       value = "/multipart/upload2/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  String upload2 (@RequestBody MultipartFile file,
-                  @PathVariable("folder") String folder,
-                  @RequestParam(value = "message", required = false) String message);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload2(@RequestBody MultipartFile file,
+                 @PathVariable("folder") String folder,
+                 @RequestParam(value = "message", required = false) String message);
 
   @RequestMapping(
       value = "/multipart/upload3/{folder}",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  String upload3 (@RequestBody MultipartFile file,
-                  @PathVariable("folder") String folder,
-                  @RequestParam(value = "message", required = false) String message);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload3(@RequestBody MultipartFile file,
+                 @PathVariable("folder") String folder,
+                 @RequestParam(value = "message", required = false) String message);
 
   @RequestMapping(
       path = "/multipart/upload4/{id}",
       method = POST,
-      produces = APPLICATION_JSON_VALUE
-  )
-  String upload4 (@PathVariable("id") String id,
-                  @RequestBody Map<Object, Object> map,
-                  @RequestParam("userName") String userName);
+      produces = APPLICATION_JSON_VALUE)
+  String upload4(@PathVariable("id") String id,
+                 @RequestBody Map<Object, Object> map,
+                 @RequestParam("userName") String userName);
 
   @RequestMapping(
       path = "/multipart/upload5",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  Response upload5 (Dto dto);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  Response upload5(Dto dto);
 
   @RequestMapping(
       path = "/multipart/upload6",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  String upload6Array (@RequestPart MultipartFile[] files);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload6Array(@RequestPart MultipartFile[] files);
 
   @RequestMapping(
       path = "/multipart/upload6",
       method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
-  )
-  String upload6Collection (@RequestPart List<MultipartFile> files);
+      consumes = MULTIPART_FORM_DATA_VALUE)
+  String upload6Collection(@RequestPart List<MultipartFile> files);
 
   class ClientConfiguration {
 
@@ -111,12 +101,12 @@ public interface Client {
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
-    public Encoder feignEncoder () {
+    public Encoder feignEncoder() {
       return new SpringFormEncoder(new SpringEncoder(messageConverters));
     }
 
     @Bean
-    public Logger.Level feignLogger () {
+    public Logger.Level feignLogger() {
       return Logger.Level.FULL;
     }
   }

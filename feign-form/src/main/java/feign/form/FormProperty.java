@@ -15,7 +15,6 @@ package feign.form;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -32,6 +31,6 @@ public @interface FormProperty {
   /**
    * The name of the property.
    */
-  String value ();
+  String value();
 
 }

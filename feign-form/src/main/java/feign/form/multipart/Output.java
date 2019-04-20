@@ -14,12 +14,10 @@
 package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -46,7 +44,7 @@ public class Output implements Closeable {
    *
    * @return this output
    */
-  public Output write (String string) {
+  public Output write(String string) {
     return write(string.getBytes(charset));
   }
 
@@ -58,7 +56,7 @@ public class Output implements Closeable {
    * @return this output
    */
   @SneakyThrows
-  public Output write (byte[] bytes) {
+  public Output write(byte[] bytes) {
     outputStream.write(bytes);
     return this;
   }
@@ -66,14 +64,15 @@ public class Output implements Closeable {
   /**
    * Writes the byte array to the output with specified offset and fixed length.
    *
-   * @param bytes  byte arrays to write to this output
-   * @param offset the offset within the array of the first byte to be read. Must be non-negative and no larger than <tt>bytes.length</tt>
+   * @param bytes byte arrays to write to this output
+   * @param offset the offset within the array of the first byte to be read. Must be non-negative
+   *        and no larger than <tt>bytes.length</tt>
    * @param length the number of bytes to be read from the given array
    *
    * @return this output
    */
   @SneakyThrows
-  public Output write (byte[] bytes, int offset, int length) {
+  public Output write(byte[] bytes, int offset, int length) {
     outputStream.write(bytes, offset, length);
     return this;
   }
@@ -83,12 +82,12 @@ public class Output implements Closeable {
    *
    * @return byte array representation of output
    */
-  public byte[] toByteArray () {
+  public byte[] toByteArray() {
     return outputStream.toByteArray();
   }
 
   @Override
-  public void close () throws IOException {
+  public void close() throws IOException {
     outputStream.close();
   }
 }

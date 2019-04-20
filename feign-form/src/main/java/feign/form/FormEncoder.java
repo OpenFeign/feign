@@ -18,14 +18,12 @@ import static feign.form.util.PojoUtil.isUserPojo;
 import static feign.form.util.PojoUtil.toMap;
 import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
-
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -55,22 +53,21 @@ public class FormEncoder implements Encoder {
   /**
    * Constructor with the default Feign's encoder as a delegate.
    */
-  public FormEncoder () {
+  public FormEncoder() {
     this(new Encoder.Default());
   }
 
   /**
    * Constructor with specified delegate encoder.
    *
-   * @param delegate  delegate encoder, if this encoder couldn't encode object.
+   * @param delegate delegate encoder, if this encoder couldn't encode object.
    */
-  public FormEncoder (Encoder delegate) {
+  public FormEncoder(Encoder delegate) {
     this.delegate = delegate;
 
     val list = asList(
         new MultipartFormContentProcessor(delegate),
-        new UrlencodedFormContentProcessor()
-    );
+        new UrlencodedFormContentProcessor());
 
     processors = new HashMap<ContentType, ContentProcessor>(list.size(), 1.F);
     for (ContentProcessor processor : list) {
@@ -80,7 +77,8 @@ public class FormEncoder implements Encoder {
 
   @Override
   @SuppressWarnings("unchecked")
-  public void encode (Object object, Type bodyType, RequestTemplate template) throws EncodeException {
+  public void encode(Object object, Type bodyType, RequestTemplate template)
+      throws EncodeException {
     String contentTypeValue = getContentTypeValue(template.headers());
     val contentType = ContentType.of(contentTypeValue);
     if (!processors.containsKey(contentType)) {
@@ -109,12 +107,12 @@ public class FormEncoder implements Encoder {
    *
    * @return {@link ContentProcessor} instance for specified type or null.
    */
-  public final ContentProcessor getContentProcessor (ContentType type) {
+  public final ContentProcessor getContentProcessor(ContentType type) {
     return processors.get(type);
   }
 
   @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
-  private String getContentTypeValue (Map<String, Collection<String>> headers) {
+  private String getContentTypeValue(Map<String, Collection<String>> headers) {
     for (val entry : headers.entrySet()) {
       if (!entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)) {
         continue;
@@ -129,10 +127,10 @@ public class FormEncoder implements Encoder {
     return null;
   }
 
-  private Charset getCharset (String contentTypeValue) {
+  private Charset getCharset(String contentTypeValue) {
     val matcher = CHARSET_PATTERN.matcher(contentTypeValue);
     return matcher.find()
-           ? Charset.forName(matcher.group(1))
-           : UTF_8;
+        ? Charset.forName(matcher.group(1))
+        : UTF_8;
   }
 }

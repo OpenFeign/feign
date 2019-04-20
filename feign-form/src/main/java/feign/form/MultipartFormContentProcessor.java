@@ -15,7 +15,6 @@ package feign.form;
 
 import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -23,7 +22,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Map;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -38,7 +36,6 @@ import feign.form.multipart.PojoWriter;
 import feign.form.multipart.SingleFileWriter;
 import feign.form.multipart.SingleParameterWriter;
 import feign.form.multipart.Writer;
-
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -56,9 +53,10 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   /**
    * Constructor with specific delegate encoder.
    *
-   * @param delegate specific delegate encoder for cases, when this processor couldn't handle request parameter.
+   * @param delegate specific delegate encoder for cases, when this processor couldn't handle
+   *        request parameter.
    */
-  public MultipartFormContentProcessor (Encoder delegate) {
+  public MultipartFormContentProcessor(Encoder delegate) {
     writers = new LinkedList<Writer>();
     addWriter(new ByteArrayWriter());
     addWriter(new FormDataWriter());
@@ -72,7 +70,8 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   }
 
   @Override
-  public void process (RequestTemplate template, Charset charset, Map<String, Object> data) throws EncodeException {
+  public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
+      throws EncodeException {
     val boundary = Long.toHexString(System.currentTimeMillis());
     val output = new Output(charset);
 
@@ -109,7 +108,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   }
 
   @Override
-  public ContentType getSupportedContentType () {
+  public ContentType getSupportedContentType() {
     return MULTIPART;
   }
 
@@ -118,27 +117,25 @@ public class MultipartFormContentProcessor implements ContentProcessor {
    *
    * @param writer additional writer.
    */
-  public final void addWriter (Writer writer) {
+  public final void addWriter(Writer writer) {
     writers.add(writer);
   }
 
   /**
-   * Adds {@link Writer} instance in runtime
-   * at the beginning of writers list.
+   * Adds {@link Writer} instance in runtime at the beginning of writers list.
    *
    * @param writer additional writer.
    */
-  public final void addFirstWriter (Writer writer) {
+  public final void addFirstWriter(Writer writer) {
     writers.addFirst(writer);
   }
 
   /**
-   * Adds {@link Writer} instance in runtime
-   * at the end of writers list.
+   * Adds {@link Writer} instance in runtime at the end of writers list.
    *
    * @param writer additional writer.
    */
-  public final void addLastWriter (Writer writer) {
+  public final void addLastWriter(Writer writer) {
     writers.addLast(writer);
   }
 
@@ -147,11 +144,11 @@ public class MultipartFormContentProcessor implements ContentProcessor {
    *
    * @return writers collection.
    */
-  public final Collection<Writer> getWriters () {
+  public final Collection<Writer> getWriters() {
     return Collections.unmodifiableCollection(writers);
   }
 
-  private Writer findApplicableWriter (Object value) {
+  private Writer findApplicableWriter(Object value) {
     for (val writer : writers) {
       if (writer.isApplicable(value)) {
         return writer;

@@ -14,9 +14,7 @@
 package feign.form.multipart;
 
 import static feign.form.ContentProcessor.CRLF;
-
 import java.net.URLConnection;
-
 import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -28,7 +26,8 @@ import lombok.val;
 public abstract class AbstractWriter implements Writer {
 
   @Override
-  public void write (Output output, String boundary, String key, Object value) throws EncodeException {
+  public void write(Output output, String boundary, String key, Object value)
+      throws EncodeException {
     output.write("--").write(boundary).write(CRLF);
     write(output, key, value);
     output.write(CRLF);
@@ -37,9 +36,9 @@ public abstract class AbstractWriter implements Writer {
   /**
    * Writes data for it's children.
    *
-   * @param output  output writer.
-   * @param key     name for piece of data.
-   * @param value   piece of data.
+   * @param output output writer.
+   * @param key name for piece of data.
+   * @param value piece of data.
    *
    * @throws EncodeException in case of write errors
    */
@@ -47,19 +46,22 @@ public abstract class AbstractWriter implements Writer {
       "PMD.UncommentedEmptyMethodBody",
       "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
   })
-  protected void write (Output output, String key, Object value) throws EncodeException {
-  }
+  protected void write(Output output, String key, Object value) throws EncodeException {}
 
   /**
    * Writes file's metadata.
    *
-   * @param output      output writer.
-   * @param name        name for piece of data.
-   * @param fileName    file name.
-   * @param contentType type of file content. May be the {@code null}, in that case it will be determined by file name.
+   * @param output output writer.
+   * @param name name for piece of data.
+   * @param fileName file name.
+   * @param contentType type of file content. May be the {@code null}, in that case it will be
+   *        determined by file name.
    */
   @SneakyThrows
-  protected void writeFileMetadata (Output output, String name, String fileName, String contentType) {
+  protected void writeFileMetadata(Output output,
+                                   String name,
+                                   String fileName,
+                                   String contentType) {
     val contentDespositionBuilder = new StringBuilder()
         .append("Content-Disposition: form-data; name=\"").append(name).append("\"");
     if (fileName != null) {
