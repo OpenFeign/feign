@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.form.feign.spring.converter;
+package feign.form.spring.converter;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
