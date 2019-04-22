@@ -15,13 +15,17 @@ package feign.reactive;
 
 import feign.Contract;
 import feign.Feign;
-import feign.InvocationHandlerFactory;
+import feign.FeignConfig.FeignConfigBuilder;
 
 abstract class ReactiveFeign {
 
 
 
   public static class Builder extends Feign.Builder {
+
+    protected Builder(FeignConfigBuilder feignConfigBuilder) {
+      super(feignConfigBuilder);
+    }
 
     private Contract contract = new Contract.Default();
 

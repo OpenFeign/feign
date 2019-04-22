@@ -14,19 +14,8 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
-import feign.InvocationHandlerFactory;
-import feign.Logger;
-import feign.Request;
-import feign.RequestInterceptor;
-import feign.ResponseMapper;
-import feign.Retryer;
-import feign.Target;
+import feign.*;
+import feign.FeignConfig.FeignConfigBuilder;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -39,13 +28,17 @@ import feign.codec.ErrorDecoder;
 public final class HystrixFeign {
 
   public static Builder builder() {
-    return new Builder();
+    return new Builder(FeignConfig.builder());
   }
 
   public static final class Builder extends Feign.Builder {
 
     private Contract contract = new Contract.Default();
     private SetterFactory setterFactory = new SetterFactory.Default();
+
+    public Builder(FeignConfigBuilder feignConfigBuilder) {
+      super(feignConfigBuilder);
+    }
 
     /**
      * Allows you to override hystrix properties such as thread pools and command keys.
@@ -80,7 +73,7 @@ public final class HystrixFeign {
      * use this feature, pass a safe implementation of your target interface as the last parameter.
      *
      * Here's an example:
-     * 
+     *
      * <pre>
      * {@code
      *
@@ -139,14 +132,9 @@ public final class HystrixFeign {
 
     /** Configures components needed for hystrix integration. */
     Feign build(final FallbackFactory<?> nullableFallbackFactory) {
-      super.invocationHandlerFactory(new InvocationHandlerFactory() {
-        @Override
-        public InvocationHandler create(Target target,
-                                        Map<Method, MethodHandler> dispatch) {
-          return new HystrixInvocationHandler(target, dispatch, setterFactory,
-              nullableFallbackFactory);
-        }
-      });
+      super.invocationHandlerFactory(
+          (target, dispatch) -> new HystrixInvocationHandler(target, dispatch, setterFactory,
+              nullableFallbackFactory));
       super.contract(new HystrixDelegatingContract(contract));
       return super.build();
     }

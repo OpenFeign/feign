@@ -13,82 +13,60 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
+import static feign.FeignException.errorExecuting;
+import static feign.FeignException.errorReading;
+import static feign.Util.checkNotNull;
+import static feign.Util.ensureClosed;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import static feign.ExceptionPropagationPolicy.UNWRAP;
-import static feign.FeignException.errorExecuting;
-import static feign.FeignException.errorReading;
-import static feign.Util.checkNotNull;
-import static feign.Util.ensureClosed;
 
-final class SynchronousMethodHandler implements MethodHandler {
+public final class SynchronousMethodHandler implements MethodHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
   private final MethodMetadata metadata;
   private final Target<?> target;
-  private final Client client;
-  private final Retryer retryer;
-  private final List<RequestInterceptor> requestInterceptors;
-  private final Logger logger;
-  private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
-  private final Options options;
-  private final Decoder decoder;
-  private final ErrorDecoder errorDecoder;
-  private final boolean decode404;
-  private final boolean closeAfterDecode;
-  private final ExceptionPropagationPolicy propagationPolicy;
 
-  private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, Logger logger,
-      Logger.Level logLevel, MethodMetadata metadata,
-      RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
+  private final FeignConfig feignConfig;
+
+  public SynchronousMethodHandler(
+      Target<?> target,
+      FeignConfig feignConfig,
+      MethodMetadata metadata,
+      RequestTemplate.Factory buildTemplateFromArgs) {
     this.target = checkNotNull(target, "target");
-    this.client = checkNotNull(client, "client for %s", target);
-    this.retryer = checkNotNull(retryer, "retryer for %s", target);
-    this.requestInterceptors =
-        checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
-    this.logger = checkNotNull(logger, "logger for %s", target);
-    this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
+    this.feignConfig = checkNotNull(feignConfig, "feignConfig for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
-    this.options = checkNotNull(options, "options for %s", target);
-    this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
-    this.decoder = checkNotNull(decoder, "decoder for %s", target);
-    this.decode404 = decode404;
-    this.closeAfterDecode = closeAfterDecode;
-    this.propagationPolicy = propagationPolicy;
   }
 
   @Override
   public Object invoke(Object[] argv) throws Throwable {
-    RequestTemplate template = buildTemplateFromArgs.create(argv);
-    Retryer retryer = this.retryer.clone();
+    final RequestTemplate template = buildTemplateFromArgs.create(argv);
+    final Retryer retryer = feignConfig.retryer.clone();
     while (true) {
       try {
         return executeAndDecode(template);
-      } catch (RetryableException e) {
+      } catch (final RetryableException e) {
         try {
           retryer.continueOrPropagate(e);
-        } catch (RetryableException th) {
-          Throwable cause = th.getCause();
-          if (propagationPolicy == UNWRAP && cause != null) {
+        } catch (final RetryableException th) {
+          final Throwable cause = th.getCause();
+          if (feignConfig.propagationPolicy == UNWRAP && cause != null) {
             throw cause;
           } else {
             throw th;
           }
         }
-        if (logLevel != Logger.Level.NONE) {
-          logger.logRetry(metadata.configKey(), logLevel);
+        if (feignConfig.logLevel != Logger.Level.NONE) {
+          feignConfig.logger.logRetry(metadata.configKey(), feignConfig.logLevel);
         }
         continue;
       }
@@ -96,29 +74,31 @@ final class SynchronousMethodHandler implements MethodHandler {
   }
 
   Object executeAndDecode(RequestTemplate template) throws Throwable {
-    Request request = targetRequest(template);
+    final Request request = targetRequest(template);
 
-    if (logLevel != Logger.Level.NONE) {
-      logger.logRequest(metadata.configKey(), logLevel, request);
+    if (feignConfig.logLevel != Logger.Level.NONE) {
+      feignConfig.logger.logRequest(metadata.configKey(), feignConfig.logLevel, request);
     }
 
     Response response;
-    long start = System.nanoTime();
+    final long start = System.nanoTime();
     try {
-      response = client.execute(request, options);
-    } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
+      response = feignConfig.client.execute(request, feignConfig.options);
+    } catch (final IOException e) {
+      if (feignConfig.logLevel != Logger.Level.NONE) {
+        feignConfig.logger.logIOException(metadata.configKey(), feignConfig.logLevel, e,
+            elapsedTime(start));
       }
       throw errorExecuting(request, e);
     }
-    long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+    final long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     boolean shouldClose = true;
     try {
-      if (logLevel != Logger.Level.NONE) {
+      if (feignConfig.logLevel != Logger.Level.NONE) {
         response =
-            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
+            feignConfig.logger.logAndRebufferResponse(metadata.configKey(), feignConfig.logLevel,
+                response, elapsedTime);
       }
       if (Response.class == metadata.returnType()) {
         if (response.body() == null) {
@@ -130,27 +110,29 @@ final class SynchronousMethodHandler implements MethodHandler {
           return response;
         }
         // Ensure the response body is disconnected
-        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
         return response.toBuilder().body(bodyData).build();
       }
       if (response.status() >= 200 && response.status() < 300) {
         if (void.class == metadata.returnType()) {
           return null;
         } else {
-          Object result = decode(response);
-          shouldClose = closeAfterDecode;
+          final Object result = decode(response);
+          shouldClose = feignConfig.closeAfterDecode;
           return result;
         }
-      } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
-        Object result = decode(response);
-        shouldClose = closeAfterDecode;
+      } else if (feignConfig.decode404 && response.status() == 404
+          && void.class != metadata.returnType()) {
+        final Object result = decode(response);
+        shouldClose = feignConfig.closeAfterDecode;
         return result;
       } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
+        throw feignConfig.errorDecoder.decode(metadata.configKey(), response);
       }
-    } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
+    } catch (final IOException e) {
+      if (feignConfig.logLevel != Logger.Level.NONE) {
+        feignConfig.logger.logIOException(metadata.configKey(), feignConfig.logLevel, e,
+            elapsedTime);
       }
       throw errorReading(request, response, e);
     } finally {
@@ -165,7 +147,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   }
 
   Request targetRequest(RequestTemplate template) {
-    for (RequestInterceptor interceptor : requestInterceptors) {
+    for (final RequestInterceptor interceptor : feignConfig.requestInterceptors) {
       interceptor.apply(template);
     }
     return target.apply(template);
@@ -173,36 +155,20 @@ final class SynchronousMethodHandler implements MethodHandler {
 
   Object decode(Response response) throws Throwable {
     try {
-      return decoder.decode(response, metadata.returnType());
-    } catch (FeignException e) {
+      return feignConfig.decoder.decode(response, metadata.returnType());
+    } catch (final FeignException e) {
       throw e;
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       throw new DecodeException(response.status(), e.getMessage(), e);
     }
   }
 
   static class Factory {
 
-    private final Client client;
-    private final Retryer retryer;
-    private final List<RequestInterceptor> requestInterceptors;
-    private final Logger logger;
-    private final Logger.Level logLevel;
-    private final boolean decode404;
-    private final boolean closeAfterDecode;
-    private final ExceptionPropagationPolicy propagationPolicy;
+    private final FeignConfig feignConfig;
 
-    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy) {
-      this.client = checkNotNull(client, "client");
-      this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.logger = checkNotNull(logger, "logger");
-      this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.decode404 = decode404;
-      this.closeAfterDecode = closeAfterDecode;
-      this.propagationPolicy = propagationPolicy;
+    Factory(FeignConfig feignConfig) {
+      this.feignConfig = checkNotNull(feignConfig, "feignConfig");
     }
 
     public MethodHandler create(Target<?> target,
@@ -211,9 +177,7 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 Options options,
                                 Decoder decoder,
                                 ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-          logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, decode404, closeAfterDecode, propagationPolicy);
+      return new SynchronousMethodHandler(target, feignConfig, md, buildTemplateFromArgs);
     }
   }
 }

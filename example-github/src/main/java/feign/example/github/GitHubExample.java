@@ -13,30 +13,26 @@
  */
 package feign.example.github;
 
-import feign.Feign;
-import feign.Logger;
-import feign.Param;
-import feign.RequestLine;
-import feign.Response;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import feign.gson.GsonDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import feign.*;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
+import feign.gson.GsonDecoder;
 
 /**
  * Inspired by {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
 
-  interface GitHub {
+  public interface GitHub {
 
-    class Repository {
+    public class Repository {
       String name;
     }
 
-    class Contributor {
+    public class Contributor {
       String login;
     }
 
@@ -56,7 +52,7 @@ public class GitHubExample {
     }
 
     static GitHub connect() {
-      Decoder decoder = new GsonDecoder();
+      final Decoder decoder = new GsonDecoder();
       return Feign.builder()
           .decoder(decoder)
           .errorDecoder(new GitHubErrorDecoder(decoder))
@@ -67,7 +63,7 @@ public class GitHubExample {
   }
 
 
-  static class GitHubClientError extends RuntimeException {
+  public static class GitHubClientError extends RuntimeException {
     private String message; // parsed from json
 
     @Override
@@ -77,36 +73,38 @@ public class GitHubExample {
   }
 
   public static void main(String... args) {
-    GitHub github = GitHub.connect();
+    final GitHub github = GitHub.connect();
 
     System.out.println("Let's fetch and print a list of the contributors to this org.");
-    List<String> contributors = github.contributors("openfeign");
-    for (String contributor : contributors) {
+    final List<String> contributors = github.contributors("openfeign");
+    for (final String contributor : contributors) {
       System.out.println(contributor);
     }
 
     System.out.println("Now, let's cause an error.");
     try {
       github.contributors("openfeign", "some-unknown-project");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
   }
 
-  static class GitHubErrorDecoder implements ErrorDecoder {
+  public static class GitHubErrorDecoder implements ErrorDecoder {
 
     final Decoder decoder;
     final ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
 
-    GitHubErrorDecoder(Decoder decoder) {
+    public GitHubErrorDecoder(Decoder decoder) {
       this.decoder = decoder;
     }
 
     @Override
     public Exception decode(String methodKey, Response response) {
       try {
-        return (Exception) decoder.decode(response, GitHubClientError.class);
-      } catch (IOException fallbackToDefault) {
+        return (Exception) decoder.decode(
+            response.toBuilder().status(200).build(),
+            GitHubClientError.class);
+      } catch (final IOException fallbackToDefault) {
         return defaultDecoder.decode(methodKey, response);
       }
     }
