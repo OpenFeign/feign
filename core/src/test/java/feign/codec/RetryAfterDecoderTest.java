@@ -16,11 +16,8 @@ package feign.codec;
 import static feign.codec.ErrorDecoder.RetryAfterDecoder.RFC822_FORMAT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-
 import feign.codec.ErrorDecoder.RetryAfterDecoder;
-
 import java.text.ParseException;
-
 import org.junit.Test;
 
 public class RetryAfterDecoderTest {

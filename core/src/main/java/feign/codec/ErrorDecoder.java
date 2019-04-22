@@ -18,11 +18,9 @@ import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
 import static java.util.Locale.US;
 import static java.util.concurrent.TimeUnit.SECONDS;
-
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

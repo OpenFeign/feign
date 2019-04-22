@@ -13,21 +13,23 @@
  */
 package feign.reactive;
 
-import feign.Feign;
-import feign.reactive.ReactiveFeign.Builder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
-import feign.InvocationHandlerFactory;
-import feign.Target;
+import feign.*;
+import feign.FeignConfig.FeignConfigBuilder;
 
 public class ReactorFeign extends ReactiveFeign {
 
   public static Builder builder() {
-    return new Builder();
+    return new Builder(FeignConfig.builder());
   }
 
   public static class Builder extends ReactiveFeign.Builder {
+
+    protected Builder(FeignConfigBuilder feignConfigBuilder) {
+      super(feignConfigBuilder);
+    }
 
     @Override
     public Feign build() {

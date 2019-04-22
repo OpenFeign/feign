@@ -18,14 +18,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import feign.Logger.NoOpLogger;
+import feign.FeignConfig.FeignConfigBuilder;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -35,7 +34,7 @@ import static feign.ExceptionPropagationPolicy.NONE;
 public abstract class Feign {
 
   public static Builder builder() {
-    return new Builder();
+    return new Builder(FeignConfig.builder());
   }
 
   /**
@@ -65,7 +64,7 @@ public abstract class Feign {
    * @see MethodMetadata#configKey()
    */
   public static String configKey(Class targetType, Method method) {
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     builder.append(targetType.getSimpleName());
     builder.append('#').append(method.getName()).append('(');
     for (Type param : method.getGenericParameterTypes()) {
@@ -96,24 +95,17 @@ public abstract class Feign {
 
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
-    private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
-    private Client client = new Client.Default(null, null);
-    private Retryer retryer = new Retryer.Default();
-    private Logger logger = new NoOpLogger();
-    private Encoder encoder = new Encoder.Default();
-    private Decoder decoder = new Decoder.Default();
-    private QueryMapEncoder queryMapEncoder = new QueryMapEncoder.Default();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
-    private boolean decode404;
-    private boolean closeAfterDecode = true;
-    private ExceptionPropagationPolicy propagationPolicy = NONE;
+    private final FeignConfigBuilder feignConfigBuilder;
+
+    protected Builder(FeignConfigBuilder feignConfigBuilder) {
+      this.feignConfigBuilder = feignConfigBuilder;
+    }
 
     public Builder logLevel(Logger.Level logLevel) {
-      this.logLevel = logLevel;
+      feignConfigBuilder.logLevel(logLevel);
       return this;
     }
 
@@ -123,32 +115,32 @@ public abstract class Feign {
     }
 
     public Builder client(Client client) {
-      this.client = client;
+      feignConfigBuilder.client(client);
       return this;
     }
 
     public Builder retryer(Retryer retryer) {
-      this.retryer = retryer;
+      feignConfigBuilder.retryer(retryer);
       return this;
     }
 
     public Builder logger(Logger logger) {
-      this.logger = logger;
+      feignConfigBuilder.logger(logger);
       return this;
     }
 
     public Builder encoder(Encoder encoder) {
-      this.encoder = encoder;
+      feignConfigBuilder.encoder(encoder);
       return this;
     }
 
     public Builder decoder(Decoder decoder) {
-      this.decoder = decoder;
+      feignConfigBuilder.decoder(decoder);
       return this;
     }
 
     public Builder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
-      this.queryMapEncoder = queryMapEncoder;
+      feignConfigBuilder.queryMapEncoder(queryMapEncoder);
       return this;
     }
 
@@ -156,7 +148,7 @@ public abstract class Feign {
      * Allows to map the response before passing it to the decoder.
      */
     public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
-      this.decoder = new ResponseMappingDecoder(mapper, decoder);
+      feignConfigBuilder.decoder(new ResponseMappingDecoder(mapper, decoder));
       return this;
     }
 
@@ -178,17 +170,17 @@ public abstract class Feign {
      * @since 8.12
      */
     public Builder decode404() {
-      this.decode404 = true;
+      feignConfigBuilder.decode404(true);
       return this;
     }
 
     public Builder errorDecoder(ErrorDecoder errorDecoder) {
-      this.errorDecoder = errorDecoder;
+      feignConfigBuilder.errorDecoder(errorDecoder);
       return this;
     }
 
     public Builder options(Options options) {
-      this.options = options;
+      feignConfigBuilder.options(options);
       return this;
     }
 
@@ -196,7 +188,8 @@ public abstract class Feign {
      * Adds a single request interceptor to the builder.
      */
     public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
-      this.requestInterceptors.add(requestInterceptor);
+      requestInterceptors.add(requestInterceptor);
+      feignConfigBuilder.requestInterceptors(requestInterceptors);
       return this;
     }
 
@@ -206,9 +199,10 @@ public abstract class Feign {
      */
     public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
       this.requestInterceptors.clear();
-      for (RequestInterceptor requestInterceptor : requestInterceptors) {
+      for (final RequestInterceptor requestInterceptor : requestInterceptors) {
         this.requestInterceptors.add(requestInterceptor);
       }
+      feignConfigBuilder.requestInterceptors(this.requestInterceptors);
       return this;
     }
 
@@ -234,12 +228,12 @@ public abstract class Feign {
      *
      */
     public Builder doNotCloseAfterDecode() {
-      this.closeAfterDecode = false;
+      feignConfigBuilder.closeAfterDecode(false);
       return this;
     }
 
     public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
-      this.propagationPolicy = propagationPolicy;
+      feignConfigBuilder.propagationPolicy(propagationPolicy);
       return this;
     }
 
@@ -252,13 +246,13 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode, propagationPolicy);
-      ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      final FeignConfig feignConfig = feignConfigBuilder.build();
+      final SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+          new SynchronousMethodHandler.Factory(feignConfig);
+      final ParseHandlersByName handlersByName =
+          new ParseHandlersByName(contract, feignConfig, synchronousMethodHandlerFactory);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory,
+          feignConfig.queryMapEncoder);
     }
   }
 

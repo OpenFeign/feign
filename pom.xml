@@ -41,6 +41,7 @@
     <module>slf4j</module>
     <module>soap</module>
     <module>reactive</module>
+    <module>apt-generator</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
     <!-- remove after feign 10.0 release -->
@@ -59,10 +60,6 @@
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
     <main.signature.artifact>java18</main.signature.artifact>
-
-    <!-- default bytecode version for src/test -->
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
 
     <main.basedir>${project.basedir}</main.basedir>
 
@@ -321,6 +318,13 @@
         <version>${slf4j.version}</version>
       </dependency>
 
+      <!-- used for code generation using annotations -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.6</version>
+        <scope>provided</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -388,6 +392,11 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
+        <configuration>
+          <source>${main.java.version}</source>
+          <target>${main.java.version}</target>
+          <compilerVersion>${main.java.version}</compilerVersion>
+        </configuration>
         <executions>
           <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
           <execution>
@@ -396,10 +405,6 @@
             <goals>
               <goal>compile</goal>
             </goals>
-            <configuration>
-              <source>${main.java.version}</source>
-              <target>${main.java.version}</target>
-            </configuration>
           </execution>
         </executions>
       </plugin>

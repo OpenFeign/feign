@@ -15,11 +15,7 @@ package feign;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
@@ -33,16 +29,16 @@ public final class MethodMetadata implements Serializable {
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
   private transient Type bodyType;
-  private RequestTemplate template = new RequestTemplate();
-  private List<String> formParams = new ArrayList<String>();
-  private Map<Integer, Collection<String>> indexToName =
+  private final RequestTemplate template = new RequestTemplate();
+  private final List<String> formParams = new ArrayList<String>();
+  private final Map<Integer, Collection<String>> indexToName =
       new LinkedHashMap<Integer, Collection<String>>();
-  private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
+  private final Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
-  private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
+  private final Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
 
-  MethodMetadata() {}
+  public MethodMetadata() {}
 
   /**
    * Used as a reference to this method. For example, {@link Logger#log(String, String, Object...)

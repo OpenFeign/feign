@@ -30,7 +30,7 @@ public interface InvocationHandlerFactory {
    */
   interface MethodHandler {
 
-    Object invoke(Object[] argv) throws Throwable;
+    <E> E invoke(Object... argv) throws Throwable;
   }
 
   static final class Default implements InvocationHandlerFactory {
