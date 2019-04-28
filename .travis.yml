@@ -27,12 +27,6 @@ cache:
 matrix:
   include:
     - os: linux
-      jdk: oraclejdk8
-      addons:
-        apt:
-          packages:
-            - oracle-java8-installer
-    - os: linux
       jdk: openjdk8
     - os: linux
       jdk: openjdk11
@@ -59,4 +53,3 @@ env:
     - secure: "ONAU76S0WBGcQGf0mr7KxKQjFvhhu73GNuQG8j47pxhJojNlNpWBbu+EGkgaInWKMtO89iBtpicVlXZc06HtbSqv7L93gbMo+xgp5daLlQg4gocDixjB1I2oPPITFFoztu76nOA1IBWRLTKu+w+Y2tKOmzWm+5v2UKD6fz7SYoo="
     # Ex. travis encrypt SONATYPE_PASSWORD=your_sonatype_password
     - secure: "UaVTxnw8klS36WLAdcmubqrHIgS4o5NcIqQMPIihk0tv3VEvCJSGvc2b7EPyQZMvm5TR3mXq5IJUAHp8j3seAHfYWmLIZWzvn7Y5mLRw8Kh9up7GzXl8Idui0AEHAAL2mfvE9smlOKPS5D13LKc6tOGFER66itHW3Jg1QoijDmQ="
-
