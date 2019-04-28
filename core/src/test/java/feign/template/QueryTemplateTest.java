@@ -160,4 +160,18 @@ public class QueryTemplateTest {
     assertThat(expanded)
         .isEqualToIgnoringCase("json=%7B%22name%22:%22feign%22,%22version%22:%20%2210%22%7D");
   }
+
+  @Test
+  public void expandCollectionValueWithBrackets() {
+    QueryTemplate template =
+        QueryTemplate.create(
+            "collection[]",
+            Collections.singletonList("{collection[]}"),
+            Util.UTF_8,
+            CollectionFormat.CSV);
+    String expanded =
+        template.expand(Collections.singletonMap("collection[]", Arrays.asList("1", "2")));
+    /* brackets will be pct-encoded */
+    assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1,2");
+  }
 }
