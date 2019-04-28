@@ -2,9 +2,16 @@
 dist: xenial
 sudo: false
 language: java
+
+cache:
+  directories:
+    - "$HOME/.m2"
+
+# Build for LTS JDKs only
 jdk:
   - openjdk8
   - openjdk11
+
 before_install:
   # Parameters used during release
   - git config user.name "$GH_USER"
@@ -13,23 +20,13 @@ before_install:
   - git config credential.helper "store --file=.git/credentials"
   - echo "https://$GH_TOKEN:@github.com" > .git/credentials
 
-install:
+#install:
   # Override default travis to use the maven wrapper
-  - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+#  - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
-script:
-  - ./travis/publish.sh
+#script:
+#  - ./travis/publish.sh
 
-cache:
-  directories:
-    - $HOME/.m2
-
-#matrix:
-#  include:
-#    - os: linux
-#      jdk: openjdk8
-#    - os: linux
-#      jdk: openjdk11
 
 # Don't build release tags. This avoids publish conflicts because the version commit exists both on master and the release tag.
 # See https://github.com/travis-ci/travis-ci/issues/1532
