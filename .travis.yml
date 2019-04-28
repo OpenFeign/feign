@@ -1,7 +1,7 @@
 # Run `travis lint` when changing this file to avoid breaking the build.
 # Default JDK is really old: 1.8.0_31; Trusty's is less old: 1.8.0_51
 # https://docs.travis-ci.com/user/ci-environment/#Virtualization-environments
-dist: trusty
+dist: xenial
 sudo: false
 language: java
 jdk: oraclejdk8
