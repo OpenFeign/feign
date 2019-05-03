@@ -23,7 +23,6 @@
     <version>10.3.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-example-github</artifactId>
   <packaging>jar</packaging>
   <name>GitHub Example</name>
@@ -36,12 +35,10 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-gson</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
@@ -84,14 +81,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
       </plugin>
     </plugins>
   </build>
