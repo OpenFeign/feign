@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
  */
 public class GitHubExample {
 
+  private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
+
   interface GitHub {
 
     class Repository {
@@ -62,6 +64,14 @@ public class GitHubExample {
           .errorDecoder(new GitHubErrorDecoder(decoder))
           .logger(new Logger.ErrorLogger())
           .logLevel(Logger.Level.BASIC)
+          .requestInterceptor(template -> {
+            if (System.getenv().containsKey(GITHUB_TOKEN)) {
+              System.out.println("Detected Authorization token from environment variable");
+              template.header(
+                  "Authorization",
+                  "token " + System.getenv(GITHUB_TOKEN));
+            }
+          })
           .target(GitHub.class, "https://api.github.com");
     }
   }
