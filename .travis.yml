@@ -12,13 +12,21 @@ jdk:
   - openjdk8
   - openjdk11
 
-before_install:
+jobs:
+  include:
+    - stage: build
+      script:
+        - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+        - ./mvnw test -B
+
+
+#before_install:
   # Parameters used during release
-  - git config user.name "$GH_USER"
-  - git config user.email "$GH_USER_EMAIL"
+#  - git config user.name "$GH_USER"
+#  - git config user.email "$GH_USER_EMAIL"
   # setup https authentication credentials, used by ./mvnw release:prepare
-  - git config credential.helper "store --file=.git/credentials"
-  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
+#  - git config credential.helper "store --file=.git/credentials"
+#  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
 
 #install:
   # Override default travis to use the maven wrapper
