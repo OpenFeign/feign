@@ -8,16 +8,12 @@ cache:
     - "$HOME/.m2"
 
 # Build for LTS JDKs only
-#jdk:
-#  - openjdk8
-#  - openjdk11
+jdk:
+  - openjdk8
+  - openjdk11
 
 jobs:
   include:
-    - stage: test
-      jdk:
-        - openjdk8
-        - openjdk11
     - stage: deploy
       if: branch =~ /^release-([0-9\.]+)$/
       jdk: openjdk11
