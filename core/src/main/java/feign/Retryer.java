@@ -28,7 +28,7 @@ public interface Retryer extends Cloneable {
 
   Retryer clone();
 
-  public static class Default implements Retryer {
+  class Default implements Retryer {
 
     private final int maxAttempts;
     private final long period;
