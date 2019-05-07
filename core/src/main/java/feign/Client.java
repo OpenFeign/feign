@@ -49,7 +49,7 @@ public interface Client {
    */
   Response execute(Request request, Options options) throws IOException;
 
-  public static class Default implements Client {
+  class Default implements Client {
 
     private final SSLSocketFactory sslContextFactory;
     private final HostnameVerifier hostnameVerifier;
