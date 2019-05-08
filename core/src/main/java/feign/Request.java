@@ -190,6 +190,17 @@ public final class Request {
     return body.encoding;
   }
 
+  /**
+   * If present, this is the replayable body to send to the server. In some cases, this may be
+   * interpretable as text.
+   *
+   * @see #charset()
+   * @deprecated use {@link #requestBody()} instead
+   */
+  public byte[] body() {
+    return body.data;
+  }
+
   public Body requestBody() {
     return body;
   }
