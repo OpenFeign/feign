@@ -54,11 +54,11 @@ public abstract class Logger {
       }
 
       int bodyLength = 0;
-      if (request.body() != null) {
-        bodyLength = request.body().length;
+      if (request.requestBody().asBytes() != null) {
+        bodyLength = request.requestBody().asBytes().length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           String bodyText =
-              request.charset() != null ? new String(request.body(), request.charset()) : null;
+              request.charset() != null ? new String(request.requestBody().asBytes(), request.charset()) : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
         }
