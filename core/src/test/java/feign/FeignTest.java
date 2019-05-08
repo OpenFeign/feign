@@ -19,6 +19,7 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -853,6 +854,25 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMap_with_child_pojo() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+
+    ChildPojo childPojo = new ChildPojo();
+    childPojo.setChildPrivateProperty("first");
+    childPojo.setParentProtectedProperty("second");
+    childPojo.setParentPublicProperty("third");
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyInheritence(childPojo);
+    assertThat(server.takeRequest())
+            .hasQueryParams(
+                    "parentPublicProperty=third",
+                    "parentProtectedProperty=second",
+                    "childPrivateProperty=first");
+  }
+
+  @Test
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
@@ -958,6 +978,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPropertyPojo(@QueryMap PropertyPojo object);
+
+    @RequestLine("GET /")
+    void queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
     class DateToMillis implements Param.Expander {
 
