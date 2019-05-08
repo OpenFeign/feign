@@ -866,10 +866,10 @@ public class FeignTest {
     server.enqueue(new MockResponse());
     api.queryMapPropertyInheritence(childPojo);
     assertThat(server.takeRequest())
-            .hasQueryParams(
-                    "parentPublicProperty=third",
-                    "parentProtectedProperty=second",
-                    "childPrivateProperty=first");
+        .hasQueryParams(
+            "parentPublicProperty=third",
+            "parentProtectedProperty=second",
+            "childPrivateProperty=first");
   }
 
   @Test
