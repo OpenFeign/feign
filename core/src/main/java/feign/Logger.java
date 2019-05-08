@@ -58,7 +58,9 @@ public abstract class Logger {
         bodyLength = request.requestBody().asBytes().length;
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           String bodyText =
-              request.charset() != null ? new String(request.requestBody().asBytes(), request.charset()) : null;
+              request.charset() != null
+                  ? new String(request.requestBody().asBytes(), request.charset())
+                  : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
         }
