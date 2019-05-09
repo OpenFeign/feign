@@ -15,7 +15,6 @@ package feign.querymap;
 
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,11 +67,17 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type) {
-      return new ObjectParamMetadata(
-          FieldUtils.getAllFieldsList(type).stream()
-              .filter(field -> !field.isSynthetic())
-              .peek(field -> field.setAccessible(true))
-              .collect(Collectors.toList()));
+      List<Field> allFields = new ArrayList();
+
+      for (Class currentClass = type; currentClass != null; currentClass =
+          currentClass.getSuperclass()) {
+        Collections.addAll(allFields, currentClass.getDeclaredFields());
+      }
+
+      return new ObjectParamMetadata(allFields.stream()
+          .filter(field -> !field.isSynthetic())
+          .peek(field -> field.setAccessible(true))
+          .collect(Collectors.toList()));
     }
   }
 }

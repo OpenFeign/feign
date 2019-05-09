@@ -33,12 +33,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.9</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.jvnet</groupId>
       <artifactId>animal-sniffer-annotation</artifactId>
       <optional>true</optional>
