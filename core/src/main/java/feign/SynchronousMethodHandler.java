@@ -16,6 +16,7 @@ package feign;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.codec.DecodeException;
@@ -72,10 +73,11 @@ final class SynchronousMethodHandler implements MethodHandler {
   @Override
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
+    Options options = findOptions(argv);
     Retryer retryer = this.retryer.clone();
     while (true) {
       try {
-        return executeAndDecode(template);
+        return executeAndDecode(template, options);
       } catch (RetryableException e) {
         try {
           retryer.continueOrPropagate(e);
@@ -95,7 +97,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
   }
 
-  Object executeAndDecode(RequestTemplate template) throws Throwable {
+  Object executeAndDecode(RequestTemplate template, Options options) throws Throwable {
     Request request = targetRequest(template);
 
     if (logLevel != Logger.Level.NONE) {
@@ -179,6 +181,14 @@ final class SynchronousMethodHandler implements MethodHandler {
     } catch (RuntimeException e) {
       throw new DecodeException(response.status(), e.getMessage(), e);
     }
+  }
+
+  Options findOptions(Object[] argv) {
+    if (argv == null || argv.length == 0) {
+      return this.options;
+    }
+    return Stream.of(argv).filter(o -> o instanceof Options).findAny().map(o -> (Options) o)
+                 .orElse(this.options);
   }
 
   static class Factory {
