@@ -114,7 +114,7 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      if (request.body() != null) {
+      if (request.requestBody().asBytes() != null) {
         if (contentLength != null) {
           connection.setFixedLengthStreamingMode(contentLength);
         } else {
@@ -128,7 +128,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          out.write(request.body());
+          out.write(request.requestBody().asBytes());
         } finally {
           try {
             out.close();

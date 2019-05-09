@@ -69,12 +69,12 @@ public class JAXRSClient implements Client {
   }
 
   private Entity<byte[]> createRequestEntity(feign.Request request) {
-    if (request.body() == null) {
+    if (request.requestBody().asBytes() == null) {
       return null;
     }
 
     return Entity.entity(
-        request.body(),
+        request.requestBody().asBytes(),
         new Variant(mediaType(request.headers()), locale(request.headers()),
             encoding(request.charset())));
   }
