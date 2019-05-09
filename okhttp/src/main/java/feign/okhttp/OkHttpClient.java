@@ -71,7 +71,7 @@ public final class OkHttpClient implements Client {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    byte[] inputBody = input.body();
+    byte[] inputBody = input.requestBody().asBytes();
     boolean isMethodWithBody =
         HttpMethod.POST == input.httpMethod()
             || HttpMethod.PUT == input.httpMethod()

@@ -115,7 +115,7 @@ public final class LBClient
 
     Request toRequest() {
       // add header "Content-Length" according to the request body
-      final byte[] body = request.body();
+      final byte[] body = request.requestBody().asBytes();
       final int bodyLength = body != null ? body.length : 0;
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();

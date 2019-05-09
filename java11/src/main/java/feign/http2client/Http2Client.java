@@ -79,10 +79,10 @@ public class Http2Client implements Client {
     }
 
     final BodyPublisher body;
-    if (request.body() == null) {
+    if (request.requestBody().asBytes() == null) {
       body = BodyPublishers.noBody();
     } else {
-      body = BodyPublishers.ofByteArray(request.body());
+      body = BodyPublishers.ofByteArray(request.requestBody().asBytes());
     }
 
     final Builder requestBuilder = HttpRequest.newBuilder().uri(uri).version(Version.HTTP_2);
