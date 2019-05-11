@@ -29,14 +29,14 @@ jobs:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
     - stage: release
       name: "Release to JCenter"
-      if: tag =~ /^[0-9\.]$/
+      if: tag =~ /^[0-9\.]+$/
       jdk: openjdk8
       install: true
       script:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
     - stage: sync
       name: "Sync with Maven Central"
-      if: tag =~ /^[0-9\.]$/
+      if: tag =~ /^[0-9\.]+$/
       jdk: openjdk8
       install: true
       script:
