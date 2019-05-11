@@ -22,7 +22,7 @@ jobs:
   include:
     - stage: snapshot
       name: "Deploy Snapshot to JCenter"
-      if: branch = master AND type != pull_request
+      if: branch = master AND type != pull_request AND commit_message !~ /^(prepare release ([0-9\.]+))$/
       jdk: openjdk8
       install: true
       script:
