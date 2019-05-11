@@ -10,12 +10,16 @@ This repo uses [semantic versions](http://semver.org/). Please keep this in mind
 
 1. **Push a git tag**
 
-   The tag should be of the format `release-N.M.L`, for example `release-8.18.0`.
+   Prepare the next release by running the [release script](travis/release.sh) from a clean checkout of the master branch.
+   This script will:
+   * Update all versions to the next release.
+   * Tag the release.
+   * Update all versions to the next development version.
 
 1. **Wait for Travis CI**
 
-   This part is controlled by [`travis/publish.sh`](travis/publish.sh). It creates a couple commits, bumps the version,
-   publishes artifacts, syncs to Maven Central.
+   This part is controlled by the [travis configuration](.travis.yml), specifically the `release` stage.  Which
+   creates the release artifacts and deploys them to maven central.
 
 ## Credentials
 
