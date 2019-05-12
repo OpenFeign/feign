@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.example.github;
+package example.github;
 
 import feign.Feign;
 import feign.Logger;
@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 /** Inspired by {@code com.example.retrofit.GitHubClient} */
 public class GitHubExample {
+
+  private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
 
   interface GitHub {
 
@@ -60,6 +62,13 @@ public class GitHubExample {
           .errorDecoder(new GitHubErrorDecoder(decoder))
           .logger(new Logger.ErrorLogger())
           .logLevel(Logger.Level.BASIC)
+          .requestInterceptor(
+              template -> {
+                if (System.getenv().containsKey(GITHUB_TOKEN)) {
+                  System.out.println("Detected Authorization token from environment variable");
+                  template.header("Authorization", "token " + System.getenv(GITHUB_TOKEN));
+                }
+              })
           .target(GitHub.class, "https://api.github.com");
     }
   }
@@ -102,6 +111,8 @@ public class GitHubExample {
     @Override
     public Exception decode(String methodKey, Response response) {
       try {
+        // must replace status by 200 other GSONDecoder returns null
+        response = response.toBuilder().status(200).build();
         return (Exception) decoder.decode(response, GitHubClientError.class);
       } catch (IOException fallbackToDefault) {
         return defaultDecoder.decode(methodKey, response);
