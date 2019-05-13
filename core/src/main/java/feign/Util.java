@@ -191,7 +191,8 @@ public class Util {
    * Returns an unmodifiable collection which may be empty, but is never null.
    */
   public static <T> Collection<T> valuesOrEmpty(Map<String, Collection<T>> map, String key) {
-    return map.containsKey(key) && map.get(key) != null ? map.get(key) : Collections.<T>emptyList();
+    Collection<T> values = map.get(key);
+    return values != null ? values : Collections.emptyList();
   }
 
   public static void ensureClosed(Closeable closeable) {
