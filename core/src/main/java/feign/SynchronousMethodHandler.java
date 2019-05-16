@@ -187,8 +187,10 @@ final class SynchronousMethodHandler implements MethodHandler {
     if (argv == null || argv.length == 0) {
       return this.options;
     }
-    return Stream.of(argv).filter(o -> o instanceof Options).findAny().map(o -> (Options) o)
-                 .orElse(this.options);
+    return (Options) Stream.of(argv)
+        .filter(o -> o instanceof Options)
+        .findFirst()
+        .orElse(this.options);
   }
 
   static class Factory {
