@@ -33,6 +33,7 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
 import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -878,6 +879,27 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMap_with_child_pojo() throws Exception {
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .queryMapEndcoder(new FieldQueryMapEncoder())
+            .target("http://localhost:" + server.getPort());
+
+    ChildPojo childPojo = new ChildPojo();
+    childPojo.setChildPrivateProperty("first");
+    childPojo.setParentProtectedProperty("second");
+    childPojo.setParentPublicProperty("third");
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyInheritence(childPojo);
+    assertThat(server.takeRequest())
+        .hasQueryParams(
+            "parentPublicProperty=third",
+            "parentProtectedProperty=second",
+            "childPrivateProperty=first");
+  }
+
+  @Test
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api =
         new TestInterfaceBuilder()
@@ -987,6 +1009,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPropertyPojo(@QueryMap PropertyPojo object);
+
+    @RequestLine("GET /")
+    void queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
     class DateToMillis implements Param.Expander {
 

@@ -67,8 +67,16 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type) {
+      List<Field> allFields = new ArrayList();
+
+      for (Class currentClass = type;
+          currentClass != null;
+          currentClass = currentClass.getSuperclass()) {
+        Collections.addAll(allFields, currentClass.getDeclaredFields());
+      }
+
       return new ObjectParamMetadata(
-          Arrays.stream(type.getDeclaredFields())
+          allFields.stream()
               .filter(field -> !field.isSynthetic())
               .peek(field -> field.setAccessible(true))
               .collect(Collectors.toList()));
