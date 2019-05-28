@@ -50,4 +50,9 @@ public class RetryAfterDecoderTest {
   public void relativeSecondsParses() throws ParseException {
     assertEquals(RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400"));
   }
+
+  @Test
+  public void relativeSecondsParseDecimalIntegers() throws ParseException {
+    assertEquals(RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400.0"));
+  }
 }

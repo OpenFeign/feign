@@ -139,7 +139,8 @@ public interface ErrorDecoder {
       if (retryAfter == null) {
         return null;
       }
-      if (retryAfter.matches("^[0-9]+$")) {
+      if (retryAfter.matches("^[0-9]+\\.?0*$")) {
+        retryAfter = retryAfter.replaceAll("\\.0*$", "");
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
         return new Date(currentTimeMillis() + deltaMillis);
       }
