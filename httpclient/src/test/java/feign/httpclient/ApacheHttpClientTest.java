@@ -68,7 +68,7 @@ public class ApacheHttpClientTest extends AbstractClientTest {
     @Path("/withBody")
     public String withBody(@QueryParam("foo") String foo, String bar);
 
-    @PUT
+    @GET
     @Path("/withoutBody")
     public String withoutBody(@QueryParam("foo") String foo);
   }
