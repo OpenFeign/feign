@@ -145,8 +145,6 @@ public final class ApacheHttpClient implements Client {
       }
 
       requestBuilder.setEntity(entity);
-    } else {
-      requestBuilder.setEntity(new ByteArrayEntity(new byte[0]));
     }
 
     return requestBuilder.build();
