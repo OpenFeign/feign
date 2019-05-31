@@ -115,7 +115,7 @@ public interface Contract {
         }
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation) {
+        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
           checkState(
               data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
