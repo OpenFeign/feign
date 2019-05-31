@@ -10,54 +10,21 @@ jdk:
   - openjdk8
   - openjdk11
 
-before_install:
-  # Parameters used during release
-  - git config user.name "$GH_USER"
-  - git config user.email "$GH_USER_EMAIL"
-  # setup https authentication credentials, used by ./mvnw release:prepare
-  - git config credential.helper "store --file=.git/credentials"
-  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
+before_install: ./travis/sign.sh
 
 jobs:
   include:
     - stage: snapshot
-      name: "Deploy Snapshot to JCenter"
+      name: "Deploy Snapshot to OSSRH"
       if: branch = master AND type != pull_request AND commit_message !~ /^(prepare release ([0-9\.]+))$/
       jdk: openjdk8
       install: true
       script:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
     - stage: release
-      name: "Release to JCenter"
+      name: "Release to OSSRH and Central"
       if: tag =~ /^[0-9\.]+$/
       jdk: openjdk8
       install: true
       script:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
-    - stage: sync
-      name: "Sync with Maven Central"
-      if: tag =~ /^[0-9\.]+$/
-      jdk: openjdk8
-      install: true
-      script:
-        # this step can take an inordinate amount of time, so the wait should push it to 30 minutes
-        - travis_wait 30 ./mvnw -B -nsu -s ./travis/settings.xml -N io.zipkin.centralsync-maven-plugin:centralsync-maven-plugin:sync
-
-env:
-  global:
-    # Ex. travis encrypt BINTRAY_USER=your_github_account
-    - secure: "VeTOgXwhZLf8uwlnYpB9tuY+NV6kiooRN0FMDoWCXuPPSz/tX2mqmshBXDYsJu0EcRtZb21MkbQwbdJ8Th9K/bvj4sGNK1PrBm9Hmz6e2AvAcxn3ROv86GMTkd7O25OsipTT+/qWrbR3s3lHQxYo5WMsrlEmJ/EF5y5Go5wx90c="
-    # Ex. travis encrypt BINTRAY_KEY=xxx-https://bintray.com/profile/edit-xxx --add
-    - secure: "WND+fjAqpdHArSbXAK7l0dpQLrX0hL/XymV02rhe0pVT1g0J1V32ncqDCVnn/73wTiECTen6y3o1vq3ByIdT9tUErt3o8oEROQsI/cVX9IhvJ/DtcW1lqafXKmQZwDQsifVxhKroW1VuZQbGrKnqVUzfqx5OzxgoNVWpkkxhf50="
-    # Ex. travis encrypt GH_USER_EMAIL=for_github@domain.com --add
-    - secure: "dG1Qt8bqe3TsmLOmYpWYsI55N0zLWCsupdpS7zMOedpM2q0laac56uc2gGV6qQIPdJQdCWzr9CE/h1nG4lJdJfreC13reQ3PDF79Yh8tMvdO1iwrSeIQ7eeRY6hs72GUtdIhfwetUgwCgIJpmBHS7O3yJhxQAOmu5twAuABiuSE="
-    # Ex. travis encrypt GH_USER=your_github_account --add
-    - secure: "DY28uU8wadasLCWSpl6KJyilGAAjSKzr3VPQ8by02eLDaAgCVq5KeYM0tjM804Rzhq3bjcXofaldj9QpWNTYC5SL6IIN5I5W+dWIZ8JzZ/rjOZgtJMMr4zcjOc5set9MsTUirB694m3c8bzhQZkah9YwUa/OuX1D8Ym/806igsE="
-    # Ex. travis encrypt GH_TOKEN=XXX-https://github.com/settings/tokens-XXX --add
-    - secure: "NmydUhuJLZ/Eg0cpCz6eZiYvsLHtSYrLIAOT2VHfUdzl/Q3PGXoodTpTqRkW7Uuj5lSYYw6cQnhiTly2dvomQYj+es5hSfIzFLvlF0x7L+aFX2IySJhn2Cg8tp5H0hn2UL8t6jDfmdJrLwGKT6EsiXYIgt4dPWJ7ZZ1SRDFp2Cg="
-    # Ex. travis encrypt SONATYPE_USER=your_sonatype_account
-    - secure: "ONAU76S0WBGcQGf0mr7KxKQjFvhhu73GNuQG8j47pxhJojNlNpWBbu+EGkgaInWKMtO89iBtpicVlXZc06HtbSqv7L93gbMo+xgp5daLlQg4gocDixjB1I2oPPITFFoztu76nOA1IBWRLTKu+w+Y2tKOmzWm+5v2UKD6fz7SYoo="
-    # Ex. travis encrypt SONATYPE_PASSWORD=your_sonatype_password
-    - secure: "UaVTxnw8klS36WLAdcmubqrHIgS4o5NcIqQMPIihk0tv3VEvCJSGvc2b7EPyQZMvm5TR3mXq5IJUAHp8j3seAHfYWmLIZWzvn7Y5mLRw8Kh9up7GzXl8Idui0AEHAAL2mfvE9smlOKPS5D13LKc6tOGFER66itHW3Jg1QoijDmQ="
-    # Ex. travis encrypt GITHUB_TOKEN=token_for_tests
-    - secure: "H4PuppuPE3lkvVQ1osulhgWeZmpIkDKj/z74lx4MUeDPNtcuqpwmTVWtL5Zyjf8CxlALX2djx4RIBshaQAu4GtKarPLONinNLZ/TCtoK8dF08/ESxLEiLQzwGkS+geWoEFiZncB5Px2T7ZbUfVFO3crVY9CLn35znR8k1uidocL0JlyVPGwCwuBxFmDhs3BZh3JvbwSikAVRvlCRU6BbREFQbSK1EamuUju/rlo+dx7W5tiiuEJJ50c8vpgatTFyy821YP82fMRrhuBDpS4/rsL9DmLhQTEbCjZW+22DhEFPRlo0XIfidC7APybXnu3oO+jFuGaFKiQdy7sjB03g/Bz5H7jAIAkbl8UpbjN+IoeUU/OgMuBYf5wJjPDYUEdI3CXqywPn0xYZwVsOcSg+UkQGYdW9ux/U+nKsYLXLWWhst2QMFzbmO94KCrpgCW4mshr/5WP4XU6cEJwDsKMAUPWuOk0KMMjIufSgvPvteWZwT9akZwzEMuGaUQ5kLr1X6xTPv1cKXTreitaoOLQs28kmPVfTwVEdareaSVXcRqeflJJBSXkAgBqGhV5CAEUaUgt9/QD0Jj5RGyRPllFcydXVLTPeg62X/L5COswlvJhPkvfNnkbMpDQZYojKKPmAf+UqZJmVYPpOoNEXygldueKeunWkna/wYkMj0YnOkM8="
