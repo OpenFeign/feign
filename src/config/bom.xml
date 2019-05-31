@@ -39,6 +39,13 @@
   </licenses>
   #end
 
+  <scm>
+    <url>https://github.com/openfeign/feign</url>
+    <connection>scm:git:https://github.com/openfeign/feign.git</connection>
+    <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
 #if ($model.developers && !$model.developers.isEmpty())
   <developers>#foreach($d in $model.developers)
 
