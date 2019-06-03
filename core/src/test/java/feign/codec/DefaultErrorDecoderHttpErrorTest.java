@@ -42,11 +42,13 @@ public class DefaultErrorDecoderHttpErrorTest {
         {409, FeignException.Conflict.class},
         {429, FeignException.TooManyRequests.class},
         {422, FeignException.UnprocessableEntity.class},
+        {450, FeignException.FeignClientException.class},
         {500, FeignException.InternalServerError.class},
         {501, FeignException.NotImplemented.class},
         {502, FeignException.BadGateway.class},
         {503, FeignException.ServiceUnavailable.class},
         {504, FeignException.GatewayTimeout.class},
+        {599, FeignException.FeignServerException.class},
         {599, FeignException.class},
     };
   }

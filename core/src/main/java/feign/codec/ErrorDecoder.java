@@ -13,22 +13,22 @@
  */
 package feign.codec;
 
+import static feign.FeignException.errorStatus;
+import static feign.Util.RETRY_AFTER;
+import static feign.Util.checkNotNull;
+import static java.util.Locale.US;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import feign.FeignException;
+import feign.Response;
+import feign.RetryableException;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import feign.FeignException;
-import feign.Response;
-import feign.RetryableException;
-import static feign.FeignException.errorStatus;
-import static feign.Util.RETRY_AFTER;
-import static feign.Util.X_RATE_LIMIT_RESET;
-import static feign.Util.checkNotNull;
-import static java.util.Locale.US;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
@@ -149,7 +149,8 @@ public interface ErrorDecoder {
       if (retryAfter == null) {
         return null;
       }
-      if (retryAfter.matches("^[0-9]+$")) {
+      if (retryAfter.matches("^[0-9]+\\.?0*$")) {
+        retryAfter = retryAfter.replaceAll("\\.0*$", "");
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
         return new Date(currentTimeMillis() + deltaMillis);
       }

@@ -13,13 +13,15 @@
  */
 package feign.codec;
 
-import org.junit.Test;
-import java.text.ParseException;
-import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import static feign.codec.ErrorDecoder.RetryAfterDecoder.RFC822_FORMAT;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
+import feign.codec.ErrorDecoder.RetryAfterDecoder;
+
+import java.text.ParseException;
+
+import org.junit.Test;
 
 public class RetryAfterDecoderTest {
 
@@ -47,5 +49,10 @@ public class RetryAfterDecoderTest {
   @Test
   public void relativeSecondsParses() throws ParseException {
     assertEquals(RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400"));
+  }
+
+  @Test
+  public void relativeSecondsParseDecimalIntegers() throws ParseException {
+    assertEquals(RFC822_FORMAT.parse("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400.0"));
   }
 }
