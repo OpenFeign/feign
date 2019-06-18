@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -48,7 +49,7 @@ public class JacksonEncoder implements Encoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      template.body(mapper.writerFor(javaType).writeValueAsString(object));
+      template.body(mapper.writerFor(javaType).writeValueAsBytes(object), StandardCharsets.UTF_8);
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }
