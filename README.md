@@ -26,11 +26,23 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 interface GitHub {
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @RequestLine("POST /repos/{owner}/{repo}/issues")
+  void createIssue(Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+
 }
 
 public static class Contributor {
   String login;
   int contributions;
+}
+
+public static class Issue {
+  String title;
+  String body;
+  List<String> assignees;
+  int milestone;
+  List<String> labels;
 }
 
 public class MyApp {

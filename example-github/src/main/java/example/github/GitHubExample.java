@@ -13,14 +13,12 @@
  */
 package example.github;
 
-import feign.Feign;
-import feign.Logger;
-import feign.Param;
-import feign.RequestLine;
-import feign.Response;
+import feign.*;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
+import feign.gson.GsonEncoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,11 +38,25 @@ public class GitHubExample {
       String login;
     }
 
+    class Issue {
+
+      Issue() {}
+
+      String title;
+      String body;
+      List<String> assignees;
+      int milestone;
+      List<String> labels;
+    }
+
     @RequestLine("GET /users/{username}/repos?sort=full_name")
     List<Repository> repos(@Param("username") String owner);
 
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
     List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+    @RequestLine("POST /repos/{owner}/{repo}/issues")
+    void createIssue(Issue issue, @Param("owner") String owner, @Param("repo") String repo);
 
     /** Lists all contributors for all repos owned by a user. */
     default List<String> contributors(String owner) {
@@ -57,7 +69,9 @@ public class GitHubExample {
 
     static GitHub connect() {
       Decoder decoder = new GsonDecoder();
+      Encoder encoder = new GsonEncoder();
       return Feign.builder()
+          .encoder(encoder)
           .decoder(decoder)
           .errorDecoder(new GitHubErrorDecoder(decoder))
           .logger(new Logger.ErrorLogger())
@@ -94,6 +108,16 @@ public class GitHubExample {
     System.out.println("Now, let's cause an error.");
     try {
       github.contributors("openfeign", "some-unknown-project");
+    } catch (GitHubClientError e) {
+      System.out.println(e.getMessage());
+    }
+
+    System.out.println("Now, try to create an issue - which will also cause an error.");
+    try {
+      GitHub.Issue issue = new GitHub.Issue();
+      issue.title = "The title";
+      issue.body = "Some Text";
+      github.createIssue(issue, "OpenFeign", "SomeRepo");
     } catch (GitHubClientError e) {
       System.out.println(e.getMessage());
     }
