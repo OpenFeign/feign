@@ -50,14 +50,95 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-gson</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-example-github</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
+  <build>
+    <resources>
+      <resource>
+        <filtering>true</filtering>
+        <!-- Replace maven properties in the docker file so we can get artifacts etc -->
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>docker/*</include>
+        </includes>
+      </resource>
+      <!-- need to manually specify the resources to copy because we have a manual setting above -->
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>feign.aptgenerator.github.GitHubFactoryExample</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.marvinformatics</groupId>
+        <artifactId>link-dependencies-maven-plugin</artifactId>
+        <version>0.2</version>
+        <configuration>
+          <includeScope>runtime</includeScope>
+        </configuration>
+        <executions>
+          <execution>
+            <id>copy-3rd-party-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>link-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/docker/jars</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <!-- used to create docker images -->
+        <groupId>com.spotify</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <!-- docker file copied here after maven replaces properties -->
+          <dockerDirectory>${project.build.directory}/classes/docker/</dockerDirectory>
+
+          <!-- Pull image before build, otherwise end up with image not found if it was never downloaded before -->
+          <pullOnBuild>true</pullOnBuild>
+
+          <serverId>docker-hub</serverId>
+          <registryUrl>https://index.docker.io/v1/</registryUrl>
+          <imageName>feign-apt-generator/test</imageName>
+          <resources>
+            <resource>
+              <targetPath>/</targetPath>
+              <directory>${project.build.directory}</directory>
+              <include>${project.artifactId}-${project.version}.jar</include>
+            </resource>
+          </resources>
+        </configuration>
+        <executions>
+          <!-- see definition of how this runs above -->
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

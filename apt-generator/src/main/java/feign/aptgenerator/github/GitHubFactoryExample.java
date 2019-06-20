@@ -13,12 +13,17 @@
  */
 package feign.aptgenerator.github;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
-
 import feign.FeignConfig;
 import feign.Logger;
 import feign.codec.Decoder;
 import feign.example.github.GitHubExample.GitHub;
+import feign.example.github.GitHubExample.GitHub.Contributor;
+import feign.example.github.GitHubExample.GitHub.Repository;
 import feign.example.github.GitHubExample.GitHubClientError;
 import feign.example.github.GitHubExample.GitHubErrorDecoder;
 import feign.gson.GsonDecoder;
@@ -29,7 +34,17 @@ import feign.gson.GsonDecoder;
 public class GitHubFactoryExample {
 
   static FeignConfig config() {
-    final Decoder decoder = new GsonDecoder();
+    final Decoder decoder = new GsonDecoder(new GsonBuilder()
+        .registerTypeAdapter(
+            GitHub.Repository.class,
+            (InstanceCreator<Repository>) type -> new GitHub.Repository())
+        .registerTypeAdapter(
+            GitHub.Contributor.class,
+            (InstanceCreator<Contributor>) type -> new GitHub.Contributor())
+        .registerTypeAdapter(
+            GitHubClientError.class,
+            (InstanceCreator<GitHubClientError>) type -> new GitHubClientError())
+        .create());
     return FeignConfig.builder()
         .decoder(decoder)
         .errorDecoder(new GitHubErrorDecoder(decoder))
@@ -39,7 +54,7 @@ public class GitHubFactoryExample {
         .build();
   }
 
-  public static void main(String... args) {
+  public static void main(String... args) throws KeyManagementException, NoSuchAlgorithmException {
     final GitHub github = new GitHubFactory(config());
 
     System.out.println("Let's fetch and print a list of the contributors to this org.");
