@@ -13,9 +13,10 @@
  */
 package feign.aptgenerator.github;
 
+import com.google.gson.GsonBuilder;
 import java.util.List;
+import example.github.GitHubClientError;
 import example.github.GitHubExample.GitHub;
-import example.github.GitHubExample.GitHubClientError;
 import example.github.GitHubExample.GitHubErrorDecoder;
 import feign.FeignConfig;
 import feign.Logger;
@@ -28,17 +29,18 @@ import feign.gson.GsonDecoder;
 public class GitHubFactoryExample {
 
   static FeignConfig config() {
-    final Decoder decoder = new GsonDecoder();
+    final Decoder decoder = new GsonDecoder(new GsonBuilder()
+        .create());
     return FeignConfig.builder()
         .decoder(decoder)
         .errorDecoder(new GitHubErrorDecoder(decoder))
         .logger(new Logger.ErrorLogger())
-        .logLevel(Logger.Level.BASIC)
+        .logLevel(Logger.Level.FULL)
         .url("https://api.github.com")
         .build();
   }
 
-  public static void main(String... args) {
+  public static void main(String[] args) {
     final GitHub github = new GitHubFactory(config());
 
     System.out.println("Let's fetch and print a list of the contributors to this org.");

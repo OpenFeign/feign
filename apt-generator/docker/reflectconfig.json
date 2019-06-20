@@ -1,0 +1,41 @@
+[
+  {
+    "name" : "example.github.Repository",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "example.github.Repository",
+    "fields" : [
+      { "name" : "name" }
+    ]
+  },
+  {
+    "name" : "example.github.Contributor",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "example.github.Contributor",
+    "fields" : [
+      { "name" : "login" }
+    ]
+  },
+  {
+    "name" : "example.github.GitHubClientError",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "example.github.GitHubClientError",
+    "fields" : [
+      { "name" : "message" }
+    ]
+  }
+]

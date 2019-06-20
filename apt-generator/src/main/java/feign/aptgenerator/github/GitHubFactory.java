@@ -15,7 +15,10 @@ package feign.aptgenerator.github;
 
 import java.util.Arrays;
 import java.util.List;
+import example.github.Contributor;
 import example.github.GitHubExample.*;
+import example.github.Issue;
+import example.github.Repository;
 import feign.*;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.HttpMethod;
@@ -27,7 +30,7 @@ public class GitHubFactory implements GitHub {
   static {
     final MethodMetadata md = new MethodMetadata();
     __repos_metadata = md;
-    md.returnType(new TypeReference<List<GitHub.Repository>>() {}.getType());
+    md.returnType(new TypeReference<List<Repository>>() {}.getType());
     md.configKey("GitHub#repos(String)");
 
     md.template().method(HttpMethod.GET);
@@ -43,7 +46,7 @@ public class GitHubFactory implements GitHub {
   static {
     final MethodMetadata md = new MethodMetadata();
     __contributors_metadata = md;
-    md.returnType(new TypeReference<List<GitHub.Contributor>>() {}.getType());
+    md.returnType(new TypeReference<List<Contributor>>() {}.getType());
     md.configKey("GitHub#contributors(String,String)");
 
     md.template().method(HttpMethod.GET);
@@ -62,7 +65,7 @@ public class GitHubFactory implements GitHub {
   static {
     final MethodMetadata md = new MethodMetadata();
     __createIssue_metadata = md;
-    md.returnType(new TypeReference<List<GitHub.Contributor>>() {}.getType());
+    md.returnType(new TypeReference<List<Contributor>>() {}.getType());
     md.configKey("GitHub#createIssue(Issue,String,String)");
 
     md.template().method(HttpMethod.POST);
@@ -106,7 +109,7 @@ public class GitHubFactory implements GitHub {
   }
 
   @Override
-  public List<GitHub.Repository> repos(String owner) {
+  public List<Repository> repos(String owner) {
     try {
       return __repos_handler.invoke(owner);
     } catch (final FeignException e) {
@@ -117,7 +120,7 @@ public class GitHubFactory implements GitHub {
   }
 
   @Override
-  public List<GitHub.Contributor> contributors(String owner, String repo) {
+  public List<Contributor> contributors(String owner, String repo) {
     try {
       return __contributors_handler.invoke(owner, repo);
     } catch (final RuntimeException e) {

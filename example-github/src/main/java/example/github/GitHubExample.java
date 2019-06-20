@@ -13,15 +13,15 @@
  */
 package example.github;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Inspired by {@code com.example.retrofit.GitHubClient}
@@ -31,27 +31,6 @@ public class GitHubExample {
   private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
 
   public interface GitHub {
-
-    public class Repository {
-      String name;
-    }
-
-    public class Contributor {
-      String login;
-    }
-
-    public class Issue {
-
-      Issue() {
-
-      }
-
-      String title;
-      String body;
-      List<String> assignees;
-      int milestone;
-      List<String> labels;
-    }
 
     @RequestLine("GET /users/{username}/repos?sort=full_name")
     List<Repository> repos(@Param("username") String owner);
@@ -64,7 +43,9 @@ public class GitHubExample {
 
     /** Lists all contributors for all repos owned by a user. */
     default List<String> contributors(String owner) {
-      return repos(owner).stream()
+      return repos(owner)
+          .stream()
+          .peek(System.out::println)
           .flatMap(repo -> contributors(owner, repo.name).stream())
           .map(c -> c.login)
           .distinct()
@@ -73,7 +54,7 @@ public class GitHubExample {
 
     static GitHub connect() {
       final Decoder decoder = new GsonDecoder();
-      Encoder encoder = new GsonEncoder();
+      final Encoder encoder = new GsonEncoder();
       return Feign.builder()
           .encoder(encoder)
           .decoder(decoder)
@@ -93,15 +74,6 @@ public class GitHubExample {
   }
 
 
-  public static class GitHubClientError extends RuntimeException {
-    private String message; // parsed from json
-
-    @Override
-    public String getMessage() {
-      return message;
-    }
-  }
-
   public static void main(String... args) {
     final GitHub github = GitHub.connect();
 
@@ -120,11 +92,11 @@ public class GitHubExample {
 
     System.out.println("Now, try to create an issue - which will also cause an error.");
     try {
-      GitHub.Issue issue = new GitHub.Issue();
+      final Issue issue = new Issue();
       issue.title = "The title";
       issue.body = "Some Text";
       github.createIssue(issue, "OpenFeign", "SomeRepo");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
   }
