@@ -13,5 +13,9 @@
 # the License.
 #
 
-openssl aes-256-cbc -K $encrypted_8beb152aadd6_key -iv $encrypted_8beb152aadd6_iv -in travis/codesigning.asc.enc -out travis/codesigning.asc -d
-gpg --fast-import travis/codesigning.asc
+# skip signing when building pull requests
+if [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
+  echo "[ENVIRONMENT] Preparing Signing Signatures"
+  openssl aes-256-cbc -K $encrypted_8beb152aadd6_key -iv $encrypted_8beb152aadd6_iv -in travis/codesigning.asc.enc -out travis/codesigning.asc -d
+  gpg --fast-import travis/codesigning.asc
+fi
