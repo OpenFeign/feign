@@ -24,6 +24,7 @@ import java.util.Collections;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.Util;
 
 public class JacksonEncoder implements Encoder {
 
@@ -48,7 +49,7 @@ public class JacksonEncoder implements Encoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      template.body(mapper.writerFor(javaType).writeValueAsString(object));
+      template.body(mapper.writerFor(javaType).writeValueAsBytes(object), Util.UTF_8);
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }
