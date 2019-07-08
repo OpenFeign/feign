@@ -30,7 +30,7 @@ public class RxJavaInvocationHandler extends ReactiveInvocationHandler {
 
   @Override
   protected Publisher invoke(Method method, MethodHandler methodHandler, Object[] arguments) {
-    return Flowable.fromCallable(this.invokeMethod(methodHandler, arguments))
+    return Flowable.fromPublisher(this.invokeMethod(methodHandler, arguments))
         .observeOn(Schedulers.trampoline());
   }
 }
