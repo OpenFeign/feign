@@ -13,15 +13,15 @@
  */
 package feign.reactive;
 
-import feign.FeignException;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 
 public abstract class ReactiveInvocationHandler implements InvocationHandler {
 
@@ -87,22 +87,52 @@ public abstract class ReactiveInvocationHandler implements InvocationHandler {
       Method method, MethodHandler methodHandler, Object[] arguments);
 
   /**
-   * Invoke the Method Handler as a Callable.
+   * Invoke the Method Handler as a Publisher.
    *
    * @param methodHandler to invoke
    * @param arguments for the method
-   * @return a Callable wrapper for the invocation.
+   * @return a Publisher wrapper for the invocation.
    */
-  Callable<?> invokeMethod(MethodHandler methodHandler, Object[] arguments) {
-    return () -> {
-      try {
-        return methodHandler.invoke(arguments);
-      } catch (Throwable th) {
-        if (th instanceof FeignException) {
-          throw (FeignException) th;
-        }
-        throw new RuntimeException(th);
-      }
-    };
+  Publisher<?> invokeMethod(MethodHandler methodHandler, Object[] arguments) {
+    return subscriber ->
+        subscriber.onSubscribe(
+            new Subscription() {
+              private final AtomicBoolean isTerminated = new AtomicBoolean(false);
+
+              @Override
+              public void request(long n) {
+                if (n <= 0 && !terminated()) {
+                  subscriber.onError(new IllegalArgumentException("negative subscription request"));
+                }
+                if (!isTerminated()) {
+                  try {
+                    Object result = methodHandler.invoke(arguments);
+                    if (null != result) {
+                      subscriber.onNext(result);
+                    }
+                  } catch (Throwable th) {
+                    if (!terminated()) {
+                      subscriber.onError(th);
+                    }
+                  }
+                }
+                if (!terminated()) {
+                  subscriber.onComplete();
+                }
+              }
+
+              @Override
+              public void cancel() {
+                isTerminated.set(true);
+              }
+
+              private boolean isTerminated() {
+                return isTerminated.get();
+              }
+
+              private boolean terminated() {
+                return isTerminated.getAndSet(true);
+              }
+            });
   }
 }
