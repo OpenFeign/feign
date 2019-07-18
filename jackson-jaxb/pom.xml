@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
+      <version>${jackson.databind.version}</version>
     </dependency>
 
     <dependency>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>2.9.9</version>
+      <version>${jackson.version}</version>
     </dependency>
 
     <!-- RuntimeDelegateImpl -->
