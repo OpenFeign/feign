@@ -17,7 +17,6 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -32,11 +31,11 @@ public class ReactorInvocationHandler extends ReactiveInvocationHandler {
 
   @Override
   protected Publisher invoke(Method method, MethodHandler methodHandler, Object[] arguments) {
-    Callable<?> invocation = this.invokeMethod(methodHandler, arguments);
+    Publisher<?> invocation = this.invokeMethod(methodHandler, arguments);
     if (Flux.class.isAssignableFrom(method.getReturnType())) {
-      return Flux.from(Mono.fromCallable(invocation)).subscribeOn(Schedulers.elastic());
+      return Flux.from(invocation).subscribeOn(Schedulers.elastic());
     } else if (Mono.class.isAssignableFrom(method.getReturnType())) {
-      return Mono.fromCallable(invocation).subscribeOn(Schedulers.elastic());
+      return Mono.from(invocation).subscribeOn(Schedulers.elastic());
     }
     throw new IllegalArgumentException(
         "Return type " + method.getReturnType().getName() + " is not supported");
