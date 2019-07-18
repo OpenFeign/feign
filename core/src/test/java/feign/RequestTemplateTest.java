@@ -469,4 +469,13 @@ public class RequestTemplateTest {
 
     assertThat(template.url()).isEqualTo("https://example.com/path?key1=value1#fragment");
   }
+
+  @Test
+  public void slashShouldNotBeAppendedForMatrixParams(){
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+            .uri("/path;key1=value1;key2=value2",true);
+
+    assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
+
+  }
 }
