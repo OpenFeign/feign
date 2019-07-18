@@ -409,7 +409,8 @@ public final class RequestTemplate implements Serializable {
     } else if ((!uri.isEmpty()
         && !uri.startsWith("/")
         && !uri.startsWith("{")
-        && !uri.startsWith("?"))) {
+        && !uri.startsWith("?")
+        && !uri.startsWith(";"))) {
       /* if the start of the url is a literal, it must begin with a slash. */
       uri = "/" + uri;
     }
