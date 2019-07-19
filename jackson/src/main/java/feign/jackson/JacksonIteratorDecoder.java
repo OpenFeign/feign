@@ -66,8 +66,6 @@ public final class JacksonIteratorDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.status() == 404)
-      return Util.emptyValueOf(type);
     if (response.body() == null)
       return null;
     Reader reader = response.body().asReader();
