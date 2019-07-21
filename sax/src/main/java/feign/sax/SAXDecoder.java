@@ -19,7 +19,6 @@ import static feign.Util.ensureClosed;
 import static feign.Util.resolveLastTypeParameter;
 
 import feign.Response;
-import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.IOException;
@@ -65,7 +64,6 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
     if (response.body() == null) return null;
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(

@@ -343,7 +343,7 @@ public class SOAPCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  public void notFoundDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -356,7 +356,7 @@ public class SOAPCodecTest {
             (byte[])
                 new JAXBDecoder(new JAXBContextFactory.Builder().build())
                     .decode(response, byte[].class))
-        .isEmpty();
+        .isNull();
   }
 
   @XmlRootElement(name = "GetPrice")

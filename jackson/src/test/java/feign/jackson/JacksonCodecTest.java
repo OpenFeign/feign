@@ -321,7 +321,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  public void notFoundDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -330,12 +330,12 @@ public class JacksonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
+    assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isNull();
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToEmptyIterator() throws Exception {
+  public void notFoundDecodesToNullIterator() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -344,6 +344,6 @@ public class JacksonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isNull();
   }
 }
