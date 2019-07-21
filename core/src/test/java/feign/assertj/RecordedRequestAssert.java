@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -159,7 +159,7 @@ public final class RecordedRequestAssert
     Set<String> found = new LinkedHashSet<String>();
     for (String header : actual.getHeaders().names()) {
       for (String name : names) {
-        if (header.toLowerCase().startsWith(name.toLowerCase() + ":")) {
+        if (header.equalsIgnoreCase(name)) {
           found.add(header);
         }
       }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -38,8 +38,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import static java.lang.String.format;
 
 /**
@@ -188,7 +191,8 @@ public class Util {
    * Returns an unmodifiable collection which may be empty, but is never null.
    */
   public static <T> Collection<T> valuesOrEmpty(Map<String, Collection<T>> map, String key) {
-    return map.containsKey(key) && map.get(key) != null ? map.get(key) : Collections.<T>emptyList();
+    Collection<T> values = map.get(key);
+    return values != null ? values : Collections.emptyList();
   }
 
   public static void ensureClosed(Closeable closeable) {
@@ -250,32 +254,22 @@ public class Util {
    * the raw type (vs type hierarchy). Decorate for sophistication.
    */
   public static Object emptyValueOf(Type type) {
-    return EMPTIES.get(Types.getRawType(type));
+    return EMPTIES.getOrDefault(Types.getRawType(type), () -> null).get();
   }
 
-  private static final Map<Class<?>, Object> EMPTIES;
+  private static final Map<Class<?>, Supplier<Object>> EMPTIES;
   static {
-    Map<Class<?>, Object> empties = new LinkedHashMap<Class<?>, Object>();
-    empties.put(boolean.class, false);
-    empties.put(Boolean.class, false);
-    empties.put(byte[].class, new byte[0]);
-    empties.put(Collection.class, Collections.emptyList());
-    empties.put(Iterator.class, new Iterator<Object>() { // Collections.emptyIterator is a 1.7 api
-      public boolean hasNext() {
-        return false;
-      }
-
-      public Object next() {
-        throw new NoSuchElementException();
-      }
-
-      public void remove() {
-        throw new IllegalStateException();
-      }
-    });
-    empties.put(List.class, Collections.emptyList());
-    empties.put(Map.class, Collections.emptyMap());
-    empties.put(Set.class, Collections.emptySet());
+    final Map<Class<?>, Supplier<Object>> empties = new LinkedHashMap<Class<?>, Supplier<Object>>();
+    empties.put(boolean.class, () -> false);
+    empties.put(Boolean.class, () -> false);
+    empties.put(byte[].class, () -> new byte[0]);
+    empties.put(Collection.class, Collections::emptyList);
+    empties.put(Iterator.class, Collections::emptyIterator);
+    empties.put(List.class, Collections::emptyList);
+    empties.put(Map.class, Collections::emptyMap);
+    empties.put(Set.class, Collections::emptySet);
+    empties.put(Optional.class, Optional::empty);
+    empties.put(Stream.class, Stream::empty);
     EMPTIES = Collections.unmodifiableMap(empties);
   }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -480,7 +481,7 @@ public class FeignTest {
           public Object decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
-              throw new RetryableException(string, HttpMethod.POST, null);
+              throw new RetryableException(response.status(), string, HttpMethod.POST, null);
             }
             return string;
           }
@@ -527,6 +528,25 @@ public class FeignTest {
   }
 
   @Test
+  public void throwsFeignExceptionWithoutBody() {
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    TestInterface api = Feign.builder()
+        .decoder((response, type) -> {
+          throw new IOException("timeout");
+        })
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.noContent();
+    } catch (FeignException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
+      assertThat(e.contentUTF8()).isEqualTo("");
+    }
+  }
+
+  @Test
   public void ensureRetryerClonesItself() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
@@ -540,7 +560,8 @@ public class FeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException("play it again sam!", HttpMethod.POST, null);
+            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
+                null);
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -564,7 +585,7 @@ public class FeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException("play it again sam!", HttpMethod.POST,
+            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
                 new TestInterfaceException(message), null);
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -587,7 +608,7 @@ public class FeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(message, HttpMethod.POST, null);
+            return new RetryableException(response.status(), message, HttpMethod.POST, null);
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -768,7 +789,7 @@ public class FeignTest {
     api.encodedQueryParam("5.2FSi+");
 
     assertThat(server.takeRequest())
-        .hasPath("/?trim=5.2FSi+");
+        .hasPath("/?trim=5.2FSi%2B");
   }
 
   @Test
@@ -833,6 +854,25 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMap_with_child_pojo() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+
+    ChildPojo childPojo = new ChildPojo();
+    childPojo.setChildPrivateProperty("first");
+    childPojo.setParentProtectedProperty("second");
+    childPojo.setParentPublicProperty("third");
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyInheritence(childPojo);
+    assertThat(server.takeRequest())
+        .hasQueryParams(
+            "parentPublicProperty=third",
+            "parentProtectedProperty=second",
+            "childPrivateProperty=first");
+  }
+
+  @Test
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
@@ -880,6 +920,9 @@ public class FeignTest {
 
     @RequestLine("POST /")
     String body(String content);
+
+    @RequestLine("POST /")
+    String noContent();
 
     @RequestLine("POST /")
     @Headers("Content-Encoding: gzip")
@@ -935,6 +978,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPropertyPojo(@QueryMap PropertyPojo object);
+
+    @RequestLine("GET /")
+    void queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
     class DateToMillis implements Param.Expander {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -117,7 +117,7 @@ public final class LBClient extends
 
     Request toRequest() {
       // add header "Content-Length" according to the request body
-      final byte[] body = request.body();
+      final byte[] body = request.requestBody().asBytes();
       final int bodyLength = body != null ? body.length : 0;
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();

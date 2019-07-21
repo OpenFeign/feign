@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -42,11 +42,13 @@ public class DefaultErrorDecoderHttpErrorTest {
         {409, FeignException.Conflict.class},
         {429, FeignException.TooManyRequests.class},
         {422, FeignException.UnprocessableEntity.class},
+        {450, FeignException.FeignClientException.class},
         {500, FeignException.InternalServerError.class},
         {501, FeignException.NotImplemented.class},
         {502, FeignException.BadGateway.class},
         {503, FeignException.ServiceUnavailable.class},
         {504, FeignException.GatewayTimeout.class},
+        {599, FeignException.FeignServerException.class},
         {599, FeignException.class},
     };
   }

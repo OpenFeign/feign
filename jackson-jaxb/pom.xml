@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2018 The Feign Authors
+    Copyright 2012-2019 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.1.0-SNAPSHOT</version>
+    <version>10.3.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jackson-jaxb</artifactId>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
+      <version>${jackson.databind.version}</version>
     </dependency>
 
     <dependency>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>2.6.4</version>
+      <version>${jackson.version}</version>
     </dependency>
 
     <!-- RuntimeDelegateImpl -->

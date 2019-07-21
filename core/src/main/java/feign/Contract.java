@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,9 +13,6 @@
  */
 package feign;
 
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
-import feign.Request.HttpMethod;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -29,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import feign.Request.HttpMethod;
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
 
 /**
  * Defines what annotations and values are valid on interfaces.
@@ -111,7 +111,7 @@ public interface Contract {
         }
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation) {
+        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
           checkState(data.formParams().isEmpty(),
               "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);

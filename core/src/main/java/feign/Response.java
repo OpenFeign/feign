@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
@@ -44,12 +45,13 @@ public final class Response implements Closeable {
   private final Request request;
 
   private Response(Builder builder) {
-    checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
     checkState(builder.request != null, "original request is required");
     this.status = builder.status;
     this.request = builder.request;
     this.reason = builder.reason; // nullable
-    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
+    this.headers = (builder.headers != null)
+        ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
+        : new LinkedHashMap<>();
     this.body = builder.body; // nullable
   }
 
