@@ -26,11 +26,23 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 interface GitHub {
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @RequestLine("POST /repos/{owner}/{repo}/issues")
+  void createIssue(Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+
 }
 
 public static class Contributor {
   String login;
   int contributions;
+}
+
+public static class Issue {
+  String title;
+  String body;
+  List<String> assignees;
+  int milestone;
+  List<String> labels;
 }
 
 public class MyApp {
@@ -73,7 +85,7 @@ their corresponding `Param` annotated method parameters.
 public interface GitHub {
   
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
-  List<Contributor> getContributors(@Param("owner") String owner, @Param("repo") String repository);
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repository);
   
   class Contributor {
     String login;
@@ -107,12 +119,66 @@ resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 * Unresolved expressions are omitted.
 * All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
 
+#### Undefined vs. Empty Values ####
+
+Undefined expressions are expressions where the value for the expression is an explicit `null` or no value is provided.
+Per [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570), it is possible to provide an empty value
+for an expression.  When Feign resolves an expression, it first determines if the value is defined, if it is then
+the query parameter will remain.  If the expression is undefined, the query parameter is removed.  See below
+for a complete breakdown.
+
+*Empty String*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   parameters.put("param", "");
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test?param=
+```
+
+*Missing*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test
+```
+
+*Undefined*
+```java
+public void test() {
+   Map<String, Object> parameters = new LinkedHashMap<>();
+   parameters.put("param", null);
+   this.demoClient.test(parameters);
+}
+```
+Result
+```
+http://localhost:8080/test
+```
+
 See [Advanced Usage](#advanced-usage) for more examples.
 
 > **What about slashes? `/`**
 >
 > `@RequestLine` and `@QueryMap` templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.  
 
+> **What about plus? `+`**
+>
+> Per the URI specification, a `+` sign is allowed in both the path and query segments of a URI, however, handling of
+> the symbol on the query can be inconsistent.  In some legacy systems, the `+` is equivalent to the a space.  Feign takes the approach of modern systems, where a
+> `+` symbol should not represent a space and is explicitly encoded as `%2B` when found on a query string.
+>
+> If you wish to use `+` as a space, then use the literal ` ` character or encode the value directly as `%20`
+ 
 ##### Custom Expansion
 
 The `@Param` annotation has an optional property `expander` allowing for complete control over the individual parameter's expansion.
@@ -144,7 +210,7 @@ See [Headers](#headers) for examples.
 > ```java
 > public interface ContentService {
 >   @RequestLine("GET /api/documents/{contentType}")
->   @Headers("Accept {contentType}")
+>   @Headers("Accept: {contentType}")
 >   String getDocumentByType(@Param("contentType") String type);
 > }
 >```
@@ -341,6 +407,28 @@ public class Example {
   }
 }
 ```
+
+### SOAP
+[SOAP](./soap) includes an encoder and decoder you can use with an XML API.
+
+
+This module adds support for encoding and decoding SOAP Body objects via JAXB and SOAPMessage. It also provides SOAPFault decoding capabilities by wrapping them into the original `javax.xml.ws.soap.SOAPFaultException`, so that you'll only need to catch `SOAPFaultException` in order to handle SOAPFault.
+
+Add `SOAPEncoder` and/or `SOAPDecoder` to your `Feign.Builder` like so:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    Api api = Feign.builder()
+	     .encoder(new SOAPEncoder(jaxbFactory))
+	     .decoder(new SOAPDecoder(jaxbFactory))
+	     .errorDecoder(new SOAPErrorDecoder())
+	     .target(MyApi.class, "http://api");
+  }
+}
+```
+
+NB: you may also need to add `SOAPErrorDecoder` if SOAP Faults are returned in response with error http codes (4xx, 5xx, ...)
 
 ### SLF4J
 [SLF4JModule](./slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
@@ -731,7 +819,7 @@ public class Example {
 All responses that result in an HTTP status not in the 2xx range will trigger the `ErrorDecoder`'s `decode` method, allowing
 you to handle the response, wrap the failure into a custom exception or perform any additional processing.
 If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
-`Retyer`.
+`Retryer`.
 
 ### Retry
 Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,21 +13,22 @@
  */
 package feign.codec;
 
+import static feign.FeignException.errorStatus;
+import static feign.Util.RETRY_AFTER;
+import static feign.Util.checkNotNull;
+import static java.util.Locale.US;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import feign.FeignException;
+import feign.Response;
+import feign.RetryableException;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import feign.FeignException;
-import feign.Response;
-import feign.RetryableException;
-import static feign.FeignException.errorStatus;
-import static feign.Util.RETRY_AFTER;
-import static feign.Util.checkNotNull;
-import static java.util.Locale.US;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
@@ -35,7 +36,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * <p/>
  * Ex:
- * 
+ *
  * <pre>
  * class IllegalArgumentExceptionOn404Decoder implements ErrorDecoder {
  *
@@ -94,6 +95,7 @@ public interface ErrorDecoder {
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
       if (retryAfter != null) {
         return new RetryableException(
+            response.status(),
             exception.getMessage(),
             response.request().httpMethod(),
             exception,
@@ -142,7 +144,8 @@ public interface ErrorDecoder {
       if (retryAfter == null) {
         return null;
       }
-      if (retryAfter.matches("^[0-9]+$")) {
+      if (retryAfter.matches("^[0-9]+\\.?0*$")) {
+        retryAfter = retryAfter.replaceAll("\\.0*$", "");
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
         return new Date(currentTimeMillis() + deltaMillis);
       }

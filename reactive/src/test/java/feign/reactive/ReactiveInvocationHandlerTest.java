@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,28 +19,25 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import feign.FeignException;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.RequestLine;
 import feign.Target;
-import feign.reactive.ReactorInvocationHandler;
-import feign.reactive.RxJavaInvocationHandler;
 import io.reactivex.Flowable;
+
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import org.junit.Rule;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReactiveInvocationHandlerTest {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Mock
   private Target target;
@@ -50,10 +47,15 @@ public class ReactiveInvocationHandlerTest {
 
   private Method method;
 
+  @Before
+  public void setUp() throws NoSuchMethodException {
+    method = TestReactorService.class.getMethod("version");
+  }
+
   @SuppressWarnings("unchecked")
   @Test
   public void invokeOnSubscribeReactor() throws Throwable {
-    Method method = TestReactorService.class.getMethod("version");
+    given(this.methodHandler.invoke(any())).willReturn("Result");
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
         Collections.singletonMap(method, this.methodHandler));
 
@@ -62,17 +64,33 @@ public class ReactiveInvocationHandlerTest {
     verifyZeroInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
-    Mono mono = (Mono) result;
-    mono.log().block();
+    StepVerifier.create((Mono) result)
+            .expectNext("Result")
+            .expectComplete()
+            .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
-  @SuppressWarnings("unchecked")
+  @Test
+  public void invokeOnSubscribeEmptyReactor() throws Throwable {
+    given(this.methodHandler.invoke(any())).willReturn(null);
+    ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
+            Collections.singletonMap(method, this.methodHandler));
+
+    Object result = handler.invoke(method, this.methodHandler, new Object[] {});
+    assertThat(result).isInstanceOf(Mono.class);
+    verifyZeroInteractions(this.methodHandler);
+
+    /* subscribe and execute the method */
+    StepVerifier.create((Mono) result)
+            .expectComplete()
+            .verify();
+    verify(this.methodHandler, times(1)).invoke(any());
+  }
+
   @Test
   public void invokeFailureReactor() throws Throwable {
-    this.thrown.expect(RuntimeException.class);
-    given(this.methodHandler.invoke(any())).willThrow(new RuntimeException("Could Not Decode"));
-    given(this.method.getReturnType()).willReturn((Class) Class.forName(Mono.class.getName()));
+    given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
         Collections.singletonMap(this.method, this.methodHandler));
 
@@ -81,12 +99,13 @@ public class ReactiveInvocationHandlerTest {
     verifyZeroInteractions(this.methodHandler);
 
     /* subscribe and execute the method, should result in an error */
-    Mono mono = (Mono) result;
-    mono.log().block();
+    StepVerifier.create((Mono) result)
+            .expectError(IOException.class)
+            .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
-  @SuppressWarnings("ResultOfMethodCallIgnored")
+  @SuppressWarnings("unchecked")
   @Test
   public void invokeOnSubscribeRxJava() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn("Result");
@@ -99,16 +118,34 @@ public class ReactiveInvocationHandlerTest {
     verifyZeroInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
-    Flowable flow = (Flowable) result;
-    flow.firstElement().blockingGet();
+    StepVerifier.create((Flowable) result)
+            .expectNext("Result")
+            .expectComplete()
+            .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
-  @SuppressWarnings("ResultOfMethodCallIgnored")
+  @Test
+  public void invokeOnSubscribeEmptyRxJava() throws Throwable {
+    given(this.methodHandler.invoke(any())).willReturn(null);
+    RxJavaInvocationHandler handler =
+            new RxJavaInvocationHandler(this.target,
+                    Collections.singletonMap(this.method, this.methodHandler));
+
+    Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
+    assertThat(result).isInstanceOf(Flowable.class);
+    verifyZeroInteractions(this.methodHandler);
+
+    /* subscribe and execute the method */
+    StepVerifier.create((Flowable) result)
+            .expectComplete()
+            .verify();
+    verify(this.methodHandler, times(1)).invoke(any());
+  }
+
   @Test
   public void invokeFailureRxJava() throws Throwable {
-    this.thrown.expect(RuntimeException.class);
-    given(this.methodHandler.invoke(any())).willThrow(new RuntimeException("Could Not Decode"));
+    given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,
             Collections.singletonMap(this.method, this.methodHandler));
@@ -118,8 +155,9 @@ public class ReactiveInvocationHandlerTest {
     verifyZeroInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
-    Flowable flow = (Flowable) result;
-    flow.firstElement().blockingGet();
+    StepVerifier.create((Flowable) result)
+            .expectError(IOException.class)
+            .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 

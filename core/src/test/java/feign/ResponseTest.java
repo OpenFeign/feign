@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign;
 
 import feign.Request.HttpMethod;
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,5 +71,39 @@ public class ResponseTest {
     List<String> expectedHeaderValue =
         Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
     assertThat(response.headers()).containsOnly(entry(("set-cookie"), expectedHeaderValue));
+  }
+
+  @Test
+  public void headersAreOptional() {
+    Response response = Response.builder()
+        .status(200)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body(new byte[0])
+        .build();
+    assertThat(response.headers()).isNotNull().isEmpty();
+  }
+
+  @Test
+  public void support1xxStatusCodes() {
+    Response response = Response.builder()
+        .status(103)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .body((Response.Body) null)
+        .build();
+
+    assertThat(response.status()).isEqualTo(103);
+  }
+
+  @Test
+  public void statusCodesOfAnyValueAreAllowed() {
+    Lists.list(600, 50, 35600).forEach(statusCode -> {
+      Response response = Response.builder()
+          .status(statusCode)
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .body((Response.Body) null)
+          .build();
+
+      assertThat(response.status()).isEqualTo(statusCode);
+    });
   }
 }

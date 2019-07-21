@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,8 @@
  */
 package feign.template;
 
+import feign.Util;
+import feign.template.UriUtils.FragmentType;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +30,20 @@ import java.util.stream.Collectors;
  * <a href="https://tools.ietf.org/html/rfc6570">RFC 6570</a>, with some relaxed rules, allowing the
  * concept to be used in areas outside of the uri.
  */
-public abstract class Template {
+public class Template {
+
+  /*
+   * special delimiter for collection based expansion, in an attempt to avoid accidental splitting
+   * for resolved values. semi-colon was chosen because it is a reserved character that must be
+   * pct-encoded and should not appear unencoded.
+   */
+  static final String COLLECTION_DELIMITER = ";";
 
   private static final Logger logger = Logger.getLogger(Template.class.getName());
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)(\\?)");
   private final String template;
   private final boolean allowUnresolved;
-  private final boolean encode;
+  private final EncodingOptions encode;
   private final boolean encodeSlash;
   private final Charset charset;
   private final List<TemplateChunk> templateChunks = new ArrayList<>();
@@ -48,12 +57,13 @@ public abstract class Template {
    * @param encodeSlash if slash characters should be encoded.
    */
   Template(
-      String value, boolean allowUnresolved, boolean encode, boolean encodeSlash, Charset charset) {
+      String value, ExpansionOptions allowUnresolved, EncodingOptions encode, boolean encodeSlash,
+      Charset charset) {
     if (value == null) {
       throw new IllegalArgumentException("template is required.");
     }
     this.template = value;
-    this.allowUnresolved = allowUnresolved;
+    this.allowUnresolved = ExpansionOptions.ALLOW_UNRESOLVED == allowUnresolved;
     this.encode = encode;
     this.encodeSlash = encodeSlash;
     this.charset = charset;
@@ -75,20 +85,9 @@ public abstract class Template {
     StringBuilder resolved = new StringBuilder();
     for (TemplateChunk chunk : this.templateChunks) {
       if (chunk instanceof Expression) {
-        Expression expression = (Expression) chunk;
-        Object value = variables.get(expression.getName());
-        if (value != null) {
-          String expanded = expression.expand(value, this.encode);
-          if (!this.encodeSlash) {
-            logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
-            expanded = expanded.replaceAll("\\%2F", "/");
-          }
-          resolved.append(expanded);
-        } else {
-          if (this.allowUnresolved) {
-            /* unresolved variables are treated as literals */
-            resolved.append(encode(expression.toString()));
-          }
+        String resolvedExpression = this.resolveExpression((Expression) chunk, variables);
+        if (resolvedExpression != null) {
+          resolved.append(resolvedExpression);
         }
       } else {
         /* chunk is a literal value */
@@ -98,6 +97,27 @@ public abstract class Template {
     return resolved.toString();
   }
 
+  protected String resolveExpression(Expression expression, Map<String, ?> variables) {
+    String resolved = null;
+    Object value = variables.get(expression.getName());
+    if (value != null) {
+      String expanded = expression.expand(value, this.encode.isEncodingRequired());
+      if (Util.isNotBlank(expanded)) {
+        if (this.encodeSlash) {
+          logger.fine("Explicit slash decoding specified, decoding all slashes in uri");
+          expanded = expanded.replaceAll("/", "%2F");
+        }
+        resolved = expanded;
+      }
+    } else {
+      if (this.allowUnresolved) {
+        /* unresolved variables are treated as literals */
+        resolved = encode(expression.toString());
+      }
+    }
+    return resolved;
+  }
+
   /**
    * Uri Encode the value.
    *
@@ -105,7 +125,7 @@ public abstract class Template {
    * @return the encoded value.
    */
   private String encode(String value) {
-    return this.encode ? UriUtils.encode(value, this.charset) : value;
+    return this.encode.isEncodingRequired() ? UriUtils.encode(value, this.charset) : value;
   }
 
   /**
@@ -116,7 +136,7 @@ public abstract class Template {
    * @return the encoded value
    */
   private String encode(String value, boolean query) {
-    if (this.encode) {
+    if (this.encode.isEncodingRequired()) {
       return query ? UriUtils.queryEncode(value, this.charset)
           : UriUtils.pathEncode(value, this.charset);
     } else {
@@ -199,7 +219,9 @@ public abstract class Template {
 
       if (chunk.startsWith("{")) {
         /* it's an expression, defer encoding until resolution */
-        Expression expression = Expressions.create(chunk);
+        FragmentType type = (query) ? FragmentType.QUERY : FragmentType.PATH_SEGMENT;
+
+        Expression expression = Expressions.create(chunk, type);
         if (expression == null) {
           this.templateChunks.add(Literal.create(encode(chunk, query)));
         } else {
@@ -218,15 +240,11 @@ public abstract class Template {
         .map(TemplateChunk::getValue).collect(Collectors.joining());
   }
 
-  public boolean allowUnresolved() {
-    return allowUnresolved;
-  }
-
   public boolean encode() {
-    return encode;
+    return encode.isEncodingRequired();
   }
 
-  public boolean encodeSlash() {
+  boolean encodeSlash() {
     return encodeSlash;
   }
 
@@ -313,6 +331,24 @@ public abstract class Template {
       }
       throw new IllegalStateException("No More Elements");
     }
+  }
+
+  public enum EncodingOptions {
+    REQUIRED(true), NOT_REQUIRED(false);
+
+    private boolean shouldEncode;
+
+    EncodingOptions(boolean shouldEncode) {
+      this.shouldEncode = shouldEncode;
+    }
+
+    public boolean isEncodingRequired() {
+      return this.shouldEncode;
+    }
+  }
+
+  public enum ExpansionOptions {
+    ALLOW_UNRESOLVED, REQUIRED
   }
 
 }

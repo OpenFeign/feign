@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,13 +14,11 @@
 package feign.jaxb;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import feign.Response;
 import feign.Util;
@@ -34,13 +32,13 @@ import org.xml.sax.SAXException;
  * <p>
  * Basic example with with Feign.Builder:
  * </p>
- * 
+ *
  * <pre>
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *     .withMarshallerJAXBEncoding(&quot;UTF-8&quot;)
  *     .withMarshallerSchemaLocation(&quot;http://apihost http://apihost/schema.xsd&quot;)
  *     .build();
- * 
+ *
  * api = Feign.builder()
  *     .decoder(new JAXBDecoder(jaxbFactory))
  *     .target(MyApi.class, &quot;http://api&quot;);
@@ -90,16 +88,11 @@ public class JAXBDecoder implements Decoder {
           false);
       saxParserFactory.setNamespaceAware(namespaceAware);
 
-      Source source = new SAXSource(saxParserFactory.newSAXParser().getXMLReader(),
-          new InputSource(response.body().asInputStream()));
-      Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class) type);
-      return unmarshaller.unmarshal(source);
-    } catch (JAXBException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (ParserConfigurationException e) {
-      throw new DecodeException(e.toString(), e);
-    } catch (SAXException e) {
-      throw new DecodeException(e.toString(), e);
+      return jaxbContextFactory.createUnmarshaller((Class<?>) type).unmarshal(new SAXSource(
+          saxParserFactory.newSAXParser().getXMLReader(),
+          new InputSource(response.body().asInputStream())));
+    } catch (JAXBException | ParserConfigurationException | SAXException e) {
+      throw new DecodeException(response.status(), e.toString(), e);
     } finally {
       if (response.body() != null) {
         response.body().close();

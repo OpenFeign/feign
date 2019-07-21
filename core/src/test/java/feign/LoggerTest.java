@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -76,16 +76,16 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)",
               "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
@@ -161,14 +161,14 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
@@ -223,14 +223,14 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
@@ -285,14 +285,14 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] Content-Length: 80",
+              "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
@@ -318,7 +318,7 @@ public class LoggerTest {
               return this;
             }
           })
-          .target(SendsStuff.class, "http://sna%fu.abc");
+          .target(SendsStuff.class, "http://sna%25fu.abc");
 
       thrown.expect(FeignException.class);
 

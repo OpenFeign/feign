@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * the query map will be generated using member variable names as query parameter names.
@@ -66,14 +67,17 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type) {
-      List<Field> fields = new ArrayList<Field>();
-      for (Field field : type.getDeclaredFields()) {
-        if (!field.isAccessible()) {
-          field.setAccessible(true);
-        }
-        fields.add(field);
+      List<Field> allFields = new ArrayList();
+
+      for (Class currentClass = type; currentClass != null; currentClass =
+          currentClass.getSuperclass()) {
+        Collections.addAll(allFields, currentClass.getDeclaredFields());
       }
-      return new ObjectParamMetadata(fields);
+
+      return new ObjectParamMetadata(allFields.stream()
+          .filter(field -> !field.isSynthetic())
+          .peek(field -> field.setAccessible(true))
+          .collect(Collectors.toList()));
     }
   }
 }

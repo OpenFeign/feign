@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -44,7 +44,7 @@ public class Http2Client implements Client {
   }
 
   public Http2Client(HttpClient client) {
-    this.client = Util.checkNotNull(client, "http cliet must be not unll");
+    this.client = Util.checkNotNull(client, "HttpClient must not be null");
   }
 
   @Override
@@ -80,10 +80,10 @@ public class Http2Client implements Client {
     }
 
     final BodyPublisher body;
-    if (request.body() == null) {
+    if (request.requestBody().asBytes() == null) {
       body = BodyPublishers.noBody();
     } else {
-      body = BodyPublishers.ofByteArray(request.body());
+      body = BodyPublishers.ofByteArray(request.requestBody().asBytes());
     }
 
     final Builder requestBuilder = HttpRequest.newBuilder()

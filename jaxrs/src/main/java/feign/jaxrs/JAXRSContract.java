@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -154,7 +154,7 @@ public class JAXRSContract extends Contract.BaseContract {
         String name = QueryParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s",
             paramIndex);
-        Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+        String query = addTemplatedParam(name);
         data.template().query(name, query);
         nameParam(data, name, paramIndex);
         isHttpParam = true;
@@ -162,7 +162,7 @@ public class JAXRSContract extends Contract.BaseContract {
         String name = HeaderParam.class.cast(parameterAnnotation).value();
         checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s",
             paramIndex);
-        Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
+        String header = addTemplatedParam(name);
         data.template().header(name, header);
         nameParam(data, name, paramIndex);
         isHttpParam = true;
@@ -179,11 +179,7 @@ public class JAXRSContract extends Contract.BaseContract {
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.
-  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-    if (possiblyNull == null) {
-      possiblyNull = new ArrayList<String>();
-    }
-    possiblyNull.add(String.format("{%s}", name));
-    return possiblyNull;
+  private String addTemplatedParam(String name) {
+    return String.format("{%s}", name);
   }
 }

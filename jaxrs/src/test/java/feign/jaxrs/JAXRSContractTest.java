@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign.jaxrs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
@@ -394,6 +395,18 @@ public class JAXRSContractTest {
             .hasUrl("/base/specific");
   }
 
+
+  @Test
+  public void producesWithHeaderParamContainAllHeaders() throws Exception {
+    assertThat(parseAndValidateMetadata(MixedAnnotations.class, "getWithHeaders",
+        String.class, String.class, String.class)
+            .template())
+                .hasHeaders(entry("Accept", Arrays.asList("{Accept}", "application/json")))
+                .hasQueries(
+                    entry("multiple", Arrays.asList("stuff", "{multiple}")),
+                    entry("another", Collections.singletonList("{another}")));
+  }
+
   interface Methods {
 
     @POST
@@ -637,5 +650,15 @@ public class JAXRSContractTest {
       throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(targetType,
         targetType.getMethod(method, parameterTypes));
+  }
+
+  interface MixedAnnotations {
+
+    @GET
+    @Path("/api/stuff?multiple=stuff")
+    @Produces("application/json")
+    Response getWithHeaders(@HeaderParam("Accept") String accept,
+                            @QueryParam("multiple") String multiple,
+                            @QueryParam("another") String another);
   }
 }

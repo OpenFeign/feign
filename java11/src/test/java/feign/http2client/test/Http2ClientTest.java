@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 import java.io.IOException;
 import feign.*;
@@ -25,6 +26,7 @@ import okhttp3.mockwebserver.MockResponse;
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
+@Ignore
 public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {

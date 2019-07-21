@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,9 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
 import java.util.Arrays;
@@ -26,6 +29,8 @@ import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import feign.Request.HttpMethod;
+import feign.template.UriUtils;
 
 public class RequestTemplateTest {
 
@@ -100,8 +105,7 @@ public class RequestTemplateTest {
   public void resolveTemplateWithBinaryBody() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .uri("{zoneId}")
-        .body(new byte[] {7, 3, -3, -7}, null);
-
+        .body(Request.Body.encoded(new byte[] {7, 3, -3, -7}, null));
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template)
@@ -156,6 +160,22 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithMixedCollectionFormatsByQuery() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .collectionFormat(CollectionFormat.EXPLODED)
+        .uri("/api/collections")
+        .query("keys", "{keys}") // default collection format
+        .query("values[]", Collections.singletonList("{values[]}"), CollectionFormat.CSV);
+
+    template = template.resolve(mapOf("keys", Arrays.asList("one", "two"),
+        "values[]", Arrays.asList("1", "2")));
+
+    assertThat(template.url())
+        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1,2");
+  }
+
+  @Test
   public void resolveTemplateWithHeaderSubstitutions() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .header("Auth-Token", "{authToken}");
@@ -188,7 +208,9 @@ public class RequestTemplateTest {
         .hasHeaders(entry("Encoded", Collections.singletonList("{{{{dont_expand_me}}")));
   }
 
-  /** This ensures we don't mess up vnd types */
+  /**
+   * This ensures we don't mess up vnd types
+   */
   @Test
   public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
@@ -247,9 +269,10 @@ public class RequestTemplateTest {
   @Test
   public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .bodyTemplate(
+        .body(Request.Body.bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
-                "\"password\": \"{password}\"%7D");
+                "\"password\": \"{password}\"%7D",
+            Util.UTF_8));
 
     template = template.resolve(
         mapOf(
@@ -262,14 +285,15 @@ public class RequestTemplateTest {
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
             entry("Content-Length",
-                Collections.singletonList(String.valueOf(template.body().length))));
+                Collections.singletonList(String.valueOf(template.requestBody().length()))));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .bodyTemplate(
-            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+        .body(Request.Body.bodyTemplate(
+            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D",
+            Util.UTF_8));
 
     template = template.resolve(
         mapOf(
@@ -279,7 +303,7 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasBody(
-            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc 123%d8\"}");
+            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"abc+123%25d8\"}");
   }
 
   @Test
@@ -324,6 +348,27 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void useCaseInsensitiveHeaderFieldNames() {
+    final RequestTemplate template = new RequestTemplate();
+
+    final String value = "value1";
+    template.header("TEST", value);
+
+    final String value2 = "value2";
+    template.header("tEST", value2);
+
+    final Collection<String> test = template.headers().get("test");
+
+    final String assertionMessage = "Header field names should be case insensitive";
+
+    assertNotNull(assertionMessage, test);
+    assertTrue(assertionMessage, test.contains(value));
+    assertTrue(assertionMessage, test.contains(value2));
+    assertEquals(1, template.headers().size());
+    assertEquals(2, template.headers().get("tesT").size());
+  }
+
+  @Test
   public void encodeSlashTest() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .uri("/api/{vhost}")
@@ -335,7 +380,9 @@ public class RequestTemplateTest {
         .hasUrl("/api/%2F");
   }
 
-  /** Implementations have a bug if they pass junk as the http method. */
+  /**
+   * Implementations have a bug if they pass junk as the http method.
+   */
   @SuppressWarnings("deprecation")
   @Test
   public void uriStuffedIntoMethod() {
@@ -401,5 +448,34 @@ public class RequestTemplateTest {
     assertThat(template.headers().keySet()).containsExactly("key1");
 
     template.headers().put("key2", Collections.singletonList("other value"));
+  }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInUri() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .uri("/path#fragment")
+        .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("/path?key1=value1#fragment");
+  }
+
+  @Test
+  public void fragmentShouldNotBeEncodedInTarget() {
+    RequestTemplate template = new RequestTemplate()
+        .method(HttpMethod.GET)
+        .target("https://example.com/path#fragment")
+        .queries(mapOf("key1", Collections.singletonList("value1")));
+
+    assertThat(template.url()).isEqualTo("https://example.com/path?key1=value1#fragment");
+  }
+
+  @Test
+  public void slashShouldNotBeAppendedForMatrixParams(){
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+            .uri("/path;key1=value1;key2=value2",true);
+
+    assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
+
   }
 }

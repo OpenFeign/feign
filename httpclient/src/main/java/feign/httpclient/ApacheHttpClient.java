@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -134,14 +134,14 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    if (request.body() != null) {
+    if (request.requestBody().asBytes() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
         ContentType contentType = getContentType(request);
-        String content = new String(request.body(), request.charset());
+        String content = new String(request.requestBody().asBytes(), request.charset());
         entity = new StringEntity(content, contentType);
       } else {
-        entity = new ByteArrayEntity(request.body());
+        entity = new ByteArrayEntity(request.requestBody().asBytes());
       }
 
       requestBuilder.setEntity(entity);
@@ -153,7 +153,7 @@ public final class ApacheHttpClient implements Client {
   }
 
   private ContentType getContentType(Request request) {
-    ContentType contentType = ContentType.DEFAULT_TEXT;
+    ContentType contentType = null;
     for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
         Collection<String> values = entry.getValue();

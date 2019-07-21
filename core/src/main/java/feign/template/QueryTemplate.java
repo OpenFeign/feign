@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,9 +31,9 @@ import java.util.stream.StreamSupport;
  */
 public final class QueryTemplate extends Template {
 
-  /* cache a copy of the variables for lookup later */
+  private static final String UNDEF = "undef";
   private List<String> values;
-  private final String name;
+  private final Template name;
   private final CollectionFormat collectionFormat;
   private boolean pure = false;
 
@@ -61,7 +62,7 @@ public final class QueryTemplate extends Template {
                                      Iterable<String> values,
                                      Charset charset,
                                      CollectionFormat collectionFormat) {
-    if (name == null || name.isEmpty()) {
+    if (Util.isBlank(name)) {
       throw new IllegalArgumentException("name is required.");
     }
 
@@ -79,7 +80,7 @@ public final class QueryTemplate extends Template {
     while (iterator.hasNext()) {
       template.append(iterator.next());
       if (iterator.hasNext()) {
-        template.append(",");
+        template.append(COLLECTION_DELIMITER);
       }
     }
 
@@ -118,8 +119,9 @@ public final class QueryTemplate extends Template {
       Iterable<String> values,
       Charset charset,
       CollectionFormat collectionFormat) {
-    super(template, false, true, true, charset);
-    this.name = name;
+    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, charset);
+    this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
+        false, charset);
     this.collectionFormat = collectionFormat;
     this.values = StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
@@ -136,12 +138,12 @@ public final class QueryTemplate extends Template {
   }
 
   public String getName() {
-    return name;
+    return name.toString();
   }
 
   @Override
   public String toString() {
-    return this.queryString(super.toString());
+    return this.queryString(this.name.toString(), super.toString());
   }
 
   /**
@@ -153,21 +155,37 @@ public final class QueryTemplate extends Template {
    */
   @Override
   public String expand(Map<String, ?> variables) {
-    return this.queryString(super.expand(variables));
+    String name = this.name.expand(variables);
+    return this.queryString(name, super.expand(variables));
   }
 
-  private String queryString(String values) {
+  @Override
+  protected String resolveExpression(Expression expression, Map<String, ?> variables) {
+    if (variables.containsKey(expression.getName())) {
+      if (variables.get(expression.getName()) == null) {
+        /* explicit undefined */
+        return UNDEF;
+      }
+      return super.resolveExpression(expression, variables);
+    }
+
+    /* mark the variable as undefined */
+    return UNDEF;
+  }
+
+  private String queryString(String name, String values) {
     if (this.pure) {
-      return this.name;
+      return name;
     }
 
     /* covert the comma separated values into a value query string */
-    List<String> resolved = Arrays.stream(values.split(","))
-        .filter(Util::isNotBlank)
+    List<String> resolved = Arrays.stream(values.split(COLLECTION_DELIMITER))
+        .filter(Objects::nonNull)
+        .filter(s -> !UNDEF.equalsIgnoreCase(s))
         .collect(Collectors.toList());
 
     if (!resolved.isEmpty()) {
-      return this.collectionFormat.join(this.name, resolved, this.getCharset()).toString();
+      return this.collectionFormat.join(name, resolved, this.getCharset()).toString();
     }
 
     /* nothing to return, all values are unresolved */

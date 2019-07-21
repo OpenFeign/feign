@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2018 The Feign Authors
+ * Copyright 2012-2019 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,6 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package feign.template;
 
 import feign.Util;
@@ -24,6 +23,12 @@ import java.util.Map;
  */
 public final class BodyTemplate extends Template {
 
+  private static final String JSON_TOKEN_START = "{";
+  private static final String JSON_TOKEN_END = "}";
+  private static final String JSON_TOKEN_START_ENCODED = "%7B";
+  private static final String JSON_TOKEN_END_ENCODED = "%7D";
+  private boolean json = false;
+
   /**
    * Create a new Body Template.
    *
@@ -35,11 +40,27 @@ public final class BodyTemplate extends Template {
   }
 
   private BodyTemplate(String value, Charset charset) {
-    super(value, false, false, false, charset);
+    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
+    if (value.startsWith(JSON_TOKEN_START_ENCODED) && value.endsWith(JSON_TOKEN_END_ENCODED)) {
+      this.json = true;
+    }
   }
 
   @Override
   public String expand(Map<String, ?> variables) {
-    return UriUtils.decode(super.expand(variables), Util.UTF_8);
+    String expanded = super.expand(variables);
+    if (this.json) {
+      /* decode only the first and last character */
+      StringBuilder sb = new StringBuilder();
+      sb.append(JSON_TOKEN_START);
+      sb.append(expanded,
+          expanded.indexOf(JSON_TOKEN_START_ENCODED) + JSON_TOKEN_START_ENCODED.length(),
+          expanded.lastIndexOf(JSON_TOKEN_END_ENCODED));
+      sb.append(JSON_TOKEN_END);
+      return sb.toString();
+    }
+    return expanded;
   }
+
+
 }
