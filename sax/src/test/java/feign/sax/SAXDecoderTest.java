@@ -94,14 +94,14 @@ public class SAXDecoderTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  public void notFoundDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
-    assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
+    assertThat((byte[]) decoder.decode(response, byte[].class)).isNull();
   }
 
   static enum NetworkStatus {
