@@ -401,7 +401,7 @@ public class JAXRSContractTest {
     assertThat(parseAndValidateMetadata(MixedAnnotations.class, "getWithHeaders",
         String.class, String.class, String.class)
             .template())
-                .hasHeaders(entry("Accept", Arrays.asList("{Accept}", "application/json")))
+                .hasHeaders(entry("Accept", Arrays.asList("application/json", "{Accept}")))
                 .hasQueries(
                     entry("multiple", Arrays.asList("stuff", "{multiple}")),
                     entry("another", Collections.singletonList("{another}")));
