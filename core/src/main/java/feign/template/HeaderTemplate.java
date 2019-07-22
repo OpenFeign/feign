@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,7 +29,7 @@ import java.util.stream.StreamSupport;
 public final class HeaderTemplate extends Template {
 
   /* cache a copy of the variables for lookup later */
-  private Set<String> values;
+  private LinkedHashSet<String> values;
   private String name;
 
   public static HeaderTemplate create(String name, Iterable<String> values) {
@@ -65,11 +64,11 @@ public final class HeaderTemplate extends Template {
    * @return a new Header Template with the values added.
    */
   public static HeaderTemplate append(HeaderTemplate headerTemplate, Iterable<String> values) {
-    Set<String> headerValues = new LinkedHashSet<>(headerTemplate.getValues());
+    LinkedHashSet<String> headerValues = new LinkedHashSet<>(headerTemplate.getValues());
     headerValues.addAll(
         StreamSupport.stream(values.spliterator(), false)
             .filter(Util::isNotBlank)
-            .collect(Collectors.toSet()));
+            .collect(Collectors.toCollection(LinkedHashSet::new)));
     return create(headerTemplate.getName(), headerValues);
   }
 
@@ -83,7 +82,7 @@ public final class HeaderTemplate extends Template {
     this.values =
         StreamSupport.stream(values.spliterator(), false)
             .filter(Util::isNotBlank)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toCollection(LinkedHashSet::new));
     this.name = name;
   }
 
