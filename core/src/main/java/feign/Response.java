@@ -17,6 +17,7 @@ import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.decodeOrDefault;
+import static feign.Util.toByteArray;
 import static feign.Util.valuesOrEmpty;
 
 import java.io.ByteArrayInputStream;
@@ -272,6 +273,15 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {
       inputStream.close();
+    }
+
+    @Override
+    public String toString() {
+      try {
+        return new String(toByteArray(inputStream), UTF_8);
+      } catch (Exception e) {
+        return super.toString();
+      }
     }
   }
 
