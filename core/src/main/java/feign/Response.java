@@ -32,6 +32,7 @@ import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.decodeOrDefault;
 import static feign.Util.valuesOrEmpty;
+import static feign.Util.toByteArray;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -276,6 +277,15 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {
       inputStream.close();
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return new String(toByteArray(inputStream), UTF_8);
+        } catch (Exception e) {
+            return super.toString();
+        }
     }
   }
 
