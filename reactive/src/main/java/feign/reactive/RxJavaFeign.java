@@ -51,7 +51,7 @@ public class RxJavaFeign extends ReactiveFeign {
   }
 
   private static class RxJavaInvocationHandlerFactory implements InvocationHandlerFactory {
-    private Scheduler scheduler;
+    private final Scheduler scheduler;
 
     private RxJavaInvocationHandlerFactory(Scheduler scheduler) {
       this.scheduler = scheduler;

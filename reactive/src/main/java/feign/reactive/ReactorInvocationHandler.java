@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 public class ReactorInvocationHandler extends ReactiveInvocationHandler {
-  private Scheduler scheduler;
+  private final Scheduler scheduler;
 
   ReactorInvocationHandler(Target<?> target,
       Map<Method, MethodHandler> dispatch,

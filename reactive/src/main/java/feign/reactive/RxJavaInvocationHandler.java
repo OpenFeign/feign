@@ -22,7 +22,7 @@ import java.util.Map;
 import org.reactivestreams.Publisher;
 
 public class RxJavaInvocationHandler extends ReactiveInvocationHandler {
-  private Scheduler scheduler;
+  private final Scheduler scheduler;
 
   RxJavaInvocationHandler(Target<?> target,
       Map<Method, MethodHandler> dispatch,

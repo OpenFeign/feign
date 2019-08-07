@@ -51,7 +51,7 @@ public class ReactorFeign extends ReactiveFeign {
   }
 
   private static class ReactorInvocationHandlerFactory implements InvocationHandlerFactory {
-    private Scheduler scheduler;
+    private final Scheduler scheduler;
 
     private ReactorInvocationHandlerFactory(Scheduler scheduler) {
       this.scheduler = scheduler;
