@@ -23,17 +23,16 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.RequestLine;
 import feign.Target;
 import io.reactivex.Flowable;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -57,7 +56,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeOnSubscribeReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-        Collections.singletonMap(method, this.methodHandler));
+        Collections.singletonMap(method, this.methodHandler), Schedulers.elastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -75,7 +74,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeOnSubscribeEmptyReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn(null);
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-            Collections.singletonMap(method, this.methodHandler));
+        Collections.singletonMap(method, this.methodHandler), Schedulers.elastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -92,7 +91,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeFailureReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-        Collections.singletonMap(this.method, this.methodHandler));
+        Collections.singletonMap(this.method, this.methodHandler), Schedulers.elastic());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -111,7 +110,8 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,
-            Collections.singletonMap(this.method, this.methodHandler));
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
@@ -129,8 +129,9 @@ public class ReactiveInvocationHandlerTest {
   public void invokeOnSubscribeEmptyRxJava() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn(null);
     RxJavaInvocationHandler handler =
-            new RxJavaInvocationHandler(this.target,
-                    Collections.singletonMap(this.method, this.methodHandler));
+        new RxJavaInvocationHandler(this.target,
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
@@ -148,7 +149,8 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,
-            Collections.singletonMap(this.method, this.methodHandler));
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
