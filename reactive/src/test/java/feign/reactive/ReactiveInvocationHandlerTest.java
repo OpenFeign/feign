@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -55,7 +56,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     ReactorInvocationHandler handler =
         new ReactorInvocationHandler(
-            this.target, Collections.singletonMap(method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(method, this.methodHandler),
+            Schedulers.elastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -71,7 +74,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willReturn(null);
     ReactorInvocationHandler handler =
         new ReactorInvocationHandler(
-            this.target, Collections.singletonMap(method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(method, this.methodHandler),
+            Schedulers.elastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -87,7 +92,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     ReactorInvocationHandler handler =
         new ReactorInvocationHandler(
-            this.target, Collections.singletonMap(this.method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(this.method, this.methodHandler),
+            Schedulers.elastic());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -104,7 +111,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(
-            this.target, Collections.singletonMap(this.method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
@@ -120,7 +129,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willReturn(null);
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(
-            this.target, Collections.singletonMap(this.method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
@@ -136,7 +147,9 @@ public class ReactiveInvocationHandlerTest {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(
-            this.target, Collections.singletonMap(this.method, this.methodHandler));
+            this.target,
+            Collections.singletonMap(this.method, this.methodHandler),
+            io.reactivex.schedulers.Schedulers.trampoline());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
