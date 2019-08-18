@@ -28,7 +28,7 @@ public class RetryerTest {
 
   @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
-    RetryableException e = new RetryableException(-1, null, null, null);
+    RetryableException e = new RetryableException(-1, null, null, null, null);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
     assertEquals(0, retryer.sleptForMillis);
@@ -61,14 +61,15 @@ public class RetryerTest {
       }
     };
 
-    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000), null));
     assertEquals(2, retryer.attempt);
     assertEquals(1000, retryer.sleptForMillis);
   }
 
   @Test(expected = RetryableException.class)
   public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    Retryer.NEVER_RETRY
+        .continueOrPropagate(new RetryableException(-1, null, null, new Date(5000), null));
   }
 
   @Test
@@ -77,7 +78,7 @@ public class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000));
+        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000), null);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

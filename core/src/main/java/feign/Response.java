@@ -281,11 +281,11 @@ public final class Response implements Closeable {
 
     @Override
     public String toString() {
-        try {
-            return new String(toByteArray(inputStream), UTF_8);
-        } catch (Exception e) {
-            return super.toString();
-        }
+      try {
+        return new String(toByteArray(inputStream), UTF_8);
+      } catch (Exception e) {
+        return super.toString();
+      }
     }
   }
 

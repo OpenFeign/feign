@@ -92,7 +92,7 @@ public class JAXBDecoder implements Decoder {
           saxParserFactory.newSAXParser().getXMLReader(),
           new InputSource(response.body().asInputStream())));
     } catch (JAXBException | ParserConfigurationException | SAXException e) {
-      throw new DecodeException(response.status(), e.toString(), e);
+      throw new DecodeException(response.status(), e.toString(), response.request(), e);
     } finally {
       if (response.body() != null) {
         response.body().close();
