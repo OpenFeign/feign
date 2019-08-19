@@ -54,6 +54,18 @@ public class FeignTest {
   public final MockWebServer server = new MockWebServer();
 
   @Test
+  public void emptyQueryArrayParameter() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.emptyArrayElement(Arrays.asList("first", "", "third"));
+
+    assertThat(server.takeRequest())
+            .hasPath("/test?people=first&people=&people=third");
+  }
+
+  @Test
   public void iterableQueryParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -939,6 +951,9 @@ public class FeignTest {
               @Param("customer_name") String customer,
               @Param("user_name") String user,
               @Param("password") String password);
+
+    @RequestLine("GET /test?people={people}")
+    Response emptyArrayElement(@Param(value = "people", encoded = true) Collection<String> people);
 
     @RequestLine("GET /{1}/{2}")
     Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);

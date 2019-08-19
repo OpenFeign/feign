@@ -72,7 +72,6 @@ public final class QueryTemplate extends Template {
 
     /* remove all empty values from the array */
     Collection<String> remaining = StreamSupport.stream(values.spliterator(), false)
-        .filter(Util::isNotBlank)
         .collect(Collectors.toList());
 
     StringBuilder template = new StringBuilder();
