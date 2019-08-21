@@ -14,6 +14,7 @@
 package feign;
 
 import static feign.Util.UTF_8;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 import java.io.IOException;
 
@@ -27,10 +28,36 @@ public class FeignException extends RuntimeException {
   private byte[] content;
   private Request request;
 
+  protected FeignException(int status, String message, Throwable cause) {
+    super(message, cause);
+    this.status = status;
+    this.request = null;
+  }
+
+  protected FeignException(int status, String message, Throwable cause, byte[] content) {
+    super(message, cause);
+    this.status = status;
+    this.content = content;
+    this.request = null;
+  }
+
+  protected FeignException(int status, String message) {
+    super(message);
+    this.status = status;
+    this.request = null;
+  }
+
+  protected FeignException(int status, String message, byte[] content) {
+    super(message);
+    this.status = status;
+    this.content = content;
+    this.request = null;
+  }
+
   protected FeignException(int status, String message, Request request, Throwable cause) {
     super(message, cause);
     this.status = status;
-    this.request = request;
+    this.request = checkNotNull(request, "request");
   }
 
   protected FeignException(int status, String message, Request request, Throwable cause,
@@ -38,20 +65,20 @@ public class FeignException extends RuntimeException {
     super(message, cause);
     this.status = status;
     this.content = content;
-    this.request = request;
+    this.request = checkNotNull(request, "request");
   }
 
   protected FeignException(int status, String message, Request request) {
     super(message);
     this.status = status;
-    this.request = request;
+    this.request = checkNotNull(request, "request");
   }
 
   protected FeignException(int status, String message, Request request, byte[] content) {
     super(message);
     this.status = status;
     this.content = content;
-    this.request = request;
+    this.request = checkNotNull(request, "request");
   }
 
   public int status() {
@@ -64,6 +91,10 @@ public class FeignException extends RuntimeException {
 
   public Request request() {
     return this.request;
+  }
+
+  public boolean hasRequest() {
+    return (this.request != null);
   }
 
   public String contentUTF8() {
