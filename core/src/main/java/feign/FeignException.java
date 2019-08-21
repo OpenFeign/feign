@@ -23,6 +23,7 @@ import java.io.IOException;
  */
 public class FeignException extends RuntimeException {
 
+  private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST = "request should not be null";
   private static final long serialVersionUID = 0;
   private int status;
   private byte[] content;
@@ -57,7 +58,7 @@ public class FeignException extends RuntimeException {
   protected FeignException(int status, String message, Request request, Throwable cause) {
     super(message, cause);
     this.status = status;
-    this.request = checkNotNull(request, "request");
+    this.request = checkRequestNotNull(request);
   }
 
   protected FeignException(int status, String message, Request request, Throwable cause,
@@ -65,20 +66,24 @@ public class FeignException extends RuntimeException {
     super(message, cause);
     this.status = status;
     this.content = content;
-    this.request = checkNotNull(request, "request");
+    this.request = checkRequestNotNull(request);
   }
 
   protected FeignException(int status, String message, Request request) {
     super(message);
     this.status = status;
-    this.request = checkNotNull(request, "request");
+    this.request = checkRequestNotNull(request);
   }
 
   protected FeignException(int status, String message, Request request, byte[] content) {
     super(message);
     this.status = status;
     this.content = content;
-    this.request = checkNotNull(request, "request");
+    this.request = checkRequestNotNull(request);
+  }
+
+  private Request checkRequestNotNull(Request request) {
+    return checkNotNull(request, EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST);
   }
 
   public int status() {
