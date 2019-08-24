@@ -697,11 +697,8 @@ public class Example {
 }
 ```
 
----
-**NOTE**
-
-Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
----
+> **A Note on JavaLogger**: 
+> Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
 
 The SLF4JLogger (see above) may also be of interest.
 
