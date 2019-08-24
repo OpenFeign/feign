@@ -167,40 +167,30 @@ public abstract class Logger {
 
     final java.util.logging.Logger logger;
 
-    private final static AtomicInteger loggerCounter = new AtomicInteger();
-
     /**
-     * Deprecated - use {@link #JavaLogger(String)} instead.
-     * Deprecation reason - unexpected inner behavior when multiple JavaLogger appended to their log files
+     * @deprecated Use {@link #JavaLogger(String)} instead.
      *
-     * This constructor can be used to create just one logger. In this way nothing will change.
-     * Example = Logger.JavaLogger().appendToFile("logs/first.log")
+     *             This constructor can be used to create just one logger. Example =
+     *             {@code Logger.JavaLogger().appendToFile("logs/first.log")}
      *
-     * But if this constructor is used several times in different places with different files we will have bad situation
-     * We call constructor and that means for client that we created new instance, that will write logs to given file
-     * But in fact we created only wrapper. Our worker class java.util.logging.Logger instance will be same for all
-     * JavaLoggers because or getLogger() method logic. And each time we create and apply file to logger -
-     * we apply file handler to same logger.
+     *             If you create multiple loggers for multiple clients and provide different files
+     *             to write log - you'll have unexpected behavior - all clients will write same log
+     *             to each file.
      *
-     * Correct way to change this - is to ask client for unique logger name to give loggerManager change to differ files
-     * But some users already using this method for single call without any class name. So, I decided to make workaround
-     *
-     * I'll create logger with Logger.class name for first instance.
-     * But each other calls of constructor will check if someone already created first logger. If so - I'll create
-     * logger with name Logger.class[1-..]. We will have Logger, Logger1, Logger2, etc. This looks not very good, but
-     * provides backward compatibility. But I mark this constructor as Deprecated and recommend other constructor with
-     * the name to provide inner logger for.
+     *             That's why this constructor will be removed in future.
      */
     @Deprecated
     public JavaLogger() {
-      int thisLoggerId = loggerCounter.getAndIncrement();
-      if (thisLoggerId == 0 ) {
-        logger = java.util.logging.Logger.getLogger(Logger.class.getName());
-      } else {
-        logger = java.util.logging.Logger.getLogger(Logger.class.getName() + thisLoggerId);
-      }
+      logger = java.util.logging.Logger.getLogger(Logger.class.getName());
     }
 
+    /**
+     * Constructor for JavaLogger class
+     * 
+     * @param loggerName - A name for the logger. This should be a dot-separated name and should
+     *        normally be based on the package name or class name of the subsystem, such as java.net
+     *        or javax.swing
+     */
     public JavaLogger(String loggerName) {
       logger = java.util.logging.Logger.getLogger(loggerName);
     }
