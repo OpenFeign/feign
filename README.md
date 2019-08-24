@@ -690,7 +690,7 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
-                     .logger(new Logger.JavaLogger(GitHub.class.getName()).appendToFile("logs/http.log"))
+                     .logger(new Logger.JavaLogger("GitHub.Logger").appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
