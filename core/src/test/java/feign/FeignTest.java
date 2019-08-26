@@ -481,7 +481,8 @@ public class FeignTest {
           public Object decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST, null);
+              throw new RetryableException(response.status(), string, HttpMethod.POST, null,
+                  response.request());
             }
             return string;
           }
@@ -561,7 +562,7 @@ public class FeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                null);
+                null, response.request());
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -586,7 +587,7 @@ public class FeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), null);
+                new TestInterfaceException(message), null, response.request());
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -608,7 +609,8 @@ public class FeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST, null);
+            return new RetryableException(response.status(), message, HttpMethod.POST, null,
+                response.request());
           }
         }).target(TestInterface.class, "http://localhost:" + server.getPort());
 

@@ -64,9 +64,9 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method */
     StepVerifier.create((Mono) result)
-            .expectNext("Result")
-            .expectComplete()
-            .verify();
+        .expectNext("Result")
+        .expectComplete()
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
@@ -82,8 +82,8 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method */
     StepVerifier.create((Mono) result)
-            .expectComplete()
-            .verify();
+        .expectComplete()
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
@@ -99,8 +99,8 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method, should result in an error */
     StepVerifier.create((Mono) result)
-            .expectError(IOException.class)
-            .verify();
+        .expectError(IOException.class)
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
@@ -119,9 +119,9 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)
-            .expectNext("Result")
-            .expectComplete()
-            .verify();
+        .expectNext("Result")
+        .expectComplete()
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
@@ -139,8 +139,8 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)
-            .expectComplete()
-            .verify();
+        .expectComplete()
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 
@@ -158,8 +158,8 @@ public class ReactiveInvocationHandlerTest {
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)
-            .expectError(IOException.class)
-            .verify();
+        .expectError(IOException.class)
+        .verify();
     verify(this.methodHandler, times(1)).invoke(any());
   }
 

@@ -471,9 +471,9 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void slashShouldNotBeAppendedForMatrixParams(){
+  public void slashShouldNotBeAppendedForMatrixParams() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
-            .uri("/path;key1=value1;key2=value2",true);
+        .uri("/path;key1=value1;key2=value2", true);
 
     assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
 
