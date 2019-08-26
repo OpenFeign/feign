@@ -152,7 +152,7 @@ public final class JacksonIteratorDecoder implements Decoder {
         current = objectReader.readValue(parser);
       } catch (IOException e) {
         // Input Stream closed automatically by parser
-        throw new DecodeException(response.status(), e.getMessage(), e);
+        throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
       }
       return current != null;
     }

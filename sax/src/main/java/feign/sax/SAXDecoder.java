@@ -90,7 +90,7 @@ public class SAXDecoder implements Decoder {
       }
       return handler.result();
     } catch (SAXException e) {
-      throw new DecodeException(response.status(), e.getMessage(), e);
+      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     }
   }
 

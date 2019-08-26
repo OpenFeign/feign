@@ -16,6 +16,7 @@ package feign;
 import static org.junit.Assert.assertEquals;
 
 import feign.Retryer.Default;
+import java.util.Collections;
 import java.util.Date;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -26,9 +27,12 @@ public class RetryerTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
+  private static final Request REQUEST =
+      Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+
   @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
-    RetryableException e = new RetryableException(-1, null, null, null);
+    RetryableException e = new RetryableException(-1, null, null, null, REQUEST);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
     assertEquals(0, retryer.sleptForMillis);
@@ -62,14 +66,15 @@ public class RetryerTest {
           }
         };
 
-    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000), REQUEST));
     assertEquals(2, retryer.attempt);
     assertEquals(1000, retryer.sleptForMillis);
   }
 
   @Test(expected = RetryableException.class)
   public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    Retryer.NEVER_RETRY.continueOrPropagate(
+        new RetryableException(-1, null, null, new Date(5000), REQUEST));
   }
 
   @Test
@@ -78,7 +83,8 @@ public class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000));
+        new RetryableException(
+            -1, null, null, new Date(System.currentTimeMillis() + 5000), REQUEST);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

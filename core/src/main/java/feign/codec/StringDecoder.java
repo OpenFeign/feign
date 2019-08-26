@@ -32,6 +32,8 @@ public class StringDecoder implements Decoder {
       return Util.toString(body.asReader());
     }
     throw new DecodeException(
-        response.status(), format("%s is not a type supported by this decoder.", type));
+        response.status(),
+        format("%s is not a type supported by this decoder.", type),
+        response.request());
   }
 }

@@ -94,7 +94,8 @@ public interface ErrorDecoder {
             exception.getMessage(),
             response.request().httpMethod(),
             exception,
-            retryAfter);
+            retryAfter,
+            response.request());
       }
       return exception;
     }
