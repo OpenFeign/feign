@@ -168,7 +168,7 @@ public abstract class Logger {
     final java.util.logging.Logger logger;
 
     /**
-     * @deprecated Use {@link #JavaLogger(String)} instead.
+     * @deprecated Use {@link #JavaLogger(String)} or {@link #JavaLogger(Class)} instead.
      *
      *             This constructor can be used to create just one logger. Example =
      *             {@code Logger.JavaLogger().appendToFile("logs/first.log")}
@@ -187,12 +187,21 @@ public abstract class Logger {
     /**
      * Constructor for JavaLogger class
      * 
-     * @param loggerName - A name for the logger. This should be a dot-separated name and should
+     * @param loggerName a name for the logger. This should be a dot-separated name and should
      *        normally be based on the package name or class name of the subsystem, such as java.net
      *        or javax.swing
      */
     public JavaLogger(String loggerName) {
       logger = java.util.logging.Logger.getLogger(loggerName);
+    }
+
+    /**
+     * Constructor for JavaLogger class
+     *
+     * @param clazz the returned logger will be named after clazz
+     */
+    public JavaLogger(Class<?> clazz) {
+      logger = java.util.logging.Logger.getLogger(clazz.getName());
     }
 
     @Override
