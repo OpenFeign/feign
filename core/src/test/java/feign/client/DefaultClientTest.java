@@ -13,15 +13,23 @@
  */
 package feign.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
 import feign.Client;
+import feign.Client.Proxied;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.ProtocolException;
+import java.net.Proxy;
+import java.net.Proxy.Type;
+import java.net.SocketAddress;
+import java.net.URL;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import okhttp3.mockwebserver.MockResponse;
@@ -31,7 +39,7 @@ import org.junit.Test;
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest extends AbstractClientTest {
 
-  Client disableHostnameVerification =
+  protected Client disableHostnameVerification =
       new Client.Default(
           TrustingSSLSocketFactory.get(),
           new HostnameVerifier() {
@@ -103,5 +111,40 @@ public class DefaultClientTest extends AbstractClientTest {
             .target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
+  }
+
+  private final SocketAddress proxyAddress = new InetSocketAddress("proxy.example.com", 8080);
+
+  /**
+   * Test that the proxy is being used, but don't check the credentials. Credentials can still be
+   * used, but they must be set using the appropriate system properties and testing that is not what
+   * we are looking to do here.
+   */
+  @Test
+  public void canCreateWithImplicitOrNoCredentials() throws Exception {
+    Proxied proxied =
+        new Proxied(TrustingSSLSocketFactory.get(), null, new Proxy(Type.HTTP, proxyAddress));
+    assertThat(proxied).isNotNull();
+    assertThat(proxied.getCredentials()).isNullOrEmpty();
+
+    /* verify that the proxy */
+    HttpURLConnection connection = proxied.getConnection(new URL("http://www.example.com"));
+    assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
+  }
+
+  @Test
+  public void canCreateWithExplicitCredentials() throws Exception {
+    Proxied proxied =
+        new Proxied(
+            TrustingSSLSocketFactory.get(),
+            null,
+            new Proxy(Type.HTTP, proxyAddress),
+            "user",
+            "password");
+    assertThat(proxied).isNotNull();
+    assertThat(proxied.getCredentials()).isNotBlank();
+
+    HttpURLConnection connection = proxied.getConnection(new URL("http://www.example.com"));
+    assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
   }
 }

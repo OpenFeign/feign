@@ -495,8 +495,11 @@
             <exclude>**/.idea/**</exclude>
             <exclude>**/target/**</exclude>
             <exclude>LICENSE</exclude>
+            <exclude>NOTICE</exclude>
+            <exclude>OSSMETADATA</exclude>
             <exclude>**/*.md</exclude>
             <exclude>bnd.bnd</exclude>
+            <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
             <exclude>src/main/resources/**</exclude>
           </excludes>
