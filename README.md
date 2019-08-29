@@ -22,14 +22,14 @@ Short Term - What we're working on now. ⏰
 * `Logger` API refactor
   * Refactor the `Logger` API to adhere closer to frameworks like SLF4J providing a common mental model for logging within Feign.  This model will be used by Feign itself throughout and provide clearer direction on how the `Logger` will be used.
 * `Retry` API refactor
-  * Refactor the `Retry` API to support user-supplied conditions and better control over back-off policies. 
+  * Refactor the `Retry` API to support user-supplied conditions and better control over back-off policies. **This may result in non-backward-compatible breaking changes**
 
 Medium Term - What's up next. ⏲ 
 ---
 * Metric API
   * Provide a first-class Metrics API that user's can tap into to gain insight into the request/response lifecycle.  Possibly provide better [OpenTracing](https://opentracing.io/) support.
 * Async execution support via `CompletableFuture`
-  * Allow for `Future` chaining and executor management for the request/response lifecycle.  Implementation will likely require non-backward-compatible breaking changes.  However this feature is required before Reactive execution can be considered.
+  * Allow for `Future` chaining and executor management for the request/response lifecycle.  **Implementation will require non-backward-compatible breaking changes**.  However this feature is required before Reactive execution can be considered.
 * Reactive execution support via [Reactive Streams](https://www.reactive-streams.org/)
   * For JDK 9+, consider a native implementation that uses `java.util.concurrent.Flow`.
   * Support for [Project Reactor](https://projectreactor.io/) and [RxJava 2+](https://github.com/ReactiveX/RxJava) implementations on JDK 8.
