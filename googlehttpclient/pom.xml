@@ -23,7 +23,7 @@
     <version>10.3.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-googleclient</artifactId>
+  <artifactId>feign-googlehttpclient</artifactId>
   <name>Feign Google HTTP Client</name>
   <description>Feign Google HTTP Client</description>
 

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package feign.googleclient;
+package feign.googlehttpclient;
 
 import feign.Feign;
 import feign.Feign.Builder;

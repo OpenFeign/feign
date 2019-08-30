@@ -12,7 +12,7 @@
  * the License.
  */
 
-package feign.googleclient;
+package feign.googlehttpclient;
 
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
@@ -34,6 +34,15 @@ import feign.Request;
 import feign.Response;
 import feign.Util;
 
+
+/**
+ * This module directs Feign's http requests to
+ * <a href="https://developers.google.com/api-client-library/java/google-http-java-client/">Google HTTP Client</a>.
+ *
+ * <pre>
+ * GitHub github = Feign.builder().client(new GoogleHttpCliest()).target(GitHub.class,
+ * "https://api.github.com");
+ */
 public class GoogleHttpClient implements Client {
     private final HttpTransport transport;
     private final HttpRequestFactory requestFactory;
