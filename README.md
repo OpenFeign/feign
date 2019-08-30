@@ -738,12 +738,15 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
-                     .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
+                     .logger(new Logger.JavaLogger("GitHub.Logger").appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
 }
 ```
+
+> **A Note on JavaLogger**: 
+> Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
 
 The SLF4JLogger (see above) may also be of interest.
 

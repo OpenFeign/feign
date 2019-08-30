@@ -16,6 +16,7 @@ package feign;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
@@ -164,8 +165,44 @@ public abstract class Logger {
    */
   public static class JavaLogger extends Logger {
 
-    final java.util.logging.Logger logger =
-        java.util.logging.Logger.getLogger(Logger.class.getName());
+    final java.util.logging.Logger logger;
+
+    /**
+     * @deprecated Use {@link #JavaLogger(String)} or {@link #JavaLogger(Class)} instead.
+     *
+     *             This constructor can be used to create just one logger. Example =
+     *             {@code Logger.JavaLogger().appendToFile("logs/first.log")}
+     *
+     *             If you create multiple loggers for multiple clients and provide different files
+     *             to write log - you'll have unexpected behavior - all clients will write same log
+     *             to each file.
+     *
+     *             That's why this constructor will be removed in future.
+     */
+    @Deprecated
+    public JavaLogger() {
+      logger = java.util.logging.Logger.getLogger(Logger.class.getName());
+    }
+
+    /**
+     * Constructor for JavaLogger class
+     * 
+     * @param loggerName a name for the logger. This should be a dot-separated name and should
+     *        normally be based on the package name or class name of the subsystem, such as java.net
+     *        or javax.swing
+     */
+    public JavaLogger(String loggerName) {
+      logger = java.util.logging.Logger.getLogger(loggerName);
+    }
+
+    /**
+     * Constructor for JavaLogger class
+     *
+     * @param clazz the returned logger will be named after clazz
+     */
+    public JavaLogger(Class<?> clazz) {
+      logger = java.util.logging.Logger.getLogger(clazz.getName());
+    }
 
     @Override
     protected void logRequest(String configKey, Level logLevel, Request request) {
