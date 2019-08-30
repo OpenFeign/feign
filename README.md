@@ -109,6 +109,19 @@ should work.  Feign's default contract defines the following annotations:
 | `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
 | `@Body`        | Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
 
+
+> **Overriding the Request Line**
+>
+> If there is a need to target a request to a different host then the one supplied when the Feign client was created, or
+> you want to supply a target host for each request, include a `java.net.URI` parameter and Feign will use that value
+> as the request target.
+>
+> ```java
+> @RequestLine("POST /repos/{owner}/{repo}/issues")
+> void createIssue(URI host, Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+> ``` 
+> 
+
 ### Templates and Expressions
 
 Feign `Expressions` represent Simple String Expressions (Level 1) as defined by [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570).  `Expressions` are expanded using
