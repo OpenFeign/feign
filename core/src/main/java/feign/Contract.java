@@ -14,18 +14,15 @@
 package feign;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import feign.Contract.DeclarativeContract.ClassAnnotationProcessor;
 import feign.Request.HttpMethod;
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
@@ -98,7 +95,7 @@ public interface Contract {
       }
       checkState(data.template().method() != null,
           "Method %s not annotated with HTTP method type (ex. GET, POST)",
-          method.getName());
+          data.configKey());
       Class<?>[] parameterTypes = method.getParameterTypes();
       Type[] genericParameterTypes = method.getGenericParameterTypes();
 
@@ -169,7 +166,6 @@ public interface Contract {
       }
     }
 
-
     /**
      * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
      * type (unless they are the same).
@@ -211,99 +207,224 @@ public interface Contract {
     }
   }
 
-  class Default extends BaseContract {
+  /**
+   * {@link Contract} base implementation that works by declaring witch annotations should be
+   * processed and how each annotation modifies {@link MethodMetadata}
+   */
+  abstract class DeclarativeContract extends BaseContract {
+
+    Map<Class<Annotation>, ClassAnnotationProcessor<Annotation>> classAnnotationProcessors =
+        new HashMap<>();
+    private Map<Class<Annotation>, MethodAnnotationProcessor<Annotation>> methodAnnotationProcessors =
+        new HashMap<>();
+    Map<Class<Annotation>, ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
+        new HashMap<>();
+
+    /**
+     * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
+     * type (unless they are the same).
+     *
+     * @param data metadata collected so far relating to the current java method.
+     * @param clz the class to process
+     */
+    @Override
+    protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
+      Arrays.stream(targetType.getAnnotations())
+          .forEach(annotation -> classAnnotationProcessors.forEach((type, processor) -> {
+            if (type.isInstance(annotation))
+              processor.process(annotation, data);
+          }));
+    }
+
+    /**
+     * @param data metadata collected so far relating to the current java method.
+     * @param annotation annotations present on the current method annotation.
+     * @param method method currently being processed.
+     */
+    @Override
+    protected final void processAnnotationOnMethod(MethodMetadata data,
+                                                   Annotation annotation,
+                                                   Method method) {
+      methodAnnotationProcessors.forEach((type, processor) -> {
+        if (type.isInstance(annotation))
+          processor.process(annotation, data);
+      });
+    }
+
+
+    /**
+     * @param data metadata collected so far relating to the current java method.
+     * @param annotations annotations present on the current parameter annotation.
+     * @param paramIndex if you find a name in {@code annotations}, call
+     *        {@link #nameParam(MethodMetadata, String, int)} with this as the last parameter.
+     * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
+     *         http-relevant annotation.
+     */
+    protected final boolean processAnnotationsOnParameter(MethodMetadata data,
+                                                          Annotation[] annotations,
+                                                          int paramIndex) {
+      return Arrays.stream(annotations)
+          .flatMap(annotation -> parameterAnnotationProcessors.entrySet()
+              .stream()
+              .map(entry -> entry.getKey().isInstance(annotation)
+                  ? entry.getValue().process(annotation, data, paramIndex)
+                  : false))
+          .collect(Collectors.reducing(Boolean::logicalOr))
+          .orElse(false);
+    }
+
+    @FunctionalInterface
+    public interface ClassAnnotationProcessor<E extends Annotation> {
+      /**
+       * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
+       * type (unless they are the same).
+       *
+       * @param annotation present on the current class
+       * @param metadata metadata collected so far relating to the current java method.
+       */
+      void process(E annotation, MethodMetadata metadata);
+    }
+
+    /**
+     * Called while class annotations are being processed
+     *
+     * @param annotation to be processed
+     * @param processor function that defines the annotations modifies {@link MethodMetadata}
+     */
+    protected <E extends Annotation> void registerClassAnnotation(Class<E> annotation,
+                                                                  ClassAnnotationProcessor<E> processor) {
+      this.classAnnotationProcessors.put((Class) annotation, (ClassAnnotationProcessor) processor);
+    }
+
+    @FunctionalInterface
+    public interface MethodAnnotationProcessor<E extends Annotation> {
+      /**
+       * @param annotation present on the current method.
+       * @param metadata metadata collected so far relating to the current java method.
+       * @param method method currently being processed.
+       */
+      void process(E annotation, MethodMetadata metadata);
+    }
+
+    /**
+     * Called while method annotations are being processed
+     *
+     * @param annotation to be processed
+     * @param processor function that defines the annotations modifies {@link MethodMetadata}
+     */
+    protected <E extends Annotation> void registerMethodAnnotation(Class<E> annotation,
+                                                                   MethodAnnotationProcessor<E> processor) {
+      this.methodAnnotationProcessors.put((Class) annotation,
+          (MethodAnnotationProcessor) processor);
+    }
+
+    @FunctionalInterface
+    public interface ParameterAnnotationProcessor<E extends Annotation> {
+      /**
+       * @param annotation present on the current parameter annotation.
+       * @param metadata metadata collected so far relating to the current java method.
+       * @param paramIndex if you find a name in {@code annotations}, call
+       *        {@link #nameParam(MethodMetadata, String, int)} with this as the last parameter.
+       * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
+       *         http-relevant annotation.
+       */
+      boolean process(E annotation, MethodMetadata metadata, int paramIndex);
+    }
+
+    /**
+     * Called while method parameter annotations are being processed
+     *
+     * @param annotation to be processed
+     * @param processor function that defines the annotations modifies {@link MethodMetadata}
+     */
+    protected <E extends Annotation> void registerParameterAnnotation(Class<E> annotation,
+                                                                      ParameterAnnotationProcessor<E> processor) {
+      this.parameterAnnotationProcessors.put((Class) annotation,
+          (ParameterAnnotationProcessor) processor);
+    }
+
+    public Map<Class<Annotation>, ClassAnnotationProcessor<Annotation>> getClassAnnotationProcessors() {
+      return Collections.unmodifiableMap(classAnnotationProcessors);
+    }
+
+  }
+
+  class Default extends DeclarativeContract {
 
     static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.*)$");
 
-    @Override
-    protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
-      if (targetType.isAnnotationPresent(Headers.class)) {
-        String[] headersOnType = targetType.getAnnotation(Headers.class).value();
+    public Default() {
+      super.registerClassAnnotation(Headers.class, (header, data) -> {
+        String[] headersOnType = header.value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
-            targetType.getName());
+            data.configKey());
         Map<String, Collection<String>> headers = toMap(headersOnType);
         headers.putAll(data.template().headers());
         data.template().headers(null); // to clear
         data.template().headers(headers);
-      }
-    }
-
-    @Override
-    protected void processAnnotationOnMethod(MethodMetadata data,
-                                             Annotation methodAnnotation,
-                                             Method method) {
-      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-      if (annotationType == RequestLine.class) {
-        String requestLine = RequestLine.class.cast(methodAnnotation).value();
+      });
+      super.registerMethodAnnotation(RequestLine.class, (ann, data) -> {
+        String requestLine = ann.value();
         checkState(emptyToNull(requestLine) != null,
-            "RequestLine annotation was empty on method %s.", method.getName());
+            "RequestLine annotation was empty on method %s.", data.configKey());
 
         Matcher requestLineMatcher = REQUEST_LINE_PATTERN.matcher(requestLine);
         if (!requestLineMatcher.find()) {
           throw new IllegalStateException(String.format(
               "RequestLine annotation didn't start with an HTTP verb on method %s",
-              method.getName()));
+              data.configKey()));
         } else {
           data.template().method(HttpMethod.valueOf(requestLineMatcher.group(1)));
           data.template().uri(requestLineMatcher.group(2));
         }
-        data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
+        data.template().decodeSlash(ann.decodeSlash());
         data.template()
-            .collectionFormat(RequestLine.class.cast(methodAnnotation).collectionFormat());
-
-      } else if (annotationType == Body.class) {
-        String body = Body.class.cast(methodAnnotation).value();
+            .collectionFormat(ann.collectionFormat());
+      });
+      super.registerMethodAnnotation(Body.class, (ann, data) -> {
+        String body = ann.value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
-            method.getName());
+            data.configKey());
         if (body.indexOf('{') == -1) {
           data.template().body(body);
         } else {
           data.template().bodyTemplate(body);
         }
-      } else if (annotationType == Headers.class) {
-        String[] headersOnMethod = Headers.class.cast(methodAnnotation).value();
+      });
+      super.registerMethodAnnotation(Headers.class, (header, data) -> {
+        String[] headersOnMethod = header.value();
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
-            method.getName());
+            data.configKey());
         data.template().headers(toMap(headersOnMethod));
-      }
-    }
-
-    @Override
-    protected boolean processAnnotationsOnParameter(MethodMetadata data,
-                                                    Annotation[] annotations,
-                                                    int paramIndex) {
-      boolean isHttpAnnotation = false;
-      for (Annotation annotation : annotations) {
-        Class<? extends Annotation> annotationType = annotation.annotationType();
-        if (annotationType == Param.class) {
-          Param paramAnnotation = (Param) annotation;
-          String name = paramAnnotation.value();
-          checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
-              paramIndex);
-          nameParam(data, name, paramIndex);
-          Class<? extends Param.Expander> expander = paramAnnotation.expander();
-          if (expander != Param.ToStringExpander.class) {
-            data.indexToExpanderClass().put(paramIndex, expander);
-          }
-          data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
-          isHttpAnnotation = true;
-          if (!data.template().hasRequestVariable(name)) {
-            data.formParams().add(name);
-          }
-        } else if (annotationType == QueryMap.class) {
-          checkState(data.queryMapIndex() == null,
-              "QueryMap annotation was present on multiple parameters.");
-          data.queryMapIndex(paramIndex);
-          data.queryMapEncoded(QueryMap.class.cast(annotation).encoded());
-          isHttpAnnotation = true;
-        } else if (annotationType == HeaderMap.class) {
-          checkState(data.headerMapIndex() == null,
-              "HeaderMap annotation was present on multiple parameters.");
-          data.headerMapIndex(paramIndex);
-          isHttpAnnotation = true;
+      });
+      super.registerParameterAnnotation(Param.class, (paramAnnotation, data, paramIndex) -> {
+        String name = paramAnnotation.value();
+        checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
+            paramIndex);
+        nameParam(data, name, paramIndex);
+        Class<? extends Param.Expander> expander = paramAnnotation.expander();
+        if (expander != Param.ToStringExpander.class) {
+          data.indexToExpanderClass().put(paramIndex, expander);
         }
-      }
-      return isHttpAnnotation;
+        data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
+        if (!data.template().hasRequestVariable(name)) {
+          data.formParams().add(name);
+        }
+        return true;
+      });
+      super.registerParameterAnnotation(QueryMap.class, (queryMap, data, paramIndex) -> {
+        checkState(data.queryMapIndex() == null,
+            "QueryMap annotation was present on multiple parameters.");
+        data.queryMapIndex(paramIndex);
+        data.queryMapEncoded(queryMap.encoded());
+        return true;
+      });
+      super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
+        checkState(data.headerMapIndex() == null,
+            "HeaderMap annotation was present on multiple parameters.");
+        data.headerMapIndex(paramIndex);
+        return true;
+      });
     }
 
     private static Map<String, Collection<String>> toMap(String[] input) {
@@ -319,5 +440,6 @@ public interface Contract {
       }
       return result;
     }
+
   }
 }

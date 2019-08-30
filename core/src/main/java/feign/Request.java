@@ -230,6 +230,12 @@ public final class Request {
     private final int readTimeoutMillis;
     private final boolean followRedirects;
 
+    @Override
+    public String toString() {
+      return "Options [connectTimeoutMillis=" + connectTimeoutMillis + ", readTimeoutMillis="
+          + readTimeoutMillis + ", followRedirects=" + followRedirects + "]";
+    }
+
     public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
       this.connectTimeoutMillis = connectTimeoutMillis;
       this.readTimeoutMillis = readTimeoutMillis;
