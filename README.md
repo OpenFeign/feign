@@ -6,6 +6,41 @@
 
 Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
 
+---
+# Roadmap
+## Feign 11 and beyond 
+Making _API_ clients easier
+
+Short Term - What we're working on now. ⏰ 
+---
+* Response Caching
+  * Support caching of api responses.  Allow for user's to define under what conditions a response is eligible for caching and what type of caching mechanism should be used.
+  * Support in-memory caching and external cache implementations (EhCache, Google, Spring, etc...)
+* Complete URI Template expression support
+  * Support [level 1 through level 4](https://tools.ietf.org/html/rfc6570#section-1.2) URI template expressions.
+  * Use [URI Templates TCK](https://github.com/uri-templates/uritemplate-test) to verify compliance.
+* `Logger` API refactor
+  * Refactor the `Logger` API to adhere closer to frameworks like SLF4J providing a common mental model for logging within Feign.  This model will be used by Feign itself throughout and provide clearer direction on how the `Logger` will be used.
+* `Retry` API refactor
+  * Refactor the `Retry` API to support user-supplied conditions and better control over back-off policies. **This may result in non-backward-compatible breaking changes**
+
+Medium Term - What's up next. ⏲ 
+---
+* Metric API
+  * Provide a first-class Metrics API that user's can tap into to gain insight into the request/response lifecycle.  Possibly provide better [OpenTracing](https://opentracing.io/) support.
+* Async execution support via `CompletableFuture`
+  * Allow for `Future` chaining and executor management for the request/response lifecycle.  **Implementation will require non-backward-compatible breaking changes**.  However this feature is required before Reactive execution can be considered.
+* Reactive execution support via [Reactive Streams](https://www.reactive-streams.org/)
+  * For JDK 9+, consider a native implementation that uses `java.util.concurrent.Flow`.
+  * Support for [Project Reactor](https://projectreactor.io/) and [RxJava 2+](https://github.com/ReactiveX/RxJava) implementations on JDK 8.
+
+Long Term - The future ☁️ 
+---
+* Additional Circuit Breaker Support.
+  * Support additional Circuit Breaker implementations like [Resilience4J](https://resilience4j.readme.io/) and Spring Circuit Breaker
+
+---  
+
 ### Why Feign and not X?
 
 Feign uses tools like Jersey and CXF to write java clients for ReST or SOAP services. Furthermore, Feign allows you to write your own code on top of http libraries such as Apache HC. Feign connects your code to http APIs with minimal overhead and code via customizable decoders and error handling, which can be written to any text-based http API.
@@ -73,6 +108,19 @@ should work.  Feign's default contract defines the following annotations:
 | `@QueryMap`    | Parameter        | Defines a `Map` of name-value pairs, or POJO, to expand into a query string. |
 | `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
 | `@Body`        | Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
+
+
+> **Overriding the Request Line**
+>
+> If there is a need to target a request to a different host then the one supplied when the Feign client was created, or
+> you want to supply a target host for each request, include a `java.net.URI` parameter and Feign will use that value
+> as the request target.
+>
+> ```java
+> @RequestLine("POST /repos/{owner}/{repo}/issues")
+> void createIssue(URI host, Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+> ``` 
+> 
 
 ### Templates and Expressions
 
@@ -690,12 +738,15 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
-                     .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
+                     .logger(new Logger.JavaLogger("GitHub.Logger").appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
 }
 ```
+
+> **A Note on JavaLogger**: 
+> Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
 
 The SLF4JLogger (see above) may also be of interest.
 

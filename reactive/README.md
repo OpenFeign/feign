@@ -31,7 +31,6 @@ public class ExampleReactor {
       .target(GitHubReactor.class, "https://api.github.com");
     
     List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
-      .map(Contributor::new)
       .collect(Collectors.toList())
       .block();
   }
@@ -57,7 +56,6 @@ public class ExampleRxJava2 {
       .target(GitHub.class, "https://api.github.com");
     
     List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
-      .map(Contributor::new)
       .collect(Collectors.toList())
       .block();
   }

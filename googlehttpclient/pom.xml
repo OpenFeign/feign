@@ -23,9 +23,9 @@
     <version>10.4.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-okhttp</artifactId>
-  <name>Feign OkHttp</name>
-  <description>Feign OkHttp</description>
+  <artifactId>feign-googlehttpclient</artifactId>
+  <name>Feign Google HTTP Client</name>
+  <description>Feign Google HTTP Client</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -38,8 +38,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
     </dependency>
 
     <dependency>
