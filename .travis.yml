@@ -12,8 +12,9 @@ jdk:
 
 before_install: ./travis/sign.sh
 
-script:
-  - ./mvnw -B -nsu -s ./travis/settings.xml -P validateCodeFormat install
+after_success:
+  # fail build if there are any local changes to sources
+  - ./travis/no-git-changes.sh
 
 jobs:
   include:
