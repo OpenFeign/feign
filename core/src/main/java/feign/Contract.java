@@ -230,10 +230,9 @@ public interface Contract {
     @Override
     protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       Arrays.stream(targetType.getAnnotations())
-          .forEach(annotation -> classAnnotationProcessors.forEach((type, processor) -> {
-            if (type.isInstance(annotation))
-              processor.process(annotation, data);
-          }));
+          .forEach(annotation -> classAnnotationProcessors
+              .get(annotation.annotationType())
+              .process(annotation, data));
     }
 
     /**
@@ -245,10 +244,8 @@ public interface Contract {
     protected final void processAnnotationOnMethod(MethodMetadata data,
                                                    Annotation annotation,
                                                    Method method) {
-      methodAnnotationProcessors.forEach((type, processor) -> {
-        if (type.isInstance(annotation))
-          processor.process(annotation, data);
-      });
+      methodAnnotationProcessors.get(annotation.annotationType())
+          .process(annotation, data);
     }
 
 
@@ -264,11 +261,10 @@ public interface Contract {
                                                           Annotation[] annotations,
                                                           int paramIndex) {
       return Arrays.stream(annotations)
-          .flatMap(annotation -> parameterAnnotationProcessors.entrySet()
-              .stream()
-              .map(entry -> entry.getKey().isInstance(annotation)
-                  ? entry.getValue().process(annotation, data, paramIndex)
-                  : false))
+          .filter(
+              annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))
+          .map(annotation -> parameterAnnotationProcessors.get(annotation.annotationType())
+              .process(annotation, data, paramIndex))
           .collect(Collectors.reducing(Boolean::logicalOr))
           .orElse(false);
     }
