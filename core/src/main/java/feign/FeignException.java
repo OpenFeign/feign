@@ -23,7 +23,8 @@ import java.io.IOException;
  */
 public class FeignException extends RuntimeException {
 
-  private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST = "request should not be null";
+  private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST =
+      "request should not be null";
   private static final long serialVersionUID = 0;
   private int status;
   private byte[] content;

@@ -16,7 +16,6 @@ package feign.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-
 import feign.Client.Proxied;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -116,9 +115,9 @@ public class DefaultClientTest extends AbstractClientTest {
       new InetSocketAddress("proxy.example.com", 8080);
 
   /**
-   * Test that the proxy is being used, but don't check the credentials.  Credentials can still
-   * be used, but they must be set using the appropriate system properties and testing that is
-   * not what we are looking to do here.
+   * Test that the proxy is being used, but don't check the credentials. Credentials can still be
+   * used, but they must be set using the appropriate system properties and testing that is not what
+   * we are looking to do here.
    */
   @Test
   public void canCreateWithImplicitOrNoCredentials() throws Exception {

@@ -12,6 +12,11 @@ jdk:
 
 before_install: ./travis/sign.sh
 
+script:
+  - ./mvnw clean install -B
+  # fail build if there are any local changes to sources
+  - ./travis/no-git-changes.sh
+
 jobs:
   include:
     - stage: snapshot
