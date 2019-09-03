@@ -32,7 +32,8 @@ import java.util.Map;
 
 /**
  * This module directs Feign's http requests to
- * <a href="https://developers.google.com/api-client-library/java/google-http-java-client/">Google HTTP Client</a>.
+ * <a href="https://developers.google.com/api-client-library/java/google-http-java-client/">Google
+ * HTTP Client</a>.
  *
  * <pre>
  * GitHub github = Feign.builder().client(new GoogleHttpCliest()).target(GitHub.class,
