@@ -211,7 +211,7 @@ public interface Contract {
    * {@link Contract} base implementation that works by declaring witch annotations should be
    * processed and how each annotation modifies {@link MethodMetadata}
    */
-  abstract class DeclarativeContract extends BaseContract {
+  public abstract class DeclarativeContract extends BaseContract {
 
     Map<Class<Annotation>, ClassAnnotationProcessor<Annotation>> classAnnotationProcessors =
         new HashMap<>();
@@ -219,6 +219,11 @@ public interface Contract {
         new HashMap<>();
     Map<Class<Annotation>, ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
         new HashMap<>();
+
+    public final List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
+      // any implementations must register processors
+      return super.parseAndValidatateMetadata(targetType);
+    }
 
     /**
      * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
@@ -231,7 +236,7 @@ public interface Contract {
     protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       Arrays.stream(targetType.getAnnotations())
           .forEach(annotation -> classAnnotationProcessors
-              .get(annotation.annotationType())
+              .getOrDefault(annotation.annotationType(), ClassAnnotationProcessor.DO_NOTHING)
               .process(annotation, data));
     }
 
@@ -241,10 +246,11 @@ public interface Contract {
      * @param method method currently being processed.
      */
     @Override
-    protected final void processAnnotationOnMethod(MethodMetadata data,
-                                                   Annotation annotation,
-                                                   Method method) {
-      methodAnnotationProcessors.get(annotation.annotationType())
+    protected void processAnnotationOnMethod(MethodMetadata data,
+                                             Annotation annotation,
+                                             Method method) {
+      methodAnnotationProcessors
+          .getOrDefault(annotation.annotationType(), MethodAnnotationProcessor.DO_NOTHING)
           .process(annotation, data);
     }
 
@@ -263,7 +269,8 @@ public interface Contract {
       return Arrays.stream(annotations)
           .filter(
               annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))
-          .map(annotation -> parameterAnnotationProcessors.get(annotation.annotationType())
+          .map(annotation -> parameterAnnotationProcessors
+              .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
               .process(annotation, data, paramIndex))
           .collect(Collectors.reducing(Boolean::logicalOr))
           .orElse(false);
@@ -271,6 +278,10 @@ public interface Contract {
 
     @FunctionalInterface
     public interface ClassAnnotationProcessor<E extends Annotation> {
+
+      ClassAnnotationProcessor<Annotation> DO_NOTHING = (ann, data) -> {
+      };
+
       /**
        * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
        * type (unless they are the same).
@@ -294,6 +305,10 @@ public interface Contract {
 
     @FunctionalInterface
     public interface MethodAnnotationProcessor<E extends Annotation> {
+
+      MethodAnnotationProcessor<Annotation> DO_NOTHING = (ann, data) -> {
+      };
+
       /**
        * @param annotation present on the current method.
        * @param metadata metadata collected so far relating to the current java method.
@@ -316,6 +331,9 @@ public interface Contract {
 
     @FunctionalInterface
     public interface ParameterAnnotationProcessor<E extends Annotation> {
+
+      ParameterAnnotationProcessor<Annotation> DO_NOTHING = (ann, data, i) -> false;
+
       /**
        * @param annotation present on the current parameter annotation.
        * @param metadata metadata collected so far relating to the current java method.
