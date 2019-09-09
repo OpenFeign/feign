@@ -39,7 +39,7 @@ import feign.Request.Body;
  * <a href="https://hc.apache.org/httpcomponents-client-5.0.x/index.html">HttpClient 5</a>. Ex.
  *
  * <pre>
- * GitHub github = Feign.builder().client(new ClassicHttpClient()).target(GitHub.class,
+ * GitHub github = Feign.builder().client(new ApacheHttp5Client()).target(GitHub.class,
  * "https://api.github.com");
  */
 /*
