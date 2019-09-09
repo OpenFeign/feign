@@ -32,11 +32,11 @@ import okhttp3.mockwebserver.RecordedRequest;
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-public class ClassicHttpClientTest extends AbstractClientTest {
+public class ApacheHttp5ClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new ClassicHttpClient());
+    return Feign.builder().client(new ApacheHttp5Client());
   }
 
   @Test
@@ -44,7 +44,7 @@ public class ClassicHttpClientTest extends AbstractClientTest {
     final HttpClient httpClient = HttpClientBuilder.create().build();
     final JaxRsTestInterface testInterface = Feign.builder()
         .contract(new JAXRSContract())
-        .client(new ClassicHttpClient(httpClient))
+        .client(new ApacheHttp5Client(httpClient))
         .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse().setBody("foo"));

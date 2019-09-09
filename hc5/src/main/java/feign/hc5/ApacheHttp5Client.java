@@ -44,16 +44,16 @@ import feign.Request.Body;
  */
 /*
  */
-public final class ClassicHttpClient implements Client {
+public final class ApacheHttp5Client implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
   private final HttpClient client;
 
-  public ClassicHttpClient() {
+  public ApacheHttp5Client() {
     this(HttpClientBuilder.create().build());
   }
 
-  public ClassicHttpClient(HttpClient client) {
+  public ApacheHttp5Client(HttpClient client) {
     this.client = client;
   }
 
@@ -66,6 +66,14 @@ public final class ClassicHttpClient implements Client {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
     final HttpHost target = HttpHost.create(URI.create(request.url()));
+    final HttpClientContext context = configureTimeouts(options);
+
+    final ClassicHttpResponse httpResponse =
+        (ClassicHttpResponse) client.execute(target, httpUriRequest, context);
+    return toFeignResponse(httpResponse, request);
+  }
+
+  protected HttpClientContext configureTimeouts(Request.Options options) {
     final HttpClientContext context = new HttpClientContext();
     // per request timeouts
     final RequestConfig requestConfig =
@@ -76,10 +84,7 @@ public final class ClassicHttpClient implements Client {
                 .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
                 .build();
     context.setRequestConfig(requestConfig);
-
-    final ClassicHttpResponse httpResponse =
-        (ClassicHttpResponse) client.execute(target, httpUriRequest, context);
-    return toFeignResponse(httpResponse, request);
+    return context;
   }
 
   ClassicHttpRequest toClassicHttpRequest(Request request, Request.Options options)
