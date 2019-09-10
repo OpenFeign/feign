@@ -13,25 +13,16 @@
  */
 package feign;
 
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import feign.Request.HttpMethod;
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
 
 /**
  * Defines what annotations and values are valid on interfaces.
@@ -225,10 +216,8 @@ public interface Contract {
    */
   public abstract class DeclarativeContract extends BaseContract {
 
-    Map<Class<Annotation>, ClassAnnotationProcessor<Annotation>> classAnnotationProcessors =
-        new HashMap<>();
-    private Map<Class<Annotation>, MethodAnnotationProcessor<Annotation>> methodAnnotationProcessors =
-        new HashMap<>();
+    private List<GuardedAnnotationProcessor> classAnnotationProcessors = new ArrayList<>();
+    private List<GuardedAnnotationProcessor> methodAnnotationProcessors = new ArrayList<>();
     Map<Class<Annotation>, ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
         new HashMap<>();
 
@@ -248,9 +237,9 @@ public interface Contract {
     @Override
     protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
       Arrays.stream(targetType.getAnnotations())
-          .forEach(annotation -> classAnnotationProcessors
-              .getOrDefault(annotation.annotationType(), ClassAnnotationProcessor.DO_NOTHING)
-              .process(annotation, data));
+          .forEach(annotation -> classAnnotationProcessors.stream()
+              .filter(processor -> processor.test(annotation))
+              .forEach(processor -> processor.process(annotation, data)));
     }
 
     /**
@@ -259,12 +248,12 @@ public interface Contract {
      * @param method method currently being processed.
      */
     @Override
-    protected void processAnnotationOnMethod(MethodMetadata data,
-                                             Annotation annotation,
-                                             Method method) {
-      methodAnnotationProcessors
-          .getOrDefault(annotation.annotationType(), MethodAnnotationProcessor.DO_NOTHING)
-          .process(annotation, data);
+    protected final void processAnnotationOnMethod(MethodMetadata data,
+                                                   Annotation annotation,
+                                                   Method method) {
+      methodAnnotationProcessors.stream()
+          .filter(processor -> processor.test(annotation))
+          .forEach(processor -> processor.process(annotation, data));
     }
 
 
@@ -289,57 +278,87 @@ public interface Contract {
       return false;
     }
 
-    @FunctionalInterface
-    public interface ClassAnnotationProcessor<E extends Annotation> {
-
-      ClassAnnotationProcessor<Annotation> DO_NOTHING = (ann, data) -> {
-      };
-
-      /**
-       * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
-       * type (unless they are the same).
-       *
-       * @param annotation present on the current class
-       * @param metadata metadata collected so far relating to the current java method.
-       */
-      void process(E annotation, MethodMetadata metadata);
+    /**
+     * Called while class annotations are being processed
+     *
+     * @param annotationType to be processed
+     * @param processor function that defines the annotations modifies {@link MethodMetadata}
+     */
+    protected <E extends Annotation> void registerClassAnnotation(Class<E> annotationType,
+                                                                  AnnotationProcessor<E> processor) {
+      registerClassAnnotation(
+          annotation -> annotation.annotationType().equals(annotationType),
+          processor);
     }
 
     /**
      * Called while class annotations are being processed
      *
-     * @param annotation to be processed
+     * @param predicate to check if the annotation should be processed or not
      * @param processor function that defines the annotations modifies {@link MethodMetadata}
      */
-    protected <E extends Annotation> void registerClassAnnotation(Class<E> annotation,
-                                                                  ClassAnnotationProcessor<E> processor) {
-      this.classAnnotationProcessors.put((Class) annotation, (ClassAnnotationProcessor) processor);
+    protected <E extends Annotation> void registerClassAnnotation(Predicate<E> predicate,
+                                                                  AnnotationProcessor<E> processor) {
+      this.classAnnotationProcessors.add(new GuardedAnnotationProcessor(predicate, processor));
     }
 
     @FunctionalInterface
-    public interface MethodAnnotationProcessor<E extends Annotation> {
-
-      MethodAnnotationProcessor<Annotation> DO_NOTHING = (ann, data) -> {
-      };
+    public interface AnnotationProcessor<E extends Annotation> {
 
       /**
-       * @param annotation present on the current method.
-       * @param metadata metadata collected so far relating to the current java method.
-       * @param method method currently being processed.
+       * @param annotation present on the current element.
+       * @param metadata collected so far relating to the current java method.
        */
       void process(E annotation, MethodMetadata metadata);
+    }
+
+    private class GuardedAnnotationProcessor
+        implements Predicate<Annotation>, AnnotationProcessor<Annotation> {
+
+      private Predicate<Annotation> predicate;
+      private AnnotationProcessor<Annotation> processor;
+
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      private GuardedAnnotationProcessor(Predicate predicate,
+          AnnotationProcessor processor) {
+        this.predicate = predicate;
+        this.processor = processor;
+      }
+
+      @Override
+      public void process(Annotation annotation, MethodMetadata metadata) {
+        processor.process(annotation, metadata);
+      }
+
+      @Override
+      public boolean test(Annotation t) {
+        return predicate.test(t);
+      }
+
     }
 
     /**
      * Called while method annotations are being processed
      *
-     * @param annotation to be processed
+     * @param annotationType to be processed
      * @param processor function that defines the annotations modifies {@link MethodMetadata}
      */
-    protected <E extends Annotation> void registerMethodAnnotation(Class<E> annotation,
-                                                                   MethodAnnotationProcessor<E> processor) {
-      this.methodAnnotationProcessors.put((Class) annotation,
-          (MethodAnnotationProcessor) processor);
+    protected <E extends Annotation> void registerMethodAnnotation(Class<E> annotationType,
+                                                                   AnnotationProcessor<E> processor) {
+      registerMethodAnnotation(
+          annotation -> annotation.annotationType().equals(annotationType),
+          processor);
+    }
+
+    /**
+     * Called while method annotations are being processed
+     *
+     * @param predicate to check if the annotation should be processed or not
+     * @param processor function that defines the annotations modifies {@link MethodMetadata}
+     */
+    protected <E extends Annotation> void registerMethodAnnotation(Predicate<E> predicate,
+                                                                   AnnotationProcessor<E> processor) {
+      this.methodAnnotationProcessors.add(new GuardedAnnotationProcessor(predicate, processor));
     }
 
     @FunctionalInterface
@@ -369,10 +388,6 @@ public interface Contract {
                                                                       ParameterAnnotationProcessor<E> processor) {
       this.parameterAnnotationProcessors.put((Class) annotation,
           (ParameterAnnotationProcessor) processor);
-    }
-
-    public Map<Class<Annotation>, ClassAnnotationProcessor<Annotation>> getClassAnnotationProcessors() {
-      return Collections.unmodifiableMap(classAnnotationProcessors);
     }
 
   }

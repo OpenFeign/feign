@@ -43,58 +43,41 @@ public class JAXRSContract extends DeclarativeContract {
 
   public JAXRSContract() {
     super.registerClassAnnotation(Path.class, (path, data) -> {
-      if (path.value().isEmpty()) {
-        return;
+      if (path != null && !path.value().isEmpty()) {
+        String pathValue = path.value();
+        if (!pathValue.startsWith("/")) {
+          pathValue = "/" + pathValue;
+        }
+        if (pathValue.endsWith("/")) {
+          // Strip off any trailing slashes, since the template has already had slashes
+          // appropriately
+          // added
+          pathValue = pathValue.substring(0, pathValue.length() - 1);
+        }
+        // jax-rs allows whitespace around the param name, as well as an optional regex. The
+        // contract
+        // should
+        // strip these out appropriately.
+        pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+        data.template().uri(pathValue);
       }
-
-      String pathValue = path.value();
-      if (!pathValue.startsWith("/")) {
-        pathValue = "/" + pathValue;
-      }
-      if (pathValue.endsWith("/")) {
-        // Strip off any trailing slashes, since the template has already had slashes appropriately
-        // added
-        pathValue = pathValue.substring(0, pathValue.length() - 1);
-      }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
-      // should
-      // strip these out appropriately.
-      pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().uri(pathValue);
     });
     super.registerClassAnnotation(Consumes.class, this::handleConsumesAnnotation);
     super.registerClassAnnotation(Produces.class, this::handleProducesAnnotation);
 
-    // trying to minimize the diff
-    registerMethodsAnnotations();
-    registerParamAnnotations();
-  }
-
-
-  /**
-   * Overwriting
-   * {@link DeclarativeContract#processAnnotationOnMethod(MethodMetadata, Annotation, Method)}
-   * breaks the idea behind it of declaring annotations and how they should be processed.
-   *
-   * Will eventually need to find a different way of reading an annotation annotation.
-   */
-  @Override
-  protected void processAnnotationOnMethod(MethodMetadata data,
-                                           Annotation methodAnnotation,
-                                           Method method) {
-    final Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-    final HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
-    if (http != null) {
+    registerMethodAnnotation(methodAnnotation -> {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+      return http != null;
+    }, (methodAnnotation, data) -> {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
       checkState(data.template().method() == null,
-          "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
+          "Method %s contains multiple HTTP methods. Found: %s and %s", data.configKey(),
           data.template().method(), http.value());
       data.template().method(Request.HttpMethod.valueOf(http.value()));
-    } else {
-      super.processAnnotationOnMethod(data, methodAnnotation, method);
-    }
-  }
+    });
 
-  protected void registerMethodsAnnotations() {
     super.registerMethodAnnotation(Path.class, (path, data) -> {
       final String pathValue = emptyToNull(path.value());
       if (pathValue == null) {
@@ -113,6 +96,9 @@ public class JAXRSContract extends DeclarativeContract {
     });
     super.registerMethodAnnotation(Consumes.class, this::handleConsumesAnnotation);
     super.registerMethodAnnotation(Produces.class, this::handleProducesAnnotation);
+
+    // trying to minimize the diff
+    registerParamAnnotations();
   }
 
   private void handleProducesAnnotation(Produces produces, MethodMetadata data) {
