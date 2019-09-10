@@ -29,6 +29,7 @@
     <module>core</module>
     <module>gson</module>
     <module>httpclient</module>
+    <module>hc5</module>
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
@@ -536,6 +537,9 @@
         <configuration>
           <lineEnding>LF</lineEnding>
           <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
+          <excludes>
+            <exclude>travis/**</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>

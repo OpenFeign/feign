@@ -63,3 +63,6 @@ atlassian-ide-plugin.xml
 
 # NetBeans specific files/directories
 .nbattrs
+
+# encrypted values
+*.asc
