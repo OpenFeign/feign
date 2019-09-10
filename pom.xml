@@ -29,6 +29,7 @@
     <module>core</module>
     <module>gson</module>
     <module>httpclient</module>
+    <module>hc5</module>
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
