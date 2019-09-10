@@ -17,7 +17,7 @@ import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 import static feign.Util.removeValues;
 
-import feign.Contract.DeclarativeContract;
+import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
 import java.lang.annotation.Annotation;
