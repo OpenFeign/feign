@@ -14,15 +14,21 @@
 package feign;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import feign.Contract.DeclarativeContract.ClassAnnotationProcessor;
 import feign.Request.HttpMethod;
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
@@ -106,9 +112,15 @@ public interface Contract {
         if (parameterAnnotations[i] != null) {
           isHttpAnnotation = processAnnotationsOnParameter(data, parameterAnnotations[i], i);
         }
+
+        if (isHttpAnnotation) {
+          data.ignoreParamater(i);
+        }
+
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
+        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class
+            && !data.isAlreadyProcessed(i)) {
           checkState(data.formParams().isEmpty(),
               "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
@@ -220,6 +232,7 @@ public interface Contract {
     Map<Class<Annotation>, ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
         new HashMap<>();
 
+    @Override
     public final List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
       // any implementations must register processors
       return super.parseAndValidatateMetadata(targetType);
@@ -263,17 +276,17 @@ public interface Contract {
      * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
      *         http-relevant annotation.
      */
+    @Override
     protected final boolean processAnnotationsOnParameter(MethodMetadata data,
                                                           Annotation[] annotations,
                                                           int paramIndex) {
-      return Arrays.stream(annotations)
+      Arrays.stream(annotations)
           .filter(
               annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))
-          .map(annotation -> parameterAnnotationProcessors
+          .forEach(annotation -> parameterAnnotationProcessors
               .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
-              .process(annotation, data, paramIndex))
-          .collect(Collectors.reducing(Boolean::logicalOr))
-          .orElse(false);
+              .process(annotation, data, paramIndex));
+      return false;
     }
 
     @FunctionalInterface
@@ -332,7 +345,8 @@ public interface Contract {
     @FunctionalInterface
     public interface ParameterAnnotationProcessor<E extends Annotation> {
 
-      ParameterAnnotationProcessor<Annotation> DO_NOTHING = (ann, data, i) -> false;
+      ParameterAnnotationProcessor<Annotation> DO_NOTHING = (ann, data, i) -> {
+      };
 
       /**
        * @param annotation present on the current parameter annotation.
@@ -342,7 +356,7 @@ public interface Contract {
        * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
        *         http-relevant annotation.
        */
-      boolean process(E annotation, MethodMetadata metadata, int paramIndex);
+      void process(E annotation, MethodMetadata metadata, int paramIndex);
     }
 
     /**
@@ -424,20 +438,17 @@ public interface Contract {
         if (!data.template().hasRequestVariable(name)) {
           data.formParams().add(name);
         }
-        return true;
       });
       super.registerParameterAnnotation(QueryMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
         data.queryMapEncoded(queryMap.encoded());
-        return true;
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,
             "HeaderMap annotation was present on multiple parameters.");
         data.headerMapIndex(paramIndex);
-        return true;
       });
     }
 

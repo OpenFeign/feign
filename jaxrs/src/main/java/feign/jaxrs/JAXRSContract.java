@@ -138,7 +138,6 @@ public class JAXRSContract extends DeclarativeContract {
         checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
             paramIndex);
         nameParam(data, name, paramIndex);
-        return true;
       });
       registerParameterAnnotation(QueryParam.class, (param, data, paramIndex) -> {
         final String name = param.value();
@@ -147,7 +146,6 @@ public class JAXRSContract extends DeclarativeContract {
         final String query = addTemplatedParam(name);
         data.template().query(name, query);
         nameParam(data, name, paramIndex);
-        return true;
       });
       registerParameterAnnotation(HeaderParam.class, (param, data, paramIndex) -> {
         final String name = param.value();
@@ -156,7 +154,6 @@ public class JAXRSContract extends DeclarativeContract {
         final String header = addTemplatedParam(name);
         data.template().header(name, header);
         nameParam(data, name, paramIndex);
-        return true;
       });
       registerParameterAnnotation(FormParam.class, (param, data, paramIndex) -> {
         final String name = param.value();
@@ -164,7 +161,6 @@ public class JAXRSContract extends DeclarativeContract {
             paramIndex);
         data.formParams().add(name);
         nameParam(data, name, paramIndex);
-        return true;
       });
     }
   }

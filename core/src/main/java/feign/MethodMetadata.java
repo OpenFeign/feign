@@ -15,11 +15,7 @@ package feign;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
@@ -41,6 +37,7 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
+  private BitSet parameterToIgnore = new BitSet();
 
   MethodMetadata() {}
 
@@ -163,4 +160,50 @@ public final class MethodMetadata implements Serializable {
   public Map<Integer, Expander> indexToExpander() {
     return indexToExpander;
   }
+
+  /**
+   * @param i individual parameter that should be ignored
+   * @return this instance
+   */
+  public MethodMetadata ignoreParamater(int i) {
+    this.parameterToIgnore.set(i);
+    return this;
+  }
+
+  public BitSet parameterToIgnore() {
+    return parameterToIgnore;
+  }
+
+  public MethodMetadata parameterToIgnore(BitSet parameterToIgnore) {
+    this.parameterToIgnore = parameterToIgnore;
+    return this;
+  }
+
+  /**
+   * @param i individual parameter to check if should be ignored
+   * @return true when field should not be processed by feign
+   */
+  public boolean shouldIgnoreParamater(int i) {
+    return parameterToIgnore.get(i);
+  }
+
+  /**
+   * @param index
+   * @return true if the parameter {@code index} was already consumed by a any
+   *         {@link MethodMetadata} holder
+   */
+  public boolean isAlreadyProcessed(Integer index) {
+    return index.equals(urlIndex)
+        || index.equals(bodyIndex)
+        || index.equals(headerMapIndex)
+        || index.equals(queryMapIndex)
+        || indexToName.containsKey(index)
+        || indexToExpanderClass.containsKey(index)
+        || indexToEncoded.containsKey(index)
+        || (indexToExpander != null && indexToExpander.containsKey(index))
+        || parameterToIgnore.get(index);
+  }
+
+
+
 }

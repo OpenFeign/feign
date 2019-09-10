@@ -28,8 +28,8 @@ public final class JAXRS2Contract extends JAXRSContract {
     // this will prevent interfaces from becoming unusable entirely due to single (unsupported)
     // endpoints.
     // https://github.com/OpenFeign/feign/issues/669
-    super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> true);
-    super.registerParameterAnnotation(Context.class, (ann, data, i) -> true);
+    super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
+    super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
   }
 
 }
