@@ -20,7 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import javax.ws.rs.*;
-import feign.Contract.DeclarativeContract;
+import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
 
