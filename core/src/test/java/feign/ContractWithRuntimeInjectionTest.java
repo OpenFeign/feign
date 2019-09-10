@@ -81,7 +81,7 @@ public class ContractWithRuntimeInjectionTest {
     }
   }
 
-  static class ContractWithRuntimeInjection extends Contract.Default {
+  static class ContractWithRuntimeInjection implements Contract {
     final BeanFactory beanFactory;
 
     ContractWithRuntimeInjection(BeanFactory beanFactory) {
@@ -93,7 +93,7 @@ public class ContractWithRuntimeInjectionTest {
      */
     @Override
     public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
-      List<MethodMetadata> result = super.parseAndValidatateMetadata(targetType);
+      List<MethodMetadata> result = new Contract.Default().parseAndValidatateMetadata(targetType);
       for (MethodMetadata md : result) {
         Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
         for (Map.Entry<Integer, Class<? extends Param.Expander>> entry :

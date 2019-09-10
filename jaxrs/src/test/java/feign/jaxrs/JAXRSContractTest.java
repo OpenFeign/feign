@@ -15,31 +15,15 @@ package feign.jaxrs;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
 import feign.MethodMetadata;
 import feign.Response;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import java.util.*;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,7 +92,7 @@ public class JAXRSContractTest {
 
   @Test
   public void producesAddsAcceptHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
+    final MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
 
     /* multiple @Produces annotations should be additive */
     assertThat(md.template())
@@ -119,7 +103,8 @@ public class JAXRSContractTest {
 
   @Test
   public void producesMultipleAddsAcceptHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesMultiple");
+    final MethodMetadata md =
+        parseAndValidateMetadata(ProducesAndConsumes.class, "producesMultiple");
 
     assertThat(md.template())
         .hasHeaders(
@@ -130,7 +115,7 @@ public class JAXRSContractTest {
   @Test
   public void producesNada() throws Exception {
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Produces.value() was empty on method producesNada");
+    thrown.expectMessage("Produces.value() was empty on ProducesAndConsumes#producesNada");
 
     parseAndValidateMetadata(ProducesAndConsumes.class, "producesNada");
   }
@@ -138,14 +123,14 @@ public class JAXRSContractTest {
   @Test
   public void producesEmpty() throws Exception {
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Produces.value() was empty on method producesEmpty");
+    thrown.expectMessage("Produces.value() was empty on ProducesAndConsumes#producesEmpty");
 
     parseAndValidateMetadata(ProducesAndConsumes.class, "producesEmpty");
   }
 
   @Test
   public void consumesAddsContentTypeHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
+    final MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
 
     /* multiple @Consumes annotations are additive */
     assertThat(md.template())
@@ -155,7 +140,8 @@ public class JAXRSContractTest {
 
   @Test
   public void consumesMultipleAddsContentTypeHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
+    final MethodMetadata md =
+        parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
 
     assertThat(md.template())
         .hasHeaders(
@@ -166,7 +152,7 @@ public class JAXRSContractTest {
   @Test
   public void consumesNada() throws Exception {
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Consumes.value() was empty on method consumesNada");
+    thrown.expectMessage("Consumes.value() was empty on ProducesAndConsumes#consumesNada");
 
     parseAndValidateMetadata(ProducesAndConsumes.class, "consumesNada");
   }
@@ -174,14 +160,15 @@ public class JAXRSContractTest {
   @Test
   public void consumesEmpty() throws Exception {
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Consumes.value() was empty on method consumesEmpty");
+    thrown.expectMessage("Consumes.value() was empty on ProducesAndConsumes#consumesEmpty");
 
     parseAndValidateMetadata(ProducesAndConsumes.class, "consumesEmpty");
   }
 
   @Test
   public void producesAndConsumesOnClassAddsHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "producesAndConsumes");
+    final MethodMetadata md =
+        parseAndValidateMetadata(ProducesAndConsumes.class, "producesAndConsumes");
 
     assertThat(md.template())
         .hasHeaders(
@@ -191,7 +178,7 @@ public class JAXRSContractTest {
 
   @Test
   public void bodyParamIsGeneric() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
+    final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
     assertThat(md.bodyIndex()).isEqualTo(0);
     assertThat(md.bodyType())
@@ -271,7 +258,7 @@ public class JAXRSContractTest {
 
   @Test
   public void withPathAndURIParams() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             WithURIParam.class, "uriParam", String.class, URI.class, String.class);
 
@@ -286,7 +273,7 @@ public class JAXRSContractTest {
 
   @Test
   public void pathAndQueryParams() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             WithPathAndQueryParams.class,
             "recordsByNameAndType",
@@ -312,7 +299,7 @@ public class JAXRSContractTest {
 
   @Test
   public void formParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
@@ -328,7 +315,7 @@ public class JAXRSContractTest {
   /** Body type is only for the body param. */
   @Test
   public void formParamsDoesNotSetBodyType() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
@@ -345,7 +332,7 @@ public class JAXRSContractTest {
 
   @Test
   public void headerParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
+    final MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
 
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
 
@@ -649,7 +636,7 @@ public class JAXRSContractTest {
     Response get();
   }
 
-  private MethodMetadata parseAndValidateMetadata(
+  protected MethodMetadata parseAndValidateMetadata(
       Class<?> targetType, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(
         targetType, targetType.getMethod(method, parameterTypes));

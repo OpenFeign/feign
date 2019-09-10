@@ -17,7 +17,7 @@ import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 import static feign.Util.removeValues;
 
-import feign.Contract;
+import feign.Contract.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
 import java.lang.annotation.Annotation;
@@ -29,7 +29,7 @@ import javax.ws.rs.*;
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
  * JAX-RS README</a>.
  */
-public class JAXRSContract extends Contract.BaseContract {
+public class JAXRSContract extends DeclarativeContract {
 
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
@@ -42,139 +42,140 @@ public class JAXRSContract extends Contract.BaseContract {
     return super.parseAndValidateMetadata(targetType, method);
   }
 
-  @Override
-  protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
-    Path path = clz.getAnnotation(Path.class);
-    if (path != null && !path.value().isEmpty()) {
-      String pathValue = path.value();
-      if (!pathValue.startsWith("/")) {
-        pathValue = "/" + pathValue;
-      }
-      if (pathValue.endsWith("/")) {
-        // Strip off any trailing slashes, since the template has already had slashes appropriately
-        // added
-        pathValue = pathValue.substring(0, pathValue.length() - 1);
-      }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
-      // should
-      // strip these out appropriately.
-      pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().uri(pathValue);
-    }
-    Consumes consumes = clz.getAnnotation(Consumes.class);
-    if (consumes != null) {
-      handleConsumesAnnotation(data, consumes, clz.getName());
-    }
-    Produces produces = clz.getAnnotation(Produces.class);
-    if (produces != null) {
-      handleProducesAnnotation(data, produces, clz.getName());
-    }
+  public JAXRSContract() {
+    super.registerClassAnnotation(
+        Path.class,
+        (path, data) -> {
+          if (path != null && !path.value().isEmpty()) {
+            String pathValue = path.value();
+            if (!pathValue.startsWith("/")) {
+              pathValue = "/" + pathValue;
+            }
+            if (pathValue.endsWith("/")) {
+              // Strip off any trailing slashes, since the template has already had slashes
+              // appropriately
+              // added
+              pathValue = pathValue.substring(0, pathValue.length() - 1);
+            }
+            // jax-rs allows whitespace around the param name, as well as an optional regex. The
+            // contract
+            // should
+            // strip these out appropriately.
+            pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+            data.template().uri(pathValue);
+          }
+        });
+    super.registerClassAnnotation(Consumes.class, this::handleConsumesAnnotation);
+    super.registerClassAnnotation(Produces.class, this::handleProducesAnnotation);
+
+    registerMethodAnnotation(
+        methodAnnotation -> {
+          Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+          HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+          return http != null;
+        },
+        (methodAnnotation, data) -> {
+          Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+          HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+          checkState(
+              data.template().method() == null,
+              "Method %s contains multiple HTTP methods. Found: %s and %s",
+              data.configKey(),
+              data.template().method(),
+              http.value());
+          data.template().method(Request.HttpMethod.valueOf(http.value()));
+        });
+
+    super.registerMethodAnnotation(
+        Path.class,
+        (path, data) -> {
+          final String pathValue = emptyToNull(path.value());
+          if (pathValue == null) {
+            return;
+          }
+          String methodAnnotationValue = path.value();
+          if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
+            methodAnnotationValue = "/" + methodAnnotationValue;
+          }
+          // jax-rs allows whitespace around the param name, as well as an optional regex. The
+          // contract
+          // should
+          // strip these out appropriately.
+          methodAnnotationValue =
+              methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+          data.template().uri(methodAnnotationValue, true);
+        });
+    super.registerMethodAnnotation(Consumes.class, this::handleConsumesAnnotation);
+    super.registerMethodAnnotation(Produces.class, this::handleProducesAnnotation);
+
+    // trying to minimize the diff
+    registerParamAnnotations();
   }
 
-  @Override
-  protected void processAnnotationOnMethod(
-      MethodMetadata data, Annotation methodAnnotation, Method method) {
-    Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-    HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
-    if (http != null) {
-      checkState(
-          data.template().method() == null,
-          "Method %s contains multiple HTTP methods. Found: %s and %s",
-          method.getName(),
-          data.template().method(),
-          http.value());
-      data.template().method(Request.HttpMethod.valueOf(http.value()));
-    } else if (annotationType == Path.class) {
-      String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
-      if (pathValue == null) {
-        return;
-      }
-      String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
-      if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
-        methodAnnotationValue = "/" + methodAnnotationValue;
-      }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
-      // should
-      // strip these out appropriately.
-      methodAnnotationValue =
-          methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().uri(methodAnnotationValue, true);
-    } else if (annotationType == Produces.class) {
-      handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
-    } else if (annotationType == Consumes.class) {
-      handleConsumesAnnotation(data, (Consumes) methodAnnotation, "method " + method.getName());
-    }
-  }
-
-  private void handleProducesAnnotation(MethodMetadata data, Produces produces, String name) {
-    String[] serverProduces =
+  private void handleProducesAnnotation(Produces produces, MethodMetadata data) {
+    final String[] serverProduces =
         removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
-    checkState(serverProduces.length > 0, "Produces.value() was empty on %s", name);
+    checkState(serverProduces.length > 0, "Produces.value() was empty on %s", data.configKey());
     data.template().header(ACCEPT, Collections.emptyList()); // remove any previous produces
     data.template().header(ACCEPT, serverProduces);
   }
 
-  private void handleConsumesAnnotation(MethodMetadata data, Consumes consumes, String name) {
-    String[] serverConsumes =
+  private void handleConsumesAnnotation(Consumes consumes, MethodMetadata data) {
+    final String[] serverConsumes =
         removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
-    checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", name);
+    checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", data.configKey());
     data.template().header(CONTENT_TYPE, Collections.emptyList()); // remove any previous consumes
     data.template().header(CONTENT_TYPE, serverConsumes[0]);
   }
 
-  /**
-   * Allows derived contracts to specify unsupported jax-rs parameter annotations which should be
-   * ignored. Required for JAX-RS 2 compatibility.
-   */
-  protected boolean isUnsupportedHttpParameterAnnotation(Annotation parameterAnnotation) {
-    return false;
-  }
-
-  @Override
-  protected boolean processAnnotationsOnParameter(
-      MethodMetadata data, Annotation[] annotations, int paramIndex) {
-    boolean isHttpParam = false;
-    for (Annotation parameterAnnotation : annotations) {
-      Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-      // masc20180327. parameter with unsupported jax-rs annotations should not be passed as body
-      // params.
-      // this will prevent interfaces from becoming unusable entirely due to single (unsupported)
-      // endpoints.
-      // https://github.com/OpenFeign/feign/issues/669
-      if (this.isUnsupportedHttpParameterAnnotation(parameterAnnotation)) {
-        isHttpParam = true;
-      } else if (annotationType == PathParam.class) {
-        String name = PathParam.class.cast(parameterAnnotation).value();
-        checkState(
-            emptyToNull(name) != null, "PathParam.value() was empty on parameter %s", paramIndex);
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == QueryParam.class) {
-        String name = QueryParam.class.cast(parameterAnnotation).value();
-        checkState(
-            emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s", paramIndex);
-        String query = addTemplatedParam(name);
-        data.template().query(name, query);
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == HeaderParam.class) {
-        String name = HeaderParam.class.cast(parameterAnnotation).value();
-        checkState(
-            emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s", paramIndex);
-        String header = addTemplatedParam(name);
-        data.template().header(name, header);
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == FormParam.class) {
-        String name = FormParam.class.cast(parameterAnnotation).value();
-        checkState(
-            emptyToNull(name) != null, "FormParam.value() was empty on parameter %s", paramIndex);
-        data.formParams().add(name);
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      }
+  protected void registerParamAnnotations() {
+    {
+      registerParameterAnnotation(
+          PathParam.class,
+          (param, data, paramIndex) -> {
+            final String name = param.value();
+            checkState(
+                emptyToNull(name) != null,
+                "PathParam.value() was empty on parameter %s",
+                paramIndex);
+            nameParam(data, name, paramIndex);
+          });
+      registerParameterAnnotation(
+          QueryParam.class,
+          (param, data, paramIndex) -> {
+            final String name = param.value();
+            checkState(
+                emptyToNull(name) != null,
+                "QueryParam.value() was empty on parameter %s",
+                paramIndex);
+            final String query = addTemplatedParam(name);
+            data.template().query(name, query);
+            nameParam(data, name, paramIndex);
+          });
+      registerParameterAnnotation(
+          HeaderParam.class,
+          (param, data, paramIndex) -> {
+            final String name = param.value();
+            checkState(
+                emptyToNull(name) != null,
+                "HeaderParam.value() was empty on parameter %s",
+                paramIndex);
+            final String header = addTemplatedParam(name);
+            data.template().header(name, header);
+            nameParam(data, name, paramIndex);
+          });
+      registerParameterAnnotation(
+          FormParam.class,
+          (param, data, paramIndex) -> {
+            final String name = param.value();
+            checkState(
+                emptyToNull(name) != null,
+                "FormParam.value() was empty on parameter %s",
+                paramIndex);
+            data.formParams().add(name);
+            nameParam(data, name, paramIndex);
+          });
     }
-    return isHttpParam;
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.

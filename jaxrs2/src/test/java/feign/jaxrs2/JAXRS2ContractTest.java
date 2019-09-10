@@ -13,8 +13,18 @@
  */
 package feign.jaxrs2;
 
+import static feign.assertj.FeignAssertions.assertThat;
+
+import feign.MethodMetadata;
 import feign.jaxrs.JAXRSContract;
 import feign.jaxrs.JAXRSContractTest;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+import org.junit.Test;
 
 /**
  * Tests interfaces defined per {@link JAXRS2Contract} are interpreted into expected {@link feign
@@ -25,5 +35,19 @@ public class JAXRS2ContractTest extends JAXRSContractTest {
   @Override
   protected JAXRSContract createContract() {
     return new JAXRS2Contract();
+  }
+
+  @Test
+  public void injectJaxrsInternals() throws Exception {
+    final MethodMetadata methodMetadata =
+        parseAndValidateMetadata(
+            JaxrsInternals.class, "inject", AsyncResponse.class, UriInfo.class);
+    assertThat(methodMetadata.template()).noRequestBody();
+  }
+
+  @Path("/")
+  public interface JaxrsInternals {
+    @GET
+    void inject(@Suspended AsyncResponse ar, @Context UriInfo info);
   }
 }

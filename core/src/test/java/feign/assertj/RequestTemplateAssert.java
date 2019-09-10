@@ -94,4 +94,21 @@ public final class RequestTemplateAssert
     objects.assertNull(info, actual.headers().get(encoded));
     return this;
   }
+
+  public RequestTemplateAssert noRequestBody() {
+    isNotNull();
+    if (actual.requestBody() != null) {
+      if (actual.requestBody().bodyTemplate() != null) {
+        failWithMessage(
+            "\nExpecting requestBody.bodyTemplate to be null, but was:<%s>",
+            actual.requestBody().bodyTemplate());
+      }
+      if (actual.requestBody().asBytes() != null) {
+        failWithMessage(
+            "\nExpecting requestBody.data to be null, but was:<%s>",
+            actual.requestBody().asString());
+      }
+    }
+    return this;
+  }
 }

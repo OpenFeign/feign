@@ -783,7 +783,8 @@ public class DefaultContractTest {
   public void missingMethod() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(
-        "RequestLine annotation didn't start with an HTTP verb on method updateSharing");
+        "RequestLine annotation didn't start with an HTTP verb on method"
+            + " MissingMethod#updateSharing");
 
     contract.parseAndValidatateMetadata(MissingMethod.class);
   }
