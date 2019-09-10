@@ -20,6 +20,7 @@ import feign.template.BodyTemplate;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
 public final class Request {
@@ -38,13 +39,17 @@ public final class Request {
     }
 
     public Request.Body expand(Map<String, ?> variables) {
-      if (bodyTemplate == null) return this;
+      if (bodyTemplate == null) {
+        return this;
+      }
 
       return encoded(bodyTemplate.expand(variables).getBytes(encoding), encoding);
     }
 
     public List<String> getVariables() {
-      if (bodyTemplate == null) return Collections.emptyList();
+      if (bodyTemplate == null) {
+        return Collections.emptyList();
+      }
       return bodyTemplate.getVariables();
     }
 
@@ -70,11 +75,15 @@ public final class Request {
     }
 
     public String asString() {
-      return encoding != null && data != null ? new String(data, encoding) : "Binary data";
+      return !isBinary() ? new String(data, encoding) : "Binary data";
     }
 
     public static Body empty() {
       return new Request.Body(null, null, null);
+    }
+
+    public boolean isBinary() {
+      return encoding == null || data == null;
     }
   }
 
@@ -96,6 +105,7 @@ public final class Request {
    *
    * @deprecated {@link #create(HttpMethod, String, Map, byte[], Charset)}
    */
+  @Deprecated
   public static Request create(
       String method,
       String url,
@@ -103,7 +113,7 @@ public final class Request {
       byte[] body,
       Charset charset) {
     checkNotNull(method, "httpMethod of %s", method);
-    HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
+    final HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
     return create(httpMethod, url, headers, body, charset);
   }
 
@@ -158,6 +168,7 @@ public final class Request {
    * @return the HttpMethod string
    * @deprecated @see {@link #httpMethod()}
    */
+  @Deprecated
   public String method() {
     return httpMethod.name();
   }
@@ -188,6 +199,7 @@ public final class Request {
    *
    * @deprecated use {@link #requestBody()} instead
    */
+  @Deprecated
   public Charset charset() {
     return body.encoding;
   }
@@ -199,6 +211,7 @@ public final class Request {
    * @see #charset()
    * @deprecated use {@link #requestBody()} instead
    */
+  @Deprecated
   public byte[] body() {
     return body.data;
   }
@@ -209,10 +222,10 @@ public final class Request {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     builder.append(httpMethod).append(' ').append(url).append(" HTTP/1.1\n");
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
+    for (final String field : headers.keySet()) {
+      for (final String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
@@ -228,22 +241,43 @@ public final class Request {
    */
   public static class Options {
 
-    private final int connectTimeoutMillis;
-    private final int readTimeoutMillis;
+    private final long connectTimeout;
+    private final TimeUnit connectTimeoutUnit;
+    private final long readTimeout;
+    private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
 
-    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
-      this.connectTimeoutMillis = connectTimeoutMillis;
-      this.readTimeoutMillis = readTimeoutMillis;
+    public Options(
+        long connectTimeout,
+        TimeUnit connectTimeoutUnit,
+        long readTimeout,
+        TimeUnit readTimeoutUnit,
+        boolean followRedirects) {
+      super();
+      this.connectTimeout = connectTimeout;
+      this.connectTimeoutUnit = connectTimeoutUnit;
+      this.readTimeout = readTimeout;
+      this.readTimeoutUnit = readTimeoutUnit;
       this.followRedirects = followRedirects;
     }
 
+    @Deprecated
+    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
+      this(
+          connectTimeoutMillis,
+          TimeUnit.MILLISECONDS,
+          readTimeoutMillis,
+          TimeUnit.MILLISECONDS,
+          followRedirects);
+    }
+
+    @Deprecated
     public Options(int connectTimeoutMillis, int readTimeoutMillis) {
       this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 
     public Options() {
-      this(10 * 1000, 60 * 1000);
+      this(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true);
     }
 
     /**
@@ -251,8 +285,9 @@ public final class Request {
      *
      * @see java.net.HttpURLConnection#getConnectTimeout()
      */
+    @Deprecated
     public int connectTimeoutMillis() {
-      return connectTimeoutMillis;
+      return (int) connectTimeoutUnit.toMillis(connectTimeout);
     }
 
     /**
@@ -260,8 +295,9 @@ public final class Request {
      *
      * @see java.net.HttpURLConnection#getReadTimeout()
      */
+    @Deprecated
     public int readTimeoutMillis() {
-      return readTimeoutMillis;
+      return (int) readTimeoutUnit.toMillis(readTimeout);
     }
 
     /**
@@ -271,6 +307,22 @@ public final class Request {
      */
     public boolean isFollowRedirects() {
       return followRedirects;
+    }
+
+    public long connectTimeout() {
+      return connectTimeout;
+    }
+
+    public TimeUnit connectTimeoutUnit() {
+      return connectTimeoutUnit;
+    }
+
+    public long readTimeout() {
+      return readTimeout;
+    }
+
+    public TimeUnit readTimeoutUnit() {
+      return readTimeoutUnit;
     }
   }
 }
