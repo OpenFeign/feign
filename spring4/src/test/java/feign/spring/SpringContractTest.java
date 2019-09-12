@@ -18,9 +18,12 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.MissingResourceException;
 import feign.Feign;
 import feign.Request;
 import feign.jackson.JacksonDecoder;
@@ -71,5 +74,37 @@ public class SpringContractTest {
     assertThat(request.headers(), equalTo(
         Collections.singletonMap("Content-Type", Arrays.asList("application/json"))));
   }
+
+  interface GenericResource<DTO> {
+
+    @RequestMapping(value = "generic", method = RequestMethod.GET)
+    public @ResponseBody DTO getData(@RequestBody DTO input);
+
+  }
+
+  @RestController
+  @RequestMapping(value = "/health", produces = "text/html")
+  interface HealthResource extends GenericResource<Data> {
+
+    @RequestMapping(method = RequestMethod.GET)
+    public @ResponseBody String getStatus();
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public void check(
+                      @PathVariable("id") String campaignId,
+                      @RequestParam(value = "deep", defaultValue = "false") boolean deepCheck);
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public void check(
+                      @PathVariable("id") String campaignId,
+                      @RequestParam(value = "deep", defaultValue = "false") boolean deepCheck,
+                      @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun);
+
+    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "This customer is not found in the system")
+    @ExceptionHandler(MissingResourceException.class)
+    void missingResourceExceptionHandler();
+
+  }
+
 
 }

@@ -24,16 +24,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import feign.Contract.BaseContract;
+import feign.DeclarativeContract;
 import feign.MethodMetadata;
 
-public class SpringContract extends BaseContract {
+public class SpringContract extends DeclarativeContract {
 
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
 
-  protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
-    if (targetType.isAnnotationPresent(RequestMapping.class)) {
-      RequestMapping requestMapping = targetType.getAnnotation(RequestMapping.class);
+  public SpringContract() {
+    registerClassAnnotation(RequestMapping.class, (requestMapping, data) ->{
       appendMappings(data, requestMapping.value());
 
       if (requestMapping.method().length == 1)
@@ -41,8 +41,37 @@ public class SpringContract extends BaseContract {
 
       handleProducesAnnotation(data, requestMapping.produces());
       handleConsumesAnnotation(data, requestMapping.consumes());
+    });
 
-    }
+    registerMethodAnnotation(RequestMapping.class, (requestMapping, data) ->{
+      String[] mappings = requestMapping.value();
+      appendMappings(data, mappings);
+
+      if (requestMapping.method().length == 1)
+        data.template().method(requestMapping.method()[0].name());
+    });
+
+    registerMethodAnnotation(ResponseBody.class, (body, data) ->{
+      handleConsumesAnnotation(data, "application/json");
+    });
+    registerMethodAnnotation(ExceptionHandler.class, (ann, data) ->{
+//      data.ignoreMethod();
+    });
+    registerParameterAnnotation( PathVariable.class, (parameterAnnotation, data, paramIndex) ->{
+      String name = PathVariable.class.cast(parameterAnnotation).value();
+      nameParam(data, name, paramIndex);
+    });
+
+    registerParameterAnnotation(RequestBody.class, (body, data,paramIndex) ->{
+      handleProducesAnnotation(data, "application/json");
+    });
+    registerParameterAnnotation(RequestParam.class, (parameterAnnotation, data,paramIndex) ->{
+      String name = RequestParam.class.cast(parameterAnnotation).value();
+      Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+      data.template().query(name, query);
+      nameParam(data, name, paramIndex);
+    });
+
   }
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
@@ -54,27 +83,6 @@ public class SpringContract extends BaseContract {
 
       data.template().append(mapping);
     }
-  }
-
-  @Override
-  protected void processAnnotationOnMethod(MethodMetadata data,
-                                           Annotation annotation,
-                                           Method method) {
-    if (annotation.annotationType() == RequestMapping.class) {
-      RequestMapping requestMapping = RequestMapping.class.cast(annotation);
-      String[] mappings = requestMapping.value();
-      appendMappings(data, mappings);
-
-      if (requestMapping.method().length == 1)
-        data.template().method(requestMapping.method()[0].name());
-
-    }
-
-    if (annotation.annotationType() == ResponseBody.class)
-      handleConsumesAnnotation(data, "application/json");
-
-    if (annotation.annotationType() == ExceptionHandler.class)
-      data.template().method("CONFIG");
   }
 
   private void handleProducesAnnotation(MethodMetadata data, String... produces) {
@@ -91,33 +99,6 @@ public class SpringContract extends BaseContract {
     data.template().header(CONTENT_TYPE, (String) null); // remove any previous
                                                          // consumes
     data.template().header(CONTENT_TYPE, consumes[0]);
-  }
-
-  @Override
-  protected boolean processAnnotationsOnParameter(MethodMetadata data,
-                                                  Annotation[] annotations,
-                                                  int paramIndex) {
-    boolean isHttpParam = false;
-    for (Annotation parameterAnnotation : annotations) {
-      Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-      if (annotationType == PathVariable.class) {
-        String name = PathVariable.class.cast(parameterAnnotation).value();
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      }
-
-      if (annotationType == RequestBody.class)
-        handleProducesAnnotation(data, "application/json");
-
-      if (annotationType == RequestParam.class) {
-        String name = RequestParam.class.cast(parameterAnnotation).value();
-        Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
-        data.template().query(name, query);
-        nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      }
-    }
-    return isHttpParam;
   }
 
   protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
