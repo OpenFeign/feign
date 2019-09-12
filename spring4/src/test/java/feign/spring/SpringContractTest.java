@@ -17,7 +17,9 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
@@ -33,6 +35,10 @@ import feign.mock.MockClient;
 import feign.mock.MockTarget;
 
 public class SpringContractTest {
+
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private MockClient mockClient;
   private HealthResource resource;
@@ -77,6 +83,13 @@ public class SpringContractTest {
         Arrays.asList("application/json")));
   }
 
+  @Test
+  public void notAHttpMethod() {
+    thrown.expectMessage("is not a method handled by feign");
+
+    resource.missingResourceExceptionHandler();
+  }
+
   interface GenericResource<DTO> {
 
     @RequestMapping(value = "generic", method = RequestMethod.GET)
@@ -108,6 +121,5 @@ public class SpringContractTest {
     void missingResourceExceptionHandler();
 
   }
-
 
 }
