@@ -1,12 +1,3 @@
-# feign-spring
-
-[![Build Status](https://travis-ci.org/velo/feign-spring.svg?branch=master)](https://travis-ci.org/velo/feign-spring?branch=master) 
-[![Coverage Status](https://coveralls.io/repos/github/velo/feign-spring/badge.svg?branch=master)](https://coveralls.io/github/velo/feign-spring?branch=master) 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.marvinformatics.feign/feign-spring/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marvinformatics.feign/feign-spring/) 
-[![Issues](https://img.shields.io/github/issues/velo/feign-spring.svg)](https://github.com/velo/feign-spring/issues) 
-[![Forks](https://img.shields.io/github/forks/velo/feign-spring.svg)](https://github.com/velo/feign-spring/network) 
-[![Stars](https://img.shields.io/github/stars/velo/feign-spring.svg)](https://github.com/velo/feign-spring/stargazers)
-
 # Feign Spring
 This module overrides OpenFeign/feign annotation processing to instead use standard ones supplied by the spring annotations specification.
 
