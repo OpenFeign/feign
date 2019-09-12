@@ -676,6 +676,21 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * Clear on reader from {@link RequestTemplate}
+   *
+   * @param name of the header.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate removeHeader(String name) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+    this.headers.remove(name);
+
+    return this;
+  }
+
+  /**
    * Create a Header Template.
    *
    * @param name of the header

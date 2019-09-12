@@ -13,7 +13,7 @@
  */
 package feign.spring;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Before;
@@ -30,6 +30,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
+import feign.mock.MockTarget;
 
 public class SpringContractTest {
 
@@ -39,30 +40,30 @@ public class SpringContractTest {
   @Before
   public void setup() throws IOException {
     mockClient = new MockClient()
-        .noContent(HttpMethod.GET, "mock:///health")
-        .noContent(HttpMethod.GET, "mock:///health/1?deep=true")
-        .noContent(HttpMethod.GET, "mock:///health/1?deep=true&dryRun=true")
-        .ok(HttpMethod.GET, "mock:///health/generic", "{}");
+        .noContent(HttpMethod.GET, "/health")
+        .noContent(HttpMethod.GET, "/health/1?deep=true")
+        .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
+        .ok(HttpMethod.GET, "/health/generic", "{}");
     resource = Feign.builder()
         .contract(new SpringContract())
         .encoder(new JacksonEncoder())
         .decoder(new JacksonDecoder())
         .client(mockClient)
-        .target(HealthResource.class, "mock://");
+        .target(new MockTarget<>(HealthResource.class));
   }
 
   @Test
   public void requestParam() {
     resource.check("1", true);
 
-    mockClient.verifyOne(HttpMethod.GET, "mock:///health/1?deep=true");
+    mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true");
   }
 
   @Test
   public void requestTwoParams() {
     resource.check("1", true, true);
 
-    mockClient.verifyOne(HttpMethod.GET, "mock:///health/1?deep=true&dryRun=true");
+    mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true&dryRun=true");
   }
 
   @Test
@@ -70,9 +71,10 @@ public class SpringContractTest {
     final Data data = resource.getData(new Data());
     assertThat(data, notNullValue());
 
-    final Request request = mockClient.verifyOne(HttpMethod.GET, "mock:///health/generic");
-    assertThat(request.headers(), equalTo(
-        Collections.singletonMap("Content-Type", Arrays.asList("application/json"))));
+    final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/generic");
+    assertThat(request.headers(), hasEntry(
+        "Content-Type",
+        Arrays.asList("application/json")));
   }
 
   interface GenericResource<DTO> {
@@ -100,7 +102,8 @@ public class SpringContractTest {
                       @RequestParam(value = "deep", defaultValue = "false") boolean deepCheck,
                       @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun);
 
-    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "This customer is not found in the system")
+    @ResponseStatus(value = HttpStatus.NOT_FOUND,
+        reason = "This customer is not found in the system")
     @ExceptionHandler(MissingResourceException.class)
     void missingResourceExceptionHandler();
 

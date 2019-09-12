@@ -33,7 +33,7 @@ public class SpringContract extends DeclarativeContract {
   static final String CONTENT_TYPE = "Content-Type";
 
   public SpringContract() {
-    registerClassAnnotation(RequestMapping.class, (requestMapping, data) ->{
+    registerClassAnnotation(RequestMapping.class, (requestMapping, data) -> {
       appendMappings(data, requestMapping.value());
 
       if (requestMapping.method().length == 1)
@@ -43,7 +43,7 @@ public class SpringContract extends DeclarativeContract {
       handleConsumesAnnotation(data, requestMapping.consumes());
     });
 
-    registerMethodAnnotation(RequestMapping.class, (requestMapping, data) ->{
+    registerMethodAnnotation(RequestMapping.class, (requestMapping, data) -> {
       String[] mappings = requestMapping.value();
       appendMappings(data, mappings);
 
@@ -51,21 +51,21 @@ public class SpringContract extends DeclarativeContract {
         data.template().method(requestMapping.method()[0].name());
     });
 
-    registerMethodAnnotation(ResponseBody.class, (body, data) ->{
+    registerMethodAnnotation(ResponseBody.class, (body, data) -> {
       handleConsumesAnnotation(data, "application/json");
     });
-    registerMethodAnnotation(ExceptionHandler.class, (ann, data) ->{
-//      data.ignoreMethod();
+    registerMethodAnnotation(ExceptionHandler.class, (ann, data) -> {
+      data.ignoreMethod();
     });
-    registerParameterAnnotation( PathVariable.class, (parameterAnnotation, data, paramIndex) ->{
+    registerParameterAnnotation(PathVariable.class, (parameterAnnotation, data, paramIndex) -> {
       String name = PathVariable.class.cast(parameterAnnotation).value();
       nameParam(data, name, paramIndex);
     });
 
-    registerParameterAnnotation(RequestBody.class, (body, data,paramIndex) ->{
+    registerParameterAnnotation(RequestBody.class, (body, data, paramIndex) -> {
       handleProducesAnnotation(data, "application/json");
     });
-    registerParameterAnnotation(RequestParam.class, (parameterAnnotation, data,paramIndex) ->{
+    registerParameterAnnotation(RequestParam.class, (parameterAnnotation, data, paramIndex) -> {
       String name = RequestParam.class.cast(parameterAnnotation).value();
       Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
       data.template().query(name, query);
@@ -76,28 +76,29 @@ public class SpringContract extends DeclarativeContract {
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
     for (int i = 0; i < mappings.length; i++) {
-      String mapping = mappings[i];
-      if (data.template().url().length() != 0 && !data.template().url().endsWith("/")
-          && !mapping.startsWith("/"))
-        data.template().append("/");
+      String methodAnnotationValue = mappings[i];
+      if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
+        methodAnnotationValue = "/" + methodAnnotationValue;
+      }
+      if (data.template().url().endsWith("/") && methodAnnotationValue.startsWith("/")) {
+        methodAnnotationValue = methodAnnotationValue.substring(1);
+      }
 
-      data.template().append(mapping);
+      data.template().uri(data.template().url() + methodAnnotationValue);
     }
   }
 
   private void handleProducesAnnotation(MethodMetadata data, String... produces) {
     if (produces.length == 0)
       return;
-    data.template().header(ACCEPT, (String) null); // remove any previous
-                                                   // produces
+    data.template().removeHeader(ACCEPT); // remove any previous produces
     data.template().header(ACCEPT, produces[0]);
   }
 
   private void handleConsumesAnnotation(MethodMetadata data, String... consumes) {
     if (consumes.length == 0)
       return;
-    data.template().header(CONTENT_TYPE, (String) null); // remove any previous
-                                                         // consumes
+    data.template().removeHeader(CONTENT_TYPE); // remove any previous consumes
     data.template().header(CONTENT_TYPE, consumes[0]);
   }
 
