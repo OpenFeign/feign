@@ -142,20 +142,20 @@ public class ReflectiveFeign extends Feign {
       this.decoder = checkNotNull(decoder, "decoder");
     }
 
-    public Map<String, MethodHandler> apply(Target key) {
-      List<MethodMetadata> metadata = contract.parseAndValidatateMetadata(key.type());
+    public Map<String, MethodHandler> apply(Target target) {
+      List<MethodMetadata> metadata = contract.parseAndValidatateMetadata(target.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder);
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder, target);
         } else if (md.bodyIndex() != null) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder);
+          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, target);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md);
+          buildTemplate = new BuildTemplateByResolvingArgs(md, target);
         }
         result.put(md.configKey(),
-                   factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+                   factory.create(target, md, buildTemplate, options, decoder, errorDecoder));
       }
       return result;
     }
@@ -164,10 +164,12 @@ public class ReflectiveFeign extends Feign {
   private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
 
     protected final MethodMetadata metadata;
+    protected final Target<?> target;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
 
-    private BuildTemplateByResolvingArgs(MethodMetadata metadata) {
+    private BuildTemplateByResolvingArgs(MethodMetadata metadata, Target<?> target) {
       this.metadata = metadata;
+      this.target = target;
       if (metadata.indexToExpander() != null) {
         indexToExpander.putAll(metadata.indexToExpander());
         return;
@@ -191,6 +193,7 @@ public class ReflectiveFeign extends Feign {
     @Override
     public RequestTemplate create(Object[] argv) {
       RequestTemplate mutable = new RequestTemplate(metadata.template());
+      mutable.target(target);
       if (metadata.urlIndex() != null) {
         int urlIndex = metadata.urlIndex();
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
@@ -308,8 +311,9 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
+        Target<?> target) {
+      super(metadata, target);
       this.encoder = encoder;
     }
 
@@ -337,8 +341,8 @@ public class ReflectiveFeign extends Feign {
 
     private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder) {
-      super(metadata);
+    private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder, Target target) {
+      super(metadata, target);
       this.encoder = encoder;
     }
 

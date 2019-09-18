@@ -45,6 +45,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
+  private final RequestTemplate requestTemplate;
 
   private Response(Builder builder) {
     checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
@@ -53,6 +54,7 @@ public final class Response implements Closeable {
     this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
     this.body = builder.body; //nullable
     this.request = builder.request; //nullable
+    this.requestTemplate = builder.requestTemplate; // nullable
   }
 
   /**
@@ -125,6 +127,7 @@ public final class Response implements Closeable {
     Map<String, Collection<String>> headers;
     Body body;
     Request request;
+    private RequestTemplate requestTemplate;
 
     Builder() {
     }
@@ -135,6 +138,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
+      this.requestTemplate = source.requestTemplate;
     }
 
     /** @see Response#status*/
@@ -189,6 +193,17 @@ public final class Response implements Closeable {
       return this;
     }
 
+    /**
+     * @see Response#requestTemplate
+     *
+     *      NOTE: will add null check in version 12 which may require changes to custom feign.Client
+     *      or loggers
+     */
+    public Builder requestTemplate(RequestTemplate requestTemplate) {
+      this.requestTemplate = requestTemplate;
+      return this;
+    }
+
     public Response build() {
       return new Response(this);
     }
@@ -231,6 +246,13 @@ public final class Response implements Closeable {
    */
   public Request request() {
     return request;
+  }
+
+  /**
+   * if present, the request template that generated this response
+   */
+  public RequestTemplate requestTemplate() {
+    return requestTemplate;
   }
 
   @Override

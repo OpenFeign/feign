@@ -58,6 +58,8 @@ public final class RequestTemplate implements Serializable {
   private byte[] body;
   private String bodyTemplate;
   private boolean decodeSlash = true;
+  private MethodMetadata methodMetadata;
+  private Target<?> target;
 
   public RequestTemplate() {
   }
@@ -73,6 +75,8 @@ public final class RequestTemplate implements Serializable {
     this.body = toCopy.body;
     this.bodyTemplate = toCopy.bodyTemplate;
     this.decodeSlash = toCopy.decodeSlash;
+    this.methodMetadata = toCopy.methodMetadata;
+    this.target = toCopy.target;
   }
 
   private static String urlDecode(String arg) {
@@ -256,10 +260,10 @@ public final class RequestTemplate implements Serializable {
   public Request request() {
     Map<String, Collection<String>> safeCopy = new LinkedHashMap<String, Collection<String>>();
     safeCopy.putAll(headers);
-    return Request.create(
+    return new Request(
         method, url + queryLine(),
         Collections.unmodifiableMap(safeCopy),
-        body, charset
+        body, charset, this
     );
   }
 
@@ -269,7 +273,7 @@ public final class RequestTemplate implements Serializable {
     checkArgument(method.matches("^[A-Z]+$"), "Invalid HTTP Method: %s", method);
     return this;
   }
-  
+
   /* @see Request#method() */
   public String method() {
     return method;
@@ -279,7 +283,7 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     return this;
   }
-  
+
   public boolean decodeSlash() {
     return decodeSlash;
   }
@@ -671,6 +675,24 @@ public final class RequestTemplate implements Serializable {
     return queryBuilder.insert(0, '?').toString();
   }
 
+  public RequestTemplate methodMetadata(MethodMetadata methodMetadata) {
+    this.methodMetadata = methodMetadata;
+    return this;
+  }
+
+  public RequestTemplate target(Target<?> target) {
+    this.target = target;
+    return this;
+  }
+
+  public MethodMetadata methodMetadata() {
+    return methodMetadata;
+  }
+
+  public Target<?> target() {
+    return target;
+  }
+
   interface Factory {
 
     /**
@@ -678,4 +700,5 @@ public final class RequestTemplate implements Serializable {
      */
     RequestTemplate create(Object[] argv);
   }
+
 }

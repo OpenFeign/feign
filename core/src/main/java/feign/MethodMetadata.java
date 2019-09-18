@@ -16,13 +16,9 @@
 package feign;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
 import feign.Param.Expander;
 
 public final class MethodMetadata implements Serializable {
@@ -44,8 +40,11 @@ public final class MethodMetadata implements Serializable {
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
+  private transient Class<?> targetType;
+  private transient Method method;
 
   MethodMetadata() {
+    template.methodMetadata(this);
   }
 
   /**
@@ -166,5 +165,23 @@ public final class MethodMetadata implements Serializable {
    */
   public Map<Integer, Expander> indexToExpander() {
     return indexToExpander;
+  }
+
+  public MethodMetadata targetType(Class<?> targetType) {
+    this.targetType = targetType;
+    return this;
+  }
+
+  public Class<?> targetType() {
+    return targetType;
+  }
+
+  public MethodMetadata method(Method method) {
+    this.method = method;
+    return this;
+  }
+
+  public Method method() {
+    return method;
   }
 }

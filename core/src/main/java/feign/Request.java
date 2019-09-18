@@ -33,7 +33,7 @@ public final class Request {
    */
   public static Request create(String method, String url, Map<String, Collection<String>> headers,
                                byte[] body, Charset charset) {
-    return new Request(method, url, headers, body, charset);
+    return new Request(method, url, headers, body, charset, null);
   }
 
   private final String method;
@@ -41,14 +41,16 @@ public final class Request {
   private final Map<String, Collection<String>> headers;
   private final byte[] body;
   private final Charset charset;
+  private final RequestTemplate requestTemplate;
 
   Request(String method, String url, Map<String, Collection<String>> headers, byte[] body,
-          Charset charset) {
+          Charset charset, RequestTemplate requestTemplate) {
     this.method = checkNotNull(method, "method of %s", url);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body; // nullable
     this.charset = charset; // nullable
+    this.requestTemplate=requestTemplate;
   }
 
   /* Method to invoke on the server. */
@@ -132,5 +134,9 @@ public final class Request {
     public int readTimeoutMillis() {
       return readTimeoutMillis;
     }
+  }
+
+  public RequestTemplate requestTemplate() {
+    return this.requestTemplate;
   }
 }

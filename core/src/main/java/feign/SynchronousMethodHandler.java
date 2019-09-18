@@ -95,8 +95,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     long start = System.nanoTime();
     try {
       response = client.execute(request, options);
-      // ensure the request is set. TODO: remove in Feign 10
-      response.toBuilder().request(request).build();
+      // ensure the request is set. TODO: remove in Feign 12
+      response = response.toBuilder()
+          .request(request)
+          .requestTemplate(template)
+          .build();
     } catch (IOException e) {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
