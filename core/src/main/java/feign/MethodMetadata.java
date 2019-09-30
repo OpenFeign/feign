@@ -38,6 +38,7 @@ public final class MethodMetadata implements Serializable {
   private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
+  private boolean ignored;
 
   MethodMetadata() {}
 
@@ -196,5 +197,13 @@ public final class MethodMetadata implements Serializable {
         || indexToEncoded.containsKey(index)
         || (indexToExpander != null && indexToExpander.containsKey(index))
         || parameterToIgnore.get(index);
+  }
+
+  public void ignoreMethod() {
+    this.ignored = true;
+  }
+
+  public boolean isIgnored() {
+    return ignored;
   }
 }

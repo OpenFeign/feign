@@ -92,6 +92,9 @@ public interface Contract {
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
+      if (data.isIgnored()) {
+        return data;
+      }
       checkState(
           data.template().method() != null,
           "Method %s not annotated with HTTP method type (ex. GET, POST)",

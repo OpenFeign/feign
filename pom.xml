@@ -41,6 +41,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>spring4</module>
     <module>soap</module>
     <module>reactive</module>
     <module>example-github</module>
@@ -226,6 +227,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs2</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-mock</artifactId>
         <version>${project.version}</version>
       </dependency>
 

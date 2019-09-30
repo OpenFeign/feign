@@ -167,8 +167,18 @@ public class ReflectiveFeign extends Feign {
         } else {
           buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder);
         }
-        result.put(
-            md.configKey(), factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+        if (md.isIgnored()) {
+          result.put(
+              md.configKey(),
+              args -> {
+                throw new IllegalStateException(
+                    md.configKey() + " is not a method handled by feign");
+              });
+        } else {
+          result.put(
+              md.configKey(),
+              factory.create(key, md, buildTemplate, options, decoder, errorDecoder));
+        }
       }
       return result;
     }
