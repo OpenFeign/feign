@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>10.4.1-SNAPSHOT</version>
+  <version>10.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
