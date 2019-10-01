@@ -46,8 +46,6 @@
     <module>reactive</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
-    <!-- remove after feign 10.0 release -->
-    <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
   </modules>
