@@ -47,6 +47,7 @@
     <module>example-github</module>
     <module>example-wikipedia</module>
     <module>mock</module>
+    <module>apt-test-generator</module>
     <module>benchmark</module>
   </modules>
 
