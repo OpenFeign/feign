@@ -114,7 +114,7 @@
   <scm>
     <url>https://github.com/openfeign/feign</url>
     <connection>scm:git:https://github.com/openfeign/feign.git</connection>
-    <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
