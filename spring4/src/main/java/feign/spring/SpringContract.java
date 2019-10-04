@@ -45,39 +45,39 @@ public class SpringContract extends DeclarativeContract {
     });
 
 
-    registerMethodAnnotation(GetMapping.class, (postMapping, data) -> {
-      appendMappings(data, postMapping.value());
+    registerMethodAnnotation(GetMapping.class, (mapping, data) -> {
+      appendMappings(data, mapping.value());
       data.template().method(Request.HttpMethod.GET);
-      handleProducesAnnotation(data, postMapping.produces());
-      handleConsumesAnnotation(data, postMapping.consumes());
+      handleProducesAnnotation(data, mapping.produces());
+      handleConsumesAnnotation(data, mapping.consumes());
     });
 
-    registerMethodAnnotation(PostMapping.class, (postMapping, data) -> {
-      appendMappings(data, postMapping.value());
+    registerMethodAnnotation(PostMapping.class, (mapping, data) -> {
+      appendMappings(data, mapping.value());
       data.template().method(Request.HttpMethod.POST);
-      handleProducesAnnotation(data, postMapping.produces());
-      handleConsumesAnnotation(data, postMapping.consumes());
+      handleProducesAnnotation(data, mapping.produces());
+      handleConsumesAnnotation(data, mapping.consumes());
     });
 
-    registerMethodAnnotation(PutMapping.class, (postMapping, data) -> {
-      appendMappings(data, postMapping.value());
+    registerMethodAnnotation(PutMapping.class, (mapping, data) -> {
+      appendMappings(data, mapping.value());
       data.template().method(Request.HttpMethod.PUT);
-      handleProducesAnnotation(data, postMapping.produces());
-      handleConsumesAnnotation(data, postMapping.consumes());
+      handleProducesAnnotation(data, mapping.produces());
+      handleConsumesAnnotation(data, mapping.consumes());
     });
 
-    registerMethodAnnotation(DeleteMapping.class, (postMapping, data) -> {
-      appendMappings(data, postMapping.value());
+    registerMethodAnnotation(DeleteMapping.class, (mapping, data) -> {
+      appendMappings(data, mapping.value());
       data.template().method(Request.HttpMethod.DELETE);
-      handleProducesAnnotation(data, postMapping.produces());
-      handleConsumesAnnotation(data, postMapping.consumes());
+      handleProducesAnnotation(data, mapping.produces());
+      handleConsumesAnnotation(data, mapping.consumes());
     });
 
-    registerMethodAnnotation(PatchMapping.class, (postMapping, data) -> {
-      appendMappings(data, postMapping.value());
+    registerMethodAnnotation(PatchMapping.class, (mapping, data) -> {
+      appendMappings(data, mapping.value());
       data.template().method(Request.HttpMethod.PATCH);
-      handleProducesAnnotation(data, postMapping.produces());
-      handleConsumesAnnotation(data, postMapping.consumes());
+      handleProducesAnnotation(data, mapping.produces());
+      handleConsumesAnnotation(data, mapping.consumes());
     });
 
     registerMethodAnnotation(ResponseBody.class, (body, data) -> {
