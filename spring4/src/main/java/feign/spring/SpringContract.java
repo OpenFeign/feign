@@ -15,14 +15,10 @@ package feign.spring;
 
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
+import feign.Request;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 public class SpringContract extends DeclarativeContract {
 
@@ -50,6 +46,51 @@ public class SpringContract extends DeclarativeContract {
 
           if (requestMapping.method().length == 1)
             data.template().method(requestMapping.method()[0].name());
+        });
+
+    registerMethodAnnotation(
+        GetMapping.class,
+        (mapping, data) -> {
+          appendMappings(data, mapping.value());
+          data.template().method(Request.HttpMethod.GET);
+          handleProducesAnnotation(data, mapping.produces());
+          handleConsumesAnnotation(data, mapping.consumes());
+        });
+
+    registerMethodAnnotation(
+        PostMapping.class,
+        (mapping, data) -> {
+          appendMappings(data, mapping.value());
+          data.template().method(Request.HttpMethod.POST);
+          handleProducesAnnotation(data, mapping.produces());
+          handleConsumesAnnotation(data, mapping.consumes());
+        });
+
+    registerMethodAnnotation(
+        PutMapping.class,
+        (mapping, data) -> {
+          appendMappings(data, mapping.value());
+          data.template().method(Request.HttpMethod.PUT);
+          handleProducesAnnotation(data, mapping.produces());
+          handleConsumesAnnotation(data, mapping.consumes());
+        });
+
+    registerMethodAnnotation(
+        DeleteMapping.class,
+        (mapping, data) -> {
+          appendMappings(data, mapping.value());
+          data.template().method(Request.HttpMethod.DELETE);
+          handleProducesAnnotation(data, mapping.produces());
+          handleConsumesAnnotation(data, mapping.consumes());
+        });
+
+    registerMethodAnnotation(
+        PatchMapping.class,
+        (mapping, data) -> {
+          appendMappings(data, mapping.value());
+          data.template().method(Request.HttpMethod.PATCH);
+          handleProducesAnnotation(data, mapping.produces());
+          handleConsumesAnnotation(data, mapping.consumes());
         });
 
     registerMethodAnnotation(

@@ -46,6 +46,7 @@ public class SpringContractTest {
     mockClient =
         new MockClient()
             .noContent(HttpMethod.GET, "/health")
+            .noContent(HttpMethod.GET, "/health/1")
             .noContent(HttpMethod.GET, "/health/1?deep=true")
             .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
             .ok(HttpMethod.GET, "/health/generic", "{}");
@@ -82,6 +83,13 @@ public class SpringContractTest {
   }
 
   @Test
+  public void composedAnnotation() {
+    resource.check("1");
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/1");
+  }
+
+  @Test
   public void notAHttpMethod() {
     thrown.expectMessage("is not a method handled by feign");
 
@@ -111,6 +119,9 @@ public class SpringContractTest {
         @PathVariable("id") String campaignId,
         @RequestParam(value = "deep", defaultValue = "false") boolean deepCheck,
         @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun);
+
+    @GetMapping(value = "/{id}")
+    public void check(@PathVariable("id") String campaignId);
 
     @ResponseStatus(
         value = HttpStatus.NOT_FOUND,
