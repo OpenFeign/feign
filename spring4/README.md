@@ -18,6 +18,21 @@ The ```consume``` adds the first value as the `Content-Type` header.
 #### `@RequestMapping`
 Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations.
 The method sets the request method.
+#### `@GetMapping`
+Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations. 
+Sets the `GET` request method. 
+#### `@PostMapping`
+Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations.
+Sets the `POST` request method. 
+#### `@PutMapping`
+Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations.
+Sets the `PUT` request method. 
+#### `@DeleteMapping`
+Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations.
+Sets the `DELETE` request method. 
+#### `@PatchMapping`
+Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathVariable` annotations.
+Sets the `PATCH` request method. 
 ### Parameter Annotations
 #### `@PathVariable`
 Links the value of the corresponding parameter to a template variable declared in the path.
