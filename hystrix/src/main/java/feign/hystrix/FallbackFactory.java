@@ -1,16 +1,30 @@
+/**
+ * Copyright 2012-2019 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.hystrix;
 
 import feign.FeignException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import static feign.Util.checkNotNull;
 
 /**
  * Used to control the fallback given its cause.
  *
  * Ex.
- * <pre>{@code
+ * 
+ * <pre>
+ * {@code
  * // This instance will be invoked if there are errors of any kind.
  * FallbackFactory<GitHub> fallbackFactory = cause -> (owner, repo) -> {
  *   if (cause instanceof FeignException && ((FeignException) cause).status() == 403) {
@@ -34,7 +48,7 @@ public interface FallbackFactory<T> {
    * Returns an instance of the fallback appropriate for the given cause
    *
    * @param cause corresponds to {@link com.netflix.hystrix.AbstractCommand#getExecutionException()}
-   * often, but not always an instance of {@link FeignException}.
+   *        often, but not always an instance of {@link FeignException}.
    */
   T create(Throwable cause);
 

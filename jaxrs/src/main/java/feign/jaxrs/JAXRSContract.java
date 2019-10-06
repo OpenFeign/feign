@@ -1,171 +1,158 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.jaxrs;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-
-import feign.Contract;
-import feign.MethodMetadata;
-
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
+import static feign.Util.removeValues;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import javax.ws.rs.*;
+import feign.DeclarativeContract;
+import feign.MethodMetadata;
+import feign.Request;
 
 /**
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
  * JAX-RS README</a>.
  */
-public final class JAXRSContract extends Contract.BaseContract {
+public class JAXRSContract extends DeclarativeContract {
 
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
 
   // Protected so unittest can call us
-  // XXX: Should parseAndValidateMetadata(Class, Method) be public instead? The old deprecated parseAndValidateMetadata(Method) was public..
+  // XXX: Should parseAndValidateMetadata(Class, Method) be public instead? The old deprecated
+  // parseAndValidateMetadata(Method) was public..
   @Override
   protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
     return super.parseAndValidateMetadata(targetType, method);
   }
 
-  @Override
-  protected void processAnnotationOnClass(MethodMetadata data, Class<?> clz) {
-    Path path = clz.getAnnotation(Path.class);
-    if (path != null) {
-      String pathValue = emptyToNull(path.value());
-      checkState(pathValue != null, "Path.value() was empty on type %s", clz.getName());
-      if (!pathValue.startsWith("/")) {
-        pathValue = "/" + pathValue;
-      }
-      if (pathValue.endsWith("/")) {
-          // Strip off any trailing slashes, since the template has already had slashes appropriately added
+  public JAXRSContract() {
+    super.registerClassAnnotation(Path.class, (path, data) -> {
+      if (path != null && !path.value().isEmpty()) {
+        String pathValue = path.value();
+        if (!pathValue.startsWith("/")) {
+          pathValue = "/" + pathValue;
+        }
+        if (pathValue.endsWith("/")) {
+          // Strip off any trailing slashes, since the template has already had slashes
+          // appropriately
+          // added
           pathValue = pathValue.substring(0, pathValue.length() - 1);
+        }
+        // jax-rs allows whitespace around the param name, as well as an optional regex. The
+        // contract
+        // should
+        // strip these out appropriately.
+        pathValue = pathValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+        data.template().uri(pathValue);
       }
-      data.template().insert(0, pathValue);
-    }
-    Consumes consumes = clz.getAnnotation(Consumes.class);
-    if (consumes != null) {
-      handleConsumesAnnotation(data, consumes, clz.getName());
-    }
-    Produces produces = clz.getAnnotation(Produces.class);
-    if (produces != null) {
-      handleProducesAnnotation(data, produces, clz.getName());
-    }
-  }
+    });
+    super.registerClassAnnotation(Consumes.class, this::handleConsumesAnnotation);
+    super.registerClassAnnotation(Produces.class, this::handleProducesAnnotation);
 
-  @Override
-  protected void processAnnotationOnMethod(MethodMetadata data, Annotation methodAnnotation,
-                                           Method method) {
-    Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-    HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
-    if (http != null) {
+    registerMethodAnnotation(methodAnnotation -> {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+      return http != null;
+    }, (methodAnnotation, data) -> {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
       checkState(data.template().method() == null,
-                 "Method %s contains multiple HTTP methods. Found: %s and %s", method.getName(),
-                 data.template().method(), http.value());
-      data.template().method(http.value());
-    } else if (annotationType == Path.class) {
-      String pathValue = emptyToNull(Path.class.cast(methodAnnotation).value());
-      checkState(pathValue != null, "Path.value() was empty on method %s", method.getName());
-      String methodAnnotationValue = Path.class.cast(methodAnnotation).value();
+          "Method %s contains multiple HTTP methods. Found: %s and %s", data.configKey(),
+          data.template().method(), http.value());
+      data.template().method(Request.HttpMethod.valueOf(http.value()));
+    });
+
+    super.registerMethodAnnotation(Path.class, (path, data) -> {
+      final String pathValue = emptyToNull(path.value());
+      if (pathValue == null) {
+        return;
+      }
+      String methodAnnotationValue = path.value();
       if (!methodAnnotationValue.startsWith("/") && !data.template().url().endsWith("/")) {
         methodAnnotationValue = "/" + methodAnnotationValue;
       }
-      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract should
+      // jax-rs allows whitespace around the param name, as well as an optional regex. The contract
+      // should
       // strip these out appropriately.
-      methodAnnotationValue = methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
-      data.template().append(methodAnnotationValue);
-    } else if (annotationType == Produces.class) {
-      handleProducesAnnotation(data, (Produces) methodAnnotation, "method " + method.getName());
-    } else if (annotationType == Consumes.class) {
-      handleConsumesAnnotation(data, (Consumes) methodAnnotation, "method " + method.getName());
-    }
+      methodAnnotationValue =
+          methodAnnotationValue.replaceAll("\\{\\s*(.+?)\\s*(:.+?)?\\}", "\\{$1\\}");
+      data.template().uri(methodAnnotationValue, true);
+    });
+    super.registerMethodAnnotation(Consumes.class, this::handleConsumesAnnotation);
+    super.registerMethodAnnotation(Produces.class, this::handleProducesAnnotation);
+
+    // trying to minimize the diff
+    registerParamAnnotations();
   }
 
-  private void handleProducesAnnotation(MethodMetadata data, Produces produces, String name) {
-    String[] serverProduces = produces.value();
-    String clientAccepts = serverProduces.length == 0 ? null : emptyToNull(serverProduces[0]);
-    checkState(clientAccepts != null, "Produces.value() was empty on %s", name);
-    data.template().header(ACCEPT, (String) null); // remove any previous produces
-    data.template().header(ACCEPT, clientAccepts);
+  private void handleProducesAnnotation(Produces produces, MethodMetadata data) {
+    final String[] serverProduces =
+        removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+    checkState(serverProduces.length > 0, "Produces.value() was empty on %s", data.configKey());
+    data.template().header(ACCEPT, Collections.emptyList()); // remove any previous produces
+    data.template().header(ACCEPT, serverProduces);
   }
 
-  private void handleConsumesAnnotation(MethodMetadata data, Consumes consumes, String name) {
-    String[] serverConsumes = consumes.value();
-    String clientProduces = serverConsumes.length == 0 ? null : emptyToNull(serverConsumes[0]);
-    checkState(clientProduces != null, "Consumes.value() was empty on %s", name);
-    data.template().header(CONTENT_TYPE, (String) null); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, clientProduces);
+  private void handleConsumesAnnotation(Consumes consumes, MethodMetadata data) {
+    final String[] serverConsumes =
+        removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+    checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", data.configKey());
+    data.template().header(CONTENT_TYPE, Collections.emptyList()); // remove any previous consumes
+    data.template().header(CONTENT_TYPE, serverConsumes[0]);
   }
 
-  @Override
-  protected boolean processAnnotationsOnParameter(MethodMetadata data, Annotation[] annotations,
-                                                  int paramIndex) {
-    boolean isHttpParam = false;
-    for (Annotation parameterAnnotation : annotations) {
-      Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
-      if (annotationType == PathParam.class) {
-        String name = PathParam.class.cast(parameterAnnotation).value();
+  protected void registerParamAnnotations() {
+    {
+      registerParameterAnnotation(PathParam.class, (param, data, paramIndex) -> {
+        final String name = param.value();
         checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
-                   paramIndex);
+            paramIndex);
         nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == QueryParam.class) {
-        String name = QueryParam.class.cast(parameterAnnotation).value();
+      });
+      registerParameterAnnotation(QueryParam.class, (param, data, paramIndex) -> {
+        final String name = param.value();
         checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s",
-                   paramIndex);
-        Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+            paramIndex);
+        final String query = addTemplatedParam(name);
         data.template().query(name, query);
         nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == HeaderParam.class) {
-        String name = HeaderParam.class.cast(parameterAnnotation).value();
+      });
+      registerParameterAnnotation(HeaderParam.class, (param, data, paramIndex) -> {
+        final String name = param.value();
         checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s",
-                   paramIndex);
-        Collection<String> header = addTemplatedParam(data.template().headers().get(name), name);
+            paramIndex);
+        final String header = addTemplatedParam(name);
         data.template().header(name, header);
         nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      } else if (annotationType == FormParam.class) {
-        String name = FormParam.class.cast(parameterAnnotation).value();
+      });
+      registerParameterAnnotation(FormParam.class, (param, data, paramIndex) -> {
+        final String name = param.value();
         checkState(emptyToNull(name) != null, "FormParam.value() was empty on parameter %s",
-                   paramIndex);
+            paramIndex);
         data.formParams().add(name);
         nameParam(data, name, paramIndex);
-        isHttpParam = true;
-      }
+      });
     }
-    return isHttpParam;
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.
-  protected Collection<String> addTemplatedParam(Collection<String> possiblyNull, String name) {
-    if (possiblyNull == null) {
-      possiblyNull = new ArrayList<String>();
-    }
-    possiblyNull.add(String.format("{%s}", name));
-    return possiblyNull;
+  private String addTemplatedParam(String name) {
+    return String.format("{%s}", name);
   }
 }

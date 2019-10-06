@@ -11,8 +11,6 @@ server interface behavior.
 ## Currently Supported Annotation Processing
 Feign only supports processing java interfaces (not abstract or concrete classes).
 
-ISE is raised when any annotation's value is empty or null.  Ex. `Path("")` raises an ISE.
-
 Here are a list of behaviors currently supported.
 ### Type Annotations
 #### `@Path`
@@ -23,7 +21,7 @@ Sets the request method.
 #### `@Path`
 Appends the value to `Target.url()`.  Can have tokens corresponding to `@PathParam` annotations.
 #### `@Produces`
-Adds the first value as the `Accept` header.
+Adds all values into the `Accept` header.
 #### `@Consumes`
 Adds the first value as the `Content-Type` header.
 ### Parameter Annotations

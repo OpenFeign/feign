@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
@@ -20,7 +18,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -28,10 +25,11 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
- * Feign's purpose is to ease development against http apis that feign restfulness. <br> In
- * implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
+ * Feign's purpose is to ease development against http apis that feign restfulness. <br>
+ * In implementation, Feign is a {@link Feign#newInstance factory} for generating {@link Target
  * targeted} http apis.
  */
 public abstract class Feign {
@@ -41,11 +39,13 @@ public abstract class Feign {
   }
 
   /**
-   * Configuration keys are formatted as unresolved <a href= "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html"
-   * >see tags</a>. This method exposes that format, in case you need to create the same value as
+   * Configuration keys are formatted as unresolved <a href=
+   * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html" >see
+   * tags</a>. This method exposes that format, in case you need to create the same value as
    * {@link MethodMetadata#configKey()} for correlation purposes.
    *
-   * <p>Here are some sample encodings:
+   * <p>
+   * Here are some sample encodings:
    *
    * <pre>
    * <ul>
@@ -103,11 +103,14 @@ public abstract class Feign {
     private Logger logger = new NoOpLogger();
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
+    private QueryMapEncoder queryMapEncoder = new QueryMapEncoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
     private boolean decode404;
+    private boolean closeAfterDecode = true;
+    private ExceptionPropagationPolicy propagationPolicy = NONE;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -144,6 +147,11 @@ public abstract class Feign {
       return this;
     }
 
+    public Builder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
+      this.queryMapEncoder = queryMapEncoder;
+      return this;
+    }
+
     /**
      * Allows to map the response before passing it to the decoder.
      */
@@ -156,11 +164,13 @@ public abstract class Feign {
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
-     * <p/> All first-party (ex gson) decoders return well-known empty values defined by {@link
-     * Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder) decoder}
-     * or make your own.
+     * <p/>
+     * All first-party (ex gson) decoders return well-known empty values defined by
+     * {@link Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder)
+     * decoder} or make your own.
      *
-     * <p/> This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * <p/>
+     * This flag only works with 404, as opposed to all or arbitrary status codes. This was an
      * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
      * fallback policy. If your server returns a different status for not-found, correct via a
      * custom {@link #client(Client) client}.
@@ -210,6 +220,29 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * This flag indicates that the response should not be automatically closed upon completion of
+     * decoding the message. This should be set if you plan on processing the response into a
+     * lazy-evaluated construct, such as a {@link java.util.Iterator}.
+     *
+     * </p>
+     * Feign standard decoders do not have built in support for this flag. If you are using this
+     * flag, you MUST also use a custom Decoder, and be sure to close all resources appropriately
+     * somewhere in the Decoder (you can use {@link Util#ensureClosed} for convenience).
+     *
+     * @since 9.6
+     *
+     */
+    public Builder doNotCloseAfterDecode() {
+      this.closeAfterDecode = false;
+      return this;
+    }
+
+    public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
+      this.propagationPolicy = propagationPolicy;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -221,11 +254,11 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-                                               logLevel, decode404);
+              logLevel, decode404, closeAfterDecode, propagationPolicy);
       ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder,
-                                  errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory);
+          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
+              errorDecoder, synchronousMethodHandlerFactory);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
 

@@ -1,3 +1,27 @@
+### Version 10.1
+* Refactoring RequestTemplate to RFC6570 (#778)
+* Allow JAXB context caching in factory (#761)
+* Reactive Wrapper Support (#795)
+* Introduced native http2 client using Java 11 (#806)
+* Unwrap RetryableException and throw cause (#737)
+* Supports PATCH without a body paramter (#824)
+* Feign-Ribbon integration now depends on Ribbon 2.3.0, updated from Ribbon 2.1.1 (#826)
+
+### Version 10.0
+* Feign baseline is now JDK 8
+  - Feign is now being built and tested with OpenJDK 11 as well. Releases and code base will use JDK 8, we are just testing compatibility with JDK 11.
+* Removed @Deprecated methods marked for removal on feign 10.
+* `RetryException` includes the `Method` used for the offending `Request`.
+* `Response` objects now contain the `Request` used.
+
+### Version 9.6
+* Feign builder now supports flag `doNotCloseAfterDecode` to support lazy iteration of responses.
+* Adds `JacksonIteratorDecoder` and `StreamDecoder` to decode responses as `java.util.Iterator` or `java.util.stream.Stream`.
+
+### Version 9.5.1
+* When specified, Content-Type header is now included on OkHttp requests lacking a body.
+* Sets empty HttpEntity if apache request body is null.
+
 ### Version 9.5
 * Introduces `feign-java8` with support for `java.util.Optional`
 * Adds `Feign.Builder.mapAndDecode()` to allow response preprocessing before decoding it.

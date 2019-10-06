@@ -1,8 +1,36 @@
+/**
+ * Copyright 2012-2019 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.benchmark;
 
+
+
+import feign.Feign;
+import feign.Logger;
+import feign.Logger.Level;
+import feign.Response;
+import feign.Retryer;
+import io.reactivex.netty.protocol.http.HttpHandlerNames;
+import io.reactivex.netty.protocol.http.server.HttpServer;
+import io.reactivex.netty.protocol.http.server.HttpServerRequest;
+import io.reactivex.netty.protocol.http.server.HttpServerResponse;
+import io.reactivex.netty.protocol.http.server.RequestHandler;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import io.netty.buffer.ByteBuf;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-
+import okhttp3.internal.http.HttpHeaders;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -14,18 +42,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import feign.Feign;
-import feign.Response;
-import io.netty.buffer.ByteBuf;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.protocol.http.server.HttpServer;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
-import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.http.server.RequestHandler;
+import rx.Observable;
 
 @Measurement(iterations = 5, time = 1)
 @Warmup(iterations = 10, time = 1)
@@ -43,17 +60,16 @@ public class RealRequestBenchmarks {
 
   @Setup
   public void setup() {
-    server = RxNetty.createHttpServer(SERVER_PORT, new RequestHandler<ByteBuf, ByteBuf>() {
-      public rx.Observable handle(HttpServerRequest<ByteBuf> request,
-                                  HttpServerResponse<ByteBuf> response) {
-        return response.flush();
-      }
-    });
-    server.start();
+
+    server = HttpServer.newServer(SERVER_PORT)
+        .start((request, response) -> null);
     client = new OkHttpClient();
-    client.setRetryOnConnectionFailure(false);
+    client.retryOnConnectionFailure();
     okFeign = Feign.builder()
         .client(new feign.okhttp.OkHttpClient(client))
+        .logLevel(Level.NONE)
+        .logger(new Logger.ErrorLogger())
+        .retryer(new Retryer.Default())
         .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
     queryRequest = new Request.Builder()
         .url("http://localhost:" + SERVER_PORT + "/?Action=GetUser&Version=2010-05-08&limit=1")
@@ -69,8 +85,8 @@ public class RealRequestBenchmarks {
    * How fast can we execute get commands synchronously?
    */
   @Benchmark
-  public com.squareup.okhttp.Response query_baseCaseUsingOkHttp() throws IOException {
-    com.squareup.okhttp.Response result = client.newCall(queryRequest).execute();
+  public okhttp3.Response query_baseCaseUsingOkHttp() throws IOException {
+    okhttp3.Response result = client.newCall(queryRequest).execute();
     result.body().close();
     return result;
   }
@@ -79,7 +95,10 @@ public class RealRequestBenchmarks {
    * How fast can we execute get commands synchronously using Feign?
    */
   @Benchmark
-  public Response query_feignUsingOkHttp() {
-    return okFeign.query();
+  public boolean query_feignUsingOkHttp() {
+    /* auto close the response */
+    try (Response ignored = okFeign.query()) {
+      return true;
+    }
   }
 }

@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.client;
 
@@ -28,14 +26,7 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509KeyManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 
 /**
  * Used for ssl tests to simplify setup.
@@ -43,19 +34,19 @@ import javax.net.ssl.X509TrustManager;
 public final class TrustingSSLSocketFactory extends SSLSocketFactory
     implements X509TrustManager, X509KeyManager {
 
-  private static final Map<String, SSLSocketFactory>
-      sslSocketFactories =
+  private static final Map<String, SSLSocketFactory> sslSocketFactories =
       new LinkedHashMap<String, SSLSocketFactory>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
-  private final static String[] ENABLED_CIPHER_SUITES = {"SSL_RSA_WITH_3DES_EDE_CBC_SHA"};
+  private final static String[] ENABLED_CIPHER_SUITES = {"TLS_RSA_WITH_AES_256_CBC_SHA"};
   private final SSLSocketFactory delegate;
   private final String serverAlias;
   private final PrivateKey privateKey;
   private final X509Certificate[] certificateChain;
+
   private TrustingSSLSocketFactory(String serverAlias) {
     try {
       SSLContext sc = SSLContext.getInstance("SSL");
-      sc.init(new KeyManager[]{this}, new TrustManager[]{this}, new SecureRandom());
+      sc.init(new KeyManager[] {this}, new TrustManager[] {this}, new SecureRandom());
       this.delegate = sc.getSocketFactory();
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -66,8 +57,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
       this.certificateChain = null;
     } else {
       try {
-        KeyStore
-            keyStore =
+        KeyStore keyStore =
             loadKeyStore(TrustingSSLSocketFactory.class.getResourceAsStream("/keystore.jks"));
         this.privateKey = (PrivateKey) keyStore.getKey(serverAlias, KEYSTORE_PASSWORD);
         Certificate[] rawChain = keyStore.getCertificateChain(serverAlias);
@@ -148,11 +138,9 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
     return null;
   }
 
-  public void checkClientTrusted(X509Certificate[] certs, String authType) {
-  }
+  public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
-  public void checkServerTrusted(X509Certificate[] certs, String authType) {
-  }
+  public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 
   @Override
   public String[] getClientAliases(String keyType, Principal[] issuers) {

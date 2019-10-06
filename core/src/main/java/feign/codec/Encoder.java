@@ -1,37 +1,37 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.codec;
 
 import java.lang.reflect.Type;
-
 import feign.RequestTemplate;
 import feign.Util;
-
 import static java.lang.String.format;
 
 /**
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
  * Encoder} is used when a method parameter has no {@code @Param} annotation. For example: <br>
  * <p/>
+ * 
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
  * void create(User user);
  * </pre>
- * Example implementation: <br> <p/>
+ * 
+ * Example implementation: <br>
+ * <p/>
+ * 
  * <pre>
  * public class GsonEncoder implements Encoder {
  *   private final Gson gson;
@@ -47,16 +47,20 @@ import static java.lang.String.format;
  * }
  * </pre>
  *
- * <p><h3>Form encoding</h3> <p>If any parameters are found in {@link
- * feign.MethodMetadata#formParams()}, they will be collected and passed to the Encoder as a map.
+ * <p>
+ * <h3>Form encoding</h3>
+ * <p>
+ * If any parameters are found in {@link feign.MethodMetadata#formParams()}, they will be collected
+ * and passed to the Encoder as a map.
  *
- * <p>Ex. The following is a form. Notice the parameters aren't consumed in the request line. A map
+ * <p>
+ * Ex. The following is a form. Notice the parameters aren't consumed in the request line. A map
  * including "username" and "password" keys will passed to the encoder, and the body type will be
  * {@link #MAP_STRING_WILDCARD}.
+ * 
  * <pre>
  * &#064;RequestLine(&quot;POST /&quot;)
- * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String
- * password);
+ * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
  */
 public interface Encoder {
@@ -66,9 +70,9 @@ public interface Encoder {
   /**
    * Converts objects to an appropriate representation in the template.
    *
-   * @param object   what to encode as the request body.
+   * @param object what to encode as the request body.
    * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
-   *                 indicates form encoding.
+   *        indicates form encoding.
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */

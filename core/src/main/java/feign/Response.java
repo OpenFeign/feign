@@ -1,39 +1,23 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import static feign.Util.*;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
-
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -45,79 +29,24 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
-  private final RequestTemplate requestTemplate;
 
   private Response(Builder builder) {
-    checkState(builder.status >= 200, "Invalid status code: %s", builder.status);
+    checkState(builder.request != null, "original request is required");
     this.status = builder.status;
-    this.reason = builder.reason; //nullable
-    this.headers = Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers));
-    this.body = builder.body; //nullable
-    this.request = builder.request; //nullable
-    this.requestTemplate = builder.requestTemplate; // nullable
+    this.request = builder.request;
+    this.reason = builder.reason; // nullable
+    this.headers = (builder.headers != null)
+        ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
+        : new LinkedHashMap<>();
+    this.body = builder.body; // nullable
+
   }
 
-  /**
-   * @deprecated  To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                InputStream inputStream, Integer length) {
-    return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(InputStreamBody.orNull(inputStream, length))
-            .build();
-  }
-
-  /**
-   * @deprecated  To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                byte[] data) {
-    return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(ByteArrayBody.orNull(data))
-            .build();
-  }
-
-  /**
-   * @deprecated  To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                String text, Charset charset) {
-    return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(ByteArrayBody.orNull(text, charset))
-            .build();
-  }
-
-  /**
-   * @deprecated  To be removed in Feign 10
-   */
-  @Deprecated
-  public static Response create(int status, String reason, Map<String, Collection<String>> headers,
-                                Body body) {
-    return Response.builder()
-            .status(status)
-            .reason(reason)
-            .headers(headers)
-            .body(body)
-            .build();
-  }
-
-  public Builder toBuilder(){
+  public Builder toBuilder() {
     return new Builder(this);
   }
 
-  public static Builder builder(){
+  public static Builder builder() {
     return new Builder();
   }
 
@@ -129,8 +58,7 @@ public final class Response implements Closeable {
     Request request;
     private RequestTemplate requestTemplate;
 
-    Builder() {
-    }
+    Builder() {}
 
     Builder(Response source) {
       this.status = source.status;
@@ -138,10 +66,9 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
-      this.requestTemplate = source.requestTemplate;
     }
 
-    /** @see Response#status*/
+    /** @see Response#status */
     public Builder status(int status) {
       this.status = status;
       return this;
@@ -183,12 +110,11 @@ public final class Response implements Closeable {
       return this;
     }
 
-    /** @see Response#request
-    *
-    * NOTE: will add null check in version 10 which may require changes
-    * to custom feign.Client or loggers
-    */
+    /**
+     * @see Response#request
+     */
     public Builder request(Request request) {
+      checkNotNull(request, "request is required");
       this.request = request;
       return this;
     }
@@ -242,30 +168,27 @@ public final class Response implements Closeable {
   }
 
   /**
-   * if present, the request that generated this response
+   * the request that generated this response
    */
   public Request request() {
     return request;
   }
 
-  /**
-   * if present, the request template that generated this response
-   */
-  public RequestTemplate requestTemplate() {
-    return requestTemplate;
-  }
-
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
-    if (reason != null) builder.append(' ').append(reason);
+    final StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
+    if (reason != null) {
+      builder.append(' ').append(reason);
+    }
     builder.append('\n');
-    for (String field : headers.keySet()) {
-      for (String value : valuesOrEmpty(headers, field)) {
+    for (final String field : headers.keySet()) {
+      for (final String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) builder.append('\n').append(body);
+    if (body != null) {
+      builder.append('\n').append(body);
+    }
     return builder.toString();
   }
 
@@ -279,8 +202,11 @@ public final class Response implements Closeable {
     /**
      * length in bytes, if known. Null if unknown or greater than {@link Integer#MAX_VALUE}.
      *
-     * <br><br><br><b>Note</b><br> This is an integer as
-     * most implementations cannot do bodies greater than 2GB.
+     * <br>
+     * <br>
+     * <br>
+     * <b>Note</b><br>
+     * This is an integer as most implementations cannot do bodies greater than 2GB.
      */
     Integer length();
 
@@ -296,14 +222,25 @@ public final class Response implements Closeable {
 
     /**
      * It is the responsibility of the caller to close the stream.
+     *
+     * @deprecated favor {@link Body#asReader(Charset)}
      */
-    Reader asReader() throws IOException;
+    @Deprecated
+    default Reader asReader() throws IOException {
+      return asReader(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * It is the responsibility of the caller to close the stream.
+     */
+    Reader asReader(Charset charset) throws IOException;
   }
 
   private static final class InputStreamBody implements Response.Body {
 
     private final InputStream inputStream;
     private final Integer length;
+
     private InputStreamBody(InputStream inputStream, Integer length) {
       this.inputStream = inputStream;
       this.length = length;
@@ -337,8 +274,23 @@ public final class Response implements Closeable {
     }
 
     @Override
+    public Reader asReader(Charset charset) throws IOException {
+      checkNotNull(charset, "charset should not be null");
+      return new InputStreamReader(inputStream, charset);
+    }
+
+    @Override
     public void close() throws IOException {
       inputStream.close();
+    }
+
+    @Override
+    public String toString() {
+      try {
+        return new String(toByteArray(inputStream), UTF_8);
+      } catch (final Exception e) {
+        return super.toString();
+      }
     }
   }
 
@@ -386,8 +338,13 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public Reader asReader(Charset charset) throws IOException {
+      checkNotNull(charset, "charset should not be null");
+      return new InputStreamReader(asInputStream(), charset);
     }
+
+    @Override
+    public void close() throws IOException {}
 
     @Override
     public String toString() {
@@ -396,10 +353,11 @@ public final class Response implements Closeable {
   }
 
   private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
-    Map<String, Collection<String>> result = new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
+    final Map<String, Collection<String>> result =
+        new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
 
-    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-      String headerName = entry.getKey();
+    for (final Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+      final String headerName = entry.getKey();
       if (!result.containsKey(headerName)) {
         result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
       }

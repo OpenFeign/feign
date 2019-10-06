@@ -1,25 +1,23 @@
-/*
- * Copyright 2014 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.jaxb;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -28,13 +26,13 @@ import javax.xml.bind.Unmarshaller;
 
 /**
  * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each
- * context.
+ * context. Since JAXB contexts creation can be an expensive task, JAXB context can be preloaded on
+ * factory creation otherwise they will be created and cached dynamically when needed.
  */
 public final class JAXBContextFactory {
 
-  private final ConcurrentHashMap<Class, JAXBContext>
-      jaxbContexts =
-      new ConcurrentHashMap<Class, JAXBContext>(64);
+  private final ConcurrentHashMap<Class<?>, JAXBContext> jaxbContexts =
+      new ConcurrentHashMap<>(64);
   private final Map<String, Object> properties;
 
   private JAXBContextFactory(Map<String, Object> properties) {
@@ -45,26 +43,21 @@ public final class JAXBContextFactory {
    * Creates a new {@link javax.xml.bind.Unmarshaller} that handles the supplied class.
    */
   public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
-    return ctx.createUnmarshaller();
+    return getContext(clazz).createUnmarshaller();
   }
 
   /**
    * Creates a new {@link javax.xml.bind.Marshaller} that handles the supplied class.
    */
   public Marshaller createMarshaller(Class<?> clazz) throws JAXBException {
-    JAXBContext ctx = getContext(clazz);
-    Marshaller marshaller = ctx.createMarshaller();
+    Marshaller marshaller = getContext(clazz).createMarshaller();
     setMarshallerProperties(marshaller);
     return marshaller;
   }
 
   private void setMarshallerProperties(Marshaller marshaller) throws PropertyException {
-    Iterator<String> keys = properties.keySet().iterator();
-
-    while (keys.hasNext()) {
-      String key = keys.next();
-      marshaller.setProperty(key, properties.get(key));
+    for (Entry<String, Object> en : properties.entrySet()) {
+      marshaller.setProperty(en.getKey(), en.getValue());
     }
   }
 
@@ -78,11 +71,25 @@ public final class JAXBContextFactory {
   }
 
   /**
-   * Creates instances of {@link feign.jaxb.JAXBContextFactory}
+   * Will preload factory's cache with JAXBContext for provided classes
+   * 
+   * @param classes
+   * @throws JAXBException
+   */
+  private void preloadContextCache(List<Class<?>> classes) throws JAXBException {
+    if (classes != null && !classes.isEmpty()) {
+      for (Class<?> clazz : classes) {
+        getContext(clazz);
+      }
+    }
+  }
+
+  /**
+   * Creates instances of {@link feign.jaxb.JAXBContextFactory}.
    */
   public static class Builder {
 
-    private final Map<String, Object> properties = new HashMap<String, Object>(5);
+    private final Map<String, Object> properties = new HashMap<>(10);
 
     /**
      * Sets the jaxb.encoding property of any Marshaller created by this factory.
@@ -125,10 +132,44 @@ public final class JAXBContextFactory {
     }
 
     /**
-     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance.
+     * Sets the given property of any Marshaller created by this factory.
+     * 
+     * <p>
+     * Example : <br>
+     * <br>
+     * <code>
+     *    new JAXBContextFactory.Builder()
+     *      .withProperty("com.sun.xml.internal.bind.xmlHeaders", "&lt;!DOCTYPE Example SYSTEM \&quot;example.dtd\&quot;&gt;")
+     *      .build();
+     * </code>
+     * </p>
+     */
+    public Builder withProperty(String key, Object value) {
+      properties.put(key, value);
+      return this;
+    }
+
+    /**
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance with a lazy loading cached
+     * context
      */
     public JAXBContextFactory build() {
       return new JAXBContextFactory(properties);
+    }
+
+    /**
+     * Creates a new {@link feign.jaxb.JAXBContextFactory} instance. Pre-loads context cache with
+     * given classes
+     *
+     * @param classes
+     * @return ContextFactory with a pre-populated JAXBContext cache
+     * @throws JAXBException if provided classes can't be used for JAXBContext generation most
+     *         likely due to missing JAXB annotations
+     */
+    public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
+      JAXBContextFactory factory = new JAXBContextFactory(properties);
+      factory.preloadContextCache(classes);
+      return factory;
     }
   }
 }

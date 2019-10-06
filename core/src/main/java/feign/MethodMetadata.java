@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign;
 
@@ -32,14 +30,16 @@ public final class MethodMetadata implements Serializable {
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
   private transient Type bodyType;
-  private RequestTemplate template = new RequestTemplate();
-  private List<String> formParams = new ArrayList<String>();
-  private Map<Integer, Collection<String>> indexToName =
+  private final RequestTemplate template = new RequestTemplate();
+  private final List<String> formParams = new ArrayList<String>();
+  private final Map<Integer, Collection<String>> indexToName =
       new LinkedHashMap<Integer, Collection<String>>();
-  private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
+  private final Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
-  private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
+  private final Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
+  private BitSet parameterToIgnore = new BitSet();
+  private boolean ignored;
   private transient Class<?> targetType;
   private transient Method method;
 
@@ -167,6 +167,57 @@ public final class MethodMetadata implements Serializable {
     return indexToExpander;
   }
 
+  /**
+   * @param i individual parameter that should be ignored
+   * @return this instance
+   */
+  public MethodMetadata ignoreParamater(int i) {
+    this.parameterToIgnore.set(i);
+    return this;
+  }
+
+  public BitSet parameterToIgnore() {
+    return parameterToIgnore;
+  }
+
+  public MethodMetadata parameterToIgnore(BitSet parameterToIgnore) {
+    this.parameterToIgnore = parameterToIgnore;
+    return this;
+  }
+
+  /**
+   * @param i individual parameter to check if should be ignored
+   * @return true when field should not be processed by feign
+   */
+  public boolean shouldIgnoreParamater(int i) {
+    return parameterToIgnore.get(i);
+  }
+
+  /**
+   * @param index
+   * @return true if the parameter {@code index} was already consumed by a any
+   *         {@link MethodMetadata} holder
+   */
+  public boolean isAlreadyProcessed(Integer index) {
+    return index.equals(urlIndex)
+        || index.equals(bodyIndex)
+        || index.equals(headerMapIndex)
+        || index.equals(queryMapIndex)
+        || indexToName.containsKey(index)
+        || indexToExpanderClass.containsKey(index)
+        || indexToEncoded.containsKey(index)
+        || (indexToExpander != null && indexToExpander.containsKey(index))
+        || parameterToIgnore.get(index);
+  }
+
+  public void ignoreMethod() {
+    this.ignored = true;
+  }
+
+  public boolean isIgnored() {
+    return ignored;
+  }
+
   public MethodMetadata targetType(Class<?> targetType) {
     this.targetType = targetType;
     return this;
@@ -184,4 +235,5 @@ public final class MethodMetadata implements Serializable {
   public Method method() {
     return method;
   }
+
 }

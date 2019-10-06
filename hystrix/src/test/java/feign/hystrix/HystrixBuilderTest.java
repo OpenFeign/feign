@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2019 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -5,17 +18,18 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import feign.FeignException;
 import feign.Headers;
 import feign.Param;
@@ -27,7 +41,6 @@ import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.observers.TestSubscriber;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 
@@ -37,6 +50,18 @@ public class HystrixBuilderTest {
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
+
+  @Test
+  public void defaultMethodReturningHystrixCommand() {
+    server.enqueue(new MockResponse().setBody("\"foo\""));
+
+    TestInterface api = target();
+
+    HystrixCommand<String> command = api.defaultMethodReturningCommand();
+
+    assertThat(command).isNotNull();
+    assertThat(command.execute()).isEqualTo("foo");
+  }
 
   @Test
   public void hystrixCommand() {
@@ -407,6 +432,66 @@ public class HystrixBuilderTest {
   }
 
   @Test
+  public void completableFutureEmptyBody()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    completable.get(5, TimeUnit.SECONDS);
+  }
+
+  @Test
+  public void completableFutureWithBody()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    assertThat(completable.get(5, TimeUnit.SECONDS)).isEqualTo("foo");
+  }
+
+  @Test
+  public void completableFutureFailWithoutFallback() throws TimeoutException, InterruptedException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = HystrixFeign.builder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    try {
+      completable.get(5, TimeUnit.SECONDS);
+    } catch (ExecutionException e) {
+      assertThat(e).hasCauseInstanceOf(HystrixRuntimeException.class);
+    }
+  }
+
+  @Test
+  public void completableFutureFallback()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    TestInterface api = target();
+
+    CompletableFuture<String> completable = api.completableFuture();
+
+    assertThat(completable).isNotNull();
+
+    assertThat(completable.get(5, TimeUnit.SECONDS)).isEqualTo("fallback");
+  }
+
+  @Test
   public void rxCompletableEmptyBody() {
     server.enqueue(new MockResponse());
 
@@ -593,6 +678,10 @@ public class HystrixBuilderTest {
     @Headers("Accept: application/json")
     HystrixCommand<String> command();
 
+    default HystrixCommand<String> defaultMethodReturningCommand() {
+      return command();
+    }
+
     @RequestLine("GET /")
     @Headers("Accept: application/json")
     HystrixCommand<Integer> intCommand();
@@ -632,6 +721,9 @@ public class HystrixBuilderTest {
 
     @RequestLine("GET /")
     Completable completable();
+
+    @RequestLine("GET /")
+    CompletableFuture<String> completableFuture();
   }
 
   class FallbackTestInterface implements TestInterface {
@@ -716,6 +808,11 @@ public class HystrixBuilderTest {
     @Override
     public Completable completable() {
       return Completable.complete();
+    }
+
+    @Override
+    public CompletableFuture<String> completableFuture() {
+      return CompletableFuture.completedFuture("fallback");
     }
   }
 }

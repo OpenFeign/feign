@@ -1,17 +1,15 @@
-/*
- * Copyright 2015 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.httpclient;
 
@@ -22,6 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.Configurable;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.URIBuilder;
@@ -31,11 +30,11 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -45,17 +44,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import feign.Util;
-
 import static feign.Util.UTF_8;
 
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-ga/">HttpClient</a>. Ex.
+ *
  * <pre>
  * GitHub github = Feign.builder().client(new ApacheHttpClient()).target(GitHub.class,
  * "https://api.github.com");
@@ -85,32 +83,34 @@ public final class ApacheHttpClient implements Client {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
     HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse).toBuilder().request(request).build();
+    return toFeignResponse(httpResponse, request);
   }
 
-  HttpUriRequest toHttpUriRequest(Request request, Request.Options options) throws
-          UnsupportedEncodingException, MalformedURLException, URISyntaxException {
-    RequestBuilder requestBuilder = RequestBuilder.create(request.method());
+  HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
+      throws URISyntaxException {
+    RequestBuilder requestBuilder = RequestBuilder.create(request.httpMethod().name());
 
-    //per request timeouts
-    RequestConfig requestConfig = RequestConfig
-            .custom()
-            .setConnectTimeout(options.connectTimeoutMillis())
-            .setSocketTimeout(options.readTimeoutMillis())
-            .build();
+    // per request timeouts
+    RequestConfig requestConfig =
+        (client instanceof Configurable ? RequestConfig.copy(((Configurable) client).getConfig())
+            : RequestConfig.custom())
+                .setConnectTimeout(options.connectTimeoutMillis())
+                .setSocketTimeout(options.readTimeoutMillis())
+                .build();
     requestBuilder.setConfig(requestConfig);
 
     URI uri = new URIBuilder(request.url()).build();
 
     requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
-    //request query params
-    List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
-    for (NameValuePair queryParam: queryParams) {
+    // request query params
+    List<NameValuePair> queryParams =
+        URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
+    for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
 
-    //request headers
+    // request headers
     boolean hasAcceptHeader = false;
     for (Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       String headerName = headerEntry.getKey();
@@ -128,42 +128,47 @@ public final class ApacheHttpClient implements Client {
         requestBuilder.addHeader(headerName, headerValue);
       }
     }
-    //some servers choke on the default accept string, so we'll set it to anything
+    // some servers choke on the default accept string, so we'll set it to anything
     if (!hasAcceptHeader) {
       requestBuilder.addHeader(ACCEPT_HEADER_NAME, "*/*");
     }
 
-    //request body
-    if (request.body() != null) {
+    // request body
+    if (request.requestBody().asBytes() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
         ContentType contentType = getContentType(request);
-        String content = new String(request.body(), request.charset());
+        String content = new String(request.requestBody().asBytes(), request.charset());
         entity = new StringEntity(content, contentType);
       } else {
-        entity = new ByteArrayEntity(request.body());
+        entity = new ByteArrayEntity(request.requestBody().asBytes());
       }
 
       requestBuilder.setEntity(entity);
+    } else {
+      requestBuilder.setEntity(new ByteArrayEntity(new byte[0]));
     }
 
     return requestBuilder.build();
   }
 
   private ContentType getContentType(Request request) {
-    ContentType contentType = ContentType.DEFAULT_TEXT;
+    ContentType contentType = null;
     for (Map.Entry<String, Collection<String>> entry : request.headers().entrySet())
       if (entry.getKey().equalsIgnoreCase("Content-Type")) {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           contentType = ContentType.parse(values.iterator().next());
+          if (contentType.getCharset() == null) {
+            contentType = contentType.withCharset(request.charset());
+          }
           break;
         }
       }
     return contentType;
   }
 
-  Response toFeignResponse(HttpResponse httpResponse) throws IOException {
+  Response toFeignResponse(HttpResponse httpResponse, Request request) throws IOException {
     StatusLine statusLine = httpResponse.getStatusLine();
     int statusCode = statusLine.getStatusCode();
 
@@ -183,14 +188,15 @@ public final class ApacheHttpClient implements Client {
     }
 
     return Response.builder()
-            .status(statusCode)
-            .reason(reason)
-            .headers(headers)
-            .body(toFeignBody(httpResponse))
-            .build();
+        .status(statusCode)
+        .reason(reason)
+        .headers(headers)
+        .request(request)
+        .body(toFeignBody(httpResponse))
+        .build();
   }
 
-  Response.Body toFeignBody(HttpResponse httpResponse) throws IOException {
+  Response.Body toFeignBody(HttpResponse httpResponse) {
     final HttpEntity entity = httpResponse.getEntity();
     if (entity == null) {
       return null;
@@ -199,8 +205,9 @@ public final class ApacheHttpClient implements Client {
 
       @Override
       public Integer length() {
-        return entity.getContentLength() >= 0 && entity.getContentLength() <= Integer.MAX_VALUE ?
-                (int) entity.getContentLength() : null;
+        return entity.getContentLength() >= 0 && entity.getContentLength() <= Integer.MAX_VALUE
+            ? (int) entity.getContentLength()
+            : null;
       }
 
       @Override
@@ -216,6 +223,12 @@ public final class ApacheHttpClient implements Client {
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
+      }
+
+      @Override
+      public Reader asReader(Charset charset) throws IOException {
+        Util.checkNotNull(charset, "charset should not be null");
+        return new InputStreamReader(asInputStream(), charset);
       }
 
       @Override

@@ -1,17 +1,15 @@
-/*
- * Copyright 2013 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.sax;
 
@@ -20,19 +18,16 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.ensureClosed;
@@ -40,14 +35,16 @@ import static feign.Util.resolveLastTypeParameter;
 
 /**
  * Decodes responses using SAX, which is supported both in normal JVM environments, as well Android.
- * <br> <h4>Basic example with with Feign.Builder</h4> <br>
+ * <br>
+ * <h4>Basic example with with Feign.Builder</h4> <br>
+ *
  * <pre>
  * api = Feign.builder()
- *            .decoder(SAXDecoder.builder()
- *                               .registerContentHandler(ContentHandlerForFoo.class)
- *                               .registerContentHandler(ContentHandlerForBar.class)
- *                               .build())
- *            .target(MyApi.class, "http://api");
+ *     .decoder(SAXDecoder.builder()
+ *         .registerContentHandler(ContentHandlerForFoo.class)
+ *         .registerContentHandler(ContentHandlerForBar.class)
+ *         .build())
+ *     .target(MyApi.class, "http://api");
  * </pre>
  */
 public class SAXDecoder implements Decoder {
@@ -64,11 +61,11 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.status() == 404) return Util.emptyValueOf(type);
-    if (response.body() == null) return null;
+    if (response.body() == null)
+      return null;
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(handlerFactory != null, "type %s not in configured handlers %s", type,
-               handlerFactories.keySet());
+        handlerFactories.keySet());
     ContentHandlerWithResult<?> handler = handlerFactory.create();
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
@@ -88,7 +85,7 @@ public class SAXDecoder implements Decoder {
       }
       return handler.result();
     } catch (SAXException e) {
-      throw new DecodeException(e.getMessage(), e);
+      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     }
   }
 
@@ -115,19 +112,21 @@ public class SAXDecoder implements Decoder {
 
     /**
      * Will call {@link Constructor#newInstance(Object...)} on {@code handlerClass} for each content
-     * stream. <p/> <h3>Note</h3> <br/> While this is costly vs {@code new}, it may not affect real
-     * performance due to the high cost of reading streams.
+     * stream.
+     * <p/>
+     * <h3>Note</h3> <br/>
+     * While this is costly vs {@code new}, it may not affect real performance due to the high cost
+     * of reading streams.
      *
      * @throws IllegalArgumentException if there's no no-arg constructor on {@code handlerClass}.
      */
     public <T extends ContentHandlerWithResult<?>> Builder registerContentHandler(
-        Class<T> handlerClass) {
-      Type
-          type =
+                                                                                  Class<T> handlerClass) {
+      Type type =
           resolveLastTypeParameter(checkNotNull(handlerClass, "handlerClass"),
-                                   ContentHandlerWithResult.class);
+              ContentHandlerWithResult.class);
       return registerContentHandler(type,
-                                    new NewInstanceContentHandlerWithResultFactory(handlerClass));
+          new NewInstanceContentHandlerWithResultFactory(handlerClass));
     }
 
     /**

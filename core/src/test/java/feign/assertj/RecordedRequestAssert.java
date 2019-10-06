@@ -1,30 +1,29 @@
-/*
- * Copyright 2015 Netflix, Inc.
+/**
+ * Copyright 2012-2019 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package feign.assertj;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import okhttp3.Headers;
 import okhttp3.mockwebserver.RecordedRequest;
-
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,9 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
-
 import feign.Util;
-
 import static org.assertj.core.data.MapEntry.entry;
 import static org.assertj.core.error.ShouldNotContain.shouldNotContain;
 
@@ -61,6 +58,35 @@ public final class RecordedRequestAssert
   public RecordedRequestAssert hasPath(String expected) {
     isNotNull();
     objects.assertEqual(info, actual.getPath(), expected);
+    return this;
+  }
+
+  public RecordedRequestAssert hasQueryParams(String... expectedParams) {
+    return hasQueryParams(Arrays.asList(expectedParams));
+  }
+
+  public RecordedRequestAssert hasQueryParams(Collection<String> expectedParams) {
+    isNotNull();
+    Collection<String> actualQueryParams = getQueryParams();
+    objects.assertEqual(info, expectedParams.size(), actualQueryParams.size());
+    for (String expectedParam : expectedParams) {
+      objects.assertIsIn(info, expectedParam, actualQueryParams);
+    }
+    return this;
+  }
+
+  private Collection<String> getQueryParams() {
+    String path = actual.getPath();
+    int queryStart = path.indexOf("?") + 1;
+    String[] queryParams = actual.getPath()
+        .substring(queryStart)
+        .split("&");
+    return Arrays.asList(queryParams);
+  }
+
+  public RecordedRequestAssert hasOneOfPath(String... expected) {
+    isNotNull();
+    objects.assertIsIn(info, actual.getPath(), expected);
     return this;
   }
 
@@ -133,7 +159,7 @@ public final class RecordedRequestAssert
     Set<String> found = new LinkedHashSet<String>();
     for (String header : actual.getHeaders().names()) {
       for (String name : names) {
-        if (header.toLowerCase().startsWith(name.toLowerCase() + ":")) {
+        if (header.equalsIgnoreCase(name)) {
           found.add(header);
         }
       }

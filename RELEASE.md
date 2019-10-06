@@ -10,12 +10,16 @@ This repo uses [semantic versions](http://semver.org/). Please keep this in mind
 
 1. **Push a git tag**
 
-   The tag should be of the format `release-N.M.L`, for example `release-8.18.0`.
+   Prepare the next release by running the [release script](travis/release.sh) from a clean checkout of the master branch.
+   This script will:
+   * Update all versions to the next release.
+   * Tag the release.
+   * Update all versions to the next development version.
 
 1. **Wait for Travis CI**
 
-   This part is controlled by [`travis/publish.sh`](travis/publish.sh). It creates a couple commits, bumps the version,
-   publishes artifacts, syncs to Maven Central.
+   This part is controlled by the [travis configuration](.travis.yml), specifically the `release` stage.  Which
+   creates the release artifacts and deploys them to maven central.
 
 ## Credentials
 
@@ -37,4 +41,36 @@ $ travis encrypt BINTRAY_USER=adrianmole
 Please add the following to your .travis.yml file:
 
   secure: "mQnECL+dXc5l9wCYl/wUz+AaYFGt/1G31NAZcTLf2RbhKo8mUenc4hZNjHCEv+4ZvfYLd/NoTNMhTCxmtBMz1q4CahPKLWCZLoRD1ExeXwRymJPIhxZUPzx9yHPHc5dmgrSYOCJLJKJmHiOl9/bJi123456="
+```
+
+### Troubleshooting invalid credentials
+
+If you receive a '401 unauthorized' failure from jCenter or Bintray, it is
+likely `BINTRAY_USER` or `BINTRAY_KEY` entries are invalid, or possibly the user
+associated with them does not have rights to upload.
+
+The least destructive test is to try to publish a snapshot manually. By passing
+the values Travis would use, you can kick off a snapshot from your laptop. This
+is a good way to validate that your unencrypted credentials are authorized.
+
+Here's an example of a snapshot deploy with specified credentials.
+```bash
+$ BINTRAY_USER=adrianmole BINTRAY_KEY=ed6f20bde9123bbb2312b221 TRAVIS_PULL_REQUEST=false TRAVIS_TAG= TRAVIS_BRANCH=master travis/publish.sh
+```
+
+## First release of the year
+
+The license plugin verifies license headers of files include a copyright notice indicating the years a file was affected.
+This information is taken from git history. There's a once-a-year problem with files that include version numbers (pom.xml).
+When a release tag is made, it increments version numbers, then commits them to git. On the first release of the year,
+further commands will fail due to the version increments invalidating the copyright statement. The way to sort this out is
+the following:
+
+Before you do the first release of the year, move the SNAPSHOT version back and forth from whatever the current is.
+In-between, re-apply the licenses.
+```bash
+$ ./mvnw versions:set -DnewVersion=1.3.3-SNAPSHOT -DgenerateBackupPoms=false
+$ ./mvnw com.mycila:license-maven-plugin:format
+$ ./mvnw versions:set -DnewVersion=1.3.2-SNAPSHOT -DgenerateBackupPoms=false
+$ git commit -am"Adjusts copyright headers for this year"
 ```
