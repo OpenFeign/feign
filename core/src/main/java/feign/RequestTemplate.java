@@ -259,7 +259,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.requestBody());
+    return Request.create(this.method, this.url(), this.headers(), this.requestBody(), this);
   }
 
   /**
