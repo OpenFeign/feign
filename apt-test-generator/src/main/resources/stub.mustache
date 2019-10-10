@@ -1,0 +1,58 @@
+package {{client.jpackage}};
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class {{client.className}}Stub
+    implements {{client.fullQualifiedName}} {
+
+  public class {{client.className}}Invokations {
+
+{{#each methods as |method|}}
+
+    private final AtomicInteger {{method.name}} = new AtomicInteger(0);
+
+    public int {{method.name}}() {
+      return {{method.name}}.get();
+    }
+
+{{/each}}
+
+  }
+
+  public class {{client.className}}Anwsers {
+
+{{#each methods as |method|}}
+  {{#unless method.isVoid}}
+    private {{method.returnType}} {{method.name}}Default;
+  {{/unless}}
+{{/each}}
+
+  }
+
+  public {{client.className}}Invokations invokations;
+  public {{client.className}}Anwsers answers;
+
+  public {{client.className}}Stub() {
+    this.invokations = new {{client.className}}Invokations();
+    this.answers = new {{client.className}}Anwsers();
+  }
+
+{{#each methods as |method|}}
+  {{#unless method.isVoid}}
+  public {{client.className}}Stub with{{method.uname}}({{method.returnType}} {{method.name}}) {
+    answers.{{method.name}}Default = {{method.name}};
+    return this;
+  }
+  {{/unless}}
+
+  @Override
+  public {{method.returnType}} {{method.name}}({{#each method.args as |arg|}}{{arg.type}} {{arg.name}}{{#unless @last}},{{/unless}}{{/each}}) {
+    invokations.{{method.name}}.incrementAndGet();
+{{#unless method.isVoid}}
+    return answers.{{method.name}}Default;
+{{/unless}}
+  }
+
+{{/each}}
+
+}

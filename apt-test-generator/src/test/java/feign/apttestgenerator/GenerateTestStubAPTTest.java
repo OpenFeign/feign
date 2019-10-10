@@ -38,7 +38,7 @@ public class GenerateTestStubAPTTest {
                     .toURL()));
     assertThat(compilation).succeeded();
     assertThat(compilation)
-        .generatedSourceFile("GitHubStub")
+        .generatedSourceFile("example.github.GitHubStub")
         .hasSourceEquivalentTo(JavaFileObjects.forResource(
             new File("src/test/java/example/github/GitHubStub.java")
                 .toURI()

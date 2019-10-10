@@ -25,6 +25,8 @@
 
   <groupId>io.github.openfeign.experimental</groupId>
   <artifactId>feign-apt-test-generator</artifactId>
+  <name>Feign APT test generator</name>
+  <description>Feign code generation tool for mocked clients</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -47,6 +49,12 @@
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.jknack</groupId>
+      <artifactId>handlebars</artifactId>
+      <version>4.1.2</version>
+    </dependency>
+
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-gson</artifactId>

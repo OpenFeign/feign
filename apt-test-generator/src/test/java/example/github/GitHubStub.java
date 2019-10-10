@@ -18,58 +18,101 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GitHubStub
     implements example.github.GitHubExample.GitHub {
 
-  protected final AtomicInteger __invocation_count_method_0 = new AtomicInteger(0);
+  public class GitHubInvokations {
 
-  public int reposInvocationCount() {
-    return __invocation_count_method_0.get();
+
+
+    private final AtomicInteger repos = new AtomicInteger(0);
+
+    public int repos() {
+      return repos.get();
+    }
+
+
+
+    private final AtomicInteger contributors = new AtomicInteger(0);
+
+    public int contributors() {
+      return contributors.get();
+    }
+
+
+
+    private final AtomicInteger createIssue = new AtomicInteger(0);
+
+    public int createIssue() {
+      return createIssue.get();
+    }
+
+
+
+  }
+
+  public class GitHubAnwsers {
+
+
+
+    private java.util.List<example.github.GitHubExample.GitHub.Repository> reposDefault;
+
+
+
+    private java.util.List<example.github.GitHubExample.GitHub.Contributor> contributorsDefault;
+
+
+
+  }
+
+  public GitHubInvokations invokations;
+  public GitHubAnwsers answers;
+
+  public GitHubStub() {
+    this.invokations = new GitHubInvokations();
+    this.answers = new GitHubAnwsers();
   }
 
 
-  protected java.util.List<example.github.GitHubExample.GitHub.Repository> __answer_method_0;
 
-  public GitHubStub withRepos(java.util.List<example.github.GitHubExample.GitHub.Repository> arg) {
-    this.__answer_method_0 = arg;
+  public GitHubStub withRepos(java.util.List<example.github.GitHubExample.GitHub.Repository> repos) {
+    answers.reposDefault = repos;
     return this;
   }
+
 
   @Override
   public java.util.List<example.github.GitHubExample.GitHub.Repository> repos(java.lang.String owner) {
-    __invocation_count_method_0.incrementAndGet();
-    return this.__answer_method_0;
+    invokations.repos.incrementAndGet();
+
+    return answers.reposDefault;
+
   }
 
-  protected final AtomicInteger __invocation_count_method_1 = new AtomicInteger(0);
 
-  public int contributorsInvocationCount() {
-    return __invocation_count_method_1.get();
-  }
 
-  protected java.util.List<example.github.GitHubExample.GitHub.Contributor> __answer_method_1;
-
-  public GitHubStub withContributors(java.util.List<example.github.GitHubExample.GitHub.Contributor> arg) {
-    this.__answer_method_1 = arg;
+  public GitHubStub withContributors(java.util.List<example.github.GitHubExample.GitHub.Contributor> contributors) {
+    answers.contributorsDefault = contributors;
     return this;
   }
+
 
   @Override
   public java.util.List<example.github.GitHubExample.GitHub.Contributor> contributors(java.lang.String owner,
                                                                                       java.lang.String repo) {
-    __invocation_count_method_1.incrementAndGet();
-    return this.__answer_method_1;
+    invokations.contributors.incrementAndGet();
+
+    return answers.contributorsDefault;
+
   }
 
-  protected final AtomicInteger __invocation_count_method_2 = new AtomicInteger(0);
 
-  public int createIssueInvocationCount() {
-    return __invocation_count_method_2.get();
-  }
 
   @Override
   public void createIssue(example.github.GitHubExample.GitHub.Issue issue,
                           java.lang.String owner,
                           java.lang.String repo) {
-    __invocation_count_method_2.incrementAndGet();
+    invokations.createIssue.incrementAndGet();
+
   }
+
 
 
 }

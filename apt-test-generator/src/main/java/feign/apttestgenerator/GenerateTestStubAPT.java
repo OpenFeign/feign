@@ -13,15 +13,19 @@
  */
 package feign.apttestgenerator;
 
+import com.github.jknack.handlebars.*;
+import com.github.jknack.handlebars.context.FieldValueResolver;
+import com.github.jknack.handlebars.context.JavaBeanValueResolver;
+import com.github.jknack.handlebars.context.MapValueResolver;
+import com.github.jknack.handlebars.io.URLTemplateSource;
 import com.google.auto.service.AutoService;
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableList;
+import java.io.IOError;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.processing.*;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -32,7 +36,6 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes({
     "feign.RequestLine"
 })
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @AutoService(Processor.class)
 public class GenerateTestStubAPT extends AbstractProcessor {
 
@@ -56,106 +59,57 @@ public class GenerateTestStubAPT extends AbstractProcessor {
     System.out.println("Count: " + clientsToGenerate.size());
     System.out.println("clientsToGenerate: " + clientsToGenerate);
 
-    clientsToGenerate.forEach((type, methods) -> {
+    final Handlebars handlebars = new Handlebars();
+
+    final URLTemplateSource source =
+        new URLTemplateSource("stub.mustache", getClass().getResource("/stub.mustache"));
+    Template template;
+    try {
+      template = handlebars.with(EscapingStrategy.JS).compile(source);
+    } catch (final IOException e) {
+      throw new IOError(e);
+    }
+
+
+    clientsToGenerate.forEach((type, executables) -> {
       try {
         final String jPackage = readPackage(type);
-        final String stubName = type.getSimpleName() + "Stub";
+        final String className = type.getSimpleName().toString();
         final JavaFileObject builderFile = processingEnv.getFiler()
-            .createSourceFile(stubName);
-        final StringBuilder writer = new StringBuilder();
-        writer.append("package " + jPackage + ";").append("\n");
-        writer.append("import java.util.concurrent.atomic.AtomicInteger;").append("\n");
-        writer.append("public class " + stubName).append("\n");
-        writer.append("    implements ").append(type);
-        writer.append(" {").append("\n");
+            .createSourceFile(jPackage + "." + className + "Stub");
 
-        methods.stream()
-            .forEach(method -> {
+        final ClientDefinition client = new ClientDefinition(
+            jPackage,
+            className,
+            type.toString());
+
+        final List<MethodDefinition> methods = executables.stream()
+            .map(method -> {
               final String methodName = method.getSimpleName().toString();
-              final String privateName = "method_" + methods.indexOf(method);
 
-              // method to verify invocation cound
-              writer
-                  .append("protected final AtomicInteger __invocation_count_")
-                  .append(privateName)
-                  .append(" = new AtomicInteger(0);")
-                  .append("\n");
-              writer
-                  .append("public int ")
-                  .append(methodName)
-                  .append("InvocationCount() {\n")
-                  .append("return __invocation_count_")
-                  .append(privateName)
-                  .append(".get();\n")
-                  .append("}\n");
+              final List<ArgumentDefinition> args = method.getParameters()
+                  .stream()
+                  .map(var -> new ArgumentDefinition(var.getSimpleName().toString(),
+                      var.asType().toString()))
+                  .collect(Collectors.toList());
+              return new MethodDefinition(
+                  methodName,
+                  method.getReturnType().toString(),
+                  method.getReturnType().getKind() == TypeKind.VOID,
+                  args);
+            })
+            .collect(Collectors.toList());
 
+        final Context context = Context.newBuilder(template)
+            .combine("client", client)
+            .combine("methods", methods)
+            .resolver(JavaBeanValueResolver.INSTANCE, MapValueResolver.INSTANCE,
+                FieldValueResolver.INSTANCE)
+            .build();
+        final String stubSource = template.apply(context);
+        System.out.println(stubSource);
 
-              // method that allows a mocked result to be set
-              if (method.getReturnType().getKind() != TypeKind.VOID) {
-                writer
-                    .append("protected ")
-                    .append(method.getReturnType())
-                    .append(" __answer_")
-                    .append(privateName)
-                    .append(";")
-                    .append("\n");
-                final Converter<String, String> upperCase =
-                    CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_CAMEL);
-                writer
-                    .append("public ")
-                    .append(stubName)
-                    .append(" with")
-                    .append(upperCase.convert(methodName))
-                    .append("(")
-                    .append(method.getReturnType())
-                    .append(" arg) {")
-                    .append("\n")
-                    .append("this.__answer_")
-                    .append(privateName)
-                    .append("= arg;\n")
-                    .append("return this;\n")
-                    .append("}\n");
-              }
-
-              // actual method implementation
-              writer
-                  .append("@Override\n")
-                  .append("public ")
-                  .append(method.getReturnType())
-                  .append(" ")
-                  .append(methodName)
-                  .append("(");
-              writer.append(
-                  method.getParameters()
-                      .stream()
-                      .map(variable -> variable.asType() + " " + variable.getSimpleName())
-                      .collect(Collectors.joining(", ")));
-              writer
-                  .append(")")
-                  .append("{\n");
-              writer
-                  .append("__invocation_count_")
-                  .append(privateName)
-                  .append(".incrementAndGet();\n");
-
-              if (method.getReturnType().getKind() != TypeKind.VOID) {
-                writer
-                    .append("return this.__answer_")
-                    .append(privateName)
-                    .append(";")
-                    .append("\n");
-              }
-
-              writer
-                  .append("}")
-                  .append("\n");
-            });
-
-        writer.append("}").append("\n");
-
-        System.out.println(writer);
-
-        builderFile.openWriter().append(writer).close();
+        builderFile.openWriter().append(stubSource).close();
       } catch (final Exception e) {
         e.printStackTrace();
         processingEnv.getMessager().printMessage(Kind.ERROR,
@@ -201,3 +155,4 @@ public class GenerateTestStubAPT extends AbstractProcessor {
   }
 
 }
+
