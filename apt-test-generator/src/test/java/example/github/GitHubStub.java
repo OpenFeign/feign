@@ -20,15 +20,11 @@ public class GitHubStub
 
   public class GitHubInvokations {
 
-
-
     private final AtomicInteger repos = new AtomicInteger(0);
 
     public int repos() {
       return repos.get();
     }
-
-
 
     private final AtomicInteger contributors = new AtomicInteger(0);
 
@@ -36,29 +32,19 @@ public class GitHubStub
       return contributors.get();
     }
 
-
-
     private final AtomicInteger createIssue = new AtomicInteger(0);
 
     public int createIssue() {
       return createIssue.get();
     }
 
-
-
   }
 
   public class GitHubAnwsers {
 
-
-
     private java.util.List<example.github.GitHubExample.GitHub.Repository> reposDefault;
 
-
-
     private java.util.List<example.github.GitHubExample.GitHub.Contributor> contributorsDefault;
-
-
 
   }
 
@@ -70,23 +56,17 @@ public class GitHubStub
     this.answers = new GitHubAnwsers();
   }
 
-
-
   public GitHubStub withRepos(java.util.List<example.github.GitHubExample.GitHub.Repository> repos) {
     answers.reposDefault = repos;
     return this;
   }
-
 
   @Override
   public java.util.List<example.github.GitHubExample.GitHub.Repository> repos(java.lang.String owner) {
     invokations.repos.incrementAndGet();
 
     return answers.reposDefault;
-
   }
-
-
 
   public GitHubStub withContributors(java.util.List<example.github.GitHubExample.GitHub.Contributor> contributors) {
     answers.contributorsDefault = contributors;
@@ -100,10 +80,7 @@ public class GitHubStub
     invokations.contributors.incrementAndGet();
 
     return answers.contributorsDefault;
-
   }
-
-
 
   @Override
   public void createIssue(example.github.GitHubExample.GitHub.Issue issue,
@@ -112,7 +89,5 @@ public class GitHubStub
     invokations.createIssue.incrementAndGet();
 
   }
-
-
 
 }
