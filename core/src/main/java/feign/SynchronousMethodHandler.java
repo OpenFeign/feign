@@ -187,8 +187,9 @@ final class SynchronousMethodHandler implements MethodHandler {
     if (argv == null || argv.length == 0) {
       return this.options;
     }
-    return (Options) Stream.of(argv)
-        .filter(o -> o instanceof Options)
+    return Stream.of(argv)
+        .filter(Options.class::isInstance)
+        .map(Options.class::cast)
         .findFirst()
         .orElse(this.options);
   }

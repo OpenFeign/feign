@@ -22,7 +22,6 @@ import static feign.Util.checkNotNull;
 import static feign.Util.isBlank;
 import static feign.Util.isNotBlank;
 import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,11 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-
 import feign.Request.Options;
 
 /**

@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>10.4.1-SNAPSHOT</version>
+  <version>10.5.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -29,6 +29,7 @@
     <module>core</module>
     <module>gson</module>
     <module>httpclient</module>
+    <module>hc5</module>
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
@@ -40,12 +41,11 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>spring4</module>
     <module>soap</module>
     <module>reactive</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
-    <!-- remove after feign 10.0 release -->
-    <module>java8</module>
     <module>mock</module>
     <module>benchmark</module>
   </modules>
@@ -74,8 +74,8 @@
     <bouncy.version>1.60</bouncy.version>
 
     <junit.version>4.12</junit.version>
-    <jackson.version>2.10.0.pr1</jackson.version>
-    <jackson.databind.version>2.9.9.3</jackson.databind.version>
+    <jackson.version>2.10.0.pr3</jackson.version>
+    <jackson.databind.version>2.10.0.pr3</jackson.databind.version>
     <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
@@ -114,7 +114,7 @@
   <scm>
     <url>https://github.com/openfeign/feign</url>
     <connection>scm:git:https://github.com/openfeign/feign.git</connection>
-    <developerConnection>scm:git:https://github.com/openfeign/feign.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -225,6 +225,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs2</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-mock</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -536,6 +542,9 @@
         <configuration>
           <lineEnding>LF</lineEnding>
           <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
+          <excludes>
+            <exclude>travis/**</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>

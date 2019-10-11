@@ -13,22 +13,15 @@
  */
 package feign;
 
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import feign.Request.HttpMethod;
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
 
 /**
  * Defines what annotations and values are valid on interfaces.
@@ -96,9 +89,12 @@ public interface Contract {
       for (Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
+      if (data.isIgnored()) {
+        return data;
+      }
       checkState(data.template().method() != null,
           "Method %s not annotated with HTTP method type (ex. GET, POST)",
-          method.getName());
+          data.configKey());
       Class<?>[] parameterTypes = method.getParameterTypes();
       Type[] genericParameterTypes = method.getGenericParameterTypes();
 
@@ -109,9 +105,15 @@ public interface Contract {
         if (parameterAnnotations[i] != null) {
           isHttpAnnotation = processAnnotationsOnParameter(data, parameterAnnotations[i], i);
         }
+
+        if (isHttpAnnotation) {
+          data.ignoreParamater(i);
+        }
+
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
+        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class
+            && !data.isAlreadyProcessed(i)) {
           checkState(data.formParams().isEmpty(),
               "Body parameters cannot be used with form parameters.");
           checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
@@ -169,7 +171,6 @@ public interface Contract {
       }
     }
 
-
     /**
      * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
      * type (unless they are the same).
@@ -211,99 +212,79 @@ public interface Contract {
     }
   }
 
-  class Default extends BaseContract {
+  class Default extends DeclarativeContract {
 
     static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.*)$");
 
-    @Override
-    protected void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
-      if (targetType.isAnnotationPresent(Headers.class)) {
-        String[] headersOnType = targetType.getAnnotation(Headers.class).value();
+    public Default() {
+      super.registerClassAnnotation(Headers.class, (header, data) -> {
+        String[] headersOnType = header.value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
-            targetType.getName());
+            data.configKey());
         Map<String, Collection<String>> headers = toMap(headersOnType);
         headers.putAll(data.template().headers());
         data.template().headers(null); // to clear
         data.template().headers(headers);
-      }
-    }
-
-    @Override
-    protected void processAnnotationOnMethod(MethodMetadata data,
-                                             Annotation methodAnnotation,
-                                             Method method) {
-      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-      if (annotationType == RequestLine.class) {
-        String requestLine = RequestLine.class.cast(methodAnnotation).value();
+      });
+      super.registerMethodAnnotation(RequestLine.class, (ann, data) -> {
+        String requestLine = ann.value();
         checkState(emptyToNull(requestLine) != null,
-            "RequestLine annotation was empty on method %s.", method.getName());
+            "RequestLine annotation was empty on method %s.", data.configKey());
 
         Matcher requestLineMatcher = REQUEST_LINE_PATTERN.matcher(requestLine);
         if (!requestLineMatcher.find()) {
           throw new IllegalStateException(String.format(
               "RequestLine annotation didn't start with an HTTP verb on method %s",
-              method.getName()));
+              data.configKey()));
         } else {
           data.template().method(HttpMethod.valueOf(requestLineMatcher.group(1)));
           data.template().uri(requestLineMatcher.group(2));
         }
-        data.template().decodeSlash(RequestLine.class.cast(methodAnnotation).decodeSlash());
+        data.template().decodeSlash(ann.decodeSlash());
         data.template()
-            .collectionFormat(RequestLine.class.cast(methodAnnotation).collectionFormat());
-
-      } else if (annotationType == Body.class) {
-        String body = Body.class.cast(methodAnnotation).value();
+            .collectionFormat(ann.collectionFormat());
+      });
+      super.registerMethodAnnotation(Body.class, (ann, data) -> {
+        String body = ann.value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
-            method.getName());
+            data.configKey());
         if (body.indexOf('{') == -1) {
           data.template().body(body);
         } else {
           data.template().bodyTemplate(body);
         }
-      } else if (annotationType == Headers.class) {
-        String[] headersOnMethod = Headers.class.cast(methodAnnotation).value();
+      });
+      super.registerMethodAnnotation(Headers.class, (header, data) -> {
+        String[] headersOnMethod = header.value();
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
-            method.getName());
+            data.configKey());
         data.template().headers(toMap(headersOnMethod));
-      }
-    }
-
-    @Override
-    protected boolean processAnnotationsOnParameter(MethodMetadata data,
-                                                    Annotation[] annotations,
-                                                    int paramIndex) {
-      boolean isHttpAnnotation = false;
-      for (Annotation annotation : annotations) {
-        Class<? extends Annotation> annotationType = annotation.annotationType();
-        if (annotationType == Param.class) {
-          Param paramAnnotation = (Param) annotation;
-          String name = paramAnnotation.value();
-          checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
-              paramIndex);
-          nameParam(data, name, paramIndex);
-          Class<? extends Param.Expander> expander = paramAnnotation.expander();
-          if (expander != Param.ToStringExpander.class) {
-            data.indexToExpanderClass().put(paramIndex, expander);
-          }
-          data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
-          isHttpAnnotation = true;
-          if (!data.template().hasRequestVariable(name)) {
-            data.formParams().add(name);
-          }
-        } else if (annotationType == QueryMap.class) {
-          checkState(data.queryMapIndex() == null,
-              "QueryMap annotation was present on multiple parameters.");
-          data.queryMapIndex(paramIndex);
-          data.queryMapEncoded(QueryMap.class.cast(annotation).encoded());
-          isHttpAnnotation = true;
-        } else if (annotationType == HeaderMap.class) {
-          checkState(data.headerMapIndex() == null,
-              "HeaderMap annotation was present on multiple parameters.");
-          data.headerMapIndex(paramIndex);
-          isHttpAnnotation = true;
+      });
+      super.registerParameterAnnotation(Param.class, (paramAnnotation, data, paramIndex) -> {
+        String name = paramAnnotation.value();
+        checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
+            paramIndex);
+        nameParam(data, name, paramIndex);
+        Class<? extends Param.Expander> expander = paramAnnotation.expander();
+        if (expander != Param.ToStringExpander.class) {
+          data.indexToExpanderClass().put(paramIndex, expander);
         }
-      }
-      return isHttpAnnotation;
+        data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
+        if (!data.template().hasRequestVariable(name)) {
+          data.formParams().add(name);
+        }
+      });
+      super.registerParameterAnnotation(QueryMap.class, (queryMap, data, paramIndex) -> {
+        checkState(data.queryMapIndex() == null,
+            "QueryMap annotation was present on multiple parameters.");
+        data.queryMapIndex(paramIndex);
+        data.queryMapEncoded(queryMap.encoded());
+      });
+      super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
+        checkState(data.headerMapIndex() == null,
+            "HeaderMap annotation was present on multiple parameters.");
+        data.headerMapIndex(paramIndex);
+      });
     }
 
     private static Map<String, Collection<String>> toMap(String[] input) {
@@ -319,5 +300,6 @@ public interface Contract {
       }
       return result;
     }
+
   }
 }

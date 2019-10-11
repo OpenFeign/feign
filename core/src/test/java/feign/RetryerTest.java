@@ -17,7 +17,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.util.Collections;
 import java.util.Date;
 import feign.Retryer.Default;
@@ -29,7 +28,7 @@ public class RetryerTest {
   public final ExpectedException thrown = ExpectedException.none();
 
   private final static Request REQUEST = Request
-          .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+      .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
 
   @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
@@ -83,7 +82,8 @@ public class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000), REQUEST);
+        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000),
+            REQUEST);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't
