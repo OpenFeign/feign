@@ -13,10 +13,15 @@
  */
 package feign;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
 import static java.lang.String.format;
-import java.io.IOException;
 
 /**
  * Origin exception type for all Http Apis.
@@ -121,7 +126,6 @@ public class FeignException extends RuntimeException {
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
-    String message = format("status %s reading %s", response.status(), methodKey);
 
     byte[] body = {};
     try {
@@ -130,6 +134,11 @@ public class FeignException extends RuntimeException {
       }
     } catch (IOException ignored) { // NOPMD
     }
+
+    String message = new FeignExceptionMessageBuilder()
+        .withResponse(response)
+        .withRequestMethod(response.request().httpMethod())
+        .withBody(body).build();
 
     return errorStatus(response.status(), message, response.request(), body);
   }
@@ -322,5 +331,74 @@ public class FeignException extends RuntimeException {
     public GatewayTimeout(String message, Request request, byte[] body) {
       super(504, message, request, body);
     }
+  }
+
+  public static class FeignExceptionMessageBuilder {
+
+    private Response response;
+
+    private byte[] body;
+
+    private Request.HttpMethod requestMethod;
+
+    public FeignExceptionMessageBuilder withResponse(Response response) {
+      this.response = response;
+      return this;
+    }
+
+    public FeignExceptionMessageBuilder withBody(byte[] body) {
+      this.body = body;
+      return this;
+    }
+
+    public FeignExceptionMessageBuilder withRequestMethod(Request.HttpMethod requestMethod) {
+      this.requestMethod = requestMethod;
+      return this;
+    }
+
+    public String build() {
+      StringBuilder result = new StringBuilder();
+
+      if (response.reason() != null) {
+        result.append(format("[%d %s]", response.status(), response.reason()));
+      } else {
+        result.append(format("[%d]", response.status()));
+      }
+      result.append(format(" during [%s] to [%s]", requestMethod, response.request().url()));
+
+      result.append(format(": [%s]", getBodyAsString(body, response.headers())));
+
+      return result.toString();
+    }
+
+    private static String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
+      Charset charset = getResponseCharset(headers);
+      if (charset == null) {
+        return new String(body, Util.UTF_8);
+      }
+      return new String(body, charset);
+    }
+
+    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
+
+      Collection<String> strings = headers.get("content-type");
+      if (strings == null || strings.size() == 0) {
+        return null;
+      }
+
+      Pattern pattern = Pattern.compile("charset=([^\\s])");
+      Matcher matcher = pattern.matcher(strings.iterator().next());
+      if (!matcher.lookingAt()) {
+        return null;
+      }
+
+      String group = matcher.group(1);
+      if (!Charset.isSupported(group)) {
+        return null;
+      }
+      return Charset.forName(group);
+
+    }
+
   }
 }

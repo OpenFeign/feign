@@ -41,7 +41,7 @@ public class DefaultErrorDecoderTest {
   @Test
   public void throwsFeignException() throws Throwable {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading Service#foo()");
+    thrown.expectMessage("[500 Internal server error] during [GET] to [/api]: []");
 
     Response response = Response.builder()
         .status(500)
@@ -66,7 +66,8 @@ public class DefaultErrorDecoderTest {
     try {
       throw errorDecoder.decode("Service#foo()", response);
     } catch (FeignException e) {
-      assertThat(e.getMessage()).isEqualTo("status 500 reading Service#foo()");
+      assertThat(e.getMessage())
+          .isEqualTo("[500 Internal server error] during [GET] to [/api]: [hello world]");
       assertThat(e.contentUTF8()).isEqualTo("hello world");
     }
   }
@@ -89,7 +90,7 @@ public class DefaultErrorDecoderTest {
   @Test
   public void retryAfterHeaderThrowsRetryableException() throws Throwable {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 503 reading Service#foo()");
+    thrown.expectMessage("[503 Service Unavailable] during [GET] to [/api]: []");
 
     headers.put(RETRY_AFTER, Collections.singletonList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response = Response.builder()
