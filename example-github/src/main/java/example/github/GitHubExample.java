@@ -68,8 +68,8 @@ public class GitHubExample {
     }
 
     static GitHub connect() {
-      Decoder decoder = new GsonDecoder();
-      Encoder encoder = new GsonEncoder();
+      final Decoder decoder = new GsonDecoder();
+      final Encoder encoder = new GsonEncoder();
       return Feign.builder()
           .encoder(encoder)
           .decoder(decoder)
@@ -80,7 +80,10 @@ public class GitHubExample {
               template -> {
                 if (System.getenv().containsKey(GITHUB_TOKEN)) {
                   System.out.println("Detected Authorization token from environment variable");
-                  template.header("Authorization", "token " + System.getenv(GITHUB_TOKEN));
+                  template.header(
+                      // not available when building PRs...
+                      // https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
+                      "Authorization", "token " + System.getenv(GITHUB_TOKEN));
                 }
               })
           .target(GitHub.class, "https://api.github.com");
@@ -97,28 +100,28 @@ public class GitHubExample {
   }
 
   public static void main(String... args) {
-    GitHub github = GitHub.connect();
+    final GitHub github = GitHub.connect();
 
     System.out.println("Let's fetch and print a list of the contributors to this org.");
-    List<String> contributors = github.contributors("openfeign");
-    for (String contributor : contributors) {
+    final List<String> contributors = github.contributors("openfeign");
+    for (final String contributor : contributors) {
       System.out.println(contributor);
     }
 
     System.out.println("Now, let's cause an error.");
     try {
       github.contributors("openfeign", "some-unknown-project");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
 
     System.out.println("Now, try to create an issue - which will also cause an error.");
     try {
-      GitHub.Issue issue = new GitHub.Issue();
+      final GitHub.Issue issue = new GitHub.Issue();
       issue.title = "The title";
       issue.body = "Some Text";
       github.createIssue(issue, "OpenFeign", "SomeRepo");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
   }
@@ -138,7 +141,7 @@ public class GitHubExample {
         // must replace status by 200 other GSONDecoder returns null
         response = response.toBuilder().status(200).build();
         return (Exception) decoder.decode(response, GitHubClientError.class);
-      } catch (IOException fallbackToDefault) {
+      } catch (final IOException fallbackToDefault) {
         return defaultDecoder.decode(methodKey, response);
       }
     }
