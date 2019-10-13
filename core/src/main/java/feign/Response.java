@@ -125,6 +125,7 @@ public final class Response implements Closeable {
      *      NOTE: will add null check in version 12 which may require changes to custom feign.Client
      *      or loggers
      */
+    @Experimental
     public Builder requestTemplate(RequestTemplate requestTemplate) {
       this.requestTemplate = requestTemplate;
       return this;
@@ -176,19 +177,17 @@ public final class Response implements Closeable {
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
-    if (reason != null) {
+    StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
+    if (reason != null)
       builder.append(' ').append(reason);
-    }
     builder.append('\n');
-    for (final String field : headers.keySet()) {
-      for (final String value : valuesOrEmpty(headers, field)) {
+    for (String field : headers.keySet()) {
+      for (String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) {
+    if (body != null)
       builder.append('\n').append(body);
-    }
     return builder.toString();
   }
 
@@ -288,7 +287,7 @@ public final class Response implements Closeable {
     public String toString() {
       try {
         return new String(toByteArray(inputStream), UTF_8);
-      } catch (final Exception e) {
+      } catch (Exception e) {
         return super.toString();
       }
     }
@@ -353,11 +352,11 @@ public final class Response implements Closeable {
   }
 
   private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
-    final Map<String, Collection<String>> result =
+    Map<String, Collection<String>> result =
         new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
 
-    for (final Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-      final String headerName = entry.getKey();
+    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+      String headerName = entry.getKey();
       if (!result.containsKey(headerName)) {
         result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
       }

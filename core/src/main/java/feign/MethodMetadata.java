@@ -30,13 +30,13 @@ public final class MethodMetadata implements Serializable {
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
   private transient Type bodyType;
-  private final RequestTemplate template = new RequestTemplate();
-  private final List<String> formParams = new ArrayList<String>();
-  private final Map<Integer, Collection<String>> indexToName =
+  private RequestTemplate template = new RequestTemplate();
+  private List<String> formParams = new ArrayList<String>();
+  private Map<Integer, Collection<String>> indexToName =
       new LinkedHashMap<Integer, Collection<String>>();
-  private final Map<Integer, Class<? extends Expander>> indexToExpanderClass =
+  private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
-  private final Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
+  private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
@@ -218,20 +218,24 @@ public final class MethodMetadata implements Serializable {
     return ignored;
   }
 
+  @Experimental
   public MethodMetadata targetType(Class<?> targetType) {
     this.targetType = targetType;
     return this;
   }
 
+  @Experimental
   public Class<?> targetType() {
     return targetType;
   }
 
+  @Experimental
   public MethodMetadata method(Method method) {
     this.method = method;
     return this;
   }
 
+  @Experimental
   public Method method() {
     return method;
   }
