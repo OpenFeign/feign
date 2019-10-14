@@ -85,7 +85,8 @@ public class SOAPFaultDecoderTest {
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
     Assertions.assertThat(error).isInstanceOf(FeignException.class)
-        .hasMessage("[503 Service Unavailable] during [GET] to [/api]: [Service Unavailable]");
+        .hasMessage(
+            "[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: [Service Unavailable]");
   }
 
   @Test
@@ -110,7 +111,8 @@ public class SOAPFaultDecoderTest {
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
     Assertions.assertThat(error).isInstanceOf(FeignException.class)
-        .hasMessage("[500 Internal Server Error] during [GET] to [/api]: [" + responseBody + "]");
+        .hasMessage("[500 Internal Server Error] during [GET] to [/api] [Service#foo()]: ["
+            + responseBody + "]");
   }
 
   private static byte[] getResourceBytes(String resourcePath) throws IOException {

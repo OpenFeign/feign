@@ -122,7 +122,8 @@ public class FallbackFactoryTest {
     TestInterface api = target(new FallbackApiRetro());
 
     assertThat(api.invoke()).isEqualTo(
-        "[500 Server Error] during [POST] to [http://localhost:" + server.getPort() + "/]: []");
+        "[500 Server Error] during [POST] to [http://localhost:" + server.getPort()
+            + "/] [TestInterface#invoke()]: []");
   }
 
   @Test
@@ -161,7 +162,7 @@ public class FallbackFactoryTest {
 
         assertThat(msg)
             .isEqualTo("fallback due to: [500 Server Error] during [POST] to [http://localhost:"
-                + server.getPort() + "/]: []");
+                + server.getPort() + "/] [TestInterface#invoke()]: []");
         assertThat(thrown).isInstanceOf(FeignException.class);
       }
     };
