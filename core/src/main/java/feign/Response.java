@@ -13,27 +13,12 @@
  */
 package feign;
 
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.toByteArray;
-import static feign.Util.valuesOrEmpty;
+import static feign.Util.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /** An immutable response to an http invocation which only returns string content. */
 public final class Response implements Closeable {
@@ -70,6 +55,7 @@ public final class Response implements Closeable {
     Map<String, Collection<String>> headers;
     Body body;
     Request request;
+    private RequestTemplate requestTemplate;
 
     Builder() {}
 
@@ -143,6 +129,17 @@ public final class Response implements Closeable {
     public Builder request(Request request) {
       checkNotNull(request, "request is required");
       this.request = request;
+      return this;
+    }
+
+    /**
+     * @see Response#requestTemplate
+     *     <p>NOTE: will add null check in version 12 which may require changes to custom
+     *     feign.Client or loggers
+     */
+    @Experimental
+    public Builder requestTemplate(RequestTemplate requestTemplate) {
+      this.requestTemplate = requestTemplate;
       return this;
     }
 
@@ -220,10 +217,17 @@ public final class Response implements Closeable {
     /** It is the responsibility of the caller to close the stream. */
     InputStream asInputStream() throws IOException;
 
-    /** It is the responsibility of the caller to close the stream. */
-    Reader asReader() throws IOException;
+    /**
+     * It is the responsibility of the caller to close the stream.
+     *
+     * @deprecated favor {@link Body#asReader(Charset)}
+     */
+    @Deprecated
+    default Reader asReader() throws IOException {
+      return asReader(StandardCharsets.UTF_8);
+    }
 
-    /** */
+    /** It is the responsibility of the caller to close the stream. */
     Reader asReader(Charset charset) throws IOException;
   }
 

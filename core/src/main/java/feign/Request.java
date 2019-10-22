@@ -114,7 +114,27 @@ public final class Request {
       Charset charset) {
     checkNotNull(method, "httpMethod of %s", method);
     final HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
-    return create(httpMethod, url, headers, body, charset);
+    return create(httpMethod, url, headers, body, charset, null);
+  }
+
+  /**
+   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   *
+   * @param httpMethod for the request.
+   * @param url for the request.
+   * @param headers to include.
+   * @param body of the request, can be {@literal null}
+   * @param charset of the request, can be {@literal null}
+   * @return a Request
+   */
+  @Deprecated
+  public static Request create(
+      HttpMethod httpMethod,
+      String url,
+      Map<String, Collection<String>> headers,
+      byte[] body,
+      Charset charset) {
+    return create(httpMethod, url, headers, Body.encoded(body, charset), null);
   }
 
   /**
@@ -132,8 +152,9 @@ public final class Request {
       String url,
       Map<String, Collection<String>> headers,
       byte[] body,
-      Charset charset) {
-    return create(httpMethod, url, headers, Body.encoded(body, charset));
+      Charset charset,
+      RequestTemplate requestTemplate) {
+    return create(httpMethod, url, headers, Body.encoded(body, charset), requestTemplate);
   }
 
   /**
@@ -146,20 +167,31 @@ public final class Request {
    * @return a Request
    */
   public static Request create(
-      HttpMethod httpMethod, String url, Map<String, Collection<String>> headers, Body body) {
-    return new Request(httpMethod, url, headers, body);
+      HttpMethod httpMethod,
+      String url,
+      Map<String, Collection<String>> headers,
+      Body body,
+      RequestTemplate requestTemplate) {
+    return new Request(httpMethod, url, headers, body, requestTemplate);
   }
 
   private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final Body body;
+  private final RequestTemplate requestTemplate;
 
-  Request(HttpMethod method, String url, Map<String, Collection<String>> headers, Body body) {
+  Request(
+      HttpMethod method,
+      String url,
+      Map<String, Collection<String>> headers,
+      Body body,
+      RequestTemplate requestTemplate) {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body;
+    this.requestTemplate = requestTemplate;
   }
 
   /**
@@ -324,5 +356,10 @@ public final class Request {
     public TimeUnit readTimeoutUnit() {
       return readTimeoutUnit;
     }
+  }
+
+  @Experimental
+  public RequestTemplate requestTemplate() {
+    return this.requestTemplate;
   }
 }

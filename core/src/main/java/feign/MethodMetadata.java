@@ -15,6 +15,7 @@ package feign;
 
 import feign.Param.Expander;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -39,8 +40,12 @@ public final class MethodMetadata implements Serializable {
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
+  private transient Class<?> targetType;
+  private transient Method method;
 
-  MethodMetadata() {}
+  MethodMetadata() {
+    template.methodMetadata(this);
+  }
 
   /**
    * Used as a reference to this method. For example, {@link Logger#log(String, String, Object...)
@@ -205,5 +210,27 @@ public final class MethodMetadata implements Serializable {
 
   public boolean isIgnored() {
     return ignored;
+  }
+
+  @Experimental
+  public MethodMetadata targetType(Class<?> targetType) {
+    this.targetType = targetType;
+    return this;
+  }
+
+  @Experimental
+  public Class<?> targetType() {
+    return targetType;
+  }
+
+  @Experimental
+  public MethodMetadata method(Method method) {
+    this.method = method;
+    return this;
+  }
+
+  @Experimental
+  public Method method() {
+    return method;
   }
 }
