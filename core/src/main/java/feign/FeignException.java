@@ -13,10 +13,20 @@
  */
 package feign;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.Buffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import static feign.Util.UTF_8;
 import static feign.Util.checkNotNull;
 import static java.lang.String.format;
-import java.io.IOException;
 
 /**
  * Origin exception type for all Http Apis.
@@ -121,7 +131,6 @@ public class FeignException extends RuntimeException {
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
-    String message = format("status %s reading %s", response.status(), methodKey);
 
     byte[] body = {};
     try {
@@ -130,6 +139,11 @@ public class FeignException extends RuntimeException {
       }
     } catch (IOException ignored) { // NOPMD
     }
+
+    String message = new FeignExceptionMessageBuilder()
+        .withResponse(response)
+        .withMethodKey(methodKey)
+        .withBody(body).build();
 
     return errorStatus(response.status(), message, response.request(), body);
   }
@@ -222,11 +236,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class BadRequest extends FeignClientException {
     public BadRequest(String message, Request request, byte[] body) {
       super(400, message, request, body);
     }
   }
+
 
   public static class Unauthorized extends FeignClientException {
     public Unauthorized(String message, Request request, byte[] body) {
@@ -234,11 +250,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class Forbidden extends FeignClientException {
     public Forbidden(String message, Request request, byte[] body) {
       super(403, message, request, body);
     }
   }
+
 
   public static class NotFound extends FeignClientException {
     public NotFound(String message, Request request, byte[] body) {
@@ -246,11 +264,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class MethodNotAllowed extends FeignClientException {
     public MethodNotAllowed(String message, Request request, byte[] body) {
       super(405, message, request, body);
     }
   }
+
 
   public static class NotAcceptable extends FeignClientException {
     public NotAcceptable(String message, Request request, byte[] body) {
@@ -258,11 +278,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class Conflict extends FeignClientException {
     public Conflict(String message, Request request, byte[] body) {
       super(409, message, request, body);
     }
   }
+
 
   public static class Gone extends FeignClientException {
     public Gone(String message, Request request, byte[] body) {
@@ -270,11 +292,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class UnsupportedMediaType extends FeignClientException {
     public UnsupportedMediaType(String message, Request request, byte[] body) {
       super(415, message, request, body);
     }
   }
+
 
   public static class TooManyRequests extends FeignClientException {
     public TooManyRequests(String message, Request request, byte[] body) {
@@ -282,11 +306,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class UnprocessableEntity extends FeignClientException {
     public UnprocessableEntity(String message, Request request, byte[] body) {
       super(422, message, request, body);
     }
   }
+
 
   public static class FeignServerException extends FeignException {
     public FeignServerException(int status, String message, Request request, byte[] body) {
@@ -294,11 +320,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class InternalServerError extends FeignServerException {
     public InternalServerError(String message, Request request, byte[] body) {
       super(500, message, request, body);
     }
   }
+
 
   public static class NotImplemented extends FeignServerException {
     public NotImplemented(String message, Request request, byte[] body) {
@@ -306,11 +334,13 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class BadGateway extends FeignServerException {
     public BadGateway(String message, Request request, byte[] body) {
       super(502, message, request, body);
     }
   }
+
 
   public static class ServiceUnavailable extends FeignServerException {
     public ServiceUnavailable(String message, Request request, byte[] body) {
@@ -318,9 +348,103 @@ public class FeignException extends RuntimeException {
     }
   }
 
+
   public static class GatewayTimeout extends FeignServerException {
     public GatewayTimeout(String message, Request request, byte[] body) {
       super(504, message, request, body);
+    }
+  }
+
+
+  private static class FeignExceptionMessageBuilder {
+
+    private static final int MAX_BODY_BYTES_LENGTH = 400;
+    private static final int MAX_BODY_CHARS_LENGTH = 200;
+
+    private Response response;
+
+    private byte[] body;
+    private String methodKey;
+
+    public FeignExceptionMessageBuilder withResponse(Response response) {
+      this.response = response;
+      return this;
+    }
+
+    public FeignExceptionMessageBuilder withBody(byte[] body) {
+      this.body = body;
+      return this;
+    }
+
+    public FeignExceptionMessageBuilder withMethodKey(String methodKey) {
+      this.methodKey = methodKey;
+      return this;
+    }
+
+    public String build() {
+      StringBuilder result = new StringBuilder();
+
+      if (response.reason() != null) {
+        result.append(format("[%d %s]", response.status(), response.reason()));
+      } else {
+        result.append(format("[%d]", response.status()));
+      }
+      result.append(format(" during [%s] to [%s] [%s]", response.request().httpMethod(),
+          response.request().url(), methodKey));
+
+      result.append(format(": [%s]", getBodyAsString(body, response.headers())));
+
+      return result.toString();
+    }
+
+    private static String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
+      Charset charset = getResponseCharset(headers);
+      if (charset == null) {
+        charset = Util.UTF_8;
+      }
+      return getResponseBody(body, charset);
+    }
+
+    private static String getResponseBody(byte[] body, Charset charset) {
+      if (body.length < MAX_BODY_BYTES_LENGTH) {
+        return new String(body, charset);
+      }
+      return getResponseBodyPreview(body, charset);
+    }
+
+    private static String getResponseBodyPreview(byte[] body, Charset charset) {
+      try {
+        Reader reader = new InputStreamReader(new ByteArrayInputStream(body), charset);
+        CharBuffer result = CharBuffer.allocate(MAX_BODY_CHARS_LENGTH);
+
+        reader.read(result);
+        reader.close();
+        ((Buffer) result).flip();
+        return result.toString() + "... (" + body.length + " bytes)";
+      } catch (IOException e) {
+        return e.toString() + ", failed to parse response";
+      }
+    }
+
+    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
+
+      Collection<String> strings = headers.get("content-type");
+      if (strings == null || strings.size() == 0) {
+        return null;
+      }
+
+      Pattern pattern = Pattern.compile("charset=([^\\s])");
+      Matcher matcher = pattern.matcher(strings.iterator().next());
+      if (!matcher.lookingAt()) {
+        return null;
+      }
+
+      String group = matcher.group(1);
+      if (!Charset.isSupported(group)) {
+        return null;
+      }
+      return Charset.forName(group);
+
     }
   }
 }
