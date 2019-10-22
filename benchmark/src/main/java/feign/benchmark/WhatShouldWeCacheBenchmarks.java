@@ -56,9 +56,9 @@ public class WhatShouldWeCacheBenchmarks {
     feignContract = new Contract.Default();
     cachedContact = new Contract() {
       private final List<MethodMetadata> cached =
-          new Default().parseAndValidatateMetadata(FeignTestInterface.class);
+          new Default().parseAndValidateMetadata(FeignTestInterface.class);
 
-      public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+      public List<MethodMetadata> parseAndValidateMetadata(Class<?> declaring) {
         return cached;
       }
     };
@@ -84,7 +84,7 @@ public class WhatShouldWeCacheBenchmarks {
    */
   @Benchmark
   public List<MethodMetadata> parseFeignContract() {
-    return feignContract.parseAndValidatateMetadata(FeignTestInterface.class);
+    return feignContract.parseAndValidateMetadata(FeignTestInterface.class);
   }
 
   /**
