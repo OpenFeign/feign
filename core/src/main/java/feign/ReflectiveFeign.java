@@ -151,7 +151,7 @@ public class ReflectiveFeign extends Feign {
     }
 
     public Map<String, MethodHandler> apply(Target key) {
-      List<MethodMetadata> metadata = contract.parseAndValidatateMetadata(key.type());
+      List<MethodMetadata> metadata = contract.parseAndValidateMetadata(key.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;

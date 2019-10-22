@@ -43,8 +43,8 @@ public final class HystrixDelegatingContract implements Contract {
   }
 
   @Override
-  public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
-    List<MethodMetadata> metadatas = this.delegate.parseAndValidatateMetadata(targetType);
+  public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
+    List<MethodMetadata> metadatas = this.delegate.parseAndValidateMetadata(targetType);
 
     for (MethodMetadata metadata : metadatas) {
       Type type = metadata.returnType();

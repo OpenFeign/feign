@@ -31,9 +31,9 @@ public abstract class DeclarativeContract extends BaseContract {
       new HashMap<>();
 
   @Override
-  public final List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
+  public final List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
     // any implementations must register processors
-    return super.parseAndValidatateMetadata(targetType);
+    return super.parseAndValidateMetadata(targetType);
   }
 
   /**
