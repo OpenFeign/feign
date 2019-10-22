@@ -13,21 +13,20 @@
  */
 package feign;
 
-import feign.Request.HttpMethod;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
+import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.UTF_8;
+import static feign.Util.checkNotNull;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import static feign.Util.*;
+import feign.Request.HttpMethod;
+import feign.template.*;
 
 /**
  * Request Builder for an HTTP Target.
@@ -51,6 +50,8 @@ public final class RequestTemplate implements Serializable {
   private Request.Body body = Request.Body.empty();
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
+  private MethodMetadata methodMetadata;
+  private Target<?> feignTarget;
 
   /**
    * Create a new Request Template.
@@ -69,6 +70,8 @@ public final class RequestTemplate implements Serializable {
    * @param body of the request, may be null
    * @param decodeSlash if the request uri should encode slash characters.
    * @param collectionFormat when expanding collection based variables.
+   * @param feignTarget
+   * @param methodMetadata
    */
   private RequestTemplate(String target,
       String fragment,
@@ -77,7 +80,9 @@ public final class RequestTemplate implements Serializable {
       Charset charset,
       Request.Body body,
       boolean decodeSlash,
-      CollectionFormat collectionFormat) {
+      CollectionFormat collectionFormat,
+      MethodMetadata methodMetadata,
+      Target<?> feignTarget) {
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
@@ -87,6 +92,8 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     this.collectionFormat =
         (collectionFormat != null) ? collectionFormat : CollectionFormat.EXPLODED;
+    this.methodMetadata = methodMetadata;
+    this.feignTarget = feignTarget;
   }
 
   /**
@@ -100,7 +107,8 @@ public final class RequestTemplate implements Serializable {
         new RequestTemplate(requestTemplate.target, requestTemplate.fragment,
             requestTemplate.uriTemplate,
             requestTemplate.method, requestTemplate.charset,
-            requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat);
+            requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat,
+            requestTemplate.methodMetadata, requestTemplate.feignTarget);
 
     if (!requestTemplate.queries().isEmpty()) {
       template.queries.putAll(requestTemplate.queries);
@@ -133,6 +141,8 @@ public final class RequestTemplate implements Serializable {
         (toCopy.collectionFormat != null) ? toCopy.collectionFormat : CollectionFormat.EXPLODED;
     this.uriTemplate = toCopy.uriTemplate;
     this.resolved = false;
+    this.methodMetadata = toCopy.methodMetadata;
+    this.target = toCopy.target;
   }
 
   /**
@@ -249,7 +259,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.requestBody());
+    return Request.create(this.method, this.url(), this.headers(), this.requestBody(), this);
   }
 
   /**
@@ -933,6 +943,28 @@ public final class RequestTemplate implements Serializable {
 
   public Request.Body requestBody() {
     return this.body;
+  }
+
+  @Experimental
+  public RequestTemplate methodMetadata(MethodMetadata methodMetadata) {
+    this.methodMetadata = methodMetadata;
+    return this;
+  }
+
+  @Experimental
+  public RequestTemplate feignTarget(Target<?> feignTarget) {
+    this.feignTarget = feignTarget;
+    return this;
+  }
+
+  @Experimental
+  public MethodMetadata methodMetadata() {
+    return methodMetadata;
+  }
+
+  @Experimental
+  public Target<?> feignTarget() {
+    return feignTarget;
   }
 
   /**
