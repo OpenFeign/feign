@@ -57,9 +57,9 @@ public class WhatShouldWeCacheBenchmarks {
     cachedContact =
         new Contract() {
           private final List<MethodMetadata> cached =
-              new Default().parseAndValidatateMetadata(FeignTestInterface.class);
+              new Default().parseAndValidateMetadata(FeignTestInterface.class);
 
-          public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+          public List<MethodMetadata> parseAndValidateMetadata(Class<?> declaring) {
             return cached;
           }
         };
@@ -86,7 +86,7 @@ public class WhatShouldWeCacheBenchmarks {
   /** How fast is parsing an api interface? */
   @Benchmark
   public List<MethodMetadata> parseFeignContract() {
-    return feignContract.parseAndValidatateMetadata(FeignTestInterface.class);
+    return feignContract.parseAndValidateMetadata(FeignTestInterface.class);
   }
 
   /** How fast is creating a feign instance for each http request, without considering network? */

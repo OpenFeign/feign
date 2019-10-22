@@ -92,8 +92,8 @@ public class ContractWithRuntimeInjectionTest {
      * Injects {@link MethodMetadata#indexToExpander(Map)} via {@link BeanFactory#getBean(Class)}.
      */
     @Override
-    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
-      List<MethodMetadata> result = new Contract.Default().parseAndValidatateMetadata(targetType);
+    public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
+      List<MethodMetadata> result = new Contract.Default().parseAndValidateMetadata(targetType);
       for (MethodMetadata md : result) {
         Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
         for (Map.Entry<Integer, Class<? extends Param.Expander>> entry :

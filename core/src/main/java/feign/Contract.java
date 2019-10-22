@@ -32,13 +32,16 @@ public interface Contract {
    *
    * @param targetType {@link feign.Target#type() type} of the Feign interface.
    */
-  // TODO: break this and correct spelling at some point
-  List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType);
+  List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType);
 
   abstract class BaseContract implements Contract {
 
+    /**
+     * @param targetType {@link feign.Target#type() type} of the Feign interface.
+     * @see #parseAndValidateMetadata(Class)
+     */
     @Override
-    public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
+    public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
       checkState(
           targetType.getTypeParameters().length == 0,
           "Parameterized types unsupported: %s",
@@ -74,11 +77,11 @@ public interface Contract {
      * @deprecated use {@link #parseAndValidateMetadata(Class, Method)} instead.
      */
     @Deprecated
-    public MethodMetadata parseAndValidatateMetadata(Method method) {
+    public MethodMetadata parseAndValidateMetadata(Method method) {
       return parseAndValidateMetadata(method.getDeclaringClass(), method);
     }
 
-    /** Called indirectly by {@link #parseAndValidatateMetadata(Class)}. */
+    /** Called indirectly by {@link #parseAndValidateMetadata(Class)}. */
     protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
       MethodMetadata data = new MethodMetadata();
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));

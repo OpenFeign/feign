@@ -576,7 +576,7 @@ public class DefaultContractTest {
 
   @Test
   public void simpleParameterizedBaseApi() throws Exception {
-    List<MethodMetadata> md = contract.parseAndValidatateMetadata(SimpleParameterizedApi.class);
+    List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
 
     assertThat(md).hasSize(1);
 
@@ -589,7 +589,7 @@ public class DefaultContractTest {
   public void parameterizedApiUnsupported() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
-    contract.parseAndValidatateMetadata(SimpleParameterizedBaseApi.class);
+    contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
   }
 
   interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
@@ -603,7 +603,7 @@ public class DefaultContractTest {
   public void overrideBaseApiUnsupported() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Overrides unsupported: OverrideParameterizedApi#get(String)");
-    contract.parseAndValidatateMetadata(OverrideParameterizedApi.class);
+    contract.parseAndValidateMetadata(OverrideParameterizedApi.class);
   }
 
   interface Child<T> extends SimpleParameterizedBaseApi<List<T>> {}
@@ -614,7 +614,7 @@ public class DefaultContractTest {
   public void onlySingleLevelInheritanceSupported() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Only single-level inheritance supported: GrandChild");
-    contract.parseAndValidatateMetadata(GrandChild.class);
+    contract.parseAndValidateMetadata(GrandChild.class);
   }
 
   @Headers("Foo: Bar")
@@ -650,7 +650,7 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedBaseApi() throws Exception {
-    List<MethodMetadata> md = contract.parseAndValidatateMetadata(ParameterizedApi.class);
+    List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedApi.class);
 
     Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
     for (MethodMetadata m : md) {
@@ -682,8 +682,7 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedHeaderExpandApi() throws Exception {
-    List<MethodMetadata> md =
-        contract.parseAndValidatateMetadata(ParameterizedHeaderExpandApi.class);
+    List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedHeaderExpandApi.class);
 
     assertThat(md).hasSize(1);
 
@@ -701,7 +700,7 @@ public class DefaultContractTest {
   @Test
   public void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
     List<MethodMetadata> md =
-        contract.parseAndValidatateMetadata(
+        contract.parseAndValidateMetadata(
             ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
 
     assertThat(md).hasSize(1);
@@ -739,7 +738,7 @@ public class DefaultContractTest {
   @Test
   public void parameterizedHeaderExpandApiBaseClass() throws Exception {
     List<MethodMetadata> mds =
-        contract.parseAndValidatateMetadata(ParameterizedHeaderExpandInheritedApi.class);
+        contract.parseAndValidateMetadata(ParameterizedHeaderExpandInheritedApi.class);
 
     Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
     for (MethodMetadata m : mds) {
@@ -786,7 +785,7 @@ public class DefaultContractTest {
         "RequestLine annotation didn't start with an HTTP verb on method"
             + " MissingMethod#updateSharing");
 
-    contract.parseAndValidatateMetadata(MissingMethod.class);
+    contract.parseAndValidateMetadata(MissingMethod.class);
   }
 
   interface StaticMethodOnInterface {
@@ -800,7 +799,7 @@ public class DefaultContractTest {
 
   @Test
   public void staticMethodsOnInterfaceIgnored() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(StaticMethodOnInterface.class);
+    List<MethodMetadata> mds = contract.parseAndValidateMetadata(StaticMethodOnInterface.class);
     assertThat(mds).hasSize(1);
     MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
@@ -817,7 +816,7 @@ public class DefaultContractTest {
 
   @Test
   public void defaultMethodsOnInterfaceIgnored() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(DefaultMethodOnInterface.class);
+    List<MethodMetadata> mds = contract.parseAndValidateMetadata(DefaultMethodOnInterface.class);
     assertThat(mds).hasSize(1);
     MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
@@ -830,7 +829,7 @@ public class DefaultContractTest {
 
   @Test
   public void paramIsASubstringOfAQuery() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidatateMetadata(SubstringQuery.class);
+    List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
 
     assertThat(mds.get(0).template().queries()).containsExactly(entry("q", asList("body:{body}")));
     assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
