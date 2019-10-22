@@ -116,7 +116,10 @@ public abstract class AbstractClientTest {
   @Test
   public void parsesErrorResponse() {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#get()");
+    thrown.expectMessage(
+        "[500 Server Error] during [GET] to [http://localhost:"
+            + server.getPort()
+            + "/] [TestInterface#get()]: [ARGHH]");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 

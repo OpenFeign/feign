@@ -125,7 +125,11 @@ public class FallbackFactoryTest {
 
     TestInterface api = target(new FallbackApiRetro());
 
-    assertThat(api.invoke()).isEqualTo("status 500 reading TestInterface#invoke()");
+    assertThat(api.invoke())
+        .isEqualTo(
+            "[500 Server Error] during [POST] to [http://localhost:"
+                + server.getPort()
+                + "/] [TestInterface#invoke()]: []");
   }
 
   @Test
@@ -163,7 +167,11 @@ public class FallbackFactoryTest {
           public void log(Level level, String msg, Throwable thrown) {
             logged.set(true);
 
-            assertThat(msg).isEqualTo("fallback due to: status 500 reading TestInterface#invoke()");
+            assertThat(msg)
+                .isEqualTo(
+                    "fallback due to: [500 Server Error] during [POST] to [http://localhost:"
+                        + server.getPort()
+                        + "/] [TestInterface#invoke()]: []");
             assertThat(thrown).isInstanceOf(FeignException.class);
           }
         };
