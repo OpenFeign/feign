@@ -14,7 +14,7 @@ Making _API_ clients easier
 Short Term - What we're working on now. ⏰ 
 ---
 * Response Caching
-  * Support caching of api responses.  Allow for user's to define under what conditions a response is eligible for caching and what type of caching mechanism should be used.
+  * Support caching of api responses.  Allow for users to define under what conditions a response is eligible for caching and what type of caching mechanism should be used.
   * Support in-memory caching and external cache implementations (EhCache, Google, Spring, etc...)
 * Complete URI Template expression support
   * Support [level 1 through level 4](https://tools.ietf.org/html/rfc6570#section-1.2) URI template expressions.
@@ -27,7 +27,7 @@ Short Term - What we're working on now. ⏰
 Medium Term - What's up next. ⏲ 
 ---
 * Metric API
-  * Provide a first-class Metrics API that user's can tap into to gain insight into the request/response lifecycle.  Possibly provide better [OpenTracing](https://opentracing.io/) support.
+  * Provide a first-class Metrics API that users can tap into to gain insight into the request/response lifecycle.  Possibly provide better [OpenTracing](https://opentracing.io/) support.
 * Async execution support via `CompletableFuture`
   * Allow for `Future` chaining and executor management for the request/response lifecycle.  **Implementation will require non-backward-compatible breaking changes**.  However this feature is required before Reactive execution can be considered.
 * Reactive execution support via [Reactive Streams](https://www.reactive-streams.org/)
