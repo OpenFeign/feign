@@ -14,10 +14,12 @@
 package example.github;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import feign.Experimental;
 
 public class GitHubStub
     implements example.github.GitHubExample.GitHub {
 
+  @Experimental
   public class GitHubInvokations {
 
     private final AtomicInteger repos = new AtomicInteger(0);
@@ -40,6 +42,7 @@ public class GitHubStub
 
   }
 
+  @Experimental
   public class GitHubAnwsers {
 
     private java.util.List<example.github.GitHubExample.GitHub.Repository> reposDefault;
@@ -56,6 +59,7 @@ public class GitHubStub
     this.answers = new GitHubAnwsers();
   }
 
+  @Experimental
   public GitHubStub withRepos(java.util.List<example.github.GitHubExample.GitHub.Repository> repos) {
     answers.reposDefault = repos;
     return this;
@@ -68,6 +72,7 @@ public class GitHubStub
     return answers.reposDefault;
   }
 
+  @Experimental
   public GitHubStub withContributors(java.util.List<example.github.GitHubExample.GitHub.Contributor> contributors) {
     answers.contributorsDefault = contributors;
     return this;

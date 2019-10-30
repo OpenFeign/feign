@@ -1,10 +1,12 @@
 package {{client.jpackage}};
 
 import java.util.concurrent.atomic.AtomicInteger;
+import feign.Experimental;
 
 public class {{client.className}}Stub
     implements {{client.fullQualifiedName}} {
 
+  @Experimental
   public class {{client.className}}Invokations {
 
 {{#each methods as |method|}}
@@ -19,6 +21,7 @@ public class {{client.className}}Stub
 
   }
 
+  @Experimental
   public class {{client.className}}Anwsers {
 
 {{#each methods as |method|}}
@@ -39,6 +42,7 @@ public class {{client.className}}Stub
 
 {{#each methods as |method|}}
   {{#unless method.isVoid}}
+  @Experimental
   public {{client.className}}Stub with{{method.uname}}({{method.returnType}} {{method.name}}) {
     answers.{{method.name}}Default = {{method.name}};
     return this;
