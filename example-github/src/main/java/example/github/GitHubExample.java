@@ -28,17 +28,17 @@ public class GitHubExample {
 
   private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
 
-  interface GitHub {
+  public interface GitHub {
 
-    class Repository {
+    public class Repository {
       String name;
     }
 
-    class Contributor {
+    public class Contributor {
       String login;
     }
 
-    class Issue {
+    public class Issue {
 
       Issue() {}
 
