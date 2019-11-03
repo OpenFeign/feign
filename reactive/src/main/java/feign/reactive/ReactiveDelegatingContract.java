@@ -18,7 +18,6 @@ import feign.MethodMetadata;
 import feign.Types;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.reactivestreams.Publisher;
@@ -74,8 +73,7 @@ public class ReactiveDelegatingContract implements Contract {
       return false;
     }
     ParameterizedType parameterizedType = (ParameterizedType) type;
-    Type raw = parameterizedType.getRawType();
-    return Arrays.asList(((Class) raw).getInterfaces())
-        .contains(Publisher.class);
+    Class<?> raw = (Class<?>) parameterizedType.getRawType();
+    return Publisher.class.isAssignableFrom(raw);
   }
 }
