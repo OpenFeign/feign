@@ -42,7 +42,7 @@ public final class OptionalDecoder implements Decoder {
     return Optional.ofNullable(delegate.decode(response, enclosedType));
   }
 
-  static boolean isOptional(Type type) {
+  public static boolean isOptional(Type type) {
     if (!(type instanceof ParameterizedType)) {
       return false;
     }

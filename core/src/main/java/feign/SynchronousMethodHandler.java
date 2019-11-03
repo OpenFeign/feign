@@ -22,6 +22,7 @@ import feign.Request.Options;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import feign.optionals.OptionalDecoder;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.FeignException.errorReading;
@@ -148,6 +149,10 @@ final class SynchronousMethodHandler implements MethodHandler {
           shouldClose = closeAfterDecode;
           return result;
         }
+      } else if (response.status() == 404 && OptionalDecoder.isOptional(metadata.returnType())) {
+        Object result = decode(response);
+        shouldClose = closeAfterDecode;
+        return result;
       } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
         Object result = decode(response);
         shouldClose = closeAfterDecode;
