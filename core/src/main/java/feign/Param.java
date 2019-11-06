@@ -33,10 +33,12 @@ public @interface Param {
   Class<? extends Expander> expander() default ToStringExpander.class;
 
   /**
-   * Specifies whether argument is already encoded The value is ignored for headers (headers are
-   * never encoded)
+   * {@code encoded} has been maintained for backward compatibility and should be deprecated. We no
+   * longer need it as values that are already pct-encoded should be identified during expansion and
+   * passed through without any changes
    *
    * @see QueryMap#encoded
+   * @deprecated
    */
   boolean encoded() default false;
 
