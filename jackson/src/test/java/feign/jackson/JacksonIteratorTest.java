@@ -13,9 +13,6 @@
  */
 package feign.jackson;
 
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.core.Is.isA;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -23,15 +20,22 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Is.isA;
 
 public class JacksonIteratorTest {
 
@@ -41,6 +45,31 @@ public class JacksonIteratorTest {
   @Test
   public void shouldDecodePrimitiveArrays() throws IOException {
     assertThat(iterator(Integer.class, "[0,1,2,3]")).containsExactly(0, 1, 2, 3);
+  }
+
+  @Test
+  public void shouldNotSkipElementsOnHasNext() throws IOException {
+    JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
+    assertThat(iterator.hasNext()).isTrue();
+    assertThat(iterator.hasNext()).isTrue();
+    assertThat(iterator.next()).isEqualTo(0);
+    assertThat(iterator.hasNext()).isFalse();
+  }
+
+  @Test
+  public void hasNextIsNotMandatory() throws IOException {
+    JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
+    assertThat(iterator.next()).isEqualTo(0);
+    assertThat(iterator.hasNext()).isFalse();
+  }
+
+  @Test
+  public void expectExceptionOnNoElements() throws IOException {
+    JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
+    assertThat(iterator.next()).isEqualTo(0);
+    assertThatThrownBy(() -> iterator.next())
+            .hasMessage(null)
+            .isInstanceOf(NoSuchElementException.class);
   }
 
   @Test
