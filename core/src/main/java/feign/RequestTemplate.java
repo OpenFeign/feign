@@ -966,6 +966,15 @@ public final class RequestTemplate implements Serializable {
   public Target<?> feignTarget() {
     return feignTarget;
   }
+  
+  public String getTargetName() {
+
+    if (feignTarget != null) {
+      return this.feignTarget.name();
+    } else {
+      return null;
+    }
+  }
 
   /**
    * Factory for creating RequestTemplate.
