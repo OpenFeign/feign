@@ -23,7 +23,6 @@ import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -68,8 +66,8 @@ public class JacksonIteratorTest {
     JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
     assertThat(iterator.next()).isEqualTo(0);
     assertThatThrownBy(() -> iterator.next())
-            .hasMessage(null)
-            .isInstanceOf(NoSuchElementException.class);
+        .hasMessage(null)
+        .isInstanceOf(NoSuchElementException.class);
   }
 
   @Test

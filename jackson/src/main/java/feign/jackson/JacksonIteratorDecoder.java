@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.*;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,7 +29,6 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
 import static feign.Util.ensureClosed;
 
 /**
