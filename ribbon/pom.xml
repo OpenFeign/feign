@@ -32,6 +32,16 @@
     <ribbon-version>2.3.0</ribbon-version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>24.1.1-jre</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -63,4 +73,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>
