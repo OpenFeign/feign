@@ -1,3 +1,10 @@
+### Version 10.7
+
+* Fix for vunerabilities reported by snky (#1121)
+* Makes iterator compatible with Java iterator expected behavior (#1117)
+* Bump reactive dependencies (#1105)
+* Deprecated `encoded` and add comment (#1108)
+
 ### Version 10.6
 * Remove java8 module (#1086) 
 * Add composed Spring annotations support (#1090) 
