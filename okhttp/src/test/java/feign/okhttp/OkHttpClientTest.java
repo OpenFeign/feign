@@ -25,6 +25,7 @@ import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
@@ -59,10 +60,16 @@ public class OkHttpClientTest extends AbstractClientTest {
   public void testNoFollowRedirect() throws Exception {
     server.enqueue(
         new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+    // Enqueue a response to fail fast if the redirect is followed, instead of waiting for the
+    // timeout
+    server.enqueue(new MockResponse().setBody("Hello"));
 
     OkHttpClientTestInterface api =
         newBuilder()
-            .options(new Request.Options(1000, 1000, false))
+            // Use the same connect and read timeouts as the OkHttp default
+            .options(
+                new Request.Options(
+                    10_000, TimeUnit.MILLISECONDS, 10_000, TimeUnit.MILLISECONDS, false))
             .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.get();
@@ -82,7 +89,10 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     OkHttpClientTestInterface api =
         newBuilder()
-            .options(new Request.Options(1000, 1000, true))
+            // Use the same connect and read timeouts as the OkHttp default
+            .options(
+                new Request.Options(
+                    10_000, TimeUnit.MILLISECONDS, 10_000, TimeUnit.MILLISECONDS, true))
             .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.get();

@@ -156,7 +156,8 @@ public final class OkHttpClient implements Client {
       throws IOException {
     okhttp3.OkHttpClient requestScoped;
     if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
-        || delegate.readTimeoutMillis() != options.readTimeoutMillis()) {
+        || delegate.readTimeoutMillis() != options.readTimeoutMillis()
+        || delegate.followRedirects() != options.isFollowRedirects()) {
       requestScoped =
           delegate
               .newBuilder()
