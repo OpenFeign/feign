@@ -31,6 +31,7 @@ import feign.Request;
 import feign.Response;
 import feign.Util;
 
+@SuppressWarnings("deprecation")
 public class DefaultDecoderTest {
 
   @Rule

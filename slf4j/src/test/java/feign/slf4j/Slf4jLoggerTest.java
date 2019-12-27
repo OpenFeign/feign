@@ -26,6 +26,7 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
 
+@SuppressWarnings("deprecation")
 public class Slf4jLoggerTest {
 
   private static final String CONFIG_KEY = "someMethod()";

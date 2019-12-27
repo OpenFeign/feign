@@ -22,6 +22,7 @@ import java.util.Date;
 import feign.Retryer.Default;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("deprecation")
 public class RetryerTest {
 
   @Rule
@@ -58,7 +59,7 @@ public class RetryerTest {
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
+  public void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer = new Retryer.Default() {
       protected long currentTimeMillis() {
         return 0;

@@ -274,7 +274,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
   }
 
   @Test
@@ -286,7 +286,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
   }
 
   @Test

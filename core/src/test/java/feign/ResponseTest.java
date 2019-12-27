@@ -25,6 +25,7 @@ import java.util.Map;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+@SuppressWarnings("deprecation")
 public class ResponseTest {
 
   @Test
@@ -42,7 +43,7 @@ public class ResponseTest {
 
   @Test
   public void canAccessHeadersCaseInsensitively() {
-    Map<String, Collection<String>> headersMap = new LinkedHashMap();
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     List<String> valueList = Collections.singletonList("application/json");
     headersMap.put("Content-Type", valueList);
     Response response = Response.builder()
@@ -57,9 +58,9 @@ public class ResponseTest {
 
   @Test
   public void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
-    Map<String, Collection<String>> headersMap = new LinkedHashMap();
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
-    headersMap.put("set-cookie", Arrays.asList("Cookie-C=Value"));
+    headersMap.put("set-cookie", Collections.singletonList("Cookie-C=Value"));
 
     Response response = Response.builder()
         .status(200)

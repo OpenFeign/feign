@@ -127,7 +127,7 @@ public class FeignException extends RuntimeException {
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.requestBody().asBytes());
+        request.body());
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {

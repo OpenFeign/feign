@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author pengfei.zhao
  */
+@SuppressWarnings("deprecation")
 public class OptionsTest {
 
   interface OptionsInterface {

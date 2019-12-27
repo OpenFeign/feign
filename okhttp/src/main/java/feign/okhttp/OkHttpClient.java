@@ -71,7 +71,7 @@ public final class OkHttpClient implements Client {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    byte[] inputBody = input.requestBody().asBytes();
+    byte[] inputBody = input.body();
     boolean isMethodWithBody =
         HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
             || HttpMethod.PATCH == input.httpMethod();
@@ -137,6 +137,7 @@ public final class OkHttpClient implements Client {
         return input.byteStream();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return input.charStream();

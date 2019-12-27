@@ -23,6 +23,7 @@ import java.util.Collections;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 public class GsonDecoder implements Decoder {
@@ -45,7 +46,7 @@ public class GsonDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(UTF_8);
     try {
       return gson.fromJson(reader, type);
     } catch (JsonIOException e) {

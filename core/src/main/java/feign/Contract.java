@@ -274,7 +274,6 @@ public interface Contract {
         if (expander != Param.ToStringExpander.class) {
           data.indexToExpanderClass().put(paramIndex, expander);
         }
-        data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
         if (!data.template().hasRequestVariable(name)) {
           data.formParams().add(name);
         }
