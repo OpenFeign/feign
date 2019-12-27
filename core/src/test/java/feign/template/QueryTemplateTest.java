@@ -193,7 +193,7 @@ public class QueryTemplateTest {
             Util.UTF_8, CollectionFormat.CSV);
     String expanded = template.expand(Collections.singletonMap("$collection",
         Arrays.asList("1", "2")));
-    /* brackets will be pct-encoded */
-    assertThat(expanded).isEqualToIgnoringCase("$collection=1,2");
+    /* dollar will be pct-encoded */
+    assertThat(expanded).isEqualToIgnoringCase("%24collection=1,2");
   }
 }
