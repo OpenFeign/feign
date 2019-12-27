@@ -21,6 +21,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class TargetTest {
 
   @Rule

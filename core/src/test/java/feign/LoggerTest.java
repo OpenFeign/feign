@@ -27,9 +27,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.Statement;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import feign.Logger.Level;
@@ -70,7 +71,7 @@ public class LoggerTest {
     @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          {Level.NONE, Arrays.asList()},
+          {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)")},
@@ -98,7 +99,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void levelEmits() throws IOException, InterruptedException {
+    public void levelEmits() {
       server.enqueue(new MockResponse().setBody("foo"));
 
       SendsStuff api = Feign.builder()
@@ -130,7 +131,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void reasonPhraseOptional() throws IOException, InterruptedException {
+    public void reasonPhraseOptional() {
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
@@ -155,7 +156,7 @@ public class LoggerTest {
     @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          {Level.NONE, Arrays.asList()},
+          {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
@@ -179,14 +180,14 @@ public class LoggerTest {
     }
 
     @Test
-    public void levelEmitsOnReadTimeout() throws IOException, InterruptedException {
+    public void levelEmitsOnReadTimeout() {
       server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
       thrown.expect(FeignException.class);
 
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
-          .options(new Request.Options(10 * 1000, 50))
+          .options(new Request.Options(10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS, true))
           .retryer(new Retryer() {
             @Override
             public void continueOrPropagate(RetryableException e) {
@@ -217,7 +218,7 @@ public class LoggerTest {
     @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          {Level.NONE, Arrays.asList()},
+          {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
@@ -241,7 +242,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void unknownHostEmits() throws IOException, InterruptedException {
+    public void unknownHostEmits() {
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
@@ -279,7 +280,7 @@ public class LoggerTest {
     @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          {Level.NONE, Arrays.asList()},
+          {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
@@ -303,7 +304,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void formatCharacterEmits() throws IOException, InterruptedException {
+    public void formatCharacterEmits() {
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
@@ -340,7 +341,7 @@ public class LoggerTest {
     @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
-          {Level.NONE, Arrays.asList()},
+          {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
@@ -351,7 +352,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void retryEmits() throws IOException, InterruptedException {
+    public void retryEmits() {
       thrown.expect(FeignException.class);
 
       SendsStuff api = Feign.builder()
@@ -382,12 +383,11 @@ public class LoggerTest {
 
   private static final class RecordingLogger extends Logger implements TestRule {
 
-    private final List<String> messages = new ArrayList<String>();
-    private final List<String> expectedMessages = new ArrayList<String>();
+    private final List<String> messages = new ArrayList<>();
+    private final List<String> expectedMessages = new ArrayList<>();
 
-    RecordingLogger expectMessages(List<String> expectedMessages) {
+    void expectMessages(List<String> expectedMessages) {
       this.expectedMessages.addAll(expectedMessages);
-      return this;
     }
 
     @Override
