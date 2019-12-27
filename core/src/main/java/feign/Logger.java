@@ -16,13 +16,10 @@ package feign;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
-import static feign.Util.UTF_8;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
+import static feign.Util.*;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -55,12 +52,12 @@ public abstract class Logger {
       }
 
       int bodyLength = 0;
-      if (request.requestBody().asBytes() != null) {
-        bodyLength = request.requestBody().asBytes().length;
+      if (request.body() != null) {
+        bodyLength = request.length();
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           String bodyText =
               request.charset() != null
-                  ? new String(request.requestBody().asBytes(), request.charset())
+                  ? new String(request.body(), request.charset())
                   : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");

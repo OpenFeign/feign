@@ -127,14 +127,15 @@ public final class ApacheHttp5Client implements Client {
     }
 
     // request body
-    final Body requestBody = request.requestBody();
-    if (requestBody.asBytes() != null) {
+    // final Body requestBody = request.requestBody();
+    byte[] data = request.body();
+    if (data != null) {
       HttpEntity entity;
-      if (requestBody.isBinary()) {
-        entity = new ByteArrayEntity(requestBody.asBytes(), null);
+      if (request.isBinary()) {
+        entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(requestBody.asString(), contentType);
+        entity = new StringEntity(new String(data), contentType);
       }
 
       requestBuilder.setEntity(entity);
@@ -142,9 +143,7 @@ public final class ApacheHttp5Client implements Client {
       requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
     }
 
-    final ClassicHttpRequest classicRequest = requestBuilder.build();
-
-    return classicRequest;
+    return requestBuilder.build();
   }
 
   private ContentType getContentType(Request request) {

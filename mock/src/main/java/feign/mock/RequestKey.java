@@ -112,7 +112,7 @@ public class RequestKey {
     this.url = buildUrl(request);
     this.headers = RequestHeaders.of(request.headers());
     this.charset = request.charset();
-    this.body = request.requestBody().asBytes();
+    this.body = request.body();
   }
 
   public HttpMethod getMethod() {

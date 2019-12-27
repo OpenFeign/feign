@@ -134,14 +134,14 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    if (request.requestBody().asBytes() != null) {
+    if (request.body() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
         ContentType contentType = getContentType(request);
-        String content = new String(request.requestBody().asBytes(), request.charset());
+        String content = new String(request.body(), request.charset());
         entity = new StringEntity(content, contentType);
       } else {
-        entity = new ByteArrayEntity(request.requestBody().asBytes());
+        entity = new ByteArrayEntity(request.body());
       }
 
       requestBuilder.setEntity(entity);

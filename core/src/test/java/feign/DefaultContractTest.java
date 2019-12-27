@@ -149,7 +149,7 @@ public class DefaultContractTest {
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
@@ -160,7 +160,7 @@ public class DefaultContractTest {
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
@@ -169,9 +169,9 @@ public class DefaultContractTest {
 
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/xml")),
+            entry("Content-Type", Collections.singletonList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
