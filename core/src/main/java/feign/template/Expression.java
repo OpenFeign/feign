@@ -13,8 +13,8 @@
  */
 package feign.template;
 
+import feign.CollectionFormat;
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
