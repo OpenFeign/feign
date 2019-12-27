@@ -29,7 +29,6 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
 import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 

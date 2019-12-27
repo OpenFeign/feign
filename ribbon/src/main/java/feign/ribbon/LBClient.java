@@ -32,7 +32,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -84,7 +83,8 @@ public final class LBClient extends
               TimeUnit.MILLISECONDS,
               configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
-      options = new Request.Options(connectTimeout, TimeUnit.MILLISECONDS, readTimeout, TimeUnit.MILLISECONDS, true);
+      options = new Request.Options(connectTimeout, TimeUnit.MILLISECONDS, readTimeout,
+          TimeUnit.MILLISECONDS, true);
     }
     Response response = request.client().execute(request.toRequest(), options);
     if (retryableStatusCodes.contains(response.status())) {
