@@ -174,4 +174,18 @@ public class QueryTemplateTest {
     /* brackets will be pct-encoded */
     assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1,2");
   }
+
+  @Test
+  public void expandCollectionValueWithDollar() {
+    QueryTemplate template =
+        QueryTemplate.create(
+            "$collection",
+            Collections.singletonList("{$collection}"),
+            Util.UTF_8,
+            CollectionFormat.CSV);
+    String expanded =
+        template.expand(Collections.singletonMap("$collection", Arrays.asList("1", "2")));
+    /* brackets will be pct-encoded */
+    assertThat(expanded).isEqualToIgnoringCase("$collection=1,2");
+  }
 }

@@ -38,7 +38,8 @@ public final class Expressions {
      *
      * see https://tools.ietf.org/html/rfc6570#section-2.3 for more information.
      */
-    expressions.put(Pattern.compile("(\\w[-\\w.\\[\\]]*[ ]*)(:(.+))?"), SimpleExpression.class);
+
+    expressions.put(Pattern.compile("^([+#./;?&]?)(.*)$"), SimpleExpression.class);
   }
 
   public static Expression create(final String value, final FragmentType type) {
@@ -68,10 +69,18 @@ public final class Expressions {
     Matcher matcher = expressionPattern.matcher(expression);
     if (matcher.matches()) {
       /* we have a valid variable expression, extract the name from the first group */
-      variableName = matcher.group(1).trim();
-      if (matcher.group(2) != null && matcher.group(3) != null) {
-        /* this variable contains an optional pattern */
-        variablePattern = matcher.group(3);
+      variableName = matcher.group(2).trim();
+      if (variableName.contains(":")) {
+        /* split on the colon */
+        String[] parts = variableName.split(":");
+        variableName = parts[0];
+        variablePattern = parts[1];
+      }
+
+      /* look for nested expressions */
+      if (variableName.contains("{")) {
+        /* nested, literal */
+        return null;
       }
     }
 
