@@ -50,15 +50,9 @@ public final class BodyTemplate extends Template {
   public String expand(Map<String, ?> variables) {
     String expanded = super.expand(variables);
     if (this.json) {
-      /* decode only the first and last character */
-      StringBuilder sb = new StringBuilder();
-      sb.append(JSON_TOKEN_START);
-      sb.append(
-          expanded,
-          expanded.indexOf(JSON_TOKEN_START_ENCODED) + JSON_TOKEN_START_ENCODED.length(),
-          expanded.lastIndexOf(JSON_TOKEN_END_ENCODED));
-      sb.append(JSON_TOKEN_END);
-      return sb.toString();
+      /* restore all start and end tokens */
+      expanded = expanded.replaceAll(JSON_TOKEN_START_ENCODED, JSON_TOKEN_START);
+      expanded = expanded.replaceAll(JSON_TOKEN_END_ENCODED, JSON_TOKEN_END);
     }
     return expanded;
   }
