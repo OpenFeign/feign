@@ -146,7 +146,7 @@ public final class QueryTemplate {
   }
 
   public List<String> getVariables() {
-    List<String> variables = new ArrayList<>();
+    List<String> variables = new ArrayList<>(this.name.getVariables());
     for (Template template : this.values) {
       variables.addAll(template.getVariables());
     }
