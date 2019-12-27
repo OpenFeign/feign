@@ -174,7 +174,7 @@ public class RequestTemplateTest {
             mapOf("keys", Arrays.asList("one", "two"), "values[]", Arrays.asList("1", "2")));
 
     assertThat(template.url())
-        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1,2");
+        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1%2C2");
   }
 
   @Test
@@ -429,7 +429,7 @@ public class RequestTemplateTest {
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not%20encoded&params%5B%5D=encoded");
     Map<String, Collection<String>> queries = template.queries();
     assertThat(queries).containsKey("params[]");
-    assertThat(queries.get("params[]")).contains("encoded").contains("not encoded");
+    assertThat(queries.get("params[]")).contains("encoded").contains("not%20encoded");
   }
 
   @SuppressWarnings("unchecked")

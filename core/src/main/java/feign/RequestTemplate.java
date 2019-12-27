@@ -169,7 +169,10 @@ public final class RequestTemplate implements Serializable {
       this.uriTemplate = UriTemplate.create("", !this.decodeSlash, this.charset);
     }
 
-    uri.append(this.uriTemplate.expand(variables));
+    String expanded = this.uriTemplate.expand(variables);
+    if (expanded != null) {
+      uri.append(expanded);
+    }
 
     /*
      * for simplicity, combine the queries into the uri and use the resulting uri to seed the

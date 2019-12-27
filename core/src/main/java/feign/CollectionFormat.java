@@ -66,21 +66,21 @@ public enum CollectionFormat {
       if (separator == null) {
         // exploded
         builder.append(valueCount++ == 0 ? "" : "&");
-        builder.append(UriUtils.queryEncode(field, charset));
+        builder.append(UriUtils.encode(field, charset));
         if (value != null) {
           builder.append('=');
-          builder.append(UriUtils.queryEncode(value, charset));
+          builder.append(UriUtils.encode(value, charset));
         }
       } else {
         // delimited with a separator character
         if (builder.length() == 0) {
-          builder.append(UriUtils.queryEncode(field, charset));
+          builder.append(UriUtils.encode(field, charset));
         }
         if (value == null) {
           continue;
         }
         builder.append(valueCount++ == 0 ? "=" : separator);
-        builder.append(UriUtils.queryEncode(value, charset));
+        builder.append(UriUtils.encode(value, charset));
       }
     }
     return builder;

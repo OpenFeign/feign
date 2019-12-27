@@ -14,10 +14,7 @@
 package feign.template;
 
 import feign.Util;
-import feign.template.UriUtils.FragmentType;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -42,7 +39,7 @@ public final class Expressions {
     expressions.put(Pattern.compile("^([+#./;?&]?)(.*)$"), SimpleExpression.class);
   }
 
-  public static Expression create(final String value, final FragmentType type) {
+  public static Expression create(final String value) {
 
     /* remove the start and end braces */
     final String expression = stripBraces(value);
@@ -84,7 +81,7 @@ public final class Expressions {
       }
     }
 
-    return new SimpleExpression(variableName, variablePattern, type);
+    return new SimpleExpression(variableName, variablePattern);
   }
 
   private static String stripBraces(String expression) {
@@ -103,26 +100,19 @@ public final class Expressions {
    */
   static class SimpleExpression extends Expression {
 
-    private final FragmentType type;
-
-    SimpleExpression(String expression, String pattern, FragmentType type) {
+    SimpleExpression(String expression, String pattern) {
       super(expression, pattern);
-      this.type = type;
     }
 
     String encode(Object value) {
-      return UriUtils.encodeReserved(value.toString(), type, Util.UTF_8);
+      return UriUtils.encode(value.toString(), Util.UTF_8);
     }
 
     @Override
     String expand(Object variable, boolean encode) {
       StringBuilder expanded = new StringBuilder();
       if (Iterable.class.isAssignableFrom(variable.getClass())) {
-        List<String> items = new ArrayList<>();
-        for (Object item : ((Iterable) variable)) {
-          items.add((encode) ? encode(item) : item.toString());
-        }
-        expanded.append(String.join(Template.COLLECTION_DELIMITER, items));
+        expanded.append(this.expandIterable((Iterable<?>) variable));
       } else {
         expanded.append((encode) ? encode(variable) : variable);
       }
@@ -134,6 +124,38 @@ public final class Expressions {
             "Value " + expanded + " does not match the expression pattern: " + this.getPattern());
       }
       return result;
+    }
+
+    private String expandIterable(Iterable<?> values) {
+      StringBuilder result = new StringBuilder();
+      for (Object value : values) {
+        if (value == null) {
+          /* skip */
+          continue;
+        }
+
+        /* expand the value */
+        String expanded = this.encode(value);
+        if (expanded.isEmpty()) {
+          /* always append the separator */
+          result.append(",");
+        } else {
+          if (result.length() != 0) {
+            if (!result.toString().equalsIgnoreCase(",")) {
+              result.append(",");
+            }
+          }
+          result.append(expanded);
+        }
+      }
+
+      if (result.length() == 0) {
+        /* completely unresolved */
+        return null;
+      }
+
+      /* return the expanded value */
+      return result.toString();
     }
   }
 }
