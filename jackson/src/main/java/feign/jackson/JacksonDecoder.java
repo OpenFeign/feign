@@ -47,7 +47,7 @@ public class JacksonDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(Util.UTF_8);
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }

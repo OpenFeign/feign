@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -77,10 +79,12 @@ public final class LBClient extends
       options =
           new Request.Options(
               configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+              TimeUnit.MILLISECONDS,
               (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
+              TimeUnit.MILLISECONDS,
               configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
-      options = new Request.Options(connectTimeout, readTimeout);
+      options = new Request.Options(connectTimeout, TimeUnit.MILLISECONDS, readTimeout, TimeUnit.MILLISECONDS, true);
     }
     Response response = request.client().execute(request.toRequest(), options);
     if (retryableStatusCodes.contains(response.status())) {
@@ -115,6 +119,7 @@ public final class LBClient extends
       setUri(uri);
     }
 
+    @SuppressWarnings("deprecation")
     Request toRequest() {
       // add header "Content-Length" according to the request body
       final byte[] body = request.body();

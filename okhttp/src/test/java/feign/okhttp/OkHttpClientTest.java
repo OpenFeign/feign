@@ -47,7 +47,7 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.getWithContentType();
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(Util.UTF_8)));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(

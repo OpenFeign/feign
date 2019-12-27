@@ -39,6 +39,7 @@ import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
 
+@SuppressWarnings("deprecation")
 public class SOAPCodecTest {
 
   @Rule

@@ -25,6 +25,7 @@ import feign.Request;
 import feign.ribbon.LBClient.RibbonRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("deprecation")
 public class LBClientTest {
 
   @Test

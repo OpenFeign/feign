@@ -31,6 +31,7 @@ import feign.Response;
 import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 
+@SuppressWarnings("deprecation")
 public class SOAPFaultDecoderTest {
 
   @Rule

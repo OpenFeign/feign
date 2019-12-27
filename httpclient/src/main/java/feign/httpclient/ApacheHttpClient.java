@@ -105,7 +105,7 @@ public final class ApacheHttpClient implements Client {
 
     // request query params
     List<NameValuePair> queryParams =
-        URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
+        URLEncodedUtils.parse(uri, requestBuilder.getCharset());
     for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
@@ -220,6 +220,7 @@ public final class ApacheHttpClient implements Client {
         return entity.getContent();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
