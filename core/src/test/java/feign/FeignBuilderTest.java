@@ -20,7 +20,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -32,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.*;
@@ -248,7 +246,8 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
-    RequestInterceptor requestInterceptor = template -> template.header("Content-Type", "text/plain");
+    RequestInterceptor requestInterceptor =
+        template -> template.header("Content-Type", "text/plain");
 
     TestInterface api =
         Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
@@ -267,7 +266,7 @@ public class FeignBuilderTest {
     String url = "http://localhost:" + server.getPort();
 
     final AtomicInteger callCount = new AtomicInteger();
-    //noinspection rawtypes
+    // noinspection rawtypes
     InvocationHandlerFactory factory = new InvocationHandlerFactory() {
       private final InvocationHandlerFactory delegate = new Default();
 

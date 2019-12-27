@@ -70,7 +70,8 @@ public class StreamDecoderTest {
 
     StreamInterface api = Feign.builder()
         .decoder(StreamDecoder.create(
-            (response, type) -> new BufferedReader(response.body().asReader(UTF_8)).lines().iterator()))
+            (response, type) -> new BufferedReader(response.body().asReader(UTF_8)).lines()
+                .iterator()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 

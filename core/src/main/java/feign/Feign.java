@@ -26,7 +26,6 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.querymap.FieldQueryMapEncoder;
-
 import static feign.ExceptionPropagationPolicy.NONE;
 
 /**

@@ -27,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.Statement;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -187,7 +186,8 @@ public class LoggerTest {
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
-          .options(new Request.Options(10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS, true))
+          .options(new Request.Options(10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS,
+              true))
           .retryer(new Retryer() {
             @Override
             public void continueOrPropagate(RetryableException e) {

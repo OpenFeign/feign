@@ -25,7 +25,6 @@ import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
-
 import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
