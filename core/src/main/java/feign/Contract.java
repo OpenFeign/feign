@@ -121,14 +121,19 @@ public interface Contract {
 
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation
-            && parameterTypes[i] != Request.Options.class
-            && !data.isAlreadyProcessed(i)) {
-          checkState(
-              data.formParams().isEmpty(), "Body parameters cannot be used with form parameters.");
-          checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
-          data.bodyIndex(i);
-          data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
+        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
+          if (data.isAlreadyProcessed(i)) {
+            checkState(
+                data.formParams().isEmpty() || data.bodyIndex() == null,
+                "Body parameters cannot be used with form parameters.");
+          } else {
+            checkState(
+                data.formParams().isEmpty(),
+                "Body parameters cannot be used with form parameters.");
+            checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
+            data.bodyIndex(i);
+            data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
+          }
         }
       }
 
