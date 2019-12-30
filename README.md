@@ -217,7 +217,7 @@ See [Advanced Usage](#advanced-usage) for more examples.
 
 > **What about slashes? `/`**
 >
-> `@RequestLine` and `@QueryMap` templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.  
+> @RequestLine and @QueryMap Templates do encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `true`.  
 
 > **What about plus? `+`**
 >
