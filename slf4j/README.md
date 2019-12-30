@@ -8,5 +8,6 @@ To use SLF4J with Feign, add both the SLF4J module and an SLF4J binding of your 
 ```java
 GitHub github = Feign.builder()
                      .logger(new Slf4jLogger())
+                     .logLevel(Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
 ```
