@@ -642,9 +642,12 @@ These approaches specify header entries as part of the api and do not require an
 when building the Feign client.
 
 #### Setting headers per target
-In cases where headers should differ for the same api based on different endpoints or where per-request
-customization is required, headers can be set as part of the client using a `RequestInterceptor` or a
-`Target`.
+To customize headers for each request method on a Target, a RequestInterceptor can be used. RequestInterceptors can be 
+shared across Target instances and are expected to be thread-safe. RequestInterceptors are applied to all request 
+methods on a Target.
+
+If you need per method customization, a custom Target is required, as the a RequestInterceptor does not have access to 
+the current method metadata.
 
 For an example of setting headers using a `RequestInterceptor`, see the `Request Interceptors` section.
 
