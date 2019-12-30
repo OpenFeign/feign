@@ -488,6 +488,7 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .logger(new Slf4jLogger())
+                     .logLevel(Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
 }
