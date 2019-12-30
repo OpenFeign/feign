@@ -227,6 +227,42 @@ public class DefaultContractTest {
         entry(2, asList("password")));
   }
 
+  @Test
+  public void formParamAndBodyParams() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Body parameters cannot be used with form parameters.");
+
+    parseAndValidateMetadata(FormParams.class,
+        "formParamAndBodyParams", String.class, String.class);
+    Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+  }
+
+  @Test
+  public void bodyParamsAndformParam() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Body parameters cannot be used with form parameters.");
+
+    parseAndValidateMetadata(FormParams.class,
+        "bodyParamsAndformParam", String.class, String.class);
+    Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+  }
+
+  @Test
+  public void formParamParseIntoFormParams() throws Exception {
+
+    MethodMetadata md = parseAndValidateMetadata(FormParams.class,
+        "loginNoBodyTemplate", String.class, String.class, String.class);
+
+    assertThat(md.formParams())
+        .containsExactly("customer_name", "user_name", "password");
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("customer_name")),
+        entry(1, asList("user_name")),
+        entry(2, asList("password")));
+  }
+
+
   /**
    * Body type is only for the body param.
    */
@@ -490,6 +526,22 @@ public class DefaultContractTest {
                @Param("customer_name") String customer,
                @Param("user_name") String user,
                @Param("password") String password);
+
+    @RequestLine("POST /")
+    void loginNoBodyTemplate(
+                             @Param("customer_name") String customer,
+                             @Param("user_name") String user,
+                             @Param("password") String password);
+
+    @RequestLine("POST /")
+    void formParamAndBodyParams(
+                                @Param("customer_name") String customer,
+                                String body);
+
+    @RequestLine("POST /")
+    void bodyParamsAndformParam(
+                                String body,
+                                @Param("customer_name") String customer);
   }
 
   interface HeaderMapInterface {
