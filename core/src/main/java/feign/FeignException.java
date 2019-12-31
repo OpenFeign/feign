@@ -18,10 +18,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static feign.Util.UTF_8;
@@ -37,7 +39,7 @@ public class FeignException extends RuntimeException {
       "request should not be null";
   private static final long serialVersionUID = 0;
   private int status;
-  private byte[] content;
+  private byte[] responseBody;
   private Request request;
 
   protected FeignException(int status, String message, Throwable cause) {
@@ -46,10 +48,10 @@ public class FeignException extends RuntimeException {
     this.request = null;
   }
 
-  protected FeignException(int status, String message, Throwable cause, byte[] content) {
+  protected FeignException(int status, String message, Throwable cause, byte[] responseBody) {
     super(message, cause);
     this.status = status;
-    this.content = content;
+    this.responseBody = responseBody;
     this.request = null;
   }
 
@@ -59,10 +61,10 @@ public class FeignException extends RuntimeException {
     this.request = null;
   }
 
-  protected FeignException(int status, String message, byte[] content) {
+  protected FeignException(int status, String message, byte[] responseBody) {
     super(message);
     this.status = status;
-    this.content = content;
+    this.responseBody = responseBody;
     this.request = null;
   }
 
@@ -73,10 +75,10 @@ public class FeignException extends RuntimeException {
   }
 
   protected FeignException(int status, String message, Request request, Throwable cause,
-      byte[] content) {
+      byte[] responseBody) {
     super(message, cause);
     this.status = status;
-    this.content = content;
+    this.responseBody = responseBody;
     this.request = checkRequestNotNull(request);
   }
 
@@ -86,10 +88,10 @@ public class FeignException extends RuntimeException {
     this.request = checkRequestNotNull(request);
   }
 
-  protected FeignException(int status, String message, Request request, byte[] content) {
+  protected FeignException(int status, String message, Request request, byte[] responseBody) {
     super(message);
     this.status = status;
-    this.content = content;
+    this.responseBody = responseBody;
     this.request = checkRequestNotNull(request);
   }
 
@@ -101,8 +103,27 @@ public class FeignException extends RuntimeException {
     return this.status;
   }
 
+  /**
+   * The Response Body, if present.
+   *
+   * @return the body of the response.
+   * @deprecated use {@link #responseBody()} instead.
+   */
+  @Deprecated
   public byte[] content() {
-    return this.content;
+    return this.responseBody;
+  }
+
+  /**
+   * The Response body.
+   *
+   * @return an Optional wrapping the response body.
+   */
+  public Optional<ByteBuffer> responseBody() {
+    if (this.responseBody == null) {
+      return Optional.empty();
+    }
+    return Optional.of(ByteBuffer.wrap(this.responseBody));
   }
 
   public Request request() {
@@ -114,8 +135,8 @@ public class FeignException extends RuntimeException {
   }
 
   public String contentUTF8() {
-    if (content != null) {
-      return new String(content, UTF_8);
+    if (responseBody != null) {
+      return new String(responseBody, UTF_8);
     } else {
       return "";
     }
