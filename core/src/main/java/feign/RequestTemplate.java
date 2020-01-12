@@ -33,7 +33,6 @@ import static feign.Util.*;
  * information also support template expressions.
  * </p>
  */
-// @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 public final class RequestTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
