@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("deprecation")
 @RunWith(Parameterized.class)
 public class DefaultErrorDecoderHttpErrorTest {
 

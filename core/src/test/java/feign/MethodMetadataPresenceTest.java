@@ -44,7 +44,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -65,7 +65,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -87,7 +87,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader()));
+    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
 
     assertThat(server.takeRequest())
         .hasBody("request data");

@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 /**
@@ -65,7 +66,7 @@ public final class JacksonIteratorDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(UTF_8);
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }

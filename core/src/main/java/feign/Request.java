@@ -13,83 +13,20 @@
  */
 package feign;
 
-import static feign.Util.checkNotNull;
-import static feign.Util.valuesOrEmpty;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import feign.template.BodyTemplate;
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
  */
 public final class Request {
-
-  public static class Body {
-
-    private final byte[] data;
-    private final Charset encoding;
-    private final BodyTemplate bodyTemplate;
-
-    private Body(byte[] data, Charset encoding, BodyTemplate bodyTemplate) {
-      super();
-      this.data = data;
-      this.encoding = encoding;
-      this.bodyTemplate = bodyTemplate;
-    }
-
-    public Request.Body expand(Map<String, ?> variables) {
-      if (bodyTemplate == null) {
-        return this;
-      }
-
-      return encoded(bodyTemplate.expand(variables).getBytes(encoding), encoding);
-    }
-
-    public List<String> getVariables() {
-      if (bodyTemplate == null) {
-        return Collections.emptyList();
-      }
-      return bodyTemplate.getVariables();
-    }
-
-    public static Request.Body encoded(byte[] bodyData, Charset encoding) {
-      return new Request.Body(bodyData, encoding, null);
-    }
-
-    public int length() {
-      /* calculate the content length based on the data provided */
-      return data != null ? data.length : 0;
-    }
-
-    public byte[] asBytes() {
-      return data;
-    }
-
-    public static Request.Body bodyTemplate(String bodyTemplate, Charset encoding) {
-      return new Request.Body(null, encoding, BodyTemplate.create(bodyTemplate));
-    }
-
-    public String bodyTemplate() {
-      return (bodyTemplate != null) ? bodyTemplate.toString() : null;
-    }
-
-    public String asString() {
-      return !isBinary()
-          ? new String(data, encoding)
-          : "Binary data";
-    }
-
-    public static Body empty() {
-      return new Request.Body(null, null, null);
-    }
-
-    public boolean isBinary() {
-      return encoding == null || data == null;
-    }
-
-  }
 
   public enum HttpMethod {
     GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
@@ -128,7 +65,7 @@ public final class Request {
                                Map<String, Collection<String>> headers,
                                byte[] body,
                                Charset charset) {
-    return create(httpMethod, url, headers, Body.encoded(body, charset), null);
+    return create(httpMethod, url, headers, Body.create(body, charset), null);
   }
 
   /**
@@ -147,7 +84,7 @@ public final class Request {
                                byte[] body,
                                Charset charset,
                                RequestTemplate requestTemplate) {
-    return create(httpMethod, url, headers, Body.encoded(body, charset), requestTemplate);
+    return create(httpMethod, url, headers, Body.create(body, charset), requestTemplate);
   }
 
   /**
@@ -173,6 +110,15 @@ public final class Request {
   private final Body body;
   private final RequestTemplate requestTemplate;
 
+  /**
+   * Creates a new Request.
+   *
+   * @param method of the request.
+   * @param url for the request.
+   * @param headers for the request.
+   * @param body for the request, optional.
+   * @param requestTemplate used to build the request.
+   */
   Request(HttpMethod method,
       String url,
       Map<String, Collection<String>> headers,
@@ -205,24 +151,30 @@ public final class Request {
     return this.httpMethod;
   }
 
-  /* Fully resolved URL including query. */
+
+  /**
+   * URL for the request.
+   *
+   * @return URL as a String.
+   */
   public String url() {
     return url;
   }
 
-  /* Ordered list of headers that will be sent to the server. */
+  /**
+   * Request Headers.
+   *
+   * @return the request headers.
+   */
   public Map<String, Collection<String>> headers() {
-    return headers;
+    return Collections.unmodifiableMap(headers);
   }
 
   /**
-   * The character set with which the body is encoded, or null if unknown or not applicable. When
-   * this is present, you can use {@code new String(req.body(), req.charset())} to access the body
-   * as a String.
+   * Charset of the request.
    *
-   * @deprecated use {@link #requestBody()} instead
+   * @return the current character set for the request, may be {@literal null} for binary data.
    */
-  @Deprecated
   public Charset charset() {
     return body.encoding;
   }
@@ -232,17 +184,29 @@ public final class Request {
    * interpretable as text.
    *
    * @see #charset()
-   * @deprecated use {@link #requestBody()} instead
    */
-  @Deprecated
   public byte[] body() {
     return body.data;
   }
 
-  public Body requestBody() {
-    return body;
+  public boolean isBinary() {
+    return body.isBinary();
   }
 
+  /**
+   * Request Length.
+   *
+   * @return size of the request body.
+   */
+  public int length() {
+    return this.body.length();
+  }
+
+  /**
+   * Request as an HTTP/1.1 request.
+   *
+   * @return the request.
+   */
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder();
@@ -258,7 +222,7 @@ public final class Request {
     return builder.toString();
   }
 
-  /*
+  /**
    * Controls the per-request settings currently required to be implemented by all {@link Client
    * clients}
    */
@@ -270,7 +234,31 @@ public final class Request {
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
 
+    /**
+     * Creates a new Options instance.
+     *
+     * @param connectTimeoutMillis connection timeout in milliseconds.
+     * @param readTimeoutMillis read timeout in milliseconds.
+     * @param followRedirects if the request should follow 3xx redirections.
+     *
+     * @deprecated please use {@link #Options(long, TimeUnit, long, TimeUnit, boolean)}
+     */
+    @Deprecated
+    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
+      this(connectTimeoutMillis, TimeUnit.MILLISECONDS,
+          readTimeoutMillis, TimeUnit.MILLISECONDS,
+          followRedirects);
+    }
 
+    /**
+     * Creates a new Options Instance.
+     *
+     * @param connectTimeout value.
+     * @param connectTimeoutUnit with the TimeUnit for the timeout value.
+     * @param readTimeout value.
+     * @param readTimeoutUnit with the TimeUnit for the timeout value.
+     * @param followRedirects if the request should follow 3xx redirections.
+     */
     public Options(long connectTimeout, TimeUnit connectTimeoutUnit,
         long readTimeout, TimeUnit readTimeoutUnit,
         boolean followRedirects) {
@@ -282,18 +270,27 @@ public final class Request {
       this.followRedirects = followRedirects;
     }
 
-    @Deprecated
-    public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
-      this(connectTimeoutMillis, TimeUnit.MILLISECONDS,
-          readTimeoutMillis, TimeUnit.MILLISECONDS,
-          followRedirects);
-    }
-
+    /**
+     * Creates a new Options instance that follows redirects by default.
+     *
+     * @param connectTimeoutMillis connection timeout in milliseconds.
+     * @param readTimeoutMillis read timeout in milliseconds.
+     *
+     * @deprecated please use {@link #Options(long, TimeUnit, long, TimeUnit, boolean)}
+     */
     @Deprecated
     public Options(int connectTimeoutMillis, int readTimeoutMillis) {
       this(connectTimeoutMillis, readTimeoutMillis, true);
     }
 
+    /**
+     * Creates the new Options instance using the following defaults:
+     * <ul>
+     * <li>Connect Timeout: 10 seconds</li>
+     * <li>Read Timeout: 60 seconds</li>
+     * <li>Follow all 3xx redirects</li>
+     * </ul>
+     */
     public Options() {
       this(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true);
     }
@@ -303,7 +300,6 @@ public final class Request {
      *
      * @see java.net.HttpURLConnection#getConnectTimeout()
      */
-    @Deprecated
     public int connectTimeoutMillis() {
       return (int) connectTimeoutUnit.toMillis(connectTimeout);
     }
@@ -313,7 +309,6 @@ public final class Request {
      *
      * @see java.net.HttpURLConnection#getReadTimeout()
      */
-    @Deprecated
     public int readTimeoutMillis() {
       return (int) readTimeoutUnit.toMillis(readTimeout);
     }
@@ -328,18 +323,38 @@ public final class Request {
       return followRedirects;
     }
 
+    /**
+     * Connect Timeout Value.
+     *
+     * @return current timeout value.
+     */
     public long connectTimeout() {
       return connectTimeout;
     }
 
+    /**
+     * TimeUnit for the Connection Timeout value.
+     *
+     * @return TimeUnit
+     */
     public TimeUnit connectTimeoutUnit() {
       return connectTimeoutUnit;
     }
 
+    /**
+     * Read Timeout value.
+     *
+     * @return current read timeout value.
+     */
     public long readTimeout() {
       return readTimeout;
     }
 
+    /**
+     * TimeUnit for the Read Timeout value.
+     *
+     * @return TimeUnit
+     */
     public TimeUnit readTimeoutUnit() {
       return readTimeoutUnit;
     }
@@ -349,5 +364,71 @@ public final class Request {
   @Experimental
   public RequestTemplate requestTemplate() {
     return this.requestTemplate;
+  }
+
+  /**
+   * Request Body.
+   */
+  public static class Body {
+
+    private Charset encoding;
+    private byte[] data;
+
+    private Body() {
+      super();
+    }
+
+    private Body(byte[] data) {
+      this.data = data;
+    }
+
+    private Body(byte[] data, Charset encoding) {
+      this.data = data;
+      this.encoding = encoding;
+    }
+
+    public Optional<Charset> getEncoding() {
+      return Optional.ofNullable(this.encoding);
+    }
+
+    public int length() {
+      /* calculate the content length based on the data provided */
+      return data != null ? data.length : 0;
+    }
+
+    public byte[] asBytes() {
+      return data;
+    }
+
+    public String asString() {
+      return !isBinary()
+          ? new String(data, encoding)
+          : "Binary data";
+    }
+
+    public boolean isBinary() {
+      return encoding == null || data == null;
+    }
+
+    public static Body create(String data) {
+      return new Body(data.getBytes());
+    }
+
+    public static Body create(String data, Charset charset) {
+      return new Body(data.getBytes(charset), charset);
+    }
+
+    public static Body create(byte[] data) {
+      return new Body(data);
+    }
+
+    public static Body create(byte[] data, Charset charset) {
+      return new Body(data, charset);
+    }
+
+    public static Body empty() {
+      return new Body();
+    }
+
   }
 }

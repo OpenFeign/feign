@@ -39,6 +39,17 @@ public final class BodyTemplate extends Template {
     return new BodyTemplate(template, Util.UTF_8);
   }
 
+  /**
+   * Create a new Body Template.
+   *
+   * @param template to parse.
+   * @param charset to use when encoding the template.
+   * @return a Body Template instance.
+   */
+  public static BodyTemplate create(String template, Charset charset) {
+    return new BodyTemplate(template, charset);
+  }
+
   private BodyTemplate(String value, Charset charset) {
     super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
     if (value.startsWith(JSON_TOKEN_START_ENCODED) && value.endsWith(JSON_TOKEN_END_ENCODED)) {

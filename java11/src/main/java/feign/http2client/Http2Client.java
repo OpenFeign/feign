@@ -80,10 +80,11 @@ public class Http2Client implements Client {
     }
 
     final BodyPublisher body;
-    if (request.requestBody().asBytes() == null) {
+    final byte[] data = request.body();
+    if (data == null) {
       body = BodyPublishers.noBody();
     } else {
-      body = BodyPublishers.ofByteArray(request.requestBody().asBytes());
+      body = BodyPublishers.ofByteArray(data);
     }
 
     final Builder requestBuilder = HttpRequest.newBuilder()

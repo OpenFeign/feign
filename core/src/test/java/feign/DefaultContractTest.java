@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -149,7 +149,7 @@ public class DefaultContractTest {
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
@@ -160,7 +160,7 @@ public class DefaultContractTest {
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
@@ -169,9 +169,9 @@ public class DefaultContractTest {
 
     assertThat(md.template())
         .hasHeaders(
-            entry("Content-Type", asList("application/xml")),
+            entry("Content-Type", Collections.singletonList("application/xml")),
             entry("Content-Length",
-                asList(String.valueOf(md.template().requestBody().asBytes().length))));
+                asList(String.valueOf(md.template().body().length))));
   }
 
   @Test

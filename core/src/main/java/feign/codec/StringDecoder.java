@@ -28,7 +28,7 @@ public class StringDecoder implements Decoder {
       return null;
     }
     if (String.class.equals(type)) {
-      return Util.toString(body.asReader());
+      return Util.toString(body.asReader(Util.UTF_8));
     }
     throw new DecodeException(response.status(),
         format("%s is not a type supported by this decoder.", type), response.request());

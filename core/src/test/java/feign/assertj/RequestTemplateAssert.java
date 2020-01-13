@@ -96,14 +96,14 @@ public final class RequestTemplateAssert
 
   public RequestTemplateAssert noRequestBody() {
     isNotNull();
-    if (actual.requestBody() != null) {
-      if (actual.requestBody().bodyTemplate() != null) {
+    if (actual.body() != null) {
+      if (actual.bodyTemplate() != null) {
         failWithMessage("\nExpecting requestBody.bodyTemplate to be null, but was:<%s>",
-            actual.requestBody().bodyTemplate());
+            actual.bodyTemplate());
       }
-      if (actual.requestBody().asBytes() != null) {
+      if (actual.body() != null) {
         failWithMessage("\nExpecting requestBody.data to be null, but was:<%s>",
-            actual.requestBody().asString());
+            new String(actual.body(), actual.requestCharset()));
       }
     }
     return this;
