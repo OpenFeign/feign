@@ -16,7 +16,6 @@ package feign.hc5;
 import static feign.Util.UTF_8;
 
 import feign.*;
-import feign.Request.Body;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -127,14 +126,15 @@ public final class ApacheHttp5Client implements Client {
     }
 
     // request body
-    final Body requestBody = request.requestBody();
-    if (requestBody.asBytes() != null) {
+    // final Body requestBody = request.requestBody();
+    byte[] data = request.body();
+    if (data != null) {
       HttpEntity entity;
-      if (requestBody.isBinary()) {
-        entity = new ByteArrayEntity(requestBody.asBytes(), null);
+      if (request.isBinary()) {
+        entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(requestBody.asString(), contentType);
+        entity = new StringEntity(new String(data), contentType);
       }
 
       requestBuilder.setEntity(entity);
@@ -142,9 +142,7 @@ public final class ApacheHttp5Client implements Client {
       requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
     }
 
-    final ClassicHttpRequest classicRequest = requestBuilder.build();
-
-    return classicRequest;
+    return requestBuilder.build();
   }
 
   private ContentType getContentType(Request request) {
@@ -215,6 +213,7 @@ public final class ApacheHttp5Client implements Client {
         return entity.getContent();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);

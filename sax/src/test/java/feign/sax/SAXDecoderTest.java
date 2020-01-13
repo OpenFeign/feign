@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
 
+@SuppressWarnings("deprecation")
 public class SAXDecoderTest {
 
   static String statusFailed =

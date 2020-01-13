@@ -64,7 +64,7 @@ public class GoogleHttpClient implements Client {
       final Request inputRequest, final Request.Options options) throws IOException {
     // Setup the request body
     HttpContent content = null;
-    if (inputRequest.requestBody().length() > 0) {
+    if (inputRequest.length() > 0) {
       final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
       String contentType = null;
       if (contentTypeValues != null && contentTypeValues.size() > 0) {
@@ -72,7 +72,7 @@ public class GoogleHttpClient implements Client {
       } else {
         contentType = "application/octet-stream";
       }
-      content = new ByteArrayContent(contentType, inputRequest.requestBody().asBytes());
+      content = new ByteArrayContent(contentType, inputRequest.body());
     }
 
     // Build the request

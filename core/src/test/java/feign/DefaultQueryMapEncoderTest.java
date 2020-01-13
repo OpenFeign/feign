@@ -16,6 +16,7 @@ package feign;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import feign.querymap.FieldQueryMapEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Rule;
@@ -26,7 +27,7 @@ public class DefaultQueryMapEncoderTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
-  private final QueryMapEncoder encoder = new QueryMapEncoder.Default();
+  private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
 
   @Test
   public void testEncodesObject_visibleFields() {

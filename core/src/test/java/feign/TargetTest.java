@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class TargetTest {
 
   @Rule public final MockWebServer server = new MockWebServer();
@@ -62,7 +63,7 @@ public class TargetTest {
                 urlEncoded.httpMethod(),
                 urlEncoded.url().replace("%2F", "/"),
                 urlEncoded.headers(),
-                urlEncoded.requestBody().asBytes(),
+                urlEncoded.body(),
                 urlEncoded.charset());
           }
         };

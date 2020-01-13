@@ -73,6 +73,7 @@ public class DecoderIteratorsBenchmark {
     }
   }
 
+  @SuppressWarnings("deprecation")
   @Setup(Level.Invocation)
   public void buildResponse() {
     response =
@@ -81,7 +82,7 @@ public class DecoderIteratorsBenchmark {
             .reason("OK")
             .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
-            .body(carsJson(Integer.valueOf(size)), Util.UTF_8)
+            .body(carsJson(Integer.parseInt(size)), Util.UTF_8)
             .build();
   }
 

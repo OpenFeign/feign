@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("deprecation")
 public class Slf4jLoggerTest {
 
   private static final String CONFIG_KEY = "someMethod()";

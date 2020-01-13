@@ -35,6 +35,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class StreamDecoderTest {
 
   interface StreamInterface {
@@ -73,7 +74,7 @@ public class StreamDecoderTest {
             .decoder(
                 StreamDecoder.create(
                     (response, type) ->
-                        new BufferedReader(response.body().asReader()).lines().iterator()))
+                        new BufferedReader(response.body().asReader(UTF_8)).lines().iterator()))
             .doNotCloseAfterDecode()
             .target(StreamInterface.class, server.url("/").toString());
 

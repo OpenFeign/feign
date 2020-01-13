@@ -26,6 +26,7 @@ import java.util.Map;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class ResponseTest {
 
   @Test
@@ -45,7 +46,7 @@ public class ResponseTest {
 
   @Test
   public void canAccessHeadersCaseInsensitively() {
-    Map<String, Collection<String>> headersMap = new LinkedHashMap();
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     List<String> valueList = Collections.singletonList("application/json");
     headersMap.put("Content-Type", valueList);
     Response response =
@@ -62,9 +63,9 @@ public class ResponseTest {
 
   @Test
   public void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
-    Map<String, Collection<String>> headersMap = new LinkedHashMap();
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
-    headersMap.put("set-cookie", Arrays.asList("Cookie-C=Value"));
+    headersMap.put("set-cookie", Collections.singletonList("Cookie-C=Value"));
 
     Response response =
         Response.builder()

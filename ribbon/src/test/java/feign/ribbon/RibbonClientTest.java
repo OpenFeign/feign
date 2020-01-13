@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -312,7 +313,8 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
-    Request.Options options = new Request.Options(1000, 1000, false);
+    Request.Options options =
+        new Request.Options(1000, TimeUnit.MILLISECONDS, 1000, TimeUnit.MILLISECONDS, false);
     TestInterface api =
         Feign.builder()
             .options(options)
@@ -348,7 +350,8 @@ public class RibbonClientTest {
             serverListKey(),
             hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
 
-    Request.Options options = new Request.Options(1000, 1000, true);
+    Request.Options options =
+        new Request.Options(1000, TimeUnit.MILLISECONDS, 1000, TimeUnit.MILLISECONDS, true);
     TestInterface api =
         Feign.builder()
             .options(options)
@@ -368,7 +371,8 @@ public class RibbonClientTest {
 
   @Test
   public void testFeignOptionsClientConfig() {
-    Request.Options options = new Request.Options(1111, 22222);
+    Request.Options options =
+        new Request.Options(1111, TimeUnit.MILLISECONDS, 22222, TimeUnit.MILLISECONDS, true);
     IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
     assertThat(
         config.get(CommonClientConfigKey.ConnectTimeout), equalTo(options.connectTimeoutMillis()));

@@ -56,9 +56,11 @@ import java.util.Map;
  * Once this conversion is applied, the query keys and resulting String values follow the same
  * contract as if they were set using {@link RequestTemplate#query(String, String...)}.
  */
+@SuppressWarnings("deprecation")
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
 public @interface QueryMap {
+
   /**
    * Specifies whether parameter names and values are already encoded.
    *

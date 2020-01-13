@@ -23,6 +23,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+@SuppressWarnings("deprecation")
 public class RetryerTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();
@@ -58,7 +59,7 @@ public class RetryerTest {
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
+  public void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer =
         new Retryer.Default() {
           protected long currentTimeMillis() {

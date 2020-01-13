@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 /**
  * @author pengfei.zhao
  */
+@SuppressWarnings("deprecation")
 public class OptionsTest {
 
   interface OptionsInterface {

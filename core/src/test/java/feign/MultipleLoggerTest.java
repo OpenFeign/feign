@@ -29,6 +29,7 @@ public class MultipleLoggerTest {
     return (java.util.logging.Logger) inner.get(logger);
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void testAppendSeveralFilesToOneJavaLogger() throws Exception {
     Logger.JavaLogger logger =

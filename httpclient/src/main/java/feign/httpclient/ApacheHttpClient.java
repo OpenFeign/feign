@@ -104,8 +104,7 @@ public final class ApacheHttpClient implements Client {
     requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
     // request query params
-    List<NameValuePair> queryParams =
-        URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
+    List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset());
     for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
@@ -134,14 +133,14 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    if (request.requestBody().asBytes() != null) {
+    if (request.body() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
         ContentType contentType = getContentType(request);
-        String content = new String(request.requestBody().asBytes(), request.charset());
+        String content = new String(request.body(), request.charset());
         entity = new StringEntity(content, contentType);
       } else {
-        entity = new ByteArrayEntity(request.requestBody().asBytes());
+        entity = new ByteArrayEntity(request.body());
       }
 
       requestBuilder.setEntity(entity);
@@ -220,6 +219,7 @@ public final class ApacheHttpClient implements Client {
         return entity.getContent();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);

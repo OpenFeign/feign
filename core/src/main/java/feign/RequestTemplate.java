@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,9 +13,7 @@
  */
 package feign;
 
-import static feign.Util.CONTENT_LENGTH;
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
+import static feign.Util.*;
 
 import feign.Request.HttpMethod;
 import feign.template.*;
@@ -35,7 +33,6 @@ import java.util.stream.Collectors;
  * <p>This class is a variation on a UriTemplate, where, in addition to the uri, Headers and Query
  * information also support template expressions.
  */
-@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 public final class RequestTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
@@ -45,6 +42,7 @@ public final class RequestTemplate implements Serializable {
   private String fragment;
   private boolean resolved = false;
   private UriTemplate uriTemplate;
+  private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
   private Request.Body body = Request.Body.empty();
@@ -61,20 +59,23 @@ public final class RequestTemplate implements Serializable {
   /**
    * Create a new Request Template.
    *
+   * @param fragment part of the request uri.
    * @param target for the template.
    * @param uriTemplate for the template.
+   * @param bodyTemplate for the template, may be {@literal null}
    * @param method of the request.
    * @param charset for the request.
-   * @param body of the request, may be null
+   * @param body of the request, may be {@literal null}
    * @param decodeSlash if the request uri should encode slash characters.
    * @param collectionFormat when expanding collection based variables.
-   * @param feignTarget
-   * @param methodMetadata
+   * @param feignTarget this template is targeted for.
+   * @param methodMetadata containing a reference to the method this template is built from.
    */
   private RequestTemplate(
       String target,
       String fragment,
       UriTemplate uriTemplate,
+      BodyTemplate bodyTemplate,
       HttpMethod method,
       Charset charset,
       Request.Body body,
@@ -85,6 +86,7 @@ public final class RequestTemplate implements Serializable {
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
+    this.bodyTemplate = bodyTemplate;
     this.method = method;
     this.charset = charset;
     this.body = body;
@@ -107,6 +109,7 @@ public final class RequestTemplate implements Serializable {
             requestTemplate.target,
             requestTemplate.fragment,
             requestTemplate.uriTemplate,
+            requestTemplate.bodyTemplate,
             requestTemplate.method,
             requestTemplate.charset,
             requestTemplate.body,
@@ -145,9 +148,11 @@ public final class RequestTemplate implements Serializable {
     this.collectionFormat =
         (toCopy.collectionFormat != null) ? toCopy.collectionFormat : CollectionFormat.EXPLODED;
     this.uriTemplate = toCopy.uriTemplate;
+    this.bodyTemplate = toCopy.bodyTemplate;
     this.resolved = false;
     this.methodMetadata = toCopy.methodMetadata;
     this.target = toCopy.target;
+    this.feignTarget = toCopy.feignTarget;
   }
 
   /**
@@ -233,7 +238,9 @@ public final class RequestTemplate implements Serializable {
       }
     }
 
-    resolved.body(this.body.expand(variables));
+    if (this.bodyTemplate != null) {
+      resolved.body(this.bodyTemplate.expand(variables));
+    }
 
     /* mark the new template resolved */
     resolved.resolved = true;
@@ -267,7 +274,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.requestBody(), this);
+    return Request.create(this.method, this.url(), this.headers(), this.body, this);
   }
 
   /**
@@ -562,7 +569,9 @@ public final class RequestTemplate implements Serializable {
     }
 
     /* body */
-    variables.addAll(this.body.getVariables());
+    if (this.bodyTemplate != null) {
+      variables.addAll(this.bodyTemplate.getVariables());
+    }
 
     return variables;
   }
@@ -702,7 +711,6 @@ public final class RequestTemplate implements Serializable {
       throw new IllegalArgumentException("name is required.");
     }
     this.headers.remove(name);
-
     return this;
   }
 
@@ -768,15 +776,12 @@ public final class RequestTemplate implements Serializable {
   /**
    * Sets the Body and Charset for this request.
    *
-   * @param bodyData to send, can be null.
+   * @param data to send, can be null.
    * @param charset of the encoded data.
    * @return a RequestTemplate for chaining.
-   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
-  @Deprecated
-  public RequestTemplate body(byte[] bodyData, Charset charset) {
-    this.body(Request.Body.encoded(bodyData, charset));
-
+  public RequestTemplate body(byte[] data, Charset charset) {
+    this.body(Request.Body.create(data, charset));
     return this;
   }
 
@@ -785,12 +790,10 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyText to send.
    * @return a RequestTemplate for chaining.
-   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
-  @Deprecated
   public RequestTemplate body(String bodyText) {
-    byte[] bodyData = bodyText != null ? bodyText.getBytes(UTF_8) : null;
-    return body(bodyData, UTF_8);
+    this.body(Request.Body.create(bodyText.getBytes(this.charset), this.charset));
+    return this;
   }
 
   /**
@@ -799,8 +802,11 @@ public final class RequestTemplate implements Serializable {
    * @param body to send.
    * @return a RequestTemplate for chaining.
    */
-  public RequestTemplate body(Request.Body body) {
+  private RequestTemplate body(Request.Body body) {
     this.body = body;
+
+    /* body template must be cleared to prevent double processing */
+    this.bodyTemplate = null;
 
     header(CONTENT_LENGTH);
     if (body.length() > 0) {
@@ -816,16 +822,17 @@ public final class RequestTemplate implements Serializable {
    * @return the currently applied Charset.
    */
   public Charset requestCharset() {
-    return charset;
+    if (this.body != null) {
+      return this.body.getEncoding().orElse(this.charset);
+    }
+    return this.charset;
   }
 
   /**
    * The Request Body.
    *
    * @return the request body.
-   * @deprecated replaced by {@link RequestTemplate#requestBody()}
    */
-  @Deprecated
   public byte[] body() {
     return body.asBytes();
   }
@@ -835,11 +842,21 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyTemplate to use.
    * @return a RequestTemplate for chaining.
-   * @deprecated replaced by {@link RequestTemplate#body(feign.Request.Body)}
    */
-  @Deprecated
   public RequestTemplate bodyTemplate(String bodyTemplate) {
-    this.body(Request.Body.bodyTemplate(bodyTemplate, Util.UTF_8));
+    this.bodyTemplate = BodyTemplate.create(bodyTemplate, this.charset);
+    return this;
+  }
+
+  /**
+   * Specify the Body Template to use. Can contain literals and expressions.
+   *
+   * @param bodyTemplate to use.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate bodyTemplate(String bodyTemplate, Charset charset) {
+    this.bodyTemplate = BodyTemplate.create(bodyTemplate, charset);
+    this.charset = charset;
     return this;
   }
 
@@ -849,7 +866,10 @@ public final class RequestTemplate implements Serializable {
    * @return the unresolved body template.
    */
   public String bodyTemplate() {
-    return body.bodyTemplate();
+    if (this.bodyTemplate != null) {
+      return this.bodyTemplate.toString();
+    }
+    return null;
   }
 
   @Override
@@ -949,10 +969,6 @@ public final class RequestTemplate implements Serializable {
     final String name = (eq > 0) ? pair.substring(0, eq) : pair;
     final String value = (eq > 0 && eq < pair.length()) ? pair.substring(eq + 1) : null;
     return new SimpleImmutableEntry<>(name, value);
-  }
-
-  public Request.Body requestBody() {
-    return this.body;
   }
 
   @Experimental

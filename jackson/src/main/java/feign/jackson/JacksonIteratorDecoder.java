@@ -13,6 +13,7 @@
  */
 package feign.jackson;
 
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -67,7 +68,7 @@ public final class JacksonIteratorDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null) return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(UTF_8);
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }

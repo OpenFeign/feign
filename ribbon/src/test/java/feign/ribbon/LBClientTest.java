@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class LBClientTest {
 
   @Test

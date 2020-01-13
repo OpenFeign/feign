@@ -78,7 +78,8 @@ public class AWSSignatureVersion4 {
     canonicalRequest.append("host").append('\n');
 
     // HexEncode(Hash(Payload))
-    String bodyText = input.requestBody().asString();
+    byte[] data = input.body();
+    String bodyText = (data != null) ? new String(data, input.requestCharset()) : null;
     if (bodyText != null) {
       canonicalRequest.append(hex(sha256(bodyText)));
     } else {

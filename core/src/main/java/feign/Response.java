@@ -133,9 +133,10 @@ public final class Response implements Closeable {
     }
 
     /**
-     * @see Response#requestTemplate
-     *     <p>NOTE: will add null check in version 12 which may require changes to custom
-     *     feign.Client or loggers
+     * The Request Template used for the original request.
+     *
+     * @param requestTemplate used.
+     * @return builder reference.
      */
     @Experimental
     public Builder requestTemplate(RequestTemplate requestTemplate) {
@@ -259,12 +260,13 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public InputStream asInputStream() throws IOException {
+    public InputStream asInputStream() {
       return inputStream;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Reader asReader() throws IOException {
+    public Reader asReader() {
       return new InputStreamReader(inputStream, UTF_8);
     }
 
@@ -327,6 +329,7 @@ public final class Response implements Closeable {
       return new ByteArrayInputStream(data);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Reader asReader() throws IOException {
       return new InputStreamReader(asInputStream(), UTF_8);

@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public final class LBClient
     extends AbstractLoadBalancerAwareClient<LBClient.RibbonRequest, LBClient.RibbonResponse> {
@@ -76,10 +77,14 @@ public final class LBClient
       options =
           new Request.Options(
               configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+              TimeUnit.MILLISECONDS,
               (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
+              TimeUnit.MILLISECONDS,
               configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
-      options = new Request.Options(connectTimeout, readTimeout);
+      options =
+          new Request.Options(
+              connectTimeout, TimeUnit.MILLISECONDS, readTimeout, TimeUnit.MILLISECONDS, true);
     }
     Response response = request.client().execute(request.toRequest(), options);
     if (retryableStatusCodes.contains(response.status())) {
@@ -113,9 +118,10 @@ public final class LBClient
       setUri(uri);
     }
 
+    @SuppressWarnings("deprecation")
     Request toRequest() {
       // add header "Content-Length" according to the request body
-      final byte[] body = request.requestBody().asBytes();
+      final byte[] body = request.body();
       final int bodyLength = body != null ? body.length : 0;
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();

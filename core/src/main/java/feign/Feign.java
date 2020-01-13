@@ -22,6 +22,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -103,7 +104,7 @@ public abstract class Feign {
     private Logger logger = new NoOpLogger();
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
-    private QueryMapEncoder queryMapEncoder = new QueryMapEncoder.Default();
+    private QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =

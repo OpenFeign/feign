@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -302,7 +302,6 @@ public interface Contract {
             if (expander != Param.ToStringExpander.class) {
               data.indexToExpanderClass().put(paramIndex, expander);
             }
-            data.indexToEncoded().put(paramIndex, paramAnnotation.encoded());
             if (!data.template().hasRequestVariable(name)) {
               data.formParams().add(name);
             }

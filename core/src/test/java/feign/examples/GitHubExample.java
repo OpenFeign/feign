@@ -13,6 +13,7 @@
  */
 package feign.examples;
 
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 import com.google.gson.Gson;
@@ -68,7 +69,7 @@ public class GitHubExample {
       if (void.class == type || response.body() == null) {
         return null;
       }
-      Reader reader = response.body().asReader();
+      Reader reader = response.body().asReader(UTF_8);
       try {
         return gson.fromJson(reader, type);
       } catch (JsonIOException e) {

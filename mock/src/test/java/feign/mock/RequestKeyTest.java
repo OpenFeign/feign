@@ -56,6 +56,7 @@ public class RequestKeyTest {
     assertThat(requestKey.getCharset(), equalTo(StandardCharsets.UTF_16));
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void create() throws Exception {
     Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();

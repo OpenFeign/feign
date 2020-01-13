@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 
+@SuppressWarnings("deprecation")
 public class DefaultDecoderTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();

@@ -32,7 +32,7 @@ public class SpringContract extends DeclarativeContract {
           appendMappings(data, requestMapping.value());
 
           if (requestMapping.method().length == 1)
-            data.template().method(requestMapping.method()[0].name());
+            data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
 
           handleProducesAnnotation(data, requestMapping.produces());
           handleConsumesAnnotation(data, requestMapping.consumes());
@@ -45,7 +45,7 @@ public class SpringContract extends DeclarativeContract {
           appendMappings(data, mappings);
 
           if (requestMapping.method().length == 1)
-            data.template().method(requestMapping.method()[0].name());
+            data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
         });
 
     registerMethodAnnotation(

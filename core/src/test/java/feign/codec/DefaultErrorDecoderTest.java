@@ -30,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+@SuppressWarnings("deprecation")
 public class DefaultErrorDecoderTest {
 
   @Rule public final ExpectedException thrown = ExpectedException.none();

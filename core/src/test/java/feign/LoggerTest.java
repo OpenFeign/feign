@@ -14,9 +14,9 @@
 package feign;
 
 import feign.Logger.Level;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -71,7 +71,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(
           new Object[][] {
-            {Level.NONE, Arrays.asList()},
+            {Level.NONE, Collections.emptyList()},
             {
               Level.BASIC,
               Arrays.asList(
@@ -109,7 +109,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void levelEmits() throws IOException, InterruptedException {
+    public void levelEmits() {
       server.enqueue(new MockResponse().setBody("foo"));
 
       SendsStuff api =
@@ -146,7 +146,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void reasonPhraseOptional() throws IOException, InterruptedException {
+    public void reasonPhraseOptional() {
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api =
@@ -173,7 +173,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(
           new Object[][] {
-            {Level.NONE, Arrays.asList()},
+            {Level.NONE, Collections.emptyList()},
             {
               Level.BASIC,
               Arrays.asList(
@@ -210,7 +210,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void levelEmitsOnReadTimeout() throws IOException, InterruptedException {
+    public void levelEmitsOnReadTimeout() {
       server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
       thrown.expect(FeignException.class);
 
@@ -218,7 +218,9 @@ public class LoggerTest {
           Feign.builder()
               .logger(logger)
               .logLevel(logLevel)
-              .options(new Request.Options(10 * 1000, 50))
+              .options(
+                  new Request.Options(
+                      10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS, true))
               .retryer(
                   new Retryer() {
                     @Override
@@ -251,7 +253,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(
           new Object[][] {
-            {Level.NONE, Arrays.asList()},
+            {Level.NONE, Collections.emptyList()},
             {
               Level.BASIC,
               Arrays.asList(
@@ -288,7 +290,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void unknownHostEmits() throws IOException, InterruptedException {
+    public void unknownHostEmits() {
       SendsStuff api =
           Feign.builder()
               .logger(logger)
@@ -327,7 +329,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(
           new Object[][] {
-            {Level.NONE, Arrays.asList()},
+            {Level.NONE, Collections.emptyList()},
             {
               Level.BASIC,
               Arrays.asList(
@@ -364,7 +366,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void formatCharacterEmits() throws IOException, InterruptedException {
+    public void formatCharacterEmits() {
       SendsStuff api =
           Feign.builder()
               .logger(logger)
@@ -403,7 +405,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(
           new Object[][] {
-            {Level.NONE, Arrays.asList()},
+            {Level.NONE, Collections.emptyList()},
             {
               Level.BASIC,
               Arrays.asList(
@@ -419,7 +421,7 @@ public class LoggerTest {
     }
 
     @Test
-    public void retryEmits() throws IOException, InterruptedException {
+    public void retryEmits() {
       thrown.expect(FeignException.class);
 
       SendsStuff api =
@@ -452,12 +454,11 @@ public class LoggerTest {
 
   private static final class RecordingLogger extends Logger implements TestRule {
 
-    private final List<String> messages = new ArrayList<String>();
-    private final List<String> expectedMessages = new ArrayList<String>();
+    private final List<String> messages = new ArrayList<>();
+    private final List<String> expectedMessages = new ArrayList<>();
 
-    RecordingLogger expectMessages(List<String> expectedMessages) {
+    void expectMessages(List<String> expectedMessages) {
       this.expectedMessages.addAll(expectedMessages);
-      return this;
     }
 
     @Override

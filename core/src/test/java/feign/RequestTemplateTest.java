@@ -99,7 +99,7 @@ public class RequestTemplateTest {
         new RequestTemplate()
             .method(HttpMethod.GET)
             .uri("{zoneId}")
-            .body(Request.Body.encoded(new byte[] {7, 3, -3, -7}, null));
+            .body(new byte[] {7, 3, -3, -7}, null);
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template).hasUrl("/hostedzone/Z1PA6795UKMFR9");
@@ -274,11 +274,10 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
-            .body(
-                Request.Body.bodyTemplate(
-                    "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
-                        + "\"password\": \"{password}\"%7D",
-                    Util.UTF_8));
+            .bodyTemplate(
+                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
+                    + "\"password\": \"{password}\"%7D",
+                Util.UTF_8);
 
     template =
         template.resolve(
@@ -294,7 +293,7 @@ public class RequestTemplateTest {
         .hasHeaders(
             entry(
                 "Content-Length",
-                Collections.singletonList(String.valueOf(template.requestBody().length()))));
+                Collections.singletonList(String.valueOf(template.body().length))));
   }
 
   @Test
@@ -302,11 +301,10 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
-            .body(
-                Request.Body.bodyTemplate(
-                    "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\","
-                        + " \"password\": \"{password}\"%7D",
-                    Util.UTF_8));
+            .bodyTemplate(
+                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\","
+                    + " \"password\": \"{password}\"%7D",
+                Util.UTF_8);
 
     template =
         template.resolve(
