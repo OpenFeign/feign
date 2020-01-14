@@ -68,7 +68,8 @@
 
     <main.basedir>${project.basedir}</main.basedir>
 
-    <okhttp3.version>3.6.0</okhttp3.version>
+    <okhttp3.client.version>3.14.4</okhttp3.client.version>
+	<okhttp3.mockwebserver.version>3.6.0</okhttp3.mockwebserver.version>
     <googlehttpclient.version>1.31.0</googlehttpclient.version>
     <gson.version>2.5</gson.version>
     <slf4j.version>1.7.13</slf4j.version>
@@ -286,13 +287,13 @@
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp</artifactId>
-        <version>${okhttp3.version}</version>
+        <version>${okhttp3.client.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
-        <version>${okhttp3.version}</version>
+        <version>${okhttp3.mockwebserver.version}</version>
       </dependency>
 
       <dependency>
