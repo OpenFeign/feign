@@ -636,9 +636,9 @@ public final class RequestTemplate implements Serializable {
     /* create a new query template out of the information here */
     this.queries.compute(name, (key, queryTemplate) -> {
       if (queryTemplate == null) {
-        return QueryTemplate.create(name, values, this.charset, collectionFormat);
+        return QueryTemplate.create(name, values, this.charset, collectionFormat, this.decodeSlash);
       } else {
-        return QueryTemplate.append(queryTemplate, values, collectionFormat);
+        return QueryTemplate.append(queryTemplate, values, collectionFormat, this.decodeSlash);
       }
     });
     return this;

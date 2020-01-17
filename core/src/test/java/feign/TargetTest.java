@@ -41,7 +41,7 @@ public class TargetTest {
 
     Feign.builder().target(TestQuery.class, baseUrl).get("slash/foo", "slash/bar");
 
-    assertThat(server.takeRequest()).hasPath("/default/slash/foo?query=slash%2Fbar");
+    assertThat(server.takeRequest()).hasPath("/default/slash/foo?query=slash/bar");
   }
 
   /**

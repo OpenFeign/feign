@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -290,5 +290,13 @@ public class UriTemplateTest {
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expanded = uriTemplate.expand(Collections.emptyMap());
     assertThat(expanded).isEqualToIgnoringCase("https://api.example.com?wsdl");
+  }
+
+  @Test
+  public void encodeReserved() {
+    String template = "/get?url={url}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(expanded).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
   }
 }

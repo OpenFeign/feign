@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -93,7 +93,7 @@ public class QueryTemplateTest {
         QueryTemplate
             .create("name", Arrays.asList("James", "Jason"), Util.UTF_8, CollectionFormat.CSV);
     String expanded = template.expand(Collections.emptyMap());
-    assertThat(expanded).isEqualToIgnoringCase("name=James,Jason");
+    assertThat(expanded).isEqualToIgnoringCase("name=James%2CJason");
   }
 
   @Test
@@ -183,7 +183,7 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("collection[]",
         Arrays.asList("1", "2")));
     /* brackets will be pct-encoded */
-    assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1,2");
+    assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1%2C2");
   }
 
   @Test
@@ -194,6 +194,6 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("$collection",
         Arrays.asList("1", "2")));
     /* dollar will be pct-encoded */
-    assertThat(expanded).isEqualToIgnoringCase("%24collection=1,2");
+    assertThat(expanded).isEqualToIgnoringCase("%24collection=1%2C2");
   }
 }

@@ -476,6 +476,15 @@ public class RequestTemplateTest {
         .uri("/path;key1=value1;key2=value2", true);
 
     assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
+  }
 
+  @Test
+  public void encodedReserved() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    Request request = template.request();
+    assertThat(request).isNotNull();
   }
 }
