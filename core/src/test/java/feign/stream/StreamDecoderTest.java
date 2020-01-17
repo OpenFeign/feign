@@ -14,7 +14,6 @@
 package feign.stream;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Request;
 import feign.Request.HttpMethod;

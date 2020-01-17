@@ -15,7 +15,6 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;

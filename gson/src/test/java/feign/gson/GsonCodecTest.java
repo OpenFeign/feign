@@ -23,7 +23,6 @@ import feign.Util;
 import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;

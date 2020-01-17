@@ -21,7 +21,6 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import feign.Response;
-import feign.Util;
 import feign.codec.Decoder;
 import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;

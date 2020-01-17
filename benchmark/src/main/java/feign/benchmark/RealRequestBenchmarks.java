@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,17 +20,12 @@ import feign.Logger;
 import feign.Logger.Level;
 import feign.Response;
 import feign.Retryer;
-import io.reactivex.netty.protocol.http.HttpHandlerNames;
 import io.reactivex.netty.protocol.http.server.HttpServer;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
-import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.http.server.RequestHandler;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import io.netty.buffer.ByteBuf;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.internal.http.HttpHeaders;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -42,7 +37,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-import rx.Observable;
 
 @Measurement(iterations = 5, time = 1)
 @Warmup(iterations = 10, time = 1)

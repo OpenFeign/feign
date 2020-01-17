@@ -19,8 +19,6 @@ import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;

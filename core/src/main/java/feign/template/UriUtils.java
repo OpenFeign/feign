@@ -164,7 +164,7 @@ public class UriUtils {
           pctEncode(b, bos);
         }
       }
-      return new String(bos.toByteArray());
+      return new String(bos.toByteArray(), charset);
     } catch (IOException ioe) {
       throw new IllegalStateException("Error occurred during encoding of the uri: "
           + ioe.getMessage(), ioe);

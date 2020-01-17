@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.*;
 import feign.*;
-import feign.Request.Body;
 
 /**
  * This module directs Feign's http requests to Apache's

@@ -19,7 +19,6 @@ import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.isBlank;
 import static feign.Util.isNotBlank;
 import static java.lang.String.format;
 import java.io.IOException;
