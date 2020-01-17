@@ -21,6 +21,8 @@ import java.nio.charset.Charset;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -327,6 +329,13 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     this.uriTemplate =
         UriTemplate.create(this.uriTemplate.toString(), !this.decodeSlash, this.charset);
+    if (!this.queries.isEmpty()) {
+      this.queries.replaceAll((key, queryTemplate) -> QueryTemplate.create(
+          /* replace the current template with new ones honoring the decode value */
+          queryTemplate.getName(), queryTemplate.getValues(), charset, collectionFormat,
+          decodeSlash));
+
+    }
     return this;
   }
 
