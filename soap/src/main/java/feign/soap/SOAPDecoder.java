@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.soap.MessageFactory;
+import javax.xml.soap.SOAPBody;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
@@ -79,15 +81,18 @@ public class SOAPDecoder implements Decoder {
 
   private final JAXBContextFactory jaxbContextFactory;
   private final String soapProtocol;
+  private final boolean useFirstChild;
 
   public SOAPDecoder(JAXBContextFactory jaxbContextFactory) {
     this.jaxbContextFactory = jaxbContextFactory;
     this.soapProtocol = SOAPConstants.DEFAULT_SOAP_PROTOCOL;
+    this.useFirstChild = false;
   }
 
   private SOAPDecoder(Builder builder) {
     this.soapProtocol = builder.soapProtocol;
     this.jaxbContextFactory = builder.jaxbContextFactory;
+    this.useFirstChild = builder.useFirstChild;
   }
 
   @Override
@@ -112,9 +117,13 @@ public class SOAPDecoder implements Decoder {
           throw new SOAPFaultException(message.getSOAPBody().getFault());
         }
 
-        return jaxbContextFactory
-            .createUnmarshaller((Class<?>) type)
-            .unmarshal(message.getSOAPBody().extractContentAsDocument());
+        Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class<?>) type);
+
+        if (this.useFirstChild) {
+          return unmarshaller.unmarshal(message.getSOAPBody().getFirstChild());
+        } else {
+          return unmarshaller.unmarshal(message.getSOAPBody().extractContentAsDocument());
+        }
       }
     } catch (SOAPException | JAXBException e) {
       throw new DecodeException(response.status(), e.toString(), response.request(), e);
@@ -129,6 +138,7 @@ public class SOAPDecoder implements Decoder {
   public static class Builder {
     String soapProtocol = SOAPConstants.DEFAULT_SOAP_PROTOCOL;
     JAXBContextFactory jaxbContextFactory;
+    boolean useFirstChild = false;
 
     public Builder withJAXBContextFactory(JAXBContextFactory jaxbContextFactory) {
       this.jaxbContextFactory = jaxbContextFactory;
@@ -146,6 +156,17 @@ public class SOAPDecoder implements Decoder {
      */
     public Builder withSOAPProtocol(String soapProtocol) {
       this.soapProtocol = soapProtocol;
+      return this;
+    }
+
+    /**
+     * Alters the behavior of the code to use the {@link SOAPBody#getFirstChild()} in place of
+     * {@link SOAPBody#extractContentAsDocument()}.
+     *
+     * @return the builder instance.
+     */
+    public Builder useFirstChild() {
+      this.useFirstChild = true;
       return this;
     }
 
