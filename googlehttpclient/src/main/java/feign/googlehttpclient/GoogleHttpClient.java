@@ -29,7 +29,6 @@ import java.util.HashMap;
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import feign.Util;
 
 
 /**

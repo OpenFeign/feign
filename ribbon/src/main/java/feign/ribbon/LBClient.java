@@ -24,7 +24,6 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import feign.Request.HttpMethod;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;

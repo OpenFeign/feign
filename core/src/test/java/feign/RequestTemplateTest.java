@@ -19,8 +19,6 @@ import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -476,6 +474,24 @@ public class RequestTemplateTest {
         .uri("/path;key1=value1;key2=value2", true);
 
     assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
+  }
 
+  @Test
+  public void encodedReservedPreserveSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A//www.google.com");
+  }
+
+  @Test
+  public void encodedReservedEncodeSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.decodeSlash(false);
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
   }
 }

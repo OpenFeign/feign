@@ -327,6 +327,13 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     this.uriTemplate =
         UriTemplate.create(this.uriTemplate.toString(), !this.decodeSlash, this.charset);
+    if (!this.queries.isEmpty()) {
+      this.queries.replaceAll((key, queryTemplate) -> QueryTemplate.create(
+          /* replace the current template with new ones honoring the decode value */
+          queryTemplate.getName(), queryTemplate.getValues(), charset, collectionFormat,
+          decodeSlash));
+
+    }
     return this;
   }
 
@@ -636,9 +643,9 @@ public final class RequestTemplate implements Serializable {
     /* create a new query template out of the information here */
     this.queries.compute(name, (key, queryTemplate) -> {
       if (queryTemplate == null) {
-        return QueryTemplate.create(name, values, this.charset, collectionFormat);
+        return QueryTemplate.create(name, values, this.charset, collectionFormat, this.decodeSlash);
       } else {
-        return QueryTemplate.append(queryTemplate, values, collectionFormat);
+        return QueryTemplate.append(queryTemplate, values, collectionFormat, this.decodeSlash);
       }
     });
     return this;

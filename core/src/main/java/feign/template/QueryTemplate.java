@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,10 @@
  */
 package feign.template;
 
+import feign.CollectionFormat;
+import feign.Util;
+import feign.template.Template.EncodingOptions;
+import feign.template.Template.ExpansionOptions;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,10 +28,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import feign.CollectionFormat;
-import feign.Util;
-import feign.template.Template.EncodingOptions;
-import feign.template.Template.ExpansionOptions;
 
 /**
  * Template for a Query String parameter.
@@ -49,7 +49,14 @@ public final class QueryTemplate {
    * @return a QueryTemplate.
    */
   public static QueryTemplate create(String name, Iterable<String> values, Charset charset) {
-    return create(name, values, charset, CollectionFormat.EXPLODED);
+    return create(name, values, charset, CollectionFormat.EXPLODED, true);
+  }
+
+  public static QueryTemplate create(String name,
+                                     Iterable<String> values,
+                                     Charset charset,
+                                     CollectionFormat collectionFormat) {
+    return create(name, values, charset, collectionFormat, true);
   }
 
   /**
@@ -59,12 +66,14 @@ public final class QueryTemplate {
    * @param values in the template.
    * @param charset for the template.
    * @param collectionFormat to use.
+   * @param decodeSlash if slash characters should be decoded
    * @return a QueryTemplate
    */
   public static QueryTemplate create(String name,
                                      Iterable<String> values,
                                      Charset charset,
-                                     CollectionFormat collectionFormat) {
+                                     CollectionFormat collectionFormat,
+                                     boolean decodeSlash) {
     if (Util.isBlank(name)) {
       throw new IllegalArgumentException("name is required.");
     }
@@ -78,7 +87,7 @@ public final class QueryTemplate {
         .filter(Util::isNotBlank)
         .collect(Collectors.toList());
 
-    return new QueryTemplate(name, remaining, charset, collectionFormat);
+    return new QueryTemplate(name, remaining, charset, collectionFormat, decodeSlash);
   }
 
   /**
@@ -90,13 +99,14 @@ public final class QueryTemplate {
    */
   public static QueryTemplate append(QueryTemplate queryTemplate,
                                      Iterable<String> values,
-                                     CollectionFormat collectionFormat) {
+                                     CollectionFormat collectionFormat,
+                                     boolean decodeSlash) {
     List<String> queryValues = new ArrayList<>(queryTemplate.getValues());
     queryValues.addAll(StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toList()));
     return create(queryTemplate.getName(), queryValues, StandardCharsets.UTF_8,
-        collectionFormat);
+        collectionFormat, decodeSlash);
   }
 
   /**
@@ -110,10 +120,11 @@ public final class QueryTemplate {
       String name,
       Iterable<String> values,
       Charset charset,
-      CollectionFormat collectionFormat) {
+      CollectionFormat collectionFormat,
+      boolean decodeSlash) {
     this.values = new CopyOnWriteArrayList<>();
     this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
-        false, charset);
+        !decodeSlash, charset);
     this.collectionFormat = collectionFormat;
 
     /* parse each value into a template chunk for resolution later */
@@ -128,7 +139,7 @@ public final class QueryTemplate {
               value,
               ExpansionOptions.REQUIRED,
               EncodingOptions.REQUIRED,
-              false,
+              !decodeSlash,
               charset));
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign.template;
 
 import feign.Util;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -153,16 +154,21 @@ public class UriUtils {
     }
 
     byte[] data = value.getBytes(charset);
-    ByteArrayOutputStream encoded = new ByteArrayOutputStream();
-    for (byte b : data) {
-      if (isUnreserved(b) || (isReserved(b) && allowReserved)) {
-        encoded.write(b);
-      } else {
-        /* percent encode the byte */
-        pctEncode(b, encoded);
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      for (byte b : data) {
+        if (isUnreserved((char) b)) {
+          bos.write(b);
+        } else if (isReserved((char) b) && allowReserved) {
+          bos.write(b);
+        } else {
+          pctEncode(b, bos);
+        }
       }
+      return new String(bos.toByteArray(), charset);
+    } catch (IOException ioe) {
+      throw new IllegalStateException("Error occurred during encoding of the uri: "
+          + ioe.getMessage(), ioe);
     }
-    return new String(encoded.toByteArray());
   }
 
   /**
