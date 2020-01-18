@@ -18,6 +18,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class SOAPCodecTest {
   public final ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void encodesSoap() throws Exception {
+  public void encodesSoap() {
     Encoder encoder = new SOAPEncoder.Builder()
         .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
         .build();
@@ -89,14 +90,14 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBMarshallerEncoding() throws Exception {
+  public void encodesSoapWithCustomJAXBMarshallerEncoding() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
     Encoder encoder = new SOAPEncoder.Builder()
         // .withWriteXmlDeclaration(true)
         .withJAXBContextFactory(jaxbContextFactory)
-        .withCharsetEncoding(Charset.forName("UTF-16"))
+        .withCharsetEncoding(StandardCharsets.UTF_16)
         .build();
 
     GetPrice mock = new GetPrice();
@@ -115,13 +116,13 @@ public class SOAPCodecTest {
         "</GetPrice>" +
         "</SOAP-ENV:Body>" +
         "</SOAP-ENV:Envelope>";
-    byte[] utf16Bytes = soapEnvelop.getBytes("UTF-16LE");
+    byte[] utf16Bytes = soapEnvelop.getBytes(StandardCharsets.UTF_16LE);
     assertThat(template).hasBody(utf16Bytes);
   }
 
 
   @Test
-  public void encodesSoapWithCustomJAXBSchemaLocation() throws Exception {
+  public void encodesSoapWithCustomJAXBSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -149,7 +150,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBNoSchemaLocation() throws Exception {
+  public void encodesSoapWithCustomJAXBNoSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
@@ -176,7 +177,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void encodesSoapWithCustomJAXBFormattedOuput() throws Exception {
+  public void encodesSoapWithCustomJAXBFormattedOuput() {
     Encoder encoder = new SOAPEncoder.Builder().withFormattedOutput(true)
         .withJAXBContextFactory(new JAXBContextFactory.Builder()
             .build())
@@ -233,6 +234,40 @@ public class SOAPCodecTest {
   }
 
   @Test
+  public void decodesSoapWithSchemaOnEnvelope() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    String mockSoapEnvelop = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+        + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" "
+        + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
+        + "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">"
+        + "<SOAP-ENV:Header/>"
+        + "<SOAP-ENV:Body>"
+        + "<GetPrice>"
+        + "<Item xsi:type=\"xsd:string\">Apples</Item>"
+        + "</GetPrice>"
+        + "</SOAP-ENV:Body>"
+        + "</SOAP-ENV:Envelope>";
+
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body(mockSoapEnvelop, UTF_8)
+        .build();
+
+    SOAPDecoder decoder = new SOAPDecoder.Builder()
+        .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+        .useFirstChild()
+        .build();
+
+    assertEquals(mock, decoder.decode(response, GetPrice.class));
+  }
+
+  @Test
   public void decodesSoap1_2Protocol() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
@@ -281,7 +316,7 @@ public class SOAPCodecTest {
         .status(200)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
+        .headers(Collections.emptyMap())
         .body("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
             + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
             + "<Header/>"
@@ -326,7 +361,7 @@ public class SOAPCodecTest {
         .status(200)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
+        .headers(Collections.emptyMap())
         .body(template.body())
         .build();
 
@@ -343,7 +378,7 @@ public class SOAPCodecTest {
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
+        .headers(Collections.emptyMap())
         .build();
     assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
         .decode(response, byte[].class)).isNull();
