@@ -487,4 +487,23 @@ public class RequestTemplateTest {
 
     assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
   }
+
+  @Test
+  public void encodedReservedPreserveSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A//www.google.com");
+  }
+
+  @Test
+  public void encodedReservedEncodeSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.decodeSlash(false);
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
+  }
 }

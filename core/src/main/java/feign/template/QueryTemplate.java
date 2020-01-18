@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -47,7 +47,12 @@ public final class QueryTemplate {
    * @return a QueryTemplate.
    */
   public static QueryTemplate create(String name, Iterable<String> values, Charset charset) {
-    return create(name, values, charset, CollectionFormat.EXPLODED);
+    return create(name, values, charset, CollectionFormat.EXPLODED, true);
+  }
+
+  public static QueryTemplate create(
+      String name, Iterable<String> values, Charset charset, CollectionFormat collectionFormat) {
+    return create(name, values, charset, collectionFormat, true);
   }
 
   /**
@@ -57,10 +62,15 @@ public final class QueryTemplate {
    * @param values in the template.
    * @param charset for the template.
    * @param collectionFormat to use.
+   * @param decodeSlash if slash characters should be decoded
    * @return a QueryTemplate
    */
   public static QueryTemplate create(
-      String name, Iterable<String> values, Charset charset, CollectionFormat collectionFormat) {
+      String name,
+      Iterable<String> values,
+      Charset charset,
+      CollectionFormat collectionFormat,
+      boolean decodeSlash) {
     if (Util.isBlank(name)) {
       throw new IllegalArgumentException("name is required.");
     }
@@ -75,7 +85,7 @@ public final class QueryTemplate {
             .filter(Util::isNotBlank)
             .collect(Collectors.toList());
 
-    return new QueryTemplate(name, remaining, charset, collectionFormat);
+    return new QueryTemplate(name, remaining, charset, collectionFormat, decodeSlash);
   }
 
   /**
@@ -86,13 +96,21 @@ public final class QueryTemplate {
    * @return a new QueryTemplate with value appended.
    */
   public static QueryTemplate append(
-      QueryTemplate queryTemplate, Iterable<String> values, CollectionFormat collectionFormat) {
+      QueryTemplate queryTemplate,
+      Iterable<String> values,
+      CollectionFormat collectionFormat,
+      boolean decodeSlash) {
     List<String> queryValues = new ArrayList<>(queryTemplate.getValues());
     queryValues.addAll(
         StreamSupport.stream(values.spliterator(), false)
             .filter(Util::isNotBlank)
             .collect(Collectors.toList()));
-    return create(queryTemplate.getName(), queryValues, StandardCharsets.UTF_8, collectionFormat);
+    return create(
+        queryTemplate.getName(),
+        queryValues,
+        StandardCharsets.UTF_8,
+        collectionFormat,
+        decodeSlash);
   }
 
   /**
@@ -103,11 +121,19 @@ public final class QueryTemplate {
    * @param collectionFormat to use.
    */
   private QueryTemplate(
-      String name, Iterable<String> values, Charset charset, CollectionFormat collectionFormat) {
+      String name,
+      Iterable<String> values,
+      Charset charset,
+      CollectionFormat collectionFormat,
+      boolean decodeSlash) {
     this.values = new CopyOnWriteArrayList<>();
     this.name =
         new Template(
-            name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED, false, charset);
+            name,
+            ExpansionOptions.ALLOW_UNRESOLVED,
+            EncodingOptions.REQUIRED,
+            !decodeSlash,
+            charset);
     this.collectionFormat = collectionFormat;
 
     /* parse each value into a template chunk for resolution later */
@@ -118,7 +144,8 @@ public final class QueryTemplate {
       }
 
       this.values.add(
-          new Template(value, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, false, charset));
+          new Template(
+              value, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, !decodeSlash, charset));
     }
 
     if (this.values.isEmpty()) {
