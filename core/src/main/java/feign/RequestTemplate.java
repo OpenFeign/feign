@@ -808,8 +808,10 @@ public final class RequestTemplate implements Serializable {
    *
    * @param body to send.
    * @return a RequestTemplate for chaining.
+   * @deprecated use {@link #body(byte[], Charset)} instead.
    */
-  private RequestTemplate body(Request.Body body) {
+  @Deprecated
+  public RequestTemplate body(Request.Body body) {
     this.body = body;
 
     /* body template must be cleared to prevent double processing */
@@ -843,6 +845,17 @@ public final class RequestTemplate implements Serializable {
    */
   public byte[] body() {
     return body.asBytes();
+  }
+
+  /**
+   * The Request.Body internal object.
+   *
+   * @return the internal Request.Body.
+   * @deprecated this abstraction is leaky and will be removed in later releases.
+   */
+  @Deprecated
+  public Request.Body requestBody() {
+    return this.body;
   }
 
 
