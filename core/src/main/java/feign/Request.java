@@ -380,7 +380,12 @@ public final class Request {
     return this.requestTemplate;
   }
 
-  /** Request Body. */
+  /**
+   * Request Body
+   *
+   * <p>Considered experimental, will most likely be made internal going forward.
+   */
+  @Experimental
   public static class Body {
 
     private Charset encoding;
@@ -434,6 +439,20 @@ public final class Request {
 
     public static Body create(byte[] data, Charset charset) {
       return new Body(data, charset);
+    }
+
+    /**
+     * Creates a new Request Body with charset encoded data.
+     *
+     * @param data to be encoded.
+     * @param charset to encode the data with. if {@literal null}, then data will be considered
+     *     binary and will not be encoded.
+     * @return a new Request.Body instance with the encoded data.
+     * @deprecated please use {@link Request.Body#create(byte[], Charset)}
+     */
+    @Deprecated
+    public static Body encoded(byte[] data, Charset charset) {
+      return create(data, charset);
     }
 
     public static Body empty() {

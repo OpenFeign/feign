@@ -296,11 +296,10 @@ public abstract class AbstractClientTest {
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     // should use utf-8 encoding by default
-    api.postWithContentType("àáâãäåèéêë", "text/plain");
+    api.postWithContentType("àáâãäåèéêë", "text/plain; charset=UTF-8");
 
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasMethod("POST")
-        .hasBody("àáâãäåèéêë");
+    String body = server.takeRequest().getBody().readUtf8();
+    assertThat(body).isEqualToIgnoringCase("àáâãäåèéêë");
   }
 
   @Test
