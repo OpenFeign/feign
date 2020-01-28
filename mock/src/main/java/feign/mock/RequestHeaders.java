@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,14 +17,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class RequestHeaders {
 
   public static class Builder {
 
-    private Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    private Map<String, Collection<String>> headers =
+        new LinkedHashMap<String, Collection<String>>();
 
     private Builder() {}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -83,6 +83,6 @@ public class RequestHeadersTest {
         .add("other header", "val2")
         .add("header", Arrays.asList("val3", "val4"))
         .build();
-    assertThat(headers.toString()).isEqualTo("other header=[val2], header=[val, val3, val4]");
+    assertThat(headers.toString()).isEqualTo("header=[val, val3, val4], other header=[val2]");
   }
 }
