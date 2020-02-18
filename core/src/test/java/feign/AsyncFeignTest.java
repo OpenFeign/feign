@@ -1060,7 +1060,7 @@ public class AsyncFeignTest {
 	
 	static interface WildApi {
 		@RequestLine("GET /")
-		CompletableFuture<? extends Object> x();
+		CompletableFuture<?> x();
 	}
 
 
