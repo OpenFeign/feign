@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2020 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign;
 
 import java.lang.reflect.Type;
@@ -7,42 +20,42 @@ import java.util.concurrent.CompletableFuture;
  * A specific invocation of an APU
  */
 class AsyncInvocation<C> {
-	
-	private final C context;
-	private final String configKey;
-	private final Type underlyingType;
-	private final long startNanos;
-	private CompletableFuture<Response> responseFuture;
-	
-	AsyncInvocation(C context, String configKey, Type underlyingType) {
-		super();
-		this.context = context;
-		this.configKey = configKey;
-		this.underlyingType = underlyingType;
-		this.startNanos = System.nanoTime();
-	}
 
-	C context() {
-		return context;
-	}
+  private final C context;
+  private final String configKey;
+  private final Type underlyingType;
+  private final long startNanos;
+  private CompletableFuture<Response> responseFuture;
 
-	String configKey() {
-		return configKey;
-	}
+  AsyncInvocation(C context, String configKey, Type underlyingType) {
+    super();
+    this.context = context;
+    this.configKey = configKey;
+    this.underlyingType = underlyingType;
+    this.startNanos = System.nanoTime();
+  }
 
-	long startNanos() {
-		return startNanos;
-	}
-	
-	Type underlyingType() {
-		return underlyingType;
-	}
-	
-	void setResponseFuture(CompletableFuture<Response> responseFuture) {
-		this.responseFuture = responseFuture;		
-	}
-	
-	CompletableFuture<Response> responseFuture() {
-		return responseFuture;
-	}
+  C context() {
+    return context;
+  }
+
+  String configKey() {
+    return configKey;
+  }
+
+  long startNanos() {
+    return startNanos;
+  }
+
+  Type underlyingType() {
+    return underlyingType;
+  }
+
+  void setResponseFuture(CompletableFuture<Response> responseFuture) {
+    this.responseFuture = responseFuture;
+  }
+
+  CompletableFuture<Response> responseFuture() {
+    return responseFuture;
+  }
 }
