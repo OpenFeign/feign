@@ -27,7 +27,7 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
 
-final class SynchronousMethodHandler extends AsyncResponseHandler implements MethodHandler {
+final class SynchronousMethodHandler implements MethodHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
@@ -41,6 +41,8 @@ final class SynchronousMethodHandler extends AsyncResponseHandler implements Met
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
+  private final AsyncResponseHandler asyncResponseHandler;
+
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
       List<RequestInterceptor> requestInterceptors, Logger logger,
@@ -48,8 +50,6 @@ final class SynchronousMethodHandler extends AsyncResponseHandler implements Met
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
       boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
-
-    super(logLevel, logger, decoder, errorDecoder, decode404, closeAfterDecode);
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -62,6 +62,7 @@ final class SynchronousMethodHandler extends AsyncResponseHandler implements Met
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
+    this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder, decode404, closeAfterDecode);
   }
 
   @Override
@@ -116,8 +117,7 @@ final class SynchronousMethodHandler extends AsyncResponseHandler implements Met
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    super.handleResponse(resultFuture, metadata.configKey(), response, metadata.returnType(),
-        elapsedTime);
+    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response, metadata.returnType(), elapsedTime);
 
     try {
       if (!resultFuture.isDone())
