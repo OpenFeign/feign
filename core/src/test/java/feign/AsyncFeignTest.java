@@ -997,12 +997,6 @@ public class AsyncFeignTest {
 		thrown.expect(IllegalArgumentException.class);
 		AsyncFeign.asyncBuilder().target(NonInterface.class, "http://localhost");
 	}
-
-	@Test
-	public void testNonCFReturnType() {
-		thrown.expect(IllegalArgumentException.class);
-		AsyncFeign.asyncBuilder().target(NonCFApi.class, "http://localhost");
-	}
 	
 	@Test
 	public void testExtendedCFReturnType() {

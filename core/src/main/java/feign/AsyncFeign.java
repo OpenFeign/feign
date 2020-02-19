@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -260,6 +261,7 @@ public abstract class AsyncFeign<C> extends Feign {
 
     asyncBuilder.builder.client(this::stageExecution);
     asyncBuilder.builder.decoder(this::stageDecode);
+    asyncBuilder.builder.forceDecoding(); // force all handling through stageDecode
 
     this.feign = asyncBuilder.builder.build();
   }
@@ -300,7 +302,7 @@ public abstract class AsyncFeign<C> extends Feign {
         }
         result.completeExceptionally(t);
       } else {
-        responseHandler.handleResponse(result, invocationContext, r,
+        responseHandler.handleResponse(result, invocationContext.configKey(), r,
             invocationContext.underlyingType(), elapsedTime);
       }
     });
@@ -310,7 +312,17 @@ public abstract class AsyncFeign<C> extends Feign {
         invocationContext.responseFuture().cancel(true);
     });
 
-    return result;
+    if (invocationContext.isAsyncReturnType())
+      return result;
+    try {
+      return result.join();
+    }catch(CompletionException e) {
+      Response r = invocationContext.responseFuture().join();
+      Throwable cause = e.getCause();
+      if (cause == null)
+        cause = e;
+      throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
+    }
   }
 
 

@@ -50,14 +50,6 @@ class AsyncResponseHandler {
     this.closeAfterDecode = closeAfterDecode;
   }
 
-  void handleResponse(CompletableFuture<Object> resultFuture,
-                      AsyncInvocation<?> invocationContext,
-                      Response response,
-                      Type returnType,
-                      long elapsedTime) {
-    handleResponse(resultFuture, invocationContext.configKey(), response, returnType, elapsedTime);
-  }
-
   boolean isVoidType(Type returnType) {
     return Void.class == returnType || void.class == returnType;
   }

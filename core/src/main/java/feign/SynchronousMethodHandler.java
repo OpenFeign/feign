@@ -41,6 +41,9 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
+
+  // only one of decoder and asyncResponseHandler will be non-null
+  private final Decoder decoder;
   private final AsyncResponseHandler asyncResponseHandler;
 
 
@@ -49,7 +52,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
+      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -62,7 +65,16 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder, decode404, closeAfterDecode);
+
+    if (forceDecoding) {
+      // internal only: usual handling will be short-circuited, and all responses will be passed to decoder directly!
+      this.decoder = decoder;
+      this.asyncResponseHandler = null;
+    } else {
+      this.decoder = null;
+      this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
+                decode404, closeAfterDecode);
+    }
   }
 
   @Override
@@ -116,8 +128,13 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
+
+    if (decoder != null)
+      return decoder.decode(response, metadata.returnType());
+
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response, metadata.returnType(), elapsedTime);
+    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response, metadata.returnType(),
+            elapsedTime);
 
     try {
       if (!resultFuture.isDone())
@@ -164,10 +181,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean decode404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final boolean forceDecoding;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
         Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy) {
+        ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -176,6 +194,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.decode404 = decode404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
+      this.forceDecoding = forceDecoding;
     }
 
     public MethodHandler create(Target<?> target,
@@ -186,7 +205,7 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
           logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, decode404, closeAfterDecode, propagationPolicy);
+          errorDecoder, decode404, closeAfterDecode, propagationPolicy, forceDecoding);
     }
   }
 }

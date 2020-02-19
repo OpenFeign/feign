@@ -1,4 +1,16 @@
-
+/**
+ * Copyright 2012-2020 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package feign;
 
 import java.lang.reflect.InvocationHandler;
@@ -15,112 +27,111 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
-	private static class MethodInfo {
-		private final String configKey;
-		private final Type underlyingType;
+  private class AsyncFeignInvocationHandler<T> implements InvocationHandler {
 
-		MethodInfo(Class<?> targetType, Method method) {
-			this.configKey = Feign.configKey(targetType, method);
+    private final Map<Method, MethodInfo> methodInfoLookup = new ConcurrentHashMap<>();
 
-			Type type = method.getGenericReturnType();
-		
-			this.underlyingType = ((ParameterizedType) type).getActualTypeArguments()[0];
-		}
-	}
+    private final Class<T> type;
+    private final T instance;
+    private final C context;
 
-	private class AsyncFeignInvocationHandler<T> implements InvocationHandler {
+    AsyncFeignInvocationHandler(Class<T> type, T instance, C context) {
+      this.type = type;
+      this.instance = instance;
+      this.context = context;
+    }
 
-		private final Map<Method, MethodInfo> methodInfoLookup = new ConcurrentHashMap<>();
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
+        try {
+          Object otherHandler =
+              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0])
+                  : null;
+          return equals(otherHandler);
+        } catch (IllegalArgumentException e) {
+          return false;
+        }
+      } else if ("hashCode".equals(method.getName()) && method.getParameterCount() == 0) {
+        return hashCode();
+      } else if ("toString".equals(method.getName()) && method.getParameterCount() == 0) {
+        return toString();
+      }
 
-		private final Class<T> type;
-		private final T instance;
-		private final C context;
+      MethodInfo methodInfo =
+          methodInfoLookup.computeIfAbsent(method, m -> new MethodInfo(type, m));
 
-		AsyncFeignInvocationHandler(Class<T> type, T instance, C context) {
-			this.type = type;
-			this.instance = instance;
-			this.context = context;
-		}
+      setInvocationContext(new AsyncInvocation<C>(context, methodInfo));
+      try {
+        return method.invoke(instance, args);
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof AsyncJoinException)
+          cause = cause.getCause();
+        throw cause;
+      } finally {
+        clearInvocationContext();
+      }
+    }
 
-		@Override
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
-				try {
-					Object otherHandler = args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0])
-							: null;
-					return equals(otherHandler);
-				} catch (IllegalArgumentException e) {
-					return false;
-				}
-			} else if ("hashCode".equals(method.getName()) && method.getParameterCount() == 0) {
-				return hashCode();
-			} else if ("toString".equals(method.getName()) && method.getParameterCount() == 0) {
-				return toString();
-			}
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof AsyncFeignInvocationHandler) {
+        AsyncFeignInvocationHandler<?> other = (AsyncFeignInvocationHandler<?>) obj;
+        return instance.equals(other.instance);
+      }
+      return false;
+    }
 
-			MethodInfo methodInfo = methodInfoLookup.computeIfAbsent(method, m -> new MethodInfo(type, m));
+    @Override
+    public int hashCode() {
+      return instance.hashCode();
+    }
 
-			setInvocationContext(new AsyncInvocation<C>(context, methodInfo.configKey, methodInfo.underlyingType));
-			try {
-				return method.invoke(instance, args);
-			} catch(InvocationTargetException e) {
-				// unwrap
-				throw e.getCause();
-			} finally {
-				clearInvocationContext();
-			}
-		}
+    @Override
+    public String toString() {
+      return instance.toString();
+    }
+  }
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof AsyncFeignInvocationHandler) {
-				AsyncFeignInvocationHandler<?> other = (AsyncFeignInvocationHandler<?>) obj;
-				return instance.equals(other.instance);
-			}
-			return false;
-		}
+  public ReflectiveAsyncFeign(AsyncBuilder<C> asyncBuilder) {
+    super(asyncBuilder);
+  }
 
-		@Override
-		public int hashCode() {
-			return instance.hashCode();
-		}
+  private String getFullMethodName(Class<?> type, Type retType, Method m) {
+    return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
+  }
 
-		@Override
-		public String toString() {
-			return instance.toString();
-		}
-	}
+  @Override
+  protected <T> T wrap(Class<T> type, T instance, C context) {
+    if (!type.isInterface())
+      throw new IllegalArgumentException("Type must be an interface: " + type);
 
-	public ReflectiveAsyncFeign(AsyncBuilder<C> asyncBuilder) {
-		super(asyncBuilder);
-	}
-	
-	private String getFullMethodName(Class<?> type, Type retType, Method m) {
-		return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
-	}
+    for (Method m : type.getMethods()) {
+      Class<?> retType = m.getReturnType();
 
-	@Override
-	protected <T> T wrap(Class<T> type, T instance, C context) {
-		if (!type.isInterface())
-			throw new IllegalArgumentException("Type must be an interface: " + type);
+      if (!CompletableFuture.class.isAssignableFrom(retType))
+        continue; // synchronous case
 
-		for (Method m : type.getMethods()) {
-			Type retType = m.getGenericReturnType();
-			if (m.getReturnType() != CompletableFuture.class)
-				throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
-						+ getFullMethodName(type, retType, m));
-			
-			if (!ParameterizedType.class.isInstance(retType))
-				throw new IllegalArgumentException("Method return type is not parameterized: "
-						+ getFullMethodName(type, retType, m));
-			
-			if (WildcardType.class.isInstance(ParameterizedType.class.cast(retType).getActualTypeArguments()[0]))
-				throw new IllegalArgumentException("Wildcards are not supported for return-type parameters: "
-						+ getFullMethodName(type, retType, m));
-		}
+      if (retType != CompletableFuture.class)
+        throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
+                + getFullMethodName(type, retType, m));
 
-		return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
-							new AsyncFeignInvocationHandler<>(type, instance, context)));
-	}
+      Type genRetType = m.getGenericReturnType();
+
+      if (!ParameterizedType.class.isInstance(genRetType))
+        throw new IllegalArgumentException("Method return type is not parameterized: "
+            + getFullMethodName(type, genRetType, m));
+
+      if (WildcardType.class
+          .isInstance(ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0]))
+        throw new IllegalArgumentException(
+            "Wildcards are not supported for return-type parameters: "
+                + getFullMethodName(type, genRetType, m));
+    }
+
+    return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type},
+        new AsyncFeignInvocationHandler<>(type, instance, context)));
+  }
 }

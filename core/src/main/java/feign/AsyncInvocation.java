@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,16 +23,14 @@ import java.util.concurrent.CompletableFuture;
 class AsyncInvocation<C> {
 
   private final C context;
-  private final String configKey;
-  private final Type underlyingType;
+  private final MethodInfo methodInfo;
   private final long startNanos;
   private CompletableFuture<Response> responseFuture;
 
-  AsyncInvocation(C context, String configKey, Type underlyingType) {
+  AsyncInvocation(C context, MethodInfo methodInfo) {
     super();
     this.context = context;
-    this.configKey = configKey;
-    this.underlyingType = underlyingType;
+    this.methodInfo = methodInfo;
     this.startNanos = System.nanoTime();
   }
 
@@ -40,7 +39,7 @@ class AsyncInvocation<C> {
   }
 
   String configKey() {
-    return configKey;
+    return methodInfo.configKey();
   }
 
   long startNanos() {
@@ -48,7 +47,11 @@ class AsyncInvocation<C> {
   }
 
   Type underlyingType() {
-    return underlyingType;
+    return methodInfo.underlyingReturnType();
+  }
+
+  boolean isAsyncReturnType() {
+    return methodInfo.isAsyncReturnType();
   }
 
   void setResponseFuture(CompletableFuture<Response> responseFuture) {
