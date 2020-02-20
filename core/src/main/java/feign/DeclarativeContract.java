@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,8 +15,10 @@ package feign;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import feign.Contract.BaseContract;
 
 /**
@@ -25,8 +27,8 @@ import feign.Contract.BaseContract;
  */
 public abstract class DeclarativeContract extends BaseContract {
 
-  private List<GuardedAnnotationProcessor> classAnnotationProcessors = new ArrayList<>();
-  private List<GuardedAnnotationProcessor> methodAnnotationProcessors = new ArrayList<>();
+  private final List<GuardedAnnotationProcessor> classAnnotationProcessors = new ArrayList<>();
+  private final List<GuardedAnnotationProcessor> methodAnnotationProcessors = new ArrayList<>();
   Map<Class<Annotation>, DeclarativeContract.ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
       new HashMap<>();
 
@@ -45,10 +47,30 @@ public abstract class DeclarativeContract extends BaseContract {
    */
   @Override
   protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
-    Arrays.stream(targetType.getAnnotations())
-        .forEach(annotation -> classAnnotationProcessors.stream()
-            .filter(processor -> processor.test(annotation))
-            .forEach(processor -> processor.process(annotation, data)));
+    if (Arrays.stream(targetType.getAnnotations())
+        .anyMatch(annotation -> classAnnotationProcessors.stream()
+            .anyMatch(processor -> processor.test(annotation)))) {
+      Arrays.stream(targetType.getAnnotations())
+          .forEach(annotation -> classAnnotationProcessors.stream()
+              .filter(processor -> processor.test(annotation))
+              .forEach(processor -> processor.process(annotation, data)));
+    } else {
+      if (targetType.getAnnotations().length == 0) {
+        data.addWarning(String.format(
+            "Class %s has no annotations, it may affect contract %s",
+            targetType.getSimpleName(),
+            getClass().getSimpleName()));
+      } else {
+        data.addWarning(String.format(
+            "Class %s has annotations %s that are not used by contract %s",
+            targetType.getSimpleName(),
+            Arrays.stream(targetType.getAnnotations())
+                .map(annotation -> annotation.annotationType()
+                    .getSimpleName())
+                .collect(Collectors.toList()),
+            getClass().getSimpleName()));
+      }
+    }
   }
 
   /**
@@ -60,9 +82,19 @@ public abstract class DeclarativeContract extends BaseContract {
   protected final void processAnnotationOnMethod(MethodMetadata data,
                                                  Annotation annotation,
                                                  Method method) {
-    methodAnnotationProcessors.stream()
-        .filter(processor -> processor.test(annotation))
-        .forEach(processor -> processor.process(annotation, data));
+    if (methodAnnotationProcessors.stream()
+        .anyMatch(processor -> processor.test(annotation))) {
+      methodAnnotationProcessors.stream()
+          .filter(processor -> processor.test(annotation))
+          .forEach(processor -> processor.process(annotation, data));
+    } else {
+      data.addWarning(String.format(
+          "Method %s has an annotation %s that is not used by contract %s",
+          method.getName(),
+          annotation.annotationType()
+              .getSimpleName(),
+          getClass().getSimpleName()));
+    }
   }
 
 
@@ -78,12 +110,37 @@ public abstract class DeclarativeContract extends BaseContract {
   protected final boolean processAnnotationsOnParameter(MethodMetadata data,
                                                         Annotation[] annotations,
                                                         int paramIndex) {
-    Arrays.stream(annotations)
-        .filter(
-            annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))
-        .forEach(annotation -> parameterAnnotationProcessors
-            .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
-            .process(annotation, data, paramIndex));
+    if (Arrays.stream(annotations)
+        .anyMatch(
+            annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))) {
+      Arrays.stream(annotations)
+          .filter(annotation -> parameterAnnotationProcessors.containsKey(annotation
+              .annotationType()))
+          .forEach(annotation -> parameterAnnotationProcessors
+              .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
+              .process(annotation, data, paramIndex));
+
+    } else {
+      final Parameter parameter = data.method().getParameters()[paramIndex];
+      String parameterName = parameter.isNamePresent()
+          ? parameter.getName()
+          : parameter.getType().getSimpleName();
+      if (annotations.length == 0) {
+        data.addWarning(String.format(
+            "Parameter %s has no annotations, it may affect contract %s",
+            parameterName,
+            getClass().getSimpleName()));
+      } else {
+        data.addWarning(String.format(
+            "Parameter %s has annotations %s that are not used by contract %s",
+            parameterName,
+            Arrays.stream(annotations)
+                .map(annotation -> annotation.annotationType()
+                    .getSimpleName())
+                .collect(Collectors.toList()),
+            getClass().getSimpleName()));
+      }
+    }
     return false;
   }
 
@@ -177,8 +234,8 @@ public abstract class DeclarativeContract extends BaseContract {
   private class GuardedAnnotationProcessor
       implements Predicate<Annotation>, DeclarativeContract.AnnotationProcessor<Annotation> {
 
-    private Predicate<Annotation> predicate;
-    private DeclarativeContract.AnnotationProcessor<Annotation> processor;
+    private final Predicate<Annotation> predicate;
+    private final DeclarativeContract.AnnotationProcessor<Annotation> processor;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private GuardedAnnotationProcessor(Predicate predicate,
