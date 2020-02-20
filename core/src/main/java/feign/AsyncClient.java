@@ -68,4 +68,28 @@ public interface AsyncClient<C> {
     }
   }
 
+  /**
+   * A synchronous implementation of {@link AsyncClient}
+   * @param <C> - unused context; synchronous clients handle context internally
+   */
+  class Pseudo<C> implements AsyncClient<C> {
+
+    private final Client client;
+
+    public Pseudo(Client client) {
+      this.client = client;
+    }
+
+    @Override
+    public CompletableFuture<Response> execute(Request request, Options options, Optional<C> requestContext) {
+      CompletableFuture<Response> result = new CompletableFuture<>();
+      try {
+        result.complete(client.execute(request, options));
+      }catch(Exception e) {
+        result.completeExceptionally(e);
+      }
+
+      return result;
+    }
+  }
 }
