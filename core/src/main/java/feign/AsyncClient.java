@@ -30,8 +30,9 @@ public interface AsyncClient<C> {
    * 
    * @param request safe to replay
    * @param options options to apply to this request
-   * @param requestContext - the optional context, for example for storing session cookies. The client should update
-   *                       this appropriately based on the received response before completing the result.
+   * @param requestContext - the optional context, for example for storing session cookies. The
+   *        client should update this appropriately based on the received response before completing
+   *        the result.
    * @return a {@link CompletableFuture} to be completed with the response, or completed
    *         exceptionally otherwise, for example with an {@link java.io.IOException} on a network
    *         error connecting to {@link Request#url()}.
@@ -70,6 +71,7 @@ public interface AsyncClient<C> {
 
   /**
    * A synchronous implementation of {@link AsyncClient}
+   * 
    * @param <C> - unused context; synchronous clients handle context internally
    */
   class Pseudo<C> implements AsyncClient<C> {
@@ -81,11 +83,13 @@ public interface AsyncClient<C> {
     }
 
     @Override
-    public CompletableFuture<Response> execute(Request request, Options options, Optional<C> requestContext) {
+    public CompletableFuture<Response> execute(Request request,
+                                               Options options,
+                                               Optional<C> requestContext) {
       CompletableFuture<Response> result = new CompletableFuture<>();
       try {
         result.complete(client.execute(request, options));
-      }catch(Exception e) {
+      } catch (Exception e) {
         result.completeExceptionally(e);
       }
 

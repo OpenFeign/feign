@@ -70,7 +70,8 @@ class AsyncResponseHandler {
       if (Response.class == returnType) {
         if (response.body() == null) {
           resultFuture.complete(response);
-        } else if (response.body().length() == null || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+        } else if (response.body().length() == null
+            || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
           shouldClose = false;
           resultFuture.complete(response);
         } else {

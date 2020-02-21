@@ -116,7 +116,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
       if (retType != CompletableFuture.class)
         throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
-                + getFullMethodName(type, retType, m));
+            + getFullMethodName(type, retType, m));
 
       Type genRetType = m.getGenericReturnType();
 

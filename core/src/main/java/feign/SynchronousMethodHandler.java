@@ -52,7 +52,8 @@ final class SynchronousMethodHandler implements MethodHandler {
       Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
+      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy,
+      boolean forceDecoding) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -67,13 +68,14 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.propagationPolicy = propagationPolicy;
 
     if (forceDecoding) {
-      // internal only: usual handling will be short-circuited, and all responses will be passed to decoder directly!
+      // internal only: usual handling will be short-circuited, and all responses will be passed to
+      // decoder directly!
       this.decoder = decoder;
       this.asyncResponseHandler = null;
     } else {
       this.decoder = null;
       this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-                decode404, closeAfterDecode);
+          decode404, closeAfterDecode);
     }
   }
 
@@ -133,8 +135,9 @@ final class SynchronousMethodHandler implements MethodHandler {
       return decoder.decode(response, metadata.returnType());
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response, metadata.returnType(),
-            elapsedTime);
+    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
+        metadata.returnType(),
+        elapsedTime);
 
     try {
       if (!resultFuture.isDone())

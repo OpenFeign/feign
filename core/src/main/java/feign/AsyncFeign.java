@@ -144,7 +144,8 @@ public abstract class AsyncFeign<C> extends Feign {
 
     private AsyncBuilder<C> lazyInits() {
       if (client == null) {
-        client = new AsyncClient.Default<>(new Client.Default(null, null), LazyInitializedExecutorService.instance);
+        client = new AsyncClient.Default<>(new Client.Default(null, null),
+            LazyInitializedExecutorService.instance);
       }
 
       return this;
@@ -316,7 +317,7 @@ public abstract class AsyncFeign<C> extends Feign {
       return result;
     try {
       return result.join();
-    }catch(CompletionException e) {
+    } catch (CompletionException e) {
       Response r = invocationContext.responseFuture().join();
       Throwable cause = e.getCause();
       if (cause == null)

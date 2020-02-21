@@ -37,16 +37,21 @@ class MethodInfo {
     if (method.getReturnType() != CompletableFuture.class) {
       this.asyncReturnType = false;
       this.underlyingReturnType = type;
-    }
-    else {
+    } else {
       this.asyncReturnType = true;
       this.underlyingReturnType = ((ParameterizedType) type).getActualTypeArguments()[0];
     }
   }
 
-  String configKey() { return configKey; }
+  String configKey() {
+    return configKey;
+  }
 
-  Type underlyingReturnType() { return underlyingReturnType; }
+  Type underlyingReturnType() {
+    return underlyingReturnType;
+  }
 
-  boolean isAsyncReturnType() { return asyncReturnType; }
+  boolean isAsyncReturnType() {
+    return asyncReturnType;
+  }
 }

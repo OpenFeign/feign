@@ -14,12 +14,11 @@
 package feign;
 
 import java.util.concurrent.CompletableFuture;
-
 import static feign.Util.*;
 
 /**
- * Thrown to encapsulate an underlying cause when using {@link CompletableFuture#join()}
- * to convert an asynchronous call to a synchronous one.
+ * Thrown to encapsulate an underlying cause when using {@link CompletableFuture#join()} to convert
+ * an asynchronous call to a synchronous one.
  */
 public class AsyncJoinException extends FeignException {
 
