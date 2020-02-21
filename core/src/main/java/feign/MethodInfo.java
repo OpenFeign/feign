@@ -18,6 +18,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
+@Experimental
 class MethodInfo {
   private final String configKey;
   private final Type underlyingReturnType;
@@ -32,7 +33,7 @@ class MethodInfo {
   MethodInfo(Class<?> targetType, Method method) {
     this.configKey = Feign.configKey(targetType, method);
 
-    Type type = method.getGenericReturnType();
+    final Type type = method.getGenericReturnType();
 
     if (method.getReturnType() != CompletableFuture.class) {
       this.asyncReturnType = false;

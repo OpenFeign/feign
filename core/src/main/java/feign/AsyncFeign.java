@@ -16,11 +16,7 @@ package feign;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
@@ -45,6 +41,7 @@ import feign.codec.ErrorDecoder;
  * be done (for example, creating and submitting a task to an {@link ExecutorService}).
  *
  */
+@Experimental
 public abstract class AsyncFeign<C> extends Feign {
 
   public static <C> AsyncBuilder<C> asyncBuilder() {
@@ -54,7 +51,7 @@ public abstract class AsyncFeign<C> extends Feign {
   private static class LazyInitializedExecutorService {
 
     private static final ExecutorService instance = Executors.newCachedThreadPool(r -> {
-      Thread result = new Thread(r);
+      final Thread result = new Thread(r);
       result.setDaemon(true);
       return result;
     });
@@ -66,8 +63,8 @@ public abstract class AsyncFeign<C> extends Feign {
     private Supplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client;
 
-    private Logger.Level logLevel = Logger.Level.NONE;
-    private Logger logger = new NoOpLogger();
+    private final Logger.Level logLevel = Logger.Level.NONE;
+    private final Logger logger = new NoOpLogger();
 
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
@@ -268,12 +265,12 @@ public abstract class AsyncFeign<C> extends Feign {
   }
 
   private Response stageExecution(Request request, Options options) {
-    Response result = Response.builder()
+    final Response result = Response.builder()
         .status(200)
         .request(request)
         .build();
 
-    AsyncInvocation<C> invocationContext = activeContext.get();
+    final AsyncInvocation<C> invocationContext = activeContext.get();
 
     invocationContext.setResponseFuture(
         client.execute(request, options, Optional.ofNullable(invocationContext.context())));
@@ -289,16 +286,16 @@ public abstract class AsyncFeign<C> extends Feign {
 
 
   private Object stageDecode(Response response, Type type) {
-    AsyncInvocation<C> invocationContext = activeContext.get();
+    final AsyncInvocation<C> invocationContext = activeContext.get();
 
-    CompletableFuture<Object> result = new CompletableFuture<>();
+    final CompletableFuture<Object> result = new CompletableFuture<>();
 
     invocationContext.responseFuture().whenComplete((r, t) -> {
-      long elapsedTime = elapsedTime(invocationContext.startNanos());
+      final long elapsedTime = elapsedTime(invocationContext.startNanos());
 
       if (t != null) {
         if (logLevel != Logger.Level.NONE && t instanceof IOException) {
-          IOException e = (IOException) t;
+          final IOException e = (IOException) t;
           logger.logIOException(invocationContext.configKey(), logLevel, e, elapsedTime);
         }
         result.completeExceptionally(t);
@@ -309,19 +306,22 @@ public abstract class AsyncFeign<C> extends Feign {
     });
 
     result.whenComplete((r, t) -> {
-      if (result.isCancelled())
+      if (result.isCancelled()) {
         invocationContext.responseFuture().cancel(true);
+      }
     });
 
-    if (invocationContext.isAsyncReturnType())
+    if (invocationContext.isAsyncReturnType()) {
       return result;
+    }
     try {
       return result.join();
-    } catch (CompletionException e) {
-      Response r = invocationContext.responseFuture().join();
+    } catch (final CompletionException e) {
+      final Response r = invocationContext.responseFuture().join();
       Throwable cause = e.getCause();
-      if (cause == null)
+      if (cause == null) {
         cause = e;
+      }
       throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
     }
   }

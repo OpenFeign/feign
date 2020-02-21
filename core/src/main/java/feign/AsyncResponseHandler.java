@@ -13,8 +13,8 @@
  */
 package feign;
 
-import static feign.FeignException.*;
-import static feign.Util.*;
+import static feign.FeignException.errorReading;
+import static feign.Util.ensureClosed;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +27,7 @@ import feign.codec.ErrorDecoder;
  * The response handler that is used to provide asynchronous support on top of standard response
  * handling
  */
+@Experimental
 class AsyncResponseHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
@@ -76,30 +77,30 @@ class AsyncResponseHandler {
           resultFuture.complete(response);
         } else {
           // Ensure the response body is disconnected
-          byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+          final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
           resultFuture.complete(response.toBuilder().body(bodyData).build());
         }
       } else if (response.status() >= 200 && response.status() < 300) {
         if (isVoidType(returnType)) {
           resultFuture.complete(null);
         } else {
-          Object result = decode(response, returnType);
+          final Object result = decode(response, returnType);
           shouldClose = closeAfterDecode;
           resultFuture.complete(result);
         }
       } else if (decode404 && response.status() == 404 && !isVoidType(returnType)) {
-        Object result = decode(response, returnType);
+        final Object result = decode(response, returnType);
         shouldClose = closeAfterDecode;
         resultFuture.complete(result);
       } else {
         resultFuture.completeExceptionally(errorDecoder.decode(configKey, response));
       }
-    } catch (IOException e) {
+    } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
       }
       resultFuture.completeExceptionally(errorReading(response.request(), response, e));
-    } catch (Exception e) {
+    } catch (final Exception e) {
       resultFuture.completeExceptionally(e);
     } finally {
       if (shouldClose) {
@@ -112,9 +113,9 @@ class AsyncResponseHandler {
   Object decode(Response response, Type type) throws IOException {
     try {
       return decoder.decode(response, type);
-    } catch (FeignException e) {
+    } catch (final FeignException e) {
       throw e;
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     }
   }

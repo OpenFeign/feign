@@ -13,13 +13,14 @@
  */
 package feign;
 
+import static feign.Util.checkNotNull;
 import java.util.concurrent.CompletableFuture;
-import static feign.Util.*;
 
 /**
  * Thrown to encapsulate an underlying cause when using {@link CompletableFuture#join()} to convert
  * an asynchronous call to a synchronous one.
  */
+@Experimental
 public class AsyncJoinException extends FeignException {
 
   private static final long serialVersionUID = 1L;

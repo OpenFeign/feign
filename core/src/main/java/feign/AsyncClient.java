@@ -22,12 +22,13 @@ import feign.Request.Options;
 /**
  * Submits HTTP {@link Request requests} asynchronously, with an optional context.
  */
+@Experimental
 public interface AsyncClient<C> {
 
   /**
    * Executes the request asynchronously. Calling {@link CompletableFuture#cancel(boolean)} on the
    * result may cause the execution to be cancelled / aborted, but this is not guaranteed.
-   * 
+   *
    * @param request safe to replay
    * @param options options to apply to this request
    * @param requestContext - the optional context, for example for storing session cookies. The
@@ -53,17 +54,18 @@ public interface AsyncClient<C> {
     public CompletableFuture<Response> execute(Request request,
                                                Options options,
                                                Optional<C> requestContext) {
-      CompletableFuture<Response> result = new CompletableFuture<>();
-      Future<?> future = executorService.submit(() -> {
+      final CompletableFuture<Response> result = new CompletableFuture<>();
+      final Future<?> future = executorService.submit(() -> {
         try {
           result.complete(client.execute(request, options));
-        } catch (Exception e) {
+        } catch (final Exception e) {
           result.completeExceptionally(e);
         }
       });
       result.whenComplete((response, throwable) -> {
-        if (result.isCancelled())
+        if (result.isCancelled()) {
           future.cancel(true);
+        }
       });
       return result;
     }
@@ -71,7 +73,7 @@ public interface AsyncClient<C> {
 
   /**
    * A synchronous implementation of {@link AsyncClient}
-   * 
+   *
    * @param <C> - unused context; synchronous clients handle context internally
    */
   class Pseudo<C> implements AsyncClient<C> {
@@ -86,10 +88,10 @@ public interface AsyncClient<C> {
     public CompletableFuture<Response> execute(Request request,
                                                Options options,
                                                Optional<C> requestContext) {
-      CompletableFuture<Response> result = new CompletableFuture<>();
+      final CompletableFuture<Response> result = new CompletableFuture<>();
       try {
         result.complete(client.execute(request, options));
-      } catch (Exception e) {
+      } catch (final Exception e) {
         result.completeExceptionally(e);
       }
 
