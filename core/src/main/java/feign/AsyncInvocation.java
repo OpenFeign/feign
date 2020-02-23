@@ -13,13 +13,13 @@
  */
 package feign;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * A specific invocation of an APU
  */
+@Experimental
 class AsyncInvocation<C> {
 
   private final C context;

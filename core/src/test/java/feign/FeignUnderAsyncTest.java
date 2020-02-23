@@ -33,7 +33,6 @@ import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -50,7 +49,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-
 import static feign.ExceptionPropagationPolicy.*;
 import static feign.Util.*;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -684,7 +682,8 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     OtherTestInterface api =
-            AsyncFeign.asyncBuilder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+        AsyncFeign.asyncBuilder().target(OtherTestInterface.class,
+            "http://localhost:" + server.getPort());
 
     assertThat(api.binaryResponseBody())
         .containsExactly(expectedResponse);
@@ -696,7 +695,8 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse());
 
     OtherTestInterface api =
-            AsyncFeign.asyncBuilder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+        AsyncFeign.asyncBuilder().target(OtherTestInterface.class,
+            "http://localhost:" + server.getPort());
 
     api.binaryRequestBody(expectedRequest);
 
@@ -835,9 +835,9 @@ public class FeignUnderAsyncTest {
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     void login(
-            @Param("customer_name") String customer,
-            @Param("user_name") String user,
-            @Param("password") String password);
+               @Param("customer_name") String customer,
+               @Param("user_name") String user,
+               @Param("password") String password);
 
     @RequestLine("POST /")
     void body(List<String> contents);
@@ -858,9 +858,9 @@ public class FeignUnderAsyncTest {
 
     @RequestLine("POST /")
     void form(
-            @Param("customer_name") String customer,
-            @Param("user_name") String user,
-            @Param("password") String password);
+              @Param("customer_name") String customer,
+              @Param("user_name") String user,
+              @Param("password") String password);
 
     @RequestLine("GET /{1}/{2}")
     Response uriParam(@Param("1") String one, URI endpoint, @Param("2") String two);
