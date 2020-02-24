@@ -107,8 +107,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
     for (final Method m : type.getMethods()) {
       final Class<?> retType = m.getReturnType();
 
-      if (!CompletableFuture.class.isAssignableFrom(retType))
-       {
+      if (!CompletableFuture.class.isAssignableFrom(retType)) {
         continue; // synchronous case
       }
 
