@@ -112,6 +112,7 @@ public abstract class Feign {
     private boolean decode404;
     private boolean closeAfterDecode = true;
     private ExceptionPropagationPolicy propagationPolicy = NONE;
+    private boolean forceDecoding = false;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -244,6 +245,14 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * Internal - used to indicate that the decoder should be immediately called
+     */
+    Builder forceDecoding() {
+      this.forceDecoding = true;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -255,7 +264,7 @@ public abstract class Feign {
     public Feign build() {
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode, propagationPolicy);
+              logLevel, decode404, closeAfterDecode, propagationPolicy, forceDecoding);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
