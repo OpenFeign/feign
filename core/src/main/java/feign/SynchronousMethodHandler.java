@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,17 +15,16 @@ package feign;
 
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
-import static feign.FeignException.errorReading;
 import static feign.Util.checkNotNull;
-import static feign.Util.ensureClosed;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -42,11 +41,11 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
-  private final Decoder decoder;
-  private final ErrorDecoder errorDecoder;
-  private final boolean decode404;
-  private final boolean closeAfterDecode;
   private final ExceptionPropagationPolicy propagationPolicy;
+
+  // only one of decoder and asyncResponseHandler will be non-null
+  private final Decoder decoder;
+  private final AsyncResponseHandler asyncResponseHandler;
 
   private SynchronousMethodHandler(
       Target<?> target,
@@ -62,7 +61,9 @@ final class SynchronousMethodHandler implements MethodHandler {
       ErrorDecoder errorDecoder,
       boolean decode404,
       boolean closeAfterDecode,
-      ExceptionPropagationPolicy propagationPolicy) {
+      ExceptionPropagationPolicy propagationPolicy,
+      boolean forceDecoding) {
+
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
@@ -73,11 +74,19 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
-    this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder for %s", target);
-    this.decoder = checkNotNull(decoder, "decoder for %s", target);
-    this.decode404 = decode404;
-    this.closeAfterDecode = closeAfterDecode;
     this.propagationPolicy = propagationPolicy;
+
+    if (forceDecoding) {
+      // internal only: usual handling will be short-circuited, and all responses will be passed to
+      // decoder directly!
+      this.decoder = decoder;
+      this.asyncResponseHandler = null;
+    } else {
+      this.decoder = null;
+      this.asyncResponseHandler =
+          new AsyncResponseHandler(
+              logLevel, logger, decoder, errorDecoder, decode404, closeAfterDecode);
+    }
   }
 
   @Override
@@ -128,49 +137,20 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-    boolean shouldClose = true;
+    if (decoder != null) return decoder.decode(response, metadata.returnType());
+
+    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+    asyncResponseHandler.handleResponse(
+        resultFuture, metadata.configKey(), response, metadata.returnType(), elapsedTime);
+
     try {
-      if (logLevel != Logger.Level.NONE) {
-        response =
-            logger.logAndRebufferResponse(metadata.configKey(), logLevel, response, elapsedTime);
-      }
-      if (Response.class == metadata.returnType()) {
-        if (response.body() == null) {
-          return response;
-        }
-        if (response.body().length() == null
-            || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
-          shouldClose = false;
-          return response;
-        }
-        // Ensure the response body is disconnected
-        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-        return response.toBuilder().body(bodyData).build();
-      }
-      if (response.status() >= 200 && response.status() < 300) {
-        if (void.class == metadata.returnType()) {
-          return null;
-        } else {
-          Object result = decode(response);
-          shouldClose = closeAfterDecode;
-          return result;
-        }
-      } else if (decode404 && response.status() == 404 && void.class != metadata.returnType()) {
-        Object result = decode(response);
-        shouldClose = closeAfterDecode;
-        return result;
-      } else {
-        throw errorDecoder.decode(metadata.configKey(), response);
-      }
-    } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime);
-      }
-      throw errorReading(request, response, e);
-    } finally {
-      if (shouldClose) {
-        ensureClosed(response.body());
-      }
+      if (!resultFuture.isDone()) throw new IllegalStateException("Response handling not done");
+
+      return resultFuture.join();
+    } catch (CompletionException e) {
+      Throwable cause = e.getCause();
+      if (cause != null) throw cause;
+      throw e;
     }
   }
 
@@ -183,16 +163,6 @@ final class SynchronousMethodHandler implements MethodHandler {
       interceptor.apply(template);
     }
     return target.apply(template);
-  }
-
-  Object decode(Response response) throws Throwable {
-    try {
-      return decoder.decode(response, metadata.returnType());
-    } catch (FeignException e) {
-      throw e;
-    } catch (RuntimeException e) {
-      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
-    }
   }
 
   Options findOptions(Object[] argv) {
@@ -216,6 +186,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean decode404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final boolean forceDecoding;
 
     Factory(
         Client client,
@@ -225,7 +196,8 @@ final class SynchronousMethodHandler implements MethodHandler {
         Logger.Level logLevel,
         boolean decode404,
         boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy) {
+        ExceptionPropagationPolicy propagationPolicy,
+        boolean forceDecoding) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -234,6 +206,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.decode404 = decode404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
+      this.forceDecoding = forceDecoding;
     }
 
     public MethodHandler create(
@@ -257,7 +230,8 @@ final class SynchronousMethodHandler implements MethodHandler {
           errorDecoder,
           decode404,
           closeAfterDecode,
-          propagationPolicy);
+          propagationPolicy,
+          forceDecoding);
     }
   }
 }
