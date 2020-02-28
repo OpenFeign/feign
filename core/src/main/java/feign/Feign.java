@@ -272,12 +272,12 @@ public abstract class Feign {
     }
   }
 
-  static class ResponseMappingDecoder implements Decoder {
+  public static class ResponseMappingDecoder implements Decoder {
 
     private final ResponseMapper mapper;
     private final Decoder delegate;
 
-    ResponseMappingDecoder(ResponseMapper mapper, Decoder decoder) {
+    public ResponseMappingDecoder(ResponseMapper mapper, Decoder decoder) {
       this.mapper = mapper;
       this.delegate = decoder;
     }
