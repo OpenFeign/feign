@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -27,8 +27,6 @@ import feign.gson.GsonEncoder;
  * Inspired by {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
-
-  private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
 
   public interface GitHub {
 
@@ -81,14 +79,11 @@ public class GitHubExample {
           .logger(new Logger.ErrorLogger())
           .logLevel(Logger.Level.BASIC)
           .requestInterceptor(template -> {
-            if (System.getenv().containsKey(GITHUB_TOKEN)) {
-              System.out.println("Detected Authorization token from environment variable");
-              template.header(
-                  // not available when building PRs...
-                  // https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
-                  "Authorization",
-                  "token " + System.getenv(GITHUB_TOKEN));
-            }
+            template.header(
+                // not available when building PRs...
+                // https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
+                "Authorization",
+                "token 383f1c1b474d8f05a21e7964976ab0d403fee071");
           })
           .target(GitHub.class, "https://api.github.com");
     }
