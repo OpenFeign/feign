@@ -24,7 +24,7 @@
   </parent>
 
   <artifactId>feign-hc5</artifactId>
-  <name>Feign Apache Http Client 5</name>
+  <name>Feign Apache HttpComponents Client 5</name>
   <description>Feign Apache HttpComponents Client 5</description>
 
   <properties>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
       <artifactId>httpclient5</artifactId>
-      <version>5.0-beta5</version>
+      <version>5.0-beta7</version>
     </dependency>
 
     <dependency>
@@ -53,6 +53,12 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-jaxrs2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
       <scope>test</scope>
     </dependency>
 
