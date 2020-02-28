@@ -1,3 +1,9 @@
+### Version 10.8
+
+* async feign variant supporting CompleteableFutures by motinis (#1174) 
+* deterministic iterations for Feign mocks by contextshuffling (#1165)
+* Async client for apache http 5 by velo (#1179)
+
 ### Version 10.7
 
 * Fix for vunerabilities reported by snky (#1121)
