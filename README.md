@@ -939,3 +939,34 @@ interface GitHub {
   }
 }
 ```
+
+
+### Async execution via `CompletableFuture`
+
+Feign 10.8 introduces a new builder `AsyncFeign` that allow methods to return `CompletableFuture` instances.
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  CompletableFuture<List<Contributor>> contributors(@Param("owner") String owner, @Param("repo") String repo);
+}
+
+public class MyApp {
+  public static void main(String... args) {
+    GitHub github = AsyncFeign.asyncBuilder()
+                         .decoder(new GsonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+  
+    // Fetch and print a list of the contributors to this library.
+    CompletableFuture<List<Contributor>> contributors = github.contributors("OpenFeign", "feign");
+    for (Contributor contributor : contributors.get(1, TimeUnit.SECONDS)) {
+      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    }
+  }
+}
+```
+
+Initial implementation include 2 async clients:
+- `AsyncClient.Default`
+- `AsyncApacheHttp5Client`
+
