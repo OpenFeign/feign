@@ -98,8 +98,8 @@ public interface Contract {
         return data;
       }
       checkState(data.template().method() != null,
-          "Method %s not annotated with HTTP method type (ex. GET, POST)",
-          data.configKey());
+          "Method %s not annotated with HTTP method type (ex. GET, POST)%s",
+          data.configKey(), data.warnings());
       final Class<?>[] parameterTypes = method.getParameterTypes();
       final Type[] genericParameterTypes = method.getGenericParameterTypes();
 
@@ -120,10 +120,10 @@ public interface Contract {
         } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
           if (data.isAlreadyProcessed(i)) {
             checkState(data.formParams().isEmpty() || data.bodyIndex() == null,
-                "Body parameters cannot be used with form parameters.");
+                "Body parameters cannot be used with form parameters.%s", data.warnings());
           } else {
             checkState(data.formParams().isEmpty(),
-                "Body parameters cannot be used with form parameters.");
+                "Body parameters cannot be used with form parameters.%s", data.warnings());
             checkState(data.bodyIndex() == null,
                 "Method has too many Body parameters: %s%s", method, data.warnings());
             data.bodyIndex(i);
