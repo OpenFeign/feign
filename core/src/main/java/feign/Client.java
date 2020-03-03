@@ -19,8 +19,10 @@ import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
+import static feign.Util.isBlank;
 import static feign.Util.isNotBlank;
 import static java.lang.String.format;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,9 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+
 import feign.Request.Options;
 
 /**
@@ -161,10 +165,12 @@ public interface Client {
       }
 
       if (request.body() != null) {
-        if (contentLength != null) {
-          connection.setFixedLengthStreamingMode(contentLength);
-        } else {
-          connection.setChunkedStreamingMode(8196);
+        if (options.isAllowStreamingMode()) {
+          if (contentLength != null) {
+            connection.setFixedLengthStreamingMode(contentLength);
+          } else {
+            connection.setChunkedStreamingMode(8196);
+          }
         }
         connection.setDoOutput(true);
         OutputStream out = connection.getOutputStream();

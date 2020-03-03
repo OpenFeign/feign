@@ -234,6 +234,7 @@ public final class Request {
     private final long readTimeout;
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
+    private final boolean allowStreamingMode;
 
     /**
      * Creates a new Options instance.
@@ -249,6 +250,27 @@ public final class Request {
       this(connectTimeoutMillis, TimeUnit.MILLISECONDS,
           readTimeoutMillis, TimeUnit.MILLISECONDS,
           followRedirects);
+    }
+    
+    /**
+     * Creates a new Options Instance.
+     *
+     * @param connectTimeout value.
+     * @param connectTimeoutUnit with the TimeUnit for the timeout value.
+     * @param readTimeout value.
+     * @param readTimeoutUnit with the TimeUnit for the timeout value.
+     * @param followRedirects if the request should follow 3xx redirections.
+     * @param allowStreamingMode if the request should allow using streaming mode.
+     */
+    public Options(long connectTimeout, TimeUnit connectTimeoutUnit, long readTimeout,
+        TimeUnit readTimeoutUnit, boolean followRedirects, boolean allowStreamingMode) {
+      super();
+      this.connectTimeout = connectTimeout;
+      this.connectTimeoutUnit = connectTimeoutUnit;
+      this.readTimeout = readTimeout;
+      this.readTimeoutUnit = readTimeoutUnit;
+      this.followRedirects = followRedirects;
+      this.allowStreamingMode = allowStreamingMode;
     }
 
     /**
@@ -269,6 +291,7 @@ public final class Request {
       this.readTimeout = readTimeout;
       this.readTimeoutUnit = readTimeoutUnit;
       this.followRedirects = followRedirects;
+      this.allowStreamingMode = true;
     }
 
     /**
@@ -314,7 +337,6 @@ public final class Request {
       return (int) readTimeoutUnit.toMillis(readTimeout);
     }
 
-
     /**
      * Defaults to true. {@code false} tells the client to not follow the redirections.
      *
@@ -322,6 +344,13 @@ public final class Request {
      */
     public boolean isFollowRedirects() {
       return followRedirects;
+    }
+
+    /**
+     * Defaults to true. {@code false} tells the client to disable streaming mode.
+     */
+    public boolean isAllowStreamingMode() {
+      return allowStreamingMode;
     }
 
     /**
