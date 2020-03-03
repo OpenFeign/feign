@@ -22,26 +22,26 @@ import feign.Target;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
 
-final class FeignMetricName {
+public final class FeignMetricName {
 
   private final Class<?> meteredComponent;
 
 
-  FeignMetricName(Class<?> meteredComponent) {
+  public FeignMetricName(Class<?> meteredComponent) {
     this.meteredComponent = meteredComponent;
   }
 
 
-  MetricName metricName(MethodMetadata methodMetadata, Target<?> target, String suffix) {
+  public MetricName metricName(MethodMetadata methodMetadata, Target<?> target, String suffix) {
     return metricName(methodMetadata, target)
         .resolve(suffix);
   }
 
-  MetricName metricName(MethodMetadata methodMetadata, Target<?> target) {
+  public MetricName metricName(MethodMetadata methodMetadata, Target<?> target) {
     return metricName(methodMetadata.targetType(), methodMetadata.method(), target.url());
   }
 
-  MetricName metricName(Class<?> targetType, Method method, String url) {
+  public MetricName metricName(Class<?> targetType, Method method, String url) {
     return MetricRegistry.name(meteredComponent)
         .tagged("client", targetType.getName())
         .tagged("method", method.getName())

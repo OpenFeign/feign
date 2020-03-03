@@ -28,7 +28,7 @@ import io.dropwizard.metrics5.Timer.Context;
 /**
  * Warp feign {@link InvocationHandler} with metrics.
  */
-final class MeteredInvocationHandleFactory implements InvocationHandlerFactory {
+public class MeteredInvocationHandleFactory implements InvocationHandlerFactory {
 
   private static final Logger LOG = LoggerFactory.getLogger(MeteredInvocationHandleFactory.class);
 
@@ -47,7 +47,7 @@ final class MeteredInvocationHandleFactory implements InvocationHandlerFactory {
 
   private final MetricSuppliers metricSuppliers;
 
-  MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,
+  public MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,
       MetricRegistry metricRegistry, MetricSuppliers metricSuppliers) {
     this.invocationHandler = invocationHandler;
     this.metricRegistry = metricRegistry;

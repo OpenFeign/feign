@@ -24,7 +24,7 @@ import io.dropwizard.metrics5.Timer.Context;
 /**
  * Warp feign {@link Encoder} with metrics.
  */
-final class MeteredEncoder implements Encoder {
+public class MeteredEncoder implements Encoder {
 
   private final Encoder encoder;
   private final MetricRegistry metricRegistry;

@@ -16,19 +16,18 @@ package feign.metrics5;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.concurrent.TimeUnit;
 import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-import io.dropwizard.metrics5.*;
+import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 
 /**
  * Warp feign {@link Decoder} with metrics.
  */
-final class MeteredDecoder implements Decoder {
+public class MeteredDecoder implements Decoder {
 
   private final Decoder decoder;
   private final MetricRegistry metricRegistry;

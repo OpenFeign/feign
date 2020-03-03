@@ -14,7 +14,6 @@
 package feign.metrics5;
 
 import static feign.Util.UTF_8;
-import com.google.common.io.CountingInputStream;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.function.Supplier;
@@ -23,12 +22,12 @@ import feign.Response.Body;
 /**
  * {@link Body} implementation that keeps track of how many bytes are read.
  */
-final class MeteredBody implements Body {
+public final class MeteredBody implements Body {
 
   private final Body delegate;
   private Supplier<Long> count;
 
-  MeteredBody(Body body) {
+  public MeteredBody(Body body) {
     this.delegate = body;
     count = () -> 0L;
   }

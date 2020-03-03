@@ -23,7 +23,7 @@ import io.dropwizard.metrics5.Timer.Context;
 /**
  * Warp feign {@link Client} with metrics.
  */
-final class MeteredClient implements Client {
+public class MeteredClient implements Client {
 
   private final Client client;
   private final MetricRegistry metricRegistry;
