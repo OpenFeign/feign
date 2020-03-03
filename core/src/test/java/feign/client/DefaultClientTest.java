@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.Proxy.Type;
+import java.util.concurrent.TimeUnit;
 import java.net.SocketAddress;
 import java.net.URL;
 import javax.net.ssl.HostnameVerifier;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import feign.Client;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Request.Options;
 import feign.RetryableException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -50,7 +52,9 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null));
+    Options options = new Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true, false);
+    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null))
+        .options(options);
   }
 
   @Test
