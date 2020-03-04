@@ -16,23 +16,21 @@ package feign.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-import feign.Client.Proxied;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.Proxy.Type;
-import java.util.concurrent.TimeUnit;
 import java.net.SocketAddress;
 import java.net.URL;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import org.junit.Test;
 import feign.Client;
+import feign.Client.Proxied;
 import feign.Feign;
 import feign.Feign.Builder;
-import feign.Request.Options;
 import feign.RetryableException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -52,9 +50,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
-    Options options = new Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true, false);
-    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null))
-        .options(options);
+    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null, false));
   }
 
   @Test
