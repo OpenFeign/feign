@@ -34,6 +34,5 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   public void testPatch() {}
 
   @Override
-  public void parsesUnauthorizedResponseBody() {
-  }
+  public void parsesUnauthorizedResponseBody() {}
 }
