@@ -147,6 +147,22 @@ public abstract class AbstractClientTest {
   }
 
   @Test
+  public void parsesUnauthorizedResponseBody() {
+    String expectedResponseBody = "ARGHH";
+
+    server.enqueue(new MockResponse().setResponseCode(401).setBody("ARGHH"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.postForString("HELLO");
+    } catch (FeignException e) {
+      assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
+    }
+  }
+
+  @Test
   public void safeRebuffering() {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -377,6 +393,10 @@ public abstract class AbstractClientTest {
     @RequestLine("POST /path/{to}/resource")
     @Headers("Accept: text/plain")
     Response post(@Param("to") String to, String body);
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    String postForString(String body);
 
     @RequestLine("GET /")
     @Headers("Accept: text/plain")
