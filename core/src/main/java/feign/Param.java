@@ -14,15 +14,15 @@
 package feign;
 
 import java.lang.annotation.Retention;
-import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A named template parameter applied to {@link Headers}, {@linkplain RequestLine} or
- * {@linkplain Body}
+ * A named template parameter applied to {@link Headers}, {@linkplain RequestLine},
+ * {@linkplain Body}, POJO fields or beans properties when it expanding
  */
 @Retention(RUNTIME)
-@java.lang.annotation.Target(PARAMETER)
+@java.lang.annotation.Target({PARAMETER, FIELD, METHOD})
 public @interface Param {
 
   /**
