@@ -52,14 +52,14 @@ public interface Contract {
             "Only single-level inheritance supported: %s",
             targetType.getSimpleName());
       }
-      Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
-      for (Method method : targetType.getMethods()) {
+      final Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
+      for (final Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class ||
             (method.getModifiers() & Modifier.STATIC) != 0 ||
             Util.isDefault(method)) {
           continue;
         }
-        MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
+        final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
         checkState(!result.containsKey(metadata.configKey()), "Overrides unsupported: %s",
             metadata.configKey());
         result.put(metadata.configKey(), metadata);
@@ -79,7 +79,7 @@ public interface Contract {
      * Called indirectly by {@link #parseAndValidateMetadata(Class)}.
      */
     protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
-      MethodMetadata data = new MethodMetadata();
+      final MethodMetadata data = new MethodMetadata();
       data.targetType(targetType);
       data.method(method);
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
@@ -91,20 +91,20 @@ public interface Contract {
       processAnnotationOnClass(data, targetType);
 
 
-      for (Annotation methodAnnotation : method.getAnnotations()) {
+      for (final Annotation methodAnnotation : method.getAnnotations()) {
         processAnnotationOnMethod(data, methodAnnotation, method);
       }
       if (data.isIgnored()) {
         return data;
       }
       checkState(data.template().method() != null,
-          "Method %s not annotated with HTTP method type (ex. GET, POST)",
-          data.configKey());
-      Class<?>[] parameterTypes = method.getParameterTypes();
-      Type[] genericParameterTypes = method.getGenericParameterTypes();
+          "Method %s not annotated with HTTP method type (ex. GET, POST)%s",
+          data.configKey(), data.warnings());
+      final Class<?>[] parameterTypes = method.getParameterTypes();
+      final Type[] genericParameterTypes = method.getGenericParameterTypes();
 
-      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-      int count = parameterAnnotations.length;
+      final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      final int count = parameterAnnotations.length;
       for (int i = 0; i < count; i++) {
         boolean isHttpAnnotation = false;
         if (parameterAnnotations[i] != null) {
@@ -120,11 +120,12 @@ public interface Contract {
         } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
           if (data.isAlreadyProcessed(i)) {
             checkState(data.formParams().isEmpty() || data.bodyIndex() == null,
-                "Body parameters cannot be used with form parameters.");
+                "Body parameters cannot be used with form parameters.%s", data.warnings());
           } else {
             checkState(data.formParams().isEmpty(),
-                "Body parameters cannot be used with form parameters.");
-            checkState(data.bodyIndex() == null, "Method has too many Body parameters: %s", method);
+                "Body parameters cannot be used with form parameters.%s", data.warnings());
+            checkState(data.bodyIndex() == null,
+                "Method has too many Body parameters: %s%s", method, data.warnings());
             data.bodyIndex(i);
             data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
           }
@@ -156,17 +157,17 @@ public interface Contract {
 
       // assume our type parameterized
       if (ParameterizedType.class.isAssignableFrom(genericType.getClass())) {
-        Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+        final Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
         keyClass = (Class<?>) parameterTypes[0];
       } else if (genericType instanceof Class<?>) {
         // raw class, type parameters cannot be inferred directly, but we can scan any extended
         // interfaces looking for any explict types
-        Type[] interfaces = ((Class) genericType).getGenericInterfaces();
+        final Type[] interfaces = ((Class) genericType).getGenericInterfaces();
         if (interfaces != null) {
-          for (Type extended : interfaces) {
+          for (final Type extended : interfaces) {
             if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
               // use the first extended interface we find.
-              Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
+              final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
               keyClass = (Class<?>) parameterTypes[0];
               break;
             }
@@ -214,7 +215,7 @@ public interface Contract {
      * links a parameter name to its index in the method signature.
      */
     protected void nameParam(MethodMetadata data, String name, int i) {
-      Collection<String> names =
+      final Collection<String> names =
           data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
       names.add(name);
       data.indexToName().put(i, names);
@@ -227,20 +228,20 @@ public interface Contract {
 
     public Default() {
       super.registerClassAnnotation(Headers.class, (header, data) -> {
-        String[] headersOnType = header.value();
+        final String[] headersOnType = header.value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
             data.configKey());
-        Map<String, Collection<String>> headers = toMap(headersOnType);
+        final Map<String, Collection<String>> headers = toMap(headersOnType);
         headers.putAll(data.template().headers());
         data.template().headers(null); // to clear
         data.template().headers(headers);
       });
       super.registerMethodAnnotation(RequestLine.class, (ann, data) -> {
-        String requestLine = ann.value();
+        final String requestLine = ann.value();
         checkState(emptyToNull(requestLine) != null,
             "RequestLine annotation was empty on method %s.", data.configKey());
 
-        Matcher requestLineMatcher = REQUEST_LINE_PATTERN.matcher(requestLine);
+        final Matcher requestLineMatcher = REQUEST_LINE_PATTERN.matcher(requestLine);
         if (!requestLineMatcher.find()) {
           throw new IllegalStateException(String.format(
               "RequestLine annotation didn't start with an HTTP verb on method %s",
@@ -254,7 +255,7 @@ public interface Contract {
             .collectionFormat(ann.collectionFormat());
       });
       super.registerMethodAnnotation(Body.class, (ann, data) -> {
-        String body = ann.value();
+        final String body = ann.value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
             data.configKey());
         if (body.indexOf('{') == -1) {
@@ -264,17 +265,17 @@ public interface Contract {
         }
       });
       super.registerMethodAnnotation(Headers.class, (header, data) -> {
-        String[] headersOnMethod = header.value();
+        final String[] headersOnMethod = header.value();
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
             data.configKey());
         data.template().headers(toMap(headersOnMethod));
       });
       super.registerParameterAnnotation(Param.class, (paramAnnotation, data, paramIndex) -> {
-        String name = paramAnnotation.value();
+        final String name = paramAnnotation.value();
         checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
             paramIndex);
         nameParam(data, name, paramIndex);
-        Class<? extends Param.Expander> expander = paramAnnotation.expander();
+        final Class<? extends Param.Expander> expander = paramAnnotation.expander();
         if (expander != Param.ToStringExpander.class) {
           data.indexToExpanderClass().put(paramIndex, expander);
         }
@@ -296,11 +297,11 @@ public interface Contract {
     }
 
     private static Map<String, Collection<String>> toMap(String[] input) {
-      Map<String, Collection<String>> result =
+      final Map<String, Collection<String>> result =
           new LinkedHashMap<String, Collection<String>>(input.length);
-      for (String header : input) {
-        int colon = header.indexOf(':');
-        String name = header.substring(0, colon);
+      for (final String header : input) {
+        final int colon = header.indexOf(':');
+        final String name = header.substring(0, colon);
         if (!result.containsKey(name)) {
           result.put(name, new ArrayList<String>(1));
         }
