@@ -29,7 +29,7 @@ public abstract class DeclarativeContract extends BaseContract {
 
   private final List<GuardedAnnotationProcessor> classAnnotationProcessors = new ArrayList<>();
   private final List<GuardedAnnotationProcessor> methodAnnotationProcessors = new ArrayList<>();
-  Map<Class<Annotation>, DeclarativeContract.ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
+  private final Map<Class<Annotation>, DeclarativeContract.ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
       new HashMap<>();
 
   @Override
@@ -47,11 +47,14 @@ public abstract class DeclarativeContract extends BaseContract {
    */
   @Override
   protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
-    if (Arrays.stream(targetType.getAnnotations())
-        .anyMatch(annotation -> classAnnotationProcessors.stream()
-            .anyMatch(processor -> processor.test(annotation)))) {
+    final List<GuardedAnnotationProcessor> processors = Arrays.stream(targetType.getAnnotations())
+        .flatMap(annotation -> classAnnotationProcessors.stream()
+            .filter(processor -> processor.test(annotation)))
+        .collect(Collectors.toList());
+
+    if (!processors.isEmpty()) {
       Arrays.stream(targetType.getAnnotations())
-          .forEach(annotation -> classAnnotationProcessors.stream()
+          .forEach(annotation -> processors.stream()
               .filter(processor -> processor.test(annotation))
               .forEach(processor -> processor.process(annotation, data)));
     } else {
@@ -82,11 +85,12 @@ public abstract class DeclarativeContract extends BaseContract {
   protected final void processAnnotationOnMethod(MethodMetadata data,
                                                  Annotation annotation,
                                                  Method method) {
-    if (methodAnnotationProcessors.stream()
-        .anyMatch(processor -> processor.test(annotation))) {
-      methodAnnotationProcessors.stream()
-          .filter(processor -> processor.test(annotation))
-          .forEach(processor -> processor.process(annotation, data));
+    List<GuardedAnnotationProcessor> processors = methodAnnotationProcessors.stream()
+        .filter(processor -> processor.test(annotation))
+        .collect(Collectors.toList());
+
+    if (!processors.isEmpty()) {
+      processors.forEach(processor -> processor.process(annotation, data));
     } else {
       data.addWarning(String.format(
           "Method %s has an annotation %s that is not used by contract %s",
@@ -110,15 +114,15 @@ public abstract class DeclarativeContract extends BaseContract {
   protected final boolean processAnnotationsOnParameter(MethodMetadata data,
                                                         Annotation[] annotations,
                                                         int paramIndex) {
-    if (Arrays.stream(annotations)
-        .anyMatch(
-            annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))) {
-      Arrays.stream(annotations)
-          .filter(annotation -> parameterAnnotationProcessors.containsKey(annotation
-              .annotationType()))
-          .forEach(annotation -> parameterAnnotationProcessors
-              .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
-              .process(annotation, data, paramIndex));
+    List<Annotation> matchingAnnotations = Arrays.stream(annotations)
+        .filter(
+            annotation -> parameterAnnotationProcessors.containsKey(annotation.annotationType()))
+        .collect(Collectors.toList());
+
+    if (!matchingAnnotations.isEmpty()) {
+      matchingAnnotations.forEach(annotation -> parameterAnnotationProcessors
+          .getOrDefault(annotation.annotationType(), ParameterAnnotationProcessor.DO_NOTHING)
+          .process(annotation, data, paramIndex));
 
     } else {
       final Parameter parameter = data.method().getParameters()[paramIndex];
