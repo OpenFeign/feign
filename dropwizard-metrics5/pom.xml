@@ -19,10 +19,10 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.7.5-SNAPSHOT</version>
+    <version>10.9-SNAPSHOT</version>
   </parent>
-  <artifactId>feign-metrics5</artifactId>
-  <name>Feign Metrics5</name>
+  <artifactId>feign-dropwizard-metrics5</artifactId>
+  <name>Feign Dropwizard Metrics5</name>
   <description>Feign Dropwizard Metrics 5</description>
 
   <properties>
