@@ -44,12 +44,12 @@
     <module>spring4</module>
     <module>soap</module>
     <module>reactive</module>
+    <module>dropwizard-metrics5</module>
     <module>example-github</module>
     <module>example-wikipedia</module>
     <module>mock</module>
     <module>apt-test-generator</module>
     <module>benchmark</module>
-    <module>metrics5</module>
   </modules>
 
   <properties>
