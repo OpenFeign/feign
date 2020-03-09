@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,12 +13,14 @@
  */
 package feign.querymap;
 
+import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -40,9 +42,12 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
       ObjectParamMetadata metadata = getMetadata(object.getClass());
       Map<String, Object> propertyNameToValue = new HashMap<String, Object>();
       for (PropertyDescriptor pd : metadata.objectProperties) {
-        Object value = pd.getReadMethod().invoke(object);
+        Method method = pd.getReadMethod();
+        Object value = method.invoke(object);
         if (value != null && value != object) {
-          propertyNameToValue.put(pd.getName(), value);
+          Param alias = method.getAnnotation(Param.class);
+          String name = alias != null ? alias.value() : pd.getName();
+          propertyNameToValue.put(name, value);
         }
       }
       return propertyNameToValue;
