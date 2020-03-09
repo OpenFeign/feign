@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -113,6 +114,7 @@ public abstract class Feign {
     private boolean closeAfterDecode = true;
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
+    private List<Capability> capabilities = new ArrayList<>();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -234,6 +236,11 @@ public abstract class Feign {
       return this;
     }
 
+    public Builder addCapability(Capability capability) {
+      this.capabilities.add(capability);
+      return this;
+    }
+
     /** Internal - used to indicate that the decoder should be immediately called */
     Builder forceDecoding() {
       this.forceDecoding = true;
@@ -249,6 +256,21 @@ public abstract class Feign {
     }
 
     public Feign build() {
+      Client client = Capability.enrich(this.client, capabilities);
+      Retryer retryer = Capability.enrich(this.retryer, capabilities);
+      List<RequestInterceptor> requestInterceptors =
+          this.requestInterceptors.stream()
+              .map(ri -> Capability.enrich(ri, capabilities))
+              .collect(Collectors.toList());
+      Logger logger = Capability.enrich(this.logger, capabilities);
+      Contract contract = Capability.enrich(this.contract, capabilities);
+      Options options = Capability.enrich(this.options, capabilities);
+      Encoder encoder = Capability.enrich(this.encoder, capabilities);
+      Decoder decoder = Capability.enrich(this.decoder, capabilities);
+      InvocationHandlerFactory invocationHandlerFactory =
+          Capability.enrich(this.invocationHandlerFactory, capabilities);
+      QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
+
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(
               client,

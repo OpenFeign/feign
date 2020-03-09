@@ -49,6 +49,7 @@
     <module>mock</module>
     <module>apt-test-generator</module>
     <module>benchmark</module>
+    <module>metrics5</module>
   </modules>
 
   <properties>
