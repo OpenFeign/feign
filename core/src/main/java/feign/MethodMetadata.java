@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class MethodMetadata implements Serializable {
 
@@ -30,18 +31,19 @@ public final class MethodMetadata implements Serializable {
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
   private transient Type bodyType;
-  private RequestTemplate template = new RequestTemplate();
-  private List<String> formParams = new ArrayList<String>();
-  private Map<Integer, Collection<String>> indexToName =
+  private final RequestTemplate template = new RequestTemplate();
+  private final List<String> formParams = new ArrayList<String>();
+  private final Map<Integer, Collection<String>> indexToName =
       new LinkedHashMap<Integer, Collection<String>>();
-  private Map<Integer, Class<? extends Expander>> indexToExpanderClass =
+  private final Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
-  private Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
+  private final Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
   private transient Class<?> targetType;
   private transient Method method;
+  private final transient List<String> warnings = new ArrayList<>();
 
   MethodMetadata() {
     template.methodMetadata(this);
@@ -232,5 +234,13 @@ public final class MethodMetadata implements Serializable {
   @Experimental
   public Method method() {
     return method;
+  }
+
+  public void addWarning(String warning) {
+    warnings.add(warning);
+  }
+
+  public String warnings() {
+    return warnings.stream().collect(Collectors.joining("\n- ", "\nWarnings:\n- ", ""));
   }
 }

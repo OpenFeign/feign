@@ -15,20 +15,16 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
 import com.google.gson.reflect.TypeToken;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
+import java.util.*;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
 /**
@@ -54,7 +50,7 @@ public class DefaultContractTest {
 
   @Test
   public void bodyParamIsGeneric() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
+    final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
     assertThat(md.bodyIndex()).isEqualTo(0);
     assertThat(md.bodyType()).isEqualTo(new TypeToken<List<String>>() {}.getType());
@@ -62,7 +58,8 @@ public class DefaultContractTest {
 
   @Test
   public void bodyParamWithPathParam() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
 
     assertThat(md.bodyIndex()).isEqualTo(1);
     assertThat(md.indexToName()).containsOnly(entry(0, asList("id")));
@@ -121,14 +118,14 @@ public class DefaultContractTest {
 
   @Test
   public void bodyWithoutParameters() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
+    final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template()).hasBody("<v01:getAccountsListOfUser/>");
   }
 
   @Test
   public void headersOnMethodAddsContentTypeHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
+    final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template())
         .hasHeaders(
@@ -138,7 +135,7 @@ public class DefaultContractTest {
 
   @Test
   public void headersOnTypeAddsContentTypeHeader() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(HeadersOnType.class, "post");
+    final MethodMetadata md = parseAndValidateMetadata(HeadersOnType.class, "post");
 
     assertThat(md.template())
         .hasHeaders(
@@ -148,7 +145,7 @@ public class DefaultContractTest {
 
   @Test
   public void headersContainsWhitespaces() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(HeadersContainsWhitespaces.class, "post");
+    final MethodMetadata md = parseAndValidateMetadata(HeadersContainsWhitespaces.class, "post");
 
     assertThat(md.template())
         .hasHeaders(
@@ -158,7 +155,7 @@ public class DefaultContractTest {
 
   @Test
   public void withPathAndURIParam() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             WithURIParam.class, "uriParam", String.class, URI.class, String.class);
 
@@ -173,7 +170,7 @@ public class DefaultContractTest {
 
   @Test
   public void pathAndQueryParams() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             WithPathAndQueryParams.class,
             "recordsByNameAndType",
@@ -191,7 +188,7 @@ public class DefaultContractTest {
 
   @Test
   public void bodyWithTemplate() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
@@ -203,7 +200,7 @@ public class DefaultContractTest {
 
   @Test
   public void formParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
@@ -255,7 +252,7 @@ public class DefaultContractTest {
   /** Body type is only for the body param. */
   @Test
   public void formParamsDoesNotSetBodyType() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
@@ -264,7 +261,7 @@ public class DefaultContractTest {
 
   @Test
   public void headerParamsParseIntoIndexToName() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
+    final MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
 
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{authToken}", "Foo")));
 
@@ -274,7 +271,7 @@ public class DefaultContractTest {
 
   @Test
   public void headerParamsParseIntoIndexToNameNotAtStart() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(HeaderParamsNotAtStart.class, "logout", String.class);
 
     assertThat(md.template())
@@ -286,14 +283,14 @@ public class DefaultContractTest {
 
   @Test
   public void customExpander() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "date", Date.class);
+    final MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "date", Date.class);
 
     assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
   }
 
   @Test
   public void queryMap() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
 
     assertThat(md.queryMapIndex()).isEqualTo(0);
@@ -301,7 +298,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapEncodedDefault() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
 
     assertThat(md.queryMapEncoded()).isFalse();
@@ -309,7 +306,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapEncodedTrue() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapEncoded", Map.class);
 
     assertThat(md.queryMapEncoded()).isTrue();
@@ -317,7 +314,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapEncodedFalse() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapNotEncoded", Map.class);
 
     assertThat(md.queryMapEncoded()).isFalse();
@@ -325,7 +322,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapMapSubclass() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             QueryMapTestInterface.class, "queryMapMapSubclass", SortedMap.class);
 
@@ -338,7 +335,7 @@ public class DefaultContractTest {
       parseAndValidateMetadata(
           QueryMapTestInterface.class, "multipleQueryMap", Map.class, Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
+    } catch (final IllegalStateException ex) {
       assertThat(ex).hasMessage("QueryMap annotation was present on multiple parameters.");
     }
   }
@@ -348,14 +345,14 @@ public class DefaultContractTest {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "nonStringKeyQueryMap", Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
+    } catch (final IllegalStateException ex) {
       assertThat(ex).hasMessage("QueryMap key must be a String: Integer");
     }
   }
 
   @Test
   public void queryMapPojoObject() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObject", Object.class);
 
     assertThat(md.queryMapIndex()).isEqualTo(0);
@@ -363,7 +360,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapPojoObjectEncoded() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectEncoded", Object.class);
 
     assertThat(md.queryMapIndex()).isEqualTo(0);
@@ -372,7 +369,7 @@ public class DefaultContractTest {
 
   @Test
   public void queryMapPojoObjectNotEncoded() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectNotEncoded", Object.class);
 
     assertThat(md.queryMapIndex()).isEqualTo(0);
@@ -396,14 +393,14 @@ public class DefaultContractTest {
     try {
       parseAndValidateMetadata(HeaderMapInterface.class, "multipleHeaderMap", Map.class, Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    } catch (IllegalStateException ex) {
+    } catch (final IllegalStateException ex) {
       assertThat(ex).hasMessage("HeaderMap annotation was present on multiple parameters.");
     }
   }
 
   @Test
   public void headerMapSubclass() throws Exception {
-    MethodMetadata md =
+    final MethodMetadata md =
         parseAndValidateMetadata(
             HeaderMapInterface.class, "headerMapSubClass", SubClassHeaders.class);
     assertThat(md.headerMapIndex()).isEqualTo(0);
@@ -619,7 +616,7 @@ public class DefaultContractTest {
 
   @Test
   public void simpleParameterizedBaseApi() throws Exception {
-    List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
+    final List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
 
     assertThat(md).hasSize(1);
 
@@ -693,10 +690,10 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedBaseApi() throws Exception {
-    List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedApi.class);
+    final List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedApi.class);
 
-    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
-    for (MethodMetadata m : md) {
+    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (final MethodMetadata m : md) {
       byConfigKey.put(m.configKey(), m);
     }
 
@@ -725,7 +722,8 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedHeaderExpandApi() throws Exception {
-    List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedHeaderExpandApi.class);
+    final List<MethodMetadata> md =
+        contract.parseAndValidateMetadata(ParameterizedHeaderExpandApi.class);
 
     assertThat(md).hasSize(1);
 
@@ -742,7 +740,7 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
-    List<MethodMetadata> md =
+    final List<MethodMetadata> md =
         contract.parseAndValidateMetadata(
             ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
 
@@ -780,11 +778,11 @@ public class DefaultContractTest {
 
   @Test
   public void parameterizedHeaderExpandApiBaseClass() throws Exception {
-    List<MethodMetadata> mds =
+    final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(ParameterizedHeaderExpandInheritedApi.class);
 
-    Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
-    for (MethodMetadata m : mds) {
+    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    for (final MethodMetadata m : mds) {
       byConfigKey.put(m.configKey(), m);
     }
 
@@ -842,9 +840,10 @@ public class DefaultContractTest {
 
   @Test
   public void staticMethodsOnInterfaceIgnored() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidateMetadata(StaticMethodOnInterface.class);
+    final List<MethodMetadata> mds =
+        contract.parseAndValidateMetadata(StaticMethodOnInterface.class);
     assertThat(mds).hasSize(1);
-    MethodMetadata md = mds.get(0);
+    final MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
   }
 
@@ -859,9 +858,10 @@ public class DefaultContractTest {
 
   @Test
   public void defaultMethodsOnInterfaceIgnored() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidateMetadata(DefaultMethodOnInterface.class);
+    final List<MethodMetadata> mds =
+        contract.parseAndValidateMetadata(DefaultMethodOnInterface.class);
     assertThat(mds).hasSize(1);
-    MethodMetadata md = mds.get(0);
+    final MethodMetadata md = mds.get(0);
     assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
   }
 
@@ -872,9 +872,26 @@ public class DefaultContractTest {
 
   @Test
   public void paramIsASubstringOfAQuery() throws Exception {
-    List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
+    final List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
 
     assertThat(mds.get(0).template().queries()).containsExactly(entry("q", asList("body:{body}")));
     assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
+  }
+
+  @Test
+  public void errorMessageOnMixedContracts() {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("are not used by contract Default");
+
+    contract.parseAndValidateMetadata(MixedAnnotations.class);
+  }
+
+  interface MixedAnnotations {
+    @Headers("Content-Type: application/json")
+    @RequestLine("GET api/v2/clients/{uid}")
+    Response findAllClientsByUid2(
+        @Category(value = String.class) String uid,
+        Integer limit,
+        @SuppressWarnings({"a"}) Integer offset);
   }
 }
