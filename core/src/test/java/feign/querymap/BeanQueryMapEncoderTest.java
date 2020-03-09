@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,8 +16,10 @@ package feign.querymap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import feign.Param;
 import feign.QueryMapEncoder;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,6 +68,39 @@ public class BeanQueryMapEncoderTest {
     Map<String, Object> encodedMap = encoder.encode(subClass);
 
     assertEquals("Unexpected encoded query map", expected, encodedMap);
+  }
+
+  @Test
+  public void testDefaultEncoder_withOverriddenParamName() {
+    HashSet<Object> expectedNames = new HashSet<>();
+    expectedNames.add("fooAlias");
+    expectedNames.add("bar");
+    final NormalObjectWithOverriddenParamName normalObject =
+        new NormalObjectWithOverriddenParamName("fooz", "barz");
+
+    final Map<String, Object> encodedMap = encoder.encode(normalObject);
+
+    assertEquals("@Param ignored", expectedNames, encodedMap.keySet());
+  }
+
+  class NormalObjectWithOverriddenParamName {
+
+    private NormalObjectWithOverriddenParamName(String foo, String bar) {
+      this.foo = foo;
+      this.bar = bar;
+    }
+
+    private String foo;
+    private String bar;
+
+    @Param("fooAlias")
+    public String getFoo() {
+      return foo;
+    }
+
+    public String getBar() {
+      return bar;
+    }
   }
 
   class NormalObject {
