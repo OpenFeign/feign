@@ -56,12 +56,11 @@ public class Metrics5CapabilityTest {
         "Expect all metric names to include method name:" + metricName,
         metricName.getTags(),
         hasEntry("method", "get")));
-    registry.getMetrics().keySet().forEach(
-        metricName -> assertThat(
-            "Expect all metric names to include host name:" + metricName,
-            metricName.getTags(),
-            // hostname is null due to feign-mock shortfalls
-            hasEntry("host", null)));
+    registry.getMetrics().keySet().forEach(metricName -> assertThat(
+        "Expect all metric names to include host name:" + metricName,
+        metricName.getTags(),
+        // hostname is null due to feign-mock shortfalls
+        hasEntry("host", null)));
   }
 
 }
