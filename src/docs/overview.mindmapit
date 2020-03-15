@@ -23,6 +23,9 @@
     - Jackson 2
     - Jackson JAXB
     - Sax
+  - metrics
+    - Dropwizard Metrics 5
+    - Micrometer
   - extras
     - Hystrix
     - SLF4J
