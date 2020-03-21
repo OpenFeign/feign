@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public class Template {
 
   private static final Logger logger = Logger.getLogger(Template.class.getName());
-  private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)(\\?)");
   private final String template;
   private final boolean allowUnresolved;
   private final EncodingOptions encode;
