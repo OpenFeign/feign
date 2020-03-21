@@ -62,6 +62,12 @@ public class HeaderTemplateTest {
   }
 
   @Test
+  public void allow_empty_expression() {
+    HeaderTemplate headerTemplate = HeaderTemplate.create("hello", Arrays.asList("{}"));
+    assertEquals("hello {}", headerTemplate.expand(Collections.emptyMap()));
+  }
+
+  @Test
   public void create_should_preserve_order() {
     /*
      * Since Java 7, HashSet order is stable within a since JVM process, so one of these assertions

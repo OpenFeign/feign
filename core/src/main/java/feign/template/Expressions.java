@@ -40,12 +40,17 @@ public final class Expressions {
         SimpleExpression.class);
   }
 
-  public static Expression create(final String value) {
+  public static Expression create(final String value, boolean allowEmpty) {
 
     /* remove the start and end braces */
     final String expression = stripBraces(value);
     if (expression == null || expression.isEmpty()) {
-      throw new IllegalArgumentException("an expression is required.");
+      if(allowEmpty) {
+        return null;
+      }
+      else {
+        throw new IllegalArgumentException("an expression is required.");
+      }
     }
 
     Optional<Entry<Pattern, Class<? extends Expression>>> matchedExpressionEntry =

@@ -124,7 +124,7 @@ public final class QueryTemplate {
       boolean decodeSlash) {
     this.values = new CopyOnWriteArrayList<>();
     this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
-        !decodeSlash, charset);
+        !decodeSlash, false, charset);
     this.collectionFormat = collectionFormat;
 
     /* parse each value into a template chunk for resolution later */
@@ -139,8 +139,7 @@ public final class QueryTemplate {
               value,
               ExpansionOptions.REQUIRED,
               EncodingOptions.REQUIRED,
-              !decodeSlash,
-              charset));
+              !decodeSlash, false, charset));
     }
 
     if (this.values.isEmpty()) {

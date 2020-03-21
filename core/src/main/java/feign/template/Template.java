@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +33,7 @@ public class Template {
   private final boolean allowUnresolved;
   private final EncodingOptions encode;
   private final boolean encodeSlash;
+  private final boolean allowEmpty;
   private final Charset charset;
   private final List<TemplateChunk> templateChunks = new ArrayList<>();
 
@@ -44,10 +44,11 @@ public class Template {
    * @param allowUnresolved if unresolved expressions should remain.
    * @param encode all values.
    * @param encodeSlash if slash characters should be encoded.
+   * @param allowEmpty if empty expressions are allowed.
    */
   Template(
-      String value, ExpansionOptions allowUnresolved, EncodingOptions encode, boolean encodeSlash,
-      Charset charset) {
+          String value, ExpansionOptions allowUnresolved, EncodingOptions encode, boolean encodeSlash,
+          boolean allowEmpty, Charset charset) {
     if (value == null) {
       throw new IllegalArgumentException("template is required.");
     }
@@ -55,6 +56,7 @@ public class Template {
     this.allowUnresolved = ExpansionOptions.ALLOW_UNRESOLVED == allowUnresolved;
     this.encode = encode;
     this.encodeSlash = encodeSlash;
+    this.allowEmpty = allowEmpty;
     this.charset = charset;
     this.parseTemplate();
   }
@@ -190,7 +192,7 @@ public class Template {
       String chunk = tokenizer.next();
 
       if (chunk.startsWith("{")) {
-        Expression expression = Expressions.create(chunk);
+        Expression expression = Expressions.create(chunk, this.allowEmpty);
         if (expression == null) {
           this.templateChunks.add(Literal.create(this.encodeLiteral(chunk)));
         } else {

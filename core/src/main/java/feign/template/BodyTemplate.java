@@ -51,7 +51,7 @@ public final class BodyTemplate extends Template {
   }
 
   private BodyTemplate(String value, Charset charset) {
-    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
+    super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, false, charset);
     if (value.startsWith(JSON_TOKEN_START_ENCODED) && value.endsWith(JSON_TOKEN_END_ENCODED)) {
       this.json = true;
     }
