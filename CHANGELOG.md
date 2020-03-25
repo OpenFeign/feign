@@ -1,3 +1,11 @@
+### Version 10.9
+
+* Configurable to disable streaming mode for Default client by verils (#1182) 
+* Overriding query parameter name by boggard (#1184)
+* Internal feign metrics by velo:
+** Dropwizard metrics 5 (#1181)
+** Micrometer (#1188)
+
 ### Version 10.8
 
 * async feign variant supporting CompleteableFutures by motinis (#1174) 
