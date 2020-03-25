@@ -9,6 +9,7 @@ cache:
 jdk:
   - openjdk8
   - openjdk11
+  - openjdk14
 
 before_install: ./travis/sign.sh
 
@@ -29,12 +30,8 @@ jobs:
     - stage: release
       name: "Release to OSSRH and Central"
       if: tag =~ /^[0-9\.]+$/
+      # there is one module (java-11) that needs to be build and released with JDK 11
       jdk: openjdk8
       install: true
       script:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
-
-env:
-  global:
-    # Ex. travis encrypt GITHUB_TOKEN=token_for_tests
-    - secure: "H4PuppuPE3lkvVQ1osulhgWeZmpIkDKj/z74lx4MUeDPNtcuqpwmTVWtL5Zyjf8CxlALX2djx4RIBshaQAu4GtKarPLONinNLZ/TCtoK8dF08/ESxLEiLQzwGkS+geWoEFiZncB5Px2T7ZbUfVFO3crVY9CLn35znR8k1uidocL0JlyVPGwCwuBxFmDhs3BZh3JvbwSikAVRvlCRU6BbREFQbSK1EamuUju/rlo+dx7W5tiiuEJJ50c8vpgatTFyy821YP82fMRrhuBDpS4/rsL9DmLhQTEbCjZW+22DhEFPRlo0XIfidC7APybXnu3oO+jFuGaFKiQdy7sjB03g/Bz5H7jAIAkbl8UpbjN+IoeUU/OgMuBYf5wJjPDYUEdI3CXqywPn0xYZwVsOcSg+UkQGYdW9ux/U+nKsYLXLWWhst2QMFzbmO94KCrpgCW4mshr/5WP4XU6cEJwDsKMAUPWuOk0KMMjIufSgvPvteWZwT9akZwzEMuGaUQ5kLr1X6xTPv1cKXTreitaoOLQs28kmPVfTwVEdareaSVXcRqeflJJBSXkAgBqGhV5CAEUaUgt9/QD0Jj5RGyRPllFcydXVLTPeg62X/L5COswlvJhPkvfNnkbMpDQZYojKKPmAf+UqZJmVYPpOoNEXygldueKeunWkna/wYkMj0YnOkM8="
