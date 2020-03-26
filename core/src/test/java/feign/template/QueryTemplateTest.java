@@ -53,7 +53,7 @@ public class QueryTemplateTest {
     QueryTemplate template =
             QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("value", Collections.emptyList()));
-    assertThat(expanded).isEqualToIgnoringCase("name=null");
+    assertThat(expanded).isEqualToIgnoringCase("name=");
   }
 
   @Test
