@@ -17,7 +17,6 @@ package feign.template;
 import static org.assertj.core.api.Assertions.assertThat;
 import feign.CollectionFormat;
 import feign.Util;
-
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Test;
@@ -64,7 +63,6 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("value", "Magnum P.I."));
     assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
   }
-
 
   @Test
   public void expandMultipleValues() {
