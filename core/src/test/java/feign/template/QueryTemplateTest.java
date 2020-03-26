@@ -17,6 +17,7 @@ package feign.template;
 import static org.assertj.core.api.Assertions.assertThat;
 import feign.CollectionFormat;
 import feign.Util;
+
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Test;
@@ -45,6 +46,30 @@ public class QueryTemplateTest {
         QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("value", "Magnum P.I."));
     assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
+  }
+
+  @Test
+  public void expandSingleValueEmptyList() {
+    QueryTemplate template =
+            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("value", Collections.emptyList()));
+    assertThat(expanded).isEqualToIgnoringCase("name=null");
+  }
+
+  @Test
+  public void expandSingleValueSingletonList() {
+    QueryTemplate template =
+            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("value", Collections.singletonList("Magnum P.I.")));
+    assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
+  }
+
+  @Test
+  public void expandSingleValueMultipleValueList() {
+    QueryTemplate template =
+            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("value", Arrays.asList("Bob", "James", "Jason")));
+    assertThat(expanded).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
   }
 
   @Test
