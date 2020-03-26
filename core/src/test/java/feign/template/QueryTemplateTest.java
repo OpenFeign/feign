@@ -32,6 +32,22 @@ public class QueryTemplateTest {
   }
 
   @Test
+  public void expandEmptyCollection() {
+    QueryTemplate template =
+            QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("people", Collections.emptyList()));
+    assertThat(expanded).isEqualToIgnoringCase("people=");
+  }
+
+  @Test
+  public void expandCollection() {
+    QueryTemplate template =
+            QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("people", Arrays.asList("Bob", "James", "Jason")));
+    assertThat(expanded).isEqualToIgnoringCase("people=Bob&people=James&people=Jason");
+  }
+
+  @Test
   public void expandCollectionWithBlanks() {
     QueryTemplate template =
         QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
@@ -48,29 +64,6 @@ public class QueryTemplateTest {
     assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
   }
 
-  @Test
-  public void expandSingleValueEmptyList() {
-    QueryTemplate template =
-            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
-    String expanded = template.expand(Collections.singletonMap("value", Collections.emptyList()));
-    assertThat(expanded).isEqualToIgnoringCase("name=");
-  }
-
-  @Test
-  public void expandSingleValueSingletonList() {
-    QueryTemplate template =
-            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
-    String expanded = template.expand(Collections.singletonMap("value", Collections.singletonList("Magnum P.I.")));
-    assertThat(expanded).isEqualToIgnoringCase("name=Magnum%20P.I.");
-  }
-
-  @Test
-  public void expandSingleValueMultipleValueList() {
-    QueryTemplate template =
-            QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
-    String expanded = template.expand(Collections.singletonMap("value", Arrays.asList("Bob", "James", "Jason")));
-    assertThat(expanded).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
-  }
 
   @Test
   public void expandMultipleValues() {
