@@ -53,7 +53,7 @@
   <profiles>
     <profile>
       <activation>
-        <jdk>11</jdk>
+        <jdk>[11,]</jdk>
       </activation>
 
       <!--
