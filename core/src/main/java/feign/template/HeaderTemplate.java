@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -31,6 +34,18 @@ public final class HeaderTemplate extends Template {
   /* cache a copy of the variables for lookup later */
   private LinkedHashSet<String> values;
   private String name;
+
+  public static HeaderTemplate from(String name, List<TemplateChunk> chunks) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+
+    if (chunks == null) {
+      throw new IllegalArgumentException("chunks are required.");
+    }
+
+    return new HeaderTemplate(name, Util.UTF_8, chunks);
+  }
 
   public static HeaderTemplate create(String name, Iterable<String> values) {
     if (name == null || name.isEmpty()) {
@@ -51,7 +66,7 @@ public final class HeaderTemplate extends Template {
     while (iterator.hasNext()) {
       template.append(iterator.next());
       if (iterator.hasNext()) {
-        template.append(", ");
+        template.append(",");
       }
     }
     return new HeaderTemplate(template.toString(), name, values, Util.UTF_8);
@@ -73,6 +88,20 @@ public final class HeaderTemplate extends Template {
   }
 
   /**
+   * Append {@link TemplateChunk} to a Header Template.
+   * 
+   * @param headerTemplate to append to.
+   * @param chunks to append.
+   * @return a new HeaderTemplate with the values added.
+   */
+  public static HeaderTemplate appendFrom(HeaderTemplate headerTemplate,
+                                          List<TemplateChunk> chunks) {
+    List<TemplateChunk> existing = new CopyOnWriteArrayList<>(headerTemplate.getTemplateChunks());
+    existing.addAll(chunks);
+    return from(headerTemplate.getName(), existing);
+  }
+
+  /**
    * Creates a new Header Template.
    *
    * @param template to parse.
@@ -85,11 +114,41 @@ public final class HeaderTemplate extends Template {
     this.name = name;
   }
 
+  /**
+   * Creates a new Header Template from a set of TemplateChunks.
+   *
+   * @param name of the header.
+   * @param charset to encode the expanded values in.
+   * @param chunks for the template.
+   */
+  private HeaderTemplate(String name, Charset charset, List<TemplateChunk> chunks) {
+    super(ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset,
+        chunks);
+    this.values = chunks.stream()
+        .map(TemplateChunk::getValue)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+    this.name = name;
+  }
+
   public Collection<String> getValues() {
     return Collections.unmodifiableCollection(values);
   }
 
   public String getName() {
     return name;
+  }
+
+  @Override
+  public String expand(Map<String, ?> variables) {
+    String result = super.expand(variables);
+
+    /* remove any trailing commas */
+    while (result.endsWith(",")) {
+      result = result.replaceAll(",$", "");
+    }
+
+    /* space all the commas now */
+    result = result.replaceAll(",", ", ");
+    return result;
   }
 }

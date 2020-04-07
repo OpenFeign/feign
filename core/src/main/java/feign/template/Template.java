@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign.template;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +59,25 @@ public class Template {
     this.encodeSlash = encodeSlash;
     this.charset = charset;
     this.parseTemplate();
+  }
+
+  /**
+   * Create a new Template from the provided {@link TemplateChunk}s.
+   *
+   * @param allowUnresolved if unresolved expressions should remain.
+   * @param encode all values
+   * @param encodeSlash if slash characters should be encoded.
+   * @param charset of the result.
+   * @param chunks for this template.
+   */
+  Template(ExpansionOptions allowUnresolved, EncodingOptions encode, boolean encodeSlash,
+      Charset charset, List<TemplateChunk> chunks) {
+    this.templateChunks.addAll(chunks);
+    this.allowUnresolved = ExpansionOptions.ALLOW_UNRESOLVED == allowUnresolved;
+    this.encode = encode;
+    this.encodeSlash = encodeSlash;
+    this.charset = charset;
+    this.template = this.toString();
   }
 
   /**
@@ -158,6 +178,10 @@ public class Template {
         .map(TemplateChunk::toString)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  public List<TemplateChunk> getTemplateChunks() {
+    return Collections.unmodifiableList(this.templateChunks);
   }
 
   /**
