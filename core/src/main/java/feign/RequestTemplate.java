@@ -33,6 +33,7 @@ import static feign.Util.*;
  * information also support template expressions.
  * </p>
  */
+@SuppressWarnings("UnusedReturnValue")
 public final class RequestTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
@@ -233,7 +234,8 @@ public final class RequestTemplate implements Serializable {
           /* split off the header values and add it to the resolved template */
           String headerValues = header.substring(header.indexOf(" ") + 1);
           if (!headerValues.isEmpty()) {
-            resolved.header(headerTemplate.getName(), headerValues);
+            /* append the header as a new literal as the value has already been expanded. */
+            resolved.header(headerTemplate.getName(), Literal.create(headerValues));
           }
         }
       }
@@ -693,6 +695,20 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * Add a header using the supplied Chunks.
+   * 
+   * @param name of the header.
+   * @param chunks to add.
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate header(String name, TemplateChunk... chunks) {
+    if (chunks == null) {
+      throw new IllegalArgumentException("chunks are required.");
+    }
+    return appendHeader(name, Arrays.asList(chunks));
+  }
+
+  /**
    * Specify a Header, with the specified values. Values can be literals or template expressions.
    *
    * @param name of the header.
@@ -742,6 +758,22 @@ public final class RequestTemplate implements Serializable {
         return HeaderTemplate.create(headerName, values);
       } else {
         return HeaderTemplate.append(headerTemplate, values);
+      }
+    });
+    return this;
+  }
+
+  private RequestTemplate appendHeader(String name, List<TemplateChunk> chunks) {
+    if (chunks.isEmpty()) {
+      this.headers.remove(name);
+      return this;
+    }
+
+    this.headers.compute(name, (headerName, headerTemplate) -> {
+      if (headerTemplate == null) {
+        return HeaderTemplate.from(name, chunks);
+      } else {
+        return HeaderTemplate.appendFrom(headerTemplate, chunks);
       }
     });
     return this;
@@ -817,7 +849,7 @@ public final class RequestTemplate implements Serializable {
     /* body template must be cleared to prevent double processing */
     this.bodyTemplate = null;
 
-    header(CONTENT_LENGTH);
+    header(CONTENT_LENGTH, Collections.emptyList());
     if (body.length() > 0) {
       header(CONTENT_LENGTH, String.valueOf(body.length()));
     }
