@@ -1,5 +1,4 @@
 dist: xenial
-sudo: false
 language: java
 
 cache:
@@ -35,3 +34,10 @@ jobs:
       install: true
       script:
         - ./mvnw -B -nsu -s ./travis/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+    - stage: release-jdk11
+      name: "Release JDK 11 Modules to OSSRH and Central"
+      if: tag =~ /^[0-9\.]+$/
+      jdk: openjdk11
+      install: true
+      script:
+        - ./mvnw -B -nsu -s ./travis/settings.xml -P release,java11 -pl :feign-java11 -:feign-benchmark -DskipTests=true deploy
