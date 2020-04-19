@@ -31,6 +31,23 @@ public class QueryTemplateTest {
   }
 
   @Test
+  public void expandEmptyCollection() {
+    QueryTemplate template =
+        QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("people", Collections.emptyList()));
+    assertThat(expanded).isEqualToIgnoringCase("people=");
+  }
+
+  @Test
+  public void expandCollection() {
+    QueryTemplate template =
+        QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded =
+        template.expand(Collections.singletonMap("people", Arrays.asList("Bob", "James", "Jason")));
+    assertThat(expanded).isEqualToIgnoringCase("people=Bob&people=James&people=Jason");
+  }
+
+  @Test
   public void expandCollectionWithBlanks() {
     QueryTemplate template =
         QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
