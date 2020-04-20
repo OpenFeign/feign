@@ -66,3 +66,6 @@ atlassian-ide-plugin.xml
 
 # encrypted values
 *.asc
+
+# maven versions
+*.versionsBackup
