@@ -40,4 +40,6 @@ jobs:
       jdk: openjdk11
       install: true
       script:
-        - ./mvnw -B -nsu -s ./travis/settings.xml -P release,java11 -pl :feign-java11 -:feign-benchmark -DskipTests=true deploy
+        # first install the pre-requisite projects, then deploy just the java 11 module
+        - ./mvnw -B -nsu -s ./travis/settings.xml -P java11 -pl :feign-java11 -am -DskipTests=true install
+        - ./mvnw -B -nsu -s ./travis/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
