@@ -33,7 +33,6 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.ProcessingException;
-
 import feign.jaxrs.JAXRSContract;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
@@ -136,15 +135,18 @@ public class JAXRSClientTest extends AbstractClientTest {
   public void testConsumesMultipleWithContentTypeHeaderAndBody() throws Exception {
     server.enqueue(new MockResponse().setBody("AAAAAAAA"));
     final JaxRSClientTestInterfaceWithJaxRsContract api = newBuilder()
-            .contract(new JAXRSContract()) // use JAXRSContract
-            .target(JaxRSClientTestInterfaceWithJaxRsContract.class, "http://localhost:" + server.getPort());
+        .contract(new JAXRSContract()) // use JAXRSContract
+        .target(JaxRSClientTestInterfaceWithJaxRsContract.class,
+            "http://localhost:" + server.getPort());
 
-    final Response response = api.consumesMultipleWithContentTypeHeaderAndBody("application/json;charset=utf-8", "body");
+    final Response response =
+        api.consumesMultipleWithContentTypeHeaderAndBody("application/json;charset=utf-8", "body");
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-            .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("application/json;charset=utf-8")))
-            .hasMethod("POST");
+        .hasHeaders(MapEntry.entry("Content-Type",
+            Collections.singletonList("application/json;charset=utf-8")))
+        .hasMethod("POST");
   }
 
   public interface JaxRSClientTestInterface {
@@ -158,6 +160,7 @@ public class JAXRSClientTest extends AbstractClientTest {
     @Path("/")
     @POST
     @Consumes({"application/xml", "application/json"})
-    Response consumesMultipleWithContentTypeHeaderAndBody(@HeaderParam("Content-Type") String contentType, String body);
+    Response consumesMultipleWithContentTypeHeaderAndBody(@HeaderParam("Content-Type") String contentType,
+                                                          String body);
   }
 }
