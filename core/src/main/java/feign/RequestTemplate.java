@@ -696,7 +696,7 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Add a header using the supplied Chunks.
-   * 
+   *
    * @param name of the header.
    * @param chunks to add.
    * @return a RequestTemplate for chaining.
@@ -751,6 +751,14 @@ public final class RequestTemplate implements Serializable {
     if (!values.iterator().hasNext()) {
       /* empty value, clear the existing values */
       this.headers.remove(name);
+      return this;
+    }
+    if (name.equals("Content-Type")) {
+      // a client can only produce content of one single type, so always override Content-Type and
+      // only add a single type
+      this.headers.remove(name);
+      this.headers.put(name,
+          HeaderTemplate.create(name, Collections.singletonList(values.iterator().next())));
       return this;
     }
     this.headers.compute(name, (headerName, headerTemplate) -> {
