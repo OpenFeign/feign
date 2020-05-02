@@ -26,9 +26,14 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
+import feign.jaxrs.JAXRSContract;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.ProcessingException;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
@@ -125,10 +130,39 @@ public class JAXRSClientTest extends AbstractClientTest {
         .hasMethod("GET");
   }
 
+  @Test
+  public void testConsumesMultipleWithContentTypeHeaderAndBody() throws Exception {
+    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    final JaxRSClientTestInterfaceWithJaxRsContract api =
+        newBuilder()
+            .contract(new JAXRSContract()) // use JAXRSContract
+            .target(
+                JaxRSClientTestInterfaceWithJaxRsContract.class,
+                "http://localhost:" + server.getPort());
+
+    final Response response =
+        api.consumesMultipleWithContentTypeHeaderAndBody("application/json;charset=utf-8", "body");
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasHeaders(
+            MapEntry.entry(
+                "Content-Type", Collections.singletonList("application/json;charset=utf-8")))
+        .hasMethod("POST");
+  }
+
   public interface JaxRSClientTestInterface {
 
     @RequestLine("GET /")
     @Headers({"Accept: text/plain", "Content-Type: text/plain"})
     Response getWithContentType();
+  }
+
+  public interface JaxRSClientTestInterfaceWithJaxRsContract {
+    @Path("/")
+    @POST
+    @Consumes({"application/xml", "application/json"})
+    Response consumesMultipleWithContentTypeHeaderAndBody(
+        @HeaderParam("Content-Type") String contentType, String body);
   }
 }

@@ -70,13 +70,13 @@ public class JAXRSContract extends DeclarativeContract {
 
     registerMethodAnnotation(
         methodAnnotation -> {
-          Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-          HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+          final Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+          final HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
           return http != null;
         },
         (methodAnnotation, data) -> {
-          Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
-          HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
+          final Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+          final HttpMethod http = annotationType.getAnnotation(HttpMethod.class);
           checkState(
               data.template().method() == null,
               "Method %s contains multiple HTTP methods. Found: %s and %s",
@@ -114,7 +114,7 @@ public class JAXRSContract extends DeclarativeContract {
 
   private void handleProducesAnnotation(Produces produces, MethodMetadata data) {
     final String[] serverProduces =
-        removeValues(produces.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+        removeValues(produces.value(), mediaType -> emptyToNull(mediaType) == null, String.class);
     checkState(serverProduces.length > 0, "Produces.value() was empty on %s", data.configKey());
     data.template().header(ACCEPT, Collections.emptyList()); // remove any previous produces
     data.template().header(ACCEPT, serverProduces);
@@ -122,10 +122,9 @@ public class JAXRSContract extends DeclarativeContract {
 
   private void handleConsumesAnnotation(Consumes consumes, MethodMetadata data) {
     final String[] serverConsumes =
-        removeValues(consumes.value(), (mediaType) -> emptyToNull(mediaType) == null, String.class);
+        removeValues(consumes.value(), mediaType -> emptyToNull(mediaType) == null, String.class);
     checkState(serverConsumes.length > 0, "Consumes.value() was empty on %s", data.configKey());
-    data.template().header(CONTENT_TYPE, Collections.emptyList()); // remove any previous consumes
-    data.template().header(CONTENT_TYPE, serverConsumes[0]);
+    data.template().header(CONTENT_TYPE, serverConsumes);
   }
 
   protected void registerParamAnnotations() {
