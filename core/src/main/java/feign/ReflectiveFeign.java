@@ -312,6 +312,10 @@ public class ReflectiveFeign extends Feign {
                 : encoded ? nextObject.toString()
                     : UriUtils.encode(nextObject.toString()));
           }
+        } else if (currValue instanceof Object[]) {
+          for (Object value : (Object[]) currValue) {
+            values.add(value == null ? null : encoded ? value.toString() : UriUtils.encode(value.toString()));
+          }
         } else {
           values.add(currValue == null ? null
               : encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
