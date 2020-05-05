@@ -73,10 +73,10 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.queryArrParams(Maps.newHashMap("1",new String[] {"apple", "pear"}));
+    api.queryArrParams(Maps.newHashMap("1", new String[] {"apple", "pear"}));
 
     assertThat(server.takeRequest())
-      .hasPath("/?1=apple&1=pear");
+        .hasPath("/?1=apple&1=pear");
   }
 
   @Test
@@ -961,7 +961,7 @@ public class FeignTest {
     Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
 
     @RequestLine("GET /")
-    Response queryArrParams(@QueryMap Map<String,String[]> twos);
+    Response queryArrParams(@QueryMap Map<String, String[]> twos);
 
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
