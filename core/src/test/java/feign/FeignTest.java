@@ -43,6 +43,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
+import org.assertj.core.util.Maps;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -62,6 +63,17 @@ public class FeignTest {
     api.queryParams("user", Arrays.asList("apple", "pear"));
 
     assertThat(server.takeRequest()).hasPath("/?1=user&2=apple&2=pear");
+  }
+
+  @Test
+  public void arrayQueryMapParams() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.queryArrParams(Maps.newHashMap("1", new String[] {"apple", "pear"}));
+
+    assertThat(server.takeRequest()).hasPath("/?1=apple&1=pear");
   }
 
   @Test
@@ -980,6 +992,9 @@ public class FeignTest {
 
     @RequestLine("GET /?1={1}&2={2}")
     Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
+
+    @RequestLine("GET /")
+    Response queryArrParams(@QueryMap Map<String, String[]> twos);
 
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
