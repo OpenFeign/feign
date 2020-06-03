@@ -59,6 +59,7 @@ public class Http2Client implements Client {
     try {
       httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
     } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new IOException("Invalid uri " + request.url(), e);
     }
 
