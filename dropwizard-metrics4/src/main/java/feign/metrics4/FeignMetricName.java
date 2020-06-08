@@ -17,7 +17,6 @@ package feign.metrics4;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import com.codahale.metrics.MetricRegistry;
 import feign.MethodMetadata;
 import feign.Target;
@@ -41,7 +40,8 @@ public final class FeignMetricName {
   }
 
   public String metricName(Class<?> targetType, Method method, String url) {
-    return MetricRegistry.name(meteredComponent, targetType.getName(), method.getName(), extractHost(url));
+    return MetricRegistry.name(meteredComponent, targetType.getName(), method.getName(),
+        extractHost(url));
   }
 
   private String extractHost(final String targetUrl) {

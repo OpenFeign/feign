@@ -15,7 +15,6 @@ package feign.metrics4;
 
 
 import java.lang.reflect.Type;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import feign.RequestTemplate;

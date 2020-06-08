@@ -15,7 +15,6 @@ package feign.metrics4;
 
 
 import java.io.IOException;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import feign.*;

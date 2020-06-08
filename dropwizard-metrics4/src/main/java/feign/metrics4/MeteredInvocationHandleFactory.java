@@ -84,7 +84,7 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
         metricRegistry.meter(
             MetricRegistry.name(metricName.metricName(clientClass, method, target.url()),
                 "exception", e.getClass().getSimpleName()),
-                metricSuppliers.meters())
+            metricSuppliers.meters())
             .mark();
 
         throw e;

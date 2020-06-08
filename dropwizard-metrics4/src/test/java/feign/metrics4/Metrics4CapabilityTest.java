@@ -16,7 +16,6 @@ package feign.metrics4;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
 import org.junit.Test;
@@ -56,7 +55,7 @@ public class Metrics4CapabilityTest {
     registry.getMetrics().keySet().forEach(metricName -> assertThat(
         "Expect all metric names to include method name:" + metricName,
         metricName,
-            containsString( "get")));
+        containsString("get")));
   }
 
 }

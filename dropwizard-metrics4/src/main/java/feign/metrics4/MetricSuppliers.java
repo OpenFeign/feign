@@ -18,7 +18,6 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SlidingTimeWindowArrayReservoir;
 import com.codahale.metrics.Timer;
-
 import java.util.concurrent.TimeUnit;
 
 public class MetricSuppliers {
