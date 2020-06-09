@@ -128,7 +128,7 @@ public final class Request {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
+    this.body = (body != null) ? body : Body.EMPTY;
     this.requestTemplate = requestTemplate;
   }
 
@@ -375,6 +375,8 @@ public final class Request {
    */
   @Experimental
   public static class Body {
+
+    public static final Body EMPTY = new Body(new byte[0]);
 
     private Charset encoding;
     private byte[] data;
