@@ -44,6 +44,7 @@
     <module>spring4</module>
     <module>soap</module>
     <module>reactive</module>
+    <module>dropwizard-metrics4</module>
     <module>dropwizard-metrics5</module>
     <module>micrometer</module>
     <module>example-github</module>
