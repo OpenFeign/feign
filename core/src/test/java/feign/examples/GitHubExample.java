@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 /**
@@ -70,7 +71,7 @@ public class GitHubExample {
       if (void.class == type || response.body() == null) {
         return null;
       }
-      Reader reader = response.body().asReader();
+      Reader reader = response.body().asReader(UTF_8);
       try {
         return gson.fromJson(reader, type);
       } catch (JsonIOException e) {

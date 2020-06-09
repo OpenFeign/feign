@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.querymap;
 
+import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
 import java.lang.reflect.Field;
@@ -40,7 +41,9 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
       for (Field field : metadata.objectFields) {
         Object value = field.get(object);
         if (value != null && value != object) {
-          fieldNameToValue.put(field.getName(), value);
+          Param alias = field.getAnnotation(Param.class);
+          String name = alias != null ? alias.value() : field.getName();
+          fieldNameToValue.put(name, value);
         }
       }
       return fieldNameToValue;

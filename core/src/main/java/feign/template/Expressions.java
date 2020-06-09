@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,16 +13,13 @@
  */
 package feign.template;
 
-import feign.Util;
-import feign.template.UriUtils.FragmentType;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import feign.Util;
 
 public final class Expressions {
   private static Map<Pattern, Class<? extends Expression>> expressions;
@@ -38,11 +35,12 @@ public final class Expressions {
      *
      * see https://tools.ietf.org/html/rfc6570#section-2.3 for more information.
      */
-    expressions.put(Pattern.compile("(\\w[-\\w.\\[\\]]*[ ]*)(:(.+))?"),
+
+    expressions.put(Pattern.compile("^([+#./;?&]?)(.*)$"),
         SimpleExpression.class);
   }
 
-  public static Expression create(final String value, final FragmentType type) {
+  public static Expression create(final String value) {
 
     /* remove the start and end braces */
     final String expression = stripBraces(value);
@@ -70,14 +68,22 @@ public final class Expressions {
     Matcher matcher = expressionPattern.matcher(expression);
     if (matcher.matches()) {
       /* we have a valid variable expression, extract the name from the first group */
-      variableName = matcher.group(1).trim();
-      if (matcher.group(2) != null && matcher.group(3) != null) {
-        /* this variable contains an optional pattern */
-        variablePattern = matcher.group(3);
+      variableName = matcher.group(2).trim();
+      if (variableName.contains(":")) {
+        /* split on the colon */
+        String[] parts = variableName.split(":");
+        variableName = parts[0];
+        variablePattern = parts[1];
+      }
+
+      /* look for nested expressions */
+      if (variableName.contains("{")) {
+        /* nested, literal */
+        return null;
       }
     }
 
-    return new SimpleExpression(variableName, variablePattern, type);
+    return new SimpleExpression(variableName, variablePattern);
   }
 
   private static String stripBraces(String expression) {
@@ -96,26 +102,19 @@ public final class Expressions {
    */
   static class SimpleExpression extends Expression {
 
-    private final FragmentType type;
-
-    SimpleExpression(String expression, String pattern, FragmentType type) {
+    SimpleExpression(String expression, String pattern) {
       super(expression, pattern);
-      this.type = type;
     }
 
     String encode(Object value) {
-      return UriUtils.encodeReserved(value.toString(), type, Util.UTF_8);
+      return UriUtils.encode(value.toString(), Util.UTF_8);
     }
 
     @Override
     String expand(Object variable, boolean encode) {
       StringBuilder expanded = new StringBuilder();
       if (Iterable.class.isAssignableFrom(variable.getClass())) {
-        List<String> items = new ArrayList<>();
-        for (Object item : ((Iterable) variable)) {
-          items.add((encode) ? encode(item) : item.toString());
-        }
-        expanded.append(String.join(Template.COLLECTION_DELIMITER, items));
+        expanded.append(this.expandIterable((Iterable<?>) variable));
       } else {
         expanded.append((encode) ? encode(variable) : variable);
       }
@@ -127,6 +126,34 @@ public final class Expressions {
             + " does not match the expression pattern: " + this.getPattern());
       }
       return result;
+    }
+
+
+    private String expandIterable(Iterable<?> values) {
+      StringBuilder result = new StringBuilder();
+      for (Object value : values) {
+        if (value == null) {
+          /* skip */
+          continue;
+        }
+
+        /* expand the value */
+        String expanded = this.encode(value);
+        if (expanded.isEmpty()) {
+          /* always append the separator */
+          result.append(",");
+        } else {
+          if (result.length() != 0) {
+            if (!result.toString().equalsIgnoreCase(",")) {
+              result.append(",");
+            }
+          }
+          result.append(expanded);
+        }
+      }
+
+      /* return the expanded value */
+      return result.toString();
     }
   }
 }

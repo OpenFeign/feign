@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -80,10 +80,11 @@ public class Http2Client implements Client {
     }
 
     final BodyPublisher body;
-    if (request.requestBody().asBytes() == null) {
+    final byte[] data = request.body();
+    if (data == null) {
       body = BodyPublishers.noBody();
     } else {
-      body = BodyPublishers.ofByteArray(request.requestBody().asBytes());
+      body = BodyPublishers.ofByteArray(data);
     }
 
     final Builder requestBuilder = HttpRequest.newBuilder()

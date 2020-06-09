@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,6 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package feign.googlehttpclient;
 
 import com.google.api.client.http.ByteArrayContent;
@@ -30,7 +29,6 @@ import java.util.HashMap;
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import feign.Util;
 
 
 /**
@@ -69,7 +67,7 @@ public class GoogleHttpClient implements Client {
       throws IOException {
     // Setup the request body
     HttpContent content = null;
-    if (inputRequest.requestBody().length() > 0) {
+    if (inputRequest.length() > 0) {
       final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
       String contentType = null;
       if (contentTypeValues != null && contentTypeValues.size() > 0) {
@@ -77,7 +75,7 @@ public class GoogleHttpClient implements Client {
       } else {
         contentType = "application/octet-stream";
       }
-      content = new ByteArrayContent(contentType, inputRequest.requestBody().asBytes());
+      content = new ByteArrayContent(contentType, inputRequest.body());
     }
 
     // Build the request

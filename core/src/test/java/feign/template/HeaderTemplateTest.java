@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -30,19 +30,25 @@ public class HeaderTemplateTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void it_should_throw_exception_when_name_is_null() {
-    HeaderTemplate.create(null, Arrays.asList("test"));
+    HeaderTemplate.create(null, Collections.singletonList("test"));
     exception.expectMessage("name is required.");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void it_should_throw_exception_when_name_is_empty() {
-    HeaderTemplate.create("", Arrays.asList("test"));
+    HeaderTemplate.create("", Collections.singletonList("test"));
     exception.expectMessage("name is required.");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void it_should_throw_exception_when_value_is_null() {
     HeaderTemplate.create("test", null);
+    exception.expectMessage("values are required");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void it_should_throw_exception_when_value_is_null_for_chunks() {
+    HeaderTemplate.from("test", null);
     exception.expectMessage("values are required");
   }
 
@@ -55,10 +61,19 @@ public class HeaderTemplateTest {
 
   @Test
   public void it_should_return_expanded() {
-    HeaderTemplate headerTemplate = HeaderTemplate.create("hello", Arrays.asList("emre", "savci"));
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{name}", "{missing}"));
     assertEquals("hello emre, savci", headerTemplate.expand(Collections.emptyMap()));
-    assertEquals("hello emre, savci",
+    assertEquals("hello emre, savci, firsts",
         headerTemplate.expand(Collections.singletonMap("name", "firsts")));
+  }
+
+  @Test
+  public void it_should_return_expanded_literals() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{replace_me}"));
+    assertEquals("hello emre, savci, {}",
+        headerTemplate.expand(Collections.singletonMap("replace_me", "{}")));
   }
 
   @Test
@@ -96,5 +111,4 @@ public class HeaderTemplateTest {
     assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
         equalTo(Arrays.asList("test 2", "test 1")));
   }
-
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,10 +14,7 @@
 package feign;
 
 import feign.Request.HttpMethod;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
+import feign.template.*;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -36,7 +33,7 @@ import static feign.Util.*;
  * information also support template expressions.
  * </p>
  */
-@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings("UnusedReturnValue")
 public final class RequestTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
@@ -46,11 +43,14 @@ public final class RequestTemplate implements Serializable {
   private String fragment;
   private boolean resolved = false;
   private UriTemplate uriTemplate;
+  private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
   private Request.Body body = Request.Body.empty();
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
+  private MethodMetadata methodMetadata;
+  private Target<?> feignTarget;
 
   /**
    * Create a new Request Template.
@@ -62,31 +62,41 @@ public final class RequestTemplate implements Serializable {
   /**
    * Create a new Request Template.
    *
+   * @param fragment part of the request uri.
    * @param target for the template.
    * @param uriTemplate for the template.
+   * @param bodyTemplate for the template, may be {@literal null}
    * @param method of the request.
    * @param charset for the request.
-   * @param body of the request, may be null
+   * @param body of the request, may be {@literal null}
    * @param decodeSlash if the request uri should encode slash characters.
    * @param collectionFormat when expanding collection based variables.
+   * @param feignTarget this template is targeted for.
+   * @param methodMetadata containing a reference to the method this template is built from.
    */
   private RequestTemplate(String target,
       String fragment,
       UriTemplate uriTemplate,
+      BodyTemplate bodyTemplate,
       HttpMethod method,
       Charset charset,
       Request.Body body,
       boolean decodeSlash,
-      CollectionFormat collectionFormat) {
+      CollectionFormat collectionFormat,
+      MethodMetadata methodMetadata,
+      Target<?> feignTarget) {
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
+    this.bodyTemplate = bodyTemplate;
     this.method = method;
     this.charset = charset;
     this.body = body;
     this.decodeSlash = decodeSlash;
     this.collectionFormat =
         (collectionFormat != null) ? collectionFormat : CollectionFormat.EXPLODED;
+    this.methodMetadata = methodMetadata;
+    this.feignTarget = feignTarget;
   }
 
   /**
@@ -97,10 +107,18 @@ public final class RequestTemplate implements Serializable {
    */
   public static RequestTemplate from(RequestTemplate requestTemplate) {
     RequestTemplate template =
-        new RequestTemplate(requestTemplate.target, requestTemplate.fragment,
+        new RequestTemplate(
+            requestTemplate.target,
+            requestTemplate.fragment,
             requestTemplate.uriTemplate,
-            requestTemplate.method, requestTemplate.charset,
-            requestTemplate.body, requestTemplate.decodeSlash, requestTemplate.collectionFormat);
+            requestTemplate.bodyTemplate,
+            requestTemplate.method,
+            requestTemplate.charset,
+            requestTemplate.body,
+            requestTemplate.decodeSlash,
+            requestTemplate.collectionFormat,
+            requestTemplate.methodMetadata,
+            requestTemplate.feignTarget);
 
     if (!requestTemplate.queries().isEmpty()) {
       template.queries.putAll(requestTemplate.queries);
@@ -132,7 +150,11 @@ public final class RequestTemplate implements Serializable {
     this.collectionFormat =
         (toCopy.collectionFormat != null) ? toCopy.collectionFormat : CollectionFormat.EXPLODED;
     this.uriTemplate = toCopy.uriTemplate;
+    this.bodyTemplate = toCopy.bodyTemplate;
     this.resolved = false;
+    this.methodMetadata = toCopy.methodMetadata;
+    this.target = toCopy.target;
+    this.feignTarget = toCopy.feignTarget;
   }
 
   /**
@@ -154,7 +176,10 @@ public final class RequestTemplate implements Serializable {
       this.uriTemplate = UriTemplate.create("", !this.decodeSlash, this.charset);
     }
 
-    uri.append(this.uriTemplate.expand(variables));
+    String expanded = this.uriTemplate.expand(variables);
+    if (expanded != null) {
+      uri.append(expanded);
+    }
 
     /*
      * for simplicity, combine the queries into the uri and use the resulting uri to seed the
@@ -209,13 +234,16 @@ public final class RequestTemplate implements Serializable {
           /* split off the header values and add it to the resolved template */
           String headerValues = header.substring(header.indexOf(" ") + 1);
           if (!headerValues.isEmpty()) {
-            resolved.header(headerTemplate.getName(), headerValues);
+            /* append the header as a new literal as the value has already been expanded. */
+            resolved.header(headerTemplate.getName(), Literal.create(headerValues));
           }
         }
       }
     }
 
-    resolved.body(this.body.expand(variables));
+    if (this.bodyTemplate != null) {
+      resolved.body(this.bodyTemplate.expand(variables));
+    }
 
     /* mark the new template resolved */
     resolved.resolved = true;
@@ -249,7 +277,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.requestBody());
+    return Request.create(this.method, this.url(), this.headers(), this.body, this);
   }
 
   /**
@@ -301,6 +329,13 @@ public final class RequestTemplate implements Serializable {
     this.decodeSlash = decodeSlash;
     this.uriTemplate =
         UriTemplate.create(this.uriTemplate.toString(), !this.decodeSlash, this.charset);
+    if (!this.queries.isEmpty()) {
+      this.queries.replaceAll((key, queryTemplate) -> QueryTemplate.create(
+          /* replace the current template with new ones honoring the decode value */
+          queryTemplate.getName(), queryTemplate.getValues(), charset, collectionFormat,
+          decodeSlash));
+
+    }
     return this;
   }
 
@@ -545,7 +580,9 @@ public final class RequestTemplate implements Serializable {
     }
 
     /* body */
-    variables.addAll(this.body.getVariables());
+    if (this.bodyTemplate != null) {
+      variables.addAll(this.bodyTemplate.getVariables());
+    }
 
     return variables;
   }
@@ -608,9 +645,9 @@ public final class RequestTemplate implements Serializable {
     /* create a new query template out of the information here */
     this.queries.compute(name, (key, queryTemplate) -> {
       if (queryTemplate == null) {
-        return QueryTemplate.create(name, values, this.charset, collectionFormat);
+        return QueryTemplate.create(name, values, this.charset, collectionFormat, this.decodeSlash);
       } else {
-        return QueryTemplate.append(queryTemplate, values, collectionFormat);
+        return QueryTemplate.append(queryTemplate, values, collectionFormat, this.decodeSlash);
       }
     });
     return this;
@@ -658,6 +695,20 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * Add a header using the supplied Chunks.
+   *
+   * @param name of the header.
+   * @param chunks to add.
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate header(String name, TemplateChunk... chunks) {
+    if (chunks == null) {
+      throw new IllegalArgumentException("chunks are required.");
+    }
+    return appendHeader(name, Arrays.asList(chunks));
+  }
+
+  /**
    * Specify a Header, with the specified values. Values can be literals or template expressions.
    *
    * @param name of the header.
@@ -686,7 +737,6 @@ public final class RequestTemplate implements Serializable {
       throw new IllegalArgumentException("name is required.");
     }
     this.headers.remove(name);
-
     return this;
   }
 
@@ -703,11 +753,35 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
+    if (name.equals("Content-Type")) {
+      // a client can only produce content of one single type, so always override Content-Type and
+      // only add a single type
+      this.headers.remove(name);
+      this.headers.put(name,
+          HeaderTemplate.create(name, Collections.singletonList(values.iterator().next())));
+      return this;
+    }
     this.headers.compute(name, (headerName, headerTemplate) -> {
       if (headerTemplate == null) {
         return HeaderTemplate.create(headerName, values);
       } else {
         return HeaderTemplate.append(headerTemplate, values);
+      }
+    });
+    return this;
+  }
+
+  private RequestTemplate appendHeader(String name, List<TemplateChunk> chunks) {
+    if (chunks.isEmpty()) {
+      this.headers.remove(name);
+      return this;
+    }
+
+    this.headers.compute(name, (headerName, headerTemplate) -> {
+      if (headerTemplate == null) {
+        return HeaderTemplate.from(name, chunks);
+      } else {
+        return HeaderTemplate.appendFrom(headerTemplate, chunks);
       }
     });
     return this;
@@ -749,15 +823,12 @@ public final class RequestTemplate implements Serializable {
   /**
    * Sets the Body and Charset for this request.
    *
-   * @param bodyData to send, can be null.
+   * @param data to send, can be null.
    * @param charset of the encoded data.
    * @return a RequestTemplate for chaining.
-   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
-  @Deprecated
-  public RequestTemplate body(byte[] bodyData, Charset charset) {
-    this.body(Request.Body.encoded(bodyData, charset));
-
+  public RequestTemplate body(byte[] data, Charset charset) {
+    this.body(Request.Body.create(data, charset));
     return this;
   }
 
@@ -766,12 +837,10 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyText to send.
    * @return a RequestTemplate for chaining.
-   * @deprecated use {@link RequestTemplate#body(feign.Request.Body)} instead
    */
-  @Deprecated
   public RequestTemplate body(String bodyText) {
-    byte[] bodyData = bodyText != null ? bodyText.getBytes(UTF_8) : null;
-    return body(bodyData, UTF_8);
+    this.body(Request.Body.create(bodyText.getBytes(this.charset), this.charset));
+    return this;
   }
 
   /**
@@ -779,11 +848,16 @@ public final class RequestTemplate implements Serializable {
    *
    * @param body to send.
    * @return a RequestTemplate for chaining.
+   * @deprecated use {@link #body(byte[], Charset)} instead.
    */
+  @Deprecated
   public RequestTemplate body(Request.Body body) {
     this.body = body;
 
-    header(CONTENT_LENGTH);
+    /* body template must be cleared to prevent double processing */
+    this.bodyTemplate = null;
+
+    header(CONTENT_LENGTH, Collections.emptyList());
     if (body.length() > 0) {
       header(CONTENT_LENGTH, String.valueOf(body.length()));
     }
@@ -797,18 +871,31 @@ public final class RequestTemplate implements Serializable {
    * @return the currently applied Charset.
    */
   public Charset requestCharset() {
-    return charset;
+    if (this.body != null) {
+      return this.body.getEncoding()
+          .orElse(this.charset);
+    }
+    return this.charset;
   }
 
   /**
    * The Request Body.
    *
    * @return the request body.
-   * @deprecated replaced by {@link RequestTemplate#requestBody()}
    */
-  @Deprecated
   public byte[] body() {
     return body.asBytes();
+  }
+
+  /**
+   * The Request.Body internal object.
+   *
+   * @return the internal Request.Body.
+   * @deprecated this abstraction is leaky and will be removed in later releases.
+   */
+  @Deprecated
+  public Request.Body requestBody() {
+    return this.body;
   }
 
 
@@ -817,11 +904,21 @@ public final class RequestTemplate implements Serializable {
    *
    * @param bodyTemplate to use.
    * @return a RequestTemplate for chaining.
-   * @deprecated replaced by {@link RequestTemplate#body(feign.Request.Body)}
    */
-  @Deprecated
   public RequestTemplate bodyTemplate(String bodyTemplate) {
-    this.body(Request.Body.bodyTemplate(bodyTemplate, Util.UTF_8));
+    this.bodyTemplate = BodyTemplate.create(bodyTemplate, this.charset);
+    return this;
+  }
+
+  /**
+   * Specify the Body Template to use. Can contain literals and expressions.
+   *
+   * @param bodyTemplate to use.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate bodyTemplate(String bodyTemplate, Charset charset) {
+    this.bodyTemplate = BodyTemplate.create(bodyTemplate, charset);
+    this.charset = charset;
     return this;
   }
 
@@ -831,7 +928,10 @@ public final class RequestTemplate implements Serializable {
    * @return the unresolved body template.
    */
   public String bodyTemplate() {
-    return body.bodyTemplate();
+    if (this.bodyTemplate != null) {
+      return this.bodyTemplate.toString();
+    }
+    return null;
   }
 
   @Override
@@ -931,8 +1031,26 @@ public final class RequestTemplate implements Serializable {
     return new SimpleImmutableEntry<>(name, value);
   }
 
-  public Request.Body requestBody() {
-    return this.body;
+  @Experimental
+  public RequestTemplate methodMetadata(MethodMetadata methodMetadata) {
+    this.methodMetadata = methodMetadata;
+    return this;
+  }
+
+  @Experimental
+  public RequestTemplate feignTarget(Target<?> feignTarget) {
+    this.feignTarget = feignTarget;
+    return this;
+  }
+
+  @Experimental
+  public MethodMetadata methodMetadata() {
+    return methodMetadata;
+  }
+
+  @Experimental
+  public Target<?> feignTarget() {
+    return feignTarget;
   }
 
   /**

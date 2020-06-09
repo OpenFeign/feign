@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2019 The Feign Authors
+    Copyright 2012-2020 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,21 +20,28 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.5.2-SNAPSHOT</version>
+    <version>10.10.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-benchmark</artifactId>
   <name>Feign Benchmark (JMH)</name>
 
   <properties>
-    <jmh.version>1.20</jmh.version>
-    <!-- override default bytecode version for src/main from parent pom -->
-    <main.java.version>1.8</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
+    <jmh.version>1.22</jmh.version>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>4.1.43.Final</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -84,7 +91,6 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-buffer</artifactId>
-      <version>4.1.5.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -107,7 +113,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
     </dependency>
-
   </dependencies>
 
   <build>

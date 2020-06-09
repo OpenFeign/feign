@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -166,7 +166,7 @@ public class MockClientTest {
     assertThat(results, hasSize(1));
 
     byte[] body = mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors")
-        .requestBody().asBytes();
+        .body();
     assertThat(body, notNullValue());
 
     String message = new String(body);

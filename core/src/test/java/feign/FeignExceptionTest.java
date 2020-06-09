@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,8 +14,49 @@
 package feign;
 
 import org.junit.Test;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FeignExceptionTest {
+
+  @Test
+  public void canCreateWithRequestAndResponse() {
+    Request request = Request.create(Request.HttpMethod.GET,
+        "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    Response response = Response.builder()
+        .status(400)
+        .body("response".getBytes(StandardCharsets.UTF_8))
+        .request(request)
+        .build();
+
+    FeignException exception =
+        FeignException.errorReading(request, response, new IOException("socket closed"));
+    assertThat(exception.responseBody()).isNotEmpty();
+    assertThat(exception.hasRequest()).isTrue();
+    assertThat(exception.request()).isNotNull();
+  }
+
+  @Test
+  public void canCreateWithRequestOnly() {
+    Request request = Request.create(Request.HttpMethod.GET,
+        "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    FeignException exception =
+        FeignException.errorExecuting(request, new IOException("connection timeout"));
+    assertThat(exception.responseBody()).isEmpty();
+    assertThat(exception.content()).isNullOrEmpty();
+    assertThat(exception.hasRequest()).isTrue();
+    assertThat(exception.request()).isNotNull();
+  }
 
   @Test(expected = NullPointerException.class)
   public void nullRequestShouldThrowNPEwThrowable() {

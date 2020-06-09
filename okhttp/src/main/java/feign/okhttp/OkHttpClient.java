@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -71,7 +71,7 @@ public final class OkHttpClient implements Client {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    byte[] inputBody = input.requestBody().asBytes();
+    byte[] inputBody = input.body();
     boolean isMethodWithBody =
         HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
             || HttpMethod.PATCH == input.httpMethod();
@@ -137,6 +137,7 @@ public final class OkHttpClient implements Client {
         return input.byteStream();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return input.charStream();
@@ -154,7 +155,8 @@ public final class OkHttpClient implements Client {
       throws IOException {
     okhttp3.OkHttpClient requestScoped;
     if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
-        || delegate.readTimeoutMillis() != options.readTimeoutMillis()) {
+        || delegate.readTimeoutMillis() != options.readTimeoutMillis()
+        || delegate.followRedirects() != options.isFollowRedirects()) {
       requestScoped = delegate.newBuilder()
           .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
           .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)

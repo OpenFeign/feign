@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +30,7 @@ public class SpringContract extends DeclarativeContract {
       appendMappings(data, requestMapping.value());
 
       if (requestMapping.method().length == 1)
-        data.template().method(requestMapping.method()[0].name());
+        data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
 
       handleProducesAnnotation(data, requestMapping.produces());
       handleConsumesAnnotation(data, requestMapping.consumes());
@@ -41,7 +41,7 @@ public class SpringContract extends DeclarativeContract {
       appendMappings(data, mappings);
 
       if (requestMapping.method().length == 1)
-        data.template().method(requestMapping.method()[0].name());
+        data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
     });
 
 

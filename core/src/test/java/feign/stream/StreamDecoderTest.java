@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 package feign.stream;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -35,6 +34,7 @@ import org.junit.Test;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("deprecation")
 public class StreamDecoderTest {
 
   interface StreamInterface {
@@ -69,7 +69,8 @@ public class StreamDecoderTest {
 
     StreamInterface api = Feign.builder()
         .decoder(StreamDecoder.create(
-            (response, type) -> new BufferedReader(response.body().asReader()).lines().iterator()))
+            (response, type) -> new BufferedReader(response.body().asReader(UTF_8)).lines()
+                .iterator()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 

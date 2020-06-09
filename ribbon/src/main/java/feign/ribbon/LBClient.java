@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,13 +24,13 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import feign.Request.HttpMethod;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -77,10 +77,13 @@ public final class LBClient extends
       options =
           new Request.Options(
               configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
+              TimeUnit.MILLISECONDS,
               (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
+              TimeUnit.MILLISECONDS,
               configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects));
     } else {
-      options = new Request.Options(connectTimeout, readTimeout);
+      options = new Request.Options(connectTimeout, TimeUnit.MILLISECONDS, readTimeout,
+          TimeUnit.MILLISECONDS, true);
     }
     Response response = request.client().execute(request.toRequest(), options);
     if (retryableStatusCodes.contains(response.status())) {
@@ -115,9 +118,10 @@ public final class LBClient extends
       setUri(uri);
     }
 
+    @SuppressWarnings("deprecation")
     Request toRequest() {
       // add header "Content-Length" according to the request body
-      final byte[] body = request.requestBody().asBytes();
+      final byte[] body = request.body();
       final int bodyLength = body != null ? body.length : 0;
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();

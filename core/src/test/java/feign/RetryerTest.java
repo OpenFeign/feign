@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import java.util.Date;
 import feign.Retryer.Default;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("deprecation")
 public class RetryerTest {
 
   @Rule
@@ -58,7 +59,7 @@ public class RetryerTest {
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
+  public void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer = new Retryer.Default() {
       protected long currentTimeMillis() {
         return 0;

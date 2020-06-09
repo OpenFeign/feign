@@ -48,3 +48,10 @@ api = Feign.builder()
      .errorDecoder(new SOAPErrorDecoder())
      .target(MyApi.class, "http://api");
 ```
+
+In certain situations the declarations on the SOAP envelope are not inherited by JAXB when reading the documents.  This is particularly
+troublesome when it is not possible to correct the XML at the source.
+
+To account for this situation, use the `useFirstChild` option on the `SOAPDecoder` builder.  This will instruct JAX be to use `SOAPBody#getFirstChild()`
+instead of `SOAPBody#extractContentAsDocument()`.  This will allow users to supply a `package-info.java` to manage the element namespaces
+explicitly and define what should occur if the namespace declarations are missing.

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,8 +19,6 @@ import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -105,7 +103,7 @@ public class RequestTemplateTest {
   public void resolveTemplateWithBinaryBody() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .uri("{zoneId}")
-        .body(Request.Body.encoded(new byte[] {7, 3, -3, -7}, null));
+        .body(new byte[] {7, 3, -3, -7}, null);
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template)
@@ -172,7 +170,7 @@ public class RequestTemplateTest {
         "values[]", Arrays.asList("1", "2")));
 
     assertThat(template.url())
-        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1,2");
+        .isEqualToIgnoringCase("/api/collections?keys=one&keys=two&values%5B%5D=1%2C2");
   }
 
   @Test
@@ -269,10 +267,10 @@ public class RequestTemplateTest {
   @Test
   public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .body(Request.Body.bodyTemplate(
+        .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
                 "\"password\": \"{password}\"%7D",
-            Util.UTF_8));
+            Util.UTF_8);
 
     template = template.resolve(
         mapOf(
@@ -285,15 +283,15 @@ public class RequestTemplateTest {
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
             entry("Content-Length",
-                Collections.singletonList(String.valueOf(template.requestBody().length()))));
+                Collections.singletonList(String.valueOf(template.body().length))));
   }
 
   @Test
   public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
-        .body(Request.Body.bodyTemplate(
+        .bodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D",
-            Util.UTF_8));
+            Util.UTF_8);
 
     template = template.resolve(
         mapOf(
@@ -418,7 +416,7 @@ public class RequestTemplateTest {
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not%20encoded&params%5B%5D=encoded");
     Map<String, Collection<String>> queries = template.queries();
     assertThat(queries).containsKey("params[]");
-    assertThat(queries.get("params[]")).contains("encoded").contains("not encoded");
+    assertThat(queries.get("params[]")).contains("encoded").contains("not%20encoded");
   }
 
   @SuppressWarnings("unchecked")
@@ -476,6 +474,24 @@ public class RequestTemplateTest {
         .uri("/path;key1=value1;key2=value2", true);
 
     assertThat(template.url()).isEqualTo("/path;key1=value1;key2=value2");
+  }
 
+  @Test
+  public void encodedReservedPreserveSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A//www.google.com");
+  }
+
+  @Test
+  public void encodedReservedEncodeSlash() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/get?url={url}");
+    template.decodeSlash(false);
+    template.method(HttpMethod.GET);
+    template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
+    assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
   }
 }

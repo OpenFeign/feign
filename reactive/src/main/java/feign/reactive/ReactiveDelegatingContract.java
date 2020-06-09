@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,6 @@ import feign.MethodMetadata;
 import feign.Types;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.reactivestreams.Publisher;
@@ -32,8 +31,8 @@ public class ReactiveDelegatingContract implements Contract {
   }
 
   @Override
-  public List<MethodMetadata> parseAndValidatateMetadata(Class<?> targetType) {
-    List<MethodMetadata> methodsMetadata = this.delegate.parseAndValidatateMetadata(targetType);
+  public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
+    List<MethodMetadata> methodsMetadata = this.delegate.parseAndValidateMetadata(targetType);
 
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
@@ -74,8 +73,7 @@ public class ReactiveDelegatingContract implements Contract {
       return false;
     }
     ParameterizedType parameterizedType = (ParameterizedType) type;
-    Type raw = parameterizedType.getRawType();
-    return Arrays.asList(((Class) raw).getInterfaces())
-        .contains(Publisher.class);
+    Class<?> raw = (Class<?>) parameterizedType.getRawType();
+    return Publisher.class.isAssignableFrom(raw);
   }
 }

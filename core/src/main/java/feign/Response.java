@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,26 +13,11 @@
  */
 package feign;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import static feign.Util.*;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
-import static feign.Util.toByteArray;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -54,6 +39,7 @@ public final class Response implements Closeable {
         ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
         : new LinkedHashMap<>();
     this.body = builder.body; // nullable
+
   }
 
   public Builder toBuilder() {
@@ -70,6 +56,7 @@ public final class Response implements Closeable {
     Map<String, Collection<String>> headers;
     Body body;
     Request request;
+    private RequestTemplate requestTemplate;
 
     Builder() {}
 
@@ -129,6 +116,18 @@ public final class Response implements Closeable {
     public Builder request(Request request) {
       checkNotNull(request, "request is required");
       this.request = request;
+      return this;
+    }
+
+    /**
+     * The Request Template used for the original request.
+     *
+     * @param requestTemplate used.
+     * @return builder reference.
+     */
+    @Experimental
+    public Builder requestTemplate(RequestTemplate requestTemplate) {
+      this.requestTemplate = requestTemplate;
       return this;
     }
 
@@ -222,11 +221,16 @@ public final class Response implements Closeable {
 
     /**
      * It is the responsibility of the caller to close the stream.
+     *
+     * @deprecated favor {@link Body#asReader(Charset)}
      */
-    Reader asReader() throws IOException;
+    @Deprecated
+    default Reader asReader() throws IOException {
+      return asReader(StandardCharsets.UTF_8);
+    }
 
     /**
-     *
+     * It is the responsibility of the caller to close the stream.
      */
     Reader asReader(Charset charset) throws IOException;
   }
@@ -259,12 +263,13 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public InputStream asInputStream() throws IOException {
+    public InputStream asInputStream() {
       return inputStream;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Reader asReader() throws IOException {
+    public Reader asReader() {
       return new InputStreamReader(inputStream, UTF_8);
     }
 
@@ -327,6 +332,7 @@ public final class Response implements Closeable {
       return new ByteArrayInputStream(data);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Reader asReader() throws IOException {
       return new InputStreamReader(asInputStream(), UTF_8);

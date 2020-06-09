@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -35,8 +35,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -105,7 +103,7 @@ public final class ApacheHttpClient implements Client {
 
     // request query params
     List<NameValuePair> queryParams =
-        URLEncodedUtils.parse(uri, requestBuilder.getCharset().name());
+        URLEncodedUtils.parse(uri, requestBuilder.getCharset());
     for (NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
@@ -134,14 +132,14 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    if (request.requestBody().asBytes() != null) {
+    if (request.body() != null) {
       HttpEntity entity = null;
       if (request.charset() != null) {
         ContentType contentType = getContentType(request);
-        String content = new String(request.requestBody().asBytes(), request.charset());
+        String content = new String(request.body(), request.charset());
         entity = new StringEntity(content, contentType);
       } else {
-        entity = new ByteArrayEntity(request.requestBody().asBytes());
+        entity = new ByteArrayEntity(request.body());
       }
 
       requestBuilder.setEntity(entity);
@@ -220,6 +218,7 @@ public final class ApacheHttpClient implements Client {
         return entity.getContent();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);

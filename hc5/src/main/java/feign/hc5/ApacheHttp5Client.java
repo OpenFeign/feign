@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -32,7 +32,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.*;
 import feign.*;
-import feign.Request.Body;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -127,14 +126,15 @@ public final class ApacheHttp5Client implements Client {
     }
 
     // request body
-    final Body requestBody = request.requestBody();
-    if (requestBody.asBytes() != null) {
+    // final Body requestBody = request.requestBody();
+    byte[] data = request.body();
+    if (data != null) {
       HttpEntity entity;
-      if (requestBody.isBinary()) {
-        entity = new ByteArrayEntity(requestBody.asBytes(), null);
+      if (request.isBinary()) {
+        entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(requestBody.asString(), contentType);
+        entity = new StringEntity(new String(data), contentType);
       }
 
       requestBuilder.setEntity(entity);
@@ -142,9 +142,7 @@ public final class ApacheHttp5Client implements Client {
       requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
     }
 
-    final ClassicHttpRequest classicRequest = requestBuilder.build();
-
-    return classicRequest;
+    return requestBuilder.build();
   }
 
   private ContentType getContentType(Request request) {
@@ -215,6 +213,7 @@ public final class ApacheHttp5Client implements Client {
         return entity.getContent();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);

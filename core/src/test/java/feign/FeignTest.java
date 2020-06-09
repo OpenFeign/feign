@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
+import org.assertj.core.util.Maps;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,6 +47,7 @@ import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("deprecation")
 public class FeignTest {
 
   @Rule
@@ -66,6 +68,18 @@ public class FeignTest {
   }
 
   @Test
+  public void arrayQueryMapParams() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.queryMapWithArrayValues(Maps.newHashMap("1", new String[] {"apple", "pear"}));
+
+    assertThat(server.takeRequest())
+        .hasPath("/?1=apple&1=pear");
+  }
+
+  @Test
   public void postTemplateParamsResolve() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -79,7 +93,7 @@ public class FeignTest {
   }
 
   @Test
-  public void responseCoercesToStringBody() throws Exception {
+  public void responseCoercesToStringBody() {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -123,7 +137,7 @@ public class FeignTest {
   public void bodyTypeCorrespondsWithParameterType() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    final AtomicReference<Type> encodedType = new AtomicReference<Type>();
+    final AtomicReference<Type> encodedType = new AtomicReference<>();
     TestInterface api = new TestInterfaceBuilder()
         .encoder(new Encoder.Default() {
           @Override
@@ -202,7 +216,7 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expand(new Date(1234l));
+    api.expand(new Date(1234L));
 
     assertThat(server.takeRequest())
         .hasPath("/?date=1234");
@@ -214,7 +228,7 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expandList(Arrays.asList(new Date(1234l), new Date(12345l)));
+    api.expandList(Arrays.asList(new Date(1234L), new Date(12345L)));
 
     assertThat(server.takeRequest())
         .hasPath("/?date=1234&date=12345");
@@ -262,8 +276,8 @@ public class FeignTest {
     // header map should be additive for headers provided by annotations
     assertThat(server.takeRequest())
         .hasHeaders(
-            entry("Content-Encoding", Arrays.asList("deflate")),
-            entry("Custom-Header", Arrays.asList("fooValue")));
+            entry("Content-Encoding", Collections.singletonList("deflate")),
+            entry("Custom-Header", Collections.singletonList("fooValue")));
 
     server.enqueue(new MockResponse());
     headerMap.put("Content-Encoding", "overrideFromMap");
@@ -277,7 +291,7 @@ public class FeignTest {
     assertThat(server.takeRequest())
         .hasHeaders(
             entry("Content-Encoding", Arrays.asList("deflate", "overrideFromMap")),
-            entry("Custom-Header", Arrays.asList("fooValue")));
+            entry("Custom-Header", Collections.singletonList("fooValue")));
   }
 
   @Test
@@ -286,7 +300,7 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", "alice");
     queryMap.put("fooKey", "fooValue");
     api.queryMap(queryMap);
@@ -301,7 +315,7 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
     queryMap.put("emptyListKey", new ArrayList<String>());
@@ -619,8 +633,8 @@ public class FeignTest {
 
   @Test
   public void whenReturnTypeIsResponseNoErrorHandling() {
-    Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
-    headers.put("Location", Arrays.asList("http://bar.com"));
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("Location", Collections.singletonList("http://bar.com"));
     final Response response = Response.builder()
         .status(302)
         .reason("Found")
@@ -810,7 +824,7 @@ public class FeignTest {
         try {
           return response
               .toBuilder()
-              .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+              .body(Util.toString(response.body().asReader(UTF_8)).toUpperCase().getBytes())
               .build();
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -946,6 +960,9 @@ public class FeignTest {
     @RequestLine("GET /?1={1}&2={2}")
     Response queryParams(@Param("1") String one, @Param("2") Iterable<String> twos);
 
+    @RequestLine("GET /")
+    Response queryMapWithArrayValues(@QueryMap Map<String, String[]> twos);
+
     @RequestLine("POST /?date={date}")
     void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
 
@@ -973,7 +990,7 @@ public class FeignTest {
                                  @QueryMap Map<String, Object> queryMap);
 
     @RequestLine("GET /?trim={trim}")
-    void encodedQueryParam(@Param(value = "trim", encoded = true) String trim);
+    void encodedQueryParam(@Param(value = "trim") String trim);
 
     @RequestLine("GET /")
     void queryMapPojo(@QueryMap CustomPojo object);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -75,6 +75,7 @@ public class DecoderIteratorsBenchmark {
     }
   }
 
+  @SuppressWarnings("deprecation")
   @Setup(Level.Invocation)
   public void buildResponse() {
     response = Response.builder()
@@ -82,7 +83,7 @@ public class DecoderIteratorsBenchmark {
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
-        .body(carsJson(Integer.valueOf(size)), Util.UTF_8)
+        .body(carsJson(Integer.parseInt(size)), Util.UTF_8)
         .build();
   }
 

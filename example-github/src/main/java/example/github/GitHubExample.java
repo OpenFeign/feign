@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,34 +13,32 @@
  */
 package example.github;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Inspired by {@code com.example.retrofit.GitHubClient}
  */
 public class GitHubExample {
 
-  private static final String GITHUB_TOKEN = "GITHUB_TOKEN";
+  public interface GitHub {
 
-  interface GitHub {
-
-    class Repository {
+    public class Repository {
       String name;
     }
 
-    class Contributor {
+    public class Contributor {
       String login;
     }
 
-    class Issue {
+    public class Issue {
 
       Issue() {
 
@@ -72,8 +70,8 @@ public class GitHubExample {
     }
 
     static GitHub connect() {
-      Decoder decoder = new GsonDecoder();
-      Encoder encoder = new GsonEncoder();
+      final Decoder decoder = new GsonDecoder();
+      final Encoder encoder = new GsonEncoder();
       return Feign.builder()
           .encoder(encoder)
           .decoder(decoder)
@@ -81,12 +79,11 @@ public class GitHubExample {
           .logger(new Logger.ErrorLogger())
           .logLevel(Logger.Level.BASIC)
           .requestInterceptor(template -> {
-            if (System.getenv().containsKey(GITHUB_TOKEN)) {
-              System.out.println("Detected Authorization token from environment variable");
-              template.header(
-                  "Authorization",
-                  "token " + System.getenv(GITHUB_TOKEN));
-            }
+            template.header(
+                // not available when building PRs...
+                // https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
+                "Authorization",
+                "token 383f1c1b474d8f05a21e7964976ab0d403fee071");
           })
           .target(GitHub.class, "https://api.github.com");
     }
@@ -103,28 +100,28 @@ public class GitHubExample {
   }
 
   public static void main(String... args) {
-    GitHub github = GitHub.connect();
+    final GitHub github = GitHub.connect();
 
     System.out.println("Let's fetch and print a list of the contributors to this org.");
-    List<String> contributors = github.contributors("openfeign");
-    for (String contributor : contributors) {
+    final List<String> contributors = github.contributors("openfeign");
+    for (final String contributor : contributors) {
       System.out.println(contributor);
     }
 
     System.out.println("Now, let's cause an error.");
     try {
       github.contributors("openfeign", "some-unknown-project");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
 
     System.out.println("Now, try to create an issue - which will also cause an error.");
     try {
-      GitHub.Issue issue = new GitHub.Issue();
+      final GitHub.Issue issue = new GitHub.Issue();
       issue.title = "The title";
       issue.body = "Some Text";
       github.createIssue(issue, "OpenFeign", "SomeRepo");
-    } catch (GitHubClientError e) {
+    } catch (final GitHubClientError e) {
       System.out.println(e.getMessage());
     }
   }
@@ -144,7 +141,7 @@ public class GitHubExample {
         // must replace status by 200 other GSONDecoder returns null
         response = response.toBuilder().status(200).build();
         return (Exception) decoder.decode(response, GitHubClientError.class);
-      } catch (IOException fallbackToDefault) {
+      } catch (final IOException fallbackToDefault) {
         return defaultDecoder.decode(methodKey, response);
       }
     }

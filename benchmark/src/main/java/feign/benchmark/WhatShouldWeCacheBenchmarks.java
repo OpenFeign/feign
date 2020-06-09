@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -56,9 +56,9 @@ public class WhatShouldWeCacheBenchmarks {
     feignContract = new Contract.Default();
     cachedContact = new Contract() {
       private final List<MethodMetadata> cached =
-          new Default().parseAndValidatateMetadata(FeignTestInterface.class);
+          new Default().parseAndValidateMetadata(FeignTestInterface.class);
 
-      public List<MethodMetadata> parseAndValidatateMetadata(Class<?> declaring) {
+      public List<MethodMetadata> parseAndValidateMetadata(Class<?> declaring) {
         return cached;
       }
     };
@@ -84,7 +84,7 @@ public class WhatShouldWeCacheBenchmarks {
    */
   @Benchmark
   public List<MethodMetadata> parseFeignContract() {
-    return feignContract.parseAndValidatateMetadata(FeignTestInterface.class);
+    return feignContract.parseAndValidateMetadata(FeignTestInterface.class);
   }
 
   /**

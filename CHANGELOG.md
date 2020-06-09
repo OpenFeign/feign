@@ -1,3 +1,49 @@
+### Version 10.9
+
+* Configurable to disable streaming mode for Default client by verils (#1182) 
+* Overriding query parameter name by boggard (#1184)
+* Internal feign metrics by velo:
+* Dropwizard metrics 5 (#1181)
+* Micrometer (#1188)
+
+### Version 10.8
+
+* async feign variant supporting CompleteableFutures by motinis (#1174) 
+* deterministic iterations for Feign mocks by contextshuffling (#1165)
+* Async client for apache http 5 by velo (#1179)
+
+### Version 10.7
+
+* Fix for vunerabilities reported by snky (#1121)
+* Makes iterator compatible with Java iterator expected behavior (#1117)
+* Bump reactive dependencies (#1105)
+* Deprecated `encoded` and add comment (#1108)
+
+### Version 10.6
+* Remove java8 module (#1086) 
+* Add composed Spring annotations support (#1090) 
+* Generate mocked clients for tests from feign interfaces (#1092)
+
+### Version 10.5
+* Add Apache Http 5 Client (#1065) 
+* Updating Apache HttpClient to 4.5.10 (#1080) (#1081)
+* Spring4 contract (#1069) 
+* Declarative contracts (#1060) 
+
+### Version 10.4
+* Adding support for JDK Proxy (#1045)
+* Add Google HTTP Client support (#1057)
+
+### Version 10.3
+* Upgrade dependencies with security vunerabilities (#997 #1010 #1011 #1024 #1025 #1031 #1032)
+* Parse Retry-After header responses that include decimal points (#980)
+* Fine-grained HTTP error exceptions with client and server errors (#854)
+* Adds support for per request timeout options (#970)
+* Unwrap RetryableException and throw cause (#737)
+* JacksonEncoder avoids intermediate String request body (#989)
+* Respect decode404 flag and decode 404 response body (#1012)
+* Maintain user-given order for header values (#1009)
+
 ### Version 10.1
 * Refactoring RequestTemplate to RFC6570 (#778)
 * Allow JAXB context caching in factory (#761)

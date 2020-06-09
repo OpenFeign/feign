@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -83,7 +83,7 @@ public interface Retryer extends Cloneable {
      * The interval increases exponentially with each attempt, at a rate of nextInterval *= 1.5
      * (where 1.5 is the backoff factor), to the maximum interval.
      *
-     * @return time in nanoseconds from now until the next attempt.
+     * @return time in milliseconds from now until the next attempt.
      */
     long nextMaxInterval() {
       long interval = (long) (period * Math.pow(1.5, attempt - 1));

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,13 +15,9 @@ package feign.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.*;
 import feign.Response;
-import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
@@ -32,6 +28,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 /**
@@ -68,7 +66,7 @@ public final class JacksonIteratorDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(UTF_8);
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
@@ -131,10 +129,17 @@ public final class JacksonIteratorDecoder implements Decoder {
 
     @Override
     public boolean hasNext() {
+      if (current == null) {
+        current = readNext();
+      }
+      return current != null;
+    }
+
+    private T readNext() {
       try {
         JsonToken jsonToken = parser.nextToken();
         if (jsonToken == null) {
-          return false;
+          return null;
         }
 
         if (jsonToken == JsonToken.START_ARRAY) {
@@ -142,22 +147,29 @@ public final class JacksonIteratorDecoder implements Decoder {
         }
 
         if (jsonToken == JsonToken.END_ARRAY) {
-          current = null;
           ensureClosed(this);
-          return false;
+          return null;
         }
 
-        current = objectReader.readValue(parser);
+        return objectReader.readValue(parser);
       } catch (IOException e) {
         // Input Stream closed automatically by parser
         throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
       }
-      return current != null;
     }
 
     @Override
     public T next() {
-      return current;
+      if (current != null) {
+        T tmp = current;
+        current = null;
+        return tmp;
+      }
+      T next = readNext();
+      if (next == null) {
+        throw new NoSuchElementException();
+      }
+      return next;
     }
 
     @Override

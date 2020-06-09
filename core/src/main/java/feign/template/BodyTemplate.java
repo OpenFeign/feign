@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -39,6 +39,17 @@ public final class BodyTemplate extends Template {
     return new BodyTemplate(template, Util.UTF_8);
   }
 
+  /**
+   * Create a new Body Template.
+   *
+   * @param template to parse.
+   * @param charset to use when encoding the template.
+   * @return a Body Template instance.
+   */
+  public static BodyTemplate create(String template, Charset charset) {
+    return new BodyTemplate(template, charset);
+  }
+
   private BodyTemplate(String value, Charset charset) {
     super(value, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.NOT_REQUIRED, false, charset);
     if (value.startsWith(JSON_TOKEN_START_ENCODED) && value.endsWith(JSON_TOKEN_END_ENCODED)) {
@@ -50,14 +61,9 @@ public final class BodyTemplate extends Template {
   public String expand(Map<String, ?> variables) {
     String expanded = super.expand(variables);
     if (this.json) {
-      /* decode only the first and last character */
-      StringBuilder sb = new StringBuilder();
-      sb.append(JSON_TOKEN_START);
-      sb.append(expanded,
-          expanded.indexOf(JSON_TOKEN_START_ENCODED) + JSON_TOKEN_START_ENCODED.length(),
-          expanded.lastIndexOf(JSON_TOKEN_END_ENCODED));
-      sb.append(JSON_TOKEN_END);
-      return sb.toString();
+      /* restore all start and end tokens */
+      expanded = expanded.replaceAll(JSON_TOKEN_START_ENCODED, JSON_TOKEN_START);
+      expanded = expanded.replaceAll(JSON_TOKEN_END_ENCODED, JSON_TOKEN_END);
     }
     return expanded;
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2019 The Feign Authors
+ * Copyright 2012-2020 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package feign.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-import feign.Client.Proxied;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -29,6 +28,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import org.junit.Test;
 import feign.Client;
+import feign.Client.Proxied;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
@@ -50,7 +50,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null));
+    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null, false));
   }
 
   @Test
