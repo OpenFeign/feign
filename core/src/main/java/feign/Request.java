@@ -128,7 +128,7 @@ public final class Request {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = (body != null) ? body : Body.EMPTY;
+    this.body = body;
     this.requestTemplate = requestTemplate;
   }
 
@@ -177,7 +177,9 @@ public final class Request {
    * @return the current character set for the request, may be {@literal null} for binary data.
    */
   public Charset charset() {
-    return body.encoding;
+    return (body == null)
+        ? Body.EMPTY.encoding
+        : body.encoding;
   }
 
   /**
@@ -187,7 +189,9 @@ public final class Request {
    * @see #charset()
    */
   public byte[] body() {
-    return body.data;
+    return (body == null)
+        ? Body.EMPTY.data
+        : body.data;
   }
 
   public boolean isBinary() {
