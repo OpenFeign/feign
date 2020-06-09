@@ -909,6 +909,21 @@ But, it's possible to add metric collection capabilities to any feign client.
 
 Metric Capabilities provide a first-class Metrics API that users can tap into to gain insight into the request/response lifecycle.
 
+#### Dropwizard Metrics 4
+
+```
+public class MyApp {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                         .addCapability(new Metrics4Capability())
+                         .target(GitHub.class, "https://api.github.com");
+
+    github.contributors("OpenFeign", "feign");
+    // metrics will be available from this point onwards
+  }
+}
+```
+
 #### Dropwizard Metrics 5
 
 ```
