@@ -21,7 +21,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.http.HttpTimeoutException;
 import java.util.concurrent.TimeUnit;
-
 import feign.*;
 import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
@@ -93,9 +92,9 @@ public class Http2ClientTest extends AbstractClientTest {
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(30, TimeUnit.SECONDS));
 
     final TestInterface api = newBuilder()
-            .retryer(Retryer.NEVER_RETRY)
-            .options(new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.SECONDS, true))
-            .target(TestInterface.class, server.url("/").toString());
+        .retryer(Retryer.NEVER_RETRY)
+        .options(new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.SECONDS, true))
+        .target(TestInterface.class, server.url("/").toString());
 
     thrown.expect(FeignException.class);
     thrown.expectCause(CoreMatchers.isA(HttpTimeoutException.class));
