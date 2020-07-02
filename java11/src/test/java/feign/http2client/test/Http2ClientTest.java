@@ -19,8 +19,11 @@ import feign.*;
 import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
 import java.io.IOException;
+import java.net.http.HttpTimeoutException;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.api.Assertions;
+import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,6 +39,10 @@ public class Http2ClientTest extends AbstractClientTest {
     @RequestLine("PATCH /patch")
     @Headers({"Accept: text/plain"})
     String patch();
+
+    @RequestLine("POST /timeout")
+    @Headers({"Accept: text/plain"})
+    String timeout();
   }
 
   @Override
@@ -76,6 +83,22 @@ public class Http2ClientTest extends AbstractClientTest {
   @Test
   public void testVeryLongResponseNullLength() {
     // client is too smart to fall for a body that is 8 bytes long
+  }
+
+  @Test
+  public void timeoutTest() {
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(30, TimeUnit.SECONDS));
+
+    final TestInterface api =
+        newBuilder()
+            .retryer(Retryer.NEVER_RETRY)
+            .options(new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.SECONDS, true))
+            .target(TestInterface.class, server.url("/").toString());
+
+    thrown.expect(FeignException.class);
+    thrown.expectCause(CoreMatchers.isA(HttpTimeoutException.class));
+
+    api.timeout();
   }
 
   @Override

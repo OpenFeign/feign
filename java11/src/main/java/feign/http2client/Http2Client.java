@@ -13,8 +13,11 @@
  */
 package feign.http2client;
 
-import feign.*;
+import feign.Client;
+import feign.Request;
 import feign.Request.Options;
+import feign.Response;
+import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -28,6 +31,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,12 +50,13 @@ public class Http2Client implements Client {
 
   @Override
   public Response execute(Request request, Options options) throws IOException {
-    final HttpRequest httpRequest = newRequestBuilder(request).build();
+    final HttpRequest httpRequest = newRequestBuilder(request, options).build();
 
     HttpResponse<byte[]> httpResponse;
     try {
       httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
     } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new IOException("Invalid uri " + request.url(), e);
     }
 
@@ -70,7 +75,7 @@ public class Http2Client implements Client {
     return response;
   }
 
-  private Builder newRequestBuilder(Request request) throws IOException {
+  private Builder newRequestBuilder(Request request, Options options) throws IOException {
     URI uri;
     try {
       uri = new URI(request.url());
@@ -86,7 +91,11 @@ public class Http2Client implements Client {
       body = BodyPublishers.ofByteArray(data);
     }
 
-    final Builder requestBuilder = HttpRequest.newBuilder().uri(uri).version(Version.HTTP_2);
+    final Builder requestBuilder =
+        HttpRequest.newBuilder()
+            .uri(uri)
+            .timeout(Duration.ofMillis(options.readTimeoutMillis()))
+            .version(Version.HTTP_2);
 
     final Map<String, Collection<String>> headers = filterRestrictedHeaders(request.headers());
     if (!headers.isEmpty()) {
@@ -159,7 +168,6 @@ public class Http2Client implements Client {
                 entry.getValue().stream()
                     .map(value -> Arrays.asList(entry.getKey(), value))
                     .flatMap(List::stream))
-        .collect(Collectors.toList())
-        .toArray(new String[0]);
+        .toArray(String[]::new);
   }
 }
