@@ -16,6 +16,7 @@ package feign;
 import static feign.Util.checkNotNull;
 import static feign.Util.valuesOrEmpty;
 
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -25,7 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
-public final class Request {
+public final class Request implements Serializable {
 
   public enum HttpMethod {
     GET,
@@ -386,9 +387,10 @@ public final class Request {
    * <p>Considered experimental, will most likely be made internal going forward.
    */
   @Experimental
-  public static class Body {
+  public static class Body implements Serializable {
 
-    private Charset encoding;
+    private transient Charset encoding;
+
     private byte[] data;
 
     private Body() {
