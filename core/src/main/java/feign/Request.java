@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -20,14 +21,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
  */
-public final class Request {
+public final class Request implements Serializable {
 
   public enum HttpMethod {
     GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
@@ -374,9 +374,10 @@ public final class Request {
    * </p>
    */
   @Experimental
-  public static class Body {
+  public static class Body implements Serializable {
 
-    private Charset encoding;
+    private transient Charset encoding;
+
     private byte[] data;
 
     private Body() {
