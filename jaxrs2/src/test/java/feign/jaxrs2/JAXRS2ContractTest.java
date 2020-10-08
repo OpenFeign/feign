@@ -13,7 +13,9 @@
  */
 package feign.jaxrs2;
 
-import static feign.assertj.FeignAssertions.assertThat;
+import feign.MethodMetadata;
+import feign.jaxrs.JAXRSContract;
+import feign.jaxrs.JAXRSContractTest;
 import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -21,9 +23,7 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-import feign.MethodMetadata;
-import feign.jaxrs.JAXRSContract;
-import feign.jaxrs.JAXRSContractTest;
+import static feign.assertj.FeignAssertions.assertThat;
 
 /**
  * Tests interfaces defined per {@link JAXRS2Contract} are interpreted into expected

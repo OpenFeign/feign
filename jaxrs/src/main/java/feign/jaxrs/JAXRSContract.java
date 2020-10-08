@@ -13,16 +13,23 @@
  */
 package feign.jaxrs;
 
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
-import static feign.Util.removeValues;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import javax.ws.rs.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
+import static feign.Util.removeValues;
 
 /**
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign

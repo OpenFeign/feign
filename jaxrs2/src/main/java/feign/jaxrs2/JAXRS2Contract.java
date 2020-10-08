@@ -13,9 +13,9 @@
  */
 package feign.jaxrs2;
 
+import feign.jaxrs.JAXRSContract;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
-import feign.jaxrs.JAXRSContract;
 
 /**
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs2">Feign
@@ -31,5 +31,4 @@ public final class JAXRS2Contract extends JAXRSContract {
     super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
     super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
   }
-
 }

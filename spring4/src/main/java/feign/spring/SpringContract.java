@@ -13,12 +13,22 @@
  */
 package feign.spring;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import org.springframework.web.bind.annotation.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class SpringContract extends DeclarativeContract {
 
@@ -138,5 +148,4 @@ public class SpringContract extends DeclarativeContract {
     possiblyNull.add(String.format("{%s}", name));
     return possiblyNull;
   }
-
 }
