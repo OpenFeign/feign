@@ -55,7 +55,7 @@ public class MeteredDecoder implements Decoder {
           .timer(metricName.name(),
               metricName.tag(template.methodMetadata(), template.feignTarget()))
           .recordCallable(() -> decoder.decode(meteredResponse, type));
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       throw e;
     } catch (Exception e) {
       throw new IOException(e);
