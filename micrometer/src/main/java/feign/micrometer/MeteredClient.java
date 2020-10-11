@@ -43,7 +43,7 @@ public class MeteredClient implements Client {
           .timer(
               metricName.name(), metricName.tag(template.methodMetadata(), template.feignTarget()))
           .recordCallable(() -> client.execute(request, options));
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       throw e;
     } catch (Exception e) {
       throw new IOException(e);

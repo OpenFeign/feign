@@ -14,9 +14,12 @@
 package feign.micrometer;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import feign.Feign;
+import feign.FeignException;
 import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
@@ -27,6 +30,7 @@ import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 public class MicrometerCapabilityTest {
@@ -72,5 +76,54 @@ public class MicrometerCapabilityTest {
                 meter.getId().getTag("host"),
                 // hostname is blank due to feign-mock shortfalls
                 equalTo("")));
+  }
+
+  @Test
+  public void clientPropagatesUncheckedException() {
+    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SimpleSource source =
+        Feign.builder()
+            .client(
+                (request, options) -> {
+                  notFound.set(new FeignException.NotFound("test", request, null));
+                  throw notFound.get();
+                })
+            .addCapability(new MicrometerCapability(registry))
+            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+
+    try {
+      source.get("0x3456789");
+      fail("Should throw NotFound exception");
+    } catch (FeignException.NotFound e) {
+      assertSame(notFound.get(), e);
+    }
+  }
+
+  @Test
+  public void decoderPropagatesUncheckedException() {
+    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SimpleSource source =
+        Feign.builder()
+            .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
+            .decoder(
+                (response, type) -> {
+                  notFound.set(new FeignException.NotFound("test", response.request(), null));
+                  throw notFound.get();
+                })
+            .addCapability(new MicrometerCapability(registry))
+            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+
+    try {
+      source.get("0x3456789");
+      fail("Should throw NotFound exception");
+    } catch (FeignException.NotFound e) {
+      assertSame(notFound.get(), e);
+    }
   }
 }
