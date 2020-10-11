@@ -14,10 +14,13 @@
 package feign.micrometer;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import feign.FeignException;
 import org.junit.Test;
 import feign.Feign;
 import feign.RequestLine;
@@ -69,4 +72,49 @@ public class MicrometerCapabilityTest {
         equalTo("")));
   }
 
+  @Test
+  public void clientPropagatesUncheckedException() {
+    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SimpleSource source = Feign.builder()
+        .client((request, options) -> {
+          notFound.set(new FeignException.NotFound("test", request, null));
+          throw notFound.get();
+        })
+        .addCapability(new MicrometerCapability(registry))
+        .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+
+    try {
+      source.get("0x3456789");
+      fail("Should throw NotFound exception");
+    } catch (FeignException.NotFound e) {
+      assertSame(notFound.get(), e);
+    }
+  }
+
+  @Test
+  public void decoderPropagatesUncheckedException() {
+    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SimpleSource source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
+        .decoder((response, type) -> {
+          notFound.set(new FeignException.NotFound("test", response.request(), null));
+          throw notFound.get();
+        })
+        .addCapability(new MicrometerCapability(registry))
+        .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+
+    try {
+      source.get("0x3456789");
+      fail("Should throw NotFound exception");
+    } catch (FeignException.NotFound e) {
+      assertSame(notFound.get(), e);
+    }
+  }
 }
