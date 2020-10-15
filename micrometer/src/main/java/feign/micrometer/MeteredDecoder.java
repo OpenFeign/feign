@@ -23,6 +23,7 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 /**
  * Warp feign {@link Decoder} with metrics.
@@ -56,8 +57,18 @@ public class MeteredDecoder implements Decoder {
               metricName.tag(template.methodMetadata(), template.feignTarget()))
           .recordCallable(() -> decoder.decode(meteredResponse, type));
     } catch (IOException | RuntimeException e) {
+      meterRegistry.counter(
+          metricName.name("error_count"),
+          metricName.tag(template.methodMetadata(), template.feignTarget())
+              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
+          .count();
       throw e;
     } catch (Exception e) {
+      meterRegistry.counter(
+          metricName.name("error_count"),
+          metricName.tag(template.methodMetadata(), template.feignTarget())
+              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
+          .count();
       throw new IOException(e);
     }
 
