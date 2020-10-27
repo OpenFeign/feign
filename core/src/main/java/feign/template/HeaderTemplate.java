@@ -22,6 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -144,7 +146,7 @@ public final class HeaderTemplate extends Template {
 
     /* remove any trailing commas or space */
     while (result.endsWith(",") || result.endsWith(" ")) {
-        result = result.replaceAll("(,\\s)$", "");
+      result = result.replaceAll("[,\\s]$", "");
     }
 
     return result;
