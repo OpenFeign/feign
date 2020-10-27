@@ -66,7 +66,7 @@ public final class HeaderTemplate extends Template {
     while (iterator.hasNext()) {
       template.append(iterator.next());
       if (iterator.hasNext()) {
-        template.append(",");
+        template.append(", ");
       }
     }
     return new HeaderTemplate(template.toString(), name, values, Util.UTF_8);
@@ -142,13 +142,11 @@ public final class HeaderTemplate extends Template {
   public String expand(Map<String, ?> variables) {
     String result = super.expand(variables);
 
-    /* remove any trailing commas */
-    while (result.endsWith(",")) {
-      result = result.replaceAll(",$", "");
+    /* remove any trailing commas or space */
+    while (result.endsWith(",") || result.endsWith(" ")) {
+        result = result.replaceAll("(,\\s)$", "");
     }
 
-    /* space all the commas now */
-    result = result.replaceAll(",", ", ");
     return result;
   }
 }

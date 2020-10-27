@@ -19,6 +19,8 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -111,4 +113,21 @@ public class HeaderTemplateTest {
     assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
         equalTo(Arrays.asList("test 2", "test 1")));
   }
+
+
+    @Test
+    public void it_should_return_expanded_include_comma() {
+        HeaderTemplate headerTemplate =
+            HeaderTemplate.create("date", Arrays.asList("{today}", "{tomorrow}"));
+
+        String today = "Thu, 24 Sep 2020 10:34:09 GMT";
+        String tomorrow = "Thu, 25 Sep 2020 10:34:09 GMT";
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("today", today);
+        map.put("tomorrow", tomorrow);
+
+        assertThat(headerTemplate.getName()+ " " + today + ", " + tomorrow,
+            equalTo(headerTemplate.expand(map)));
+    }
 }
