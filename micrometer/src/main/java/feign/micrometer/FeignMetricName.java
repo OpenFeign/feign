@@ -16,6 +16,7 @@ package feign.micrometer;
 import feign.MethodMetadata;
 import feign.Target;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,17 +42,17 @@ public final class FeignMetricName {
     return meteredComponent.getName();
   }
 
-  public List<Tag> tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags) {
+  public Tags tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags) {
     return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), tags);
   }
 
-  public List<Tag> tag(Class<?> targetType, Method method, String url, Tag... extraTags) {
+  public Tags tag(Class<?> targetType, Method method, String url, Tag... extraTags) {
     List<Tag> tags = new ArrayList<>();
     tags.add(Tag.of("client", targetType.getName()));
     tags.add(Tag.of("method", method.getName()));
     tags.add(Tag.of("host", extractHost(url)));
     tags.addAll(Arrays.asList(extraTags));
-    return tags;
+    return Tags.of(tags);
   }
 
   private String extractHost(final String targetUrl) {
