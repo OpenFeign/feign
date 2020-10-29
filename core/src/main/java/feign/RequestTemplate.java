@@ -233,7 +233,7 @@ public final class RequestTemplate implements Serializable {
         if (!header.isEmpty()) {
           /* split off the header values and add it to the resolved template */
           String headerValues = header.substring(header.indexOf(" ") + 1);
-          if (!headerValues.isEmpty()) {
+          if (!headerValues.isEmpty() && header.contains(" ")) {
             /* append the header as a new literal as the value has already been expanded. */
             resolved.header(headerTemplate.getName(), Literal.create(headerValues));
           }
