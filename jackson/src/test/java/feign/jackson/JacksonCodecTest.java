@@ -171,14 +171,14 @@ public class JacksonCodecTest {
         + "  \"id\" : \"ABCD\"" + System.lineSeparator()
         + "} ]");
   }
-  
+
   @Test
   public void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
     headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
-    
+
     Response response = Response.builder()
         .status(200)
         .reason("OK")
@@ -191,7 +191,8 @@ public class JacksonCodecTest {
             + "}").getBytes(StandardCharsets.ISO_8859_1))
         .build();
     assertEquals(zone.get("id"),
-        ((Zone)new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType())).get("id"));
+        ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType()))
+            .get("id"));
   }
 
   @Test
