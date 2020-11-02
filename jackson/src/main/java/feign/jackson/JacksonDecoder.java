@@ -13,15 +13,17 @@
  */
 package feign.jackson;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Collections;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -47,7 +49,8 @@ public class JacksonDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader(Util.UTF_8);
+    Charset charset = getResponseCharset(response);
+    Reader reader = response.body().asReader(charset);
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
@@ -65,5 +68,24 @@ public class JacksonDecoder implements Decoder {
       }
       throw e;
     }
+  }
+  
+  private Charset getResponseCharset(Response response) {
+    
+    Collection<String> contentTypeHeaders = response.headers().get("Content-Type");
+    
+    if(contentTypeHeaders != null) {
+      for(String contentTypeHeader : contentTypeHeaders) {
+        String[] contentTypeParmeters = contentTypeHeader.split(";");
+        if(contentTypeParmeters.length > 1) {
+          String[] charsetParts = contentTypeParmeters[1].split("=");
+          if(charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+            return Charset.forName(charsetParts[1]);
+          }
+        }
+      } 
+    }
+    
+    return Util.UTF_8;
   }
 }

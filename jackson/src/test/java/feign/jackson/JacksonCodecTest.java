@@ -28,6 +28,7 @@ import feign.Util;
 import org.junit.Test;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -167,6 +168,25 @@ public class JacksonCodecTest {
         + "  \"name\" : \"DENOMINATOR.IO.\"," + System.lineSeparator()
         + "  \"id\" : \"ABCD\"" + System.lineSeparator()
         + "} ]");
+  }
+  
+  @Test
+  public void decoderCharset() throws IOException {
+    Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
+
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Map.of("Content-Type", List.of("application/json;charset=ISO-8859-1")))
+        .body(new String("" //
+            + "{" + System.lineSeparator()
+            + "  \"name\" : \"DENOMINATOR.IO.\"," + System.lineSeparator()
+            + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\"" + System.lineSeparator()
+            + "}").getBytes(StandardCharsets.ISO_8859_1))
+        .build();
+    assertEquals(zone.get("id"),
+        ((Zone)new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType())).get("id"));
   }
 
   @Test
