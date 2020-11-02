@@ -31,7 +31,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -174,11 +176,14 @@ public class JacksonCodecTest {
   public void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
+    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+    
     Response response = Response.builder()
         .status(200)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Map.of("Content-Type", List.of("application/json;charset=ISO-8859-1")))
+        .headers(headers)
         .body(new String("" //
             + "{" + System.lineSeparator()
             + "  \"name\" : \"DENOMINATOR.IO.\"," + System.lineSeparator()
