@@ -49,8 +49,7 @@ public class JacksonDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null)
       return null;
-    Charset charset = getResponseCharset(response);
-    Reader reader = response.body().asReader(charset);
+    Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
@@ -70,22 +69,4 @@ public class JacksonDecoder implements Decoder {
     }
   }
 
-  private Charset getResponseCharset(Response response) {
-
-    Collection<String> contentTypeHeaders = response.headers().get("Content-Type");
-
-    if (contentTypeHeaders != null) {
-      for (String contentTypeHeader : contentTypeHeaders) {
-        String[] contentTypeParmeters = contentTypeHeader.split(";");
-        if (contentTypeParmeters.length > 1) {
-          String[] charsetParts = contentTypeParmeters[1].split("=");
-          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
-            return Charset.forName(charsetParts[1]);
-          }
-        }
-      }
-    }
-
-    return Util.UTF_8;
-  }
 }
