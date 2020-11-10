@@ -54,10 +54,11 @@ public class Http2Client implements Client {
   @Override
   public Response execute(Request request, Options options) throws IOException {
     final HttpRequest httpRequest = newRequestBuilder(request, options).build();
+    HttpClient clientForRequest = clientForRequest(options);
 
     HttpResponse<byte[]> httpResponse;
     try {
-      httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
+      httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
     } catch (final InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IOException("Invalid uri " + request.url(), e);
@@ -74,6 +75,35 @@ public class Http2Client implements Client {
         .headers(castMapCollectType(httpResponse.headers().map()))
         .build();
     return response;
+  }
+
+  private HttpClient clientForRequest(Options options) {
+    if (doesClientConfigurationDiffer(options)) {
+      // create a new client from the existing one - but with connectTimeout and followRedirect
+      // settings from options
+      java.net.http.HttpClient.Builder builder = HttpClient
+          .newBuilder()
+          .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
+          .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()))
+          .sslContext(client.sslContext())
+          .sslParameters(client.sslParameters())
+          .version(client.version());
+      client.authenticator().ifPresent(builder::authenticator);
+      client.cookieHandler().ifPresent(builder::cookieHandler);
+      client.executor().ifPresent(builder::executor);
+      client.proxy().ifPresent(builder::proxy);
+      return builder.build();
+    }
+    return client;
+  }
+
+  private boolean doesClientConfigurationDiffer(Options options) {
+    if ((client.followRedirects() == Redirect.ALWAYS) != options.isFollowRedirects()) {
+      return true;
+    }
+    return client.connectTimeout()
+        .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
+        .orElse(true);
   }
 
   private Builder newRequestBuilder(Request request, Options options) throws IOException {
