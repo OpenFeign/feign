@@ -47,6 +47,12 @@ public class Http2Client implements Client {
         .build());
   }
 
+  public Http2Client(Options options) {
+    this(newClientBuilder(options)
+        .version(Version.HTTP_2)
+        .build());
+  }
+
   public Http2Client(HttpClient client) {
     this.client = Util.checkNotNull(client, "HttpClient must not be null");
   }
@@ -54,7 +60,7 @@ public class Http2Client implements Client {
   @Override
   public Response execute(Request request, Options options) throws IOException {
     final HttpRequest httpRequest = newRequestBuilder(request, options).build();
-    HttpClient clientForRequest = clientForRequest(options);
+    HttpClient clientForRequest = getOrCreateClient(options);
 
     HttpResponse<byte[]> httpResponse;
     try {
@@ -77,14 +83,11 @@ public class Http2Client implements Client {
     return response;
   }
 
-  private HttpClient clientForRequest(Options options) {
+  private HttpClient getOrCreateClient(Options options) {
     if (doesClientConfigurationDiffer(options)) {
       // create a new client from the existing one - but with connectTimeout and followRedirect
       // settings from options
-      java.net.http.HttpClient.Builder builder = HttpClient
-          .newBuilder()
-          .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
-          .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()))
+      java.net.http.HttpClient.Builder builder = newClientBuilder(options)
           .sslContext(client.sslContext())
           .sslParameters(client.sslParameters())
           .version(client.version());
@@ -104,6 +107,13 @@ public class Http2Client implements Client {
     return client.connectTimeout()
         .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
         .orElse(true);
+  }
+
+  private static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
+    return HttpClient
+        .newBuilder()
+        .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
+        .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
   }
 
   private Builder newRequestBuilder(Request request, Options options) throws IOException {
