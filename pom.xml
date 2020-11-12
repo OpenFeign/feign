@@ -417,6 +417,21 @@
               <target>${main.java.version}</target>
             </configuration>
           </execution>
+          <execution>
+            <id>default-test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <fork>true</fork>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+              <source>${main.java.version}</source>
+              <target>${main.java.version}</target>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 

@@ -201,6 +201,21 @@ public class DefaultContractTest {
   }
 
   @Test
+  public void autoDiscoverParamNames() throws Exception {
+    final MethodMetadata md = parseAndValidateMetadata(AutoDiscoverParamNames.class,
+        "recordsByNameAndType", int.class, String.class,
+        String.class);
+
+    assertThat(md.template())
+        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+
+    assertThat(md.indexToName()).containsExactly(
+        entry(0, asList("domainId")),
+        entry(1, asList("name")),
+        entry(2, asList("type")));
+  }
+
+  @Test
   public void bodyWithTemplate() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
         "login", String.class, String.class, String.class);
@@ -515,6 +530,12 @@ public class DefaultContractTest {
     Response recordsByNameAndType(@Param("domainId") int id,
                                   @Param("name") String nameFilter,
                                   @Param("type") String typeFilter);
+  }
+
+  interface AutoDiscoverParamNames {
+
+    @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
+    Response recordsByNameAndType(@Param int domainId, @Param String name, @Param() String type);
   }
 
   interface FormParams {
