@@ -24,10 +24,10 @@ public final class VertxDelegatingContract implements Contract {
   }
 
   @Override
-  public List<MethodMetadata> parseAndValidatateMetadata(final Class<?> targetType) {
+  public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
     checkNotNull(targetType, "Argument targetType must be not null");
 
-    final List<MethodMetadata> metadatas = delegate.parseAndValidatateMetadata(targetType);
+    final List<MethodMetadata> metadatas = delegate.parseAndValidateMetadata(targetType);
 
     for (final MethodMetadata metadata : metadatas) {
       final Type type = metadata.returnType();
@@ -45,4 +45,5 @@ public final class VertxDelegatingContract implements Contract {
 
     return metadatas;
   }
+
 }

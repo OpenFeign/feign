@@ -42,7 +42,7 @@ final class VertxInvocationHandler implements InvocationHandler {
         if (isReturnsFuture(method)) {
           return invokeRequestMethod(method, args);
         } else {
-          throw new FeignException(String.format(
+          throw new FeignException(-1, String.format(
               "Method %s of contract %s doesn't return io.vertx.core.Future",
               method.getName(),
               method.getDeclaringClass().getSimpleName()));
