@@ -1,7 +1,22 @@
 language: java
-jdk: oraclejdk8
-install: mvn clean install source:jar javadoc:jar deploy --settings settings.xml
-after_success: mvn clean jacoco:prepare-agent test jacoco:report coveralls:report
+jdk: openjdk8
+
+jobs:
+  include:
+    - stage: build
+      install: skip
+      script: "mvn clean install"
+
+    - stage: publish-release
+      if: tag =~ ^v
+      install: skip
+      script: "mvn clean install source:jar javadoc:jar deploy --settings settings.xml"
+
+    - stage: report-coverage
+      if: branch = master
+      install: skip
+      script: "mvn clean jacoco:prepare-agent test jacoco:report coveralls:report"
+
 env:
   global:
     # BINTRAY_USER
