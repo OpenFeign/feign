@@ -27,6 +27,9 @@ ij_java_names_count_to_use_import_on_demand = 999
 ij_java_imports_layout = *,|,javax.**,java.**,|,$*
 ij_java_layout_static_imports_separately = true
 
+[pom.xml]
+indent_size = 4
+
 [*.md]
 trim_trailing_whitespace = false
 

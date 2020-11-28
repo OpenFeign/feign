@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -61,6 +62,28 @@ public class IceCreamOrder {
 
   public Instant getOrderTimestamp() {
     return orderTimestamp;
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof IceCreamOrder)) {
+      return false;
+    }
+
+    final IceCreamOrder another = (IceCreamOrder) other;
+    return id == another.id
+        && Objects.equals(balls, another.balls)
+        && Objects.equals(mixins, another.mixins)
+        && Objects.equals(orderTimestamp, another.orderTimestamp);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, balls, mixins, orderTimestamp);
   }
 
   @Override

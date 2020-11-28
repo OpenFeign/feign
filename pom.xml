@@ -54,14 +54,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <vertx.version>3.5.0</vertx.version>
+        <vertx.version>3.5.1</vertx.version>
         <feign.version>8.18.0</feign.version>
 
         <!-- Tests -->
-        <junit.version>4.12</junit.version>
-        <vertx-unit.version>3.5.0</vertx-unit.version>
-        <assertj.version>3.9.0</assertj.version>
-        <wiremock.version>2.14.0</wiremock.version>
+        <junit.version>5.7.0</junit.version>
+        <assertj.version>3.18.1</assertj.version>
+        <wiremock.version>2.27.2</wiremock.version>
         <jackson.version>2.9.3</jackson.version>
         <slf4j-log4j12.version>1.8.0-beta0</slf4j-log4j12.version>
 
@@ -70,9 +69,21 @@
         <coveralls-plugin.version>4.1.0</coveralls-plugin.version>
 
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -89,16 +100,14 @@
 
         <!-- Tests -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
         </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-unit</artifactId>
-            <version>${vertx-unit.version}</version>
+            <artifactId>vertx-junit5</artifactId>
+            <version>${vertx.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -111,9 +120,15 @@
 
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
+            <artifactId>wiremock-jre8</artifactId>
             <version>${wiremock.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit</groupId>
+                    <artifactId>junit-bom</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -165,7 +180,6 @@
                     </configuration>
                 </plugin>
 
-                <!-- Run tests -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -217,6 +231,18 @@
         </pluginManagement>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
             <!-- Jacoco Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
