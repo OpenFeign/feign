@@ -134,7 +134,7 @@ public class RetryingTest {
           try {
             assertThat(res.cause())
                 .isInstanceOf(RetryableException.class)
-                .hasMessageContaining("status 503");
+                .hasMessageContaining("503 Service Unavailable");
             async.complete();
           } catch (Throwable exception) {
             context.fail(exception);

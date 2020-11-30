@@ -183,7 +183,7 @@ public class VertxHttpClientTest {
         try {
           assertThat(res.cause())
               .isInstanceOf(FeignException.class)
-              .hasMessageContaining("status 404");
+              .hasMessageContaining("404 Not Found");
           async.complete();
         } catch (Throwable exception) {
           context.fail(exception);
