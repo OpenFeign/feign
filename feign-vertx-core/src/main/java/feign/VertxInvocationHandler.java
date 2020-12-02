@@ -1,8 +1,8 @@
 package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
-import feign.vertx.VertxHttpClient;
-import io.vertx.core.Future;
+import feign.vertx.VertxAdaptors;
+import feign.vertx.adaptor.AbstractVertxHttpClient;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -51,18 +51,18 @@ final class VertxInvocationHandler implements InvocationHandler {
   }
 
   /**
-   * Transforms method invocation into request that executed by {@link VertxHttpClient}.
+   * Transforms method invocation into request that executed by {@link AbstractVertxHttpClient}.
    *
    * @param method  invoked method
    * @param args  provided arguments to method
    *
    * @return future with decoded result or occurred exception
    */
-  private Future invokeRequestMethod(final Method method, final Object[] args) {
+  private Object invokeRequestMethod(final Method method, final Object[] args) {
     try {
-      return (Future) dispatch.get(method).invoke(args);
+      return dispatch.get(method).invoke(args);
     } catch (Throwable throwable) {
-      return Future.failedFuture(throwable);
+      return VertxAdaptors.getAdaptor().failedFuture(throwable);
     }
   }
 
@@ -74,7 +74,7 @@ final class VertxInvocationHandler implements InvocationHandler {
    * @return true if method must return Future, false if not
    */
   private boolean isReturnsFuture(final Method method) {
-    return Future.class.isAssignableFrom(method.getReturnType());
+    return VertxAdaptors.getAdaptor().isVertxFuture(method.getReturnType());
   }
 
   @Override

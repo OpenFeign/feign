@@ -1,7 +1,5 @@
 package feign.vertx;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
 import feign.vertx.testcase.domain.OrderGenerator;
 import io.vertx.junit5.VertxExtension;
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 @ExtendWith(VertxExtension.class)
 public abstract class AbstractFeignVertxTest {
