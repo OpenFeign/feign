@@ -16,14 +16,17 @@ package feign.micrometer;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import feign.FeignException;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.*;
 
 /**
  * Warp feign {@link Decoder} with metrics.
@@ -43,7 +46,6 @@ public class MeteredDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
-    final RequestTemplate template = response.request().requestTemplate();
     final Optional<MeteredBody> body = Optional.ofNullable(response.body())
         .map(MeteredBody::new);
 
@@ -51,32 +53,73 @@ public class MeteredDecoder implements Decoder {
         .orElse(response);
 
     Object decoded;
+
+    final Timer.Sample sample = Timer.start(meterRegistry);
     try {
-      decoded = meterRegistry
-          .timer(metricName.name(),
-              metricName.tag(template.methodMetadata(), template.feignTarget()))
-          .recordCallable(() -> decoder.decode(meteredResponse, type));
+      decoded = decoder.decode(meteredResponse, type);
+      final Timer timer = createSuccessTimer(response, type);
+      sample.stop(timer);
     } catch (IOException | RuntimeException e) {
-      meterRegistry.counter(
-          metricName.name("error_count"),
-          metricName.tag(template.methodMetadata(), template.feignTarget())
-              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
-          .count();
+      sample.stop(createExceptionTimer(response, type, e));
+      createExceptionCounter(response, type, e).count();
       throw e;
     } catch (Exception e) {
-      meterRegistry.counter(
-          metricName.name("error_count"),
-          metricName.tag(template.methodMetadata(), template.feignTarget())
-              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
-          .count();
+      sample.stop(createExceptionTimer(response, type, e));
+      createExceptionCounter(response, type, e).count();
       throw new IOException(e);
     }
 
-    body.ifPresent(b -> meterRegistry.summary(
-        metricName.name("response_size"),
-        metricName.tag(template.methodMetadata(), template.feignTarget())).record(b.count()));
+    body.ifPresent(b -> createSummary(response, type).record(b.count()));
 
     return decoded;
+  }
+
+  private Timer createSuccessTimer(Response response, Type type) {
+    final List<Tag> successTags = extraSuccessTags(response, type);
+    final Tag[] tags = successTags.toArray(new Tag[] {});
+    final RequestTemplate template = response.request().requestTemplate();
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.timer(metricName.name(), allTags);
+  }
+
+  private Timer createExceptionTimer(Response response, Type type, Exception exception) {
+    final List<Tag> exceptionTags = extraExceptionTags(response, type, exception);
+    final Tag[] tags = exceptionTags.toArray(new Tag[] {});
+    final RequestTemplate template = response.request().requestTemplate();
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.timer(metricName.name("exception"), allTags);
+  }
+
+  private Counter createExceptionCounter(Response response, Type type, Exception exception) {
+    final List<Tag> exceptionTags = extraExceptionTags(response, type, exception);
+    final Tag[] tags = exceptionTags.toArray(new Tag[] {});
+    final RequestTemplate template = response.request().requestTemplate();
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.counter(metricName.name("error_count"), allTags);
+  }
+
+  private DistributionSummary createSummary(Response response, Type type) {
+    final List<Tag> successTags = extraSummaryTags(response, type);
+    final Tag[] tags = successTags.toArray(new Tag[] {});
+    final RequestTemplate template = response.request().requestTemplate();
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.summary(metricName.name("response_size"), allTags);
+  }
+
+  protected List<Tag> extraSuccessTags(Response response, Type type) {
+    return Collections.emptyList();
+  }
+
+  protected List<Tag> extraExceptionTags(Response response, Type type, Exception exception) {
+    final RequestTemplate template = response.request().requestTemplate();
+    final List<Tag> result = new ArrayList<>();
+    result.add(Tag.of("uri", template.path()));
+    result.add(Tag.of("exception_name", exception.getClass().getSimpleName()));
+    return result;
+  }
+
+  protected List<Tag> extraSummaryTags(Response response, Type type) {
+    return Collections.emptyList();
   }
 
 }

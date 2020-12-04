@@ -15,10 +15,13 @@ package feign.micrometer;
 
 
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 import feign.RequestTemplate;
+import feign.Response;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.*;
 
 /**
  * Warp feign {@link Encoder} with metrics.
@@ -38,17 +41,35 @@ public class MeteredEncoder implements Encoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    meterRegistry.timer(
-        metricName.name(),
-        metricName.tag(template.methodMetadata(), template.feignTarget()))
+    createTimer(object, bodyType, template)
         .record(() -> encoder.encode(object, bodyType, template));
 
     if (template.body() != null) {
-      meterRegistry.summary(
-          metricName.name("request_size"),
-          metricName.tag(template.methodMetadata(), template.feignTarget()))
-          .record(template.body().length);
+      createSummary(object, bodyType, template).record(template.body().length);
     }
   }
 
+  private Timer createTimer(Object object, Type bodyType, RequestTemplate template) {
+    final List<Tag> successTags = extraTimerTags(object, bodyType, template);
+    final Tag[] tags = successTags.toArray(new Tag[] {});
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.timer(metricName.name(), allTags);
+  }
+
+  private DistributionSummary createSummary(Object object,
+                                            Type bodyType,
+                                            RequestTemplate template) {
+    final List<Tag> successTags = extraSummaryTags(object, bodyType, template);
+    final Tag[] tags = successTags.toArray(new Tag[] {});
+    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    return meterRegistry.summary(metricName.name("response_size"), allTags);
+  }
+
+  protected List<Tag> extraTimerTags(Object object, Type bodyType, RequestTemplate template) {
+    return Collections.emptyList();
+  }
+
+  protected List<Tag> extraSummaryTags(Object object, Type bodyType, RequestTemplate template) {
+    return Collections.emptyList();
+  }
 }
