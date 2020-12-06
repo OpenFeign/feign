@@ -72,12 +72,12 @@
         <slf4j-log4j12.version>1.8.0-beta0</slf4j-log4j12.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.7.9</jacoco-plugin.version>
-        <coveralls-plugin.version>4.1.0</coveralls-plugin.version>
+        <jacoco-plugin.version>0.8.6</jacoco-plugin.version>
+        <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
+        <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
