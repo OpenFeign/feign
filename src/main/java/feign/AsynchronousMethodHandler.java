@@ -8,18 +8,18 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import feign.vertx.VertxAdaptors;
-import feign.vertx.adaptor.AbstractVertxHttpClient;
-import feign.vertx.adaptor.VertxFuture;
+import feign.vertx.VertxHttpClient;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
- * Method handler for asynchronous HTTP requests via {@link AbstractVertxHttpClient}.
+ * Method handler for asynchronous HTTP requests via {@link VertxHttpClient}.
  * Inspired by {@link SynchronousMethodHandler}.
  *
  * @author Alexei KLENIN
@@ -30,7 +30,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
 
   private final MethodMetadata metadata;
   private final Target<?> target;
-  private final AbstractVertxHttpClient<?, ?, Object> client;
+  private final VertxHttpClient client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
   private final Logger logger;
@@ -42,7 +42,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
 
   private AsynchronousMethodHandler(
       final Target<?> target,
-      final AbstractVertxHttpClient<?, ?, Object> client,
+      final VertxHttpClient client,
       final Retryer retryer,
       final List<RequestInterceptor> requestInterceptors,
       final Logger logger,
@@ -67,7 +67,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Object invoke(final Object[] argv) {
+  public Future invoke(final Object[] argv) {
     final RequestTemplate template = buildTemplateFromArgs.create(argv);
     final Retryer retryer = this.retryer.clone();
 
@@ -85,15 +85,15 @@ final class AsynchronousMethodHandler implements MethodHandler {
    *
    * @return future with decoded result or occurred error
    */
-  private VertxFuture<?, Object> executeAndDecode(final RequestTemplate template) {
+  private Future<Object> executeAndDecode(final RequestTemplate template) {
     final Request request = targetRequest(template);
-    final VertxFuture<Object, Object> decodedResultFuture = VertxAdaptors.getAdaptor().future();
+    final Future<Object> decodedResultFuture = Future.future();
 
     logRequest(request);
 
     final Instant start = Instant.now();
 
-    client.execute(request).setHandler((VertxFuture<Object, Response> res) -> {
+    client.execute(request).setHandler(res -> {
       boolean shouldClose = true;
 
       final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
@@ -234,7 +234,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
   }
 
   static final class Factory {
-    private final AbstractVertxHttpClient client;
+    private final VertxHttpClient client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
     private final Logger logger;
@@ -242,7 +242,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
     private final boolean decode404;
 
     Factory(
-        final AbstractVertxHttpClient client,
+        final VertxHttpClient client,
         final Retryer retryer,
         final List<RequestInterceptor> requestInterceptors,
         final Logger logger,
@@ -278,15 +278,15 @@ final class AsynchronousMethodHandler implements MethodHandler {
   }
 
   /**
-   * Handler for {@link VertxFuture} able to retry execution of request. In this case handler passed
+   * Handler for {@link AsyncResult} able to retry execution of request. In this case handler passed
    * to new request.
    *
    * @param <T>  type of response
    */
-  private final class ResultHandlerWithRetryer<T> implements Consumer<VertxFuture<Object, T>> {
+  private final class ResultHandlerWithRetryer<T> implements Handler<AsyncResult<T>> {
     private final RequestTemplate template;
     private final Retryer retryer;
-    private final VertxFuture<?, T> resultFuture = (VertxFuture<?, T>) VertxAdaptors.getAdaptor().future();
+    private final Future<T> resultFuture = Future.future();
 
     private ResultHandlerWithRetryer(final RequestTemplate template, final Retryer retryer) {
       this.template = template;
@@ -300,7 +300,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public void accept(VertxFuture<Object, T> result) {
+    public void handle(AsyncResult<T> result) {
       if (result.succeeded()) {
         this.resultFuture.complete(result.result());
       } else {
@@ -310,7 +310,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
           try {
             this.retryer.continueOrPropagate(retryableException);
             logRetry();
-            ((VertxFuture<Object, T>) executeAndDecode(this.template)).setHandler(this);
+            ((Future<T>) executeAndDecode(this.template)).setHandler(this);
           } catch (final RetryableException noMoreRetryAttempts) {
             this.resultFuture.fail(noMoreRetryAttempts);
           }
@@ -326,8 +326,8 @@ final class AsynchronousMethodHandler implements MethodHandler {
      *
      * @return future with result of attempts
      */
-    private Object getResultFuture() {
-      return this.resultFuture.asFuture();
+    private Future<?> getResultFuture() {
+      return this.resultFuture;
     }
   }
 }

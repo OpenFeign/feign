@@ -1,11 +1,9 @@
-package feign.vertx.adaptor.vertx35;
+package feign.vertx;
 
 import static feign.Util.checkNotNull;
 
 import feign.Request;
 import feign.Response;
-import feign.vertx.adaptor.AbstractVertxHttpClient;
-import feign.vertx.adaptor.VertxFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -22,11 +20,26 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public final class Vertx35HttpClient extends AbstractVertxHttpClient<Vertx, HttpClientOptions, Future<Response>> {
+/**
+ * Like {@link feign.Client} but method {@link #execute} returns {@link Future} with
+ * {@link Response}. HTTP request is executed asynchronously with Vert.x
+ *
+ * @author Alexei KLENIN
+ * @author Gordon McKinney
+ */
+@SuppressWarnings("unused")
+public final class VertxHttpClient {
   private final HttpClient httpClient;
 
-  public Vertx35HttpClient(final Vertx vertx, final HttpClientOptions options) {
-    super(vertx, options);
+  /**
+   * Constructor from {@link Vertx} instance and HTTP client options.
+   *
+   * @param vertx  vertx instance
+   * @param options  HTTP options
+   */
+  public VertxHttpClient(final Vertx vertx, final HttpClientOptions options) {
+    checkNotNull(vertx, "Argument vertx must not be null");
+    checkNotNull(options, "Argument options must be not null");
     this.httpClient = vertx.createHttpClient(options);
   }
 
@@ -36,7 +49,7 @@ public final class Vertx35HttpClient extends AbstractVertxHttpClient<Vertx, Http
    * @param request  request
    * @return future of HTTP response
    */
-  public VertxFuture<Future<Response>, Response> execute(final Request request) {
+  public Future<Response> execute(final Request request) {
     checkNotNull(request, "Argument request must be not null");
 
     final HttpClientRequest httpClientRequest;
@@ -44,10 +57,10 @@ public final class Vertx35HttpClient extends AbstractVertxHttpClient<Vertx, Http
     try {
       httpClientRequest = makeHttpClientRequest(request);
     } catch (final MalformedURLException unexpectedException) {
-      return Vertx35Future.failed(unexpectedException);
+      return Future.failedFuture(unexpectedException);
     }
 
-    final VertxFuture<Future<Response>, Response> responseFuture = new Vertx35Future<>();
+    final Future<Response> responseFuture = Future.future();
 
     httpClientRequest.exceptionHandler(responseFuture::fail);
     httpClientRequest.handler(response -> {

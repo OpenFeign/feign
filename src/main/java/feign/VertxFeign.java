@@ -7,10 +7,11 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.vertx.VertxAdaptors;
 import feign.vertx.VertxDelegatingContract;
-import feign.vertx.adaptor.AbstractVertxAdaptor;
-import feign.vertx.adaptor.AbstractVertxHttpClient;
+import feign.vertx.VertxHttpClient;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Allows Feign interfaces to return Vert.x {@code io.vertx.core.Future Future}s.
+ * Allows Feign interfaces to return Vert.x {@link io.vertx.core.Future Future}s.
  *
  * @author Alexei KLENIN
  * @author Gordon McKinney
@@ -77,7 +78,7 @@ public final class VertxFeign extends Feign {
    * VertxFeign builder.
    */
   public static final class Builder extends Feign.Builder {
-    private Object vertx;
+    private Vertx vertx;
     private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new VertxDelegatingContract(new Contract.Default());
@@ -86,7 +87,7 @@ public final class VertxFeign extends Feign {
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Object options = VertxAdaptors.getAdaptor().defaultClientOptions();
+    private HttpClientOptions options = new HttpClientOptions();
     private boolean decode404;
 
     /** Unsupported operation. */
@@ -109,8 +110,8 @@ public final class VertxFeign extends Feign {
      *
      * @return this builder
      */
-    public Builder vertx(final Object vertx) {
-      this.vertx = VertxAdaptors.getAdaptor().assertVertx(vertx);
+    public Builder vertx(final Vertx vertx) {
+      this.vertx = checkNotNull(vertx, "Argument vertx must be not null");
       return this;
     }
 
@@ -227,15 +228,15 @@ public final class VertxFeign extends Feign {
     }
 
     /**
-     * Sets request options using Vert.x {@code HttpClientOptions}.
+     * Sets request options using Vert.x {@link HttpClientOptions}.
      *
      * @param options  {@code HttpClientOptions} for full customization of the underlying Vert.x
-     *     {@code HttpClient}
+     *     {@link HttpClient}
      *
      * @return this builder
      */
-    public Builder options(final Object options) {
-      this.options = VertxAdaptors.getAdaptor().assertVertxClientOptions(options);
+    public Builder options(final HttpClientOptions options) {
+      this.options = checkNotNull(options, "Argument options must be not null");
       return this;
     }
 
@@ -249,7 +250,9 @@ public final class VertxFeign extends Feign {
     @Override
     public Builder options(final Request.Options options) {
       checkNotNull(options, "Argument options must be not null");
-      this.options = VertxAdaptors.getAdaptor().makeOptions(options);
+      this.options = new HttpClientOptions()
+          .setConnectTimeout(options.connectTimeoutMillis())
+          .setIdleTimeout(options.readTimeoutMillis());
       return this;
     }
 
@@ -322,8 +325,7 @@ public final class VertxFeign extends Feign {
     public VertxFeign build() {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
-      final AbstractVertxAdaptor adaptor = VertxAdaptors.getAdaptor();
-      final AbstractVertxHttpClient client = adaptor.createHttpClient(vertx, this.options);
+      final VertxHttpClient client = new VertxHttpClient(vertx, this.options);
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
@@ -338,7 +340,7 @@ public final class VertxFeign extends Feign {
 
   private static final class ParseHandlersByName {
     private final Contract contract;
-    private final Object options;
+    private final HttpClientOptions options;
     private final Encoder encoder;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
@@ -346,7 +348,7 @@ public final class VertxFeign extends Feign {
 
     private ParseHandlersByName(
         final Contract contract,
-        final Object options,
+        final HttpClientOptions options,
         final Encoder encoder,
         final Decoder decoder,
         final ErrorDecoder errorDecoder,
