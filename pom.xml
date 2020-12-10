@@ -55,7 +55,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <vertx.version>3.5.1</vertx.version>
-        <feign.version>8.18.0</feign.version>
+        <feign.version>9.0.0</feign.version>
 
         <!-- Tests -->
         <junit.version>5.7.0</junit.version>
@@ -100,7 +100,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.netflix.feign</groupId>
+            <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
             <version>${feign.version}</version>
         </dependency>
@@ -151,14 +151,14 @@
         </dependency>
 
         <dependency>
-            <groupId>com.netflix.feign</groupId>
+            <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
             <version>${feign.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.netflix.feign</groupId>
+            <groupId>io.github.openfeign</groupId>
             <artifactId>feign-slf4j</artifactId>
             <version>${feign.version}</version>
             <scope>test</scope>
