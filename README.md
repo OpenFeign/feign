@@ -45,6 +45,7 @@ compile group: 'io.github.openfeign', name: 'feign-vertx', version: '1.0.0'
 Feign                  | feign-vertx            | Vertx
 ---------------------- | ---------------------- | ----------------------
 8.x                    | 1.x+                   | 3.5.x - 3.9.x (except 3.5.2)
+9.x                    | 2.x+                   | 3.5.x - 3.9.x (except 3.5.2)
 
 ## Usage
 
