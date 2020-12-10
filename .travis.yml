@@ -8,7 +8,7 @@ jobs:
       script: "mvn clean install -DskipTests=true"
 
     - stage: publish-release
-      if: tag =~ ^v
+      if: tag IS present
       install: skip
       script: "mvn clean install source:jar javadoc:jar deploy -DskipTests=true --settings settings.xml"
 
