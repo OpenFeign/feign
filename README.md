@@ -1,20 +1,55 @@
 # feign-vertx
 
 [![Build Status](https://travis-ci.org/OpenFeign/feign-vertx.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-vertx)
-[ ![Download](https://api.bintray.com/packages/hosuaby/OpenFeign/feign-vertx/images/download.svg) ](https://bintray.com/hosuaby/OpenFeign/feign-vertx/_latestVersion)
-
-Use Feign on Vert.x
-
-## Overview
+[![Download](https://api.bintray.com/packages/hosuaby/OpenFeign/feign-vertx/images/download.svg)](https://bintray.com/hosuaby/OpenFeign/feign-vertx/_latestVersion)
 
 Implementation of Feign on Vertx. Brings you the best of two worlds together : 
 concise syntax of Feign to write client side API on fast, asynchronous and
 non-blocking HTTP client of Vertx.
 
+## Installation
+
+### With Maven
+
+```xml
+<repositories>
+    <repository>
+        <id>jcenter</id>
+        <url>https://jcenter.bintray.com/</url>
+    </repository>
+</repositories>
+...
+<dependencies>
+    ...
+    <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-vertx</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+    ...
+</dependencies>
+```
+
+### With Gradle
+
+```groovy
+repositories {
+    jcenter()
+}
+
+compile group: 'io.github.openfeign', name: 'feign-vertx', version: '1.0.0'
+```
+
 ## Usage
 
 Write Feign API as usual, but every method of interface must return
 `io.vertx.core.Future`.
+
+## Compatibility
+
+Feign                  | feign-vertx            | Vertx
+---------------------- | ---------------------- | ----------------------
+8.x                    | 1.x+                   | 3.5.x - 3.9.x (except 3.5.2)
 
 ```java
 @Headers({ "Accept: application/json" })
@@ -54,27 +89,6 @@ IcecreamServiceApi icecreamApi = VertxFeign
 /* Execute requests asynchronously */
 Future<Collection<Flavor>> flavorsFuture = icecreamApi.getAvailableFlavors();
 Future<Collection<Mixin>> mixinsFuture = icecreamApi.getAvailableMixins();
-```
-
-## Maven
-
-```xml
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <url>https://jcenter.bintray.com/</url>
-    </repository>
-</repositories>
-...
-<dependencies>
-    ...
-    <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-vertx</artifactId>
-        <version>0.0.1</version>
-    </dependency>
-    ...
-</dependencies>
 ```
 
 ## License

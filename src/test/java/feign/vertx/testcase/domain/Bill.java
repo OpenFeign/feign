@@ -2,6 +2,7 @@ package feign.vertx.testcase.domain;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Bill for consumed ice cream.
@@ -52,5 +53,24 @@ public class Bill {
         .sum();
     Float price = PRICES.get(nbBalls) + order.getMixins().size() * MIXIN_PRICE;
     return new Bill(price);
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    }
+
+    if (!(other instanceof Bill)) {
+      return false;
+    }
+
+    final Bill another = (Bill) other;
+    return Objects.equals(price, another.price);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(price);
   }
 }

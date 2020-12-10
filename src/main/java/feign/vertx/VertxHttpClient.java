@@ -74,13 +74,11 @@ public final class VertxHttpClient {
 
       response.exceptionHandler(responseFuture::fail);
       response.bodyHandler(body -> {
-        final Response feignResponse = Response.builder()
-            .status(response.statusCode())
-            .reason(response.statusMessage())
-            .headers(responseHeaders)
-            .body(body.getBytes())
-            .request(request)
-            .build();
+        final Response feignResponse = Response.create(
+            response.statusCode(),
+            response.statusMessage(),
+            responseHeaders,
+            body.getBytes());
         responseFuture.complete(feignResponse);
       });
     });

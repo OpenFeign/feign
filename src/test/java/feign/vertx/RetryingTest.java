@@ -1,15 +1,5 @@
 package feign.vertx;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static feign.vertx.TestUtils.MAPPER;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.Logger;
 import feign.RetryableException;
 import feign.Retryer;
@@ -18,36 +8,50 @@ import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
 import feign.vertx.testcase.IcecreamServiceApi;
 import feign.vertx.testcase.domain.Flavor;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Collection;
 
-@RunWith(VertxUnitRunner.class)
-public class RetryingTest {
-  private Vertx vertx = Vertx.vertx();
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static feign.vertx.TestUtils.MAPPER;
+import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(8089);
+@DisplayName("When server ask client to retry")
+public class RetryingTest extends AbstractFeignVertxTest {
+  static IcecreamServiceApi client;
+
+  @BeforeAll
+  static void createClient(Vertx vertx) {
+    client = VertxFeign
+        .builder()
+        .vertx(vertx)
+        .decoder(new JacksonDecoder(MAPPER))
+        .retryer(new Retryer.Default(100, SECONDS.toMillis(1), 5))
+        .logger(new Slf4jLogger())
+        .logLevel(Logger.Level.FULL)
+        .target(IcecreamServiceApi.class, wireMock.baseUrl());
+  }
 
   @Test
-  public void testRetrying_success(TestContext context) {
+  @DisplayName("should succeed when client retries less than max attempts")
+  public void testRetrying_success(VertxTestContext testContext) {
 
     /* Given */
-    String flavorsStr = Arrays
-        .stream(Flavor.values())
-        .map(flavor -> "\"" + flavor + "\"")
-        .collect(Collectors.joining(", ", "[ ", " ]"));
-
     String scenario = "testRetrying_success";
 
-    stubFor(get(urlEqualTo("/icecream/flavors"))
+    wireMock.stubFor(get(urlEqualTo("/icecream/flavors"))
         .withHeader("Accept", equalTo("application/json"))
         .inScenario(scenario)
         .whenScenarioStateIs(STARTED)
@@ -56,7 +60,7 @@ public class RetryingTest {
             .withHeader("Retry-After", "1"))
         .willSetStateTo("attempt1"));
 
-    stubFor(get(urlEqualTo("/icecream/flavors"))
+    wireMock.stubFor(get(urlEqualTo("/icecream/flavors"))
         .withHeader("Accept", equalTo("application/json"))
         .inScenario(scenario)
         .whenScenarioStateIs("attempt1")
@@ -65,83 +69,55 @@ public class RetryingTest {
             .withHeader("Retry-After", "1"))
         .willSetStateTo("attempt2"));
 
-    stubFor(get(urlEqualTo("/icecream/flavors"))
+    wireMock.stubFor(get(urlEqualTo("/icecream/flavors"))
         .withHeader("Accept", equalTo("application/json"))
         .inScenario(scenario)
         .whenScenarioStateIs("attempt2")
         .willReturn(aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(flavorsStr)));
-
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .decoder(new JacksonDecoder(MAPPER))
-        .retryer(new Retryer.Default())
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
+            .withBody(FLAVORS_JSON)));
 
     /* When */
-    client.getAvailableFlavors().setHandler(res -> {
+    Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
-      /* Then */
+    /* Then */
+    flavorsFuture.setHandler(res -> testContext.verify(() -> {
       if (res.succeeded()) {
-        try {
-          assertThat(res.result())
-              .hasSize(Flavor.values().length)
-              .containsAll(Arrays.asList(Flavor.values()));
-          async.complete();
-        } catch (Throwable exception) {
-          context.fail(exception);
-        }
+        assertThat(res.result())
+            .hasSize(Flavor.values().length)
+            .containsAll(Arrays.asList(Flavor.values()));
+        testContext.completeNow();
       } else {
-        context.fail(res.cause());
+        testContext.failNow(res.cause());
       }
-    });
+    }));
   }
 
   @Test
-  public void testRetrying_noMoreAttempts(TestContext context) {
+  @DisplayName("should fail when after max number of attempts")
+  public void testRetrying_noMoreAttempts(VertxTestContext testContext) {
 
     /* Given */
-    stubFor(get(urlEqualTo("/icecream/flavors"))
+    wireMock.stubFor(get(urlEqualTo("/icecream/flavors"))
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse()
             .withStatus(503)
             .withHeader("Retry-After", "1")));
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .decoder(new JacksonDecoder(MAPPER))
-        .retryer(new Retryer.Default())
-        .logger(new Slf4jLogger())
-        .logLevel(Logger.Level.FULL)
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
-
     /* When */
-    client.getAvailableFlavors().setHandler(res -> {
+    Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
-      /* Then */
-      if (res.failed())
-
-      /* Then */
-        if (res.failed()) {
-          try {
-            assertThat(res.cause())
-                .isInstanceOf(RetryableException.class)
-                .hasMessageContaining("503 Service Unavailable");
-            async.complete();
-          } catch (Throwable exception) {
-            context.fail(exception);
-          }
-        } else {
-          context.fail("RetryableException excepted but not occurred");
-        }
-    });
+    /* Then */
+    flavorsFuture.setHandler(res -> testContext.verify(() -> {
+      if (res.failed()) {
+        assertThat(res.cause())
+            .isInstanceOf(RetryableException.class)
+            .hasMessageContaining("status 503");
+        testContext.completeNow();
+      } else {
+        testContext.failNow(new IllegalStateException("RetryableException excepted but not occurred"));
+      }
+    }));
   }
 }

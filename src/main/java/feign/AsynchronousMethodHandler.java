@@ -121,13 +121,12 @@ final class AsynchronousMethodHandler implements MethodHandler {
               shouldClose = false;
               decodedResultFuture.complete(response);
             } else {
-              decodedResultFuture.complete(Response.builder()
-                  .status(response.status())
-                  .reason(response.reason())
-                  .headers(response.headers())
-                  .request(response.request())
-                  .body(response.body())
-                  .build());
+              final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+              decodedResultFuture.complete(Response.create(
+                  response.status(),
+                  response.reason(),
+                  response.headers(),
+                  bodyData));
             }
           } else if (response.status() >= 200 && response.status() < 300) {
             if (Void.class == metadata.returnType()) {
@@ -175,7 +174,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
       interceptor.apply(template);
     }
 
-    return target.apply(template);
+    return target.apply(new RequestTemplate(template));
   }
 
   /**
@@ -198,7 +197,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
       throw feignException;
     } catch (final RuntimeException unexpectedException) {
       /* Any unexpected exception */
-      throw new DecodeException(-1, unexpectedException.getMessage(), response.request());
+      throw new DecodeException(unexpectedException.getMessage(), unexpectedException);
     }
   }
 

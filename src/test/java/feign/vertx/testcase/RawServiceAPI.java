@@ -12,7 +12,7 @@ import io.vertx.core.Future;
  * @author Alexei KLENIN
  */
 @Headers({ "Accept: application/json" })
-public interface AnotherServiceAPI {
+public interface RawServiceAPI {
 
   @RequestLine("GET /icecream/flavors")
   Future<Response> getAvailableFlavors();

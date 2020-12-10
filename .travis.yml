@@ -5,17 +5,19 @@ jobs:
   include:
     - stage: build
       install: skip
-      script: "mvn clean install"
+      script: "mvn clean install -DskipTests=true"
 
     - stage: publish-release
       if: tag =~ ^v
       install: skip
-      script: "mvn clean install source:jar javadoc:jar deploy --settings settings.xml"
+      script: "mvn clean install source:jar javadoc:jar deploy -DskipTests=true --settings settings.xml"
 
     - stage: report-coverage
       if: branch = master
       install: skip
-      script: "mvn clean jacoco:prepare-agent test jacoco:report coveralls:report"
+      script: "mvn clean compile jacoco:prepare-agent test jacoco:report coveralls:report"
+
+script: "mvn clean compile test -Dvertx.version=$VERTX"
 
 env:
   global:
@@ -23,3 +25,9 @@ env:
     - secure: tB3KyU6XsuNnG1teeyQg4VHOQHmfay8hvv6Wc90P2Dsjiy8GLLZXmFS+vzgWAqKoaxdvAhjVizsF3yhe77G3c+G27jAsQdpBUAwRSOR0CpLfvISBzXYMi2e4BMpp0GXAP3m0vDi85wY5dPkdDLi37TDIRA1WaYvJuCitRxsSHszGXGJOXw9sJnuawx2Z0VbRjRFnCi8xW6LlqJXykw9fDADMVlw03koJTK8Nj1/5ccoOQaiXjWk3Sq1ZkppA1XK/c0TKKOJZuYFrEJPGaN7yiULq4soaQyXsOs6ASG0Sz1nflv5wjLynHXQpwR0JdFNy2baA7hNGbiXecYXUGbVlCDN/bekHYY8023SfGOU6XTo+4X1vVU/Fknwi0GQc3/VpmMKDdDrgOgHty6Kfmb9w896zTgm/Z9hllxO2/FqrlFby2xnaYV6SUMbUqEOsr4q3ufGVYtkv8rySZs8wLU6V02y8ublAL6wCRh4pumCwRPLZw/OVU9S+T2vVSRA9dXzUUjy/yg+t2MH7I00TfLINpeiIJ9oByQPSPQaI/yVieZVeZTRB8DdmFTMjCNmPJmrANEMUWoZaJpK76t2APLu92lDbIEceHk6KI5dhFBhgzQq9c+AtQJbwq5ksDmEJ/atTzpBi5VnRPrP2LQSTh+wjKqGuYqRaP74ce7BV9rpEIJ0=
     # BINTRAY_API_KEY
     - secure: OZCzGtQhWrwLGSPK+QA54OLH5pyipkvIno78bPuoIWgZ3FOXp3cp8Ojkp3C0ET/AXYhuSFLI1DMgUd0uwVLD7j35vZx4V9KmXx4eBIFEPC7ogJtZ5oTHqqqa/Vpp1fxa1fdFgqgTnaO+vbuN/JbYfb6Dhwjfws+SyRQoRSMdKELHfG1yhgSAAum8s4s5w1pUvrcxJczyLTim01fQ/VIC+YtLo1CWe00X2uuZ6T/CHSlQWsk3qsdMEKQO41DcSuRwigoAHIDAFwSrocEaDofaTognEulJ8DpXzp60UYa2RRxOpsjr4ZroZsfxRRslO4XCGxjav1LCk4GtSlXa8KmqcpYbV1+0P5F10Oz/EtWP/deu2ZsQaJFwJW6+2rRITMHBHHd3ggWPPfRmRWE5bnhizdXKri0iYYsJ6DaUkhwlBq5YNdVLiYn1JgRAplXOLgcBULlhxk90EONDRrjOwImE2yMpjk5zEzJXTxluRPVMw+9F2D6Qysmi+H4vHPJCteV0IBZomvs/rX6XN+rXhBfx4uhN1ydRZuXdKo87OzIP4uF0jWjxlykG2sTksQq17eOYKp2Xj9xQf1lh3OggLJzz6337Np+rjqY/yJvZCpSXGuQwENoQV8QB98cyjHHvNeMF3D4bFq/I/q8zRJxLRHT1ia0yRlcftqgxMVt7fEGaNIk=
+  jobs:
+    - VERTX=3.5.4
+    - VERTX=3.6.3
+    - VERTX=3.7.1
+    - VERTX=3.8.5
+    - VERTX=3.9.4

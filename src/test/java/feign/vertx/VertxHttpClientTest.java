@@ -1,16 +1,5 @@
 package feign.vertx;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import feign.Logger;
 import feign.Request;
@@ -24,286 +13,276 @@ import feign.vertx.testcase.domain.Bill;
 import feign.vertx.testcase.domain.Flavor;
 import feign.vertx.testcase.domain.IceCreamOrder;
 import feign.vertx.testcase.domain.Mixin;
-import feign.vertx.testcase.domain.OrderGenerator;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import io.vertx.junit5.VertxTestContext;
+import org.assertj.core.api.ThrowableAssert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
-@RunWith(VertxUnitRunner.class)
-public class VertxHttpClientTest {
-  private Vertx vertx = Vertx.vertx();
-  private OrderGenerator generator = new OrderGenerator();
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
+import static feign.vertx.testcase.domain.Mixin.MIXINS_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(8089);
+@DisplayName("FeignVertx client")
+public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Nested
+  @DisplayName("When make a GET request")
+  class WhenMakeGetRequest {
+    IcecreamServiceApi client;
 
-  @Test
-  public void testSimpleGet_success(TestContext context) {
+    @BeforeEach
+    void createClient(Vertx vertx) {
+      client = VertxFeign
+          .builder()
+          .vertx(vertx)
+          .decoder(new JacksonDecoder(TestUtils.MAPPER))
+          .options(new Request.Options(5 * 1000, 10 * 1000))
+          .logger(new Slf4jLogger())
+          .logLevel(Logger.Level.FULL)
+          .target(IcecreamServiceApi.class, wireMock.baseUrl());
+    }
 
-    /* Given */
-    String flavorsStr = Arrays
-        .stream(Flavor.values())
-        .map(flavor -> "\"" + flavor + "\"")
-        .collect(Collectors.joining(", ", "[ ", " ]"));
+    @Test
+    @DisplayName("will get flavors")
+    void testWillGetFlavors(VertxTestContext testContext) {
 
-    String mixinsStr = Arrays
-        .stream(Mixin.values())
-        .map(flavor -> "\"" + flavor + "\"")
-        .collect(Collectors.joining(", ", "[ ", " ]"));
+      /* Given */
+      wireMock.stubFor(get(urlEqualTo("/icecream/flavors"))
+          .withHeader("Accept", equalTo("application/json"))
+          .willReturn(aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(FLAVORS_JSON)));
 
-    stubFor(get(urlEqualTo("/icecream/flavors"))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(flavorsStr)));
+      /* When */
+      Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
-    stubFor(get(urlEqualTo("/icecream/mixins"))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(mixinsStr)));
+      /* Then */
+      flavorsFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.succeeded()) {
+          Collection<Flavor> flavors = res.result();
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .decoder(new JacksonDecoder(TestUtils.MAPPER))
-        .logger(new Slf4jLogger())
-        .logLevel(Logger.Level.FULL)
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
-
-    /* When */
-    Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
-    Future<Collection<Mixin>> mixinsFuture = client.getAvailableMixins();
-
-    /* Then */
-    CompositeFuture.all(flavorsFuture, mixinsFuture).setHandler(res -> {
-      if (res.succeeded()) {
-        Collection<Flavor> flavors = res.result().resultAt(0);
-        Collection<Mixin> mixins = res.result().resultAt(1);
-
-        try {
           assertThat(flavors)
               .hasSize(Flavor.values().length)
               .containsAll(Arrays.asList(Flavor.values()));
+          testContext.completeNow();
+        } else {
+          testContext.failNow(res.cause());
+        }
+      }));
+    }
+
+    @Test
+    @DisplayName("will get mixins")
+    void testWillGetMixins(VertxTestContext testContext) {
+
+      /* Given */
+      wireMock.stubFor(get(urlEqualTo("/icecream/mixins"))
+          .withHeader("Accept", equalTo("application/json"))
+          .willReturn(aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(MIXINS_JSON)));
+
+      /* When */
+      Future<Collection<Mixin>> mixinsFuture = client.getAvailableMixins();
+
+      /* Then */
+      mixinsFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.succeeded()) {
+          Collection<Mixin> mixins = res.result();
+
           assertThat(mixins)
               .hasSize(Mixin.values().length)
               .containsAll(Arrays.asList(Mixin.values()));
-          async.complete();
-        } catch (Throwable exception) {
-          context.fail(exception);
+          testContext.completeNow();
+        } else {
+          testContext.failNow(res.cause());
         }
-      } else {
-        context.fail(res.cause());
-      }
-    });
-  }
+      }));
+    }
 
-  @Test
-  public void testFindOrder_success(TestContext context) {
+    @Test
+    @DisplayName("will get order by id")
+    void testWillGetOrderById(VertxTestContext testContext) {
 
-    /* Given */
-    IceCreamOrder order = generator.generate();
-    int orderId = order.getId();
-    String orderStr = TestUtils.encodeAsJsonString(order);
+      /* Given */
+      IceCreamOrder order = generator.generate();
+      int orderId = order.getId();
+      String orderStr = TestUtils.encodeAsJsonString(order);
 
-    stubFor(get(urlEqualTo("/icecream/orders/" + orderId))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(orderStr)));
+      wireMock.stubFor(get(urlEqualTo("/icecream/orders/" + orderId))
+          .withHeader("Accept", equalTo("application/json"))
+          .willReturn(aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(orderStr)));
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .decoder(new JacksonDecoder(TestUtils.MAPPER))
-        .options(new Request.Options(5 * 1000, 10 * 1000))
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
-
-    /* When */
-    client.findOrder(orderId).setHandler(res -> {
+      /* When */
+      Future<IceCreamOrder> orderFuture = client.findOrder(orderId);
 
       /* Then */
-      if (res.succeeded()) {
-        try {
-          Assertions.assertThat(res.result())
-              .isEqualToComparingFieldByFieldRecursively(order);
-          async.complete();
-        } catch (Throwable exception) {
-          context.fail(exception);
+      orderFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.succeeded()) {
+          assertThat(res.result())
+              .isEqualTo(order);
+          testContext.completeNow();
+        } else {
+          testContext.failNow(res.cause());
         }
-      } else {
-        context.fail(res.cause());
-      }
-    });
-  }
+      }));
+    }
 
-  @Test
-  public void testFindOrder_404(TestContext context) {
+    @Test
+    @DisplayName("will return 404 when try to get non-existing order by id")
+    void testWillReturn404WhenTryToGetNonExistingOrderById(VertxTestContext testContext) {
 
-    /* Given */
-    stubFor(get(urlEqualTo("/icecream/orders/123"))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(404)));
+      /* Given */
+      wireMock.stubFor(get(urlEqualTo("/icecream/orders/123"))
+          .withHeader("Accept", equalTo("application/json"))
+          .willReturn(aResponse().withStatus(404)));
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .decoder(new JacksonDecoder(TestUtils.MAPPER))
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
-
-    /* When */
-    client.findOrder(123).setHandler(res -> {
+      /* When */
+      Future<IceCreamOrder> orderFuture = client.findOrder(123);
 
       /* Then */
-      if (res.failed()) {
-        try {
+      orderFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.failed()) {
           assertThat(res.cause())
               .isInstanceOf(FeignException.class)
-              .hasMessageContaining("404 Not Found");
-          async.complete();
-        } catch (Throwable exception) {
-          context.fail(exception);
+              .hasMessageContaining("status 404");
+          testContext.completeNow();
+        } else {
+          testContext.failNow(new IllegalStateException("FeignException excepted but not occurred"));
         }
-      } else {
-        context.fail("FeignException excepted but not occurred");
-      }
-    });
+      }));
+    }
   }
 
-  @Test
-  public void testMakeOrder_success(TestContext context) {
+  @Nested
+  @DisplayName("When make a POST request")
+  class WhenMakePostRequest {
+    IcecreamServiceApi client;
 
-    /* Given */
-    IceCreamOrder order = generator.generate();
-    Bill bill = Bill.makeBill(order);
-    String orderStr = TestUtils.encodeAsJsonString(order);
-    String billStr = TestUtils.encodeAsJsonString(bill);
+    @BeforeEach
+    void createClient(Vertx vertx) {
+      client = VertxFeign
+          .builder()
+          .vertx(vertx)
+          .encoder(new JacksonEncoder(TestUtils.MAPPER))
+          .decoder(new JacksonDecoder(TestUtils.MAPPER))
+          .target(IcecreamServiceApi.class, wireMock.baseUrl());
+    }
 
-    stubFor(post(urlEqualTo("/icecream/orders"))
-        .withHeader("Content-Type", equalTo("application/json"))
-        .withHeader("Accept", equalTo("application/json"))
-        .withRequestBody(equalToJson(orderStr))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(billStr)));
+    @Test
+    @DisplayName("will make an order")
+    void testWillMakeOrder(VertxTestContext testContext) {
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .encoder(new JacksonEncoder(TestUtils.MAPPER))
-        .decoder(new JacksonDecoder(TestUtils.MAPPER))
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
+      /* Given */
+      IceCreamOrder order = generator.generate();
+      Bill bill = Bill.makeBill(order);
+      String orderStr = TestUtils.encodeAsJsonString(order);
+      String billStr = TestUtils.encodeAsJsonString(bill);
 
-    Async async = context.async();
+      wireMock.stubFor(post(urlEqualTo("/icecream/orders"))
+          .withHeader("Content-Type", equalTo("application/json"))
+          .withHeader("Accept", equalTo("application/json"))
+          .withRequestBody(equalToJson(orderStr))
+          .willReturn(aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(billStr)));
 
-    /* When */
-    client.makeOrder(order).setHandler(res -> {
+      /* When */
+      Future<Bill> billFuture = client.makeOrder(order);
 
       /* Then */
-      if (res.succeeded()) {
-        try {
-          Assertions.assertThat(res.result())
-              .isEqualToComparingFieldByFieldRecursively(bill);
-          async.complete();
-        } catch (Throwable exception) {
-          context.fail(exception);
+      billFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.succeeded()) {
+          assertThat(res.result())
+              .isEqualTo(bill);
+          testContext.completeNow();
+        } else {
+          testContext.failNow(res.cause());
         }
-      } else {
-        context.fail(res.cause());
-      }
-    });
-  }
+      }));
+    }
 
-  @Test
-  public void testPayBill_success(TestContext context) {
+    @Test
+    @DisplayName("will pay bill")
+    void testWillPayBill(VertxTestContext testContext) {
 
-    /* Given */
-    Bill bill = Bill.makeBill(generator.generate());
-    String billStr = TestUtils.encodeAsJsonString(bill);
+      /* Given */
+      Bill bill = Bill.makeBill(generator.generate());
+      String billStr = TestUtils.encodeAsJsonString(bill);
 
-    stubFor(post(urlEqualTo("/icecream/bills/pay"))
-        .withHeader("Content-Type", equalTo("application/json"))
-        .withRequestBody(equalToJson(billStr))
-        .willReturn(aResponse()
-            .withStatus(200)));
+      wireMock.stubFor(post(urlEqualTo("/icecream/bills/pay"))
+          .withHeader("Content-Type", equalTo("application/json"))
+          .withRequestBody(equalToJson(billStr))
+          .willReturn(aResponse()
+              .withStatus(200)));
 
-    IcecreamServiceApi client = VertxFeign
-        .builder()
-        .vertx(vertx)
-        .encoder(new JacksonEncoder(TestUtils.MAPPER))
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
-
-    Async async = context.async();
-
-    /* When */
-    client.payBill(bill).setHandler(res -> {
+      /* When */
+      Future<Void> payedFuture = client.payBill(bill);
 
       /* Then */
-      if (res.succeeded()) {
-        async.complete();
-      } else {
-        context.fail(res.cause());
-      }
-    });
+      payedFuture.setHandler(res -> testContext.verify(() -> {
+        if (res.succeeded()) {
+          testContext.completeNow();
+        } else {
+          testContext.failNow(res.cause());
+        }
+      }));
+    }
   }
 
-  @Test
-  public void testInstantiationContract_forgotProvideVertx() {
+  @Nested
+  @DisplayName("Should fail client instantiation")
+  class ShouldFailedClientInstantiation {
 
-    /* Given */
-    expectedException.expect(NullPointerException.class);
-    expectedException.expectMessage(
-        "Vertx instance wasn't provided in VertxFeign builder");
+    @Test
+    @DisplayName("when Vertx is not provided")
+    void testWhenVertxMissing() {
 
-    /* When */
-    VertxFeign
-        .builder()
-        .target(IcecreamServiceApi.class, "http://localhost:8089");
+      /* Given */
+      ThrowableAssert.ThrowingCallable instantiateContractForgottenVertx = () -> VertxFeign
+          .builder()
+          .target(IcecreamServiceApi.class, wireMock.baseUrl());
 
-    /* Then */
-    // Exception thrown
-  }
+      /* Then */
+      assertThatCode(instantiateContractForgottenVertx)
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("Vertx instance wasn't provided in VertxFeign builder");
+    }
 
-  @Test
-  public void testInstantiationBrokenContract_throwsException() {
+    @Test
+    @DisplayName("when try to instantiate contract that have method that not return future")
+    void testWhenTryToInstantiateBrokenContract(Vertx vertx) {
 
-    /* Given */
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage(containsString
-        ("IcecreamServiceApiBroken#findOrder(int)"));
+      /* Given */
+      ThrowableAssert.ThrowingCallable instantiateBrokenContract = () -> VertxFeign
+          .builder()
+          .vertx(vertx)
+          .target(IcecreamServiceApiBroken.class, wireMock.baseUrl());
 
-    /* When */
-    VertxFeign
-        .builder()
-        .vertx(vertx)
-        .target(IcecreamServiceApiBroken.class, "http://localhost:8089");
-
-    /* Then */
-    // Exception thrown
+      /* Then */
+      assertThatCode(instantiateBrokenContract)
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("IcecreamServiceApiBroken#findOrder(int)");
+    }
   }
 }
