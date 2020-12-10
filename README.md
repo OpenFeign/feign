@@ -40,16 +40,16 @@ repositories {
 compile group: 'io.github.openfeign', name: 'feign-vertx', version: '1.0.0'
 ```
 
-## Usage
-
-Write Feign API as usual, but every method of interface must return
-`io.vertx.core.Future`.
-
 ## Compatibility
 
 Feign                  | feign-vertx            | Vertx
 ---------------------- | ---------------------- | ----------------------
 8.x                    | 1.x+                   | 3.5.x - 3.9.x (except 3.5.2)
+
+## Usage
+
+Write Feign API as usual, but every method of interface must return
+`io.vertx.core.Future`.
 
 ```java
 @Headers({ "Accept: application/json" })
