@@ -164,7 +164,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
         if (res.failed()) {
           assertThat(res.cause())
               .isInstanceOf(FeignException.class)
-              .hasMessageContaining("status 404");
+              .hasMessageContaining("404");
           testContext.completeNow();
         } else {
           testContext.failNow(new IllegalStateException("FeignException excepted but not occurred"));
