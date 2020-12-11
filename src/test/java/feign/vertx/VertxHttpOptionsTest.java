@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -65,7 +66,7 @@ public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
     IcecreamServiceApi client = VertxFeign
             .builder()
             .vertx(vertx)
-            .options(new Request.Options(5000, 5000)) // Plain old Feign Request.Options (regression)
+            .options(new Request.Options(5L, TimeUnit.SECONDS, 5L, TimeUnit.SECONDS, true))
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .logger(new Slf4jLogger())
             .logLevel(Logger.Level.FULL)
@@ -75,7 +76,7 @@ public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
   }
 
   private void testClient(IcecreamServiceApi client, VertxTestContext testContext) {
-    client.getAvailableFlavors().setHandler(res -> {
+    client.getAvailableFlavors().onComplete(res -> {
       if (res.succeeded()) {
         Collection<Flavor> flavors = res.result();
 

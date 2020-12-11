@@ -82,7 +82,7 @@ public class RetryingTest extends AbstractFeignVertxTest {
     Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
     /* Then */
-    flavorsFuture.setHandler(res -> testContext.verify(() -> {
+    flavorsFuture.onComplete(res -> testContext.verify(() -> {
       if (res.succeeded()) {
         assertThat(res.result())
             .hasSize(Flavor.values().length)
@@ -109,7 +109,7 @@ public class RetryingTest extends AbstractFeignVertxTest {
     Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
     /* Then */
-    flavorsFuture.setHandler(res -> testContext.verify(() -> {
+    flavorsFuture.onComplete(res -> testContext.verify(() -> {
       if (res.failed()) {
         assertThat(res.cause())
             .isInstanceOf(RetryableException.class)

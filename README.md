@@ -24,7 +24,7 @@ non-blocking HTTP client of Vertx.
     <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-vertx</artifactId>
-        <version>4.0.0</version>
+        <version>5.0.0</version>
     </dependency>
     ...
 </dependencies>
@@ -37,7 +37,7 @@ repositories {
     jcenter()
 }
 
-compile group: 'io.github.openfeign', name: 'feign-vertx', version: '4.0.0'
+compile group: 'io.github.openfeign', name: 'feign-vertx', version: '5.0.0'
 ```
 
 ## Compatibility
@@ -48,6 +48,7 @@ Feign                  | feign-vertx            | Vertx
 9.x                    | 2.x+                   | 3.5.x - 3.9.x (except 3.5.2)
 10.x (except 10.5.0)   | 3.x+                   | 3.5.x - 3.9.x (except 3.5.2)
 11.x                   | 4.x+                   | 3.5.x - 3.9.x (except 3.5.2)
+11.x                   | 5.x+                   | 4.0.x
 
 ## Usage
 

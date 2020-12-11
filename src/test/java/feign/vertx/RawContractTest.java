@@ -57,7 +57,7 @@ public class RawContractTest extends AbstractFeignVertxTest {
     Future<Response> flavorsFuture = client.getAvailableFlavors();
 
     /* Then */
-    flavorsFuture.setHandler(res -> testContext.verify(() -> {
+    flavorsFuture.onComplete(res -> testContext.verify(() -> {
       if (res.succeeded()) {
         Response response = res.result();
         try {
@@ -98,7 +98,7 @@ public class RawContractTest extends AbstractFeignVertxTest {
     Future<Response> payedFuture = client.payBill(bill);
 
     /* Then */
-    payedFuture.setHandler(res -> testContext.verify(() -> {
+    payedFuture.onComplete(res -> testContext.verify(() -> {
       if (res.succeeded()) {
         testContext.completeNow();
       } else {

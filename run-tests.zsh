@@ -34,13 +34,9 @@ for feign_version in $feign_versions; do
 done
 
 declare -A vertx_versions
-vertx_versions=( [v35x]="3.5.x" [v36x]="3.6.x" [v37x]="3.7.x" [v38x]="3.8.x" [v39x]="3.9.x" )
+vertx_versions=( [v40x]="4.0.x" )
 
-v35x=( "3.5.1" "3.5.3" "3.5.4" )
-v36x=( "3.6.0" "3.6.1" "3.6.2" "3.6.3" )
-v37x=( "3.7.0" "3.7.1" )
-v38x=( "3.8.0" "3.8.1" "3.8.2" "3.8.3" "3.8.4" "3.8.5" )
-v39x=( "3.9.0" "3.9.1" "3.9.2" "3.9.3" "3.9.4" )
+v40x=( "4.0.0" )
 
 for version in ${(k)vertx_versions}; do
   echo "Tests with Vertx ${vertx_versions[${version}]}:"

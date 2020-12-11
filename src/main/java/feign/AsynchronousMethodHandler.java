@@ -1,22 +1,21 @@
 package feign;
 
-import static feign.FeignException.errorExecuting;
-import static feign.FeignException.errorReading;
-import static feign.Util.ensureClosed;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.vertx.VertxHttpClient;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.function.Function;
+
+import static feign.FeignException.errorExecuting;
+import static feign.FeignException.errorReading;
+import static feign.Util.ensureClosed;
 
 /**
  * Method handler for asynchronous HTTP requests via {@link VertxHttpClient}.
@@ -71,10 +70,8 @@ final class AsynchronousMethodHandler implements MethodHandler {
     final RequestTemplate template = buildTemplateFromArgs.create(argv);
     final Retryer retryer = this.retryer.clone();
 
-    final ResultHandlerWithRetryer handler = new ResultHandlerWithRetryer(template, retryer);
-    executeAndDecode(template).setHandler(handler);
-
-    return handler.getResultFuture();
+    final RetryRecoverer recoverer = new RetryRecoverer<>(template, retryer);
+    return executeAndDecode(template).recover(recoverer);
   }
 
   /**
@@ -87,80 +84,75 @@ final class AsynchronousMethodHandler implements MethodHandler {
    */
   private Future<Object> executeAndDecode(final RequestTemplate template) {
     final Request request = targetRequest(template);
-    final Future<Object> decodedResultFuture = Future.future();
 
     logRequest(request);
 
     final Instant start = Instant.now();
 
-    client.execute(request).setHandler(res -> {
-      boolean shouldClose = true;
+    return client
+        .execute(request)
+        .compose(
+            response -> {
+              final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
+              boolean shouldClose = true;
 
-      final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
+              try {
+                // TODO: check why this buffering is needed
+                if (logLevel != Logger.Level.NONE) {
+                  response = logger.logAndRebufferResponse(
+                      metadata.configKey(),
+                      logLevel,
+                      response,
+                      elapsedTime);
+                }
 
-      if (res.succeeded()) {
-
-        /* Just as executeAndDecode in SynchronousMethodHandler but wrapped in Future */
-        Response response = res.result();
-
-        try {
-          // TODO: check why this buffering is needed
-          if (logLevel != Logger.Level.NONE) {
-            response = logger.logAndRebufferResponse(
-                metadata.configKey(),
-                logLevel,
-                response,
-                elapsedTime);
-          }
-
-          if (Response.class == metadata.returnType()) {
-            if (response.body() == null) {
-              decodedResultFuture.complete(response);
-            } else if (response.body().length() == null
-                || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
-              shouldClose = false;
-              decodedResultFuture.complete(response);
-            } else {
-              decodedResultFuture.complete(Response.builder()
-                  .status(response.status())
-                  .reason(response.reason())
-                  .headers(response.headers())
-                  .request(response.request())
-                  .body(response.body())
-                  .build());
-            }
-          } else if (response.status() >= 200 && response.status() < 300) {
-            if (Void.class == metadata.returnType()) {
-              decodedResultFuture.complete();
-            } else {
-              decodedResultFuture.complete(decode(response, request));
-            }
-          } else if (decode404 && response.status() == 404) {
-            decodedResultFuture.complete(decoder.decode(response, metadata.returnType()));
-          } else {
-            decodedResultFuture.fail(errorDecoder.decode(metadata.configKey(), response));
-          }
-        } catch (final IOException ioException) {
-          logIoException(ioException, elapsedTime);
-          decodedResultFuture.fail(errorReading(request, response, ioException));
-        } catch (FeignException exception) {
-          decodedResultFuture.fail(exception);
-        } finally {
-          if (shouldClose) {
-            ensureClosed(response.body());
-          }
-        }
-      } else {
-        if (res.cause() instanceof IOException) {
-          logIoException((IOException) res.cause(), elapsedTime);
-          decodedResultFuture.fail(errorExecuting(request, (IOException) res.cause()));
-        } else {
-          decodedResultFuture.fail(res.cause());
-        }
-      }
-    });
-
-    return decodedResultFuture;
+                if (Response.class == metadata.returnType()) {
+                  if (response.body() == null) {
+                    return Future.succeededFuture(response);
+                  } else if (response.body().length() == null
+                      || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+                    shouldClose = false;
+                    return Future.succeededFuture(response);
+                  } else {
+                    return Future.succeededFuture(Response.builder()
+                        .status(response.status())
+                        .reason(response.reason())
+                        .headers(response.headers())
+                        .request(response.request())
+                        .body(response.body())
+                        .build());
+                  }
+                } else if (response.status() >= 200 && response.status() < 300) {
+                  if (Void.class == metadata.returnType()) {
+                    return Future.succeededFuture();
+                  } else {
+                    return Future.succeededFuture(decode(response, request));
+                  }
+                } else if (decode404 && response.status() == 404) {
+                  return Future.succeededFuture(decoder.decode(response, metadata.returnType()));
+                } else {
+                  return Future.failedFuture(errorDecoder.decode(metadata.configKey(), response));
+                }
+              } catch (final IOException ioException) {
+                logIoException(ioException, elapsedTime);
+                return Future.failedFuture(errorReading(request, response, ioException));
+              } catch (FeignException exception) {
+                return Future.failedFuture(exception);
+              } finally {
+                if (shouldClose) {
+                  ensureClosed(response.body());
+                }
+              }
+            },
+            failure -> {
+              if (failure.getCause() instanceof IOException) {
+                final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
+                logIoException((IOException) failure.getCause(), elapsedTime);
+                return Future.failedFuture(errorExecuting(request, (IOException) failure.getCause()));
+              } else {
+                return Future.failedFuture(failure.getCause());
+              }
+            });
   }
 
   /**
@@ -280,56 +272,29 @@ final class AsynchronousMethodHandler implements MethodHandler {
   }
 
   /**
-   * Handler for {@link AsyncResult} able to retry execution of request. In this case handler passed
-   * to new request.
+   * Handler for failures able to retry execution of request. In this case handler passed to new request.
    *
    * @param <T>  type of response
    */
-  private final class ResultHandlerWithRetryer<T> implements Handler<AsyncResult<T>> {
+  private final class RetryRecoverer<T> implements Function<Throwable, Future<T>> {
     private final RequestTemplate template;
     private final Retryer retryer;
-    private final Future<T> resultFuture = Future.future();
 
-    private ResultHandlerWithRetryer(final RequestTemplate template, final Retryer retryer) {
+    private RetryRecoverer(final RequestTemplate template, final Retryer retryer) {
       this.template = template;
       this.retryer = retryer;
     }
 
-    /**
-     * In case of failure retries HTTP request passing itself as handler.
-     *
-     * @param result  result of asynchronous HTTP request execution
-     */
     @Override
     @SuppressWarnings("unchecked")
-    public void handle(AsyncResult<T> result) {
-      if (result.succeeded()) {
-        this.resultFuture.complete(result.result());
+    public Future<T> apply(final Throwable throwable) {
+      if (throwable instanceof RetryableException) {
+        this.retryer.continueOrPropagate((RetryableException) throwable);
+        logRetry();
+        return ((Future<T>) executeAndDecode(this.template)).recover(this);
       } else {
-        try {
-          throw result.cause();
-        } catch (final RetryableException retryableException) {
-          try {
-            this.retryer.continueOrPropagate(retryableException);
-            logRetry();
-            ((Future<T>) executeAndDecode(this.template)).setHandler(this);
-          } catch (final RetryableException noMoreRetryAttempts) {
-            this.resultFuture.fail(noMoreRetryAttempts);
-          }
-        } catch (final Throwable otherException) {
-          this.resultFuture.fail(otherException);
-        }
+        return Future.failedFuture(throwable);
       }
-    }
-
-    /**
-     * Returns a future that will be completed after successful execution or after all attempts
-     * finished by fail.
-     *
-     * @return future with result of attempts
-     */
-    private Future<?> getResultFuture() {
-      return this.resultFuture;
     }
   }
 }

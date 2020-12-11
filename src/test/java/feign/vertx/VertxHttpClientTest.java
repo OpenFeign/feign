@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -50,7 +51,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
           .builder()
           .vertx(vertx)
           .decoder(new JacksonDecoder(TestUtils.MAPPER))
-          .options(new Request.Options(5 * 1000, 10 * 1000))
+          .options(new Request.Options(5L, TimeUnit.SECONDS, 5L, TimeUnit.SECONDS, true))
           .logger(new Slf4jLogger())
           .logLevel(Logger.Level.FULL)
           .target(IcecreamServiceApi.class, wireMock.baseUrl());
@@ -72,7 +73,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<Collection<Flavor>> flavorsFuture = client.getAvailableFlavors();
 
       /* Then */
-      flavorsFuture.setHandler(res -> testContext.verify(() -> {
+      flavorsFuture.onComplete(res -> testContext.verify(() -> {
         if (res.succeeded()) {
           Collection<Flavor> flavors = res.result();
 
@@ -102,7 +103,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<Collection<Mixin>> mixinsFuture = client.getAvailableMixins();
 
       /* Then */
-      mixinsFuture.setHandler(res -> testContext.verify(() -> {
+      mixinsFuture.onComplete(res -> testContext.verify(() -> {
         if (res.succeeded()) {
           Collection<Mixin> mixins = res.result();
 
@@ -136,7 +137,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<IceCreamOrder> orderFuture = client.findOrder(orderId);
 
       /* Then */
-      orderFuture.setHandler(res -> testContext.verify(() -> {
+      orderFuture.onComplete(res -> testContext.verify(() -> {
         if (res.succeeded()) {
           assertThat(res.result())
               .isEqualTo(order);
@@ -160,7 +161,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<IceCreamOrder> orderFuture = client.findOrder(123);
 
       /* Then */
-      orderFuture.setHandler(res -> testContext.verify(() -> {
+      orderFuture.onComplete(res -> testContext.verify(() -> {
         if (res.failed()) {
           assertThat(res.cause())
               .isInstanceOf(FeignException.class)
@@ -211,7 +212,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<Bill> billFuture = client.makeOrder(order);
 
       /* Then */
-      billFuture.setHandler(res -> testContext.verify(() -> {
+      billFuture.onComplete(res -> testContext.verify(() -> {
         if (res.succeeded()) {
           assertThat(res.result())
               .isEqualTo(bill);
@@ -240,7 +241,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       Future<Void> payedFuture = client.payBill(bill);
 
       /* Then */
-      payedFuture.setHandler(res -> testContext.verify(() -> {
+      payedFuture.onComplete(res -> testContext.verify(() -> {
         if (res.succeeded()) {
           testContext.completeNow();
         } else {

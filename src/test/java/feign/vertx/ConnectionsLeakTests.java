@@ -107,7 +107,7 @@ public class ConnectionsLeakTests {
 
     CompositeFuture
         .all(futures)
-        .setHandler(ignored -> testContext.verify(() -> {
+        .onComplete(ignored -> testContext.verify(() -> {
           try {
             assertThat(this.connections.size())
                 .isEqualTo(pollSize);

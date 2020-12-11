@@ -9,8 +9,10 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,7 +54,7 @@ public final class VertxHttpClient {
   public Future<Response> execute(final Request request) {
     checkNotNull(request, "Argument request must be not null");
 
-    final HttpClientRequest httpClientRequest;
+    final HttpRequest<Buffer> httpClientRequest;
 
     try {
       httpClientRequest = makeHttpClientRequest(request);
@@ -60,10 +62,11 @@ public final class VertxHttpClient {
       return Future.failedFuture(unexpectedException);
     }
 
-    final Future<Response> responseFuture = Future.future();
+    final Future<HttpResponse<Buffer>> responseFuture = request.body() != null
+        ? httpClientRequest.sendBuffer(Buffer.buffer(request.body()))
+        : httpClientRequest.send();
 
-    httpClientRequest.exceptionHandler(responseFuture::fail);
-    httpClientRequest.handler(response -> {
+    return responseFuture.compose(response -> {
       final Map<String, Collection<String>> responseHeaders = StreamSupport
           .stream(response.headers().spliterator(), false)
           .collect(Collectors.groupingBy(
@@ -72,36 +75,20 @@ public final class VertxHttpClient {
                   Map.Entry::getValue,
                   Collectors.toCollection(ArrayList::new))));
 
-      response.exceptionHandler(responseFuture::fail);
-      response.bodyHandler(body -> {
-        final Response feignResponse = Response.builder()
-            .status(response.statusCode())
-            .reason(response.statusMessage())
-            .headers(responseHeaders)
-            .body(body.getBytes())
-            .request(request)
-            .build();
-        responseFuture.complete(feignResponse);
-      });
+      byte[] body = response.body() != null ? response.body().getBytes() : null;
+
+      return Future.succeededFuture(Response
+          .builder()
+          .status(response.statusCode())
+          .reason(response.statusMessage())
+          .headers(responseHeaders)
+          .body(body)
+          .request(request)
+          .build());
     });
-
-    /* Write body if exists */
-    if (request.body() != null) {
-      httpClientRequest.write(Buffer.buffer(request.body()));
-    }
-
-    httpClientRequest.end();
-
-    return responseFuture;
   }
 
-  /**
-   * Creates {@link HttpClientRequest} (Vert.x) from {@link Request} (feign).
-   *
-   * @param request  feign request
-   * @return fully formed HttpClientRequest
-   */
-  private HttpClientRequest makeHttpClientRequest(final Request request)
+  private HttpRequest<Buffer> makeHttpClientRequest(final Request request)
       throws MalformedURLException {
     final URL url = new URL(request.url());
     final int port = url.getPort() > -1
@@ -110,11 +97,12 @@ public final class VertxHttpClient {
     final String host = url.getHost();
     final String requestUri = url.getFile();
 
-    HttpClientRequest httpClientRequest = httpClient.request(
-        HttpMethod.valueOf(request.method()),
-        port,
-        host,
-        requestUri);
+    HttpRequest<Buffer> httpClientRequest = WebClient
+        .wrap(this.httpClient)
+        .request(HttpMethod.valueOf(request.httpMethod().name()),
+            port,
+            host,
+            requestUri);
 
     /* Add headers to request */
     for (final Map.Entry<String, Collection<String>> header : request.headers().entrySet()) {

@@ -1,15 +1,11 @@
 package feign.vertx;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import feign.VertxFeign;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import feign.vertx.testcase.HelloServiceAPI;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -68,7 +64,7 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
     @DisplayName("All requests should fail")
     void testAllRequestsShouldFail(VertxTestContext testContext) {
       sendRequests(10)
-          .setHandler(responses -> testContext.verify(() -> {
+          .onComplete(responses -> testContext.verify(() -> {
             if (responses.succeeded()) {
               testContext.failNow(new IllegalStateException("Client should not get responses from unavailable server"));
             }
@@ -119,16 +115,12 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
   }
 
   Future<Void> assertAllRequestsAnswered(AsyncResult<CompositeFuture> responses, VertxTestContext testContext) {
-    Future<Void> done = Future.future();
-
     if (responses.succeeded()) {
       testContext.completeNow();
-      done.complete();
+      return Future.succeededFuture();
     } else {
       testContext.failNow(responses.cause());
-      done.fail(responses.cause());
+      return Future.failedFuture(responses.cause());
     }
-
-    return done;
   }
 }
