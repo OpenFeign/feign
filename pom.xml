@@ -55,7 +55,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <vertx.version>3.5.1</vertx.version>
-        <feign.version>10.0.0</feign.version>
+        <feign.version>11.0</feign.version>
 
         <!-- Tests -->
         <junit.version>5.7.0</junit.version>

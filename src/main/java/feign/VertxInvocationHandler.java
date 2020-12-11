@@ -46,7 +46,7 @@ final class VertxInvocationHandler implements InvocationHandler {
               "Method %s of contract %s doesn't return io.vertx.core.Future",
               method.getName(),
               method.getDeclaringClass().getSimpleName());
-          throw FeignExceptionFactory.feignException(message);
+          throw new FeignException(-1, message);
         }
     }
   }

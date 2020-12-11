@@ -362,7 +362,7 @@ public final class VertxFeign extends Feign {
     }
 
     private Map<String, MethodHandler> apply(final Target key) {
-      final List<MethodMetadata> metadatas = ContractAdaptor.parseAndValidateMetadata(contract, key.type());
+      final List<MethodMetadata> metadatas = contract.parseAndValidateMetadata(key.type());
       final Map<String, MethodHandler> result = new HashMap<>();
 
       for (final MethodMetadata metadata : metadatas) {

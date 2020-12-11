@@ -4,7 +4,6 @@ import static feign.Util.checkNotNull;
 import static feign.Util.resolveLastTypeParameter;
 
 import feign.Contract;
-import feign.ContractAdaptor;
 import feign.MethodMetadata;
 import io.vertx.core.Future;
 
@@ -24,14 +23,11 @@ public final class VertxDelegatingContract implements Contract {
     this.delegate = checkNotNull(delegate, "delegate must not be null");
   }
 
+  @Override
   public List<MethodMetadata> parseAndValidateMetadata(final Class<?> targetType) {
-    return this.parseAndValidatateMetadata(targetType);
-  }
-
-  public List<MethodMetadata> parseAndValidatateMetadata(final Class<?> targetType) {
     checkNotNull(targetType, "Argument targetType must be not null");
 
-    final List<MethodMetadata> metadatas = ContractAdaptor.parseAndValidateMetadata(delegate, targetType);
+    final List<MethodMetadata> metadatas = delegate.parseAndValidateMetadata(targetType);
 
     for (final MethodMetadata metadata : metadatas) {
       final Type type = metadata.returnType();

@@ -113,7 +113,7 @@ public class RetryingTest extends AbstractFeignVertxTest {
       if (res.failed()) {
         assertThat(res.cause())
             .isInstanceOf(RetryableException.class)
-            .hasMessageContaining("503");
+            .hasMessageContaining("503 Service Unavailable");
         testContext.completeNow();
       } else {
         testContext.failNow(new IllegalStateException("RetryableException excepted but not occurred"));

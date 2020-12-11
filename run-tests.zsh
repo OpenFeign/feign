@@ -23,8 +23,7 @@ function print_result() {
   echo "\t${color}${version} ${mark}${NC}"
 }
 
-feign_versions=( "10.0.0" "10.0.1" "10.1.0" "10.2.0" "10.2.3" "10.3.0" "10.4.0" "10.5.1" "10.6.0" "10.7.0" "10.7.2"
-  "10.7.3" "10.7.4" "10.8" "10.9" "10.9.1" "10.10.0" "10.10.1" "10.11" )
+feign_versions=( "11.0" )
 
 for feign_version in $feign_versions; do
   echo "Tests with Feign ${version}:"

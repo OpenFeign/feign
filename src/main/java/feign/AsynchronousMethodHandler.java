@@ -133,7 +133,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
             if (Void.class == metadata.returnType()) {
               decodedResultFuture.complete();
             } else {
-              decodedResultFuture.complete(decode(response));
+              decodedResultFuture.complete(decode(response, request));
             }
           } else if (decode404 && response.status() == 404) {
             decodedResultFuture.complete(decoder.decode(response, metadata.returnType()));
@@ -182,6 +182,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
    * Transforms HTTP response body into object using decoder.
    *
    * @param response  HTTP response
+   * @param request  HTTP request
    *
    * @return decoded result
    *
@@ -190,7 +191,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
    *     IOException
    * @throws FeignException when decoding succeeds, but conveys the operation failed
    */
-  private Object decode(final Response response) throws IOException, FeignException {
+  private Object decode(final Response response, final Request request) throws IOException, FeignException {
     try {
       return decoder.decode(response, metadata.returnType());
     } catch (final FeignException feignException) {
@@ -198,7 +199,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
       throw feignException;
     } catch (final RuntimeException unexpectedException) {
       /* Any unexpected exception */
-      throw FeignExceptionFactory.decodeException(unexpectedException.getMessage(), unexpectedException);
+      throw new DecodeException(-1, unexpectedException.getMessage(), request, unexpectedException);
     }
   }
 
