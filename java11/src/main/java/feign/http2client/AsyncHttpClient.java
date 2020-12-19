@@ -19,7 +19,6 @@ import feign.Request.Options;
 import feign.Response;
 import feign.Util;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
@@ -27,9 +26,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
-public class AsyncHttpClient extends AbstractHttpClient implements AsyncClient<Void> {
+public class AsyncHttpClient extends AbstractHttpClient implements AsyncClient<Object> {
 
   private final HttpClient client;
 
@@ -44,7 +42,7 @@ public class AsyncHttpClient extends AbstractHttpClient implements AsyncClient<V
   }
 
   @Override
-  public CompletableFuture<Response> execute(Request request, Options options, Optional<Void> requestContext) {
+  public CompletableFuture<Response> execute(Request request, Options options, Optional<Object> requestContext) {
     HttpRequest httpRequest;
     try {
       httpRequest = newRequestBuilder(request, options).build();

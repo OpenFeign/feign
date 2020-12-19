@@ -18,23 +18,15 @@ import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 import feign.Util;
-import java.io.ByteArrayInputStream;
+
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublisher;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class Http2Client extends AbstractHttpClient implements Client {
 
@@ -71,34 +63,5 @@ public class Http2Client extends AbstractHttpClient implements Client {
     }
 
     return toFeignResponse(request, httpResponse);
-  }
-
-  /**
-   * There is a bunch o headers that the http2 client do not allow to be set.
-   *
-   * @see jdk.internal.net.http.common.Utils.DISALLOWED_HEADERS_SET
-   */
-  private static final Set<String> DISALLOWED_HEADERS_SET;
-
-  static {
-    // A case insensitive TreeSet of strings.
-    final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    treeSet.addAll(Set.of("connection", "content-length", "date", "expect", "from", "host",
-        "origin", "referer", "upgrade", "via", "warning"));
-    DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
-  }
-
-  @Override
-  protected Map<String, Collection<String>> filterRestrictedHeaders(Map<String, Collection<String>> headers) {
-    final Map<String, Collection<String>> filteredHeaders = headers.keySet()
-        .stream()
-        .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
-        .collect(Collectors.toMap(
-            Function.identity(),
-            headers::get));
-
-    filteredHeaders.computeIfAbsent("Accept", key -> List.of("*/*"));
-
-    return filteredHeaders;
   }
 }

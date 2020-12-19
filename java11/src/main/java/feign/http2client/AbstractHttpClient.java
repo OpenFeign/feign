@@ -30,11 +30,16 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalLong;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class AbstractHttpClient {
 
@@ -86,11 +91,7 @@ public abstract class AbstractHttpClient {
     }
   }
 
-  protected Map<String, Collection<String>> filterRestrictedHeaders(Map<String, Collection<String>> headers) {
-    return headers;
-  }
-
-    private Map<String, Collection<String>> castMapCollectType(Map<String, List<String>> map) {
+  private Map<String, Collection<String>> castMapCollectType(Map<String, List<String>> map) {
     final Map<String, Collection<String>> result = new HashMap<>();
     map.forEach((key, value) -> result.put(key, new HashSet<>(value)));
     return result;
@@ -105,4 +106,31 @@ public abstract class AbstractHttpClient {
         .toArray(String[]::new);
   }
 
+  /**
+   * There is a bunch o headers that the http2 client do not allow to be set.
+   *
+   * @see jdk.internal.net.http.common.Utils.DISALLOWED_HEADERS_SET
+   */
+  private static final Set<String> DISALLOWED_HEADERS_SET;
+
+  static {
+    // A case insensitive TreeSet of strings.
+    final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    treeSet.addAll(Set.of("connection", "content-length", "date", "expect", "from", "host",
+            "origin", "referer", "upgrade", "via", "warning"));
+    DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
+  }
+
+  protected Map<String, Collection<String>> filterRestrictedHeaders(Map<String, Collection<String>> headers) {
+    final Map<String, Collection<String>> filteredHeaders = headers.keySet()
+            .stream()
+            .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
+            .collect(Collectors.toMap(
+                    Function.identity(),
+                    headers::get));
+
+    filteredHeaders.computeIfAbsent("Accept", key -> List.of("*/*"));
+
+    return filteredHeaders;
+  }
 }
