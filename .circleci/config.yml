@@ -39,7 +39,7 @@ commands:
       - run:
           name: 'Configure GPG keys'
           command: |
-            echo $SECRING_GPG_ASC_BASE64 | base64 --decode | gpg --batch --no-tty --import --yes
+            echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
   nexus-deploy:
     steps:
       - run:
@@ -85,4 +85,4 @@ workflows:
       - deploy-snapshot:
           requires:
             - jdk8
-          context: Sonatype
+          context: Sontatype
