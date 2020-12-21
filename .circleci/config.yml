@@ -50,7 +50,7 @@ jobs:
 
   jdk14:
     docker:
-      - image: circleci/openjdk:14
+      - image: circleci/openjdk:14-buster
     <<: *defaults
 
 workflows:
