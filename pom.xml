@@ -580,8 +580,8 @@
           <dynamicDependencies>
             <DynamicDependency>
               <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit-platform</artifactId>
-              <version>2.22.2</version>
+              <artifactId>surefire-junit4</artifactId>
+              <version>2.22.0</version>
               <repositoryType>PLUGIN</repositoryType>
             </DynamicDependency>
           </dynamicDependencies>
