@@ -45,7 +45,7 @@ commands:
       - run:
           name: 'Deploy to Sonatype'
           command: |
-            mvn -nsu -s ./circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+            mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
 
 jobs:
   jdk8:
