@@ -85,4 +85,4 @@ workflows:
       - deploy-snapshot:
           requires:
             - jdk8
-          context: Sontatype
+          context: Sonatype
