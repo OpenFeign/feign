@@ -12,11 +12,6 @@
 # the License.
 #
 
-# Java Maven CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-java/ for more details
-#
-
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
@@ -37,6 +32,15 @@ defaults: &defaults
     - run: mvn -o test
 
 version: 2.1
+
+commands:
+  configure-gpg:
+    steps:
+      - run: echo $SECRING_GPG_ASC_BASE64 | base64 --decode | gpg --batch --no-tty --import --yes
+  nexus-deploy:
+    steps:
+      - run: mvn -nsu -s ./circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+
 jobs:
   jdk8:
     docker:
@@ -53,6 +57,17 @@ jobs:
       - image: circleci/openjdk:14-buster
     <<: *defaults
 
+  deploy-snapshot:
+    docker:
+      - image: circleci/openjdk:8
+    steps:
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - configure-gpg
+      - nexus-deploy
+
 workflows:
   version: 2
   build:
@@ -60,3 +75,9 @@ workflows:
       - jdk8
       - jdk11
       - jdk14
+  snapshot:
+    jobs:
+      - deploy-snapshot:
+          filters:
+            branches:
+              only: master
