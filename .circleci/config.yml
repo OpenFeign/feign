@@ -84,7 +84,9 @@ workflows:
   snapshot:
     jobs:
       - deploy-snapshot:
-          filters:
-            branches:
-              only: master
+          requires:
+            - build
+          #filters:
+          #  branches:
+          #    only: master
           context: Sontatype
