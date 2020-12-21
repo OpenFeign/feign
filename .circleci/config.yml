@@ -81,12 +81,7 @@ workflows:
       - jdk8
       - jdk11
       - jdk14
-  snapshot:
-    jobs:
       - deploy-snapshot:
           requires:
-            - build
-          #filters:
-          #  branches:
-          #    only: master
+            - jdk8
           context: Sontatype
