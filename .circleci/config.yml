@@ -41,7 +41,7 @@ jobs:
           paths:
             - ~/.m2
           key: feign-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn -o install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      - run: mvn -o test
 workflows:
   version: 2
   build:
