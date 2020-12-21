@@ -67,6 +67,7 @@ jobs:
     docker:
       - image: circleci/openjdk:8
     steps:
+      - checkout
       - restore_cache:
           keys:
             - feign-dependencies-{{ checksum "pom.xml" }}
@@ -84,4 +85,4 @@ workflows:
       - deploy-snapshot:
           requires:
             - jdk8
-          context: Sontatype
+          context: Sonatype
