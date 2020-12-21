@@ -36,10 +36,16 @@ version: 2.1
 commands:
   configure-gpg:
     steps:
-      - run: echo $SECRING_GPG_ASC_BASE64 | base64 --decode | gpg --batch --no-tty --import --yes
+      - run:
+          name: 'Configure GPG keys'
+          command: |
+            echo $SECRING_GPG_ASC_BASE64 | base64 --decode | gpg --batch --no-tty --import --yes
   nexus-deploy:
     steps:
-      - run: mvn -nsu -s ./circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+      - run:
+          name: 'Deploy to Sonatype'
+          command: |
+            mvn -nsu -s ./circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
 
 jobs:
   jdk8:
@@ -81,3 +87,4 @@ workflows:
           filters:
             branches:
               only: master
+          context: Sontatype
