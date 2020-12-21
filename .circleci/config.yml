@@ -19,31 +19,44 @@
 
 # our job defaults
 defaults: &defaults
-  docker:
-    - image: circleci/openjdk:11.0.8
   working_directory: ~/feign
   environment:
     # Customize the JVM maximum heap limit
     MAVEN_OPTS: -Xmx3200m
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - feign-dependencies-{{ checksum "pom.xml" }}
+          - feign-dependencies-
+    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies install -DskipTests=true
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: feign-dependencies-{{ checksum "pom.xml" }}
+    - run: mvn -o test
 
 version: 2.1
 jobs:
-  build:
+  jdk8:
+    docker:
+      - image: circleci/openjdk:8
     <<: *defaults
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - feign-dependencies-{{ checksum "pom.xml" }}
-            - feign-dependencies-
-      - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies install -DskipTests=true
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: feign-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn -o test
+
+  jdk11:
+    docker:
+      - image: circleci/openjdk:11
+    <<: *defaults
+
+  jdk14:
+    docker:
+      - image: circleci/openjdk:14-buster
+    <<: *defaults
+
 workflows:
   version: 2
   build:
     jobs:
-      - build
+      - jdk8
+      - jdk11
+      - jdk14
