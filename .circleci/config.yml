@@ -86,3 +86,6 @@ workflows:
           requires:
             - jdk8
           context: Sonatype
+          filters:
+            branches:
+              only: master
