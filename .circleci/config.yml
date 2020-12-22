@@ -85,6 +85,8 @@ workflows:
       - deploy-snapshot:
           requires:
             - jdk8
+            - jdk11
+            - jdk14
           context: Sonatype
           filters:
             branches:
