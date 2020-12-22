@@ -77,7 +77,7 @@
     <slf4j.version>1.7.13</slf4j.version>
     <bouncy.version>1.60</bouncy.version>
 
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <jackson.version>2.10.0.pr3</jackson.version>
     <jackson.databind.version>2.10.0.pr3</jackson.databind.version>
     <assertj.version>3.10.0</assertj.version>
@@ -417,6 +417,21 @@
               <target>${main.java.version}</target>
             </configuration>
           </execution>
+          <execution>
+            <id>default-test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <fork>true</fork>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+              <source>${main.java.version}</source>
+              <target>${main.java.version}</target>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -517,6 +532,7 @@
             <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
             <exclude>src/main/resources/**</exclude>
+            <exclude>.circleci/**</exclude>
           </excludes>
           <strictCheck>true</strictCheck>
         </configuration>
@@ -556,7 +572,21 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>de.qaware.maven</groupId>
+        <artifactId>go-offline-maven-plugin</artifactId>
+        <version>1.1.0</version>
+        <configuration>
+          <dynamicDependencies>
+            <DynamicDependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit4</artifactId>
+              <version>2.22.0</version>
+              <repositoryType>PLUGIN</repositoryType>
+            </DynamicDependency>
+          </dynamicDependencies>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
@@ -765,6 +795,12 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <configuration>
+                  <gpgArguments>
+                    <arg>--pinentry-mode</arg>
+                    <arg>loopback</arg>
+                  </gpgArguments>
+                </configuration>
                 <phase>verify</phase>
               </execution>
             </executions>
