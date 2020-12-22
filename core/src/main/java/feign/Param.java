@@ -28,7 +28,7 @@ public @interface Param {
   /**
    * The name of the template parameter.
    */
-  String value();
+  String value() default "";
 
   /**
    * How to expand the value of this parameter, if {@link ToStringExpander} isn't adequate.
