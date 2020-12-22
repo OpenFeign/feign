@@ -271,7 +271,14 @@ public interface Contract {
         data.template().headers(toMap(headersOnMethod));
       });
       super.registerParameterAnnotation(Param.class, (paramAnnotation, data, paramIndex) -> {
-        final String name = paramAnnotation.value();
+        final String annotationName = paramAnnotation.value();
+        final Parameter parameter = data.method().getParameters()[paramIndex];
+        final String name;
+        if (emptyToNull(annotationName) == null && parameter.isNamePresent()) {
+          name = parameter.getName();
+        } else {
+          name = annotationName;
+        }
         checkState(emptyToNull(name) != null, "Param annotation was empty on param %s.",
             paramIndex);
         nameParam(data, name, paramIndex);

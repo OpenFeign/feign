@@ -1,0 +1,93 @@
+#
+# Copyright 2012-2020 The Feign Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+
+# our job defaults
+defaults: &defaults
+  working_directory: ~/feign
+  environment:
+    # Customize the JVM maximum heap limit
+    MAVEN_OPTS: -Xmx3200m
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - feign-dependencies-{{ checksum "pom.xml" }}
+          - feign-dependencies-
+    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies install -DskipTests=true
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: feign-dependencies-{{ checksum "pom.xml" }}
+    - run: mvn -o test
+
+version: 2.1
+
+commands:
+  configure-gpg:
+    steps:
+      - run:
+          name: 'Configure GPG keys'
+          command: |
+            echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
+  nexus-deploy:
+    steps:
+      - run:
+          name: 'Deploy to Sonatype'
+          command: |
+            mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+
+jobs:
+  jdk8:
+    docker:
+      - image: circleci/openjdk:8
+    <<: *defaults
+
+  jdk11:
+    docker:
+      - image: circleci/openjdk:11
+    <<: *defaults
+
+  jdk14:
+    docker:
+      - image: circleci/openjdk:14-buster
+    <<: *defaults
+
+  deploy-snapshot:
+    docker:
+      - image: circleci/openjdk:8
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - configure-gpg
+      - nexus-deploy
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - jdk8
+      - jdk11
+      - jdk14
+      - deploy-snapshot:
+          requires:
+            - jdk8
+            - jdk11
+            - jdk14
+          context: Sonatype
+          filters:
+            branches:
+              only: master
