@@ -12,29 +12,7 @@
 # the License.
 #
 
-# our job defaults
-defaults: &defaults
-  working_directory: ~/feign
-  environment:
-    # Customize the JVM maximum heap limit
-    MAVEN_OPTS: -Xmx3200m
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - feign-dependencies-{{ checksum "pom.xml" }}
-          - feign-dependencies-
-    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
-    - save_cache:
-        paths:
-          - ~/.m2
-        key: feign-dependencies-{{ checksum "pom.xml" }}
-    - run: mvn -o package
-    - run: ./scripts/no-git-changes.sh
-
-
-version: 2.1
-
+# common commands
 commands:
   verify-formatting:
     steps:
@@ -54,6 +32,29 @@ commands:
           name: 'Deploy to Sonatype'
           command: |
             mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+
+
+# our job defaults
+defaults: &defaults
+  working_directory: ~/feign
+  environment:
+    # Customize the JVM maximum heap limit
+    MAVEN_OPTS: -Xmx3200m
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - feign-dependencies-{{ checksum "pom.xml" }}
+          - feign-dependencies-
+    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
+    - save_cache:
+        paths:
+          - ~/.m2
+        key: feign-dependencies-{{ checksum "pom.xml" }}
+    - run: mvn -o package
+    - verify-formatting
+
+version: 2.1
 
 jobs:
   jdk8:
