@@ -30,10 +30,18 @@ defaults: &defaults
           - ~/.m2
         key: feign-dependencies-{{ checksum "pom.xml" }}
     - run: mvn -o package
+    - run: ./scripts/no-git-changes.sh
+
 
 version: 2.1
 
 commands:
+  verify-formatting:
+    steps:
+      - run:
+          name: 'Verify formatting'
+          command: |
+            scripts/no-git-changes.sh
   configure-gpg:
     steps:
       - run:
