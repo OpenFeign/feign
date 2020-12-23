@@ -32,12 +32,14 @@ commands:
           name: 'Deploy Core Modules Sonatype'
           command: |
             mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
-  jdk11-deploy:
+  jdk11-build:
     steps:
       - run:
           name: 'Build JDK 11 Modules'
           command: |
             mvn -B -nsu -s ./travis/settings.xml -P java11 -pl :feign-java11 -am -DskipTests=true install
+  jdk11-deploy:
+    steps:
       - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
@@ -87,7 +89,8 @@ deploy-jdk11: &deploy-jdk11
           - feign-dependencies-{{ checksum "pom.xml" }}
           - feign-dependencies-
     - configure-gpg
-    - nexus-deploy
+    - jdk11-build
+    - jdk11-deploy
 
 version: 2.1
 
