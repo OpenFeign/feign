@@ -29,7 +29,7 @@ defaults: &defaults
         paths:
           - ~/.m2
         key: feign-dependencies-{{ checksum "pom.xml" }}
-    - run: mvn -o install
+    - run: mvn -o package
 
 version: 2.1
 
