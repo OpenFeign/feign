@@ -146,25 +146,3 @@ workflows:
           filters:
             branches:
               only: master
-  release:
-    jobs:
-      - release:
-          requires:
-            - jdk8
-            - jdk11
-            - jdk14
-          context: Sonatype
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-      - release-jdk11:
-          requires:
-            - release
-          context: Sonatype
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
