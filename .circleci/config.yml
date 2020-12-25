@@ -63,7 +63,7 @@ jobs:
       - image: circleci/openjdk:14-buster
     <<: *defaults
 
-  deploy-snapshot:
+  deploy:
     docker:
       - image: circleci/openjdk:8
     steps:
@@ -82,7 +82,7 @@ workflows:
       - jdk8
       - jdk11
       - jdk14
-      - deploy-snapshot:
+      - deploy:
           requires:
             - jdk8
             - jdk11
