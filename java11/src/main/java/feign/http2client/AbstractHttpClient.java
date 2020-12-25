@@ -18,10 +18,10 @@ import feign.Request.Options;
 import feign.Response;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient.Version;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
@@ -104,6 +104,39 @@ public abstract class AbstractHttpClient {
             .map(value -> Arrays.asList(entry.getKey(), value))
             .flatMap(List::stream))
         .toArray(String[]::new);
+  }
+
+  protected HttpClient getOrCreateClient(HttpClient client, Options options) {
+    if (doesClientConfigurationDiffer(client, options)) {
+      // create a new client from the existing one - but with connectTimeout and followRedirect
+      // settings from options
+      java.net.http.HttpClient.Builder builder = newClientBuilder(options)
+          .sslContext(client.sslContext())
+          .sslParameters(client.sslParameters())
+          .version(client.version());
+      client.authenticator().ifPresent(builder::authenticator);
+      client.cookieHandler().ifPresent(builder::cookieHandler);
+      client.executor().ifPresent(builder::executor);
+      client.proxy().ifPresent(builder::proxy);
+      return builder.build();
+    }
+    return client;
+  }
+
+  protected boolean doesClientConfigurationDiffer(HttpClient client, Options options) {
+    if ((client.followRedirects() == Redirect.ALWAYS) != options.isFollowRedirects()) {
+      return true;
+    }
+    return client.connectTimeout()
+        .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
+        .orElse(true);
+  }
+
+  protected static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
+    return HttpClient
+        .newBuilder()
+        .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
+        .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
   }
 
   /**

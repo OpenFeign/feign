@@ -50,7 +50,8 @@ public class AsyncHttpClient extends AbstractHttpClient implements AsyncClient<O
       throw new IllegalArgumentException("Invalid uri " + request.url(), e);
     }
 
-    CompletableFuture<HttpResponse<byte[]>> future = client.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+    HttpClient clientForRequest = getOrCreateClient(client, options);
+    CompletableFuture<HttpResponse<byte[]>> future = clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
     return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse));
   }
 }

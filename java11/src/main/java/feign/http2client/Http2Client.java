@@ -27,7 +27,6 @@ import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
 
 public class Http2Client extends AbstractHttpClient implements Client {
 
@@ -61,7 +60,7 @@ public class Http2Client extends AbstractHttpClient implements Client {
       throw new IOException("Invalid uri " + request.url(), e);
     }
 
-    HttpClient clientForRequest = getOrCreateClient(options);
+    HttpClient clientForRequest = getOrCreateClient(client, options);
     HttpResponse<byte[]> httpResponse;
     try {
       httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
@@ -71,38 +70,5 @@ public class Http2Client extends AbstractHttpClient implements Client {
     }
 
     return toFeignResponse(request, httpResponse);
-  }
-
-  private HttpClient getOrCreateClient(Options options) {
-    if (doesClientConfigurationDiffer(options)) {
-      // create a new client from the existing one - but with connectTimeout and followRedirect
-      // settings from options
-      java.net.http.HttpClient.Builder builder = newClientBuilder(options)
-          .sslContext(client.sslContext())
-          .sslParameters(client.sslParameters())
-          .version(client.version());
-      client.authenticator().ifPresent(builder::authenticator);
-      client.cookieHandler().ifPresent(builder::cookieHandler);
-      client.executor().ifPresent(builder::executor);
-      client.proxy().ifPresent(builder::proxy);
-      return builder.build();
-    }
-    return client;
-  }
-
-  private boolean doesClientConfigurationDiffer(Options options) {
-    if ((client.followRedirects() == Redirect.ALWAYS) != options.isFollowRedirects()) {
-      return true;
-    }
-    return client.connectTimeout()
-        .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
-        .orElse(true);
-  }
-
-  private static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
-    return HttpClient
-        .newBuilder()
-        .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
-        .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
   }
 }
