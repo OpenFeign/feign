@@ -12,8 +12,23 @@
 # the License.
 #
 
+# common executors
+executors:
+  java:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    docker:
+      - image: circleci/openjdk:<<parameters.jdk>>
+
 # common commands
 commands:
+  resolve-dependencies:
+    description: 'Download and prepare all dependencies'
+    steps:
+      - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
   verify-formatting:
     steps:
       - run:
@@ -51,98 +66,67 @@ defaults: &defaults
   environment:
     # Customize the JVM maximum heap limit
     MAVEN_OPTS: -Xmx3200m
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - feign-dependencies-{{ checksum "pom.xml" }}
-          - feign-dependencies-
-    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
-    - save_cache:
-        paths:
-          - ~/.m2
-        key: feign-dependencies-{{ checksum "pom.xml" }}
-    - run: mvn -o package
-    - verify-formatting
-
-
-# deploy configuration
-deploy: &deploy
-  docker:
-    - image: circleci/openjdk:8
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - feign-dependencies-{{ checksum "pom.xml" }}
-          - feign-dependencies-
-    - configure-gpg
-    - nexus-deploy
-
-deploy-jdk11: &deploy-jdk11
-  docker:
-    - image: circleci/openjdk:11
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - feign-dependencies-{{ checksum "pom.xml" }}
-          - feign-dependencies-
-    - configure-gpg
-    - jdk11-build
-    - jdk11-deploy
 
 version: 2.1
 
 jobs:
-  jdk8:
-    docker:
-      - image: circleci/openjdk:8
+  build:
+    parameters:
+      version:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    executor:
+      name: jdk
+      version: <<parameters.version>>
     <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - resolve-dependencies
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: feign-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: 'Test'
+          command: |
+            mvn -o test
+      - verify-formatting
 
-  jdk11:
-    docker:
-      - image: circleci/openjdk:11
-    <<: *defaults
-
-  jdk14:
-    docker:
-      - image: circleci/openjdk:14-buster
-    <<: *defaults
-
-  snapshot:
-    <<: *deploy
-
-  snapshot-jdk11:
-    <<: *deploy-jdk11
-
-  release:
-    <<: *deploy
-
-  release-jdk11:
-    <<: *deploy-jdk11
+  deploy:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    executor:
+      name: java
+      version: <<parameters.version>>
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - resolve-dependencies
+      - configure-gpg
+      - nexus-deploy
 
 workflows:
   version: 2
   build:
     jobs:
-      - jdk8
-      - jdk11
-      - jdk14
-      - snapshot:
-          requires:
-            - jdk8
-            - jdk11
-            - jdk14
-          context: Sonatype
-          filters:
-            branches:
-              only: master
-      - snapshot-jdk11:
-          requires:
-            - snapshot
-            - jdk14
-          context: Sonatype
-          filters:
-            branches:
-              only: master
+      - build:
+          jdk: 8
+      - build:
+          jdk: 11
+      - build:
+          jdk: 14
+
+
+
+
