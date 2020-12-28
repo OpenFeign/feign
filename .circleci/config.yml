@@ -65,7 +65,7 @@ defaults: &defaults
     MAVEN_OPTS: -Xmx3200m
 
 # branch filters
-master-only: &only-master
+master-only: &master-only
   branches:
     only: master
 
@@ -175,17 +175,17 @@ workflows:
           jdk: '8'
           name: 'jdk 8'
           filters:
-            <<: *only-master
+            <<: *master-only
       - test:
           jdk: '11'
           name: 'jdk 11'
           filters:
-            <<: *only-master
+            <<: *master-only
       - test:
           jdk: '14-buster'
           name: 'jdk 14'
           filters:
-            <<: *only-master
+            <<: *master-only
       - deploy:
           jdk: '8'
           name: 'deploy snapshot'
@@ -194,14 +194,14 @@ workflows:
             - 'jdk 11'
             - 'jdk 14'
           filters:
-            <<: *only-master
+            <<: *master-only
       - deploy-jdk11:
           jdk: '11'
           name: 'deploy jdk11 snapshot modules'
           requires:
             - 'jdk 11'
           filters:
-            <<: *only-master
+            <<: *master-only
 
   release:
     jobs:
