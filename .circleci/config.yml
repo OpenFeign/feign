@@ -130,24 +130,24 @@ jobs:
       - configure-gpg
       - nexus-deploy
 
-    deploy-jdk11:
-      parameters:
-        jdk:
-          description: 'jdk version to use'
-          default: '11'
-          type: string
-      executor:
-        name: java
-        version: <<parameters.jdk>>
-      steps:
-        - checkout
-        - restore_cache:
-            keys:
-              - feign-dependencies-{{ checksum "pom.xml" }}
-              - feign-dependencies-
-        - resolve-dependencies
-        - configure-gpg
-        - nexus-deploy-jdk11
+  deploy-jdk11:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '11'
+        type: string
+    executor:
+      name: java
+      version: <<parameters.jdk>>
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - resolve-dependencies
+      - configure-gpg
+      - nexus-deploy-jdk11
 
 workflows:
   version: 2
