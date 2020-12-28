@@ -37,4 +37,4 @@ echo "pushing tag ${tag}"
 ./mvnw scm:tag
 
 # Update the versions to the next snapshot
-./mvnw -B versions:set scm:checkin -DnewVersion="${snapshot}" -DgenerateBackupPoms=false -Dmessage="[travis skip] updating versions to next development iteration ${snapshot}"
+./mvnw -B versions:set scm:checkin -DnewVersion="${snapshot}" -DgenerateBackupPoms=false -Dmessage="[ci skip] updating versions to next development iteration ${snapshot}"
