@@ -195,6 +195,7 @@ workflows:
             - 'jdk 8'
             - 'jdk 11'
             - 'jdk 14'
+          context: Sonatype
           filters:
             <<: *master-only
       - deploy-jdk11:
@@ -203,6 +204,7 @@ workflows:
           requires:
             - 'jdk 11'
             - 'deploy snapshot'
+          context: Sonatype
           filters:
             <<: *master-only
 
@@ -211,6 +213,7 @@ workflows:
       - deploy:
           jdk: '8'
           name: 'release to maven central'
+          context: Sonatype
           filters:
             <<: *tags-only
       - deploy-jdk11:
@@ -218,5 +221,6 @@ workflows:
           name: 'release jdk11 artifacts to maven central'
           requires:
             - 'release to maven central'
+          context: Sonatype
           filters:
             <<: *tags-only
