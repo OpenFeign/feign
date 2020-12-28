@@ -72,23 +72,20 @@ defaults: &defaults
 
 # branch filters
 master-only: &only-master
-  filters:
-    branches:
-      only: master
+  branches:
+    only: master
 
 tags-only: &tags-only
-  filters:
-    branches:
-      ignore: /.*/
-    tags:
-      only: /.*/
+  branches:
+    ignore: /.*/
+  tags:
+    only: /.*/
 
 all-branches: &all-branches
-  filters:
-    branches:
-      ignore: master
-    tags:
-      ignore: /.*/
+  branches:
+    ignore: master
+  tags:
+    ignore: /.*/
 
 version: 2.1
 
