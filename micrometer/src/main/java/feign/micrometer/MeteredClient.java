@@ -26,12 +26,16 @@ public class MeteredClient implements Client {
 
   private final Client client;
   private final MeterRegistry meterRegistry;
-  private final FeignMetricName metricName;
+  private final MetricName metricName;
 
   public MeteredClient(Client client, MeterRegistry meterRegistry) {
+    this(client, meterRegistry, new FeignMetricName(Client.class));
+  }
+
+  public MeteredClient(Client client, MeterRegistry meterRegistry, MetricName metricName) {
     this.client = client;
     this.meterRegistry = meterRegistry;
-    this.metricName = new FeignMetricName(Client.class);
+    this.metricName = metricName;
   }
 
   @Override

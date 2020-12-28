@@ -24,12 +24,16 @@ public class MeteredEncoder implements Encoder {
 
   private final Encoder encoder;
   private final MeterRegistry meterRegistry;
-  private final FeignMetricName metricName;
+  private final MetricName metricName;
 
   public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry) {
+    this(encoder, meterRegistry, new FeignMetricName(Encoder.class));
+  }
+
+  public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry, MetricName metricName) {
     this.encoder = encoder;
     this.meterRegistry = meterRegistry;
-    this.metricName = new FeignMetricName(Encoder.class);
+    this.metricName = metricName;
   }
 
   @Override

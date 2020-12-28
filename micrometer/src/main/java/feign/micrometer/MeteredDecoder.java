@@ -29,12 +29,16 @@ public class MeteredDecoder implements Decoder {
 
   private final Decoder decoder;
   private final MeterRegistry meterRegistry;
-  private final FeignMetricName metricName;
+  private final MetricName metricName;
 
   public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry) {
+    this(decoder, meterRegistry, new FeignMetricName(Decoder.class));
+  }
+
+  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry, MetricName metricName) {
     this.decoder = decoder;
     this.meterRegistry = meterRegistry;
-    this.metricName = new FeignMetricName(Decoder.class);
+    this.metricName = metricName;
   }
 
   @Override

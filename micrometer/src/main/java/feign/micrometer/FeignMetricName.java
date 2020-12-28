@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class FeignMetricName {
+public final class FeignMetricName implements MetricName {
 
   private final Class<?> meteredComponent;
 
@@ -32,20 +32,24 @@ public final class FeignMetricName {
     this.meteredComponent = meteredComponent;
   }
 
+  @Override
   public String name(String suffix) {
     return name()
         // any separator, so naming convention can change it
         + "." + suffix;
   }
 
+  @Override
   public String name() {
     return meteredComponent.getName();
   }
 
+  @Override
   public Tags tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags) {
     return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), tags);
   }
 
+  @Override
   public Tags tag(Class<?> targetType, Method method, String url, Tag... extraTags) {
     List<Tag> tags = new ArrayList<>();
     tags.add(Tag.of("client", targetType.getName()));
