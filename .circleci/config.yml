@@ -78,7 +78,7 @@ jobs:
         type: string
     executor:
       name: java
-      version: <<parameters.version>>
+      version: <<parameters.jdk>>
     <<: *defaults
     steps:
       - checkout
@@ -105,7 +105,7 @@ jobs:
         type: string
     executor:
       name: java
-      version: <<parameters.version>>
+      version: <<parameters.jdk>>
     steps:
       - checkout
       - restore_cache:
