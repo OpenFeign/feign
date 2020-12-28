@@ -72,12 +72,12 @@ version: 2.1
 jobs:
   build:
     parameters:
-      version:
+      jdk:
         description: 'jdk version to use'
         default: '8'
         type: string
     executor:
-      name: jdk
+      name: java
       version: <<parameters.version>>
     <<: *defaults
     steps:
