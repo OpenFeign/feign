@@ -202,7 +202,7 @@ workflows:
           name: 'deploy jdk11 snapshot modules'
           requires:
             - 'jdk 11'
-            - deploy
+            - 'deploy snapshot'
           filters:
             <<: *master-only
 
@@ -210,11 +210,13 @@ workflows:
     jobs:
       - deploy:
           jdk: '8'
+          name: 'release to maven central'
           filters:
             <<: *tags-only
       - deploy-jdk11:
           jdk: '11'
+          name: 'release jdk11 artifacts to maven central'
           requires:
-            - deploy
+            - 'release to maven central'
           filters:
             <<: *tags-only
