@@ -70,7 +70,7 @@ defaults: &defaults
 version: 2.1
 
 jobs:
-  build:
+  test:
     parameters:
       jdk:
         description: 'jdk version to use'
@@ -120,12 +120,12 @@ workflows:
   version: 2
   build:
     jobs:
-      - build:
-          jdk: 8
-      - build:
-          jdk: 11
-      - build:
-          jdk: 14
+      - test:
+          jdk: '8'
+      - test:
+          jdk: '11'
+      - test:
+          jdk: '14'
 
 
 
