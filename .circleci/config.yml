@@ -120,6 +120,7 @@ jobs:
     executor:
       name: java
       version: <<parameters.jdk>>
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -139,6 +140,7 @@ jobs:
     executor:
       name: java
       version: <<parameters.jdk>>
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -200,6 +202,7 @@ workflows:
           name: 'deploy jdk11 snapshot modules'
           requires:
             - 'jdk 11'
+            - deploy
           filters:
             <<: *master-only
 
@@ -211,5 +214,7 @@ workflows:
             <<: *tags-only
       - deploy-jdk11:
           jdk: '11'
+          requires:
+            - deploy
           filters:
             <<: *tags-only
