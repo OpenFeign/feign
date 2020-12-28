@@ -12,28 +12,32 @@
 # the License.
 #
 
-# our job defaults
-defaults: &defaults
-  working_directory: ~/feign
-  environment:
-    # Customize the JVM maximum heap limit
-    MAVEN_OPTS: -Xmx3200m
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - feign-dependencies-{{ checksum "pom.xml" }}
-          - feign-dependencies-
-    - run: mvn dependency:resolve-plugins go-offline:resolve-dependencies install -DskipTests=true
-    - save_cache:
-        paths:
-          - ~/.m2
-        key: feign-dependencies-{{ checksum "pom.xml" }}
-    - run: mvn -o test
+# common executors
+executors:
+  java:
+    parameters:
+      version:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    docker:
+      - image: circleci/openjdk:<<parameters.version>>
 
-version: 2.1
-
+# common commands
 commands:
+  resolve-dependencies:
+    description: 'Download and prepare all dependencies'
+    steps:
+      - run:
+          name: 'Resolving Dependencies'
+          command: |
+            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
+  verify-formatting:
+    steps:
+      - run:
+          name: 'Verify formatting'
+          command: |
+            scripts/no-git-changes.sh
   configure-gpg:
     steps:
       - run:
@@ -43,51 +47,180 @@ commands:
   nexus-deploy:
     steps:
       - run:
-          name: 'Deploy to Sonatype'
+          name: 'Deploy Core Modules Sonatype'
           command: |
             mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+  nexus-deploy-jdk11:
+    steps:
+      - run:
+          name: 'Deploy JDK 11 Modules to Sonatype'
+          command: |
+            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
+
+# our job defaults
+defaults: &defaults
+  working_directory: ~/feign
+  environment:
+    # Customize the JVM maximum heap limit
+    MAVEN_OPTS: -Xmx3200m
+
+# branch filters
+master-only: &master-only
+  branches:
+    only: master
+
+tags-only: &tags-only
+  branches:
+    ignore: /.*/
+  tags:
+    only: /.*/
+
+all-branches: &all-branches
+  branches:
+    ignore: master
+  tags:
+    ignore: /.*/
+
+version: 2.1
 
 jobs:
-  jdk8:
-    docker:
-      - image: circleci/openjdk:8
+  test:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    executor:
+      name: java
+      version: <<parameters.jdk>>
     <<: *defaults
-
-  jdk11:
-    docker:
-      - image: circleci/openjdk:11
-    <<: *defaults
-
-  jdk14:
-    docker:
-      - image: circleci/openjdk:14-buster
-    <<: *defaults
-
-  deploy-snapshot:
-    docker:
-      - image: circleci/openjdk:8
     steps:
       - checkout
       - restore_cache:
           keys:
             - feign-dependencies-{{ checksum "pom.xml" }}
             - feign-dependencies-
+      - resolve-dependencies
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: feign-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: 'Test'
+          command: |
+            mvn -o test
+      - verify-formatting
+
+  deploy:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    executor:
+      name: java
+      version: <<parameters.jdk>>
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - resolve-dependencies
       - configure-gpg
       - nexus-deploy
+
+  deploy-jdk11:
+    parameters:
+      jdk:
+        description: 'jdk version to use'
+        default: '11'
+        type: string
+    executor:
+      name: java
+      version: <<parameters.jdk>>
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
+      - resolve-dependencies
+      - configure-gpg
+      - nexus-deploy-jdk11
 
 workflows:
   version: 2
   build:
     jobs:
-      - jdk8
-      - jdk11
-      - jdk14
-      - deploy-snapshot:
+      - test:
+          jdk: '8'
+          name: 'jdk 8'
+          filters:
+            <<: *all-branches
+      - test:
+          jdk: '11'
+          name: 'jdk 11'
+          filters:
+            <<: *all-branches
+      - test:
+          jdk: '14-buster'
+          name: 'jdk 14'
+          filters:
+            <<: *all-branches
+
+  snapshot:
+    jobs:
+      - test:
+          jdk: '8'
+          name: 'jdk 8'
+          filters:
+            <<: *master-only
+      - test:
+          jdk: '11'
+          name: 'jdk 11'
+          filters:
+            <<: *master-only
+      - test:
+          jdk: '14-buster'
+          name: 'jdk 14'
+          filters:
+            <<: *master-only
+      - deploy:
+          jdk: '8'
+          name: 'deploy snapshot'
           requires:
-            - jdk8
-            - jdk11
-            - jdk14
+            - 'jdk 8'
+            - 'jdk 11'
+            - 'jdk 14'
           context: Sonatype
           filters:
-            branches:
-              only: master
+            <<: *master-only
+      - deploy-jdk11:
+          jdk: '11'
+          name: 'deploy jdk11 snapshot modules'
+          requires:
+            - 'jdk 11'
+            - 'deploy snapshot'
+          context: Sonatype
+          filters:
+            <<: *master-only
+
+  release:
+    jobs:
+      - deploy:
+          jdk: '8'
+          name: 'release to maven central'
+          context: Sonatype
+          filters:
+            <<: *tags-only
+      - deploy-jdk11:
+          jdk: '11'
+          name: 'release jdk11 artifacts to maven central'
+          requires:
+            - 'release to maven central'
+          context: Sonatype
+          filters:
+            <<: *tags-only
