@@ -50,13 +50,7 @@ commands:
           name: 'Deploy Core Modules Sonatype'
           command: |
             mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
-  jdk11-build:
-    steps:
-      - run:
-          name: 'Build JDK 11 Modules'
-          command: |
-            mvn -B -nsu -s ./travis/settings.xml -P java11 -pl :feign-java11 -am -DskipTests=true install
-  jdk11-deploy:
+  nexus-deploy-jdk11:
     steps:
       - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
@@ -136,6 +130,25 @@ jobs:
       - configure-gpg
       - nexus-deploy
 
+    deploy-jdk11:
+      parameters:
+        jdk:
+          description: 'jdk version to use'
+          default: '11'
+          type: string
+      executor:
+        name: java
+        version: <<parameters.jdk>>
+      steps:
+        - checkout
+        - restore_cache:
+            keys:
+              - feign-dependencies-{{ checksum "pom.xml" }}
+              - feign-dependencies-
+        - resolve-dependencies
+        - configure-gpg
+        - nexus-deploy-jdk11
+
 workflows:
   version: 2
   build:
@@ -182,5 +195,21 @@ workflows:
             - 'jdk 14'
           filters:
             <<: *only-master
+      - deploy-jdk11:
+          jdk: '11'
+          name: 'deploy jdk11 snapshot modules'
+          requires:
+            - 'jdk 11'
+          filters:
+            <<: *only-master
 
-
+  release:
+    jobs:
+      - deploy:
+          jdk: '8'
+          filters:
+            <<: *tags-only
+      - deploy-jdk11:
+          jdk: '11'
+          filters:
+            <<: *tags-only
