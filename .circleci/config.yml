@@ -53,6 +53,10 @@ commands:
   nexus-deploy-jdk11:
     steps:
       - run:
+          name: 'Build JDK 11 Release modules locally'
+          command: |
+            ./mvnw -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11 -am -DskipTests=true install
+      - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
             mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
