@@ -156,5 +156,31 @@ workflows:
           filters:
             <<: *all-branches
 
+  snapshot:
+    jobs:
+      - test:
+          jdk: '8'
+          name: 'jdk 8'
+          filters:
+            <<: *only-master
+      - test:
+          jdk: '11'
+          name: 'jdk 11'
+          filters:
+            <<: *only-master
+      - test:
+          jdk: '14-buster'
+          name: 'jdk 14'
+          filters:
+            <<: *only-master
+      - deploy:
+          jdk: '8'
+          name: 'deploy snapshot'
+          requires:
+            - 'jdk 8'
+            - 'jdk 11'
+            - 'jdk 14'
+          filters:
+            <<: *only-master
 
 
