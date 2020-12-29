@@ -584,6 +584,12 @@
               <version>2.22.0</version>
               <repositoryType>PLUGIN</repositoryType>
             </DynamicDependency>
+            <DynamicDependency>
+              <groupId>org.codehaus.mojo.signature</groupId>
+              <artifactId>java18</artifactId>
+              <version>1.0</version>
+              <repositoryType>PLUGIN</repositoryType>
+            </DynamicDependency>
           </dynamicDependencies>
         </configuration>
       </plugin>
