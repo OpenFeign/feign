@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>10.12-SNAPSHOT</version>
+  <version>10.13-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -77,9 +77,9 @@
     <slf4j.version>1.7.13</slf4j.version>
     <bouncy.version>1.60</bouncy.version>
 
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <jackson.version>2.10.0.pr3</jackson.version>
-    <jackson.databind.version>2.10.0.pr3</jackson.databind.version>
+    <jackson.databind.version>2.10.5.1</jackson.databind.version>
     <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
@@ -417,6 +417,21 @@
               <target>${main.java.version}</target>
             </configuration>
           </execution>
+          <execution>
+            <id>default-test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <fork>true</fork>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+              <source>${main.java.version}</source>
+              <target>${main.java.version}</target>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -517,12 +532,13 @@
             <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
             <exclude>src/main/resources/**</exclude>
+            <exclude>.circleci/**</exclude>
           </excludes>
           <strictCheck>true</strictCheck>
         </configuration>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
@@ -549,14 +565,35 @@
         </configuration>
         <executions>
           <execution>
-            <phase>verify</phase>
+            <phase>validate</phase>
             <goals>
               <goal>format</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>de.qaware.maven</groupId>
+        <artifactId>go-offline-maven-plugin</artifactId>
+        <version>1.2.8</version>
+        <configuration>
+          <dynamicDependencies>
+            <DynamicDependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit4</artifactId>
+              <version>2.22.0</version>
+              <repositoryType>PLUGIN</repositoryType>
+            </DynamicDependency>
+            <DynamicDependency>
+              <groupId>org.codehaus.mojo.signature</groupId>
+              <artifactId>java18</artifactId>
+              <version>1.0</version>
+              <type>signature</type>
+              <repositoryType>MAIN</repositoryType>
+            </DynamicDependency>
+          </dynamicDependencies>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
@@ -765,6 +802,12 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <configuration>
+                  <gpgArguments>
+                    <arg>--pinentry-mode</arg>
+                    <arg>loopback</arg>
+                  </gpgArguments>
+                </configuration>
                 <phase>verify</phase>
               </execution>
             </executions>
