@@ -575,7 +575,7 @@
       <plugin>
         <groupId>de.qaware.maven</groupId>
         <artifactId>go-offline-maven-plugin</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.8</version>
         <configuration>
           <dynamicDependencies>
             <DynamicDependency>
@@ -588,7 +588,8 @@
               <groupId>org.codehaus.mojo.signature</groupId>
               <artifactId>java18</artifactId>
               <version>1.0</version>
-              <repositoryType>PLUGIN</repositoryType>
+              <type>signature</type>
+              <repositoryType>MAIN</repositoryType>
             </DynamicDependency>
           </dynamicDependencies>
         </configuration>
