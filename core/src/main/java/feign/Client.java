@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -129,7 +130,11 @@ public interface Client {
       if (status >= 400) {
         stream = connection.getErrorStream();
       } else {
-        stream = connection.getInputStream();
+        if (this.isGzip(connection)) {
+          stream = new GZIPInputStream(connection.getInputStream());
+        } else {
+          stream = connection.getInputStream();
+        }
       }
       return Response.builder()
           .status(status)
@@ -215,6 +220,14 @@ public interface Client {
         }
       }
       return connection;
+    }
+
+    private boolean isGzip(HttpURLConnection connection) {
+      String contentEncoding = connection.getHeaderField("Content-Encoding");
+      if (Util.isNotBlank(contentEncoding)) {
+        return contentEncoding.equalsIgnoreCase("gzip");
+      }
+      return false;
     }
   }
 
