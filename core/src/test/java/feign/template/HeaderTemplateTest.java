@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,12 +44,6 @@ public class HeaderTemplateTest {
   @Test(expected = IllegalArgumentException.class)
   public void it_should_throw_exception_when_value_is_null() {
     HeaderTemplate.create("test", null);
-    exception.expectMessage("values are required");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void it_should_throw_exception_when_value_is_null_for_chunks() {
-    HeaderTemplate.from("test", null);
     exception.expectMessage("values are required");
   }
 
@@ -110,5 +105,15 @@ public class HeaderTemplateTest {
             Arrays.asList("test 2", "test 1"));
     assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
         equalTo(Arrays.asList("test 2", "test 1")));
+  }
+
+  @Test
+  public void it_should_support_http_date() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
+    assertEquals(
+        headerTemplate.expand(
+            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")),
+        "Expires Wed, 4 Jul 2001 12:08:56 -0700");
   }
 }
