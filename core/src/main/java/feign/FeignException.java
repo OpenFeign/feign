@@ -450,11 +450,11 @@ public class FeignException extends RuntimeException {
     private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
 
       Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.size() == 0) {
+      if (strings == null || strings.isEmpty()) {
         return null;
       }
 
-      Pattern pattern = Pattern.compile("charset=([^\\s])");
+      Pattern pattern = Pattern.compile(".*charset=([^\\s|^;]+).*");
       Matcher matcher = pattern.matcher(strings.iterator().next());
       if (!matcher.lookingAt()) {
         return null;
