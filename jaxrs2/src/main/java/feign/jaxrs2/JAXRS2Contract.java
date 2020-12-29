@@ -14,6 +14,7 @@
 package feign.jaxrs2;
 
 import feign.jaxrs.JAXRSContract;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
@@ -30,5 +31,6 @@ public final class JAXRS2Contract extends JAXRSContract {
     // https://github.com/OpenFeign/feign/issues/669
     super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
     super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
+    super.registerParameterAnnotation(BeanParam.class, (ann, data, i) -> data.ignoreParamater(i));
   }
 }
