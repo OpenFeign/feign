@@ -14,10 +14,12 @@
 package feign.template;
 
 import feign.Util;
+import feign.template.Template.EncodingOptions;
+import feign.template.Template.ExpansionOptions;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,23 +31,10 @@ import java.util.stream.StreamSupport;
  * Template for HTTP Headers. Variables that are unresolved are ignored and Literals are not
  * encoded.
  */
-public final class HeaderTemplate extends Template {
+public final class HeaderTemplate {
 
-  /* cache a copy of the variables for lookup later */
-  private LinkedHashSet<String> values;
-  private String name;
-
-  public static HeaderTemplate from(String name, List<TemplateChunk> chunks) {
-    if (name == null || name.isEmpty()) {
-      throw new IllegalArgumentException("name is required.");
-    }
-
-    if (chunks == null) {
-      throw new IllegalArgumentException("chunks are required.");
-    }
-
-    return new HeaderTemplate(name, Util.UTF_8, chunks);
-  }
+  private final String name;
+  private final List<Template> values = new CopyOnWriteArrayList<>();
 
   public static HeaderTemplate create(String name, Iterable<String> values) {
     if (name == null || name.isEmpty()) {
@@ -56,19 +45,7 @@ public final class HeaderTemplate extends Template {
       throw new IllegalArgumentException("values are required");
     }
 
-    /* construct a uri template from the name and values */
-    StringBuilder template = new StringBuilder();
-    template.append(name).append(" ");
-
-    /* create a comma separated template for the header values */
-    Iterator<String> iterator = values.iterator();
-    while (iterator.hasNext()) {
-      template.append(iterator.next());
-      if (iterator.hasNext()) {
-        template.append(",");
-      }
-    }
-    return new HeaderTemplate(template.toString(), name, values, Util.UTF_8);
+    return new HeaderTemplate(name, values, Util.UTF_8);
   }
 
   /**
@@ -88,68 +65,64 @@ public final class HeaderTemplate extends Template {
   }
 
   /**
-   * Append {@link TemplateChunk} to a Header Template.
+   * Create a new Header Template.
    *
-   * @param headerTemplate to append to.
-   * @param chunks to append.
-   * @return a new HeaderTemplate with the values added.
+   * @param name of the Header.
+   * @param values for the Header.
+   * @param charset to use when encoding the values.
    */
-  public static HeaderTemplate appendFrom(
-      HeaderTemplate headerTemplate, List<TemplateChunk> chunks) {
-    List<TemplateChunk> existing = new CopyOnWriteArrayList<>(headerTemplate.getTemplateChunks());
-    existing.addAll(chunks);
-    return from(headerTemplate.getName(), existing);
-  }
-
-  /**
-   * Creates a new Header Template.
-   *
-   * @param template to parse.
-   */
-  private HeaderTemplate(String template, String name, Iterable<String> values, Charset charset) {
-    super(template, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset);
-    this.values =
-        StreamSupport.stream(values.spliterator(), false)
-            .filter(Util::isNotBlank)
-            .collect(Collectors.toCollection(LinkedHashSet::new));
+  private HeaderTemplate(String name, Iterable<String> values, Charset charset) {
     this.name = name;
-  }
 
-  /**
-   * Creates a new Header Template from a set of TemplateChunks.
-   *
-   * @param name of the header.
-   * @param charset to encode the expanded values in.
-   * @param chunks for the template.
-   */
-  private HeaderTemplate(String name, Charset charset, List<TemplateChunk> chunks) {
-    super(ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset, chunks);
-    this.values =
-        chunks.stream()
-            .map(TemplateChunk::getValue)
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-    this.name = name;
+    for (String value : values) {
+      if (value == null || value.isEmpty()) {
+        /* skip */
+        continue;
+      }
+
+      this.values.add(
+          new Template(
+              value, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset));
+    }
   }
 
   public Collection<String> getValues() {
-    return Collections.unmodifiableCollection(values);
+    return Collections.unmodifiableList(
+        this.values.stream().map(Template::toString).collect(Collectors.toList()));
+  }
+
+  public List<String> getVariables() {
+    List<String> variables = new ArrayList<>();
+    for (Template template : this.values) {
+      variables.addAll(template.getVariables());
+    }
+    return Collections.unmodifiableList(variables);
   }
 
   public String getName() {
-    return name;
+    return this.name;
   }
 
-  @Override
   public String expand(Map<String, ?> variables) {
-    String result = super.expand(variables);
+    List<String> expanded = new ArrayList<>();
+    if (!this.values.isEmpty()) {
+      for (Template template : this.values) {
+        String result = template.expand(variables);
 
-    /* remove any trailing commas */
-    while (result.endsWith(",")) {
-      result = result.replaceAll(",$", "");
+        if (result == null) {
+          /* ignore unresolved values */
+          continue;
+        }
+
+        expanded.add(result);
+      }
     }
 
-    /* space all the commas now */
-    result = result.replaceAll(",", ", ");
-    return result;
+    StringBuilder result = new StringBuilder();
+    if (!expanded.isEmpty()) {
+      result.append(String.join(", ", expanded));
+    }
+
+    return result.toString();
   }
 }

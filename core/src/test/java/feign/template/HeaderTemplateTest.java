@@ -46,12 +46,6 @@ public class HeaderTemplateTest {
     exception.expectMessage("values are required");
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void it_should_throw_exception_when_value_is_null_for_chunks() {
-    HeaderTemplate.from("test", null);
-    exception.expectMessage("values are required");
-  }
-
   @Test
   public void it_should_return_name() {
     HeaderTemplate headerTemplate =
@@ -63,10 +57,9 @@ public class HeaderTemplateTest {
   public void it_should_return_expanded() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{name}", "{missing}"));
-    assertEquals("hello emre, savci", headerTemplate.expand(Collections.emptyMap()));
+    assertEquals("emre, savci", headerTemplate.expand(Collections.emptyMap()));
     assertEquals(
-        "hello emre, savci, firsts",
-        headerTemplate.expand(Collections.singletonMap("name", "firsts")));
+        "emre, savci, firsts", headerTemplate.expand(Collections.singletonMap("name", "firsts")));
   }
 
   @Test
@@ -74,8 +67,7 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{replace_me}"));
     assertEquals(
-        "hello emre, savci, {}",
-        headerTemplate.expand(Collections.singletonMap("replace_me", "{}")));
+        "emre, savci, {}", headerTemplate.expand(Collections.singletonMap("replace_me", "{}")));
   }
 
   @Test
@@ -118,5 +110,15 @@ public class HeaderTemplateTest {
     assertThat(
         new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
         equalTo(Arrays.asList("test 2", "test 1")));
+  }
+
+  @Test
+  public void it_should_support_http_date() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
+    assertEquals(
+        headerTemplate.expand(
+            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")),
+        "Wed, 4 Jul 2001 12:08:56 -0700");
   }
 }

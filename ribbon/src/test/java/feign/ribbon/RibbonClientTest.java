@@ -45,10 +45,12 @@ import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+@Ignore("inconsistent, deprecated toolset")
 public class RibbonClientTest {
 
   @Rule public final TestName testName = new TestName();
