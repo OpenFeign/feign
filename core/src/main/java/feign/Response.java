@@ -284,14 +284,6 @@ public final class Response implements Closeable {
       inputStream.close();
     }
 
-    @Override
-    public String toString() {
-      try {
-        return new String(toByteArray(inputStream), UTF_8);
-      } catch (Exception e) {
-        return super.toString();
-      }
-    }
   }
 
   private static final class ByteArrayBody implements Response.Body {
@@ -347,10 +339,6 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {}
 
-    @Override
-    public String toString() {
-      return decodeOrDefault(data, UTF_8, "Binary data");
-    }
   }
 
   private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {

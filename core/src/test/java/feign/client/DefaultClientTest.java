@@ -27,6 +27,7 @@ import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
@@ -169,6 +170,25 @@ public class DefaultClientTest extends AbstractClientTest {
 
   }
 
+  @Test
+  public void canSupportDeflate() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("Content-Encoding", "deflate")
+        .setBody(new Buffer().write(deflate(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+
+  }
+
   private byte[] compress(String data) throws Exception {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
       GZIPOutputStream gzipOutputStream = new GZIPOutputStream(bos);
@@ -176,6 +196,14 @@ public class DefaultClientTest extends AbstractClientTest {
       gzipOutputStream.close();
       return bos.toByteArray();
     }
+  }
 
+  private byte[] deflate(String data) throws Exception {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
+      DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(bos);
+      deflaterOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
+      deflaterOutputStream.close();
+      return bos.toByteArray();
+    }
   }
 }

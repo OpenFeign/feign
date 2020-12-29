@@ -34,9 +34,11 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
@@ -132,6 +134,8 @@ public interface Client {
       } else {
         if (this.isGzip(connection)) {
           stream = new GZIPInputStream(connection.getInputStream());
+        } else if (this.isDeflate(connection)) {
+          stream = new InflaterInputStream(connection.getInputStream());
         } else {
           stream = connection.getInputStream();
         }
@@ -223,9 +227,17 @@ public interface Client {
     }
 
     private boolean isGzip(HttpURLConnection connection) {
-      String contentEncoding = connection.getHeaderField("Content-Encoding");
+      String contentEncoding = connection.getHeaderField(CONTENT_ENCODING);
       if (Util.isNotBlank(contentEncoding)) {
-        return contentEncoding.equalsIgnoreCase("gzip");
+        return contentEncoding.equalsIgnoreCase(ENCODING_GZIP);
+      }
+      return false;
+    }
+
+    private boolean isDeflate(HttpURLConnection connection) {
+      String contentEncoding = connection.getHeaderField(CONTENT_ENCODING);
+      if (Util.isNotBlank(contentEncoding)) {
+        return contentEncoding.equalsIgnoreCase(ENCODING_DEFLATE);
       }
       return false;
     }
