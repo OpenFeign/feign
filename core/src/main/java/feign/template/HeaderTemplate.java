@@ -124,8 +124,6 @@ public final class HeaderTemplate {
 
     StringBuilder result = new StringBuilder();
     if (!expanded.isEmpty()) {
-      result.append(this.name);
-      result.append(" ");
       result.append(String.join(", ", expanded));
     }
 

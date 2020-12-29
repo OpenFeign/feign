@@ -58,8 +58,8 @@ public class HeaderTemplateTest {
   public void it_should_return_expanded() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{name}", "{missing}"));
-    assertEquals("hello emre, savci", headerTemplate.expand(Collections.emptyMap()));
-    assertEquals("hello emre, savci, firsts",
+    assertEquals("emre, savci", headerTemplate.expand(Collections.emptyMap()));
+    assertEquals("emre, savci, firsts",
         headerTemplate.expand(Collections.singletonMap("name", "firsts")));
   }
 
@@ -67,7 +67,7 @@ public class HeaderTemplateTest {
   public void it_should_return_expanded_literals() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{replace_me}"));
-    assertEquals("hello emre, savci, {}",
+    assertEquals("emre, savci, {}",
         headerTemplate.expand(Collections.singletonMap("replace_me", "{}")));
   }
 
@@ -114,6 +114,6 @@ public class HeaderTemplateTest {
     assertEquals(
         headerTemplate.expand(
             Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")),
-        "Expires Wed, 4 Jul 2001 12:08:56 -0700");
+        "Wed, 4 Jul 2001 12:08:56 -0700");
   }
 }
