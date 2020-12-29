@@ -92,18 +92,6 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void responseCoercesToStringBody() throws Throwable {
-    server.enqueue(new MockResponse().setBody("foo"));
-
-    TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
-
-    Response response = unwrap(api.response());
-    assertTrue(response.body().isRepeatable());
-    assertEquals("foo", response.body().toString());
-  }
-
-  @Test
   public void postFormParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
