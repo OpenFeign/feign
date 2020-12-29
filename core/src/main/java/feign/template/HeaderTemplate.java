@@ -148,6 +148,7 @@ public final class HeaderTemplate extends Template {
     }
 
     /* space all the commas now */
+    result = result.replaceAll(", ", ",");
     result = result.replaceAll(",", ", ");
     return result;
   }
