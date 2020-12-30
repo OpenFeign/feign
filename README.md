@@ -281,7 +281,10 @@ with the following alterations:
 ---
 ### Customization
 
-Feign has several aspects that can be customized.  For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.  For example:
+Feign has several aspects that can be customized.  
+For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.<br>
+For request setting, you can use `options(Request.Options options)` on `target()` to set connectTimeout, connectTimeoutUnit, readTimeout, readTimeoutUnit, followRedirects.<br>
+For example:
 
 ```java
 interface Bank {
@@ -291,8 +294,9 @@ interface Bank {
 
 public class BankService {
   public static void main(String[] args) {
-    Bank bank = Feign.builder().decoder(
-        new AccountDecoder())
+    Bank bank = Feign.builder()
+        .decoder(new AccountDecoder())
+        .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
         .target(Bank.class, "https://api.examplebank.com");
   }
 }
