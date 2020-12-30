@@ -54,7 +54,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -74,7 +73,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
@@ -177,8 +175,7 @@ public class AsyncHttpClientTest {
 
     server.takeRequest();
 
-    Assertions.assertThat(encodedType.get()).isEqualTo(new TypeToken<List<String>>() {
-    }.getType());
+    Assertions.assertThat(encodedType.get()).isEqualTo(new TypeToken<List<String>>() {}.getType());
 
     checkCFCompletedSoon(cf);
   }
@@ -659,8 +656,7 @@ public class AsyncHttpClientTest {
     final OtherTestInterfaceAsync api =
         newAsyncBuilder().target(new HardCodedTarget<>(
             OtherTestInterfaceAsync.class,
-            "http://localhost:" + server.getPort()
-        ));
+            "http://localhost:" + server.getPort()));
 
     Assertions.assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
   }
@@ -673,8 +669,7 @@ public class AsyncHttpClientTest {
     final OtherTestInterfaceAsync api =
         newAsyncBuilder().encoder(new Encoder.Default()).target(new HardCodedTarget<>(
             OtherTestInterfaceAsync.class,
-            "http://localhost:" + server.getPort()
-        ));
+            "http://localhost:" + server.getPort()));
 
     final CompletableFuture<?> cf = api.binaryRequestBody(expectedRequest);
 
@@ -982,16 +977,16 @@ public class AsyncHttpClientTest {
             .client(new AsyncHttpClient())
             .decoder(new Decoder.Default()).encoder(new Encoder() {
 
-          @SuppressWarnings("deprecation")
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            if (object instanceof Map) {
-              template.body(new Gson().toJson(object));
-            } else {
-              template.body(object.toString());
-            }
-          }
-        });
+              @SuppressWarnings("deprecation")
+              @Override
+              public void encode(Object object, Type bodyType, RequestTemplate template) {
+                if (object instanceof Map) {
+                  template.body(new Gson().toJson(object));
+                } else {
+                  template.body(object.toString());
+                }
+              }
+            });
 
     TestInterfaceAsyncBuilder requestInterceptor(RequestInterceptor requestInterceptor) {
       delegate.requestInterceptor(requestInterceptor);

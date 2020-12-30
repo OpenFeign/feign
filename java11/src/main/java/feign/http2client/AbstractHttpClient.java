@@ -16,7 +16,6 @@ package feign.http2client;
 import feign.Request;
 import feign.Request.Options;
 import feign.Response;
-
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -150,17 +149,17 @@ public abstract class AbstractHttpClient {
     // A case insensitive TreeSet of strings.
     final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     treeSet.addAll(Set.of("connection", "content-length", "date", "expect", "from", "host",
-            "origin", "referer", "upgrade", "via", "warning"));
+        "origin", "referer", "upgrade", "via", "warning"));
     DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
   }
 
   protected Map<String, Collection<String>> filterRestrictedHeaders(Map<String, Collection<String>> headers) {
     final Map<String, Collection<String>> filteredHeaders = headers.keySet()
-            .stream()
-            .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
-            .collect(Collectors.toMap(
-                    Function.identity(),
-                    headers::get));
+        .stream()
+        .filter(headerName -> !DISALLOWED_HEADERS_SET.contains(headerName))
+        .collect(Collectors.toMap(
+            Function.identity(),
+            headers::get));
 
     filteredHeaders.computeIfAbsent("Accept", key -> List.of("*/*"));
 

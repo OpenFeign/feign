@@ -18,7 +18,6 @@ import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 import feign.Util;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -54,8 +53,8 @@ public class Http2Client extends AbstractHttpClient implements Client {
     final HttpRequest httpRequest;
     try {
       httpRequest = newRequestBuilder(request, options)
-              .version(Version.HTTP_2)
-              .build();
+          .version(Version.HTTP_2)
+          .build();
     } catch (URISyntaxException e) {
       throw new IOException("Invalid uri " + request.url(), e);
     }
