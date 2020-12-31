@@ -17,14 +17,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import feign.Feign;
-import feign.Logger;
-import feign.Param;
-import feign.RequestLine;
+import feign.*;
 import feign.gson.GsonDecoder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 public class WikipediaExample {
 
@@ -64,6 +62,7 @@ public class WikipediaExample {
             .decoder(new GsonDecoder(gson))
             .logger(new Logger.ErrorLogger())
             .logLevel(Logger.Level.BASIC)
+            .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
             .target(Wikipedia.class, "https://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");
