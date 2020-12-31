@@ -21,7 +21,6 @@ import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.isNotBlank;
 import static java.lang.String.format;
-
 import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
