@@ -14,11 +14,9 @@
 package feign;
 
 import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FeignExceptionTest {
@@ -65,23 +63,25 @@ public class FeignExceptionTest {
     Map<String, Collection<String>> map = new HashMap<>();
     map.put("connection", new ArrayList<>(Collections.singletonList("keep-alive")));
     map.put("content-length", new ArrayList<>(Collections.singletonList("100")));
-    map.put("content-type", new ArrayList<>(Collections.singletonList("application/json;charset=UTF-16BE")));
+    map.put("content-type",
+        new ArrayList<>(Collections.singletonList("application/json;charset=UTF-16BE")));
 
     Request request = Request.create(Request.HttpMethod.GET,
-            "/home", Collections.emptyMap(),
-            "data".getBytes(StandardCharsets.UTF_16BE),
-            StandardCharsets.UTF_16BE,
-            null);
+        "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_16BE),
+        StandardCharsets.UTF_16BE,
+        null);
 
     Response response = Response.builder()
-            .status(400)
-            .body("response".getBytes(StandardCharsets.UTF_16BE))
-            .headers(map)
-            .request(request)
-            .build();
+        .status(400)
+        .body("response".getBytes(StandardCharsets.UTF_16BE))
+        .headers(map)
+        .request(request)
+        .build();
 
     FeignException exception = FeignException.errorStatus("methodKey", response);
-    assertThat(exception.getMessage()).isEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
+    assertThat(exception.getMessage())
+        .isEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
   }
 
   @Test
@@ -89,23 +89,25 @@ public class FeignExceptionTest {
     Map<String, Collection<String>> map = new HashMap<>();
     map.put("connection", new ArrayList<>(Collections.singletonList("keep-alive")));
     map.put("content-length", new ArrayList<>(Collections.singletonList("100")));
-    map.put("content-type", new ArrayList<>(Collections.singletonList("application/json;charset=UTF-8")));
+    map.put("content-type",
+        new ArrayList<>(Collections.singletonList("application/json;charset=UTF-8")));
 
     Request request = Request.create(Request.HttpMethod.GET,
-            "/home", Collections.emptyMap(),
-            "data".getBytes(StandardCharsets.UTF_16BE),
-            StandardCharsets.UTF_16BE,
-            null);
+        "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_16BE),
+        StandardCharsets.UTF_16BE,
+        null);
 
     Response response = Response.builder()
-            .status(400)
-            .body("response".getBytes(StandardCharsets.UTF_16BE))
-            .headers(map)
-            .request(request)
-            .build();
+        .status(400)
+        .body("response".getBytes(StandardCharsets.UTF_16BE))
+        .headers(map)
+        .request(request)
+        .build();
 
     FeignException exception = FeignException.errorStatus("methodKey", response);
-    assertThat(exception.getMessage()).isNotEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
+    assertThat(exception.getMessage())
+        .isNotEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
   }
 
   @Test(expected = NullPointerException.class)
