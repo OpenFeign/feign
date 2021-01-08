@@ -41,7 +41,7 @@ public class ResponseTest {
             .build();
 
     assertThat(response.reason()).isNull();
-    assertThat(response.toString()).isEqualTo("HTTP/1.1 200\n\n");
+    assertThat(response.toString()).startsWith("HTTP/1.1 200");
   }
 
   @Test

@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.gson.Gson;
@@ -74,18 +73,6 @@ public class AsyncApacheHttp5ClientTest {
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
                 + " \"password\"}");
-  }
-
-  @Test
-  public void responseCoercesToStringBody() throws Throwable {
-    server.enqueue(new MockResponse().setBody("foo"));
-
-    final TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
-
-    final Response response = unwrap(api.response());
-    assertTrue(response.body().isRepeatable());
-    assertEquals("foo", response.body().toString());
   }
 
   @Test

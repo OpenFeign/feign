@@ -19,7 +19,6 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -88,17 +87,6 @@ public class FeignTest {
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
                 + " \"password\"}");
-  }
-
-  @Test
-  public void responseCoercesToStringBody() {
-    server.enqueue(new MockResponse().setBody("foo"));
-
-    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
-
-    Response response = api.response();
-    assertTrue(response.body().isRepeatable());
-    assertEquals("foo", response.body().toString());
   }
 
   @Test
