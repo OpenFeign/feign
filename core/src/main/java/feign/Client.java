@@ -19,9 +19,9 @@ import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
-import static feign.Util.isBlank;
 import static feign.Util.isNotBlank;
 import static java.lang.String.format;
+import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,11 +35,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-import feign.Request.Options;
 
 /**
  * Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe.
@@ -129,7 +130,13 @@ public interface Client {
       if (status >= 400) {
         stream = connection.getErrorStream();
       } else {
-        stream = connection.getInputStream();
+        if (this.isGzip(connection.getHeaderFields().get(CONTENT_ENCODING))) {
+          stream = new GZIPInputStream(connection.getInputStream());
+        } else if (this.isDeflate(connection.getHeaderFields().get(CONTENT_ENCODING))) {
+          stream = new InflaterInputStream(connection.getInputStream());
+        } else {
+          stream = connection.getInputStream();
+        }
       }
       return Response.builder()
           .status(status)
@@ -163,10 +170,8 @@ public interface Client {
       connection.setRequestMethod(request.httpMethod().name());
 
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
-      boolean gzipEncodedRequest =
-          contentEncodingValues != null && contentEncodingValues.contains(ENCODING_GZIP);
-      boolean deflateEncodedRequest =
-          contentEncodingValues != null && contentEncodingValues.contains(ENCODING_DEFLATE);
+      boolean gzipEncodedRequest = this.isGzip(contentEncodingValues);
+      boolean deflateEncodedRequest = this.isDeflate(contentEncodingValues);
 
       boolean hasAcceptHeader = false;
       Integer contentLength = null;
@@ -215,6 +220,18 @@ public interface Client {
         }
       }
       return connection;
+    }
+
+    private boolean isGzip(Collection<String> contentEncodingValues) {
+      return contentEncodingValues != null
+          && !contentEncodingValues.isEmpty()
+          && contentEncodingValues.contains(ENCODING_GZIP);
+    }
+
+    private boolean isDeflate(Collection<String> contentEncodingValues) {
+      return contentEncodingValues != null
+          && !contentEncodingValues.isEmpty()
+          && contentEncodingValues.contains(ENCODING_DEFLATE);
     }
   }
 

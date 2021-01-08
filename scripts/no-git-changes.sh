@@ -13,7 +13,6 @@
 # the License.
 #
 
-
 set -euo pipefail
 set -x
 
@@ -28,4 +27,3 @@ else
   echo "Please run 'mvn clean install' locally to format files"
   exit 1
 fi
-

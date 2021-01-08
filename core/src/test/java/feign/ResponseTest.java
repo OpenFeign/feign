@@ -14,6 +14,7 @@
 package feign;
 
 import feign.Request.HttpMethod;
+import java.nio.charset.StandardCharsets;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class ResponseTest {
         .build();
 
     assertThat(response.reason()).isNull();
-    assertThat(response.toString()).isEqualTo("HTTP/1.1 200\n\n");
+    assertThat(response.toString()).startsWith("HTTP/1.1 200");
   }
 
   @Test
