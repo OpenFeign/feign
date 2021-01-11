@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>10.12-SNAPSHOT</version>
+  <version>10.13-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -79,7 +79,7 @@
 
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.10.0.pr3</jackson.version>
-    <jackson.databind.version>2.10.0.pr3</jackson.databind.version>
+    <jackson.databind.version>2.10.5.1</jackson.databind.version>
     <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
@@ -538,7 +538,7 @@
         </configuration>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
@@ -565,7 +565,7 @@
         </configuration>
         <executions>
           <execution>
-            <phase>verify</phase>
+            <phase>validate</phase>
             <goals>
               <goal>format</goal>
             </goals>
@@ -575,7 +575,7 @@
       <plugin>
         <groupId>de.qaware.maven</groupId>
         <artifactId>go-offline-maven-plugin</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.8</version>
         <configuration>
           <dynamicDependencies>
             <DynamicDependency>
@@ -583,6 +583,13 @@
               <artifactId>surefire-junit4</artifactId>
               <version>2.22.0</version>
               <repositoryType>PLUGIN</repositoryType>
+            </DynamicDependency>
+            <DynamicDependency>
+              <groupId>org.codehaus.mojo.signature</groupId>
+              <artifactId>java18</artifactId>
+              <version>1.0</version>
+              <type>signature</type>
+              <repositoryType>MAIN</repositoryType>
             </DynamicDependency>
           </dynamicDependencies>
         </configuration>

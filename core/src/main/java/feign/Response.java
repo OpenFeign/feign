@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -303,14 +303,6 @@ public final class Response implements Closeable {
       inputStream.close();
     }
 
-    @Override
-    public String toString() {
-      try {
-        return new String(toByteArray(inputStream), UTF_8);
-      } catch (Exception e) {
-        return super.toString();
-      }
-    }
   }
 
   private static final class ByteArrayBody implements Response.Body {
@@ -366,10 +358,6 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {}
 
-    @Override
-    public String toString() {
-      return decodeOrDefault(data, UTF_8, "Binary data");
-    }
   }
 
   private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
