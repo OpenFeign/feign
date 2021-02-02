@@ -802,13 +802,13 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <phase>verify</phase>
                 <configuration>
                   <gpgArguments>
                     <arg>--pinentry-mode</arg>
                     <arg>loopback</arg>
                   </gpgArguments>
                 </configuration>
-                <phase>verify</phase>
               </execution>
             </executions>
           </plugin>

@@ -736,7 +736,7 @@ public final class RequestTemplate implements Serializable {
       return this;
     }
 
-    if (this.headers.containsKey(name)) {
+    if (headerIsPresentOnHeaders(name)) {
       // a client can only produce content of one single type, so always override an present header and
       // only add a single type
       this.headers.remove(name);
@@ -755,7 +755,12 @@ public final class RequestTemplate implements Serializable {
     return this;
   }
 
-  /**
+	private boolean headerIsPresentOnHeaders(String name) {
+		return !name.equalsIgnoreCase("Content-Encoding") &&
+				this.headers.keySet().stream().anyMatch(name::equalsIgnoreCase);
+	}
+
+	/**
    * Headers for this Request.
    *
    * @param headers to use.
