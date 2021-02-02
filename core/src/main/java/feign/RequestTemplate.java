@@ -755,9 +755,14 @@ public final class RequestTemplate implements Serializable {
     return this;
   }
 
-	private boolean headerIsPresentOnHeaders(String name) {
-		return !name.equalsIgnoreCase("Content-Encoding") &&
-				this.headers.keySet().stream().anyMatch(name::equalsIgnoreCase);
+  /**
+   *
+   * @param headerName
+   * @return true when header has that key and is not Content-Encoding
+   */
+	private boolean headerIsPresentOnHeaders(String headerName) {
+		return !headerName.equalsIgnoreCase("Content-Encoding") &&
+				this.headers.keySet().stream().anyMatch(headerName::equalsIgnoreCase);
 	}
 
 	/**
