@@ -352,22 +352,18 @@ public class RequestTemplateTest {
     final String value = "value1";
     template.header("TEST", value);
 
+    final String value2 = "value2";
+    template.header("tEST", value2);
+
     final Collection<String> test = template.headers().get("test");
+
     final String assertionMessage = "Header field names should be case insensitive";
 
     assertNotNull(assertionMessage, test);
     assertTrue(assertionMessage, test.contains(value));
+    assertTrue(assertionMessage, test.contains(value2));
     assertEquals(1, template.headers().size());
-    assertEquals(1, template.headers().get("tesT").size());
-
-    final String value2 = "value2";
-    template.header("tEST", value2);
-
-    final Collection<String> test2 = template.headers().get("test");
-
-    assertTrue(assertionMessage, test2.contains(value2));
-    assertEquals(1, template.headers().size());
-    assertEquals(1, template.headers().get("tesT").size());
+    assertEquals(2, template.headers().get("tesT").size());
   }
 
   @Test
