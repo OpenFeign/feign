@@ -758,11 +758,22 @@ public final class RequestTemplate implements Serializable {
   /**
    *
    * @param headerName
-   * @return true when header has that key and is not Content-Encoding
+   * @return true when header is equal to Authorization or Content-Type and
+   * is already present on headers
    */
   private boolean headerIsPresentOnHeaders(String headerName) {
-      return !headerName.equalsIgnoreCase("Content-Encoding") &&
+      return isAuthorizationOrContentType(headerName) &&
               this.headers.keySet().stream().anyMatch(headerName::equalsIgnoreCase);
+  }
+
+  /**
+   *
+   * @param headerName
+   * @return true when header is equal to Authorization or Content-Type
+   */
+  private boolean isAuthorizationOrContentType(String headerName) {
+ 	return headerName.equalsIgnoreCase( "Authorization") ||
+			headerName.equalsIgnoreCase("Content-Type");
   }
 
 	/**
