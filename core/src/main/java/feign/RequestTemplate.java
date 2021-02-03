@@ -735,16 +735,14 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
-
-    if (headerIsPresentOnHeaders(name)) {
-      // a client can only produce content of one single type of Authorization and content-type
-      // so always override an present header and only add a single type
+    if (name.equals("Content-Type") || name.equals("Authorization")) {
+      // a client can only produce content of one single type, so always override Content-Type or
+      // Authorization and only add a single type
       this.headers.remove(name);
       this.headers.put(name,
           HeaderTemplate.create(name, Collections.singletonList(values.iterator().next())));
       return this;
     }
-
     this.headers.compute(name, (headerName, headerTemplate) -> {
       if (headerTemplate == null) {
         return HeaderTemplate.create(headerName, values);
@@ -753,27 +751,6 @@ public final class RequestTemplate implements Serializable {
       }
     });
     return this;
-  }
-
-  /**
-   *
-   * @param headerName
-   * @return true when header is equal to Authorization or Content-Type and is already present on
-   *         headers
-   */
-  private boolean headerIsPresentOnHeaders(String headerName) {
-    return isAuthorizationOrContentType(headerName) &&
-        this.headers.keySet().stream().anyMatch(headerName::equalsIgnoreCase);
-  }
-
-  /**
-   *
-   * @param headerName
-   * @return true when header is equal to Authorization or Content-Type
-   */
-  private boolean isAuthorizationOrContentType(String headerName) {
-    return headerName.equalsIgnoreCase("Authorization") ||
-        headerName.equalsIgnoreCase("Content-Type");
   }
 
   /**
