@@ -182,6 +182,25 @@ public final class Response implements Closeable {
     return request;
   }
 
+  public Charset charset() {
+
+    Collection<String> contentTypeHeaders = headers().get("Content-Type");
+
+    if (contentTypeHeaders != null) {
+      for (String contentTypeHeader : contentTypeHeaders) {
+        String[] contentTypeParmeters = contentTypeHeader.split(";");
+        if (contentTypeParmeters.length > 1) {
+          String[] charsetParts = contentTypeParmeters[1].split("=");
+          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+            return Charset.forName(charsetParts[1]);
+          }
+        }
+      }
+    }
+
+    return Util.UTF_8;
+  }
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);

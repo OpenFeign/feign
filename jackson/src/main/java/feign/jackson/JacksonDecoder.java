@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import feign.Response;
-import feign.Util;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class JacksonDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException {
     if (response.body() == null) return null;
-    Reader reader = response.body().asReader(Util.UTF_8);
+    Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
