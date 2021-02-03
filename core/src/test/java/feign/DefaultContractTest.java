@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -304,10 +304,10 @@ public class DefaultContractTest {
         parseAndValidateMetadata(HeaderParamsNotAtStart.class, "logout", String.class);
 
     assertThat(md.template())
-        .hasHeaders(entry("Authorization", asList("Bearer {authToken}", "Foo")));
+        .hasHeaders(entry("Authorization", Collections.singletonList("Bearer {authToken}")));
 
     assertThat(md.indexToName())
-        .containsExactly(entry(0, asList("authToken")));
+        .containsExactly(entry(0, Collections.singletonList("authToken")));
     assertThat(md.formParams()).isEmpty();
   }
 
