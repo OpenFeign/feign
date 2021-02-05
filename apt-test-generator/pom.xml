@@ -140,6 +140,7 @@
         <!-- used to create docker images -->
         <groupId>com.spotify</groupId>
         <artifactId>docker-maven-plugin</artifactId>
+        <version>${docker-maven-plugin.version}</version>
         <configuration>
           <!-- docker file copied here after maven replaces properties -->
           <dockerDirectory>${project.build.directory}/classes/docker/</dockerDirectory>
