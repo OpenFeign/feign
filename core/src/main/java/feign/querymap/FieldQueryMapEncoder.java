@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,12 +13,17 @@
  */
 package feign.querymap;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * the query map will be generated using member variable names as query parameter names.
@@ -31,13 +36,15 @@ import java.util.stream.Collectors;
 public class FieldQueryMapEncoder implements QueryMapEncoder {
 
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata =
-      new HashMap<Class<?>, ObjectParamMetadata>();
+      new ConcurrentHashMap<>();
 
   @Override
   public Map<String, Object> encode(Object object) throws EncodeException {
+    ObjectParamMetadata metadata =
+        classToMetadata.computeIfAbsent(object.getClass(), ObjectParamMetadata::parseObjectType);
+    Map<String, Object> fieldNameToValue = new HashMap<>();
+
     try {
-      ObjectParamMetadata metadata = getMetadata(object.getClass());
-      Map<String, Object> fieldNameToValue = new HashMap<String, Object>();
       for (Field field : metadata.objectFields) {
         Object value = field.get(object);
         if (value != null && value != object) {
@@ -50,15 +57,6 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
     } catch (IllegalAccessException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
-  }
-
-  private ObjectParamMetadata getMetadata(Class<?> objectType) {
-    ObjectParamMetadata metadata = classToMetadata.get(objectType);
-    if (metadata == null) {
-      metadata = ObjectParamMetadata.parseObjectType(objectType);
-      classToMetadata.put(objectType, metadata);
-    }
-    return metadata;
   }
 
   private static class ObjectParamMetadata {
