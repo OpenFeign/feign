@@ -137,7 +137,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     // final Body requestBody = request.requestBody();
     final byte[] data = request.body();
     if (data != null) {
-      httpRequest.setBodyBytes(data, getContentType(request));
+      httpRequest.setBody(data, getContentType(request));
     }
 
     return httpRequest;
