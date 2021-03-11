@@ -16,9 +16,9 @@ package feign.querymap;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import feign.Param;
@@ -42,18 +42,23 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
   public Map<String, Object> encode(Object object) throws EncodeException {
     ObjectParamMetadata metadata =
         classToMetadata.computeIfAbsent(object.getClass(), ObjectParamMetadata::parseObjectType);
-    Map<String, Object> fieldNameToValue = new HashMap<>();
 
+    return metadata.objectFields.stream()
+        .map(field -> this.FieldValuePair(object, field))
+        .filter(fieldObjectPair -> fieldObjectPair.right.isPresent())
+        .collect(Collectors.toMap(this::fieldName,
+            fieldObjectPair -> fieldObjectPair.right.get()));
+
+  }
+
+  private String fieldName(Pair<Field, Optional<Object>> pair) {
+    Param alias = pair.left.getAnnotation(Param.class);
+    return alias != null ? alias.value() : pair.left.getName();
+  }
+
+  private Pair<Field, Optional<Object>> FieldValuePair(Object object, Field field) {
     try {
-      for (Field field : metadata.objectFields) {
-        Object value = field.get(object);
-        if (value != null && value != object) {
-          Param alias = field.getAnnotation(Param.class);
-          String name = alias != null ? alias.value() : field.getName();
-          fieldNameToValue.put(name, value);
-        }
-      }
-      return fieldNameToValue;
+      return Pair.pair(field, Optional.ofNullable(field.get(object)));
     } catch (IllegalAccessException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
@@ -81,4 +86,20 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
           .collect(Collectors.toList()));
     }
   }
+
+  private static class Pair<T, U> {
+    private Pair(T left, U right) {
+      this.right = right;
+      this.left = left;
+    }
+
+    public final T left;
+    public final U right;
+
+    public static <T, U> Pair<T, U> pair(T left, U right) {
+      return new Pair<>(left, right);
+    }
+
+  }
+
 }
