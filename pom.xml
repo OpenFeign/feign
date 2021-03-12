@@ -177,6 +177,7 @@
         <artifactId>feign-core</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -226,6 +227,7 @@
         <artifactId>feign-jaxrs</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -238,6 +240,7 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-mock</artifactId>
         <version>${project.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -262,6 +265,14 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-slf4j</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-micrometer</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -803,13 +814,13 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <phase>verify</phase>
                 <configuration>
                   <gpgArguments>
                     <arg>--pinentry-mode</arg>
                     <arg>loopback</arg>
                   </gpgArguments>
                 </configuration>
-                <phase>verify</phase>
               </execution>
             </executions>
           </plugin>
