@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -44,7 +44,36 @@ public class MeteredClient implements Client {
                 metricName.metricName(template.methodMetadata(), template.feignTarget()),
                 metricSuppliers.timers())
             .time()) {
-      return client.execute(request, options);
+      Response response = client.execute(request, options);
+      metricRegistry
+          .meter(
+              MetricRegistry.name(
+                  metricName.metricName(
+                      template.methodMetadata(), template.feignTarget(), "http_response_code"),
+                  "status_group",
+                  response.status() / 100 + "xx",
+                  "http_status",
+                  String.valueOf(response.status())),
+              metricSuppliers.meters())
+          .mark();
+      return response;
+    } catch (FeignException e) {
+      metricRegistry
+          .meter(
+              MetricRegistry.name(
+                  metricName.metricName(
+                      template.methodMetadata(), template.feignTarget(), "http_response_code"),
+                  "status_group",
+                  e.status() / 100 + "xx",
+                  "http_status",
+                  String.valueOf(e.status())),
+              metricSuppliers.meters())
+          .mark();
+      throw e;
+    } catch (IOException | RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IOException(e);
     }
   }
 }
