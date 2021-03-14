@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -450,11 +450,11 @@ public class FeignException extends RuntimeException {
     private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
 
       Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.size() == 0) {
+      if (strings == null || strings.isEmpty()) {
         return null;
       }
 
-      Pattern pattern = Pattern.compile("charset=([^\\s])");
+      Pattern pattern = Pattern.compile(".*charset=([^\\s|^;]+).*");
       Matcher matcher = pattern.matcher(strings.iterator().next());
       if (!matcher.lookingAt()) {
         return null;
