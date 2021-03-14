@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+import feign.Feign.Builder;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
@@ -63,14 +64,6 @@ public abstract class AsyncFeign<C> extends Feign {
     private Supplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client;
 
-    private final Logger.Level logLevel = Logger.Level.NONE;
-    private final Logger logger = new NoOpLogger();
-
-    private Decoder decoder = new Decoder.Default();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private boolean decode404;
-    private boolean closeAfterDecode = true;
-
     public AsyncBuilder() {
       super();
       this.builder = Feign.builder();
@@ -90,7 +83,7 @@ public abstract class AsyncFeign<C> extends Feign {
      * @see Builder#mapAndDecode(ResponseMapper, Decoder)
      */
     public AsyncBuilder<C> mapAndDecode(ResponseMapper mapper, Decoder decoder) {
-      this.decoder = (response, type) -> decoder.decode(mapper.map(response, type), type);
+      this.builder.decoder ( (response, type) -> decoder.decode(mapper.map(response, type), type));
       return this;
     }
 
@@ -98,7 +91,7 @@ public abstract class AsyncFeign<C> extends Feign {
      * @see Builder#decoder(Decoder)
      */
     public AsyncBuilder<C> decoder(Decoder decoder) {
-      this.decoder = decoder;
+      this.builder.decoder ( decoder);
       return this;
     }
 
@@ -106,7 +99,7 @@ public abstract class AsyncFeign<C> extends Feign {
      * @see Builder#decode404()
      */
     public AsyncBuilder<C> decode404() {
-      this.decode404 = true;
+      this.builder.decode404();
       return this;
     }
 
@@ -114,12 +107,12 @@ public abstract class AsyncFeign<C> extends Feign {
      * @see Builder#errorDecoder(ErrorDecoder)
      */
     public AsyncBuilder<C> errorDecoder(ErrorDecoder errorDecoder) {
-      this.errorDecoder = errorDecoder;
+      this.builder.errorDecoder ( errorDecoder);
       return this;
     }
 
     public AsyncBuilder<C> doNotCloseAfterDecode() {
-      this.closeAfterDecode = false;
+      this.builder.doNotCloseAfterDecode();
       return this;
     }
 
@@ -226,7 +219,13 @@ public abstract class AsyncFeign<C> extends Feign {
       builder.invocationHandlerFactory(invocationHandlerFactory);
       return this;
     }
-  }
+
+    public AsyncBuilder<C> addCapability(Capability capability) {
+      builder.addCapability(capability);
+      return this;
+    }
+
+}
 
   private final ThreadLocal<AsyncInvocation<C>> activeContext;
 
@@ -244,18 +243,18 @@ public abstract class AsyncFeign<C> extends Feign {
     this.activeContext = new ThreadLocal<>();
 
     this.defaultContextSupplier = asyncBuilder.defaultContextSupplier;
-    this.client = asyncBuilder.client;
+    this.client = Capability.enrich(asyncBuilder.client, asyncBuilder.builder.capabilities);
 
-    this.logLevel = asyncBuilder.logLevel;
-    this.logger = asyncBuilder.logger;
+    this.logLevel = asyncBuilder.builder.logLevel;
+    this.logger = asyncBuilder.builder.logger;
 
     this.responseHandler = new AsyncResponseHandler(
-        asyncBuilder.logLevel,
-        asyncBuilder.logger,
-        asyncBuilder.decoder,
-        asyncBuilder.errorDecoder,
-        asyncBuilder.decode404,
-        asyncBuilder.closeAfterDecode);
+        asyncBuilder.builder.logLevel,
+        asyncBuilder.builder.logger,
+        asyncBuilder.builder.decoder,
+        asyncBuilder.builder.errorDecoder,
+        asyncBuilder.builder.decode404,
+        asyncBuilder.builder.closeAfterDecode);
 
     asyncBuilder.builder.client(this::stageExecution);
     asyncBuilder.builder.decoder(this::stageDecode);

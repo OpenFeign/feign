@@ -97,25 +97,25 @@ public abstract class Feign {
 
   public static class Builder {
 
-    private final List<RequestInterceptor> requestInterceptors =
+    protected final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
-    private Logger.Level logLevel = Logger.Level.NONE;
-    private Contract contract = new Contract.Default();
-    private Client client = new Client.Default(null, null);
-    private Retryer retryer = new Retryer.Default();
-    private Logger logger = new NoOpLogger();
-    private Encoder encoder = new Encoder.Default();
-    private Decoder decoder = new Decoder.Default();
-    private QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Options options = new Options();
-    private InvocationHandlerFactory invocationHandlerFactory =
+    protected Logger.Level logLevel = Logger.Level.NONE;
+    protected Contract contract = new Contract.Default();
+    protected Client client = new Client.Default(null, null);
+    protected Retryer retryer = new Retryer.Default();
+    protected Logger logger = new NoOpLogger();
+    protected Encoder encoder = new Encoder.Default();
+    protected Decoder decoder = new Decoder.Default();
+    protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+    protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+    protected Options options = new Options();
+    protected InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
-    private boolean decode404;
-    private boolean closeAfterDecode = true;
-    private ExceptionPropagationPolicy propagationPolicy = NONE;
-    private boolean forceDecoding = false;
-    private List<Capability> capabilities = new ArrayList<>();
+    protected boolean decode404;
+    protected boolean closeAfterDecode = true;
+    protected ExceptionPropagationPolicy propagationPolicy = NONE;
+    protected boolean forceDecoding = false;
+    protected List<Capability> capabilities = new ArrayList<>();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
