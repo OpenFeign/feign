@@ -70,6 +70,7 @@
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
         <versions-maven-plugin.version>2.8.1</versions-maven-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     </properties>
@@ -264,6 +265,15 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <source>8</source>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
                 <executions>
                     <execution>
@@ -316,13 +326,9 @@
     <!-- Push binary to JCenter -->
     <distributionManagement>
         <repository>
-            <id>bintray</id>
-            <url>https://api.bintray.com/maven/hosuaby/OpenFeign/feign-vertx/;publish=1</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
-        <snapshotRepository>
-            <id>jfrog-snapshots</id>
-            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
-        </snapshotRepository>
     </distributionManagement>
 
     <reporting>

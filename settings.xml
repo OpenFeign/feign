@@ -4,14 +4,9 @@
                           https://maven.apache.org/xsd/settings-1.0.0.xsd">
     <servers>
         <server>
-            <id>bintray</id>
-            <username>${env.BINTRAY_USER}</username>
-            <password>${env.BINTRAY_API_KEY}</password>
-        </server>
-        <server>
-            <id>jfrog-snapshots</id>
-            <username>${env.BINTRAY_USER}</username>
-            <password>${env.BINTRAY_API_KEY}</password>
+            <id>ossrh</id>
+            <username>${env.SONATYPE_USER}</username>
+            <password>${env.SONATYPE_PASSWORD}</password>
         </server>
     </servers>
 </settings>
