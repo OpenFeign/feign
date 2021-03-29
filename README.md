@@ -1,7 +1,9 @@
 # feign-vertx
 
-[![Build Status](https://travis-ci.org/OpenFeign/feign-vertx.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-vertx)
+[![CI](https://github.com/OpenFeign/feign-vertx/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/OpenFeign/feign-vertx/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/hosuaby/vertx-feign/badge.svg?branch=master)](https://coveralls.io/github/hosuaby/vertx-feign?branch=master)
 [![Download](https://api.bintray.com/packages/hosuaby/OpenFeign/feign-vertx/images/download.svg)](https://bintray.com/hosuaby/OpenFeign/feign-vertx/_latestVersion)
+[![javadoc](https://javadoc.io/badge2/io.github.openfeign/feign-vertx/javadoc.svg)](https://javadoc.io/doc/io.github.openfeign/feign-vertx)
 
 Implementation of Feign on Vertx. Brings you the best of two worlds together : 
 concise syntax of Feign to write client side API on fast, asynchronous and
@@ -12,13 +14,6 @@ non-blocking HTTP client of Vertx.
 ### With Maven
 
 ```xml
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <url>https://jcenter.bintray.com/</url>
-    </repository>
-</repositories>
-...
 <dependencies>
     ...
     <dependency>
@@ -33,10 +28,6 @@ non-blocking HTTP client of Vertx.
 ### With Gradle
 
 ```groovy
-repositories {
-    jcenter()
-}
-
 compile group: 'io.github.openfeign', name: 'feign-vertx', version: '5.0.0'
 ```
 
