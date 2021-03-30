@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/OpenFeign/feign-vertx/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/OpenFeign/feign-vertx/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/hosuaby/vertx-feign/badge.svg?branch=master)](https://coveralls.io/github/hosuaby/vertx-feign?branch=master)
-[![Download](https://api.bintray.com/packages/hosuaby/OpenFeign/feign-vertx/images/download.svg)](https://bintray.com/hosuaby/OpenFeign/feign-vertx/_latestVersion)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-vertx/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-vertx)
 [![javadoc](https://javadoc.io/badge2/io.github.openfeign/feign-vertx/javadoc.svg)](https://javadoc.io/doc/io.github.openfeign/feign-vertx)
 
 Implementation of Feign on Vertx. Brings you the best of two worlds together : 
