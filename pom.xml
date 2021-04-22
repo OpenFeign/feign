@@ -36,6 +36,7 @@
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
+    <module>json</module>
     <module>okhttp</module>
     <module>googlehttpclient</module>
     <module>ribbon</module>
@@ -76,6 +77,7 @@
     <gson.version>2.5</gson.version>
     <slf4j.version>1.7.13</slf4j.version>
     <bouncy.version>1.60</bouncy.version>
+    <json.version>20210307</json.version>
 
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.10.0.pr3</jackson.version>
@@ -317,6 +319,12 @@
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk15on</artifactId>
         <version>${bouncy.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${json.version}</version>
       </dependency>
 
       <dependency>
