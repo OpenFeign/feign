@@ -61,7 +61,7 @@ public class JsonEncoderTest {
   @Test
   public void unknownTypeThrowsEncodeException() {
     Exception exception = assertThrows(EncodeException.class,
-        () -> new JsonEncoder().encode(jsonObject, Date.class, new RequestTemplate()));
+        () -> new JsonEncoder().encode("qwerty", Date.class, new RequestTemplate()));
     assertEquals("class java.util.Date is not a type supported by this encoder.",
         exception.getMessage());
   }

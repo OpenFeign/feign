@@ -53,9 +53,9 @@ public class JsonEncoder implements Encoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    if (JSONArray.class == bodyType || JSONObject.class == bodyType) {
-      if (object == null)
-        return;
+    if (object == null)
+      return;
+    if (object instanceof JSONArray || object instanceof JSONObject) {
       template.body(object.toString());
     } else {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
