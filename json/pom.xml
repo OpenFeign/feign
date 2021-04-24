@@ -23,7 +23,7 @@
     <version>-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-org.json</artifactId>
+  <artifactId>feign-json</artifactId>
   <name>Feign JSON-java</name>
   <description>Feign JSON-java</description>
 

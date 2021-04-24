@@ -36,7 +36,7 @@
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
-    <module>org.json</module>
+    <module>json</module>
     <module>okhttp</module>
     <module>googlehttpclient</module>
     <module>ribbon</module>
