@@ -82,40 +82,18 @@
 
   <profiles>
     <profile>
-      <id>multi-release</id>
+      <id>active-on-jdk-11</id>
       <activation>
-        <jdk>9</jdk>
+        <jdk>11</jdk>
       </activation>
       <build>
         <plugins>
           <plugin>
-            <artifactId>maven-jar-plugin</artifactId>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-              <archive>
-                <manifestEntries>
-                  <Multi-Release>true</Multi-Release>
-                </manifestEntries>
-              </archive>
+              <argLine>--illegal-access=deny</argLine>
             </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>compile-java-9</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>compile</goal>
-                </goals>
-                <configuration>
-                  <release>9</release>
-                  <compileSourceRoots>
-                    <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
-                  </compileSourceRoots>
-                  <multiReleaseOutput>true</multiReleaseOutput>
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
