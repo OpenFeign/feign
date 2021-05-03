@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.defaultmethodhandler.DefaultMethodHandlerFactory;
 import feign.querymap.FieldQueryMapEncoder;
 import static feign.ExceptionPropagationPolicy.NONE;
 
@@ -116,6 +117,8 @@ public abstract class Feign {
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
     private List<Capability> capabilities = new ArrayList<>();
+    private DefaultMethodHandlerFactory defaultMethodHandlerFactory =
+        new DefaultMethodHandlerFactory.Default();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -253,6 +256,15 @@ public abstract class Feign {
       return this;
     }
 
+
+    /**
+     * Allows you to override how feign handle default methods.
+     */
+    public Builder defaultMethodHandlerFactory(DefaultMethodHandlerFactory defaultMethodHandlerFactory) {
+      this.defaultMethodHandlerFactory = defaultMethodHandlerFactory;
+      return this;
+    }
+
     /**
      * Internal - used to indicate that the decoder should be immediately called
      */
@@ -280,6 +292,8 @@ public abstract class Feign {
       Options options = Capability.enrich(this.options, capabilities);
       Encoder encoder = Capability.enrich(this.encoder, capabilities);
       Decoder decoder = Capability.enrich(this.decoder, capabilities);
+      DefaultMethodHandlerFactory defaultMethodHandlerFactory =
+          Capability.enrich(this.defaultMethodHandlerFactory, capabilities);
       InvocationHandlerFactory invocationHandlerFactory =
           Capability.enrich(this.invocationHandlerFactory, capabilities);
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
@@ -290,7 +304,8 @@ public abstract class Feign {
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder,
+          defaultMethodHandlerFactory);
     }
   }
 

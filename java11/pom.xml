@@ -81,7 +81,14 @@
           <skip>true</skip>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- make sure java11 module can't access JDK internals -->
+          <argLine>--illegal-access=deny</argLine>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

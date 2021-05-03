@@ -11,21 +11,20 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign;
+package feign.safedefaultmethodhandler;
 
-import feign.InvocationHandlerFactory.MethodHandler;
-import org.jvnet.animal_sniffer.IgnoreJRERequirement;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Method;
+import feign.defaultmethodhandler.DefaultMethodHandler;
 
 /**
  * Handles default methods by directly invoking the default method code on the interface. The bindTo
  * method must be called on the result before invoke is called.
  */
-@IgnoreJRERequirement
-final class DefaultMethodHandler implements MethodHandler {
+final class SafeDefaultMethodHandler implements DefaultMethodHandler {
+
   // Uses Java 9 MethodHandle based reflection. As default methods will only exist when
   // run on a Java 8 JVM this will not affect use on legacy JVMs.
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
@@ -34,7 +33,7 @@ final class DefaultMethodHandler implements MethodHandler {
   // handle is effectively final after bindTo has been called.
   private MethodHandle handle;
 
-  public DefaultMethodHandler(Method defaultMethod) {
+  public SafeDefaultMethodHandler(Method defaultMethod) {
     try {
       final Class<?> declaringClass = defaultMethod.getDeclaringClass();
       final Lookup lookup = MethodHandles.privateLookupIn(declaringClass, MethodHandles.lookup());

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.http2client.test;
+package feign.http2client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.api.Assertions;
@@ -29,7 +29,6 @@ import okhttp3.mockwebserver.MockResponse;
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-@Ignore
 public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {
@@ -88,6 +87,7 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
+  @Ignore
   public void timeoutTest() {
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(30, TimeUnit.SECONDS));
 
@@ -106,5 +106,13 @@ public class Http2ClientTest extends AbstractClientTest {
   public Feign.Builder newBuilder() {
     return Feign.builder().client(new Http2Client());
   }
+
+  @Ignore
+  @Override
+  public void parsesErrorResponse() {}
+
+  @Ignore
+  @Override
+  public void safeRebuffering_noContent() {}
 
 }

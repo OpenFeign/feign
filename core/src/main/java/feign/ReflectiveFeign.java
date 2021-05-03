@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +24,8 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.*;
+import feign.defaultmethodhandler.DefaultMethodHandler;
+import feign.defaultmethodhandler.DefaultMethodHandlerFactory;
 import feign.template.UriUtils;
 
 public class ReflectiveFeign extends Feign {
@@ -31,12 +33,14 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
+  private final DefaultMethodHandlerFactory defaultMethodHandlerFactory;
 
   ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
-      QueryMapEncoder queryMapEncoder) {
+      QueryMapEncoder queryMapEncoder, DefaultMethodHandlerFactory defaultMethodHandlerFactory) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
     this.queryMapEncoder = queryMapEncoder;
+    this.defaultMethodHandlerFactory = defaultMethodHandlerFactory;
   }
 
   /**
@@ -54,7 +58,7 @@ public class ReflectiveFeign extends Feign {
       if (method.getDeclaringClass() == Object.class) {
         continue;
       } else if (Util.isDefault(method)) {
-        DefaultMethodHandler handler = new DefaultMethodHandler(method);
+        DefaultMethodHandler handler = defaultMethodHandlerFactory.newInstance(method);
         defaultMethodHandlers.add(handler);
         methodToHandler.put(method, handler);
       } else {
