@@ -133,9 +133,9 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-      keys:
-        - feign-dependencies-{{ checksum "pom.xml" }}
-        - feign-dependencies-
+          keys:
+            - feign-dependencies-{{ checksum "pom.xml" }}
+            - feign-dependencies-
       - resolve-dependencies
       - save_cache:
           paths:
