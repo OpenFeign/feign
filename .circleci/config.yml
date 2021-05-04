@@ -131,7 +131,7 @@ jobs:
       version: <<parameters.jdk>>
     <<: *defaults
     steps:
-      - - checkout
+      - checkout
       - restore_cache:
       keys:
         - feign-dependencies-{{ checksum "pom.xml" }}
