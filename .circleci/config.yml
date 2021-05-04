@@ -180,11 +180,8 @@ workflows:
       - test:
           jdk: '11'
           name: 'test jdk11'
-          filters:
-            <<: *all-branches
-      - test:
-          jdk: '14-buster'
-          name: 'jdk 14'
+          requires:
+            - package
           filters:
             <<: *all-branches
 
