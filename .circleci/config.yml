@@ -131,12 +131,22 @@ jobs:
       version: <<parameters.jdk>>
     <<: *defaults
     steps:
+      - - checkout
+      - restore_cache:
+      keys:
+        - feign-dependencies-{{ checksum "pom.xml" }}
+        - feign-dependencies-
+      - resolve-dependencies
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: feign-dependencies-{{ checksum "pom.xml" }}
       - attach_workspace:
-          at: ./
+          at: ~/feign
       - run:
           name: 'Test'
           command: |
-            ls -altr
+            ls -altR | grep target
 
   deploy:
     parameters:
