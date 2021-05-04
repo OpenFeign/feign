@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.2</version>
+    <version>-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-core</artifactId>
