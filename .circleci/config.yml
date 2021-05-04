@@ -136,7 +136,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            mvn -o test
+            ls -altr
 
   deploy:
     parameters:
