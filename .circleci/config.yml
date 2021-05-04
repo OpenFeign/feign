@@ -88,11 +88,12 @@ all-branches: &all-branches
 version: 2.1
 
 jobs:
-  test:
+
+  package:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8'
+        default: '11'
         type: string
     executor:
       name: java
@@ -110,16 +111,20 @@ jobs:
             - ~/.m2
           key: feign-dependencies-{{ checksum "pom.xml" }}
       - run:
-          name: 'Test'
+          name: 'Package'
           command: |
-            mvn -o test
+            mvn -o -DskipTests=true package
       - verify-formatting
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "*/target/"
 
-  deploy:
+  test:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8'
+        default: '11'
         type: string
     executor:
       name: java
@@ -132,10 +137,18 @@ jobs:
             - feign-dependencies-{{ checksum "pom.xml" }}
             - feign-dependencies-
       - resolve-dependencies
-      - configure-gpg
-      - nexus-deploy
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: feign-dependencies-{{ checksum "pom.xml" }}
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'Test'
+          command: |
+            mvn -o test
 
-  deploy-jdk11:
+  deploy:
     parameters:
       jdk:
         description: 'jdk version to use'
@@ -153,20 +166,20 @@ jobs:
             - feign-dependencies-
       - resolve-dependencies
       - configure-gpg
-      - nexus-deploy-jdk11
+      - nexus-deploy
 
 workflows:
   version: 2
   build:
     jobs:
-      - test:
-          jdk: '8'
-          name: 'jdk 8'
+      - package:
+          jdk: '11'
+          name: 'package'
           filters:
             <<: *all-branches
       - test:
           jdk: '11'
-          name: 'jdk 11'
+          name: 'test jdk11'
           filters:
             <<: *all-branches
       - test:
@@ -177,37 +190,34 @@ workflows:
 
   snapshot:
     jobs:
+      - package:
+          jdk: '11'
+          name: 'package'
+          filters:
+            <<: *master-only
       - test:
           jdk: '8'
-          name: 'jdk 8'
+          name: 'test jdk8'
           filters:
             <<: *master-only
       - test:
           jdk: '11'
-          name: 'jdk 11'
+          name: 'test jdk11'
           filters:
             <<: *master-only
       - test:
           jdk: '14-buster'
-          name: 'jdk 14'
+          name: 'test jdk-latest'
           filters:
             <<: *master-only
       - deploy:
-          jdk: '8'
+          jdk: '11'
           name: 'deploy snapshot'
           requires:
-            - 'jdk 8'
-            - 'jdk 11'
-            - 'jdk 14'
-          context: Sonatype
-          filters:
-            <<: *master-only
-      - deploy-jdk11:
-          jdk: '11'
-          name: 'deploy jdk11 snapshot modules'
-          requires:
-            - 'jdk 11'
-            - 'deploy snapshot'
+            - 'package'
+            - 'test jdk8'
+            - 'test jdk11'
+            - 'test jdk-latest'
           context: Sonatype
           filters:
             <<: *master-only
@@ -215,16 +225,8 @@ workflows:
   release:
     jobs:
       - deploy:
-          jdk: '8'
-          name: 'release to maven central'
-          context: Sonatype
-          filters:
-            <<: *tags-only
-      - deploy-jdk11:
           jdk: '11'
-          name: 'release jdk11 artifacts to maven central'
-          requires:
-            - 'release to maven central'
+          name: 'release to maven central'
           context: Sonatype
           filters:
             <<: *tags-only
