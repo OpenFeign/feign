@@ -20,7 +20,7 @@ function increment() {
 }
 
 # extract the release version from the pom file
-version=`./mvnw -o help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
+version=`./mvnw -B help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
 tag=`echo ${version} | cut -d'-' -f 1`
 
 # determine the next snapshot version
