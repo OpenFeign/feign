@@ -116,9 +116,9 @@ jobs:
             mvn -o -DskipTests=true package
       - verify-formatting
       - persist_to_workspace:
-          root: ./
+          root: ~/feign
           paths:
-            - "*/target/"
+            - "*/target/*"
 
   test:
     parameters:
