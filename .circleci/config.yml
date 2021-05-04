@@ -146,7 +146,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            ./mvnw -o test
+           ls -altR
 
   deploy:
     parameters:
