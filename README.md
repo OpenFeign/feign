@@ -23,7 +23,7 @@ Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11. 
 
 This is a map with current key features provided by feign:
 
-![MindMap overview](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ashleyfrieze/feign/plantuml/src/docs/overview-mindmap.iuml)
+![MindMap overview](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/OpenFeign/feign/master/src/docs/overview-mindmap.iuml)
 
 # Roadmap
 ## Feign 11 and beyond
