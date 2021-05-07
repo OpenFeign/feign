@@ -1,1 +1,1 @@
-Overview map was generated using: https://josetomastocino.github.io/mindmapit/
+Overview map was generated using PlantUML: https://plantuml.com/mindmap-diagram
