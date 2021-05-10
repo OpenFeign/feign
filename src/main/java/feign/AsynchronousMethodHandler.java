@@ -6,6 +6,7 @@ import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Future;
+import io.vertx.core.VertxException;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -145,7 +146,9 @@ final class AsynchronousMethodHandler implements MethodHandler {
               }
             },
             failure -> {
-              if (failure.getCause() instanceof IOException) {
+              if (failure instanceof VertxException) {
+                return Future.failedFuture(failure);
+              } else if (failure.getCause() instanceof IOException) {
                 final long elapsedTime = Duration.between(start, Instant.now()).toMillis();
                 logIoException((IOException) failure.getCause(), elapsedTime);
                 return Future.failedFuture(errorExecuting(request, (IOException) failure.getCause()));

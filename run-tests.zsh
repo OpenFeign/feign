@@ -23,7 +23,7 @@ function print_result() {
   echo "\t${color}${version} ${mark}${NC}"
 }
 
-feign_versions=( "11.0" )
+feign_versions=( "11.0" "11.1" "11.2" )
 
 for feign_version in $feign_versions; do
   echo "Tests with Feign ${version}:"
@@ -35,8 +35,7 @@ done
 
 declare -A vertx_versions
 vertx_versions=( [v40x]="4.0.x" )
-
-v40x=( "4.0.0" )
+v40x=( "4.0.0" "4.0.1" "4.0.2" )
 
 for version in ${(k)vertx_versions}; do
   echo "Tests with Vertx ${vertx_versions[${version}]}:"

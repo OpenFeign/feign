@@ -54,7 +54,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <vertx.version>4.0.0</vertx.version>
+        <vertx.version>4.0.2</vertx.version>
         <feign.version>11.0</feign.version>
 
         <!-- Tests -->
