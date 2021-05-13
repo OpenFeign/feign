@@ -29,7 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <ribbon-version>2.3.0</ribbon-version>
+    <ribbon-version>2.7.18</ribbon-version>
   </properties>
 
   <dependencyManagement>
