@@ -33,6 +33,7 @@
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
+    <module>jackson-jr</module>
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
@@ -78,8 +79,8 @@
     <bouncy.version>1.60</bouncy.version>
 
     <junit.version>4.13.1</junit.version>
-    <jackson.version>2.10.0.pr3</jackson.version>
-    <jackson.databind.version>2.10.5.1</jackson.databind.version>
+    <jackson.version>2.12.3</jackson.version>
+    <jackson.databind.version>2.12.3</jackson.databind.version>
     <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
@@ -334,6 +335,18 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-objects</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-annotation-support</artifactId>
         <version>${jackson.version}</version>
       </dependency>
 
