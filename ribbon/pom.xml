@@ -56,6 +56,12 @@
 
     <dependency>
       <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon-archaius</artifactId>
+      <version>${ribbon-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
       <artifactId>ribbon-loadbalancer</artifactId>
       <version>${ribbon-version}</version>
     </dependency>
