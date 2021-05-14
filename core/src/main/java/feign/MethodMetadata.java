@@ -41,6 +41,7 @@ public final class MethodMetadata implements Serializable {
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
+  private boolean configurationMethod;
   private transient Class<?> targetType;
   private transient Method method;
   private transient final List<String> warnings = new ArrayList<>();
@@ -218,6 +219,14 @@ public final class MethodMetadata implements Serializable {
 
   public boolean isIgnored() {
     return ignored;
+  }
+
+  public void setAsConfigurationMethod() {
+    this.configurationMethod = true;
+  }
+
+  public boolean isConfigurationMethod() {
+    return configurationMethod;
   }
 
   @Experimental

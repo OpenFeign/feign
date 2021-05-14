@@ -905,6 +905,45 @@ public class FeignTest {
         .hasQueryParams("/");
   }
 
+  @Test
+  public void configuredPathParameterIsIncluded() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+    api.configure("configuredValue");
+
+    server.enqueue(new MockResponse());
+    api.configuredPathParam("requestValue");
+    assertThat(server.takeRequest())
+        .hasQueryParams("/configuredValue/requestValue");
+  }
+
+  @Test
+  public void configuredHeaderParameterIsIncluded() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+    api.configure("configuredValue");
+
+    server.enqueue(new MockResponse());
+    api.configuredHeaderParam("requestValue");
+    assertThat(server.takeRequest())
+        .hasHeaders(
+            entry("configuredheader", Collections.singletonList("configuredValue")),
+            entry("requestheader", Collections.singletonList("requestValue"))
+        );
+  }
+
+  @Test
+  public void configuredBodyParameterIsIncluded() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+    api.configure("configuredValue");
+
+    server.enqueue(new MockResponse());
+    api.configuredBodyParam("requestValue");
+    assertThat(server.takeRequest())
+        .hasBody("{\"configuredProperty\": \"configuredValue\", \"requestProperty\": \"requestValue\"}");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -989,6 +1028,23 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPropertyInheritence(@QueryMap ChildPojo object);
+
+    @Configuration
+    void configure(@Param("configuredParam") String configuredParam);
+
+    @RequestLine("GET /{configuredParam}/{requestParam}")
+    void configuredPathParam(@Param("requestParam") String requestParam);
+
+    @RequestLine("POST /")
+    @Headers({
+        "ConfiguredHeader: {configuredParam}",
+        "RequestHeader: {requestParam}"
+    })
+    void configuredHeaderParam(@Param("requestParam") String requestParam);
+
+    @RequestLine("POST /")
+    @Body("%7B\"configuredProperty\": \"{configuredParam}\", \"requestProperty\": \"{requestParam}\"%7D")
+    void configuredBodyParam(@Param("requestParam") String requestParam);
 
     class DateToMillis implements Param.Expander {
 
