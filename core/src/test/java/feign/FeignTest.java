@@ -906,42 +906,42 @@ public class FeignTest {
   }
 
   @Test
-  public void configuredPathParameterIsIncluded() throws Exception {
+  public void sharedPathParameterIsIncluded() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
-    api.configure("configuredValue");
+    api.configure("sharedValue");
 
     server.enqueue(new MockResponse());
-    api.configuredPathParam("requestValue");
+    api.sharedPathParam("exclusiveValue");
     assertThat(server.takeRequest())
-        .hasQueryParams("/configuredValue/requestValue");
+        .hasQueryParams("/sharedValue/exclusiveValue");
   }
 
   @Test
-  public void configuredHeaderParameterIsIncluded() throws Exception {
+  public void sharedHeaderParameterIsIncluded() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
-    api.configure("configuredValue");
+    api.configure("sharedValue");
 
     server.enqueue(new MockResponse());
-    api.configuredHeaderParam("requestValue");
+    api.sharedHeaderParam("exclusiveValue");
     assertThat(server.takeRequest())
         .hasHeaders(
-            entry("configuredheader", Collections.singletonList("configuredValue")),
-            entry("requestheader", Collections.singletonList("requestValue"))
+            entry("sharedheader", Collections.singletonList("sharedValue")),
+            entry("exclusiveheader", Collections.singletonList("exclusiveValue"))
         );
   }
 
   @Test
-  public void configuredBodyParameterIsIncluded() throws Exception {
+  public void sharedBodyParameterIsIncluded() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
-    api.configure("configuredValue");
+    api.configure("sharedValue");
 
     server.enqueue(new MockResponse());
-    api.configuredBodyParam("requestValue");
+    api.sharedBodyParam("exclusiveValue");
     assertThat(server.takeRequest())
-        .hasBody("{\"configuredProperty\": \"configuredValue\", \"requestProperty\": \"requestValue\"}");
+        .hasBody("{\"sharedProperty\": \"sharedValue\", \"requestProperty\": \"exclusiveValue\"}");
   }
 
   interface TestInterface {
@@ -1029,22 +1029,22 @@ public class FeignTest {
     @RequestLine("GET /")
     void queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
-    @Configuration
-    void configure(@Param("configuredParam") String configuredParam);
+    @Shared
+    void configure(@Param("sharedParam") String sharedParam);
 
-    @RequestLine("GET /{configuredParam}/{requestParam}")
-    void configuredPathParam(@Param("requestParam") String requestParam);
+    @RequestLine("GET /{sharedParam}/{exclusiveParam}")
+    void sharedPathParam(@Param("exclusiveParam") String exclusiveParam);
 
     @RequestLine("POST /")
     @Headers({
-        "ConfiguredHeader: {configuredParam}",
-        "RequestHeader: {requestParam}"
+        "SharedHeader: {sharedParam}",
+        "ExclusiveHeader: {exclusiveParam}"
     })
-    void configuredHeaderParam(@Param("requestParam") String requestParam);
+    void sharedHeaderParam(@Param("exclusiveParam") String exclusiveParam);
 
     @RequestLine("POST /")
-    @Body("%7B\"configuredProperty\": \"{configuredParam}\", \"requestProperty\": \"{requestParam}\"%7D")
-    void configuredBodyParam(@Param("requestParam") String requestParam);
+    @Body("%7B\"sharedProperty\": \"{sharedParam}\", \"requestProperty\": \"{exclusiveParam}\"%7D")
+    void sharedBodyParam(@Param("exclusiveParam") String exclusiveParam);
 
     class DateToMillis implements Param.Expander {
 

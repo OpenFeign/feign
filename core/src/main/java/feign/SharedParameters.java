@@ -6,16 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-public class ConfigurationParameters {
+public class SharedParameters {
 
-    private final Map<String, Object> configuredParams = new HashMap<>();
+    private final Map<String, Object> paramNameToValue = new HashMap<>();
 
     public ConfigurationMethodHandler newHandler(final MethodMetadata methodMetadata) {
         return new ConfigurationMethodHandler(methodMetadata);
     }
 
     public Map<String, Object> getParameterMap() {
-        return configuredParams;
+        return paramNameToValue;
     }
 
     public class ConfigurationMethodHandler implements MethodHandler {
@@ -31,7 +31,7 @@ public class ConfigurationParameters {
             IntStream.range(0, argv.length)
                 .forEach(index -> methodMetadata.indexToName()
                     .get(index)
-                    .forEach(name -> configuredParams.put(name, argv[index])));
+                    .forEach(name -> paramNameToValue.put(name, argv[index])));
             return null;
         }
     }

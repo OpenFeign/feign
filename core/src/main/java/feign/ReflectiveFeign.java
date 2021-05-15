@@ -31,7 +31,7 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
-  private ConfigurationParameters configurationParameters;
+  private SharedParameters sharedParameters;
 
   ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
       QueryMapEncoder queryMapEncoder) {
@@ -130,7 +130,7 @@ public class ReflectiveFeign extends Feign {
     private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
     private final SynchronousMethodHandler.Factory factory;
-    private final ConfigurationParameters configurations;
+    private final SharedParameters sharedParameters;
 
     ParseHandlersByName(
         Contract contract,
@@ -147,7 +147,7 @@ public class ReflectiveFeign extends Feign {
       this.queryMapEncoder = queryMapEncoder;
       this.encoder = checkNotNull(encoder, "encoder");
       this.decoder = checkNotNull(decoder, "decoder");
-      this.configurations = new ConfigurationParameters();
+      this.sharedParameters = new SharedParameters();
     }
 
     public Map<String, MethodHandler> apply(Target target) {
@@ -156,16 +156,16 @@ public class ReflectiveFeign extends Feign {
       for (MethodMetadata md : metadata) {
         BuildTemplateByResolvingArgs buildTemplate;
         if (md.isConfigurationMethod()) {
-          result.put(md.configKey(), configurations.newHandler(md));
+          result.put(md.configKey(), sharedParameters.newHandler(md));
           continue;
         }
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
           buildTemplate =
-              new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, configurations, target);
+              new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, sharedParameters, target);
         } else if (md.bodyIndex() != null) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, configurations, target);
+          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, sharedParameters, target);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, configurations, target);
+          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, sharedParameters, target);
         }
         if (md.isIgnored()) {
           result.put(md.configKey(), args -> {
@@ -187,14 +187,14 @@ public class ReflectiveFeign extends Feign {
     protected final MethodMetadata metadata;
     protected final Target<?> target;
     private final Map<Integer, Expander> indexToExpander = new LinkedHashMap<Integer, Expander>();
-    private final ConfigurationParameters configurations;
+    private final SharedParameters sharedParameters;
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata, QueryMapEncoder queryMapEncoder,
-                                         ConfigurationParameters configurations, Target target) {
+                                         SharedParameters sharedParameters, Target target) {
       this.metadata = metadata;
       this.target = target;
       this.queryMapEncoder = queryMapEncoder;
-      this.configurations = configurations;
+      this.sharedParameters = sharedParameters;
       if (metadata.indexToExpander() != null) {
         indexToExpander.putAll(metadata.indexToExpander());
         return;
@@ -224,7 +224,7 @@ public class ReflectiveFeign extends Feign {
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
         mutable.target(String.valueOf(argv[urlIndex]));
       }
-      Map<String, Object> varBuilder = new LinkedHashMap<String, Object>(configurations.getParameterMap());
+      Map<String, Object> varBuilder = new LinkedHashMap<String, Object>(sharedParameters.getParameterMap());
       for (Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
         int i = entry.getKey();
         Object value = argv[entry.getKey()];
@@ -348,8 +348,9 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-        QueryMapEncoder queryMapEncoder, ConfigurationParameters configurations, Target target) {
-      super(metadata, queryMapEncoder, configurations, target);
+                                             QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
+                                             Target target) {
+      super(metadata, queryMapEncoder, sharedParameters, target);
       this.encoder = encoder;
     }
 
@@ -379,8 +380,9 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-        QueryMapEncoder queryMapEncoder, ConfigurationParameters configurations, Target target) {
-      super(metadata, queryMapEncoder, configurations, target);
+                                         QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
+                                         Target target) {
+      super(metadata, queryMapEncoder, sharedParameters, target);
       this.encoder = encoder;
     }
 

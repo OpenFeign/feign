@@ -303,7 +303,11 @@ public interface Contract {
             "HeaderMap annotation was present on multiple parameters.");
         data.headerMapIndex(paramIndex);
       });
-      super.registerMethodAnnotation(Configuration.class, (ann, data) -> {
+      super.registerMethodAnnotation(Shared.class, (ann, data) -> {
+        boolean allParametersAreAnnotated = Arrays.stream(data.method().getParameters())
+            .allMatch(param -> param.isAnnotationPresent(Param.class));
+        checkState(allParametersAreAnnotated,
+            "Param annotation was not present on some parameters");
         data.setAsConfigurationMethod();
       });
     }
