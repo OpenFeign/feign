@@ -1,7 +1,7 @@
 # Feign makes writing java http clients easier
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/OpenFeign/feign.svg?branch=master)](https://travis-ci.org/OpenFeign/feign)
+[![CircleCI](https://circleci.com/gh/OpenFeign/feign/tree/master.svg?style=svg)](https://circleci.com/gh/OpenFeign/feign/tree/master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/badge.png)](https://search.maven.org/artifact/io.github.openfeign/feign-core/)
 
 Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
@@ -23,7 +23,7 @@ Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11. 
 
 This is a map with current key features provided by feign:
 
-![MindMap overview](src/docs/overview.png)
+![MindMap overview](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/OpenFeign/feign/master/src/docs/overview-mindmap.iuml)
 
 # Roadmap
 ## Feign 11 and beyond
@@ -107,7 +107,7 @@ should work.  Feign's default contract defines the following annotations:
 | Annotation     | Interface Target | Usage |
 |----------------|------------------|-------|
 | `@RequestLine` | Method           | Defines the `HttpMethod` and `UriTemplate` for request.  `Expressions`, values wrapped in curly-braces `{expression}` are resolved using their corresponding `@Param` annotated parameters. |
-| `@Param`       | Parameter        | Defines a template variable, whose value will be used to resolve the corresponding template `Expression`, by name. |
+| `@Param`       | Parameter        | Defines a template variable, whose value will be used to resolve the corresponding template `Expression`, by name provided as annotation value. If value is missing it will try to get the name from bytecode method parameter name (if the code was compiled with `-parameters` flag). |
 | `@Headers`     | Method, Type     | Defines a `HeaderTemplate`; a variation on a `UriTemplate`.  that uses `@Param` annotated values to resolve the corresponding `Expressions`.  When used on a `Type`, the template will be applied to every request.  When used on a `Method`, the template will apply only to the annotated method. |
 | `@QueryMap`    | Parameter        | Defines a `Map` of name-value pairs, or POJO, to expand into a query string. |
 | `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
@@ -281,7 +281,10 @@ with the following alterations:
 ---
 ### Customization
 
-Feign has several aspects that can be customized.  For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.  For example:
+Feign has several aspects that can be customized.  
+For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.<br>
+For request setting, you can use `options(Request.Options options)` on `target()` to set connectTimeout, connectTimeoutUnit, readTimeout, readTimeoutUnit, followRedirects.<br>
+For example:
 
 ```java
 interface Bank {
@@ -291,8 +294,9 @@ interface Bank {
 
 public class BankService {
   public static void main(String[] args) {
-    Bank bank = Feign.builder().decoder(
-        new AccountDecoder())
+    Bank bank = Feign.builder()
+        .decoder(new AccountDecoder())
+        .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
         .target(Bank.class, "https://api.examplebank.com");
   }
 }
@@ -1019,4 +1023,3 @@ public class MyApp {
 Initial implementation include 2 async clients:
 - `AsyncClient.Default`
 - `AsyncApacheHttp5Client`
-

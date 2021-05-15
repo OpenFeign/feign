@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -48,6 +49,7 @@ import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
 
+@Ignore("inconsistent, deprecated toolset")
 public class RibbonClientTest {
 
   @Rule

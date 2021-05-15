@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,8 @@ package feign.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -24,8 +26,12 @@ import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
+import okio.Buffer;
 import org.junit.Test;
 import feign.Client;
 import feign.Client.Proxied;
@@ -144,4 +150,60 @@ public class DefaultClientTest extends AbstractClientTest {
     assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
   }
 
+
+  @Test
+  public void canSupportGzip() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("Content-Encoding", "gzip")
+        .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+
+  }
+
+  @Test
+  public void canSupportDeflate() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("Content-Encoding", "deflate")
+        .setBody(new Buffer().write(deflate(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+
+  }
+
+  private byte[] compress(String data) throws Exception {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
+      GZIPOutputStream gzipOutputStream = new GZIPOutputStream(bos);
+      gzipOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
+      gzipOutputStream.close();
+      return bos.toByteArray();
+    }
+  }
+
+  private byte[] deflate(String data) throws Exception {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
+      DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(bos);
+      deflaterOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
+      deflaterOutputStream.close();
+      return bos.toByteArray();
+    }
+  }
 }

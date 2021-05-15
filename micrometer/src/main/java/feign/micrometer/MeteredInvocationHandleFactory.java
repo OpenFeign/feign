@@ -38,13 +38,18 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
 
   private final MeterRegistry meterRegistry;
 
-  private final FeignMetricName metricName;
+  private final MetricName metricName;
 
   public MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,
       MeterRegistry meterRegistry) {
+    this(invocationHandler, meterRegistry, new FeignMetricName(Feign.class));
+  }
+
+  public MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,
+      MeterRegistry meterRegistry, MetricName metricName) {
     this.invocationHandler = invocationHandler;
     this.meterRegistry = meterRegistry;
-    this.metricName = new FeignMetricName(Feign.class);
+    this.metricName = metricName;
   }
 
   @Override

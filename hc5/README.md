@@ -1,4 +1,4 @@
-Apache Http Compoments 5
+Apache Http Components 5
 ========================
 
 This module directs Feign's http requests to Apache's [HttpClient 5](https://hc.apache.org/httpcomponents-client-5.0.x/index.html).

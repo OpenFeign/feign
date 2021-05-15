@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,49 +13,75 @@
  */
 package feign.metrics4;
 
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
+import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.SharedMetricRegistries;
-import org.junit.Test;
-import feign.Feign;
-import feign.RequestLine;
-import feign.mock.HttpMethod;
-import feign.mock.MockClient;
-import feign.mock.MockTarget;
+import feign.Capability;
+import feign.Util;
+import feign.micrometer.AbstractMetricsTestBase;
 
-public class Metrics4CapabilityTest {
+public class Metrics4CapabilityTest
+    extends AbstractMetricsTestBase<MetricRegistry, String, Metric> {
 
-  public interface SimpleSource {
-
-    @RequestLine("GET /get")
-    String get(String body);
-
+  @Override
+  protected MetricRegistry createMetricsRegistry() {
+    return new MetricRegistry();
   }
 
-  @Test
-  public void addMetricsCapability() {
-    final MetricRegistry registry = SharedMetricRegistries.getOrCreate("unit_test");
-
-    final SimpleSource source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
-        .addCapability(new Metrics4Capability(registry))
-        .target(new MockTarget<>(Metrics4CapabilityTest.SimpleSource.class));
-
-    source.get("0x3456789");
-
-    assertThat(registry.getMetrics(), aMapWithSize(6));
-
-    registry.getMetrics().keySet().forEach(metricName -> assertThat(
-        "Expect all metric names to include client name:" + metricName,
-        metricName,
-        containsString("feign.metrics4.Metrics4CapabilityTest$SimpleSource")));
-    registry.getMetrics().keySet().forEach(metricName -> assertThat(
-        "Expect all metric names to include method name:" + metricName,
-        metricName,
-        containsString("get")));
+  protected Capability createMetricCapability() {
+    return new Metrics4Capability(metricsRegistry);
   }
+
+  @Override
+  protected Map<String, Metric> getFeignMetrics() {
+    return metricsRegistry.getMetrics();
+  }
+
+  @Override
+  protected boolean doesMetricIdIncludeClient(String metricId) {
+    return metricId.contains("feign.micrometer.AbstractMetricsTestBase$SimpleSource");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeVerb(String metricId, String verb) {
+    return metricId.contains(verb);
+  }
+
+  @Override
+  protected boolean doesMetricIncludeHost(String metricId) {
+    // since metrics 4 don't have tags, we do not include hostname
+    return true;
+  }
+
+
+  @Override
+  protected Metric getMetric(String suffix, String... tags) {
+    Util.checkArgument(tags.length % 2 == 0, "tags must contain key-value pairs %s",
+        Arrays.toString(tags));
+
+
+    return getFeignMetrics().entrySet()
+        .stream()
+        .filter(entry -> {
+          String name = entry.getKey();
+          if (!name.contains(suffix)) {
+            return false;
+          }
+
+          for (int i = 0; i < tags.length; i += 2) {
+            if (!name.contains(tags[i]) && !name.contains(tags[i] + 1)) {
+              return false;
+            }
+          }
+
+          return true;
+        })
+        .findAny()
+        .map(Entry::getValue)
+        .orElse(null);
+  }
+
 
 }
