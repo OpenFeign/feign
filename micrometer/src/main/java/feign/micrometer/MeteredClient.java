@@ -1,11 +1,11 @@
 /**
  * Copyright 2012-2021 The Feign Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -23,6 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,30 +49,16 @@ public class MeteredClient implements Client {
 
   @Override
   public Response execute(Request request, Options options) throws IOException {
+    final RequestTemplate template = request.requestTemplate();
     final Timer.Sample sample = Timer.start(meterRegistry);
     try {
-      meterRegistry.counter(
-              metricName.name("http_response_code"),
-              metricName.tag(
-                      template.methodMetadata(),
-                      template.feignTarget(),
-                      Tag.of("http_status", String.valueOf(response.status())),
-                      Tag.of("status_group", response.status() / 100 + "xx")))
-              .increment();
       final Response response = client.execute(request, options);
-
+      countResponseCode(template, response.status());
       final Timer timer = createSuccessTimer(response, options);
       sample.stop(timer);
       return response;
     } catch (FeignException e) {
-      meterRegistry.counter(
-          metricName.name("http_response_code"),
-          metricName.tag(
-              template.methodMetadata(),
-              template.feignTarget(),
-              Tag.of("http_status", String.valueOf(e.status())),
-              Tag.of("status_group", e.status() / 100 + "xx")))
-          .increment();
+      countResponseCode(template, e.status());
       throw e;
     } catch (IOException | RuntimeException e) {
       sample.stop(createExceptionTimer(request, options, e));
@@ -80,6 +67,17 @@ public class MeteredClient implements Client {
       sample.stop(createExceptionTimer(request, options, e));
       throw new IOException(e);
     }
+  }
+
+  private void countResponseCode(RequestTemplate template, int status) {
+    meterRegistry.counter(
+        metricName.name("http_response_code"),
+        metricName.tag(
+            template.methodMetadata(),
+            template.feignTarget(),
+            Tag.of("http_status", String.valueOf(status)),
+            Tag.of("status_group", status / 100 + "xx")))
+        .increment();
   }
 
   private Timer createSuccessTimer(Response response, Options options) {
