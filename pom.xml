@@ -78,8 +78,7 @@
     <bouncy.version>1.60</bouncy.version>
 
     <junit.version>4.13.1</junit.version>
-    <jackson.version>2.10.0.pr3</jackson.version>
-    <jackson.databind.version>2.12.3</jackson.databind.version>
+    <jackson.version>2.12.3</jackson.version>
     <assertj.version>3.10.0</assertj.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
@@ -322,7 +321,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.databind.version}</version>
+        <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
