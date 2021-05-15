@@ -160,12 +160,14 @@ public class ReflectiveFeign extends Feign {
           continue;
         }
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate =
-              new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, sharedParameters, target);
+          buildTemplate = new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder,
+              sharedParameters, target);
         } else if (md.bodyIndex() != null) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, sharedParameters, target);
+          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder,
+              sharedParameters, target);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, sharedParameters, target);
+          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder,
+              sharedParameters, target);
         }
         if (md.isIgnored()) {
           result.put(md.configKey(), args -> {
@@ -190,7 +192,7 @@ public class ReflectiveFeign extends Feign {
     private final SharedParameters sharedParameters;
 
     private BuildTemplateByResolvingArgs(MethodMetadata metadata, QueryMapEncoder queryMapEncoder,
-                                         SharedParameters sharedParameters, Target target) {
+        SharedParameters sharedParameters, Target target) {
       this.metadata = metadata;
       this.target = target;
       this.queryMapEncoder = queryMapEncoder;
@@ -224,7 +226,7 @@ public class ReflectiveFeign extends Feign {
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);
         mutable.target(String.valueOf(argv[urlIndex]));
       }
-      Map<String, Object> varBuilder = new LinkedHashMap<String, Object>(sharedParameters.getParameterMap());
+      Map<String, Object> varBuilder = new LinkedHashMap<String, Object>(sharedParameters.asMap());
       for (Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
         int i = entry.getKey();
         Object value = argv[entry.getKey()];
@@ -348,8 +350,8 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-                                             QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
-                                             Target target) {
+        QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
+        Target target) {
       super(metadata, queryMapEncoder, sharedParameters, target);
       this.encoder = encoder;
     }
@@ -380,8 +382,8 @@ public class ReflectiveFeign extends Feign {
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-                                         QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
-                                         Target target) {
+        QueryMapEncoder queryMapEncoder, SharedParameters sharedParameters,
+        Target target) {
       super(metadata, queryMapEncoder, sharedParameters, target);
       this.encoder = encoder;
     }

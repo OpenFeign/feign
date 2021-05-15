@@ -98,7 +98,7 @@ public interface Contract {
         return data;
       }
       checkState(data.isConfigurationMethod() ||
-              data.template().method() != null,
+          data.template().method() != null,
           "Method %s not annotated with HTTP method type (ex. GET, POST)%s",
           data.configKey(), data.warnings());
       final Class<?>[] parameterTypes = method.getParameterTypes();

@@ -928,8 +928,7 @@ public class FeignTest {
     assertThat(server.takeRequest())
         .hasHeaders(
             entry("sharedheader", Collections.singletonList("sharedValue")),
-            entry("exclusiveheader", Collections.singletonList("exclusiveValue"))
-        );
+            entry("exclusiveheader", Collections.singletonList("exclusiveValue")));
   }
 
   @Test
