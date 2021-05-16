@@ -843,7 +843,7 @@
     <profile>
       <id>active-on-jdk-11</id>
       <activation>
-        <jdk>11</jdk>
+        <jdk>[11,)</jdk>
       </activation>
       <modules>
         <module>java11</module>
