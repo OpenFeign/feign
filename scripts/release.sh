@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2012-2020 The Feign Authors
+# Copyright 2012-2021 The Feign Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@ function increment() {
 }
 
 # extract the release version from the pom file
-version=`./mvnw -o help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
+version=`./mvnw -B help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
 tag=`echo ${version} | cut -d'-' -f 1`
 
 # determine the next snapshot version
