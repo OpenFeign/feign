@@ -360,6 +360,9 @@ public class Example {
 }
 ```
 
+For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
+the [Jackson Jr Module](./jackson-jr).
+
 ### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 

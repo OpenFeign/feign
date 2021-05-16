@@ -33,6 +33,7 @@
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
+    <module>jackson-jr</module>
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
@@ -333,6 +334,18 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-objects</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-annotation-support</artifactId>
         <version>${jackson.version}</version>
       </dependency>
 
