@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>-SNAPSHOT</version>
+  <version>11.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -121,7 +121,7 @@
 
   <scm>
     <url>https://github.com/openfeign/feign</url>
-    <connection>scm:git:https://github.com/openfeign/feign.git</connection>
+    <connection>scm:git:git@github.com:OpenFeign/feign.git</connection>
     <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
@@ -834,6 +834,16 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+
+    <profile>
+      <id>active-on-jdk-11</id>
+      <activation>
+        <jdk>11</jdk>
+      </activation>
+      <modules>
+        <module>java11</module>
+      </modules>
     </profile>
   </profiles>
 </project>
