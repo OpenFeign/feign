@@ -13,16 +13,13 @@
  */
 package feign.micrometer;
 
-import feign.Client;
-import feign.FeignException;
-import feign.Request;
+import feign.*;
 import feign.Request.Options;
-import feign.RequestTemplate;
-import feign.Response;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,58 +49,76 @@ public class MeteredClient implements Client {
     final Timer.Sample sample = Timer.start(meterRegistry);
     try {
       final Response response = client.execute(request, options);
-      countResponseCode(template, response.status());
-      final Timer timer = createSuccessTimer(response, options);
+      countSuccessResponseCode(template, options, response.status());
+      final Timer timer = createSuccessTimer(template, options);
       sample.stop(timer);
       return response;
     } catch (FeignException e) {
-      countResponseCode(template, e.status());
+      countErrorResponseCode(template, options, e.status(), e);
       throw e;
     } catch (IOException | RuntimeException e) {
-      sample.stop(createExceptionTimer(request, options, e));
+      sample.stop(createExceptionTimer(template, options, e));
       throw e;
     } catch (Exception e) {
-      sample.stop(createExceptionTimer(request, options, e));
+      sample.stop(createExceptionTimer(template, options, e));
       throw new IOException(e);
     }
   }
 
-  private void countResponseCode(RequestTemplate template, int status) {
+  private void countSuccessResponseCode(RequestTemplate template,
+                                        Options options,
+                                        int responseStatus) {
+    final List<Tag> tags = extraSuccessTags(template, options);
+    tags.add(Tag.of("http_status", String.valueOf(responseStatus)));
+    tags.add(Tag.of("status_group", responseStatus / 100 + "xx"));
+    final Tags allTags = metricName
+        .tag(template.methodMetadata(), template.feignTarget(), tags.toArray(new Tag[] {}));
     meterRegistry.counter(
         metricName.name("http_response_code"),
-        metricName.tag(
-            template.methodMetadata(),
-            template.feignTarget(),
-            Tag.of("http_status", String.valueOf(status)),
-            Tag.of("status_group", status / 100 + "xx")))
+        allTags)
         .increment();
   }
 
-  private Timer createSuccessTimer(Response response, Options options) {
-    final List<Tag> successTags = extraSuccessTags(response, options);
+  private void countErrorResponseCode(RequestTemplate template,
+                                      Options options,
+                                      int responseStatus,
+                                      Exception e) {
+    final List<Tag> tags = extraExceptionTags(template, options, e);
+    tags.add(Tag.of("http_status", String.valueOf(responseStatus)));
+    tags.add(Tag.of("status_group", responseStatus / 100 + "xx"));
+    final Tags allTags = metricName
+        .tag(template.methodMetadata(), template.feignTarget(), tags.toArray(new Tag[] {}));
+    meterRegistry.counter(
+        metricName.name("http_response_code"),
+        allTags)
+        .increment();
+  }
+
+  private Timer createSuccessTimer(RequestTemplate template, Options options) {
+    final List<Tag> successTags = extraSuccessTags(template, options);
     final Tag[] tags = successTags.toArray(new Tag[] {});
-    final RequestTemplate template = response.request().requestTemplate();
     final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
     return meterRegistry.timer(metricName.name(), allTags);
   }
 
-  private Timer createExceptionTimer(Request request, Options options, Exception exception) {
-    final List<Tag> exceptionTags = extraExceptionTags(request, options, exception);
+  private Timer createExceptionTimer(RequestTemplate template,
+                                     Options options,
+                                     Exception exception) {
+    final List<Tag> exceptionTags = extraExceptionTags(template, options, exception);
     final Tag[] tags = exceptionTags.toArray(new Tag[] {});
-    final RequestTemplate template = request.requestTemplate();
     final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
     return meterRegistry.timer(metricName.name("exception"), allTags);
   }
 
-  protected List<Tag> extraSuccessTags(Response response, Options options) {
-    final RequestTemplate template = response.request().requestTemplate();
+  protected List<Tag> extraSuccessTags(RequestTemplate template, Options options) {
     final List<Tag> result = new ArrayList<>();
     result.add(Tag.of("uri", template.path()));
     return result;
   }
 
-  protected List<Tag> extraExceptionTags(Request request, Options options, Exception exception) {
-    final RequestTemplate template = request.requestTemplate();
+  protected List<Tag> extraExceptionTags(RequestTemplate template,
+                                         Options options,
+                                         Exception exception) {
     final List<Tag> result = new ArrayList<>();
     result.add(Tag.of("uri", template.path()));
     result.add(Tag.of("exception_name", exception.getClass().getSimpleName()));
