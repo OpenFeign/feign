@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.slf4j;
+package org.slf4j.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
@@ -19,40 +19,31 @@ import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.SimpleLogger;
-import org.slf4j.impl.SimpleLoggerFactory;
 
 /**
  * A testing utility to allow control over {@link org.slf4j.impl.SimpleLogger}. In some cases,
  * reflection is used to bypass access restrictions.
  */
-final class RecordingSimpleLogger implements TestRule {
+public final class RecordingSimpleLogger implements TestRule {
 
   private String expectedMessages = "";
 
   /** Resets {@link org.slf4j.impl.SimpleLogger} to the new log level. */
-  RecordingSimpleLogger logLevel(String logLevel) throws Exception {
+  public RecordingSimpleLogger logLevel(String logLevel) throws Exception {
     System.setProperty(SHOW_THREAD_NAME_KEY, "false");
     System.setProperty(DEFAULT_LOG_LEVEL_KEY, logLevel);
 
-    Field field = SimpleLogger.class.getDeclaredField("INITIALIZED");
-    field.setAccessible(true);
-    field.set(null, false);
-
-    Method method = SimpleLoggerFactory.class.getDeclaredMethod("reset");
-    method.setAccessible(true);
-    method.invoke(LoggerFactory.getILoggerFactory());
+    SimpleLogger.init();
+    ((SimpleLoggerFactory) LoggerFactory.getILoggerFactory()).reset();
     return this;
   }
 
   /** Newline delimited output that would be sent to stderr. */
-  RecordingSimpleLogger expectMessages(String expectedMessages) {
+  public RecordingSimpleLogger expectMessages(String expectedMessages) {
     this.expectedMessages = expectedMessages;
     return this;
   }

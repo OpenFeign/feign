@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+import org.slf4j.impl.RecordingSimpleLogger;
 
 @SuppressWarnings("deprecation")
 public class Slf4jLoggerTest {
