@@ -20,6 +20,7 @@
 *** Spring boot (3rd party)
 ** encoders/decoders
 *** GSON
+*** JAXB
 *** Jackson 1
 *** Jackson 2
 *** Jackson JAXB
