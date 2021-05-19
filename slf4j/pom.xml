@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>-SNAPSHOT</version>
+    <version>11.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-slf4j</artifactId>
@@ -29,7 +29,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <slf4j.version>1.7.13</slf4j.version>
   </properties>
 
   <dependencies>

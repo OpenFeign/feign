@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>-SNAPSHOT</version>
+    <version>11.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-ribbon</artifactId>
@@ -29,7 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <ribbon-version>2.3.0</ribbon-version>
+    <ribbon-version>2.7.18</ribbon-version>
   </properties>
 
   <dependencyManagement>
@@ -51,6 +51,12 @@
     <dependency>
       <groupId>com.netflix.ribbon</groupId>
       <artifactId>ribbon-core</artifactId>
+      <version>${ribbon-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon-archaius</artifactId>
       <version>${ribbon-version}</version>
     </dependency>
 

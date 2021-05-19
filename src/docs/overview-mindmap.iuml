@@ -1,0 +1,36 @@
+@startmindmap
+* Feign
+** clients
+*** java.net.URL
+*** Apache HTTP
+*** Apache HC5
+*** Google HTTP
+*** Java 11 Http2
+*** OK Http
+*** Ribbon
+** async clients
+*** java.net.URL
+*** Apache HC5
+** contracts
+*** Feign
+*** JAX-RS
+*** JAX-RS 2
+*** Spring 4
+*** SOAP
+*** Spring boot (3rd party)
+** encoders/decoders
+*** GSON
+*** JAXB
+*** Jackson 1
+*** Jackson 2
+*** Jackson JAXB
+*** Jackson Jr
+*** Sax
+** metrics
+*** Dropwizard Metrics 5
+*** Micrometer
+** extras
+*** Hystrix
+*** SLF4J
+*** Mock
+@endmindmap

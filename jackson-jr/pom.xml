@@ -23,15 +23,12 @@
     <version>11.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-spring4</artifactId>
-  <name>Feign spring</name>
-  <description>Feign Contracts for Spring4</description>
+  <artifactId>feign-jackson-jr</artifactId>
+  <name>Feign Jackson Jr</name>
+  <description>Feign Jackson Jr</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-
-    <spring.version>4.3.6.RELEASE</spring.version>
-    <hamcrest.version>1.3</hamcrest.version>
   </properties>
 
   <dependencies>
@@ -39,35 +36,23 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-web</artifactId>
-      <version>${spring.version}</version>
+      <groupId>com.fasterxml.jackson.jr</groupId>
+      <artifactId>jackson-jr-objects</artifactId>
     </dependency>
 
-    <!-- testing -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.jr</groupId>
+      <artifactId>jackson-jr-annotation-support</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-mock</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jackson</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <version>${hamcrest.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
-      <version>${hamcrest.version}</version>
+      <artifactId>feign-core</artifactId>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
   </dependencies>
-
 </project>

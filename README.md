@@ -23,7 +23,7 @@ Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11. 
 
 This is a map with current key features provided by feign:
 
-![MindMap overview](src/docs/overview.png)
+![MindMap overview](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/OpenFeign/feign/master/src/docs/overview-mindmap.iuml)
 
 # Roadmap
 ## Feign 11 and beyond
@@ -359,6 +359,9 @@ public class Example {
   }
 }
 ```
+
+For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
+the [Jackson Jr Module](./jackson-jr).
 
 ### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
@@ -1023,4 +1026,3 @@ public class MyApp {
 Initial implementation include 2 async clients:
 - `AsyncClient.Default`
 - `AsyncApacheHttp5Client`
-

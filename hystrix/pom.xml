@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>-SNAPSHOT</version>
+    <version>11.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-hystrix</artifactId>
@@ -36,7 +36,7 @@
       <dependency>
         <groupId>com.netflix.archaius</groupId>
         <artifactId>archaius-core</artifactId>
-        <version>0.7.6</version>
+        <version>0.7.7</version>
       </dependency>
 
       <dependency>
