@@ -22,19 +22,19 @@ public class SharedParameters {
 
   private final Map<String, Object> paramNameToValue = new HashMap<>();
 
-  public ConfigurationMethodHandler newHandler(final MethodMetadata methodMetadata) {
-    return new ConfigurationMethodHandler(methodMetadata);
+  public SharedMethodHandler newHandler(final MethodMetadata methodMetadata) {
+    return new SharedMethodHandler(methodMetadata);
   }
 
   public Map<String, Object> asMap() {
     return paramNameToValue;
   }
 
-  public class ConfigurationMethodHandler implements MethodHandler {
+  public class SharedMethodHandler implements MethodHandler {
 
     private final MethodMetadata methodMetadata;
 
-    public ConfigurationMethodHandler(final MethodMetadata methodMetadata) {
+    public SharedMethodHandler(final MethodMetadata methodMetadata) {
       this.methodMetadata = methodMetadata;
     }
 
