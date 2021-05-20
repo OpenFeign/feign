@@ -31,13 +31,17 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
-  private SharedParameters sharedParameters;
 
   ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
       QueryMapEncoder queryMapEncoder) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
     this.queryMapEncoder = queryMapEncoder;
+  }
+
+  public ReflectiveFeign withSharedParameters(SharedParameters sharedParameters) {
+    return new ReflectiveFeign(targetToHandlersByName.withSharedParameters(sharedParameters),
+        factory, queryMapEncoder);
   }
 
   /**
@@ -62,7 +66,8 @@ public class ReflectiveFeign extends Feign {
         methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
       }
     }
-    InvocationHandler handler = factory.create(target, methodToHandler);
+    InvocationHandler handler = factory.withFeignFactory(this::withSharedParameters)
+        .create(target, methodToHandler);
     T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
         new Class<?>[] {target.type()}, handler);
 
@@ -76,10 +81,13 @@ public class ReflectiveFeign extends Feign {
 
     private final Target target;
     private final Map<Method, MethodHandler> dispatch;
+    private final SharedParameters.FeignFactory feignFactory;
 
-    FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {
+    FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch,
+        SharedParameters.FeignFactory feignFactory) {
       this.target = checkNotNull(target, "target");
       this.dispatch = checkNotNull(dispatch, "dispatch for %s", target);
+      this.feignFactory = checkNotNull(feignFactory, "feign factory");
     }
 
     @Override
@@ -98,7 +106,14 @@ public class ReflectiveFeign extends Feign {
         return toString();
       }
 
-      return dispatch.get(method).invoke(args);
+      MethodHandler methodHandler = dispatch.get(method);
+      Object invocationValue = methodHandler.invoke(args);
+
+      if (methodHandler instanceof SharedParameters.SharedMethodHandler) {
+        return feignFactory.create((SharedParameters) invocationValue).newInstance(target);
+      } else {
+        return invocationValue;
+      }
     }
 
     @Override
@@ -140,6 +155,19 @@ public class ReflectiveFeign extends Feign {
         QueryMapEncoder queryMapEncoder,
         ErrorDecoder errorDecoder,
         SynchronousMethodHandler.Factory factory) {
+      this(contract, options, encoder, decoder, queryMapEncoder, errorDecoder, factory,
+          new SharedParameters());
+    }
+
+    ParseHandlersByName(
+        Contract contract,
+        Options options,
+        Encoder encoder,
+        Decoder decoder,
+        QueryMapEncoder queryMapEncoder,
+        ErrorDecoder errorDecoder,
+        SynchronousMethodHandler.Factory factory,
+        SharedParameters sharedParameters) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -147,7 +175,12 @@ public class ReflectiveFeign extends Feign {
       this.queryMapEncoder = queryMapEncoder;
       this.encoder = checkNotNull(encoder, "encoder");
       this.decoder = checkNotNull(decoder, "decoder");
-      this.sharedParameters = new SharedParameters();
+      this.sharedParameters = sharedParameters;
+    }
+
+    public ParseHandlersByName withSharedParameters(SharedParameters sharedParameters) {
+      return new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
+          errorDecoder, factory, sharedParameters);
     }
 
     public Map<String, MethodHandler> apply(Target target) {

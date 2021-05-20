@@ -13,14 +13,23 @@
  */
 package feign;
 
-import feign.InvocationHandlerFactory.MethodHandler;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
+import feign.InvocationHandlerFactory.MethodHandler;
 
 public class SharedParameters {
 
-  private final Map<String, Object> paramNameToValue = new HashMap<>();
+  private final Map<String, Object> paramNameToValue;
+
+  public SharedParameters() {
+    this(Collections.emptyMap());
+  }
+
+  private SharedParameters(final Map<String, Object> paramNameToValue) {
+    this.paramNameToValue = Collections.unmodifiableMap(paramNameToValue);
+  }
 
   public SharedMethodHandler newHandler(final MethodMetadata methodMetadata) {
     return new SharedMethodHandler(methodMetadata);
@@ -28,6 +37,10 @@ public class SharedParameters {
 
   public Map<String, Object> asMap() {
     return paramNameToValue;
+  }
+
+  interface FeignFactory {
+    Feign create(SharedParameters sharedParameters);
   }
 
   public class SharedMethodHandler implements MethodHandler {
@@ -40,11 +53,13 @@ public class SharedParameters {
 
     @Override
     public Object invoke(Object[] argv) throws Throwable {
+      Map<String, Object> paramNameToValueCopy = new HashMap<>(paramNameToValue);
       IntStream.range(0, argv.length)
           .forEach(index -> methodMetadata.indexToName()
               .get(index)
-              .forEach(name -> paramNameToValue.put(name, argv[index])));
-      return null;
+              .forEach(name -> paramNameToValueCopy.put(name, argv[index])));
+
+      return new SharedParameters(paramNameToValueCopy);
     }
   }
 }

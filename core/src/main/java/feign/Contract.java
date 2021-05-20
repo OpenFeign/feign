@@ -307,7 +307,9 @@ public interface Contract {
         boolean allParametersAreAnnotated = Arrays.stream(data.method().getParameters())
             .allMatch(param -> param.isAnnotationPresent(Param.class));
         checkState(allParametersAreAnnotated,
-            "Param annotation was not present on some parameters");
+            "Param annotation was not present on some parameters of method %s", data.configKey());
+        checkState(data.returnType().equals(data.targetType()),
+            "Shared method %s return type must be its own interface", data.configKey());
         data.setAsConfigurationMethod();
       });
     }
