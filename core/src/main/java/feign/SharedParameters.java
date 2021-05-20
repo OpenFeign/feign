@@ -39,7 +39,7 @@ public class SharedParameters {
     return paramNameToValue;
   }
 
-  interface FeignFactory {
+  public interface FeignFactory {
     Feign create(SharedParameters sharedParameters);
   }
 
