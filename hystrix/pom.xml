@@ -48,7 +48,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>24.1.1-jre</version>
+        <version>${guava.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
