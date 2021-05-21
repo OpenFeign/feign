@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,13 +14,22 @@
 package feign.micrometer;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import org.junit.Test;
+import org.springframework.cloud.openfeign.support.SpringMvcContract;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import feign.Feign;
+import feign.Request.Options;
 import feign.RequestLine;
+import feign.Retryer;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
@@ -40,7 +49,7 @@ public class MicrometerCapabilityTest {
 
   @Test
   public void addMetricsCapability() {
-    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+    final SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
 
     final SimpleSource source = Feign.builder()
         .client(new MockClient()
@@ -50,7 +59,7 @@ public class MicrometerCapabilityTest {
 
     source.get("0x3456789");
 
-    List<Meter> metrics = new ArrayList<>();
+    final List<Meter> metrics = new ArrayList<>();
     registry.forEachMeter(metrics::add);
     metrics.removeIf(meter -> !meter.getId().getName().startsWith("feign."));
 
@@ -67,6 +76,52 @@ public class MicrometerCapabilityTest {
         meter.getId().getTag("host"),
         // hostname is blank due to feign-mock shortfalls
         equalTo("")));
+  }
+
+  @Test
+  public void shouldTestConcurrentCreateInstances()
+      throws InterruptedException, ExecutionException {
+
+    // Given
+    final Feign.Builder builder = Feign.builder().contract(new SpringMvcContract())
+        .encoder(new JacksonEncoder())
+        .decoder(new JacksonDecoder())
+        .retryer(Retryer.NEVER_RETRY)
+        .options(new Options());
+
+
+    final MultithreadTester<Feign.Builder, ApiRestTest> tester = new MultithreadTester<>(
+        builder, 1000);
+
+    // When
+    final List<Future<ApiRestTest>> threadsExecution = tester.run(feignBuilder -> {
+
+
+      final long t1 = System.currentTimeMillis();
+
+      final ApiRestTest apiRestTest = feignBuilder
+          .addCapability(new MicrometerCapability())
+          .target(ApiRestTest.class, "http://localhost:8080");
+
+      final long t2 = System.currentTimeMillis();
+
+      System.out.println("Time elapsed in the creation of the client rest:" + (t2 - t1));
+
+      return apiRestTest;
+
+
+    });
+
+    for (final Future<ApiRestTest> threadExecution : threadsExecution) {
+      final ApiRestTest apiRestTest = threadExecution.get();
+      assertNotNull(apiRestTest);
+    }
+
+  }
+
+  private interface ApiRestTest {
+    @GetMapping(path = "/apiRest")
+    public Object find(@RequestParam(value = "clientId") Long clientId);
   }
 
 }
