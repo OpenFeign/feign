@@ -23,9 +23,9 @@ import java.util.List;
 import feign.MethodMetadata;
 import feign.Target;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.config.NamingConvention;
+import io.micrometer.core.instrument.Tags;
 
-public final class FeignMetricName {
+public final class FeignMetricName implements MetricName {
 
   private final Class<?> meteredComponent;
 
@@ -33,27 +33,31 @@ public final class FeignMetricName {
     this.meteredComponent = meteredComponent;
   }
 
+  @Override
   public String name(String suffix) {
     return name()
         // any separator, so naming convention can change it
         + "." + suffix;
   }
 
+  @Override
   public String name() {
     return meteredComponent.getName();
   }
 
-  public List<Tag> tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags) {
+  @Override
+  public Tags tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags) {
     return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), tags);
   }
 
-  public List<Tag> tag(Class<?> targetType, Method method, String url, Tag... extraTags) {
+  @Override
+  public Tags tag(Class<?> targetType, Method method, String url, Tag... extraTags) {
     List<Tag> tags = new ArrayList<>();
     tags.add(Tag.of("client", targetType.getName()));
     tags.add(Tag.of("method", method.getName()));
     tags.add(Tag.of("host", extractHost(url)));
     tags.addAll(Arrays.asList(extraTags));
-    return tags;
+    return Tags.of(tags);
   }
 
   private String extractHost(final String targetUrl) {

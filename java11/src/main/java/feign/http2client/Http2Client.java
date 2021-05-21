@@ -13,6 +13,11 @@
  */
 package feign.http2client;
 
+import feign.Client;
+import feign.Request;
+import feign.Request.Options;
+import feign.Response;
+import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -26,11 +31,10 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import feign.*;
-import feign.Request.Options;
 
 public class Http2Client implements Client {
 
@@ -43,18 +47,26 @@ public class Http2Client implements Client {
         .build());
   }
 
+  public Http2Client(Options options) {
+    this(newClientBuilder(options)
+        .version(Version.HTTP_2)
+        .build());
+  }
+
   public Http2Client(HttpClient client) {
     this.client = Util.checkNotNull(client, "HttpClient must not be null");
   }
 
   @Override
   public Response execute(Request request, Options options) throws IOException {
-    final HttpRequest httpRequest = newRequestBuilder(request).build();
+    final HttpRequest httpRequest = newRequestBuilder(request, options).build();
+    HttpClient clientForRequest = getOrCreateClient(options);
 
     HttpResponse<byte[]> httpResponse;
     try {
-      httpResponse = client.send(httpRequest, BodyHandlers.ofByteArray());
+      httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
     } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new IOException("Invalid uri " + request.url(), e);
     }
 
@@ -71,7 +83,40 @@ public class Http2Client implements Client {
     return response;
   }
 
-  private Builder newRequestBuilder(Request request) throws IOException {
+  private HttpClient getOrCreateClient(Options options) {
+    if (doesClientConfigurationDiffer(options)) {
+      // create a new client from the existing one - but with connectTimeout and followRedirect
+      // settings from options
+      java.net.http.HttpClient.Builder builder = newClientBuilder(options)
+          .sslContext(client.sslContext())
+          .sslParameters(client.sslParameters())
+          .version(client.version());
+      client.authenticator().ifPresent(builder::authenticator);
+      client.cookieHandler().ifPresent(builder::cookieHandler);
+      client.executor().ifPresent(builder::executor);
+      client.proxy().ifPresent(builder::proxy);
+      return builder.build();
+    }
+    return client;
+  }
+
+  private boolean doesClientConfigurationDiffer(Options options) {
+    if ((client.followRedirects() == Redirect.ALWAYS) != options.isFollowRedirects()) {
+      return true;
+    }
+    return client.connectTimeout()
+        .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
+        .orElse(true);
+  }
+
+  private static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
+    return HttpClient
+        .newBuilder()
+        .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
+        .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
+  }
+
+  private Builder newRequestBuilder(Request request, Options options) throws IOException {
     URI uri;
     try {
       uri = new URI(request.url());
@@ -89,6 +134,7 @@ public class Http2Client implements Client {
 
     final Builder requestBuilder = HttpRequest.newBuilder()
         .uri(uri)
+        .timeout(Duration.ofMillis(options.readTimeoutMillis()))
         .version(Version.HTTP_2);
 
     final Map<String, Collection<String>> headers = filterRestrictedHeaders(request.headers());
@@ -152,8 +198,7 @@ public class Http2Client implements Client {
             .stream()
             .map(value -> Arrays.asList(entry.getKey(), value))
             .flatMap(List::stream))
-        .collect(Collectors.toList())
-        .toArray(new String[0]);
+        .toArray(String[]::new);
   }
 
 }

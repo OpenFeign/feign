@@ -23,6 +23,7 @@ import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 /**
  * Warp feign {@link Decoder} with metrics.
@@ -31,12 +32,16 @@ public class MeteredDecoder implements Decoder {
 
   private final Decoder decoder;
   private final MeterRegistry meterRegistry;
-  private final FeignMetricName metricName;
+  private final MetricName metricName;
 
   public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry) {
+    this(decoder, meterRegistry, new FeignMetricName(Decoder.class));
+  }
+
+  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry, MetricName metricName) {
     this.decoder = decoder;
     this.meterRegistry = meterRegistry;
-    this.metricName = new FeignMetricName(Decoder.class);
+    this.metricName = metricName;
   }
 
   @Override
@@ -55,9 +60,19 @@ public class MeteredDecoder implements Decoder {
           .timer(metricName.name(),
               metricName.tag(template.methodMetadata(), template.feignTarget()))
           .recordCallable(() -> decoder.decode(meteredResponse, type));
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
+      meterRegistry.counter(
+          metricName.name("error_count"),
+          metricName.tag(template.methodMetadata(), template.feignTarget())
+              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
+          .count();
       throw e;
     } catch (Exception e) {
+      meterRegistry.counter(
+          metricName.name("error_count"),
+          metricName.tag(template.methodMetadata(), template.feignTarget())
+              .and(Tag.of("exception_name", e.getClass().getSimpleName())))
+          .count();
       throw new IOException(e);
     }
 

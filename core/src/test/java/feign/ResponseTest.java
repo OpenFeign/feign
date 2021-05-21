@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign;
 
 import feign.Request.HttpMethod;
+import java.nio.charset.StandardCharsets;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class ResponseTest {
         .build();
 
     assertThat(response.reason()).isNull();
-    assertThat(response.toString()).isEqualTo("HTTP/1.1 200\n\n");
+    assertThat(response.toString()).startsWith("HTTP/1.1 200");
   }
 
   @Test
