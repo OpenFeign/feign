@@ -33,6 +33,7 @@
     <module>hystrix</module>
     <module>jackson</module>
     <module>jackson-jaxb</module>
+    <module>jackson-jr</module>
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
@@ -72,9 +73,10 @@
     <main.basedir>${project.basedir}</main.basedir>
 
     <okhttp3.version>4.6.0</okhttp3.version>
-    <googlehttpclient.version>1.31.0</googlehttpclient.version>
+    <guava.version>30.1.1-jre</guava.version>
+    <googlehttpclient.version>1.39.2</googlehttpclient.version>
     <gson.version>2.8.6</gson.version>
-    <slf4j.version>1.7.13</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <bouncy.version>1.60</bouncy.version>
 
     <junit.version>4.13.1</junit.version>
@@ -333,6 +335,18 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-objects</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jr</groupId>
+        <artifactId>jackson-jr-annotation-support</artifactId>
         <version>${jackson.version}</version>
       </dependency>
 
@@ -830,7 +844,7 @@
     <profile>
       <id>active-on-jdk-11</id>
       <activation>
-        <jdk>11</jdk>
+        <jdk>[11,)</jdk>
       </activation>
       <modules>
         <module>java11</module>

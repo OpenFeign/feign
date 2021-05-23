@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,18 +13,19 @@
  */
 package feign.slf4j;
 
-import feign.Request.HttpMethod;
-import feign.Util;
+import java.util.Collection;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
-import java.util.Collection;
-import java.util.Collections;
+import org.slf4j.impl.RecordingSimpleLogger;
 import feign.Feign;
 import feign.Logger;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 
 @SuppressWarnings("deprecation")
 public class Slf4jLoggerTest {

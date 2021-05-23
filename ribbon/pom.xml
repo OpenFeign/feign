@@ -29,7 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <ribbon-version>2.3.0</ribbon-version>
+    <ribbon-version>2.7.18</ribbon-version>
   </properties>
 
   <dependencyManagement>
@@ -37,7 +37,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>24.1.1-jre</version>
+        <version>${guava.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -51,6 +51,12 @@
     <dependency>
       <groupId>com.netflix.ribbon</groupId>
       <artifactId>ribbon-core</artifactId>
+      <version>${ribbon-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.ribbon</groupId>
+      <artifactId>ribbon-archaius</artifactId>
       <version>${ribbon-version}</version>
     </dependency>
 
