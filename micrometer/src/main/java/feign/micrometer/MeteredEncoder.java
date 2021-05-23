@@ -56,15 +56,15 @@ public class MeteredEncoder implements Encoder {
     }
   }
 
-  private Timer createTimer(Object object, Type bodyType, RequestTemplate template) {
+  protected Timer createTimer(Object object, Type bodyType, RequestTemplate template) {
     final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
         extraTags(object, bodyType, template));
     return meterRegistry.timer(metricName.name(), allTags);
   }
 
-  private DistributionSummary createSummary(Object object,
-                                            Type bodyType,
-                                            RequestTemplate template) {
+  protected DistributionSummary createSummary(Object object,
+                                              Type bodyType,
+                                              RequestTemplate template) {
     final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
         extraTags(object, bodyType, template));
     return meterRegistry.summary(metricName.name("response_size"), allTags);
