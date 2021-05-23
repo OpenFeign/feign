@@ -49,21 +49,28 @@ public class MeteredClient implements Client {
   @Override
   public Response execute(Request request, Options options) throws IOException {
     final Timer.Sample sample = Timer.start(meterRegistry);
+    Timer timer = null;
     try {
       final Response response = client.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
-      final Timer timer = createTimer(request, response, options, null);
+      timer = createTimer(request, response, options, null);
       sample.stop(timer);
       return response;
     } catch (FeignException e) {
+      timer = createTimer(request, null, options, e);
       countResponseCode(request, null, options, e.status(), e);
       throw e;
     } catch (IOException | RuntimeException e) {
-      sample.stop(createTimer(request, null, options, e));
+      timer = createTimer(request, null, options, e);
       throw e;
     } catch (Exception e) {
-      sample.stop(createTimer(request, null, options, e));
+      timer = createTimer(request, null, options, e);
       throw new IOException(e);
+    } finally {
+      if (timer == null) {
+        timer = createTimer(request, null, options, null);
+      }
+      sample.stop(timer);
     }
   }
 

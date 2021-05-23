@@ -58,18 +58,24 @@ public class MeteredDecoder implements Decoder {
     Object decoded;
 
     final Timer.Sample sample = Timer.start(meterRegistry);
+    Timer timer = null;
     try {
       decoded = decoder.decode(meteredResponse, type);
-      final Timer timer = createTimer(response, type, null);
+      timer = createTimer(response, type, null);
       sample.stop(timer);
     } catch (IOException | RuntimeException e) {
-      sample.stop(createTimer(response, type, e));
+      timer = createTimer(response, type, e);
       createExceptionCounter(response, type, e).count();
       throw e;
     } catch (Exception e) {
-      sample.stop(createTimer(response, type, e));
+      timer = createTimer(response, type, e);
       createExceptionCounter(response, type, e).count();
       throw new IOException(e);
+    } finally {
+      if (timer == null) {
+        timer = createTimer(response, type, null);
+      }
+      sample.stop(timer);
     }
 
     body.ifPresent(b -> createSummary(response, type).record(b.count()));

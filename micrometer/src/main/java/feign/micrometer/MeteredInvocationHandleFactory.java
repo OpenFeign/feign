@@ -65,10 +65,11 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
       }
 
       final Timer.Sample sample = Timer.start(meterRegistry);
+      Timer timer = null;
       try {
         try {
           final Object invoke = invocationHandle.invoke(proxy, method, args);
-          sample.stop(createTimer(target, method, args, null));
+          timer = createTimer(target, method, args, null);
           return invoke;
         } catch (Exception e) {
           throw e;
@@ -76,13 +77,18 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
           throw new Exception(e);
         }
       } catch (final FeignException e) {
-        sample.stop(createTimer(target, method, args, e));
+        timer = createTimer(target, method, args, e);
         createFeignExceptionCounter(target, method, args, e).increment();
         throw e;
       } catch (final Throwable e) {
-        sample.stop(createTimer(target, method, args, e));
+        timer = createTimer(target, method, args, e);
         createExceptionCounter(target, method, args, e).increment();
         throw e;
+      } finally {
+        if (timer == null) {
+          timer = createTimer(target, method, args, null);
+        }
+        sample.stop(timer);
       }
     };
   }
