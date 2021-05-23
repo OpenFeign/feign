@@ -18,7 +18,6 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import io.micrometer.core.instrument.*;
 import java.lang.reflect.Type;
-
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
@@ -29,16 +28,16 @@ public class MeteredEncoder implements Encoder {
   private final Encoder encoder;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
-  private final  MetricTagResolver metricTagResolver;
+  private final MetricTagResolver metricTagResolver;
 
   public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry) {
     this(encoder, meterRegistry, new FeignMetricName(Encoder.class), new FeignMetricTagResolver());
   }
 
   public MeteredEncoder(Encoder encoder,
-                        MeterRegistry meterRegistry,
-                        MetricName metricName,
-                        MetricTagResolver metricTagResolver) {
+      MeterRegistry meterRegistry,
+      MetricName metricName,
+      MetricTagResolver metricTagResolver) {
     this.encoder = encoder;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;

@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
@@ -43,7 +42,8 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
 
   public MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,
       MeterRegistry meterRegistry) {
-    this(invocationHandler, meterRegistry, new FeignMetricName(Feign.class), new FeignMetricTagResolver());
+    this(invocationHandler, meterRegistry, new FeignMetricName(Feign.class),
+        new FeignMetricTagResolver());
   }
 
   public MeteredInvocationHandleFactory(InvocationHandlerFactory invocationHandler,

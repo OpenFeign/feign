@@ -22,7 +22,6 @@ import io.micrometer.core.instrument.*;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
-
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
@@ -39,7 +38,8 @@ public class MeteredDecoder implements Decoder {
     this(decoder, meterRegistry, new FeignMetricName(Decoder.class), new FeignMetricTagResolver());
   }
 
-  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry, MetricName metricName, MetricTagResolver metricTagResolver) {
+  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry, MetricName metricName,
+      MetricTagResolver metricTagResolver) {
     this.decoder = decoder;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
@@ -98,7 +98,8 @@ public class MeteredDecoder implements Decoder {
   protected DistributionSummary createSummary(Response response, Type type) {
     final Tag[] tags = extraTags(response, type, null);
     final RequestTemplate template = response.request().requestTemplate();
-    final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(), tags);
+    final Tags allTags =
+        metricTagResolver.tag(template.methodMetadata(), template.feignTarget(), tags);
     return meterRegistry.summary(metricName.name("response_size"), allTags);
   }
 

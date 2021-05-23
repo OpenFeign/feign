@@ -20,7 +20,6 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import java.io.IOException;
-
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
@@ -38,9 +37,9 @@ public class MeteredClient implements Client {
   }
 
   public MeteredClient(Client client,
-                       MeterRegistry meterRegistry,
-                       MetricName metricName,
-                       MetricTagResolver metricTagResolver) {
+      MeterRegistry meterRegistry,
+      MetricName metricName,
+      MetricTagResolver metricTagResolver) {
     this.client = client;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
