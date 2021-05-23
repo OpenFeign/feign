@@ -13,16 +13,13 @@
  */
 package feign.micrometer;
 
-
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.List;
 import feign.RequestTemplate;
-import feign.Response;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import io.micrometer.core.instrument.*;
 import java.lang.reflect.Type;
+
+import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
  * Warp feign {@link Encoder} with metrics.
@@ -32,15 +29,20 @@ public class MeteredEncoder implements Encoder {
   private final Encoder encoder;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
+  private final  MetricTagResolver metricTagResolver;
 
   public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry) {
-    this(encoder, meterRegistry, new FeignMetricName(Encoder.class));
+    this(encoder, meterRegistry, new FeignMetricName(Encoder.class), new FeignMetricTagResolver());
   }
 
-  public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry, MetricName metricName) {
+  public MeteredEncoder(Encoder encoder,
+                        MeterRegistry meterRegistry,
+                        MetricName metricName,
+                        MetricTagResolver metricTagResolver) {
     this.encoder = encoder;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
+    this.metricTagResolver = metricTagResolver;
   }
 
   @Override
@@ -55,26 +57,20 @@ public class MeteredEncoder implements Encoder {
   }
 
   private Timer createTimer(Object object, Type bodyType, RequestTemplate template) {
-    final List<Tag> successTags = extraTimerTags(object, bodyType, template);
-    final Tag[] tags = successTags.toArray(new Tag[] {});
-    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
+        extraTags(object, bodyType, template));
     return meterRegistry.timer(metricName.name(), allTags);
   }
 
   private DistributionSummary createSummary(Object object,
                                             Type bodyType,
                                             RequestTemplate template) {
-    final List<Tag> successTags = extraSummaryTags(object, bodyType, template);
-    final Tag[] tags = successTags.toArray(new Tag[] {});
-    final Tags allTags = metricName.tag(template.methodMetadata(), template.feignTarget(), tags);
+    final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
+        extraTags(object, bodyType, template));
     return meterRegistry.summary(metricName.name("response_size"), allTags);
   }
 
-  protected List<Tag> extraTimerTags(Object object, Type bodyType, RequestTemplate template) {
-    return Collections.emptyList();
-  }
-
-  protected List<Tag> extraSummaryTags(Object object, Type bodyType, RequestTemplate template) {
-    return Collections.emptyList();
+  protected Tag[] extraTags(Object object, Type bodyType, RequestTemplate template) {
+    return EMPTY_TAGS_ARRAY;
   }
 }
