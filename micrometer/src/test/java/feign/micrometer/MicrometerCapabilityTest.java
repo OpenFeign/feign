@@ -24,9 +24,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.Test;
-import org.springframework.cloud.openfeign.support.SpringMvcContract;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import feign.Capability;
 import feign.Feign;
 import feign.Request.Options;
@@ -41,7 +38,7 @@ import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 public class MicrometerCapabilityTest
-    extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
+extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
 
   @Override
   protected SimpleMeterRegistry createMetricsRegistry() {
@@ -115,25 +112,25 @@ public class MicrometerCapabilityTest
       throws InterruptedException, ExecutionException {
 
     // Given
-    final Feign.Builder builder = Feign.builder().contract(new SpringMvcContract())
+    final Feign.Builder builder = Feign.builder()
         .encoder(new JacksonEncoder())
         .decoder(new JacksonDecoder())
         .retryer(Retryer.NEVER_RETRY)
         .options(new Options());
 
 
-    final MultithreadTester<Feign.Builder, ApiRestTest> tester = new MultithreadTester<>(
+    final MultithreadTester<Feign.Builder, SimpleSource> tester = new MultithreadTester<>(
         builder, 1000);
 
     // When
-    final List<Future<ApiRestTest>> threadsExecution = tester.run(feignBuilder -> {
+    final List<Future<SimpleSource>> threadsExecution = tester.run(feignBuilder -> {
 
 
       final long t1 = System.currentTimeMillis();
 
-      final ApiRestTest apiRestTest = feignBuilder
+      final SimpleSource apiRestTest = feignBuilder
           .addCapability(new MicrometerCapability())
-          .target(ApiRestTest.class, "http://localhost:8080");
+          .target(SimpleSource.class, "http://localhost:8080");
 
       final long t2 = System.currentTimeMillis();
 
@@ -144,17 +141,15 @@ public class MicrometerCapabilityTest
 
     });
 
-    for (final Future<ApiRestTest> threadExecution : threadsExecution) {
-      final ApiRestTest apiRestTest = threadExecution.get();
+    // Then
+    for (final Future<SimpleSource> threadExecution : threadsExecution) {
+      final SimpleSource apiRestTest = threadExecution.get();
       assertNotNull(apiRestTest);
     }
 
   }
 
-  private interface ApiRestTest {
-    @GetMapping(path = "/apiRest")
-    public Object find(@RequestParam(value = "clientId") Long clientId);
-  }
+
 
 
 }
