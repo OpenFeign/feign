@@ -13,13 +13,18 @@
  */
 package feign;
 
-import feign.InvocationHandlerFactory.MethodHandler;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import feign.InvocationHandlerFactory.MethodHandler;
+
+//
+// import static org.graalvm.compiler.debug.DebugOptions.Log;
 
 /**
  * Handles default methods by directly invoking the default method code on the interface. The bindTo
@@ -29,61 +34,28 @@ final class DefaultMethodHandler implements MethodHandler {
   // Uses Java 7 MethodHandle based reflection. As default methods will only exist when
   // run on a Java 8 JVM this will not affect use on legacy JVMs.
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
-  private final MethodHandle unboundHandle;
+  public MethodHandle unboundHandle;
 
   // handle is effectively final after bindTo has been called.
-  private MethodHandle handle;
+  public MethodHandle handle;
 
   public DefaultMethodHandler(Method defaultMethod) {
-    Class<?> declaringClass = defaultMethod.getDeclaringClass();
-
     try {
-      Lookup lookup = readLookup(declaringClass);
+
+      Constructor<Lookup> lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class);
+
+      lookupConstructor.setAccessible(true);
+
+      Class<?> declaringClass = defaultMethod.getDeclaringClass();
+
+      Lookup lookup = lookupConstructor.newInstance(declaringClass);
+
       this.unboundHandle = lookup.unreflectSpecial(defaultMethod, declaringClass);
-    } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException ex) {
+    } catch (IllegalAccessException ex) {
       throw new IllegalStateException(ex);
+    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+       e.printStackTrace();
     }
-
-  }
-
-  private Lookup readLookup(Class<?> declaringClass)
-      throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
-    try {
-      return safeReadLookup(declaringClass);
-    } catch (NoSuchMethodException e) {
-      return legacyReadLookup();
-    }
-  }
-
-  /**
-   * equivalent to:
-   *
-   * <pre>
-   * return MethodHandles.privateLookupIn(declaringClass, MethodHandles.lookup());
-   * </pre>
-   *
-   * @param declaringClass
-   * @return
-   * @throws IllegalAccessException
-   * @throws InvocationTargetException
-   * @throws NoSuchMethodException
-   */
-  private Lookup safeReadLookup(Class<?> declaringClass)
-      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-    Lookup lookup = MethodHandles.lookup();
-
-    Object privateLookupIn =
-        MethodHandles.class.getMethod("privateLookupIn", Class.class, Lookup.class)
-            .invoke(null, declaringClass, lookup);
-    return (Lookup) privateLookupIn;
-  }
-
-  private Lookup legacyReadLookup() throws NoSuchFieldException, IllegalAccessException {
-    Field field = Lookup.class.getDeclaredField("IMPL_LOOKUP");
-    field.setAccessible(true);
-    Lookup lookup = (Lookup) field.get(null);
-    return lookup;
   }
 
   /**
