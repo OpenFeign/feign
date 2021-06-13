@@ -13,15 +13,19 @@
  */
 package feign;
 
+
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 import feign.InvocationHandlerFactory.MethodHandler;
+//import kotlin.jvm.internal.Intrinsics;
 
 //
 // import static org.graalvm.compiler.debug.DebugOptions.Log;
@@ -34,28 +38,60 @@ final class DefaultMethodHandler implements MethodHandler {
   // Uses Java 7 MethodHandle based reflection. As default methods will only exist when
   // run on a Java 8 JVM this will not affect use on legacy JVMs.
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
-  private MethodHandle unboundHandle;
+  public MethodHandle unboundHandle;
 
   // handle is effectively final after bindTo has been called.
   private MethodHandle handle;
 
+
+
   public DefaultMethodHandler(Method defaultMethod) {
+      /**
+       * 13/06/2021
+       *
+       * Modified to work with Android. Previous commit worked up to API level 28 (Android 8)
+       * however, Android 9+ enforces more strict checking with reflection.
+       *
+       * Solution is to use double reflection, as below.
+       *
+       * Jamie (xrpdevs-at-xrpdevs-co-uk)
+       *
+       * TODO: Integrate back into version forked from, keep original legacyReadLookup and safeReadLookup
+       *        and add conditional branch if running on Dalvik (android java runtime)
+       *
+       *        if (System.getProperty("java.vm.name").equalsIgnoreCase("Dalvik"))
+       *
+       **/
+
     try {
 
-      Constructor<Lookup> lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class);
+      Class classReference = Class.class;
 
-      lookupConstructor.setAccessible(true);
+      Class[] classType = new Class[] {Class.class};
+
+      Method var10001 = classReference.getDeclaredMethod(
+             "getDeclaredConstructor", Class[].class);
+
+        var10001.setAccessible(true);
+      Constructor<Lookup> someHiddenMethod =
+              (Constructor) var10001.invoke(Lookup.class, (Object) classType);
 
       Class<?> declaringClass = defaultMethod.getDeclaringClass();
 
-      Lookup lookup = lookupConstructor.newInstance(declaringClass);
+      Lookup lookup = someHiddenMethod.newInstance(declaringClass);
 
       this.unboundHandle = lookup.unreflectSpecial(defaultMethod, declaringClass);
+
     } catch (IllegalAccessException ex) {
       throw new IllegalStateException(ex);
-    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException e) {
-       e.printStackTrace();
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+        e.printStackTrace();
     }
+
   }
 
   /**
@@ -68,6 +104,9 @@ final class DefaultMethodHandler implements MethodHandler {
       throw new IllegalStateException(
           "Attempted to rebind a default method handler that was already bound");
     }
+
+    System.out.println("UnboundHandle: "+Dumper.dump(unboundHandle));
+
     handle = unboundHandle.bindTo(proxy);
   }
 
