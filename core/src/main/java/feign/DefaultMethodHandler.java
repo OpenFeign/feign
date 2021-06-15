@@ -54,7 +54,7 @@ final class DefaultMethodHandler implements MethodHandler {
             if (System.getProperty("java.vm.name").equalsIgnoreCase("Dalvik")) {
                 return androidLookup(declaringClass);
             } else {
-                return readLookup(declaringClass);
+                return safeReadLookup(declaringClass);
             }
         } catch (NoSuchMethodException | InstantiationException e) {
             return legacyReadLookup();
