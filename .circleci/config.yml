@@ -124,7 +124,7 @@ jobs:
             mvn -o test
       - verify-formatting
   android-test:
-    # These next lines define the Android machine image executor: https://circleci.com/docs/2.0/executor-types/
+    # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
     executor:
       name: android/android-machine
 
