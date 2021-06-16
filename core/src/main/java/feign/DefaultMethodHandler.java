@@ -66,29 +66,20 @@ final class DefaultMethodHandler implements MethodHandler {
     Lookup lookup;
     try {
       // Android 9+ double reflection
-
-
       Class<Class> classReference = Class.class;
-
       Class[] classType = new Class[] {Class.class};
-
-      Method var10001 = classReference.getDeclaredMethod(
+      Method reflectedGetDeclaredConstructor = classReference.getDeclaredMethod(
           "getDeclaredConstructor",
           Class[].class);
-
-      var10001.setAccessible(true);
+      reflectedGetDeclaredConstructor.setAccessible(true);
       Constructor someHiddenMethod =
-          (Constructor) var10001.invoke(Lookup.class, (Object) classType);
+          (Constructor) reflectedGetDeclaredConstructor.invoke(Lookup.class, (Object) classType);
       lookup = (Lookup) someHiddenMethod.newInstance(declaringClass);
-      // return(lookup);
-      // aMH = lookup.unreflectSpecial(defaultMethod, declaringClass);
     } catch (IllegalAccessException ex0) {
       // Android < 9 reflection
       Constructor<Lookup> lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class);
       lookupConstructor.setAccessible(true);
       lookup = lookupConstructor.newInstance(declaringClass);
-
-      // aMH = lookup.unreflectSpecial(defaultMethod, declaringClass);
     }
     return (lookup);
   }
