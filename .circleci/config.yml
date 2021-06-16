@@ -189,9 +189,9 @@ workflows:
           name: 'jdk 14'
           filters:
             <<: *all-branches
-  build-android:
-      jobs:
-        - android-test
+      - test:
+          name: 'android test'
+          - android-test
 
   snapshot:
     jobs:
