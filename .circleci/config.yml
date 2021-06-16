@@ -128,7 +128,7 @@ jobs:
 
       # The next step will run the unit tests
       - android/run-tests:
-        test-command: "./gradlew lint testDebug --continue"
+   #     test-command: "./gradlew lint testDebug --continue"
 
   deploy:
     parameters:
