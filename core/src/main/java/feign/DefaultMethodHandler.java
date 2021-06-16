@@ -32,7 +32,7 @@ final class DefaultMethodHandler implements MethodHandler {
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
   private final MethodHandle unboundHandle;
 
-  // handle is effectively final after bindTo has been called..
+  // handle is effectively final after bindTo has been called...
   private MethodHandle handle;
 
   public DefaultMethodHandler(Method defaultMethod) {
