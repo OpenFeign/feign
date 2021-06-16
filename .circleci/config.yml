@@ -186,17 +186,7 @@ workflows:
           name: 'jdk 14'
           filters:
             <<: *all-branches
-      - test:
-          executor:
-            name: android/android-machine
-
-            steps:
-              # Checkout the code as the first step.
-              - checkout
-
-              # The next step will run the unit tests
-              - android/run-tests:
-                test-command: "./gradlew lint testDebug --continue"
+      - android-test:
 
   snapshot:
     jobs:
