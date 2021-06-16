@@ -25,7 +25,14 @@ executors:
         type: string
     docker:
       - image: circleci/openjdk:<<parameters.version>>
-
+  android:
+    parameters:
+      version:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    docker:
+      - image: circleci/openjdk:<<parameters.version>>
 # common commands
 commands:
   resolve-dependencies:
@@ -191,8 +198,7 @@ workflows:
             <<: *all-branches
       - test:
           name: 'android test'
-          steps:
-            - android-test
+          - android-test
 
   snapshot:
     jobs:
