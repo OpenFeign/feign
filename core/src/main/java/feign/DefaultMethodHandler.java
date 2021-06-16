@@ -51,9 +51,9 @@ final class DefaultMethodHandler implements MethodHandler {
   private Lookup readLookup(Class<?> declaringClass)
       throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
     try {
-        return safeReadLookup(declaringClass);
+      return safeReadLookup(declaringClass);
     } catch (NoSuchMethodException e) {
-      try{
+      try {
         return androidLookup(declaringClass);
       } catch (InstantiationException | NoSuchMethodException instantiationException) {
         return legacyReadLookup();
