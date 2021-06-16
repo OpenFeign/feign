@@ -12,6 +12,9 @@
 # the License.
 #
 
+orbs:
+  android: circleci/android@1.0.3
+
 # common executors
 executors:
   java:
@@ -22,7 +25,14 @@ executors:
         type: string
     docker:
       - image: circleci/openjdk:<<parameters.version>>
-
+  android:
+    parameters:
+      version:
+        description: 'jdk version to use'
+        default: '8'
+        type: string
+    docker:
+      - image: circleci/openjdk:<<parameters.version>>
 # common commands
 commands:
   resolve-dependencies:
@@ -60,7 +70,6 @@ commands:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
             mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
-
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
@@ -114,6 +123,18 @@ jobs:
           command: |
             mvn -o test
       - verify-formatting
+  android-test:
+    # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
+    executor:
+      name: android/android-machine
+
+    steps:
+      # Checkout the code as the first step.
+      - checkout
+
+      # The next step will run the unit tests
+      - android/run-tests:
+          test-command: ./gradlew lint testDebug --continue
 
   deploy:
     parameters:
@@ -174,6 +195,9 @@ workflows:
           name: 'jdk 14'
           filters:
             <<: *all-branches
+      - test:
+          name: 'android test'
+
 
   snapshot:
     jobs:
@@ -228,3 +252,4 @@ workflows:
           context: Sonatype
           filters:
             <<: *tags-only
+
