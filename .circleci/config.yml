@@ -12,6 +12,9 @@
 # the License.
 #
 
+orbs:
+  android: circleci/android@1.0.3
+
 # common executors
 executors:
   java:
