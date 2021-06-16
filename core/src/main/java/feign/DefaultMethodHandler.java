@@ -51,13 +51,13 @@ final class DefaultMethodHandler implements MethodHandler {
   private Lookup readLookup(Class<?> declaringClass)
       throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
     try {
-      if (System.getProperty("java.vm.name").equalsIgnoreCase("Dalvik")) {
-        return androidLookup(declaringClass);
-      } else {
         return safeReadLookup(declaringClass);
+    } catch (NoSuchMethodException e) {
+      try{
+        return androidLookup(declaringClass);
+      } catch (InstantiationException | NoSuchMethodException instantiationException) {
+        return legacyReadLookup();
       }
-    } catch (NoSuchMethodException | InstantiationException e) {
-      return legacyReadLookup();
     }
   }
 
