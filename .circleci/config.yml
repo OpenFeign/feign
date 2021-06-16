@@ -177,11 +177,10 @@ workflows:
           name: 'jdk 14'
           filters:
             <<: *all-branches
-      -test:
-          - android/run-ui-tests:
-              name: build-and-test
-              system-image: system-images;android-23;google_apis;x86
-              test-command: ./gradlew assemble sample:connectedDebugAndroidTest
+  build-android:
+      jobs:
+          - unit-test
+          - android-test
 
   snapshot:
     jobs:
