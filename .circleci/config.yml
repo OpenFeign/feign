@@ -198,7 +198,7 @@ workflows:
             <<: *all-branches
       - test:
           name: 'android test'
-          - android-test
+          android-test
 
   snapshot:
     jobs:
