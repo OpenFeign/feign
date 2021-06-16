@@ -114,6 +114,18 @@ jobs:
           command: |
             mvn -o test
       - verify-formatting
+  android-test:
+  # These next lines define the Android machine image executor: https://circleci.com/docs/2.0/executor-types/
+    executor:
+      name: android/android-machine
+
+    steps:
+      # Checkout the code as the first step.
+      - checkout
+
+      # The next step will run the unit tests
+      - android/run-tests:
+        test-command: "./gradlew lint testDebug --continue"
 
   deploy:
     parameters:
@@ -174,6 +186,7 @@ workflows:
           name: 'jdk 14'
           filters:
             <<: *all-branches
+
 
   snapshot:
     jobs:
