@@ -23,9 +23,9 @@
     <version>11.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-slf4j</artifactId>
-  <name>Feign SLF4J</name>
-  <description>Feign SLF4J</description>
+  <artifactId>feign-jackson-jr</artifactId>
+  <name>Feign Jackson Jr</name>
+  <description>Feign Jackson Jr</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -38,22 +38,20 @@
     </dependency>
 
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
+      <groupId>com.fasterxml.jackson.jr</groupId>
+      <artifactId>jackson-jr-objects</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.jr</groupId>
+      <artifactId>jackson-jr-annotation-support</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
       <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

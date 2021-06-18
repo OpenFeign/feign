@@ -36,7 +36,7 @@
       <dependency>
         <groupId>com.netflix.archaius</groupId>
         <artifactId>archaius-core</artifactId>
-        <version>0.7.6</version>
+        <version>0.7.7</version>
       </dependency>
 
       <dependency>
@@ -48,7 +48,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>24.1.1-jre</version>
+        <version>${guava.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
