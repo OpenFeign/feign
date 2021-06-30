@@ -26,6 +26,7 @@
 *** Jackson JAXB
 *** Jackson Jr
 *** Sax
+*** JSON-java
 ** metrics
 *** Dropwizard Metrics 5
 *** Micrometer
