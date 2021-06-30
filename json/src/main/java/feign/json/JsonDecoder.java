@@ -74,9 +74,9 @@ public class JsonDecoder implements Decoder {
 
   private Object decodeJSON(Response response, Type type, Reader reader) {
     JSONTokener tokenizer = new JSONTokener(reader);
-    if (JSONObject.class == type)
+    if (JSONObject.class.isAssignableFrom((Class<?>) type))
       return new JSONObject(tokenizer);
-    else if (JSONArray.class == type)
+    else if (JSONArray.class.isAssignableFrom((Class<?>) type))
       return new JSONArray(tokenizer);
     else
       throw new DecodeException(response.status(),

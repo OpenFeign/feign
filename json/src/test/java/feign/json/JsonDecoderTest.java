@@ -181,4 +181,38 @@ public class JsonDecoderTest {
     assertEquals("test exception", exception.getMessage());
   }
 
+  @Test
+  public void decodesExtendedArray() throws IOException {
+    String json = "[{\"a\":\"b\",\"c\":1},123]";
+    Response response = Response.builder()
+        .status(204)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body(json, UTF_8)
+        .request(request)
+        .build();
+    assertTrue(jsonArray.similar(new JsonDecoder().decode(response, ExtendedJSONArray.class)));
+  }
+
+  @Test
+  public void decodeExtendedObject() throws IOException {
+    String json = "{\"a\":\"b\",\"c\":1}";
+    Response response = Response.builder()
+        .status(204)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body(json, UTF_8)
+        .request(request)
+        .build();
+    assertTrue(jsonObject.similar(new JsonDecoder().decode(response, ExtendedJSONObject.class)));
+  }
+
+  static class ExtendedJSONArray extends JSONArray {
+
+  }
+
+  static class ExtendedJSONObject extends JSONObject {
+
+  }
+
 }
