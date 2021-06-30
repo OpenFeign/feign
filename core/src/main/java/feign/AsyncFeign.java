@@ -159,6 +159,7 @@ public abstract class AsyncFeign<C> extends Feign {
      */
     public AsyncBuilder<C> logLevel(Logger.Level logLevel) {
       builder.logLevel(logLevel);
+      this.logLevel = logLevel
       return this;
     }
 
