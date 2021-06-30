@@ -87,6 +87,18 @@ public class JsonDecoderTest {
   }
 
   @Test
+  public void emptyBodyDecodesToNull() throws IOException {
+    Response response = Response.builder()
+        .status(204)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body("", UTF_8)
+        .request(request)
+        .build();
+    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+  }
+
+  @Test
   public void unknownTypeThrowsDecodeException() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
@@ -117,6 +129,40 @@ public class JsonDecoderTest {
     assertEquals("A JSONArray text must start with '[' at 1 [character 2 line 1]",
         exception.getMessage());
     assertTrue(exception.getCause() instanceof JSONException);
+  }
+
+  @Test
+  public void causedByCommonException() throws IOException {
+    Response.Body body = mock(Response.Body.class);
+    when(body.asReader(any())).thenThrow(new JSONException("test exception",
+        new Exception("test cause exception")));
+    Response response = Response.builder()
+        .status(204)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body(body)
+        .request(request)
+        .build();
+    Exception exception = assertThrows(DecodeException.class,
+        () -> new JsonDecoder().decode(response, JSONArray.class));
+    assertEquals("test exception", exception.getMessage());
+  }
+
+  @Test
+  public void causedByIOException() throws IOException {
+    Response.Body body = mock(Response.Body.class);
+    when(body.asReader(any())).thenThrow(new JSONException("test exception",
+        new IOException("test cause exception")));
+    Response response = Response.builder()
+        .status(204)
+        .reason("OK")
+        .headers(Collections.emptyMap())
+        .body(body)
+        .request(request)
+        .build();
+    Exception exception = assertThrows(IOException.class,
+        () -> new JsonDecoder().decode(response, JSONArray.class));
+    assertEquals("test cause exception", exception.getMessage());
   }
 
   @Test
