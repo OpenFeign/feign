@@ -110,6 +110,35 @@ public class FeignExceptionTest {
         .isNotEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
   }
 
+  @Test
+  public void canGetResponseHeadersFromException() {
+    Request request = Request.create(
+        Request.HttpMethod.GET,
+        "/home",
+        Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    Map<String, Collection<String>> responseHeaders = new HashMap<>();
+    responseHeaders.put("Content-Type", Collections.singletonList("text/plain"));
+    responseHeaders.put("Cookie", Arrays.asList("cookie1", "cookie2"));
+
+    Response response = Response.builder()
+        .request(request)
+        .body("some text", StandardCharsets.UTF_8)
+        .headers(responseHeaders)
+        .build();
+
+    FeignException exception = FeignException.errorStatus("methodKey", response);
+    assertThat(exception.responseHeaders())
+        .hasEntrySatisfying("Content-Type", value -> {
+          assertThat(value).contains("text/plain");
+        }).hasEntrySatisfying("Cookie", value -> {
+          assertThat(value).contains("cookie1", "cookie2");
+        });
+  }
+
   @Test(expected = NullPointerException.class)
   public void nullRequestShouldThrowNPEwThrowable() {
     new Derived(404, "message", null, new Throwable());
