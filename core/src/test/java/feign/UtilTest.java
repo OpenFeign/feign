@@ -254,18 +254,18 @@ public class UtilTest {
   }
 
   @Test
-  public void copyIsUnmodified() {
+  public void copyIsUnmodifiable() {
     // Arrange
     Map<String, Collection<String>> sourceMap = new HashMap<>();
 
     sourceMap.put("First", Arrays.asList("abc", "qwerty", "xyz"));
     sourceMap.put("camelCase", Collections.singleton("123"));
     // Act
-    Map<String, Collection<String>> unmodifiedMap = caseInsensitiveCopyOf(sourceMap);
+    Map<String, Collection<String>> unmodifiableMap = caseInsensitiveCopyOf(sourceMap);
     // Assert result
-    assertThatThrownBy(() -> unmodifiedMap.put("new", Collections.singleton("223322")))
+    assertThatThrownBy(() -> unmodifiableMap.put("new", Collections.singleton("223322")))
         .isInstanceOf(UnsupportedOperationException.class);
-    assertThatThrownBy(() -> unmodifiedMap.get("camelCase").clear())
+    assertThatThrownBy(() -> unmodifiableMap.get("camelCase").clear())
         .isInstanceOf(UnsupportedOperationException.class);
   }
 

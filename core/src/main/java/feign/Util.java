@@ -356,7 +356,7 @@ public class Util {
   /**
    * Copy entire map of string collection.
    *
-   * The copy is unmodified map of unmodified collections.
+   * The copy is unmodifiable map of unmodifiable collections.
    *
    * @param map string collection map
    * @return copy of the map or an empty map if the map is null.
