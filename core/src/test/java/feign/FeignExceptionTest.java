@@ -117,7 +117,7 @@ public class FeignExceptionTest {
 
   @Test(expected = NullPointerException.class)
   public void nullRequestShouldThrowNPEwThrowableAndBytes() {
-    new Derived(404, "message", null, new Throwable(), new byte[1]);
+    new Derived(404, "message", null, new Throwable(), new byte[1], Collections.emptyMap());
   }
 
   @Test(expected = NullPointerException.class)
@@ -127,7 +127,7 @@ public class FeignExceptionTest {
 
   @Test(expected = NullPointerException.class)
   public void nullRequestShouldThrowNPEwBytes() {
-    new Derived(404, "message", null, new byte[1]);
+    new Derived(404, "message", null, new byte[1], Collections.emptyMap());
   }
 
   static class Derived extends FeignException {
@@ -136,16 +136,18 @@ public class FeignExceptionTest {
       super(status, message, request, cause);
     }
 
-    public Derived(int status, String message, Request request, Throwable cause, byte[] content) {
-      super(status, message, request, cause, content);
+    public Derived(int status, String message, Request request, Throwable cause, byte[] content,
+        Map<String, Collection<String>> headers) {
+      super(status, message, request, cause, content, headers);
     }
 
     public Derived(int status, String message, Request request) {
       super(status, message, request);
     }
 
-    public Derived(int status, String message, Request request, byte[] content) {
-      super(status, message, request, content);
+    public Derived(int status, String message, Request request, byte[] content,
+        Map<String, Collection<String>> headers) {
+      super(status, message, request, content, headers);
     }
   }
 
