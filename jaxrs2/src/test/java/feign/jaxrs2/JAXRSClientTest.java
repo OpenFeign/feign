@@ -92,11 +92,12 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
-    assertThat(response.headers()).hasEntrySatisfying("Content-Length", value -> {
-      assertThat(value).contains("3");
-    }).hasEntrySatisfying("Foo", value -> {
-      assertThat(value).contains("Bar");
-    });
+    assertThat(response.headers())
+        .hasEntrySatisfying("Content-Length", value -> {
+          assertThat(value).contains("3");
+        }).hasEntrySatisfying("Foo", value -> {
+          assertThat(value).contains("Bar");
+        });
     assertThat(response.body().asInputStream())
         .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
