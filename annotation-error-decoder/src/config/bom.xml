@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2017-2019 The Feign Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+    in compliance with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under the License
+    is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+    or implied. See the License for the specific language governing permissions and limitations under
+    the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>${model.groupId}</groupId>
+  <artifactId>${model.artifactId}</artifactId>
+  <version>${model.version}</version>
+  <name>${model.name}</name>
+  <packaging>pom</packaging>
+  <description>Bill of material</description>
+  #if ($model.url)
+
+  <url>${model.url}</url>#end
+  #if ($model.licenses && !$model.licenses.isEmpty())
+
+  <licenses>#foreach($l in $model.licenses)
+
+    <license>
+      <name>${l.name}</name>
+      <url>${l.url}</url>
+      <distribution>${l.distribution}</distribution>
+    </license>#end
+
+  </licenses>
+  #end
+
+#if ($model.developers && !$model.developers.isEmpty())
+  <developers>#foreach($d in $model.developers)
+
+    <developer>
+      <id>${d.id}</id>
+      <name>${d.name}</name>#if($d.email)
+
+      <email>${d.email}</email>#end#if($d.url)
+
+      <url>${d.url}</url>#end#if($d.organization)
+
+      <organization>${d.organization}</organization>#end#if($d.organizationUrl)
+
+      <organizationUrl>${d.organizationUrl}</organizationUrl>#end
+
+    </developer>#end
+
+  </developers>
+#end
+
+  <dependencyManagement>
+    <dependencies>#foreach($d in $model.dependencyManagement.dependencies)
+
+      <dependency>
+        <groupId>${d.groupId}</groupId>
+        <artifactId>${d.artifactId}</artifactId>
+        <version>${d.version}</version>#if( $d.scope && $!d.scope != '' )
+
+        <scope>${d.scope}</scope>#end#if( $d.type && $!d.type != '' && $!d.type != 'jar' && $!d.type != 'bundle')
+
+        <type>${d.type}</type>#end#if( $d.classifier && $!d.classifier != '' )
+
+        <classifier>${d.classifier}</classifier>#end#if( $d.exclusions && $d.exclusions.size() > 0 )
+
+        <exclusions>#foreach( $e in $d.exclusions )
+
+          <exclusion>
+            <groupId>${e.groupId}</groupId>
+            <artifactId>${e.artifactId}</artifactId>
+          </exclusion>#end
+
+        </exclusions>#end
+
+      </dependency>#end
+
+    </dependencies>
+  </dependencyManagement>
+
+</project>
