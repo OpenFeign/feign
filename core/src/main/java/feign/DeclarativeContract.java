@@ -43,7 +43,7 @@ public abstract class DeclarativeContract extends BaseContract {
    * (unless they are the same).
    *
    * @param data metadata collected so far relating to the current java method.
-   * @param clz the class to process
+   * @param targetType the class to process
    */
   @Override
   protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {
