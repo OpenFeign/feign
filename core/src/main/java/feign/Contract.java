@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -40,26 +40,25 @@ public interface Contract {
     private boolean alwaysEncodeBody;
 
     /**
-     * Returns whether a custom {@link feign.codec.Encoder}, if set for the client,
-     * should always be in charge of defining the request message body.
-     * See {@link #alwaysEncodeBody(boolean)} for further details.
+     * Returns whether a custom {@link feign.codec.Encoder}, if set for the client, should always be
+     * in charge of defining the request message body. See {@link #alwaysEncodeBody(boolean)} for
+     * further details.
      *
-     * @return whether a custom {@link feign.codec.Encoder}, if set for the client,
-     * should always be in charge of defining the request message body.
+     * @return whether a custom {@link feign.codec.Encoder}, if set for the client, should always be
+     *         in charge of defining the request message body.
      */
     protected boolean alwaysEncodeBody() {
       return alwaysEncodeBody;
     }
 
     /**
-     * Sets whether a custom {@link feign.codec.Encoder}, if set for the client,
-     * should always be in charge of defining the request message body.
-     * If set to false, the encoder will only be called if one, and only one,
-     * body parameter is provided and the method is not configured to
-     * have the body set via Feign annotations. This is false by default.
+     * Sets whether a custom {@link feign.codec.Encoder}, if set for the client, should always be in
+     * charge of defining the request message body. If set to false, the encoder will only be called
+     * if one, and only one, body parameter is provided and the method is not configured to have the
+     * body set via Feign annotations. This is false by default.
      *
-     * @param alwaysEncodeBody if true, custom {@link feign.codec.Encoder} will
-     *                         always be in charge of defining the request message body
+     * @param alwaysEncodeBody if true, custom {@link feign.codec.Encoder} will always be in charge
+     *        of defining the request message body
      */
     protected void alwaysEncodeBody(boolean alwaysEncodeBody) {
       this.alwaysEncodeBody = alwaysEncodeBody;
