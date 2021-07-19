@@ -54,6 +54,7 @@ commands:
           name: 'Configure GPG keys'
           command: |
             echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
+            gpg --keyserver keyserver.ubuntu.com --send-keys "ABA18559AB7620FC"
   nexus-deploy:
     steps:
       - run:
