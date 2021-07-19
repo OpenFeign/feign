@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>11.3-SNAPSHOT</version>
+  <version>11.3</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -724,6 +724,7 @@
           <serverId>ossrh</serverId>
           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
+          <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
         </configuration>
       </plugin>
     </plugins>
