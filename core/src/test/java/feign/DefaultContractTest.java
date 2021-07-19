@@ -15,7 +15,6 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
 import com.google.gson.reflect.TypeToken;
@@ -627,58 +626,6 @@ public class DefaultContractTest {
 
     @RequestLine(value = "GET /api/{zoneId}")
     String getZone(@Param("ZoneId") String vhost);
-  }
-
-  @Headers("Foo: Bar")
-  interface SimpleParameterizedBaseApi<M> {
-
-    @RequestLine("GET /api/{zoneId}")
-    M get(@Param("key") String key);
-  }
-
-  interface SimpleParameterizedApi extends SimpleParameterizedBaseApi<String> {}
-
-  @Test
-  public void simpleParameterizedBaseApi() throws Exception {
-    final List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
-
-    assertThat(md).hasSize(1);
-
-    assertThat(md.get(0).configKey()).isEqualTo("SimpleParameterizedApi#get(String)");
-    assertThat(md.get(0).returnType()).isEqualTo(String.class);
-    assertThat(md.get(0).template()).hasHeaders(entry("Foo", asList("Bar")));
-  }
-
-  @Test
-  public void parameterizedApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
-    contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
-  }
-
-  interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
-
-    @Override
-    @RequestLine("GET /api/{zoneId}")
-    String get(@Param("key") String key);
-  }
-
-  @Test
-  public void overrideBaseApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Overrides unsupported: OverrideParameterizedApi#get(String)");
-    contract.parseAndValidateMetadata(OverrideParameterizedApi.class);
-  }
-
-  interface Child<T> extends SimpleParameterizedBaseApi<List<T>> {}
-
-  interface GrandChild extends Child<String> {}
-
-  @Test
-  public void onlySingleLevelInheritanceSupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Only single-level inheritance supported: GrandChild");
-    contract.parseAndValidateMetadata(GrandChild.class);
   }
 
   @Headers("Foo: Bar")

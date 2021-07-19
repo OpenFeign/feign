@@ -18,9 +18,17 @@ import static feign.Util.emptyToNull;
 
 import feign.Request.HttpMethod;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,12 +58,6 @@ public interface Contract {
           targetType.getInterfaces().length <= 1,
           "Only single inheritance supported: %s",
           targetType.getSimpleName());
-      if (targetType.getInterfaces().length == 1) {
-        checkState(
-            targetType.getInterfaces()[0].getInterfaces().length == 0,
-            "Only single-level inheritance supported: %s",
-            targetType.getSimpleName());
-      }
       final Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (final Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class
@@ -64,10 +66,16 @@ public interface Contract {
           continue;
         }
         final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
-        checkState(
-            !result.containsKey(metadata.configKey()),
-            "Overrides unsupported: %s",
-            metadata.configKey());
+        if (result.containsKey(metadata.configKey())) {
+          MethodMetadata existingMetadata = result.get(metadata.configKey());
+          Type existingReturnType = existingMetadata.returnType();
+          Type overridingReturnType = metadata.returnType();
+          Type resolvedType = Types.resolveReturnType(existingReturnType, overridingReturnType);
+          if (resolvedType.equals(overridingReturnType)) {
+            result.put(metadata.configKey(), metadata);
+          }
+          continue;
+        }
         result.put(metadata.configKey(), metadata);
       }
       return new ArrayList<>(result.values());
@@ -175,15 +183,13 @@ public interface Contract {
       } else if (genericType instanceof Class<?>) {
         // raw class, type parameters cannot be inferred directly, but we can scan any extended
         // interfaces looking for any explict types
-        final Type[] interfaces = ((Class) genericType).getGenericInterfaces();
-        if (interfaces != null) {
-          for (final Type extended : interfaces) {
-            if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
-              // use the first extended interface we find.
-              final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
-              keyClass = (Class<?>) parameterTypes[0];
-              break;
-            }
+        final Type[] interfaces = ((Class<?>) genericType).getGenericInterfaces();
+        for (final Type extended : interfaces) {
+          if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
+            // use the first extended interface we find.
+            final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
+            keyClass = (Class<?>) parameterTypes[0];
+            break;
           }
         }
       }
