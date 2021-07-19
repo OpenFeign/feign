@@ -14,15 +14,9 @@
 package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 import feign.Request.HttpMethod;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 
@@ -57,8 +51,17 @@ public class ResponseTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
-    assertThat(response.headers().get("content-type")).isEqualTo(valueList);
-    assertThat(response.headers().get("Content-Type")).isEqualTo(valueList);
+    assertThat(response.headers())
+        .hasEntrySatisfying(
+            "content-type",
+            value -> {
+              assertThat(value).contains("application/json");
+            })
+        .hasEntrySatisfying(
+            "Content-Type",
+            value -> {
+              assertThat(value).contains("application/json");
+            });
   }
 
   @Test
@@ -76,9 +79,12 @@ public class ResponseTest {
             .body(new byte[0])
             .build();
 
-    List<String> expectedHeaderValue =
-        Arrays.asList("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
-    assertThat(response.headers()).containsOnly(entry(("set-cookie"), expectedHeaderValue));
+    assertThat(response.headers())
+        .hasEntrySatisfying(
+            "set-cookie",
+            value -> {
+              assertThat(value).contains("Cookie-A=Value", "Cookie-B=Value", "Cookie-C=Value");
+            });
   }
 
   @Test

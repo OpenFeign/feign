@@ -13,7 +13,6 @@
  */
 package feign;
 
-import static feign.ExceptionPropagationPolicy.*;
 import static feign.Util.*;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -547,8 +546,12 @@ public class FeignUnderAsyncTest {
             .client(new AsyncClient.Default<>((request, options) -> response, execs))
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(
-        api.response().headers().get("Location"), Collections.singletonList("http://bar.com"));
+    assertThat(api.response().headers())
+        .hasEntrySatisfying(
+            "Location",
+            value -> {
+              assertThat(value).contains("http://bar.com");
+            });
 
     execs.shutdown();
   }

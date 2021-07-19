@@ -34,10 +34,7 @@ public final class Response implements Closeable {
     this.status = builder.status;
     this.request = builder.request;
     this.reason = builder.reason; // nullable
-    this.headers =
-        (builder.headers != null)
-            ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
-            : new LinkedHashMap<>();
+    this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
   }
 
@@ -353,20 +350,5 @@ public final class Response implements Closeable {
 
     @Override
     public void close() throws IOException {}
-  }
-
-  private static Map<String, Collection<String>> caseInsensitiveCopyOf(
-      Map<String, Collection<String>> headers) {
-    Map<String, Collection<String>> result =
-        new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
-
-    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-      String headerName = entry.getKey();
-      if (!result.containsKey(headerName)) {
-        result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
-      }
-      result.get(headerName).addAll(entry.getValue());
-    }
-    return result;
   }
 }

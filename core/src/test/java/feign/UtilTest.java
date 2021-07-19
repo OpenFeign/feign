@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,23 +13,16 @@
  */
 package feign;
 
-import static feign.Util.emptyToNull;
-import static feign.Util.removeValues;
-import static feign.Util.resolveLastTypeParameter;
+import static feign.Util.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import org.junit.Assert;
+import java.util.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -164,7 +157,7 @@ public class UtilTest {
     // Act
     final Object retval = Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
     // Assert result
-    Assert.assertEquals(new Integer(0), retval);
+    assertEquals(new Integer(0), retval);
   }
 
   @Test
@@ -186,7 +179,7 @@ public class UtilTest {
     // Act
     final String retval = Util.emptyToNull(string);
     // Assert result
-    Assert.assertEquals("AAAAAAAA", retval);
+    assertEquals("AAAAAAAA", retval);
   }
 
   @Test
@@ -196,7 +189,7 @@ public class UtilTest {
     // Act
     final String retval = Util.emptyToNull(string);
     // Assert result
-    Assert.assertNull(retval);
+    assertNull(retval);
   }
 
   @Test
@@ -206,7 +199,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    Assert.assertEquals(false, retval);
+    assertEquals(false, retval);
   }
 
   @Test
@@ -216,7 +209,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    Assert.assertEquals(true, retval);
+    assertEquals(true, retval);
   }
 
   @Test
@@ -226,7 +219,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    Assert.assertEquals(false, retval);
+    assertEquals(false, retval);
   }
 
   @Test
@@ -236,15 +229,72 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    Assert.assertEquals(true, retval);
+    assertEquals(true, retval);
+  }
+
+  @Test
+  public void caseInsensitiveCopyOfMap() {
+    // Arrange
+    Map<String, Collection<String>> sourceMap = new HashMap<>();
+
+    sourceMap.put("First", Arrays.asList("abc", "qwerty", "xyz"));
+    sourceMap.put("camelCase", Collections.singleton("123"));
+    // Act
+    Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(sourceMap);
+    // Assert result
+    assertThat(actualMap)
+        .hasEntrySatisfying(
+            "First",
+            value -> {
+              assertThat(value).contains("xyz", "abc", "qwerty");
+            })
+        .hasEntrySatisfying(
+            "first",
+            value -> {
+              assertThat(value).contains("xyz", "abc", "qwerty");
+            })
+        .hasEntrySatisfying(
+            "CAMELCASE",
+            value -> {
+              assertThat(value).contains("123");
+            })
+        .hasEntrySatisfying(
+            "camelcase",
+            value -> {
+              assertThat(value).contains("123");
+            });
+  }
+
+  @Test
+  public void copyIsUnmodifiable() {
+    // Arrange
+    Map<String, Collection<String>> sourceMap = new HashMap<>();
+
+    sourceMap.put("First", Arrays.asList("abc", "qwerty", "xyz"));
+    sourceMap.put("camelCase", Collections.singleton("123"));
+    // Act
+    Map<String, Collection<String>> unmodifiableMap = caseInsensitiveCopyOf(sourceMap);
+    // Assert result
+    assertThatThrownBy(() -> unmodifiableMap.put("new", Collections.singleton("223322")))
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> unmodifiableMap.get("camelCase").clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  public void nullMap() {
+    // Act
+    Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(null);
+    // Assert result
+    assertThat(actualMap).isNotNull().isEmpty();
   }
 
   interface LastTypeParameter {
-    final List<String> LIST_STRING = null;
-    final Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
-    final Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
-    final ParameterizedDecoder<List<String>> PARAMETERIZED_DECODER_LIST_STRING = null;
-    final ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
+    List<String> LIST_STRING = null;
+    Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
+    Parameterized<? extends List<String>> PARAMETERIZED_WILDCARD_LIST_STRING = null;
+    ParameterizedDecoder<List<String>> PARAMETERIZED_DECODER_LIST_STRING = null;
+    ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
   }
 
   interface ParameterizedDecoder<T extends List<String>> extends Decoder {}
