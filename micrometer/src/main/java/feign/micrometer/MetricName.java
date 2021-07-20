@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,19 +13,11 @@
  */
 package feign.micrometer;
 
-import feign.MethodMetadata;
-import feign.Target;
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
-import java.lang.reflect.Method;
-
 public interface MetricName {
 
   String name();
 
   String name(String suffix);
 
-  Tags tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags);
-
-  Tags tag(Class<?> targetType, Method method, String url, Tag... extraTags);
+  String name(Throwable e);
 }

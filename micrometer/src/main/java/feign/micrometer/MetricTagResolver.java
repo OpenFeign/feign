@@ -13,31 +13,21 @@
  */
 package feign.micrometer;
 
-public final class FeignMetricName implements MetricName {
+import feign.MethodMetadata;
+import feign.Target;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import java.lang.reflect.Method;
 
-  private final Class<?> meteredComponent;
+public interface MetricTagResolver {
 
-  public FeignMetricName(Class<?> meteredComponent) {
-    this.meteredComponent = meteredComponent;
-  }
+  Tag[] EMPTY_TAGS_ARRAY = new Tag[] {};
 
-  @Override
-  public String name(String suffix) {
-    return name()
-        // any separator, so naming convention can change it
-        + "." + suffix;
-  }
+  Tags tag(MethodMetadata methodMetadata, Target<?> target, Tag... tags);
 
-  @Override
-  public String name() {
-    return meteredComponent.getName();
-  }
+  Tags tag(MethodMetadata methodMetadata, Target<?> target, Throwable e, Tag... tags);
 
-  @Override
-  public String name(Throwable e) {
-    if (e == null) {
-      return name();
-    }
-    return name("exception");
-  }
+  Tags tag(Class<?> targetType, Method method, String url, Tag... extraTags);
+
+  Tags tag(Class<?> targetType, Method method, String url, Throwable e, Tag... extraTags);
 }
