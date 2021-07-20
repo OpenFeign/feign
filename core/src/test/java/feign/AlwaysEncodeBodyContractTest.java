@@ -26,20 +26,15 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public class AlwaysEncodeContractTest {
+public class AlwaysEncodeBodyContractTest {
 
   @Retention(RUNTIME)
   @Target(ElementType.METHOD)
   private @interface SampleMethodAnnotation {
   }
 
-  private static class SampleContract extends DeclarativeContract {
+  private static class SampleContract extends AlwaysEncodeBodyContract {
     SampleContract() {
-      this(true);
-    }
-
-    SampleContract(boolean alwaysEncodeBody) {
-      alwaysEncodeBody(alwaysEncodeBody);
       AnnotationProcessor<SampleMethodAnnotation> annotationProcessor =
           (annotation, metadata) -> metadata.template().method(Request.HttpMethod.POST);
       super.registerMethodAnnotation(SampleMethodAnnotation.class, annotationProcessor);
@@ -114,50 +109,6 @@ public class AlwaysEncodeContractTest {
     SampleTargetOneParameter sampleClient3 = Feign.builder()
         .contract(new SampleContract())
         .encoder(new AllParametersSampleEncoder())
-        .client(new SampleClient())
-        .target(SampleTargetOneParameter.class, "http://localhost");
-    Assert.assertEquals("moo", sampleClient3.concatenate("moo"));
-  }
-
-  /**
-   * This test makes sure Feign only calls the client provided encoder if the resolver criteria is
-   * met.
-   */
-  @Test
-  public void alwaysEncodeBodyFalseTest() {
-    // The custom encoder cannot be called because
-    // the method has multiple non-annotated parameters.
-    // In this case an IllegalStateException is thrown,
-    // as expected.
-    try {
-      Feign.builder()
-          .contract(new SampleContract(false))
-          .encoder(new AllParametersSampleEncoder())
-          .client(new SampleClient())
-          .target(SampleTargetMultipleNonAnnotatedParameters.class, "http://localhost");
-      Assert.fail("An expected IllegalStateException exception was not thrown!");
-    } catch (IllegalStateException e) {
-      Assert.assertEquals(IllegalStateException.class, e.getClass());
-      Assert.assertTrue(e.getMessage().startsWith("Method has too many Body parameters"));
-    }
-
-    // The custom encoder should not be called in this case,
-    // as the method has zero non-annotated parameters.
-    // Because nothing else is available to write the request body,
-    // the response is also created with a null body
-    SampleTargetNoParameters sampleClient2 = Feign.builder()
-        .contract(new SampleContract(false))
-        .encoder(new BodyParameterSampleEncoder())
-        .client(new SampleClient())
-        .target(SampleTargetNoParameters.class, "http://localhost");
-    Assert.assertNull(sampleClient2.concatenate());
-
-    // The custom encoder should be called in this case,
-    // as the method has only one non-annotated parameter
-    // (to be used as the body parameter)
-    SampleTargetOneParameter sampleClient3 = Feign.builder()
-        .contract(new SampleContract(false))
-        .encoder(new BodyParameterSampleEncoder())
         .client(new SampleClient())
         .target(SampleTargetOneParameter.class, "http://localhost");
     Assert.assertEquals("moo", sampleClient3.concatenate("moo"));

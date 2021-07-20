@@ -119,10 +119,12 @@ public final class MethodMetadata implements Serializable {
     return this;
   }
 
+  @Experimental
   public boolean alwaysEncodeBody() {
     return alwaysEncodeBody;
   }
 
+  @Experimental
   MethodMetadata alwaysEncodeBody(boolean alwaysEncodeBody) {
     this.alwaysEncodeBody = alwaysEncodeBody;
     return this;
