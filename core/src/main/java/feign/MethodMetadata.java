@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -30,6 +30,7 @@ public final class MethodMetadata implements Serializable {
   private Integer headerMapIndex;
   private Integer queryMapIndex;
   private boolean queryMapEncoded;
+  private boolean alwaysEncodeBody;
   private transient Type bodyType;
   private final RequestTemplate template = new RequestTemplate();
   private final List<String> formParams = new ArrayList<String>();
@@ -115,6 +116,17 @@ public final class MethodMetadata implements Serializable {
 
   public MethodMetadata queryMapEncoded(boolean queryMapEncoded) {
     this.queryMapEncoded = queryMapEncoded;
+    return this;
+  }
+
+  @Experimental
+  public boolean alwaysEncodeBody() {
+    return alwaysEncodeBody;
+  }
+
+  @Experimental
+  MethodMetadata alwaysEncodeBody(boolean alwaysEncodeBody) {
+    this.alwaysEncodeBody = alwaysEncodeBody;
     return this;
   }
 

@@ -96,6 +96,9 @@ public interface Contract {
       data.method(method);
       data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
       data.configKey(Feign.configKey(targetType, method));
+      if (AlwaysEncodeBodyContract.class.isAssignableFrom(this.getClass())) {
+        data.alwaysEncodeBody(true);
+      }
 
       if (targetType.getInterfaces().length == 1) {
         processAnnotationOnClass(data, targetType.getInterfaces()[0]);
@@ -136,7 +139,7 @@ public interface Contract {
                 data.formParams().isEmpty() || data.bodyIndex() == null,
                 "Body parameters cannot be used with form parameters.%s",
                 data.warnings());
-          } else {
+          } else if (!data.alwaysEncodeBody()) {
             checkState(
                 data.formParams().isEmpty(),
                 "Body parameters cannot be used with form parameters.%s",
