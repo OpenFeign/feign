@@ -17,6 +17,7 @@ import feign.Param;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,6 +33,11 @@ public class FieldQueryMapEncoderTest {
   public final ExpectedException thrown = ExpectedException.none();
 
   private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
+
+  @Test
+  public void testDefaultEncoder_acceptNullValue() {
+    assertEquals("Empty map should be returned", Collections.EMPTY_MAP, encoder.encode(null));
+  }
 
   @Test
   public void testDefaultEncoder_normalClassWithValues() {
