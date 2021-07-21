@@ -40,6 +40,9 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
 
   @Override
   public Map<String, Object> encode(Object object) throws EncodeException {
+    if (object == null) {
+      return Collections.emptyMap();
+    }
     ObjectParamMetadata metadata =
         classToMetadata.computeIfAbsent(object.getClass(), ObjectParamMetadata::parseObjectType);
 
