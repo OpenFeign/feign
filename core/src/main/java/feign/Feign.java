@@ -335,8 +335,8 @@ public abstract class Feign {
     @Override
     public boolean canDecode(Response response, Type type)
         throws IOException, DecodeException, FeignException {
-      if(delegate instanceof TypedDecoder)
-      return ((TypedDecoder) delegate).canDecode(response, type);
+      if (delegate instanceof TypedDecoder)
+        return ((TypedDecoder) delegate).canDecode(response, type);
 
       return true;
     }
