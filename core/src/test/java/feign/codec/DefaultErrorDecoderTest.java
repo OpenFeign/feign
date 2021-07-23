@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -52,49 +52,6 @@ public class DefaultErrorDecoderTest {
         .build();
 
     throw errorDecoder.decode("Service#foo()", response);
-  }
-
-  @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
-    Response response = Response.builder()
-        .status(500)
-        .reason("Internal server error")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(headers)
-        .body("hello world", UTF_8)
-        .build();
-
-    try {
-      throw errorDecoder.decode("Service#foo()", response);
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo(
-              "[500 Internal server error] during [GET] to [/api] [Service#foo()]: [hello world]");
-      assertThat(e.contentUTF8()).isEqualTo("hello world");
-    }
-  }
-
-  @Test
-  public void throwsFeignExceptionIncludingLongBody() throws Throwable {
-    String actualBody = repeatString("hello world ", 200);
-    Response response = Response.builder()
-        .status(500)
-        .reason("Internal server error")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(headers)
-        .body(actualBody, UTF_8)
-        .build();
-    String expectedBody = repeatString("hello world ", 16) + "hello wo... (2400 bytes)";
-
-    try {
-      throw errorDecoder.decode("Service#foo()", response);
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo(
-              "[500 Internal server error] during [GET] to [/api] [Service#foo()]: [" + expectedBody
-                  + "]");
-      assertThat(e.contentUTF8()).isEqualTo(actualBody);
-    }
   }
 
   private String repeatString(String string, int times) {

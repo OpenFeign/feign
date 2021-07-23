@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,8 +24,8 @@ import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
-import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
+import static java.lang.String.format;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
@@ -172,6 +172,15 @@ final class SynchronousMethodHandler implements MethodHandler {
         .map(Options.class::cast)
         .findFirst()
         .orElse(this.options);
+  }
+
+  static FeignException errorExecuting(Request request, IOException cause) {
+    return new RetryableException(
+        -1,
+        format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
+        request.httpMethod(),
+        cause,
+        null, request);
   }
 
   static class Factory {

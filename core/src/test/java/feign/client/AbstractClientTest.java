@@ -134,38 +134,6 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesErrorResponseBody() {
-    String expectedResponseBody = "ARGHH";
-
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
-
-    TestInterface api = newBuilder()
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    try {
-      api.get();
-    } catch (FeignException e) {
-      assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
-    }
-  }
-
-  @Test
-  public void parsesUnauthorizedResponseBody() {
-    String expectedResponseBody = "ARGHH";
-
-    server.enqueue(new MockResponse().setResponseCode(401).setBody("ARGHH"));
-
-    TestInterface api = newBuilder()
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    try {
-      api.postForString("HELLO");
-    } catch (FeignException e) {
-      assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
-    }
-  }
-
-  @Test
   public void safeRebuffering() {
     server.enqueue(new MockResponse().setBody("foo"));
 

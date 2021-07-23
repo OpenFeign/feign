@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  */
 package feign;
 
-import static feign.FeignException.errorReading;
 import static feign.Util.ensureClosed;
+import static java.lang.String.format;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
@@ -99,7 +99,7 @@ class AsyncResponseHandler {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
       }
-      resultFuture.completeExceptionally(errorReading(response.request(), response, e));
+      resultFuture.completeExceptionally(errorReading(response, e));
     } catch (final Exception e) {
       resultFuture.completeExceptionally(e);
     } finally {
@@ -116,7 +116,16 @@ class AsyncResponseHandler {
     } catch (final FeignException e) {
       throw e;
     } catch (final RuntimeException e) {
-      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
+      throw new DecodeException(response.status(), e.getMessage(), response, e);
     }
+  }
+
+  static FeignException errorReading(Response response, IOException cause) {
+    Request request = response.request();
+    return new FeignException(
+        response.status(),
+        format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
+        response,
+        cause);
   }
 }

@@ -43,7 +43,7 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
 
   /**
    * Construct with a custom {@link JSON} to use for decoding
-   * 
+   *
    * @param mapper the mapper to use
    */
   public JacksonJrDecoder(JSON mapper) {
@@ -53,7 +53,7 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
   /**
    * Construct with a series of {@link JacksonJrExtension} objects that are registered into the
    * {@link JSON}
-   * 
+   *
    * @param iterable the source of the extensions
    */
   public JacksonJrDecoder(Iterable<JacksonJrExtension> iterable) {
@@ -102,6 +102,6 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
         return (mapper, reader) -> mapper.mapOfFrom((Class<?>) parameterType[1], reader);
       }
     }
-    throw new DecodeException(500, "Cannot decode type: " + type.getTypeName(), response.request());
+    throw new DecodeException(500, "Cannot decode type: " + type.getTypeName(), response);
   }
 }

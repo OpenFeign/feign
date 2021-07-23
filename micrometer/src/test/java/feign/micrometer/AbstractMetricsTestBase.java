@@ -90,7 +90,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     final SimpleSource source = Feign.builder()
         .client((request, options) -> {
-          notFound.set(new FeignException.NotFound("test", request, null, null));
+          notFound.set(new FeignException.NotFound("test", request));
           throw notFound.get();
         })
         .addCapability(createMetricCapability())
@@ -118,7 +118,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         .client(new MockClient()
             .ok(HttpMethod.GET, "/get", "1234567890abcde"))
         .decoder((response, type) -> {
-          notFound.set(new FeignException.NotFound("test", response.request(), null, null));
+          notFound.set(new FeignException.NotFound("test", response.request()));
           throw notFound.get();
         })
         .addCapability(createMetricCapability())

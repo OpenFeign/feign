@@ -67,7 +67,7 @@ public class JsonDecoder implements Decoder {
       if (jsonException.getCause() != null && jsonException.getCause() instanceof IOException) {
         throw (IOException) jsonException.getCause();
       }
-      throw new DecodeException(response.status(), jsonException.getMessage(), response.request(),
+      throw new DecodeException(response.status(), jsonException.getMessage(), response,
           jsonException);
     }
   }
@@ -80,7 +80,7 @@ public class JsonDecoder implements Decoder {
       return new JSONArray(tokenizer);
     else
       throw new DecodeException(response.status(),
-          format("%s is not a type supported by this decoder.", type), response.request());
+          format("%s is not a type supported by this decoder.", type), response);
   }
 
 }

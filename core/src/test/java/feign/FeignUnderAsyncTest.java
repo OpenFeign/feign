@@ -484,44 +484,6 @@ public class FeignUnderAsyncTest {
   }
 
   @Test
-  public void throwsFeignExceptionIncludingBody() {
-    server.enqueue(new MockResponse().setBody("success!"));
-
-    TestInterface api = AsyncFeign.asyncBuilder()
-        .decoder((response, type) -> {
-          throw new IOException("timeout");
-        })
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    try {
-      api.body("Request body");
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
-    }
-  }
-
-  @Test
-  public void throwsFeignExceptionWithoutBody() {
-    server.enqueue(new MockResponse().setBody("success!"));
-
-    TestInterface api = AsyncFeign.asyncBuilder()
-        .decoder((response, type) -> {
-          throw new IOException("timeout");
-        })
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    try {
-      api.noContent();
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("");
-    }
-  }
-
-  @Test
   public void whenReturnTypeIsResponseNoErrorHandling() {
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     headers.put("Location", Collections.singletonList("http://bar.com"));

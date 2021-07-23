@@ -506,44 +506,6 @@ public class AsyncFeignTest {
     unwrap(cf);
   }
 
-  @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
-    server.enqueue(new MockResponse().setBody("success!"));
-
-    TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
-      throw new IOException("timeout");
-    }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
-
-    CompletableFuture<?> cf = api.body("Request body");
-    server.takeRequest();
-    try {
-      unwrap(cf);
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
-      return;
-    }
-    fail();
-  }
-
-  @Test
-  public void throwsFeignExceptionWithoutBody() {
-    server.enqueue(new MockResponse().setBody("success!"));
-
-    TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
-      throw new IOException("timeout");
-    }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
-
-    try {
-      api.noContent();
-    } catch (FeignException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("");
-    }
-  }
-
   @SuppressWarnings("deprecation")
   @Test
   public void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
@@ -756,7 +718,7 @@ public class AsyncFeignTest {
   @Test
   public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        new TestInterfaceAsyncBuilder().queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -773,7 +735,7 @@ public class AsyncFeignTest {
   @Test
   public void queryMap_with_child_pojo() throws Exception {
     TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
+        new TestInterfaceAsyncBuilder().queryMapEncoder(new FieldQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     ChildPojo childPojo = new ChildPojo();
@@ -792,7 +754,7 @@ public class AsyncFeignTest {
   @Test
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        new TestInterfaceAsyncBuilder().queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -810,7 +772,7 @@ public class AsyncFeignTest {
   @Test
   public void beanQueryMapEncoderWithEmptyParams() throws Exception {
     TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+        new TestInterfaceAsyncBuilder().queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -1015,7 +977,7 @@ public class AsyncFeignTest {
       return this;
     }
 
-    TestInterfaceAsyncBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
+    TestInterfaceAsyncBuilder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
       return this;
     }
