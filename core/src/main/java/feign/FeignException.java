@@ -44,38 +44,30 @@ public class FeignException extends RuntimeException {
   private Request request;
   private Response response;
 
-  // EncodeException
   protected FeignException(int status, String message) {
     super(message);
     this.status = status;
     this.request = null;
   }
 
-  // EncodeException
   protected FeignException(int status, String message, Throwable cause) {
     super(message, cause);
     this.status = status;
     this.request = null;
   }
 
-  // RetryableException, DecodeException - optional headers is needed
-  // DecodeException should be replaced by (status, message, response)
   protected FeignException(int status, String message, Request request) {
     super(message);
     this.status = status;
     this.request = checkRequestNotNull(request);
   }
 
-  // AsyncJoinException, RetryableException, DecodeException - optional headers is needed
-  // AsyncJoinException and DecodeException should be replaced by (status, message, response, cause)
   protected FeignException(int status, String message, Request request, Throwable cause) {
     super(message, cause);
     this.status = status;
     this.request = checkRequestNotNull(request);
   }
 
-  // errorStatus() -> ErrorDecoder, FeignClientException, FeignServerException
-  // status, message, response
   protected FeignException(int status, String message, Response response) {
     super(message);
     this.status = status;
@@ -83,8 +75,6 @@ public class FeignException extends RuntimeException {
     this.request = checkRequestNotNull(response.request());
   }
 
-  // errorReading() -> AsyncResponseHandler - add response objects
-  // status, message, response, cause
   protected FeignException(int status, String message, Response response, Throwable cause) {
     super(message, cause);
     this.status = status;
@@ -203,7 +193,6 @@ public class FeignException extends RuntimeException {
     }
   }
 
-  // move to SynchronousMethodHandler
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
         -1,

@@ -13,8 +13,8 @@
  */
 package feign;
 
+import static feign.FeignException.errorReading;
 import static feign.Util.ensureClosed;
-import static java.lang.String.format;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
@@ -118,14 +118,5 @@ class AsyncResponseHandler {
     } catch (final RuntimeException e) {
       throw new DecodeException(response.status(), e.getMessage(), response, e);
     }
-  }
-
-  static FeignException errorReading(Response response, IOException cause) {
-    Request request = response.request();
-    return new FeignException(
-        response.status(),
-        format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
-        response,
-        cause);
   }
 }
