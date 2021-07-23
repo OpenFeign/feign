@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,37 @@
  */
 package feign.http2client.test;
 
+import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
+import static org.hamcrest.CoreMatchers.isA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.assertj.core.api.Assertions;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import feign.AsyncClient;
@@ -44,43 +75,14 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
-import feign.http2client.AsyncHttpClient;
+import feign.http2client.Http2Client;
 import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
-import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-public class AsyncHttpClientTest {
+public class Http2ClientAsyncTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
@@ -120,7 +122,7 @@ public class AsyncHttpClientTest {
 
     final Response response = unwrap(api.response());
     assertTrue(response.body().isRepeatable());
-    assertEquals("foo", response.body().toString());
+    assertEquals("foo", Util.toString(response.body().asReader(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -556,8 +558,8 @@ public class AsyncHttpClientTest {
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals(Collections.singletonList("http://bar.com"),
-        unwrap(api.response()).headers().get("Location"));
+    assertThat(unwrap(api.response()).headers().get("Location"))
+        .contains("http://bar.com");
 
     execs.shutdown();
   }
@@ -974,7 +976,7 @@ public class AsyncHttpClientTest {
 
     private final AsyncFeign.AsyncBuilder<Object> delegate =
         AsyncFeign.asyncBuilder()
-            .client(new AsyncHttpClient())
+            .client(new Http2Client())
             .decoder(new Decoder.Default()).encoder(new Encoder() {
 
               @SuppressWarnings("deprecation")
