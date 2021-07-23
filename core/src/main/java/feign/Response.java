@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,11 +13,11 @@
  */
 package feign;
 
-import static feign.Util.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import static feign.Util.*;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -35,9 +35,7 @@ public final class Response implements Closeable {
     this.status = builder.status;
     this.request = builder.request;
     this.reason = builder.reason; // nullable
-    this.headers = (builder.headers != null)
-        ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
-        : new LinkedHashMap<>();
+    this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
 
   }
@@ -175,6 +173,25 @@ public final class Response implements Closeable {
     return request;
   }
 
+  public Charset charset() {
+
+    Collection<String> contentTypeHeaders = headers().get("Content-Type");
+
+    if (contentTypeHeaders != null) {
+      for (String contentTypeHeader : contentTypeHeaders) {
+        String[] contentTypeParmeters = contentTypeHeader.split(";");
+        if (contentTypeParmeters.length > 1) {
+          String[] charsetParts = contentTypeParmeters[1].split("=");
+          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+            return Charset.forName(charsetParts[1]);
+          }
+        }
+      }
+    }
+
+    return Util.UTF_8;
+  }
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
@@ -284,14 +301,6 @@ public final class Response implements Closeable {
       inputStream.close();
     }
 
-    @Override
-    public String toString() {
-      try {
-        return new String(toByteArray(inputStream), UTF_8);
-      } catch (Exception e) {
-        return super.toString();
-      }
-    }
   }
 
   private static final class ByteArrayBody implements Response.Body {
@@ -347,23 +356,6 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {}
 
-    @Override
-    public String toString() {
-      return decodeOrDefault(data, UTF_8, "Binary data");
-    }
   }
 
-  private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
-    Map<String, Collection<String>> result =
-        new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
-
-    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-      String headerName = entry.getKey();
-      if (!result.containsKey(headerName)) {
-        result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
-      }
-      result.get(headerName).addAll(entry.getValue());
-    }
-    return result;
-  }
 }

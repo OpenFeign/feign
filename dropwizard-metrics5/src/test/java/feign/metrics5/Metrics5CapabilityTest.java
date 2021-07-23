@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,54 +13,79 @@
  */
 package feign.metrics5;
 
-import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
-import feign.Feign;
-import feign.RequestLine;
-import feign.mock.HttpMethod;
-import feign.mock.MockClient;
-import feign.mock.MockTarget;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
+import feign.Capability;
+import feign.Util;
+import feign.micrometer.AbstractMetricsTestBase;
+import io.dropwizard.metrics5.Metric;
+import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
-import io.dropwizard.metrics5.SharedMetricRegistries;
 
-public class Metrics5CapabilityTest {
+public class Metrics5CapabilityTest
+    extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
 
-  public interface SimpleSource {
 
-    @RequestLine("GET /get")
-    String get(String body);
-
+  @Override
+  protected MetricRegistry createMetricsRegistry() {
+    return new MetricRegistry();
   }
 
-  @Test
-  public void addMetricsCapability() {
-    final MetricRegistry registry = SharedMetricRegistries.getOrCreate("unit_test");
+  protected Capability createMetricCapability() {
+    return new Metrics5Capability(metricsRegistry);
+  }
 
-    final SimpleSource source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
-        .addCapability(new Metrics5Capability(registry))
-        .target(new MockTarget<>(Metrics5CapabilityTest.SimpleSource.class));
+  @Override
+  protected Map<MetricName, Metric> getFeignMetrics() {
+    return metricsRegistry.getMetrics();
+  }
 
-    source.get("0x3456789");
+  @Override
+  protected boolean doesMetricIdIncludeClient(MetricName metricId) {
+    return hasEntry("client", "feign.micrometer.AbstractMetricsTestBase$SimpleSource")
+        .matches(metricId.getTags());
+  }
 
-    assertThat(registry.getMetrics(), aMapWithSize(6));
+  @Override
+  protected boolean doesMetricIncludeVerb(MetricName metricId, String verb) {
+    return hasEntry("method", verb).matches(metricId.getTags());
+  }
 
-    registry.getMetrics().keySet().forEach(metricName -> assertThat(
-        "Expect all metric names to include client name:" + metricName,
-        metricName.getTags(),
-        hasEntry("client", "feign.metrics5.Metrics5CapabilityTest$SimpleSource")));
-    registry.getMetrics().keySet().forEach(metricName -> assertThat(
-        "Expect all metric names to include method name:" + metricName,
-        metricName.getTags(),
-        hasEntry("method", "get")));
-    registry.getMetrics().keySet().forEach(metricName -> assertThat(
-        "Expect all metric names to include host name:" + metricName,
-        metricName.getTags(),
-        // hostname is null due to feign-mock shortfalls
-        hasEntry("host", null)));
+  @Override
+  protected boolean doesMetricIncludeHost(MetricName metricId) {
+    // hostname is null due to feign-mock shortfalls
+    return hasEntry("host", null).matches(metricId.getTags());
+  }
+
+  @Override
+  protected Metric getMetric(String suffix, String... tags) {
+    Util.checkArgument(tags.length % 2 == 0, "tags must contain key-value pairs %s",
+        Arrays.toString(tags));
+
+
+    return getFeignMetrics().entrySet()
+        .stream()
+        .filter(entry -> {
+          MetricName name = entry.getKey();
+          if (!name.getKey().endsWith(suffix)) {
+            return false;
+          }
+
+          for (int i = 0; i < tags.length; i += 2) {
+            if (name.getTags().containsKey(tags[i])) {
+              if (!name.getTags().get(tags[i]).equals(tags[i + 1])) {
+                return false;
+              }
+            }
+          }
+
+          return true;
+        })
+        .findAny()
+        .map(Entry::getValue)
+        .orElse(null);
   }
 
 }

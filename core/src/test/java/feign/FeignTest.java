@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -43,9 +43,8 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -90,17 +89,6 @@ public class FeignTest {
     assertThat(server.takeRequest())
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
-  }
-
-  @Test
-  public void responseCoercesToStringBody() {
-    server.enqueue(new MockResponse().setBody("foo"));
-
-    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
-
-    Response response = api.response();
-    assertTrue(response.body().isRepeatable());
-    assertEquals("foo", response.body().toString());
   }
 
   @Test
@@ -648,8 +636,9 @@ public class FeignTest {
         .client((request, options) -> response)
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.response().headers().get("Location"),
-        Collections.singletonList("http://bar.com"));
+    assertThat(api.response().headers()).hasEntrySatisfying("Location", value -> {
+      assertThat(value).contains("http://bar.com");
+    });
   }
 
   private static class MockRetryer implements Retryer {

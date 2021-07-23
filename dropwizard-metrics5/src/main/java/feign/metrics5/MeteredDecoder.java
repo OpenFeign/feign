@@ -59,6 +59,18 @@ public class MeteredDecoder implements Decoder {
                 metricSuppliers.timers())
             .time()) {
       decoded = decoder.decode(response, type);
+    } catch (IOException | RuntimeException e) {
+      metricRegistry.meter(
+          metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
+              .tagged("exception_name", e.getClass().getSimpleName()),
+          metricSuppliers.meters()).mark();
+      throw e;
+    } catch (Exception e) {
+      metricRegistry.meter(
+          metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
+              .tagged("exception_name", e.getClass().getSimpleName()),
+          metricSuppliers.meters()).mark();
+      throw new IOException(e);
     }
 
     if (body != null) {

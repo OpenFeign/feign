@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,108 +13,89 @@
  */
 package feign.micrometer;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import feign.FeignException;
-import org.junit.Test;
-import feign.Feign;
-import feign.RequestLine;
-import feign.mock.HttpMethod;
-import feign.mock.MockClient;
-import feign.mock.MockTarget;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import feign.Capability;
+import feign.Util;
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
-public class MicrometerCapabilityTest {
+public class MicrometerCapabilityTest
+    extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
 
-  public interface SimpleSource {
-
-    @RequestLine("GET /get")
-    String get(String body);
-
+  @Override
+  protected SimpleMeterRegistry createMetricsRegistry() {
+    return new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
   }
 
-  @Test
-  public void addMetricsCapability() {
-    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+  protected Capability createMetricCapability() {
+    return new MicrometerCapability(metricsRegistry);
+  }
 
-    final SimpleSource source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
-        .addCapability(new MicrometerCapability(registry))
-        .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
-
-    source.get("0x3456789");
-
+  @Override
+  protected Map<Id, Meter> getFeignMetrics() {
     List<Meter> metrics = new ArrayList<>();
-    registry.forEachMeter(metrics::add);
+    metricsRegistry.forEachMeter(metrics::add);
     metrics.removeIf(meter -> !meter.getId().getName().startsWith("feign."));
-
-    metrics.forEach(meter -> assertThat(
-        "Expect all metric names to include client name:" + meter.getId(),
-        meter.getId().getTag("client"),
-        equalTo("feign.micrometer.MicrometerCapabilityTest$SimpleSource")));
-    metrics.forEach(meter -> assertThat(
-        "Expect all metric names to include method name:" + meter.getId(),
-        meter.getId().getTag("method"),
-        equalTo("get")));
-    metrics.forEach(meter -> assertThat(
-        "Expect all metric names to include host name:" + meter.getId(),
-        meter.getId().getTag("host"),
-        // hostname is blank due to feign-mock shortfalls
-        equalTo("")));
+    return metrics.stream()
+        .collect(Collectors.toMap(
+            Meter::getId,
+            Function.identity()));
   }
 
-  @Test
-  public void clientPropagatesUncheckedException() {
-    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
+  @Override
+  protected boolean doesMetricIdIncludeClient(Id metricId) {
+    return metricId.getTag("client")
+        .contains("feign.micrometer.AbstractMetricsTestBase$SimpleSource");
+  }
 
-    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+  @Override
+  protected boolean doesMetricIncludeVerb(Id metricId, String verb) {
+    return metricId.getTag("method").equals(verb);
+  }
 
-    final SimpleSource source = Feign.builder()
-        .client((request, options) -> {
-          notFound.set(new FeignException.NotFound("test", request, null));
-          throw notFound.get();
+  @Override
+  protected boolean doesMetricIncludeHost(Id metricId) {
+    return metricId.getTag("host").equals("");
+  }
+
+
+  @Override
+  protected Meter getMetric(String suffix, String... tags) {
+    Util.checkArgument(tags.length % 2 == 0, "tags must contain key-value pairs %s",
+        Arrays.toString(tags));
+
+
+    return getFeignMetrics().entrySet()
+        .stream()
+        .filter(entry -> {
+          Id name = entry.getKey();
+          if (!name.getName().endsWith(suffix)) {
+            return false;
+          }
+
+          for (int i = 0; i < tags.length; i += 2) {
+            if (name.getTag(tags[i]) != null) {
+              if (!name.getTag(tags[i]).equals(tags[i + 1])) {
+                return false;
+              }
+            }
+          }
+
+          return true;
         })
-        .addCapability(new MicrometerCapability(registry))
-        .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
-
-    try {
-      source.get("0x3456789");
-      fail("Should throw NotFound exception");
-    } catch (FeignException.NotFound e) {
-      assertSame(notFound.get(), e);
-    }
+        .findAny()
+        .map(Entry::getValue)
+        .orElse(null);
   }
 
-  @Test
-  public void decoderPropagatesUncheckedException() {
-    SimpleMeterRegistry registry = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
 
-    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
-
-    final SimpleSource source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
-        .decoder((response, type) -> {
-          notFound.set(new FeignException.NotFound("test", response.request(), null));
-          throw notFound.get();
-        })
-        .addCapability(new MicrometerCapability(registry))
-        .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
-
-    try {
-      source.get("0x3456789");
-      fail("Should throw NotFound exception");
-    } catch (FeignException.NotFound e) {
-      assertSame(notFound.get(), e);
-    }
-  }
 }

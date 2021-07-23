@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,19 +13,18 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import feign.Logger.Level;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.*;
 import feign.querymap.FieldQueryMapEncoder;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
