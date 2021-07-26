@@ -82,7 +82,6 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
         throw e;
       } catch (final Throwable e) {
         timer = createTimer(target, method, args, e);
-        createExceptionCounter(target, method, args, e).increment();
         throw e;
       } finally {
         if (timer == null) {
@@ -97,15 +96,6 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
     final Tag[] extraTags = extraTags(target, method, args, e);
     final Tags allTags = metricTagResolver.tag(target.type(), method, target.url(), e, extraTags);
     return meterRegistry.timer(metricName.name(e), allTags);
-  }
-
-  protected Counter createExceptionCounter(Target target,
-                                           Method method,
-                                           Object[] args,
-                                           Throwable e) {
-    final Tag[] extraTags = extraTags(target, method, args, e);
-    final Tags allTags = metricTagResolver.tag(target.type(), method, target.url(), e, extraTags);
-    return meterRegistry.counter(metricName.name(e), allTags);
   }
 
   protected Counter createFeignExceptionCounter(Target target,
