@@ -15,8 +15,10 @@ package feign.micrometer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import feign.Capability;
@@ -136,11 +138,27 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
             .addCapability(createMetricCapability())
             .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
-    try {
-      source.get("0x3456789");
-      fail("Should throw NotFound exception");
-    } catch (FeignException.NotFound e) {
-      assertSame(notFound.get(), e);
-    }
+    FeignException.NotFound thrown =
+        assertThrows(FeignException.NotFound.class, () -> source.get("0x3456789"));
+    assertSame(notFound.get(), thrown);
+  }
+
+  @Test
+  public void shouldMetricCollectionWithCustomException() {
+    final SimpleSource source =
+        Feign.builder()
+            .client(
+                (request, options) -> {
+                  throw new RuntimeException("Test error");
+                })
+            .addCapability(createMetricCapability())
+            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+
+    RuntimeException thrown = assertThrows(RuntimeException.class, () -> source.get("0x3456789"));
+    assertThat(thrown.getMessage(), equalTo("Test error"));
+
+    assertThat(
+        getMetric("exception", "exception_name", "RuntimeException", "method", "get"),
+        notNullValue());
   }
 }

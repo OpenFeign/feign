@@ -69,22 +69,15 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
       final Timer.Sample sample = Timer.start(meterRegistry);
       Timer timer = null;
       try {
-        try {
-          final Object invoke = invocationHandle.invoke(proxy, method, args);
-          timer = createTimer(target, method, args, null);
-          return invoke;
-        } catch (Exception e) {
-          throw e;
-        } catch (Throwable e) {
-          throw new Exception(e);
-        }
+        final Object invoke = invocationHandle.invoke(proxy, method, args);
+        timer = createTimer(target, method, args, null);
+        return invoke;
       } catch (final FeignException e) {
         timer = createTimer(target, method, args, e);
         createFeignExceptionCounter(target, method, args, e).increment();
         throw e;
       } catch (final Throwable e) {
         timer = createTimer(target, method, args, e);
-        createExceptionCounter(target, method, args, e).increment();
         throw e;
       } finally {
         if (timer == null) {
@@ -99,13 +92,6 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
     final Tag[] extraTags = extraTags(target, method, args, e);
     final Tags allTags = metricTagResolver.tag(target.type(), method, target.url(), e, extraTags);
     return meterRegistry.timer(metricName.name(e), allTags);
-  }
-
-  protected Counter createExceptionCounter(
-      Target target, Method method, Object[] args, Throwable e) {
-    final Tag[] extraTags = extraTags(target, method, args, e);
-    final Tags allTags = metricTagResolver.tag(target.type(), method, target.url(), e, extraTags);
-    return meterRegistry.counter(metricName.name(e), allTags);
   }
 
   protected Counter createFeignExceptionCounter(

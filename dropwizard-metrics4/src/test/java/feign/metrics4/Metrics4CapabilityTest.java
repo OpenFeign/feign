@@ -69,7 +69,8 @@ public class Metrics4CapabilityTest
               }
 
               for (int i = 0; i < tags.length; i += 2) {
-                if (!name.contains(tags[i]) && !name.contains(tags[i] + 1)) {
+                // metrics 4 doesn't support tags, for that reason we don't include tag name
+                if (!name.contains(tags[i + 1])) {
                   return false;
                 }
               }
