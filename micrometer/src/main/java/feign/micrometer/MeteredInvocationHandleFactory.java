@@ -67,15 +67,9 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
       final Timer.Sample sample = Timer.start(meterRegistry);
       Timer timer = null;
       try {
-        try {
-          final Object invoke = invocationHandle.invoke(proxy, method, args);
-          timer = createTimer(target, method, args, null);
-          return invoke;
-        } catch (Exception e) {
-          throw e;
-        } catch (Throwable e) {
-          throw new Exception(e);
-        }
+        final Object invoke = invocationHandle.invoke(proxy, method, args);
+        timer = createTimer(target, method, args, null);
+        return invoke;
       } catch (final FeignException e) {
         timer = createTimer(target, method, args, e);
         createFeignExceptionCounter(target, method, args, e).increment();
