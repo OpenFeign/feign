@@ -41,8 +41,28 @@ public class FeignException extends RuntimeException {
       "response should not be null";
   private static final long serialVersionUID = 0;
   private final int status;
+  @Deprecated
+  private byte[] responseBody;
+  @Deprecated
+  private Map<String, Collection<String>> responseHeaders;
   private Request request;
   private Response response;
+
+  protected FeignException(int status, String message, Throwable cause) {
+    super(message, cause);
+    this.status = status;
+    this.request = null;
+  }
+
+  @Deprecated
+  protected FeignException(int status, String message, Throwable cause, byte[] responseBody,
+      Map<String, Collection<String>> responseHeaders) {
+    super(message, cause);
+    this.status = status;
+    this.responseBody = responseBody;
+    this.responseHeaders = caseInsensitiveCopyOf(responseHeaders);
+    this.request = null;
+  }
 
   protected FeignException(int status, String message) {
     super(message);
@@ -50,10 +70,30 @@ public class FeignException extends RuntimeException {
     this.request = null;
   }
 
-  protected FeignException(int status, String message, Throwable cause) {
+  @Deprecated
+  protected FeignException(int status, String message, byte[] responseBody,
+      Map<String, Collection<String>> responseHeaders) {
+    super(message);
+    this.status = status;
+    this.responseBody = responseBody;
+    this.responseHeaders = caseInsensitiveCopyOf(responseHeaders);
+    this.request = null;
+  }
+
+  protected FeignException(int status, String message, Request request, Throwable cause) {
     super(message, cause);
     this.status = status;
-    this.request = null;
+    this.request = checkRequestNotNull(request);
+  }
+
+  @Deprecated
+  protected FeignException(int status, String message, Request request, Throwable cause,
+      byte[] responseBody, Map<String, Collection<String>> responseHeaders) {
+    super(message, cause);
+    this.status = status;
+    this.responseBody = responseBody;
+    this.responseHeaders = caseInsensitiveCopyOf(responseHeaders);
+    this.request = checkRequestNotNull(request);
   }
 
   protected FeignException(int status, String message, Request request) {
@@ -62,9 +102,13 @@ public class FeignException extends RuntimeException {
     this.request = checkRequestNotNull(request);
   }
 
-  protected FeignException(int status, String message, Request request, Throwable cause) {
-    super(message, cause);
+  @Deprecated
+  protected FeignException(int status, String message, Request request, byte[] responseBody,
+      Map<String, Collection<String>> responseHeaders) {
+    super(message);
     this.status = status;
+    this.responseBody = responseBody;
+    this.responseHeaders = caseInsensitiveCopyOf(responseHeaders);
     this.request = checkRequestNotNull(request);
   }
 
@@ -94,12 +138,71 @@ public class FeignException extends RuntimeException {
     return this.status;
   }
 
+  @Deprecated
+  private static byte[] getBodyAsByteArray(Response response) {
+    byte[] body = new byte[] {};
+    try {
+      if (response.body() != null) {
+        body = Util.toByteArray(response.body().asInputStream());
+      }
+    } catch (IOException ignored) { // NOPMD
+    }
+    return body;
+  }
+
+  /**
+   * The Response Body, if present.
+   *
+   * @return the body of the response.
+   * @deprecated use {@link #responseBody()} instead.
+   */
+  @Deprecated
+  public byte[] content() {
+    if (hasResponse()) {
+      return getBodyAsByteArray(response());
+    }
+    return this.responseBody;
+  }
+
+  /**
+   * The Response body.
+   *
+   * @return an Optional wrapping the response body.
+   */
+  @Deprecated
+  public Optional<ByteBuffer> responseBody() {
+    if (!hasResponse() && this.responseBody == null) {
+      return Optional.empty();
+    }
+    return Optional.of(ByteBuffer.wrap(content()));
+  }
+
+  @Deprecated
+  public Map<String, Collection<String>> responseHeaders() {
+    if (hasResponse()) {
+      return response.headers();
+    }
+    if (this.responseHeaders == null) {
+      return Collections.emptyMap();
+    }
+    return responseHeaders;
+  }
+
   public Request request() {
     return this.request;
   }
 
   public boolean hasRequest() {
     return (this.request != null);
+  }
+
+  @Deprecated
+  public String contentUTF8() {
+    if (content() != null) {
+      return new String(content(), UTF_8);
+    } else {
+      return "";
+    }
   }
 
   public Response response() {
@@ -362,17 +465,6 @@ public class FeignException extends RuntimeException {
       result.append(format(": [%s]", getBodyAsString(body, response.headers())));
 
       return result.toString();
-    }
-
-    private static byte[] getBodyAsByteArray(Response response) {
-      byte[] body = new byte[] {};
-      try {
-        if (response.body() != null) {
-          body = Util.toByteArray(response.body().asInputStream());
-        }
-      } catch (IOException ignored) { // NOPMD
-      }
-      return body;
     }
 
     private static String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
