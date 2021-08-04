@@ -85,6 +85,7 @@
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.12.4</jackson.version>
     <assertj.version>3.10.0</assertj.version>
+    <hamcrest.version>2.2</hamcrest.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
@@ -104,7 +105,6 @@
     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
-    <hamcrest.version>2.2</hamcrest.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
