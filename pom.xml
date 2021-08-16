@@ -79,7 +79,7 @@
     <googlehttpclient.version>1.39.2</googlehttpclient.version>
     <gson.version>2.8.7</gson.version>
     <slf4j.version>1.7.32</slf4j.version>
-    <bouncy.version>1.60</bouncy.version>
+    <bouncy.version>1.67</bouncy.version>
     <json.version>20210307</json.version>
 
     <junit.version>4.13.1</junit.version>
