@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import feign.*;
@@ -31,6 +32,9 @@ import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
@@ -79,6 +83,29 @@ public class MicrometerCapabilityTest
     clientMetrics.keySet().forEach(metricId -> assertThat(
         "Expect all Client metric names to include uri as aggregated path expression:" + metricId,
         doesMetricIncludeUri(metricId, "/get/{id}")));
+  }
+
+  @Test
+  public void decoderExceptionCounterHasUriLabelWithPathExpression() {
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SourceWithPathExpressions source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
+        .decoder((response, type) -> {
+          notFound.set(new FeignException.NotFound("test", response.request(), null, null));
+          throw notFound.get();
+        })
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
+
+    FeignException.NotFound thrown =
+        assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
+    assertSame(notFound.get(), thrown);
+
+    assertThat(
+        getMetric("feign.codec.Decoder.error_count", "uri", "/get/{id}"),
+        notNullValue());
   }
 
   @Override
