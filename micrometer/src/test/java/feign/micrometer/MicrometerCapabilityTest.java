@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import feign.*;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
@@ -54,12 +53,13 @@ public class MicrometerCapabilityTest
 
     source.get("0x3456789");
 
-    getFeignMetrics().entrySet()
-        .stream()
+    final Map<Meter.Id, Meter> clientMetrics = getFeignMetrics().entrySet().stream()
         .filter(this::isClientMetric)
-        .peek(e -> assertThat(
-            "Expect Client metric names to include uri:" + e,
-            doesMetricIncludeUri(e.getKey(), "/get")));
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+    clientMetrics.keySet().forEach(metricId -> assertThat(
+        "Expect all Client metric names to include uri:" + metricId,
+        doesMetricIncludeUri(metricId, "/get")));
   }
 
   @Test
@@ -72,12 +72,13 @@ public class MicrometerCapabilityTest
 
     source.get("123", "0x3456789");
 
-    getFeignMetrics().entrySet()
-        .stream()
+    final Map<Meter.Id, Meter> clientMetrics = getFeignMetrics().entrySet().stream()
         .filter(this::isClientMetric)
-        .peek(e -> assertThat(
-            "Expect Client metric names to include uri with path expression:" + e,
-            doesMetricIncludeUri(e.getKey(), "/get/{id}")));
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+    clientMetrics.keySet().forEach(metricId -> assertThat(
+        "Expect all Client metric names to include uri as aggregated path expression:" + metricId,
+        doesMetricIncludeUri(metricId, "/get/{id}")));
   }
 
   @Override
