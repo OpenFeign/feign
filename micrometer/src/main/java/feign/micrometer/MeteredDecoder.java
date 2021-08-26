@@ -95,7 +95,7 @@ public class MeteredDecoder implements Decoder {
     final Tag[] extraTags = extraTags(response, type, e);
     final RequestTemplate template = response.request().requestTemplate();
     final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
-        Tag.of("uri", template.path()),
+        Tag.of("uri", template.methodMetadata().template().path()),
         Tag.of("exception_name", e.getClass().getSimpleName()))
         .and(extraTags);
     return meterRegistry.counter(metricName.name("error_count"), allTags);

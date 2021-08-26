@@ -20,16 +20,65 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import feign.Capability;
-import feign.Util;
+
+import feign.*;
+import feign.mock.HttpMethod;
+import feign.mock.MockClient;
+import feign.mock.MockTarget;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
+
+
+  public interface SourceWithPathExpressions {
+
+    @RequestLine("GET /get/{id}")
+    String get(@Param("id") String id, String body);
+
+  }
+
+  @Test
+  public void clientMetricsHaveUriLabel() {
+    final SimpleSource source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(SimpleSource.class));
+
+    source.get("0x3456789");
+
+    getFeignMetrics().entrySet()
+        .stream()
+        .filter(this::isClientMetric)
+        .peek(e -> assertThat(
+            "Expect Client metric names to include uri:" + e,
+            doesMetricIncludeUri(e.getKey(), "/get")));
+  }
+
+  @Test
+  public void clientMetricsHaveUriLabelWithPathExpression() {
+    final SourceWithPathExpressions source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(SourceWithPathExpressions.class));
+
+    source.get("123", "0x3456789");
+
+    getFeignMetrics().entrySet()
+        .stream()
+        .filter(this::isClientMetric)
+        .peek(e -> assertThat(
+            "Expect Client metric names to include uri with path expression:" + e,
+            doesMetricIncludeUri(e.getKey(), "/get/{id}")));
+  }
 
   @Override
   protected SimpleMeterRegistry createMetricsRegistry() {
@@ -97,5 +146,12 @@ public class MicrometerCapabilityTest
         .orElse(null);
   }
 
+  private boolean isClientMetric(Map.Entry<Id, Meter> entry) {
+    return entry.getKey().getName().startsWith("feign.Client");
+  }
+
+  private boolean doesMetricIncludeUri(Id metricId, String uri) {
+    return uri.equals(metricId.getTag("uri"));
+  }
 
 }
