@@ -43,14 +43,17 @@ public class MeteredClient implements Client {
     final RequestTemplate template = request.requestTemplate();
     try (final Context classTimer =
         metricRegistry.timer(
-            metricName.metricName(template.methodMetadata(), template.feignTarget()),
+            metricName.metricName(template.methodMetadata(),
+                template.feignTarget())
+                .tagged("uri", template.methodMetadata().template().path()),
             metricSuppliers.timers()).time()) {
       Response response = client.execute(request, options);
       metricRegistry.counter(
           metricName
               .metricName(template.methodMetadata(), template.feignTarget(), "http_response_code")
               .tagged("http_status", String.valueOf(response.status()))
-              .tagged("status_group", response.status() / 100 + "xx"))
+              .tagged("status_group", response.status() / 100 + "xx")
+              .tagged("uri", template.methodMetadata().template().path()))
           .inc();
       return response;
     } catch (FeignException e) {
@@ -58,7 +61,8 @@ public class MeteredClient implements Client {
           metricName
               .metricName(template.methodMetadata(), template.feignTarget(), "http_response_code")
               .tagged("http_status", String.valueOf(e.status()))
-              .tagged("status_group", e.status() / 100 + "xx"))
+              .tagged("status_group", e.status() / 100 + "xx")
+              .tagged("uri", template.methodMetadata().template().path()))
           .inc();
       throw e;
     } catch (IOException | RuntimeException e) {
