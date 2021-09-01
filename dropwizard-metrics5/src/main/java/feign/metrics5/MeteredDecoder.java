@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -51,7 +51,9 @@ public class MeteredDecoder implements Decoder {
     try (final Context classTimer =
         metricRegistry
             .timer(
-                metricName.metricName(template.methodMetadata(), template.feignTarget()),
+                metricName
+                    .metricName(template.methodMetadata(), template.feignTarget())
+                    .tagged("uri", template.methodMetadata().template().path()),
                 metricSuppliers.timers())
             .time()) {
       decoded = decoder.decode(response, type);
@@ -60,7 +62,8 @@ public class MeteredDecoder implements Decoder {
           .meter(
               metricName
                   .metricName(template.methodMetadata(), template.feignTarget(), "error_count")
-                  .tagged("exception_name", e.getClass().getSimpleName()),
+                  .tagged("exception_name", e.getClass().getSimpleName())
+                  .tagged("uri", template.methodMetadata().template().path()),
               metricSuppliers.meters())
           .mark();
       throw e;
@@ -69,7 +72,8 @@ public class MeteredDecoder implements Decoder {
           .meter(
               metricName
                   .metricName(template.methodMetadata(), template.feignTarget(), "error_count")
-                  .tagged("exception_name", e.getClass().getSimpleName()),
+                  .tagged("exception_name", e.getClass().getSimpleName())
+                  .tagged("uri", template.methodMetadata().template().path()),
               metricSuppliers.meters())
           .mark();
       throw new IOException(e);
@@ -78,8 +82,9 @@ public class MeteredDecoder implements Decoder {
     if (body != null) {
       metricRegistry
           .histogram(
-              metricName.metricName(
-                  template.methodMetadata(), template.feignTarget(), "response_size"),
+              metricName
+                  .metricName(template.methodMetadata(), template.feignTarget(), "response_size")
+                  .tagged("uri", template.methodMetadata().template().path()),
               metricSuppliers.histograms())
           .update(body.count());
     }

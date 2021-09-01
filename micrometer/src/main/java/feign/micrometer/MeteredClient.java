@@ -84,11 +84,9 @@ public class MeteredClient implements Client {
                 template.methodMetadata(),
                 template.feignTarget(),
                 e,
-                new Tag[] {
-                  Tag.of("http_status", String.valueOf(responseStatus)),
-                  Tag.of("status_group", responseStatus / 100 + "xx"),
-                  Tag.of("uri", template.path())
-                })
+                Tag.of("http_status", String.valueOf(responseStatus)),
+                Tag.of("status_group", responseStatus / 100 + "xx"),
+                Tag.of("uri", template.methodMetadata().template().path()))
             .and(extraTags);
     meterRegistry.counter(metricName.name("http_response_code"), allTags).increment();
   }
@@ -101,7 +99,7 @@ public class MeteredClient implements Client {
                 template.methodMetadata(),
                 template.feignTarget(),
                 e,
-                Tag.of("uri", template.path()))
+                Tag.of("uri", template.methodMetadata().template().path()))
             .and(extraTags(request, response, options, e));
     return meterRegistry.timer(metricName.name(e), allTags);
   }

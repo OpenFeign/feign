@@ -92,4 +92,19 @@ public class MicrometerCapabilityTest
         .map(Entry::getValue)
         .orElse(null);
   }
+
+  @Override
+  protected boolean isClientMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isDecoderMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.codec.Decoder");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeUri(Id metricId, String uri) {
+    return uri.equals(metricId.getTag("uri"));
+  }
 }

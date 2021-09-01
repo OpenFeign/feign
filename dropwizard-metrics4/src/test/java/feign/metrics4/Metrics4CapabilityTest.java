@@ -81,4 +81,19 @@ public class Metrics4CapabilityTest
         .map(Entry::getValue)
         .orElse(null);
   }
+
+  @Override
+  protected boolean isClientMetric(String metricId) {
+    return metricId.startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isDecoderMetric(String metricId) {
+    return metricId.startsWith("feign.codec.Decoder");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeUri(String metricId, String uri) {
+    return metricId.contains(uri);
+  }
 }
