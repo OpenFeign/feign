@@ -13,100 +13,24 @@
  */
 package feign.micrometer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import feign.*;
-import feign.mock.HttpMethod;
-import feign.mock.MockClient;
-import feign.mock.MockTarget;
+import feign.Capability;
+import feign.Util;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Test;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
 
-
-  public interface SourceWithPathExpressions {
-
-    @RequestLine("GET /get/{id}")
-    String get(@Param("id") String id, String body);
-
-  }
-
-  @Test
-  public void clientMetricsHaveUriLabel() {
-    final SimpleSource source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
-        .addCapability(createMetricCapability())
-        .target(new MockTarget<>(SimpleSource.class));
-
-    source.get("0x3456789");
-
-    final Map<Meter.Id, Meter> clientMetrics = getFeignMetrics().entrySet().stream()
-        .filter(this::isClientMetric)
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-
-    clientMetrics.keySet().forEach(metricId -> assertThat(
-        "Expect all Client metric names to include uri:" + metricId,
-        doesMetricIncludeUri(metricId, "/get")));
-  }
-
-  @Test
-  public void clientMetricsHaveUriLabelWithPathExpression() {
-    final SourceWithPathExpressions source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
-        .addCapability(createMetricCapability())
-        .target(new MockTarget<>(SourceWithPathExpressions.class));
-
-    source.get("123", "0x3456789");
-
-    final Map<Meter.Id, Meter> clientMetrics = getFeignMetrics().entrySet().stream()
-        .filter(this::isClientMetric)
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-
-    clientMetrics.keySet().forEach(metricId -> assertThat(
-        "Expect all Client metric names to include uri as aggregated path expression:" + metricId,
-        doesMetricIncludeUri(metricId, "/get/{id}")));
-  }
-
-  @Test
-  public void decoderExceptionCounterHasUriLabelWithPathExpression() {
-    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
-
-    final SourceWithPathExpressions source = Feign.builder()
-        .client(new MockClient()
-            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
-        .decoder((response, type) -> {
-          notFound.set(new FeignException.NotFound("test", response.request(), null, null));
-          throw notFound.get();
-        })
-        .addCapability(createMetricCapability())
-        .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
-
-    FeignException.NotFound thrown =
-        assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
-    assertSame(notFound.get(), thrown);
-
-    assertThat(
-        getMetric("feign.codec.Decoder.error_count", "uri", "/get/{id}"),
-        notNullValue());
-  }
 
   @Override
   protected SimpleMeterRegistry createMetricsRegistry() {
@@ -174,11 +98,18 @@ public class MicrometerCapabilityTest
         .orElse(null);
   }
 
-  private boolean isClientMetric(Map.Entry<Id, Meter> entry) {
-    return entry.getKey().getName().startsWith("feign.Client");
+  @Override
+  protected boolean isClientMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.Client");
   }
 
-  private boolean doesMetricIncludeUri(Id metricId, String uri) {
+  @Override
+  protected boolean isDecoderMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.codec.Decoder");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeUri(Id metricId, String uri) {
     return uri.equals(metricId.getTag("uri"));
   }
 
