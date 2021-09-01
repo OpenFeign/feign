@@ -43,15 +43,18 @@ public class MeteredClient implements Client {
     final RequestTemplate template = request.requestTemplate();
     try (final Timer.Context classTimer =
         metricRegistry.timer(
-            metricName.metricName(template.methodMetadata(), template.feignTarget()),
+            MetricRegistry.name(
+                metricName.metricName(template.methodMetadata(), template.feignTarget()),
+                "uri", template.methodMetadata().template().path()),
             metricSuppliers.timers()).time()) {
       Response response = client.execute(request, options);
       metricRegistry.meter(
           MetricRegistry.name(
               metricName.metricName(template.methodMetadata(), template.feignTarget(),
                   "http_response_code"),
-              "status_group", response.status() / 100 + "xx", "http_status",
-              String.valueOf(response.status())),
+              "status_group", response.status() / 100 + "xx",
+              "http_status", String.valueOf(response.status()),
+              "uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       return response;
     } catch (FeignException e) {
@@ -59,7 +62,9 @@ public class MeteredClient implements Client {
           MetricRegistry.name(
               metricName.metricName(template.methodMetadata(), template.feignTarget(),
                   "http_response_code"),
-              "status_group", e.status() / 100 + "xx", "http_status", String.valueOf(e.status())),
+              "status_group", e.status() / 100 + "xx",
+              "http_status", String.valueOf(e.status()),
+              "uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       throw e;
     } catch (IOException | RuntimeException e) {

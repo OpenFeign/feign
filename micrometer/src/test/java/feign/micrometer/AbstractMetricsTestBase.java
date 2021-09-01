@@ -13,24 +13,18 @@
  */
 package feign.micrometer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Before;
-import org.junit.Test;
-import feign.Capability;
-import feign.Feign;
-import feign.FeignException;
-import feign.RequestLine;
+import feign.*;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
+import org.junit.Before;
+import org.junit.Test;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
@@ -149,5 +143,82 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
 
+  @Test
+  public void clientMetricsHaveUriLabel() {
+    final SimpleSource source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(SimpleSource.class));
+
+    source.get("0x3456789");
+
+    final Map<METRIC_ID, METRIC> clientMetrics = getFeignMetrics().entrySet().stream()
+        .filter(entry -> isClientMetric(entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    clientMetrics.keySet().forEach(metricId -> assertThat(
+        "Expect all Client metric names to include uri:" + metricId,
+        doesMetricIncludeUri(metricId, "/get")));
+  }
+
+  public interface SourceWithPathExpressions {
+
+    @RequestLine("GET /get/{id}")
+    String get(@Param("id") String id, String body);
+
+  }
+
+  @Test
+  public void clientMetricsHaveUriLabelWithPathExpression() {
+    final SourceWithPathExpressions source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(SourceWithPathExpressions.class));
+
+    source.get("123", "0x3456789");
+
+    final Map<METRIC_ID, METRIC> clientMetrics = getFeignMetrics().entrySet().stream()
+        .filter(entry -> isClientMetric(entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    clientMetrics.keySet().forEach(metricId -> assertThat(
+        "Expect all Client metric names to include uri as aggregated path expression:" + metricId,
+        doesMetricIncludeUri(metricId, "/get/{id}")));
+  }
+
+  @Test
+  public void decoderExceptionCounterHasUriLabelWithPathExpression() {
+    final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
+
+    final SourceWithPathExpressions source = Feign.builder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
+        .decoder((response, type) -> {
+          notFound.set(new FeignException.NotFound("test", response.request(), null, null));
+          throw notFound.get();
+        })
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
+
+    FeignException.NotFound thrown =
+        assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
+    assertSame(notFound.get(), thrown);
+
+    final Map<METRIC_ID, METRIC> decoderMetrics = getFeignMetrics().entrySet().stream()
+        .filter(entry -> isDecoderMetric(entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    decoderMetrics.keySet().forEach(metricId -> assertThat(
+        "Expect all Decoder metric names to include uri as aggregated path expression:" + metricId,
+        doesMetricIncludeUri(metricId, "/get/{id}")));
+  }
+
+  protected abstract boolean isClientMetric(METRIC_ID metricId);
+
+  protected abstract boolean isDecoderMetric(METRIC_ID metricId);
+
+  protected abstract boolean doesMetricIncludeUri(METRIC_ID metricId, String uri);
 
 }

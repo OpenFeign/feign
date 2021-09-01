@@ -83,9 +83,9 @@ public class MeteredClient implements Client {
     final RequestTemplate template = request.requestTemplate();
     final Tags allTags = metricTagResolver
         .tag(template.methodMetadata(), template.feignTarget(), e,
-            new Tag[] {Tag.of("http_status", String.valueOf(responseStatus)),
-                Tag.of("status_group", responseStatus / 100 + "xx"),
-                Tag.of("uri", template.path())})
+            Tag.of("http_status", String.valueOf(responseStatus)),
+            Tag.of("status_group", responseStatus / 100 + "xx"),
+            Tag.of("uri", template.methodMetadata().template().path()))
         .and(extraTags);
     meterRegistry.counter(
         metricName.name("http_response_code"),
@@ -99,7 +99,8 @@ public class MeteredClient implements Client {
                               Exception e) {
     final RequestTemplate template = request.requestTemplate();
     final Tags allTags = metricTagResolver
-        .tag(template.methodMetadata(), template.feignTarget(), e, Tag.of("uri", template.path()))
+        .tag(template.methodMetadata(), template.feignTarget(), e,
+            Tag.of("uri", template.methodMetadata().template().path()))
         .and(extraTags(request, response, options, e));
     return meterRegistry.timer(metricName.name(e), allTags);
   }
