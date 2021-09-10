@@ -88,4 +88,19 @@ public class Metrics5CapabilityTest
         .orElse(null);
   }
 
+  @Override
+  protected boolean isClientMetric(MetricName metricId) {
+    return metricId.getKey().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isDecoderMetric(MetricName metricId) {
+    return metricId.getKey().startsWith("feign.codec.Decoder");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeUri(MetricName metricId, String uri) {
+    return uri.equals(metricId.getTags().get("uri"));
+  }
+
 }

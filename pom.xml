@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>11.6-SNAPSHOT</version>
+  <version>11.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -78,13 +78,14 @@
     <guava.version>30.1.1-jre</guava.version>
     <googlehttpclient.version>1.39.2</googlehttpclient.version>
     <gson.version>2.8.7</gson.version>
-    <slf4j.version>1.7.31</slf4j.version>
-    <bouncy.version>1.60</bouncy.version>
+    <slf4j.version>1.7.32</slf4j.version>
+    <bouncy.version>1.69</bouncy.version>
     <json.version>20210307</json.version>
 
     <junit.version>4.13.1</junit.version>
-    <jackson.version>2.12.3</jackson.version>
+    <jackson.version>2.12.4</jackson.version>
     <assertj.version>3.10.0</assertj.version>
+    <hamcrest.version>2.2</hamcrest.version>
 
     <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
@@ -283,6 +284,12 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest</artifactId>
+        <version>${hamcrest.version}</version>
       </dependency>
 
       <dependency>

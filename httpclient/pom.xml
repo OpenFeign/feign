@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.6-SNAPSHOT</version>
+    <version>11.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-httpclient</artifactId>
@@ -30,6 +30,19 @@
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <!--
+        fix vulnerability introduced by transient dependency
+        https://app.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
+        -->
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.15</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
