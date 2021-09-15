@@ -124,6 +124,9 @@ public class SOAPEncoder implements Encoder {
           Boolean.toString(writeXmlDeclaration));
       soapMessage.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, charsetEncoding.displayName());
       soapMessage.getSOAPBody().addDocument(document);
+      
+      modifySOAPMessage(soapMessage);
+      
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       if (formattedOutput) {
         Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -138,6 +141,30 @@ public class SOAPEncoder implements Encoder {
         | TransformerFactoryConfigurationError | TransformerException e) {
       throw new EncodeException(e.toString(), e);
     }
+  }
+  
+  /**
+   * Override this in order to modify the SOAP message object before it's finally encoded.
+   * <br>
+   * This might be useful to add SOAP Headers, which are not supported by this SOAPEncoder directly.
+   * <br>
+   * This is an example of how to add a security header:
+   * <code>
+   *   protected void modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+   *     SOAPFactory soapFactory = SOAPFactory.newInstance();
+   *     String uri = "http://schemas.xmlsoap.org/ws/2002/12/secext";
+   *     String prefix = "wss";
+   *     SOAPElement security = soapFactory.createElement("Security", prefix, uri);
+   *     SOAPElement usernameToken = soapFactory.createElement("UsernameToken", prefix, uri);
+   *     usernameToken.addChildElement("Username", prefix, uri).setValue("test");
+   *     usernameToken.addChildElement("Password", prefix, uri).setValue("test");
+   *     security.addChildElement(usernameToken);
+   *     soapMessage.getSOAPHeader().addChildElement(security);
+   *   }
+   * </code>
+   */
+  protected void modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+    // Intentionally blank
   }
 
   /**
