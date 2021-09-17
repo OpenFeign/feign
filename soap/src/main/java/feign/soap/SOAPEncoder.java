@@ -33,7 +33,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -145,12 +144,10 @@ public class SOAPEncoder implements Encoder {
   }
 
   /**
-   * Override this in order to modify the SOAP message object before it's finally encoded.
-   * <br>
+   * Override this in order to modify the SOAP message object before it's finally encoded. <br>
    * This might be useful to add SOAP Headers, which are not supported by this SOAPEncoder directly.
    * <br>
-   * This is an example of how to add a security header:
-   * <code>
+   * This is an example of how to add a security header: <code>
    *   protected void modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
    *     SOAPFactory soapFactory = SOAPFactory.newInstance();
    *     String uri = "http://schemas.xmlsoap.org/ws/2002/12/secext";
