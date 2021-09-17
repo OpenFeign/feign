@@ -125,7 +125,7 @@ public class SOAPEncoder implements Encoder {
       soapMessage.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, charsetEncoding.displayName());
       soapMessage.getSOAPBody().addDocument(document);
 
-      modifySOAPMessage(soapMessage);
+      soapMessage = modifySOAPMessage(soapMessage);
 
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       if (formattedOutput) {
@@ -148,7 +148,7 @@ public class SOAPEncoder implements Encoder {
    * This might be useful to add SOAP Headers, which are not supported by this SOAPEncoder directly.
    * <br>
    * This is an example of how to add a security header: <code>
-   *   protected void modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+   *   protected SOAPMessage modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
    *     SOAPFactory soapFactory = SOAPFactory.newInstance();
    *     String uri = "http://schemas.xmlsoap.org/ws/2002/12/secext";
    *     String prefix = "wss";
@@ -158,11 +158,13 @@ public class SOAPEncoder implements Encoder {
    *     usernameToken.addChildElement("Password", prefix, uri).setValue("test");
    *     security.addChildElement(usernameToken);
    *     soapMessage.getSOAPHeader().addChildElement(security);
+   *     return soapMessage;
    *   }
    * </code>
    */
-  protected void modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+  protected SOAPMessage modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
     // Intentionally blank
+    return soapMessage;
   }
 
   /**
