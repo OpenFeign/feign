@@ -41,7 +41,6 @@ import feign.Response;
  * "https://api.github.com");
  */
 public class GoogleHttpClient implements Client {
-  private final HttpTransport transport;
   private final HttpRequestFactory requestFactory;
 
   public GoogleHttpClient() {
@@ -49,8 +48,11 @@ public class GoogleHttpClient implements Client {
   }
 
   public GoogleHttpClient(final HttpTransport transport) {
-    this.transport = transport;
-    this.requestFactory = transport.createRequestFactory();
+    this(transport.createRequestFactory());
+  }
+
+  public GoogleHttpClient(final HttpRequestFactory requestFactory) {
+    this.requestFactory = requestFactory;
   }
 
   @Override
