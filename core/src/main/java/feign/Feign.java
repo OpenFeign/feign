@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.InvocationHandlerFactory.MethodHandlerCustomizer;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -96,8 +97,7 @@ public abstract class Feign {
 
   public static class Builder {
 
-    private final List<RequestInterceptor> requestInterceptors =
-        new ArrayList<RequestInterceptor>();
+    private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
@@ -110,11 +110,12 @@ public abstract class Feign {
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
+    private final List<MethodHandlerCustomizer> methodHandlerCustomizers = new ArrayList<>();
     private boolean decode404;
     private boolean closeAfterDecode = true;
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
-    private List<Capability> capabilities = new ArrayList<>();
+    private final List<Capability> capabilities = new ArrayList<>();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -225,6 +226,26 @@ public abstract class Feign {
     }
 
     /**
+     * Adds a single method handler customizer to the builder.
+     */
+    public Builder methodHandlerCustomizer(MethodHandlerCustomizer methodHandlerCustomizer) {
+      this.methodHandlerCustomizers.add(methodHandlerCustomizer);
+      return this;
+    }
+
+    /**
+     * Sets the full set of method handler customizers for the builder, overwriting any previous
+     * interceptors.
+     */
+    public Builder methodHandlerCustomizers(Iterable<MethodHandlerCustomizer> methodHandlerCustomizers) {
+      this.methodHandlerCustomizers.clear();
+      for (MethodHandlerCustomizer methodHandlerCustomizer : methodHandlerCustomizers) {
+        this.methodHandlerCustomizers.add(methodHandlerCustomizer);
+      }
+      return this;
+    }
+
+    /**
      * This flag indicates that the response should not be automatically closed upon completion of
      * decoding the message. This should be set if you plan on processing the response into a
      * lazy-evaluated construct, such as a {@link java.util.Iterator}.
@@ -289,7 +310,8 @@ public abstract class Feign {
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign(handlersByName, invocationHandlerFactory,
+              queryMapEncoder, methodHandlerCustomizers);
     }
   }
 

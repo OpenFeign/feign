@@ -33,6 +33,11 @@ public interface InvocationHandlerFactory {
     Object invoke(Object[] argv) throws Throwable;
   }
 
+  interface MethodHandlerCustomizer {
+
+    MethodHandler customize(Target<?> target, Method method, MethodHandler originalHandler);
+  }
+
   static final class Default implements InvocationHandlerFactory {
 
     @Override

@@ -14,6 +14,8 @@
 package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
+import feign.InvocationHandlerFactory.MethodHandlerCustomizer;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -21,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Handles default methods by directly invoking the default method code on the interface. The bindTo
@@ -35,7 +38,13 @@ final class DefaultMethodHandler implements MethodHandler {
   // handle is effectively final after bindTo has been called...
   private MethodHandle handle;
 
-  public DefaultMethodHandler(Method defaultMethod) {
+  private MethodHandler actualHandler = this::invokeOriginal;
+
+  public DefaultMethodHandler(
+          Method defaultMethod,
+          Target<?> target,
+          List<MethodHandlerCustomizer> methodHandlerCustomizers
+  ) {
     Class<?> declaringClass = defaultMethod.getDeclaringClass();
 
     try {
@@ -45,7 +54,9 @@ final class DefaultMethodHandler implements MethodHandler {
         | InvocationTargetException ex) {
       throw new IllegalStateException(ex);
     }
-
+    for (MethodHandlerCustomizer customizer : methodHandlerCustomizers) {
+      actualHandler = customizer.customize(target, defaultMethod, actualHandler);
+    }
   }
 
   private Lookup readLookup(Class<?> declaringClass)
@@ -128,12 +139,16 @@ final class DefaultMethodHandler implements MethodHandler {
     handle = unboundHandle.bindTo(proxy);
   }
 
+  @Override
+  public Object invoke(Object[] argv) throws Throwable {
+    return actualHandler.invoke(argv);
+  }
+
   /**
    * Invoke this method. DefaultMethodHandler#bindTo must be called before the first time invoke is
    * called.
    */
-  @Override
-  public Object invoke(Object[] argv) throws Throwable {
+  public Object invokeOriginal(Object[] argv) throws Throwable {
     if (handle == null) {
       throw new IllegalStateException(
           "Default method handler invoked before proxy has been bound.");

@@ -21,6 +21,7 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.Map.Entry;
 import feign.InvocationHandlerFactory.MethodHandler;
+import feign.InvocationHandlerFactory.MethodHandlerCustomizer;
 import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.*;
@@ -31,12 +32,14 @@ public class ReflectiveFeign extends Feign {
   private final ParseHandlersByName targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
+  private final List<MethodHandlerCustomizer> methodHandlerCustomizers;
 
   ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
-      QueryMapEncoder queryMapEncoder) {
+      QueryMapEncoder queryMapEncoder, List<MethodHandlerCustomizer> methodHandlerCustomizers) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
     this.queryMapEncoder = queryMapEncoder;
+    this.methodHandlerCustomizers = methodHandlerCustomizers;
   }
 
   /**
@@ -47,18 +50,23 @@ public class ReflectiveFeign extends Feign {
   @Override
   public <T> T newInstance(Target<T> target) {
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
-    Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
-    List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
+    Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<>();
+    List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<>();
 
     for (Method method : target.type().getMethods()) {
       if (method.getDeclaringClass() == Object.class) {
         continue;
-      } else if (Util.isDefault(method)) {
-        DefaultMethodHandler handler = new DefaultMethodHandler(method);
+      }
+      if (Util.isDefault(method)) {
+        DefaultMethodHandler handler = new DefaultMethodHandler(method, target, methodHandlerCustomizers);
         defaultMethodHandlers.add(handler);
         methodToHandler.put(method, handler);
       } else {
-        methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
+        MethodHandler handler = nameToHandler.get(Feign.configKey(target.type(), method));
+        for (MethodHandlerCustomizer customizer : methodHandlerCustomizers) {
+          handler = customizer.customize(target, method, handler);
+        }
+        methodToHandler.put(method, handler);
       }
     }
     InvocationHandler handler = factory.create(target, methodToHandler);
