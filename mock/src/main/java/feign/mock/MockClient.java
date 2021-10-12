@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -219,20 +219,31 @@ public class MockClient implements Client {
   }
 
   public Request verifyOne(HttpMethod method, String url) {
-    return verifyTimes(method, url, 1).get(0);
+    return verifyOne(RequestKey.builder(method, url).build());
   }
 
   public List<Request> verifyTimes(final HttpMethod method, final String url, final int times) {
+    return verifyTimes(RequestKey.builder(method, url).build(), times);
+  }
+
+  public void verifyNever(HttpMethod method, String url) {
+    verifyNever(RequestKey.builder(method, url).build());
+  }
+
+  public Request verifyOne(RequestKey requestKey) {
+    return verifyTimes(requestKey, 1).get(0);
+  }
+
+  public List<Request> verifyTimes(final RequestKey requestKey, final int times) {
     if (times < 0) {
       throw new IllegalArgumentException("times must be a non negative number");
     }
 
     if (times == 0) {
-      verifyNever(method, url);
+      verifyNever(requestKey);
       return Collections.emptyList();
     }
 
-    RequestKey requestKey = RequestKey.builder(method, url).build();
     if (!requests.containsKey(requestKey)) {
       throw new VerificationAssertionError("Wanted: '%s' but never invoked! Got: %s", requestKey,
           requests.keySet());
@@ -248,8 +259,7 @@ public class MockClient implements Client {
     return result;
   }
 
-  public void verifyNever(HttpMethod method, String url) {
-    RequestKey requestKey = RequestKey.builder(method, url).build();
+  public void verifyNever(RequestKey requestKey) {
     if (requests.containsKey(requestKey)) {
       throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!", requestKey);
     }
