@@ -13,6 +13,7 @@
  */
 package feign.mock;
 
+import static feign.Util.UTF_8;
 import static feign.Util.toByteArray;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -94,6 +95,7 @@ public class MockClientTest {
       byte[] data = toByteArray(input);
       RequestKey postContributorKey =
           RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+              .charset(UTF_8)
               .headers(RequestHeaders.builder()
                   .add("Content-Length", "55")
                   .add("Content-Type", "application/json")
@@ -193,8 +195,50 @@ public class MockClientTest {
 
   @Test
   public void verifyNone() {
+    RequestKey testRequestKey;
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
+
+    testRequestKey =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .charset(UTF_8)
+            .headers(RequestHeaders.builder()
+                .add("Content-Length", "55")
+                .add("Content-Type", "application/json")
+                .build())
+            // body is not equal
+            .body("{\"login\":\"velo[at]github\",\"type\":\"preposterous hacker\"}")
+            .build();
+    try {
+      mockClient.verifyOne(testRequestKey);
+      fail();
+    } catch (VerificationAssertionError e) {
+      assertThat(e.getMessage(), containsString("Wanted"));
+      assertThat(e.getMessage(), containsString("POST"));
+      assertThat(e.getMessage(), containsString("/repos/netflix/feign/contributors"));
+    }
+    mockClient.verifyNever(testRequestKey);
+
+    testRequestKey =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .charset(UTF_8)
+            .headers(RequestHeaders.builder()
+                .add("Content-Length", "55")
+                .add("Content-Type", "application/json")
+                // headers are not equal
+                .add("X-Header", "qwerty")
+                .build())
+            .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
+            .build();
+    try {
+      mockClient.verifyOne(testRequestKey);
+      fail();
+    } catch (VerificationAssertionError e) {
+      assertThat(e.getMessage(), containsString("Wanted"));
+      assertThat(e.getMessage(), containsString("POST"));
+      assertThat(e.getMessage(), containsString("/repos/netflix/feign/contributors"));
+    }
+    mockClient.verifyNever(testRequestKey);
 
     try {
       mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
