@@ -581,6 +581,9 @@
             <exclude>.circleci/**</exclude>
           </excludes>
           <strictCheck>true</strictCheck>
+          <mapping>
+            <java>JAVADOC_STYLE</java>
+          </mapping>
         </configuration>
         <executions>
           <execution>
