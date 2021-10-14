@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.mock;
 
+import static feign.Util.UTF_8;
 import static feign.Util.toByteArray;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -21,13 +22,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.fail;
 
-import feign.Body;
-import feign.Feign;
-import feign.FeignException;
-import feign.Param;
-import feign.Request;
-import feign.RequestLine;
-import feign.Response;
+import feign.*;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
@@ -58,6 +53,7 @@ public class MockClientTest {
     List<Contributor> patchContributors(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
+    @Headers({"Content-Type: application/json"})
     @Body("%7B\"login\":\"{login}\",\"type\":\"{type}\"%7D")
     Contributor create(
         @Param("owner") String owner,
@@ -97,6 +93,16 @@ public class MockClientTest {
   public void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
+      RequestKey postContributorKey =
+          RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+              .charset(UTF_8)
+              .headers(
+                  RequestHeaders.builder()
+                      .add("Content-Length", "55")
+                      .add("Content-Type", "application/json")
+                      .build())
+              .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
+              .build();
       mockClient = new MockClient();
       github =
           Feign.builder()
@@ -109,10 +115,7 @@ public class MockClientTest {
                           HttpMethod.GET,
                           "/repos/netflix/feign/contributors?client_id=7 7",
                           new ByteArrayInputStream(data))
-                      .ok(
-                          HttpMethod.POST,
-                          "/repos/netflix/feign/contributors",
-                          "{\"login\":\"velo\",\"contributions\":0}")
+                      .ok(postContributorKey, "{\"login\":\"velo\",\"contributions\":0}")
                       .noContent(HttpMethod.PATCH, "/repos/velo/feign-mock/contributors")
                       .add(
                           HttpMethod.GET,
@@ -173,6 +176,16 @@ public class MockClientTest {
 
   @Test
   public void verifyInvocation() {
+    RequestKey testRequestKey =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .headers(
+                RequestHeaders.builder()
+                    .add("Content-Length", "55")
+                    .add("Content-Type", "application/json")
+                    .build())
+            .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
+            .build();
+
     Contributor contribution =
         github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     // making sure it received a proper response
@@ -183,7 +196,10 @@ public class MockClientTest {
     List<Request> results =
         mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
     assertThat(results, hasSize(1));
+    results = mockClient.verifyTimes(testRequestKey, 1);
+    assertThat(results, hasSize(1));
 
+    assertThat(mockClient.verifyOne(testRequestKey).body(), notNullValue());
     byte[] body = mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
     assertThat(body, notNullValue());
 
@@ -196,8 +212,52 @@ public class MockClientTest {
 
   @Test
   public void verifyNone() {
+    RequestKey testRequestKey;
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
+
+    testRequestKey =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .charset(UTF_8)
+            .headers(
+                RequestHeaders.builder()
+                    .add("Content-Length", "55")
+                    .add("Content-Type", "application/json")
+                    .build())
+            // body is not equal
+            .body("{\"login\":\"velo[at]github\",\"type\":\"preposterous hacker\"}")
+            .build();
+    try {
+      mockClient.verifyOne(testRequestKey);
+      fail();
+    } catch (VerificationAssertionError e) {
+      assertThat(e.getMessage(), containsString("Wanted"));
+      assertThat(e.getMessage(), containsString("POST"));
+      assertThat(e.getMessage(), containsString("/repos/netflix/feign/contributors"));
+    }
+    mockClient.verifyNever(testRequestKey);
+
+    testRequestKey =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .charset(UTF_8)
+            .headers(
+                RequestHeaders.builder()
+                    .add("Content-Length", "55")
+                    .add("Content-Type", "application/json")
+                    // headers are not equal
+                    .add("X-Header", "qwerty")
+                    .build())
+            .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
+            .build();
+    try {
+      mockClient.verifyOne(testRequestKey);
+      fail();
+    } catch (VerificationAssertionError e) {
+      assertThat(e.getMessage(), containsString("Wanted"));
+      assertThat(e.getMessage(), containsString("POST"));
+      assertThat(e.getMessage(), containsString("/repos/netflix/feign/contributors"));
+    }
+    mockClient.verifyNever(testRequestKey);
 
     try {
       mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
