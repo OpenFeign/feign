@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,10 @@
  */
 package feign.jackson;
 
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Is.isA;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -20,9 +24,6 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,10 +31,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.core.Is.isA;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("deprecation")
 public class JacksonIteratorTest {
@@ -43,7 +43,7 @@ public class JacksonIteratorTest {
 
   @Test
   public void shouldDecodePrimitiveArrays() throws IOException {
-    assertThat(iterator(Integer.class, "[0,1,2,3]")).containsExactly(0, 1, 2, 3);
+    assertThat(iterator(Integer.class, "[0,1,2,3]")).toIterable().containsExactly(0, 1, 2, 3);
   }
 
   @Test
@@ -73,7 +73,7 @@ public class JacksonIteratorTest {
 
   @Test
   public void shouldDecodeObjects() throws IOException {
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]"))
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]")).toIterable()
         .containsExactly(new User("bob"), new User("joe"));
   }
 
@@ -82,13 +82,13 @@ public class JacksonIteratorTest {
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(IOException.class));
 
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
+    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).toIterable()
         .containsOnly(new User("bob"));
   }
 
   @Test
   public void emptyBodyDecodesToEmptyIterator() throws IOException {
-    assertThat(iterator(String.class, "")).isEmpty();
+    assertThat(iterator(String.class, "")).toIterable().isEmpty();
   }
 
   @Test
@@ -97,7 +97,7 @@ public class JacksonIteratorTest {
 
     JacksonIterator<String> it = iterator(String.class, "[\"test\"]");
 
-    assertThat(it).containsExactly("test");
+    assertThat(it).toIterable().containsExactly("test");
     it.remove();
   }
 
@@ -121,7 +121,7 @@ public class JacksonIteratorTest {
         .body(inputStream, jsonBytes.length)
         .build();
 
-    assertThat(iterator(Boolean.class, response)).hasSize(2);
+    assertThat(iterator(Boolean.class, response)).toIterable().hasSize(2);
     assertThat(closed.get()).isTrue();
   }
 
@@ -147,7 +147,7 @@ public class JacksonIteratorTest {
 
     try {
       thrown.expect(DecodeException.class);
-      assertThat(iterator(Boolean.class, response)).hasSize(1);
+      assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1);
     } finally {
       assertThat(closed.get()).isTrue();
     }
