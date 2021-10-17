@@ -14,8 +14,12 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -25,7 +29,13 @@ import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -67,7 +77,7 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().decode404().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
-    assertThat(api.decodedLazyPost()).isEmpty(); // empty, not null!
+    assertThat(api.decodedLazyPost().hasNext()).isFalse(); // empty, not null!
     assertThat(api.optionalContent()).isEmpty(); // empty, not null!
     assertThat(api.streamPost()).isEmpty(); // empty, not null!
     assertThat(api.decodedPost()).isNull(); // null, not empty!
@@ -94,7 +104,7 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
-    assertThat(api.decodedLazyPost()).isEmpty(); // empty, not null!
+    assertThat(api.decodedLazyPost().hasNext()).isFalse(); // empty, not null!
     assertThat(api.optionalContent()).isEmpty(); // empty, not null!
     assertThat(api.streamPost()).isEmpty(); // empty, not null!
     assertThat(api.decodedPost()).isNull(); // null, not empty!
