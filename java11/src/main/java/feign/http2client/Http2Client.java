@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.http2client;
 
+import feign.AsyncClient;
 import feign.Client;
 import feign.Request;
 import feign.Request.Options;
@@ -32,11 +33,22 @@ import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Http2Client implements Client {
+public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
 
@@ -54,9 +66,14 @@ public class Http2Client implements Client {
 
   @Override
   public Response execute(Request request, Options options) throws IOException {
-    final HttpRequest httpRequest = newRequestBuilder(request, options).build();
-    HttpClient clientForRequest = getOrCreateClient(options);
+    final HttpRequest httpRequest;
+    try {
+      httpRequest = newRequestBuilder(request, options).version(client.version()).build();
+    } catch (URISyntaxException e) {
+      throw new IOException("Invalid uri " + request.url(), e);
+    }
 
+    HttpClient clientForRequest = getOrCreateClient(options);
     HttpResponse<byte[]> httpResponse;
     try {
       httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
@@ -65,19 +82,37 @@ public class Http2Client implements Client {
       throw new IOException("Invalid uri " + request.url(), e);
     }
 
+    return toFeignResponse(request, httpResponse);
+  }
+
+  @Override
+  public CompletableFuture<Response> execute(
+      Request request, Options options, Optional<Object> requestContext) {
+    HttpRequest httpRequest;
+    try {
+      httpRequest = newRequestBuilder(request, options).build();
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException("Invalid uri " + request.url(), e);
+    }
+
+    HttpClient clientForRequest = getOrCreateClient(options);
+    CompletableFuture<HttpResponse<byte[]>> future =
+        clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+    return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse));
+  }
+
+  protected Response toFeignResponse(Request request, HttpResponse<byte[]> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
-    final Response response =
-        Response.builder()
-            .body(
-                new ByteArrayInputStream(httpResponse.body()),
-                length.isPresent() ? (int) length.getAsLong() : null)
-            .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))
-            .request(request)
-            .status(httpResponse.statusCode())
-            .headers(castMapCollectType(httpResponse.headers().map()))
-            .build();
-    return response;
+    return Response.builder()
+        .body(
+            new ByteArrayInputStream(httpResponse.body()),
+            length.isPresent() ? (int) length.getAsLong() : null)
+        .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))
+        .request(request)
+        .status(httpResponse.statusCode())
+        .headers(castMapCollectType(httpResponse.headers().map()))
+        .build();
   }
 
   private HttpClient getOrCreateClient(Options options) {
@@ -114,13 +149,8 @@ public class Http2Client implements Client {
         .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
   }
 
-  private Builder newRequestBuilder(Request request, Options options) throws IOException {
-    URI uri;
-    try {
-      uri = new URI(request.url());
-    } catch (final URISyntaxException e) {
-      throw new IOException("Invalid uri " + request.url(), e);
-    }
+  private Builder newRequestBuilder(Request request, Options options) throws URISyntaxException {
+    URI uri = new URI(request.url());
 
     final BodyPublisher body;
     final byte[] data = request.body();
@@ -134,7 +164,7 @@ public class Http2Client implements Client {
         HttpRequest.newBuilder()
             .uri(uri)
             .timeout(Duration.ofMillis(options.readTimeoutMillis()))
-            .version(Version.HTTP_2);
+            .version(client.version());
 
     final Map<String, Collection<String>> headers = filterRestrictedHeaders(request.headers());
     if (!headers.isEmpty()) {
