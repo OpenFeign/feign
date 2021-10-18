@@ -11,9 +11,15 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-@XmlSchema(
-    elementFormDefault = XmlNsForm.UNQUALIFIED)
-package feign.soap;
+package feign.http2client.test;
 
-import javax.xml.bind.annotation.XmlNsForm;
-import javax.xml.bind.annotation.XmlSchema;
+public class CustomPojo {
+
+  private final String name;
+  private final Integer number;
+
+  CustomPojo(String name, Integer number) {
+    this.name = name;
+    this.number = number;
+  }
+}

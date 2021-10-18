@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -55,7 +55,10 @@ public class MeteredDecoder implements Decoder {
     final Object decoded;
     try (final Timer.Context classTimer =
         metricRegistry
-            .timer(metricName.metricName(template.methodMetadata(), template.feignTarget()),
+            .timer(
+                MetricRegistry.name(
+                    metricName.metricName(template.methodMetadata(), template.feignTarget()),
+                    "uri", template.methodMetadata().template().path()),
                 metricSuppliers.timers())
             .time()) {
       decoded = decoder.decode(response, type);

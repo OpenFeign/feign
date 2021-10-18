@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.6-SNAPSHOT</version>
+    <version>11.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-java11</artifactId>
@@ -67,6 +67,11 @@
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <type>jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
