@@ -25,20 +25,20 @@ import java.util.Optional;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
- * Warp feign {@link Decoder} with metrics.
+ * Warp feign {@link Decoder<E>} with metrics.
  */
-public class MeteredDecoder implements Decoder {
+public class MeteredDecoder<E> implements Decoder<E> {
 
-  private final Decoder decoder;
+  private final Decoder<E> decoder;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
   private final MetricTagResolver metricTagResolver;
 
-  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry) {
+  public MeteredDecoder(Decoder<E> decoder, MeterRegistry meterRegistry) {
     this(decoder, meterRegistry, new FeignMetricName(Decoder.class), new FeignMetricTagResolver());
   }
 
-  public MeteredDecoder(Decoder decoder, MeterRegistry meterRegistry, MetricName metricName,
+  public MeteredDecoder(Decoder<E> decoder, MeterRegistry meterRegistry, MetricName metricName,
       MetricTagResolver metricTagResolver) {
     this.decoder = decoder;
     this.meterRegistry = meterRegistry;
@@ -47,7 +47,7 @@ public class MeteredDecoder implements Decoder {
   }
 
   @Override
-  public Object decode(Response response, Type type)
+  public E decode(Response response, Type type)
       throws IOException, FeignException {
     final Optional<MeteredBody> body = Optional.ofNullable(response.body())
         .map(MeteredBody::new);
@@ -55,7 +55,7 @@ public class MeteredDecoder implements Decoder {
     Response meteredResponse = body.map(b -> response.toBuilder().body(b).build())
         .orElse(response);
 
-    Object decoded;
+    E decoded;
 
     final Timer.Sample sample = Timer.start(meterRegistry);
     Timer timer = null;

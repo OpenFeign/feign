@@ -298,7 +298,7 @@ public class UtilTest {
     ParameterizedDecoder<?> PARAMETERIZED_DECODER_UNBOUND = null;
   }
 
-  interface ParameterizedDecoder<T extends List<String>> extends Decoder {
+  interface ParameterizedDecoder<T extends List<String>> extends Decoder<Object> {
 
   }
 

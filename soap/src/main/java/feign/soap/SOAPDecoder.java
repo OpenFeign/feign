@@ -81,7 +81,7 @@ import feign.jaxb.JAXBContextFactory;
  * @see SOAPErrorDecoder
  * @see SOAPFaultException
  */
-public class SOAPDecoder implements Decoder {
+public class SOAPDecoder implements Decoder<Object> {
 
 
   private final JAXBContextFactory jaxbContextFactory;

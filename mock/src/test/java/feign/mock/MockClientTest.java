@@ -68,16 +68,16 @@ public class MockClientTest {
 
   }
 
-  class AssertionDecoder implements Decoder {
+  class AssertionDecoder<E> implements Decoder<E> {
 
-    private final Decoder delegate;
+    private final Decoder<E> delegate;
 
-    public AssertionDecoder(Decoder delegate) {
+    public AssertionDecoder(Decoder<E> delegate) {
       this.delegate = delegate;
     }
 
     @Override
-    public Object decode(Response response, Type type)
+    public E decode(Response response, Type type)
         throws IOException, DecodeException, FeignException {
       assertThat(response.request(), notNullValue());
 
@@ -103,7 +103,7 @@ public class MockClientTest {
               .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
               .build();
       mockClient = new MockClient();
-      github = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
+      github = Feign.builder().decoder(new AssertionDecoder<>(new GsonDecoder()))
           .client(mockClient.ok(HttpMethod.GET, "/repos/netflix/feign/contributors", data)
               .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55")
               .ok(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",

@@ -25,16 +25,16 @@ import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 
 /**
- * Warp feign {@link Decoder} with metrics.
+ * Warp feign {@link Decoder<E>} with metrics.
  */
-public class MeteredDecoder implements Decoder {
+public class MeteredDecoder<E> implements Decoder<E> {
 
-  private final Decoder decoder;
+  private final Decoder<E> decoder;
   private final MetricRegistry metricRegistry;
   private final MetricSuppliers metricSuppliers;
   private final FeignMetricName metricName;
 
-  public MeteredDecoder(Decoder decoder, MetricRegistry metricRegistry,
+  public MeteredDecoder(Decoder<E> decoder, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
     this.decoder = decoder;
     this.metricRegistry = metricRegistry;
@@ -43,7 +43,7 @@ public class MeteredDecoder implements Decoder {
   }
 
   @Override
-  public Object decode(Response response, Type type)
+  public E decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
     final RequestTemplate template = response.request().requestTemplate();
     final MeteredBody body = response.body() == null
@@ -52,7 +52,7 @@ public class MeteredDecoder implements Decoder {
 
     response = response.toBuilder().body(body).build();
 
-    final Object decoded;
+    final E decoded;
     try (final Context classTimer =
         metricRegistry
             .timer(metricName.metricName(template.methodMetadata(), template.feignTarget())

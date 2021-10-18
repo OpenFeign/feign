@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,19 +22,23 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class OptionalDecoder implements Decoder {
-  final Decoder delegate;
+public final class OptionalDecoder<E> implements Decoder<E> {
+  final Decoder<E> delegate;
 
-  public OptionalDecoder(Decoder delegate) {
+  public OptionalDecoder(Decoder<E> delegate) {
     Objects.requireNonNull(delegate, "Decoder must not be null. ");
     this.delegate = delegate;
   }
 
   @Override
-  public Object decode(Response response, Type type) throws IOException {
+  public E decode(Response response, Type type) throws IOException {
     if (!isOptional(type)) {
       return delegate.decode(response, type);
     }
+    return (E) decodeOptional(response, type);
+  }
+
+  private Optional<E> decodeOptional(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) {
       return Optional.empty();
     }

@@ -23,18 +23,18 @@ import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 /**
  * Warp feign {@link Encoder} with metrics.
  */
-public class MeteredEncoder implements Encoder {
+public class MeteredEncoder<E> implements Encoder<E> {
 
-  private final Encoder encoder;
+  private final Encoder<E> encoder;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
   private final MetricTagResolver metricTagResolver;
 
-  public MeteredEncoder(Encoder encoder, MeterRegistry meterRegistry) {
+  public MeteredEncoder(Encoder<E> encoder, MeterRegistry meterRegistry) {
     this(encoder, meterRegistry, new FeignMetricName(Encoder.class), new FeignMetricTagResolver());
   }
 
-  public MeteredEncoder(Encoder encoder,
+  public MeteredEncoder(Encoder<E> encoder,
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
@@ -45,7 +45,7 @@ public class MeteredEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public void encode(E object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     createTimer(object, bodyType, template)
         .record(() -> encoder.encode(object, bodyType, template));

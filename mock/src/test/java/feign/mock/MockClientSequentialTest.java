@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -72,16 +72,16 @@ public class MockClientSequentialTest {
 
   }
 
-  class AssertionDecoder implements Decoder {
+  class AssertionDecoder<E> implements Decoder<E> {
 
-    private final Decoder delegate;
+    private final Decoder<E> delegate;
 
-    public AssertionDecoder(Decoder delegate) {
+    public AssertionDecoder(Decoder<E> delegate) {
       this.delegate = delegate;
     }
 
     @Override
-    public Object decode(Response response, Type type)
+    public E decode(Response response, Type type)
         throws IOException, DecodeException, FeignException {
       assertThat(response.request(), notNullValue());
 
@@ -102,7 +102,7 @@ public class MockClientSequentialTest {
           .add("Name", "netflix")
           .build();
       mockClientSequential = new MockClient(true);
-      githubSequential = Feign.builder().decoder(new AssertionDecoder(new GsonDecoder()))
+      githubSequential = Feign.builder().decoder(new AssertionDecoder<>(new GsonDecoder()))
           .client(mockClientSequential
               .add(RequestKey
                   .builder(HttpMethod.GET, "/repos/netflix/feign/contributors")

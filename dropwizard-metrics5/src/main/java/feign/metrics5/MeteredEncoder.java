@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,14 +24,14 @@ import io.dropwizard.metrics5.Timer.Context;
 /**
  * Warp feign {@link Encoder} with metrics.
  */
-public class MeteredEncoder implements Encoder {
+public class MeteredEncoder<E> implements Encoder<E> {
 
-  private final Encoder encoder;
+  private final Encoder<E> encoder;
   private final MetricRegistry metricRegistry;
   private final MetricSuppliers metricSuppliers;
   private final FeignMetricName metricName;
 
-  public MeteredEncoder(Encoder encoder, MetricRegistry metricRegistry,
+  public MeteredEncoder(Encoder<E> encoder, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
     this.encoder = encoder;
     this.metricRegistry = metricRegistry;
@@ -40,7 +40,7 @@ public class MeteredEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public void encode(E object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     try (final Context classTimer =
         metricRegistry.timer(

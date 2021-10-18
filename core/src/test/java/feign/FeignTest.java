@@ -480,7 +480,7 @@ public class FeignTest {
     TestInterface api = new TestInterfaceBuilder()
         .decoder(new StringDecoder() {
           @Override
-          public Object decode(Response response, Type type) throws IOException {
+          public String decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
               throw new RetryableException(response.status(), string, HttpMethod.POST, null,

@@ -83,7 +83,7 @@ import feign.jaxb.JAXBContextFactory;
  * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
  * </p>
  */
-public class SOAPEncoder implements Encoder {
+public class SOAPEncoder implements Encoder<Object> {
 
   private static final String DEFAULT_SOAP_PROTOCOL = SOAPConstants.SOAP_1_1_PROTOCOL;
 

@@ -48,7 +48,7 @@ import static java.lang.String.format;
  *   github.create("openfeign", "feign", contributor);
  * </pre>
  */
-public class JsonEncoder implements Encoder {
+public class JsonEncoder implements Encoder<Object> {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)

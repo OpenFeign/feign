@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * A {@link Decoder} that uses Jackson Jr to convert objects to String or byte representation.
  */
-public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
+public class JacksonJrDecoder extends JacksonJrMapper implements Decoder<Object> {
 
   @FunctionalInterface
   interface Transformer {

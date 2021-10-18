@@ -49,7 +49,7 @@ import static java.lang.String.format;
  *   System.out.println(contributors.getJSONObject(0).getString("login"));
  * </pre>
  */
-public class JsonDecoder implements Decoder {
+public class JsonDecoder implements Decoder<Object> {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {

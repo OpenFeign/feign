@@ -56,7 +56,7 @@ public class AlwaysEncodeBodyContractTest {
     String concatenate(String word1);
   }
 
-  private static class AllParametersSampleEncoder implements Encoder {
+  private static class AllParametersSampleEncoder implements Encoder<Object> {
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
@@ -67,7 +67,7 @@ public class AlwaysEncodeBodyContractTest {
     }
   }
 
-  private static class BodyParameterSampleEncoder implements Encoder {
+  private static class BodyParameterSampleEncoder implements Encoder<Object> {
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {

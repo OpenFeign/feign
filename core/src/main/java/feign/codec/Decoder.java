@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -60,7 +60,7 @@ import feign.Util;
  * {@link DecodeException} unless they are a subclass of {@link FeignException} already, and unless
  * the client was configured with {@link Feign.Builder#decode404()}.
  */
-public interface Decoder {
+public interface Decoder<E> {
 
   /**
    * Decodes an http response into an object corresponding to its
@@ -75,10 +75,12 @@ public interface Decoder {
    * @throws DecodeException when decoding failed due to a checked exception besides IOException.
    * @throws FeignException when decoding succeeds, but conveys the operation failed.
    */
-  Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
+  E decode(Response response, Type type) throws IOException, DecodeException, FeignException;
 
   /** Default implementation of {@code Decoder}. */
-  public class Default extends StringDecoder {
+  public class Default implements Decoder<Object> {
+
+    private StringDecoder stringDecoder = new StringDecoder();
 
     @Override
     public Object decode(Response response, Type type) throws IOException {
@@ -89,7 +91,7 @@ public interface Decoder {
       if (byte[].class.equals(type)) {
         return Util.toByteArray(response.body().asInputStream());
       }
-      return super.decode(response, type);
+      return stringDecoder.decode(response, type);
     }
   }
 }

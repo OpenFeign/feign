@@ -28,7 +28,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 
-public class JacksonDecoder implements Decoder {
+public class JacksonDecoder implements Decoder<Object> {
 
   private final ObjectMapper mapper;
 

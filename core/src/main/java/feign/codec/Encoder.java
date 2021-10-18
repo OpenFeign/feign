@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -63,7 +63,7 @@ import static java.lang.String.format;
  * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
  */
-public interface Encoder {
+public interface Encoder<E> {
   /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
 
@@ -76,12 +76,12 @@ public interface Encoder {
    * @param template the request template to populate.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
-  void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
+  void encode(E object, Type bodyType, RequestTemplate template) throws EncodeException;
 
   /**
    * Default implementation of {@code Encoder}.
    */
-  class Default implements Encoder {
+  class Default implements Encoder<Object> {
 
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template) {

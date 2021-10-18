@@ -103,8 +103,8 @@ public abstract class Feign {
     private Client client = new Client.Default(null, null);
     private Retryer retryer = new Retryer.Default();
     private Logger logger = new NoOpLogger();
-    private Encoder encoder = new Encoder.Default();
-    private Decoder decoder = new Decoder.Default();
+    private Encoder<?> encoder = new Encoder.Default();
+    private Decoder<?> decoder = new Decoder.Default();
     private QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private Options options = new Options();
@@ -141,12 +141,12 @@ public abstract class Feign {
       return this;
     }
 
-    public Builder encoder(Encoder encoder) {
+    public <E> Builder encoder(Encoder<E> encoder) {
       this.encoder = encoder;
       return this;
     }
 
-    public Builder decoder(Decoder decoder) {
+    public <E> Builder decoder(Decoder<E> decoder) {
       this.decoder = decoder;
       return this;
     }
@@ -159,8 +159,8 @@ public abstract class Feign {
     /**
      * Allows to map the response before passing it to the decoder.
      */
-    public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
-      this.decoder = new ResponseMappingDecoder(mapper, decoder);
+    public <E> Builder mapAndDecode(ResponseMapper mapper, Decoder<E> decoder) {
+      this.decoder = new ResponseMappingDecoder<E>(mapper, decoder);
       return this;
     }
 
@@ -277,8 +277,8 @@ public abstract class Feign {
       Logger logger = Capability.enrich(this.logger, capabilities);
       Contract contract = Capability.enrich(this.contract, capabilities);
       Options options = Capability.enrich(this.options, capabilities);
-      Encoder encoder = Capability.enrich(this.encoder, capabilities);
-      Decoder decoder = Capability.enrich(this.decoder, capabilities);
+      Encoder<?> encoder = Capability.enrich(this.encoder, capabilities);
+      Decoder<?> decoder = Capability.enrich(this.decoder, capabilities);
       InvocationHandlerFactory invocationHandlerFactory =
           Capability.enrich(this.invocationHandlerFactory, capabilities);
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
@@ -293,18 +293,18 @@ public abstract class Feign {
     }
   }
 
-  public static class ResponseMappingDecoder implements Decoder {
+  public static class ResponseMappingDecoder<E> implements Decoder<E> {
 
     private final ResponseMapper mapper;
-    private final Decoder delegate;
+    private final Decoder<E> delegate;
 
-    public ResponseMappingDecoder(ResponseMapper mapper, Decoder decoder) {
+    public ResponseMappingDecoder(ResponseMapper mapper, Decoder<E> decoder) {
       this.mapper = mapper;
       this.delegate = decoder;
     }
 
     @Override
-    public Object decode(Response response, Type type) throws IOException {
+    public E decode(Response response, Type type) throws IOException {
       return delegate.decode(mapper.map(response, type), type);
     }
   }

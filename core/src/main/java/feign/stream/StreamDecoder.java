@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -44,16 +44,16 @@ import static feign.Util.ensureClosed;
  * }</code>
  * </pre>
  */
-public final class StreamDecoder implements Decoder {
+public final class StreamDecoder<E> implements Decoder<Stream<E>> {
 
-  private final Decoder iteratorDecoder;
+  private final Decoder<E> iteratorDecoder;
 
-  StreamDecoder(Decoder iteratorDecoder) {
+  StreamDecoder(Decoder<E> iteratorDecoder) {
     this.iteratorDecoder = iteratorDecoder;
   }
 
   @Override
-  public Object decode(Response response, Type type)
+  public Stream<E> decode(Response response, Type type)
       throws IOException, FeignException {
     if (!(type instanceof ParameterizedType)) {
       throw new IllegalArgumentException("StreamDecoder supports only stream: unknown " + type);
@@ -62,7 +62,7 @@ public final class StreamDecoder implements Decoder {
     if (!Stream.class.equals(streamType.getRawType())) {
       throw new IllegalArgumentException("StreamDecoder supports only stream: unknown " + type);
     }
-    Iterator<?> iterator =
+    Iterator<E> iterator =
         (Iterator) iteratorDecoder.decode(response, new IteratorParameterizedType(streamType));
 
     return StreamSupport.stream(
@@ -76,8 +76,8 @@ public final class StreamDecoder implements Decoder {
         });
   }
 
-  public static StreamDecoder create(Decoder iteratorDecoder) {
-    return new StreamDecoder(iteratorDecoder);
+  public static <E> StreamDecoder<E> create(Decoder<E> iteratorDecoder) {
+    return new StreamDecoder<>(iteratorDecoder);
   }
 
   static final class IteratorParameterizedType implements ParameterizedType {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,10 +19,10 @@ import feign.Response;
 import feign.Util;
 import static java.lang.String.format;
 
-public class StringDecoder implements Decoder {
+public class StringDecoder implements Decoder<String> {
 
   @Override
-  public Object decode(Response response, Type type) throws IOException {
+  public String decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
     if (body == null) {
       return null;
