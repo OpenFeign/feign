@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,13 +15,11 @@ package feign.httpclient;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.Response;
@@ -73,13 +71,13 @@ public class ApacheHttpClientTest extends AbstractClientTest {
     final HttpClient httpClient = HttpClientBuilder.create().build();
     final ErrorDecoder decoder = mock(ErrorDecoder.class);
     final JaxRsTestInterface testInterface = Feign.builder()
-            .contract(new JAXRSContract())
-            .errorDecoder(decoder)
-            .retryer(Retryer.NEVER_RETRY)
-            .client(new ApacheHttpClient(httpClient))
-            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+        .contract(new JAXRSContract())
+        .errorDecoder(decoder)
+        .retryer(Retryer.NEVER_RETRY)
+        .client(new ApacheHttpClient(httpClient))
+        .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
     when(decoder.decode(anyString(), any(Response.class)))
-            .thenReturn(new RuntimeException("Exception thrown by decoder"));
+        .thenReturn(new RuntimeException("Exception thrown by decoder"));
     // Invalid redirection caused because Location header is missing.
     server.enqueue(new MockResponse().setResponseCode(303));
 
