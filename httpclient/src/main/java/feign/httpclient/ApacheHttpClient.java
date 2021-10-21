@@ -13,16 +13,29 @@
  */
 package feign.httpclient;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
+import static feign.Util.UTF_8;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.*;
+
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import feign.Util;
+import org.apache.http.*;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.Configurable;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ByteArrayEntity;
@@ -30,23 +43,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import feign.Client;
-import feign.Request;
-import feign.Response;
-import feign.Util;
-import static feign.Util.UTF_8;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -80,8 +76,13 @@ public final class ApacheHttpClient implements Client {
     } catch (URISyntaxException e) {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
-    HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse, request);
+    HttpClientContext localContext = HttpClientContext.create();
+    try {
+      HttpResponse httpResponse = client.execute(httpUriRequest, localContext);
+      return toFeignResponse(httpResponse, request);
+    } catch (ClientProtocolException ex) {
+      return toFeignResponse(localContext.getResponse(), request);
+    }
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
