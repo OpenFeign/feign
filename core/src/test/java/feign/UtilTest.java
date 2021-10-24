@@ -13,18 +13,29 @@
  */
 package feign;
 
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
-import org.junit.Test;
-import java.io.Reader;
-import java.lang.reflect.Type;
-import java.util.*;
-import feign.codec.Decoder;
-import static feign.Util.*;
+import static feign.Util.caseInsensitiveCopyOf;
+import static feign.Util.emptyToNull;
+import static feign.Util.removeValues;
+import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import feign.codec.Decoder;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class UtilTest {
 
@@ -34,14 +45,14 @@ public class UtilTest {
   @Test
   public void removesEmptyStrings() {
     String[] values = new String[] {"", null};
-    assertThat(removeValues(values, (value) -> emptyToNull(value) == null, String.class))
+    assertThat(removeValues(values, value -> emptyToNull(value) == null, String.class))
         .isEmpty();
   }
 
   @Test
   public void removesEvenNumbers() {
     Integer[] values = new Integer[] {22, 23};
-    assertThat(removeValues(values, (number) -> number % 2 == 0, Integer.class))
+    assertThat(removeValues(values, number -> number % 2 == 0, Integer.class))
         .containsExactly(23);
   }
 
@@ -51,7 +62,7 @@ public class UtilTest {
     assertEquals(false, Util.emptyValueOf(Boolean.class));
     assertThat((byte[]) Util.emptyValueOf(byte[].class)).isEmpty();
     assertEquals(Collections.emptyList(), Util.emptyValueOf(Collection.class));
-    assertThat((Iterator<?>) Util.emptyValueOf(Iterator.class)).isEmpty();
+    assertThat(((Iterator<?>) Util.emptyValueOf(Iterator.class)).hasNext()).isFalse();
     assertEquals(Collections.emptyList(), Util.emptyValueOf(List.class));
     assertEquals(Collections.emptyMap(), Util.emptyValueOf(Map.class));
     assertEquals(Collections.emptySet(), Util.emptyValueOf(Set.class));
