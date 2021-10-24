@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -467,6 +468,7 @@ public class TypesResolveReturnTypeTest {
   @Test
   public void overrideOverridingConcreteCollectionGenericFourthLevel() {
     Method[] methods = OverrideOverridingConcreteCollectionGenericFourthLevel.class.getMethods();
+    Arrays.sort(methods, (i, j) -> i.toString().compareTo(j.toString()));
     Assertions.assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(OverrideOverridingConcreteCollectionGenericFourthLevel.class,
