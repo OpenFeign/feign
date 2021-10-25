@@ -19,8 +19,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +43,8 @@ public class TypesResolveReturnTypeTest {
 
   public Method[] getMethods(Class<?> c) {
     Method[] methods = c.getMethods();
-    Arrays.sort(methods, new Comparator<Method>() {
-      @Override
-      public int compare(Method o1, Method o2) {
-        return (o1.getName() + o1.getGenericReturnType().getTypeName()).compareTo(
-            (o2.getName() + o2.getGenericReturnType().getTypeName()));
-      }
-    });
+    Arrays.sort(methods,
+        Comparator.comparing(o -> (o.getName() + o.getGenericReturnType().getTypeName())));
     return methods;
   }
 
