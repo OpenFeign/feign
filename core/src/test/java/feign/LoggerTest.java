@@ -389,9 +389,14 @@ public class LoggerTest {
     private final List<String> messages = new ArrayList<>();
     private final List<String> expectedMessages = new ArrayList<>();
 
-    RecordingLogger() {
-      super(header -> !header.getKey().toLowerCase().startsWith(PREFIX_X),
-          header -> !header.getKey().toLowerCase().startsWith(PREFIX_Y));
+    @Override
+    protected boolean shouldLogRequestHeader(String header) {
+      return !header.toLowerCase().startsWith(PREFIX_X);
+    }
+
+    @Override
+    protected boolean shouldLogResponseHeader(String header) {
+      return !header.toLowerCase().startsWith(PREFIX_Y);
     }
 
     void expectMessages(List<String> expectedMessages) {
