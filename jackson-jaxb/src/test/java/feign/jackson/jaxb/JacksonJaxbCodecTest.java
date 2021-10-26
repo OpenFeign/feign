@@ -20,7 +20,6 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import javax.xml.bind.annotation.XmlAccessType;
