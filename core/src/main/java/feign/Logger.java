@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,10 +16,14 @@ package feign;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Predicate;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 import static feign.Util.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -27,8 +31,31 @@ import static feign.Util.*;
 public abstract class Logger {
 
   protected static String methodTag(String configKey) {
-    return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('(')))
-        .append("] ").toString();
+    return '[' + configKey.substring(0, configKey.indexOf('(')) + "] ";
+  }
+
+  protected Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter;
+  protected Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter;
+
+  /**
+   * Default logger constructor
+   */
+  protected Logger() {
+    requestHeaderFilter = header -> !(header.getValue() == null || header.getValue().isEmpty());
+    responseHeaderFilter = header -> !(header.getValue() == null || header.getValue().isEmpty());
+  }
+
+  /**
+   * Logger constructor with additional header filters
+   *
+   * @param additionalRequestHeaderFilter additional request header filter
+   * @param additionalResponseHeaderFilter additional response header filter
+   */
+  protected Logger(Predicate<Map.Entry<String, Collection<String>>> additionalRequestHeaderFilter,
+      Predicate<Map.Entry<String, Collection<String>>> additionalResponseHeaderFilter) {
+    this();
+    requestHeaderFilter = requestHeaderFilter.and(requireNonNull(additionalRequestHeaderFilter));
+    responseHeaderFilter = responseHeaderFilter.and(requireNonNull(additionalResponseHeaderFilter));
   }
 
   /**
@@ -45,11 +72,10 @@ public abstract class Logger {
     log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
-      for (String field : request.headers().keySet()) {
-        for (String value : valuesOrEmpty(request.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
-        }
-      }
+      request.headers().entrySet().stream()
+          .filter(requestHeaderFilter)
+          .forEach(header -> header.getValue()
+              .forEach(value -> log(configKey, "%s: %s", header.getKey(), value)));
 
       int bodyLength = 0;
       if (request.body() != null) {
@@ -83,11 +109,10 @@ public abstract class Logger {
     log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
-      for (String field : response.headers().keySet()) {
-        for (String value : valuesOrEmpty(response.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
-        }
-      }
+      response.headers().entrySet().stream()
+          .filter(responseHeaderFilter)
+          .forEach(header -> header.getValue()
+              .forEach(value -> log(configKey, "%s: %s", header.getKey(), value)));
 
       int bodyLength = 0;
       if (response.body() != null && !(status == 204 || status == 205)) {
@@ -183,7 +208,7 @@ public abstract class Logger {
 
     /**
      * Constructor for JavaLogger class
-     * 
+     *
      * @param loggerName a name for the logger. This should be a dot-separated name and should
      *        normally be based on the package name or class name of the subsystem, such as java.net
      *        or javax.swing
@@ -198,6 +223,20 @@ public abstract class Logger {
      * @param clazz the returned logger will be named after clazz
      */
     public JavaLogger(Class<?> clazz) {
+      logger = java.util.logging.Logger.getLogger(clazz.getName());
+    }
+
+    public JavaLogger(String loggerName,
+        Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+        Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+      super(requestHeaderFilter, responseHeaderFilter);
+      logger = java.util.logging.Logger.getLogger(loggerName);
+    }
+
+    public JavaLogger(Class<?> clazz,
+        Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+        Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+      super(requestHeaderFilter, responseHeaderFilter);
       logger = java.util.logging.Logger.getLogger(clazz.getName());
     }
 

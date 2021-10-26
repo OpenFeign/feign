@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,9 @@ package feign.slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Predicate;
 import feign.Request;
 import feign.Response;
 
@@ -40,7 +43,31 @@ public class Slf4jLogger extends feign.Logger {
     this(LoggerFactory.getLogger(name));
   }
 
+  public Slf4jLogger(Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+      Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+    this(feign.Logger.class, requestHeaderFilter, responseHeaderFilter);
+  }
+
+  public Slf4jLogger(Class<?> clazz,
+      Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+      Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+    this(LoggerFactory.getLogger(clazz), requestHeaderFilter, responseHeaderFilter);
+  }
+
+  public Slf4jLogger(String name,
+      Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+      Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+    this(LoggerFactory.getLogger(name), requestHeaderFilter, responseHeaderFilter);
+  }
+
   Slf4jLogger(Logger logger) {
+    this.logger = logger;
+  }
+
+  Slf4jLogger(Logger logger,
+      Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
+      Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
+    super(requestHeaderFilter, responseHeaderFilter);
     this.logger = logger;
   }
 

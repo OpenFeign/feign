@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -49,7 +49,7 @@ public class LoggerTest {
   interface SendsStuff {
 
     @RequestLine("POST /")
-    @Headers("Content-Type: application/json")
+    @Headers({"Content-Type: application/json", "X-Token: qwerty"})
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     String login(
                  @Param("customer_name") String customer,
@@ -99,7 +99,7 @@ public class LoggerTest {
 
     @Test
     public void levelEmits() {
-      server.enqueue(new MockResponse().setBody("foo"));
+      server.enqueue(new MockResponse().setHeader("X-Powered-By", "Mock").setBody("foo"));
 
       SendsStuff api = Feign.builder()
           .logger(logger)
@@ -383,8 +383,15 @@ public class LoggerTest {
 
   private static final class RecordingLogger extends Logger implements TestRule {
 
+    private static final String PREFIX = "x-";
+
     private final List<String> messages = new ArrayList<>();
     private final List<String> expectedMessages = new ArrayList<>();
+
+    RecordingLogger() {
+      super(header -> !header.getKey().toLowerCase().startsWith(PREFIX),
+          header -> !header.getKey().toLowerCase().startsWith(PREFIX));
+    }
 
     void expectMessages(List<String> expectedMessages) {
       this.expectedMessages.addAll(expectedMessages);
