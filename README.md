@@ -769,7 +769,7 @@ There is way to filter sensitive information in headers like authorization data,
 ```java
 Feign.builder()
  .logger(new Logger.JavaLogger(header -> !header.getKey().equals("X-Token"),
-     header -> !header.getKey().equals("X-Sing")))
+     header -> !header.getKey().equals("X-Sign")))
 ...
 ```
 
