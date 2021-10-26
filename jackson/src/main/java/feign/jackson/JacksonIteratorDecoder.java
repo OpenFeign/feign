@@ -64,7 +64,7 @@ public final class JacksonIteratorDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.body() == null)
+    if (response.status() == 404 || response.body() == null)
       return null;
     Reader reader = response.body().asReader(UTF_8);
     if (!reader.markSupported()) {

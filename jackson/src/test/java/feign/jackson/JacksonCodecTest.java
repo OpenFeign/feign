@@ -318,12 +318,38 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
+  public void notFoundWithBodyDecodesToNull() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
+        .build();
+    assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isNull();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
   public void notFoundDecodesToNullIterator() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
+        .build();
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isNull();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundWithBodyDecodesToNullIterator() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
         .build();
     assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isNull();
   }

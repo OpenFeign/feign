@@ -23,6 +23,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -251,6 +252,22 @@ public class JAXBCodecTest {
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
+    assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
+        .decode(response, byte[].class)).isNull();
+  }
+
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
+  @Test
+  public void notFoundWithBodyDecodesToNull() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
         .build();
     assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
         .decode(response, byte[].class)).isNull();

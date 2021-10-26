@@ -20,6 +20,8 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -65,6 +67,21 @@ public class JacksonJaxbCodecTest {
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
+        .build();
+    assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isNull();
+  }
+
+  /**
+   * Enabled via {@link feign.Feign.Builder#decode404()}
+   */
+  @Test
+  public void notFoundWithBodyDecodesToNull() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
         .build();
     assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isNull();
   }

@@ -22,6 +22,7 @@ import feign.Request.HttpMethod;
 import feign.Util;
 import org.junit.Test;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -234,6 +235,19 @@ public class GsonCodecTest {
         .reason("NOT FOUND")
         .headers(Collections.emptyMap())
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .build();
+    assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isNull();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundWithBodyDecodesToNull() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
         .build();
     assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isNull();
   }

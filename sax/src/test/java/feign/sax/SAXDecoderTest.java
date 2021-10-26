@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -101,6 +102,19 @@ public class SAXDecoderTest {
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
+        .build();
+    assertThat((byte[]) decoder.decode(response, byte[].class)).isNull();
+  }
+
+  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  @Test
+  public void notFoundWithBodyDecodesToNull() throws Exception {
+    Response response = Response.builder()
+        .status(404)
+        .reason("NOT FOUND")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.<String, Collection<String>>emptyMap())
+        .body("description explaining the 404", StandardCharsets.UTF_8)
         .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isNull();
   }

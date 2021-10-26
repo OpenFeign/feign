@@ -66,7 +66,7 @@ public class JAXBDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 204)
       return Util.emptyValueOf(type);
-    if (response.body() == null)
+    if (response.status() == 404 || response.body() == null)
       return null;
     while (type instanceof ParameterizedType) {
       ParameterizedType ptype = (ParameterizedType) type;

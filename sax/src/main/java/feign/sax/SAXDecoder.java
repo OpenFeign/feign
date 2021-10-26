@@ -60,7 +60,7 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
-    if (response.body() == null)
+    if (response.status() == 404 || response.body() == null)
       return null;
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);
     checkState(handlerFactory != null, "type %s not in configured handlers %s", type,

@@ -47,7 +47,7 @@ public class JacksonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.body() == null)
+    if (response.status() == 404 || response.body() == null)
       return null;
     Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {

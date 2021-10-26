@@ -36,7 +36,7 @@ public final class JacksonJaxbJsonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, FeignException {
-    if (response.body() == null)
+    if (response.status() == 404 || response.body() == null)
       return null;
     return jacksonJaxbJsonProvider.readFrom(Object.class, type, null, APPLICATION_JSON_TYPE, null,
         response.body().asInputStream());
