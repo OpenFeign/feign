@@ -99,7 +99,7 @@ public class LoggerTest {
 
     @Test
     public void levelEmits() {
-      server.enqueue(new MockResponse().setHeader("X-Powered-By", "Mock").setBody("foo"));
+      server.enqueue(new MockResponse().setHeader("Y-Powered-By", "Mock").setBody("foo"));
 
       SendsStuff api = Feign.builder()
           .logger(logger)
@@ -383,14 +383,15 @@ public class LoggerTest {
 
   private static final class RecordingLogger extends Logger implements TestRule {
 
-    private static final String PREFIX = "x-";
+    private static final String PREFIX_X = "x-";
+    private static final String PREFIX_Y = "y-";
 
     private final List<String> messages = new ArrayList<>();
     private final List<String> expectedMessages = new ArrayList<>();
 
     RecordingLogger() {
-      super(header -> !header.getKey().toLowerCase().startsWith(PREFIX),
-          header -> !header.getKey().toLowerCase().startsWith(PREFIX));
+      super(header -> !header.getKey().toLowerCase().startsWith(PREFIX_X),
+          header -> !header.getKey().toLowerCase().startsWith(PREFIX_Y));
     }
 
     void expectMessages(List<String> expectedMessages) {

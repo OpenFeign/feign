@@ -281,7 +281,7 @@ with the following alterations:
 ---
 ### Customization
 
-Feign has several aspects that can be customized.  
+Feign has several aspects that can be customized.
 For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.<br>
 For request setting, you can use `options(Request.Options options)` on `target()` to set connectTimeout, connectTimeoutUnit, readTimeout, readTimeoutUnit, followRedirects.<br>
 For example:
@@ -764,6 +764,14 @@ public class Example {
 > Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
 
 The SLF4JLogger (see above) may also be of interest.
+
+There is way to filter sensitive information in headers like authorization data, tokens etc.
+```java
+Feign.builder()
+ .logger(new Logger.JavaLogger(header -> !header.getKey().equals("X-Token"),
+     header -> !header.getKey().equals("X-Sing")))
+...
+```
 
 
 #### Request Interceptors

@@ -23,6 +23,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 import static feign.Util.*;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -48,14 +49,18 @@ public abstract class Logger {
   /**
    * Logger constructor with additional header filters
    *
-   * @param additionalRequestHeaderFilter additional request header filter
-   * @param additionalResponseHeaderFilter additional response header filter
+   * @param additionalRequestHeaderFilter additional request header filter, can be null
+   * @param additionalResponseHeaderFilter additional response header filter, can be null
    */
   protected Logger(Predicate<Map.Entry<String, Collection<String>>> additionalRequestHeaderFilter,
       Predicate<Map.Entry<String, Collection<String>>> additionalResponseHeaderFilter) {
     this();
-    requestHeaderFilter = requestHeaderFilter.and(requireNonNull(additionalRequestHeaderFilter));
-    responseHeaderFilter = responseHeaderFilter.and(requireNonNull(additionalResponseHeaderFilter));
+    if (nonNull(additionalRequestHeaderFilter)) {
+      requestHeaderFilter = requestHeaderFilter.and(additionalRequestHeaderFilter);
+    }
+    if (nonNull(additionalResponseHeaderFilter)) {
+      responseHeaderFilter = responseHeaderFilter.and(additionalResponseHeaderFilter);
+    }
   }
 
   /**
@@ -226,6 +231,13 @@ public abstract class Logger {
       logger = java.util.logging.Logger.getLogger(clazz.getName());
     }
 
+    /**
+     * Constructor for JavaLogger class
+     *
+     * @param loggerName loggerName a name for the logger
+     * @param requestHeaderFilter additional request header filter, can be null
+     * @param responseHeaderFilter additional response header filter, can be null
+     */
     public JavaLogger(String loggerName,
         Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
         Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
@@ -233,6 +245,13 @@ public abstract class Logger {
       logger = java.util.logging.Logger.getLogger(loggerName);
     }
 
+    /**
+     * Constructor for JavaLogger class
+     *
+     * @param clazz the returned logger will be named after clazz
+     * @param requestHeaderFilter additional request header filter, can be null
+     * @param responseHeaderFilter additional response header filter, can be null
+     */
     public JavaLogger(Class<?> clazz,
         Predicate<Map.Entry<String, Collection<String>>> requestHeaderFilter,
         Predicate<Map.Entry<String, Collection<String>>> responseHeaderFilter) {
