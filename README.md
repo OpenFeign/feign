@@ -281,7 +281,7 @@ with the following alterations:
 ---
 ### Customization
 
-Feign has several aspects that can be customized.
+Feign has several aspects that can be customized.  
 For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.<br>
 For request setting, you can use `options(Request.Options options)` on `target()` to set connectTimeout, connectTimeoutUnit, readTimeout, readTimeoutUnit, followRedirects.<br>
 For example:
