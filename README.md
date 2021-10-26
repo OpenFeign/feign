@@ -765,14 +765,8 @@ public class Example {
 
 The SLF4JLogger (see above) may also be of interest.
 
-There is way to filter sensitive information in headers like authorization data, tokens etc.
-```java
-Feign.builder()
- .logger(new Logger.JavaLogger(header -> !header.getKey().equals("X-Token"),
-     header -> !header.getKey().equals("X-Sign")))
-...
-```
-
+To filter out sensitive information like authorization or tokens
+override methods `shouldLogRequestHeader` or `shouldLogResponseHeader`.
 
 #### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
