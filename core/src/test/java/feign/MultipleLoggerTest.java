@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -41,7 +41,7 @@ public class MultipleLoggerTest {
   }
 
   @Test
-  public void testJavaLoggerInstantationWithLoggerName() throws Exception {
+  public void testJavaLoggerInstantiationWithLoggerName() throws Exception {
     Logger.JavaLogger l1 = new Logger.JavaLogger("First client")
         .appendToFile(tmp.newFile("1.log").getAbsolutePath());
     Logger.JavaLogger l2 = new Logger.JavaLogger("Second client")
