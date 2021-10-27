@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -26,11 +26,7 @@ import java.util.logging.SimpleFormatter;
 public abstract class Logger {
 
   protected static String methodTag(String configKey) {
-    return new StringBuilder()
-        .append('[')
-        .append(configKey.substring(0, configKey.indexOf('(')))
-        .append("] ")
-        .toString();
+    return '[' + configKey.substring(0, configKey.indexOf('(')) + "] ";
   }
 
   /**
@@ -43,13 +39,35 @@ public abstract class Logger {
    */
   protected abstract void log(String configKey, String format, Object... args);
 
+  /**
+   * Override to filter out request headers.
+   *
+   * @param header header name
+   * @return true to log a request header
+   */
+  protected boolean shouldLogRequestHeader(String header) {
+    return true;
+  }
+
+  /**
+   * Override to filter out response headers.
+   *
+   * @param header header name
+   * @return true to log a response header
+   */
+  protected boolean shouldLogResponseHeader(String header) {
+    return true;
+  }
+
   protected void logRequest(String configKey, Level logLevel, Request request) {
     log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
-        for (String value : valuesOrEmpty(request.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogRequestHeader(field)) {
+          for (String value : valuesOrEmpty(request.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
@@ -82,8 +100,10 @@ public abstract class Logger {
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
-        for (String value : valuesOrEmpty(response.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogResponseHeader(field)) {
+          for (String value : valuesOrEmpty(response.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
