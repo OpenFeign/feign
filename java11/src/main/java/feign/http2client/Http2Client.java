@@ -52,10 +52,21 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
 
+  /**
+   * Creates the new Http2Client using following defaults:
+   * <ul>
+   * <li>Connect Timeout: 10 seconds, as {@link Request.Options#Options()} uses</li>
+   * <li>Follow all 3xx redirects</li>
+   * <li>HTTP 2</li>
+   * </ul>
+   *
+   * @see Request.Options#Options()
+   */
   public Http2Client() {
     this(HttpClient.newBuilder()
         .followRedirects(Redirect.ALWAYS)
         .version(Version.HTTP_2)
+        .connectTimeout(Duration.ofMillis(10000))
         .build());
   }
 
