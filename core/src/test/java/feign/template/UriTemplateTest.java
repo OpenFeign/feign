@@ -304,7 +304,7 @@ public class UriTemplateTest {
   @Test
   public void pathStyleExpansionSupported() {
     String template = "{;who}";
-    UriTemplate uriTemplate= UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expanded = uriTemplate.expand(Collections.singletonMap("who", "fred"));
     assertThat(expanded).isEqualToIgnoringCase(";who=fred");
   }
@@ -312,7 +312,7 @@ public class UriTemplateTest {
   @Test
   public void pathStyleExpansionEncodesReservedCharacters() {
     String template = "{;half}";
-    UriTemplate uriTemplate= UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expanded = uriTemplate.expand(Collections.singletonMap("half", "50%"));
     assertThat(expanded).isEqualToIgnoringCase(";half=50%25");
   }
@@ -320,7 +320,7 @@ public class UriTemplateTest {
   @Test
   public void pathStyleExpansionSupportedWithLists() {
     String template = "{;list}";
-    UriTemplate uriTemplate= UriTemplate.create(template, Util.UTF_8);
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
 
     List<String> values = new ArrayList<>();
     values.add("red");
