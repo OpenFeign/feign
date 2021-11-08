@@ -13,6 +13,7 @@
  */
 package feign.template;
 
+import feign.Param.Expander;
 import feign.Util;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -181,7 +182,7 @@ public final class Expressions {
     }
   }
 
-  static class PathStyleExpression extends SimpleExpression {
+  public static class PathStyleExpression extends SimpleExpression implements Expander {
 
     PathStyleExpression(String name, String pattern) {
       super(name, pattern, ";", true);
@@ -192,5 +193,9 @@ public final class Expressions {
       return this.separator + super.expand(variable, encode);
     }
 
+    @Override
+    public String expand(Object value) {
+      return this.expand(value, true);
+    }
   }
 }
