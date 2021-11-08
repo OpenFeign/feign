@@ -184,7 +184,7 @@ public final class Expressions {
 
   public static class PathStyleExpression extends SimpleExpression implements Expander {
 
-    PathStyleExpression(String name, String pattern) {
+    public PathStyleExpression(String name, String pattern) {
       super(name, pattern, ";", true);
     }
 
@@ -196,6 +196,14 @@ public final class Expressions {
     @Override
     public String expand(Object value) {
       return this.expand(value, true);
+    }
+
+    @Override
+    public String getValue() {
+      if (this.getPattern() != null) {
+        return "{" + this.separator + this.getName() + ":" + this.getName() + "}";
+      }
+      return "{" + this.separator + this.getName() + "}";
     }
   }
 }
