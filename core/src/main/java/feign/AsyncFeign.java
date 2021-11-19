@@ -64,7 +64,7 @@ public abstract class AsyncFeign<C> extends Feign {
     private AsyncClient<C> client;
 
     private Logger.Level logLevel = Logger.Level.NONE;
-    private final Logger logger = new NoOpLogger();
+    private Logger logger = new NoOpLogger();
 
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
@@ -177,6 +177,7 @@ public abstract class AsyncFeign<C> extends Feign {
      */
     public AsyncBuilder<C> logger(Logger logger) {
       builder.logger(logger);
+      this.logger = logger;
       return this;
     }
 
