@@ -1,6 +1,6 @@
 # feign-java11
 
-This module directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
+This module directs Feign's http requests to Java11 [New HTTP/2 Client](https://openjdk.java.net/jeps/321) that implements HTTP/2.
 
 To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
 
