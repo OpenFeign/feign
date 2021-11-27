@@ -41,6 +41,7 @@ import feign.Response;
  * "https://api.github.com");
  */
 public class GoogleHttpClient implements Client {
+  private static final String HTTP_PROTOCOL_VERSION = "HTTP/1.1";
   private final HttpRequestFactory requestFactory;
 
   public GoogleHttpClient() {
@@ -112,6 +113,7 @@ public class GoogleHttpClient implements Client {
       contentLength = inputResponse.getHeaders().getContentLength().intValue();
     }
     return Response.builder()
+        .protocolVersion(HTTP_PROTOCOL_VERSION)
         .body(inputResponse.getContent(), contentLength)
         .status(inputResponse.getStatusCode())
         .reason(inputResponse.getStatusMessage())
