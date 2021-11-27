@@ -59,6 +59,7 @@ public interface Client {
 
   class Default implements Client {
 
+    private static final String HTTP_PROTOCOL = "1.1";
     private final SSLSocketFactory sslContextFactory;
     private final HostnameVerifier hostnameVerifier;
 
@@ -139,6 +140,7 @@ public interface Client {
         }
       }
       return Response.builder()
+          .protocol(HTTP_PROTOCOL)
           .status(status)
           .reason(reason)
           .headers(headers)

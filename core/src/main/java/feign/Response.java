@@ -29,6 +29,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
+  private final Optional<String> protocol;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
@@ -37,7 +38,7 @@ public final class Response implements Closeable {
     this.reason = builder.reason; // nullable
     this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
-
+    this.protocol = Optional.ofNullable(builder.protocol);
   }
 
   public Builder toBuilder() {
@@ -55,6 +56,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
+    private String protocol;
 
     Builder() {}
 
@@ -64,6 +66,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
+      source.protocol.ifPresent(this::protocol);
     }
 
     /** @see Response#status */
@@ -114,6 +117,14 @@ public final class Response implements Closeable {
     public Builder request(Request request) {
       checkNotNull(request, "request is required");
       this.request = request;
+      return this;
+    }
+
+    /**
+     * HTTP version
+     */
+    public Builder protocol(String protocol) {
+      this.protocol = protocol;
       return this;
     }
 
@@ -171,6 +182,15 @@ public final class Response implements Closeable {
    */
   public Request request() {
     return request;
+  }
+
+  /**
+   * the HTTP version
+   *
+   * @return HTTP version or empty if a client does not provide it
+   */
+  public Optional<String> protocol() {
+    return protocol;
   }
 
   public Charset charset() {

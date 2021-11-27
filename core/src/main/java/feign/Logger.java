@@ -61,7 +61,7 @@ public abstract class Logger {
   }
 
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
+    log(configKey, "---> %s %s HTTP", request.httpMethod().name(), request.url());
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
@@ -97,11 +97,12 @@ public abstract class Logger {
                                             Response response,
                                             long elapsedTime)
       throws IOException {
+    String protocol = response.protocol().orElse("unknown");
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
+    log(configKey, "<--- HTTP/%s %s%s (%sms)", protocol, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
@@ -206,7 +207,7 @@ public abstract class Logger {
 
     /**
      * Constructor for JavaLogger class
-     * 
+     *
      * @param loggerName a name for the logger. This should be a dot-separated name and should
      *        normally be based on the package name or class name of the subsystem, such as java.net
      *        or javax.swing

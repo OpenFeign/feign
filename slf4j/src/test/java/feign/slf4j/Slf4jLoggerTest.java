@@ -101,9 +101,9 @@ public class Slf4jLoggerTest {
     slf4j.logLevel("debug");
     slf4j.expectMessages("DEBUG feign.Logger - [someMethod] A message with 2 formatting tokens."
         + System.lineSeparator() +
-        "DEBUG feign.Logger - [someMethod] ---> GET http://api.example.com HTTP/1.1"
+        "DEBUG feign.Logger - [someMethod] ---> GET http://api.example.com HTTP"
         + System.lineSeparator() +
-        "DEBUG feign.Logger - [someMethod] <--- HTTP/1.1 200 OK (273ms)"
+        "DEBUG feign.Logger - [someMethod] <--- HTTP/unknown 200 OK (273ms)"
         + System.lineSeparator());
 
     logger = new Slf4jLogger();
