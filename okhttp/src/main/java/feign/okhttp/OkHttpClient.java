@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -34,6 +34,10 @@ import okhttp3.*;
  * "https://api.github.com");
  */
 public final class OkHttpClient implements Client {
+
+  private static final String DOT = ".";
+  private static final String SLASH = "/";
+  private static final String UNDERSCORE = "_";
 
   private final okhttp3.OkHttpClient delegate;
 
@@ -92,6 +96,9 @@ public final class OkHttpClient implements Client {
   private static feign.Response toFeignResponse(Response response, feign.Request request)
       throws IOException {
     return feign.Response.builder()
+        .protocolVersion(response.protocol().name()
+            .replaceFirst(UNDERSCORE, SLASH)
+            .replaceFirst(UNDERSCORE, DOT))
         .status(response.code())
         .reason(response.message())
         .request(request)
