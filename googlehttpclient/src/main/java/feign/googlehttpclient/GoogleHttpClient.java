@@ -42,6 +42,7 @@ import feign.Response;
  */
 public class GoogleHttpClient implements Client {
   private static final String HTTP_PROTOCOL_VERSION = "HTTP/1.1";
+
   private final HttpRequestFactory requestFactory;
 
   public GoogleHttpClient() {
