@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -61,6 +61,7 @@ import static feign.Util.UTF_8;
  */
 public final class ApacheHttpClient implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
+  private static final String HTTP_PROTOCOL = "1.1";
 
   private final HttpClient client;
 
@@ -186,6 +187,7 @@ public final class ApacheHttpClient implements Client {
     }
 
     return Response.builder()
+        .protocol(HTTP_PROTOCOL)
         .status(statusCode)
         .reason(reason)
         .headers(headers)
