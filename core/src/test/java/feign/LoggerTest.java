@@ -145,14 +145,15 @@ public class LoggerTest {
   }
 
   @RunWith(Parameterized.class)
-  public static class HttpProtocolTest extends LoggerTest {
+  public static class HttpProtocolVersionTest extends LoggerTest {
 
     private final Level logLevel;
-    private final String testProtocol;
+    private final String testProtocolVersion;
 
-    public HttpProtocolTest(Level logLevel, String testProtocol, List<String> expectedMessages) {
+    public HttpProtocolVersionTest(Level logLevel, String testProtocolVersion,
+        List<String> expectedMessages) {
       this.logLevel = logLevel;
-      this.testProtocol = testProtocol;
+      this.testProtocolVersion = testProtocolVersion;
       logger.expectMessages(expectedMessages);
     }
 
@@ -162,21 +163,21 @@ public class LoggerTest {
           {Level.BASIC, null, Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
               "\\[SendsStuff#login\\] <--- HTTP/unknown 200 \\([0-9]+ms\\)")},
-          {Level.BASIC, "1.1", Arrays.asList(
+          {Level.BASIC, "HTTP/1.1", Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
-          {Level.BASIC, "2.0", Arrays.asList(
+          {Level.BASIC, "HTTP-NEXT", Arrays.asList(
               "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
-              "\\[SendsStuff#login\\] <--- HTTP/2.0 200 \\([0-9]+ms\\)")}
+              "\\[SendsStuff#login\\] <--- HTTP-NEXT 200 \\([0-9]+ms\\)")}
       });
     }
 
     @Test
-    public void testHttpProtocol() {
+    public void testHttpProtocolVersion() {
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
-          .client(new TestClient(testProtocol))
+          .client(new TestProtocolVersionClient(testProtocolVersion))
           .logger(logger)
           .logLevel(logLevel)
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -468,19 +469,20 @@ public class LoggerTest {
     }
   }
 
-  private static final class TestClient extends Client.Default {
+  private static final class TestProtocolVersionClient extends Client.Default {
 
-    private final String testProtocol;
+    private final String testProtocolVersion;
 
-    public TestClient(String testProtocol) {
+    public TestProtocolVersionClient(String testProtocolVersion) {
       super(null, null);
-      this.testProtocol = testProtocol;
+      this.testProtocolVersion = testProtocolVersion;
     }
 
     @Override
     Response convertResponse(HttpURLConnection connection, Request request)
         throws IOException {
-      return super.convertResponse(connection, request).toBuilder().protocol(testProtocol).build();
+      return super.convertResponse(connection, request)
+          .toBuilder().protocolVersion(testProtocolVersion).build();
     }
   }
 }

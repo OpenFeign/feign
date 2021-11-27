@@ -29,7 +29,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
-  private final Optional<String> protocol;
+  private final String protocolVersion;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
@@ -38,7 +38,7 @@ public final class Response implements Closeable {
     this.reason = builder.reason; // nullable
     this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
-    this.protocol = Optional.ofNullable(builder.protocol);
+    this.protocolVersion = builder.protocolVersion;
   }
 
   public Builder toBuilder() {
@@ -56,7 +56,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
-    private String protocol;
+    private String protocolVersion;
 
     Builder() {}
 
@@ -66,7 +66,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
-      source.protocol.ifPresent(this::protocol);
+      this.protocolVersion = source.protocolVersion;
     }
 
     /** @see Response#status */
@@ -121,10 +121,10 @@ public final class Response implements Closeable {
     }
 
     /**
-     * HTTP version
+     * HTTP protocol version
      */
-    public Builder protocol(String protocol) {
-      this.protocol = protocol;
+    public Builder protocolVersion(String protocolVersion) {
+      this.protocolVersion = protocolVersion;
       return this;
     }
 
@@ -185,12 +185,12 @@ public final class Response implements Closeable {
   }
 
   /**
-   * the HTTP version
+   * the HTTP protocol version
    *
-   * @return HTTP version or empty if a client does not provide it
+   * @return HTTP protocol version or empty if a client does not provide it
    */
-  public Optional<String> protocol() {
-    return protocol;
+  public Optional<String> protocolVersion() {
+    return Optional.ofNullable(protocolVersion);
   }
 
   public Charset charset() {

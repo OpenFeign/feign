@@ -20,7 +20,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class HttpProtocolTest {
+public class HttpProtocolVersionTest {
 
   interface Remote {
 
@@ -30,14 +30,14 @@ public class HttpProtocolTest {
   }
 
   @Test
-  public void testMockProtocol() {
+  public void testMockProtocolVersion() {
     Remote remote = Feign.builder()
         .client(new MockClient().ok(HttpMethod.GET, "/test"))
         .target(new MockTarget<>(Remote.class));
 
     Response response = remote.test();
 
-    assertTrue(response.protocol().isPresent());
-    assertEquals("mock", response.protocol().orElse("?"));
+    assertTrue(response.protocolVersion().isPresent());
+    assertEquals("mock", response.protocolVersion().orElse("?"));
   }
 }

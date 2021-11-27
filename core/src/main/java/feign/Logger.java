@@ -97,12 +97,12 @@ public abstract class Logger {
                                             Response response,
                                             long elapsedTime)
       throws IOException {
-    String protocol = response.protocol().orElse("unknown");
+    String protocol = response.protocolVersion().orElse("HTTP/unknown");
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- HTTP/%s %s%s (%sms)", protocol, status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s (%sms)", protocol, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
