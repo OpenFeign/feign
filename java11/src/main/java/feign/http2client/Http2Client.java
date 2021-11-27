@@ -50,6 +50,10 @@ import feign.Util;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
+  private static final String DOT = ".";
+  private static final String SLASH = "/";
+  private static final String UNDERSCORE = "_";
+
   private final HttpClient client;
 
   /**
@@ -124,6 +128,9 @@ public class Http2Client implements Client, AsyncClient<Object> {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
     return Response.builder()
+        .protocolVersion(httpResponse.version().name()
+            .replaceFirst(UNDERSCORE, SLASH)
+            .replaceFirst(UNDERSCORE, DOT))
         .body(new ByteArrayInputStream(httpResponse.body()),
             length.isPresent() ? (int) length.getAsLong() : null)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))
