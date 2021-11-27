@@ -68,6 +68,7 @@ public class MockClient implements Client {
     } else {
       responseBuilder = executeAny(request, requestKey);
     }
+    responseBuilder.protocol("mock");
 
     return responseBuilder.request(request).build();
   }
