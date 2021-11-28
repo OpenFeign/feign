@@ -66,7 +66,7 @@ public interface Client {
 
     /**
      * Disable the request body internal buffering for {@code HttpURLConnection}.
-     *
+     * 
      * @see HttpURLConnection#setFixedLengthStreamingMode(int)
      * @see HttpURLConnection#setFixedLengthStreamingMode(long)
      * @see HttpURLConnection#setChunkedStreamingMode(int)
@@ -75,7 +75,7 @@ public interface Client {
 
     /**
      * Create a new client, which disable request buffering by default.
-     *
+     * 
      * @param sslContextFactory SSLSocketFactory for secure https URL connections.
      * @param hostnameVerifier the host name verifier.
      */
@@ -87,7 +87,7 @@ public interface Client {
 
     /**
      * Create a new client.
-     *
+     * 
      * @param sslContextFactory SSLSocketFactory for secure https URL connections.
      * @param hostnameVerifier the host name verifier.
      * @param disableRequestBuffering Disable the request body internal buffering for
