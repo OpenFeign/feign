@@ -51,10 +51,6 @@ import static feign.Util.enumForName;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
-  private static final String DOT = ".";
-  private static final String SLASH = "/";
-  private static final String UNDERSCORE = "_";
-
   private final HttpClient client;
 
   /**

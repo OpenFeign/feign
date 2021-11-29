@@ -217,7 +217,7 @@ public abstract class Logger {
 
     /**
      * Constructor for JavaLogger class
-     *
+     * 
      * @param loggerName a name for the logger. This should be a dot-separated name and should
      *        normally be based on the package name or class name of the subsystem, such as java.net
      *        or javax.swing

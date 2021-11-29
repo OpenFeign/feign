@@ -37,10 +37,6 @@ import static feign.Util.enumForName;
  */
 public final class OkHttpClient implements Client {
 
-  private static final String DOT = ".";
-  private static final String SLASH = "/";
-  private static final String UNDERSCORE = "_";
-
   private final okhttp3.OkHttpClient delegate;
 
   public OkHttpClient() {
