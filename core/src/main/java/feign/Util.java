@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 
 /**
  * Utilities, typically copied in from guava, so as to avoid dependency conflicts.
@@ -382,8 +383,7 @@ public class Util {
   }
 
   public static <T extends Enum<?>> T enumForName(Class<T> enumClass, Object object) {
-    checkNotNull(object, "name is required");
-    String name = object.toString();
+    String name = (nonNull(object)) ? object.toString() : null;
     for (T enumItem : enumClass.getEnumConstants()) {
       if (enumItem.name().equalsIgnoreCase(name) || enumItem.toString().equalsIgnoreCase(name)) {
         return enumItem;
