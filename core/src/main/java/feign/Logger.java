@@ -20,6 +20,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 import static feign.Util.*;
+import static java.util.Objects.nonNull;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -61,7 +62,9 @@ public abstract class Logger {
   }
 
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP", request.httpMethod().name(), request.url());
+    String protocolVersion = resolveProtocolVersion(request.protocolVersion());
+    log(configKey, "---> %s %s %s", request.httpMethod().name(), request.url(),
+        protocolVersion);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
@@ -97,12 +100,12 @@ public abstract class Logger {
                                             Response response,
                                             long elapsedTime)
       throws IOException {
-    String protocol = response.protocolVersion().orElse("HTTP/unknown");
+    String protocolVersion = resolveProtocolVersion(response.protocolVersion());
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- %s %s%s (%sms)", protocol, status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
@@ -147,6 +150,13 @@ public abstract class Logger {
       log(configKey, "<--- END ERROR");
     }
     return ioe;
+  }
+
+  protected static String resolveProtocolVersion(Request.ProtocolVersion protocolVersion) {
+    if (nonNull(protocolVersion)) {
+      return protocolVersion.toString();
+    }
+    return "UNKNOWN";
   }
 
   /**

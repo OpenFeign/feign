@@ -61,7 +61,6 @@ import static feign.Util.UTF_8;
  */
 public final class ApacheHttpClient implements Client {
   private static final String ACCEPT_HEADER_NAME = "Accept";
-  private static final String HTTP_PROTOCOL_VERSION = "HTTP/1.1";
 
   private final HttpClient client;
 
@@ -187,7 +186,6 @@ public final class ApacheHttpClient implements Client {
     }
 
     return Response.builder()
-        .protocolVersion(HTTP_PROTOCOL_VERSION)
         .status(statusCode)
         .reason(reason)
         .headers(headers)

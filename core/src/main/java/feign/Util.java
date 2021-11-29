@@ -381,4 +381,15 @@ public class Util {
     return Collections.unmodifiableMap(result);
   }
 
+  public static <T extends Enum<?>> T enumForName(Class<T> enumClass, Object object) {
+    checkNotNull(object, "name is required");
+    String name = object.toString();
+    for (T enumItem : enumClass.getEnumConstants()) {
+      if (enumItem.name().equalsIgnoreCase(name) || enumItem.toString().equalsIgnoreCase(name)) {
+        return enumItem;
+      }
+    }
+    return null;
+  }
+
 }

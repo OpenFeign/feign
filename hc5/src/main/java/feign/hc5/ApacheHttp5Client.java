@@ -14,6 +14,7 @@
 package feign.hc5;
 
 import static feign.Util.UTF_8;
+import static feign.Util.enumForName;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -181,7 +182,8 @@ public final class ApacheHttp5Client implements Client {
     }
 
     return Response.builder()
-        .protocolVersion(httpResponse.getVersion().format())
+        .protocolVersion(enumForName(Request.ProtocolVersion.class,
+            httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)

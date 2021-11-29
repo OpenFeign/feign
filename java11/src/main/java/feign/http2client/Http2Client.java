@@ -47,6 +47,7 @@ import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 import feign.Util;
+import static feign.Util.enumForName;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
@@ -128,9 +129,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
     return Response.builder()
-        .protocolVersion(httpResponse.version().name()
-            .replaceFirst(UNDERSCORE, SLASH)
-            .replaceFirst(UNDERSCORE, DOT))
+        .protocolVersion(enumForName(Request.ProtocolVersion.class, httpResponse.version()))
         .body(new ByteArrayInputStream(httpResponse.body()),
             length.isPresent() ? (int) length.getAsLong() : null)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))

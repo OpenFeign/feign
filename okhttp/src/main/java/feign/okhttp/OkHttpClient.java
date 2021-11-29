@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import feign.Client;
 import feign.Request.HttpMethod;
+import feign.Request.ProtocolVersion;
 import okhttp3.*;
+import static feign.Util.enumForName;
 
 /**
  * This module directs Feign's http requests to
@@ -96,9 +98,7 @@ public final class OkHttpClient implements Client {
   private static feign.Response toFeignResponse(Response response, feign.Request request)
       throws IOException {
     return feign.Response.builder()
-        .protocolVersion(response.protocol().name()
-            .replaceFirst(UNDERSCORE, SLASH)
-            .replaceFirst(UNDERSCORE, DOT))
+        .protocolVersion(enumForName(ProtocolVersion.class, response.protocol()))
         .status(response.code())
         .reason(response.message())
         .request(request)

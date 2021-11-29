@@ -29,12 +29,12 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.Statement;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import feign.Logger.Level;
+import feign.Request.ProtocolVersion;
+import static java.util.Objects.nonNull;
+import static feign.Util.enumForName;
 
 @RunWith(Enclosed.class)
 public class LoggerTest {
@@ -74,10 +74,10 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 OK \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
@@ -85,7 +85,7 @@ public class LoggerTest {
               "\\[SendsStuff#login\\] content-length: 3",
               "\\[SendsStuff#login\\] <--- END HTTP \\(3-byte body\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
@@ -126,7 +126,7 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
       });
     }
@@ -148,12 +148,12 @@ public class LoggerTest {
   public static class HttpProtocolVersionTest extends LoggerTest {
 
     private final Level logLevel;
-    private final String testProtocolVersion;
+    private final String protocolVersionName;
 
-    public HttpProtocolVersionTest(Level logLevel, String testProtocolVersion,
+    public HttpProtocolVersionTest(Level logLevel, String protocolVersionName,
         List<String> expectedMessages) {
       this.logLevel = logLevel;
-      this.testProtocolVersion = testProtocolVersion;
+      this.protocolVersionName = protocolVersionName;
       logger.expectMessages(expectedMessages);
     }
 
@@ -161,14 +161,17 @@ public class LoggerTest {
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.BASIC, null, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
-              "\\[SendsStuff#login\\] <--- HTTP/unknown 200 \\([0-9]+ms\\)")},
-          {Level.BASIC, "HTTP/1.1", Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
-          {Level.BASIC, "HTTP-NEXT", Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
-              "\\[SendsStuff#login\\] <--- HTTP-NEXT 200 \\([0-9]+ms\\)")}
+          {Level.BASIC, "HTTP/1.1", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
+          {Level.BASIC, "HTTP/2.0", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/2.0 200 \\([0-9]+ms\\)")},
+          {Level.BASIC, "HTTP-XYZ", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- UNKNOWN 200 \\([0-9]+ms\\)")}
       });
     }
 
@@ -177,7 +180,7 @@ public class LoggerTest {
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
-          .client(new TestProtocolVersionClient(testProtocolVersion))
+          .client(new TestProtocolVersionClient(protocolVersionName))
           .logger(logger)
           .logLevel(logLevel)
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -201,16 +204,16 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR SocketTimeoutException: Read timed out \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
@@ -264,16 +267,16 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
@@ -326,16 +329,16 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
@@ -387,10 +390,10 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
               "\\[SendsStuff#login\\] ---> RETRYING",
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP",
+              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
               "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")}
       });
     }
@@ -470,19 +473,23 @@ public class LoggerTest {
   }
 
   private static final class TestProtocolVersionClient extends Client.Default {
+    private final String protocolVersionName;
 
-    private final String testProtocolVersion;
-
-    public TestProtocolVersionClient(String testProtocolVersion) {
+    public TestProtocolVersionClient(String protocolVersionName) {
       super(null, null);
-      this.testProtocolVersion = testProtocolVersion;
+      this.protocolVersionName = protocolVersionName;
     }
 
     @Override
     Response convertResponse(HttpURLConnection connection, Request request)
         throws IOException {
-      return super.convertResponse(connection, request)
-          .toBuilder().protocolVersion(testProtocolVersion).build();
+      Response response = super.convertResponse(connection, request);
+      if (nonNull((protocolVersionName))) {
+        response = response.toBuilder()
+            .protocolVersion(enumForName(ProtocolVersion.class, protocolVersionName))
+            .build();
+      }
+      return response;
     }
   }
 }

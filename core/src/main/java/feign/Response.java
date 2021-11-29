@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import feign.Request.ProtocolVersion;
 import static feign.Util.*;
 
 /**
@@ -29,7 +30,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
-  private final String protocolVersion;
+  private final ProtocolVersion protocolVersion;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
@@ -56,7 +57,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
-    private String protocolVersion;
+    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
 
     Builder() {}
 
@@ -123,7 +124,7 @@ public final class Response implements Closeable {
     /**
      * HTTP protocol version
      */
-    public Builder protocolVersion(String protocolVersion) {
+    public Builder protocolVersion(ProtocolVersion protocolVersion) {
       this.protocolVersion = protocolVersion;
       return this;
     }
@@ -189,8 +190,8 @@ public final class Response implements Closeable {
    *
    * @return HTTP protocol version or empty if a client does not provide it
    */
-  public Optional<String> protocolVersion() {
-    return Optional.ofNullable(protocolVersion);
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
   }
 
   public Charset charset() {

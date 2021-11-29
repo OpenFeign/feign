@@ -59,8 +59,6 @@ public interface Client {
 
   class Default implements Client {
 
-    private static final String HTTP_PROTOCOL_VERSION = "HTTP/1.1";
-
     private final SSLSocketFactory sslContextFactory;
     private final HostnameVerifier hostnameVerifier;
 
@@ -141,7 +139,6 @@ public interface Client {
         }
       }
       return Response.builder()
-          .protocolVersion(HTTP_PROTOCOL_VERSION)
           .status(status)
           .reason(reason)
           .headers(headers)

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import feign.Client;
 import feign.Request;
+import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
 
@@ -68,7 +69,7 @@ public class MockClient implements Client {
     } else {
       responseBuilder = executeAny(request, requestKey);
     }
-    responseBuilder.protocolVersion("mock");
+    responseBuilder.protocolVersion(ProtocolVersion.MOCK);
 
     return responseBuilder.request(request).build();
   }
