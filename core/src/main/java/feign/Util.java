@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 
 /**
  * Utilities, typically copied in from guava, so as to avoid dependency conflicts.
@@ -379,6 +380,16 @@ public class Util {
     result.replaceAll((key, value) -> Collections.unmodifiableCollection(value));
 
     return Collections.unmodifiableMap(result);
+  }
+
+  public static <T extends Enum<?>> T enumForName(Class<T> enumClass, Object object) {
+    String name = (nonNull(object)) ? object.toString() : null;
+    for (T enumItem : enumClass.getEnumConstants()) {
+      if (enumItem.name().equalsIgnoreCase(name) || enumItem.toString().equalsIgnoreCase(name)) {
+        return enumItem;
+      }
+    }
+    return null;
   }
 
 }
