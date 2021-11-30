@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -38,6 +38,28 @@ public final class Request implements Serializable {
     OPTIONS,
     TRACE,
     PATCH
+  }
+
+  public enum ProtocolVersion {
+    HTTP_1_0("HTTP/1.0"),
+    HTTP_1_1("HTTP/1.1"),
+    HTTP_2("HTTP/2.0"),
+    MOCK;
+
+    String protocolVersion;
+
+    ProtocolVersion() {
+      protocolVersion = name();
+    }
+
+    ProtocolVersion(String protocolVersion) {
+      this.protocolVersion = protocolVersion;
+    }
+
+    @Override
+    public String toString() {
+      return protocolVersion;
+    }
   }
 
   /**
@@ -121,6 +143,7 @@ public final class Request implements Serializable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final RequestTemplate requestTemplate;
+  private final ProtocolVersion protocolVersion;
 
   /**
    * Creates a new Request.
@@ -142,6 +165,7 @@ public final class Request implements Serializable {
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body;
     this.requestTemplate = requestTemplate;
+    protocolVersion = ProtocolVersion.HTTP_1_1;
   }
 
   /**
@@ -212,6 +236,15 @@ public final class Request implements Serializable {
    */
   public int length() {
     return this.body.length();
+  }
+
+  /**
+   * Request HTTP protocol version
+   *
+   * @return HTTP protocol version
+   */
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
   }
 
   /**

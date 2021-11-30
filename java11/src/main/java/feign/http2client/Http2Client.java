@@ -13,10 +13,13 @@
  */
 package feign.http2client;
 
+import static feign.Util.enumForName;
+
 import feign.AsyncClient;
 import feign.Client;
 import feign.Request;
 import feign.Request.Options;
+import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
 import java.io.ByteArrayInputStream;
@@ -121,6 +124,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
     return Response.builder()
+        .protocolVersion(enumForName(ProtocolVersion.class, httpResponse.version()))
         .body(
             new ByteArrayInputStream(httpResponse.body()),
             length.isPresent() ? (int) length.getAsLong() : null)

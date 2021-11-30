@@ -17,6 +17,7 @@ import static feign.Util.UTF_8;
 
 import feign.Client;
 import feign.Request;
+import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
@@ -68,6 +69,7 @@ public class MockClient implements Client {
     } else {
       responseBuilder = executeAny(request, requestKey);
     }
+    responseBuilder.protocolVersion(ProtocolVersion.MOCK);
 
     return responseBuilder.request(request).build();
   }

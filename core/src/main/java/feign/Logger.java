@@ -14,6 +14,7 @@
 package feign;
 
 import static feign.Util.*;
+import static java.util.Objects.nonNull;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,7 +61,8 @@ public abstract class Logger {
   }
 
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
+    String protocolVersion = resolveProtocolVersion(request.protocolVersion());
+    log(configKey, "---> %s %s %s", request.httpMethod().name(), request.url(), protocolVersion);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
@@ -91,12 +93,13 @@ public abstract class Logger {
 
   protected Response logAndRebufferResponse(
       String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
+    String protocolVersion = resolveProtocolVersion(response.protocolVersion());
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0
             ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
@@ -143,6 +146,13 @@ public abstract class Logger {
       log(configKey, "<--- END ERROR");
     }
     return ioe;
+  }
+
+  protected static String resolveProtocolVersion(Request.ProtocolVersion protocolVersion) {
+    if (nonNull(protocolVersion)) {
+      return protocolVersion.toString();
+    }
+    return "UNKNOWN";
   }
 
   /** Controls the level of logging. */

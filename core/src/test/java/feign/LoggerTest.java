@@ -13,11 +13,14 @@
  */
 package feign;
 
+import static feign.Util.enumForName;
+import static java.util.Objects.nonNull;
+
 import feign.Logger.Level;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import feign.Request.ProtocolVersion;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -151,6 +154,69 @@ public class LoggerTest {
 
       SendsStuff api =
           Feign.builder()
+              .logger(logger)
+              .logLevel(logLevel)
+              .target(SendsStuff.class, "http://localhost:" + server.getPort());
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class HttpProtocolVersionTest extends LoggerTest {
+
+    private final Level logLevel;
+    private final String protocolVersionName;
+
+    public HttpProtocolVersionTest(
+        Level logLevel, String protocolVersionName, List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      this.protocolVersionName = protocolVersionName;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(
+          new Object[][] {
+            {
+              Level.BASIC,
+              null,
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")
+            },
+            {
+              Level.BASIC,
+              "HTTP/1.1",
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")
+            },
+            {
+              Level.BASIC,
+              "HTTP/2.0",
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] <--- HTTP/2.0 200 \\([0-9]+ms\\)")
+            },
+            {
+              Level.BASIC,
+              "HTTP-XYZ",
+              Arrays.asList(
+                  "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+                  "\\[SendsStuff#login\\] <--- UNKNOWN 200 \\([0-9]+ms\\)")
+            }
+          });
+    }
+
+    @Test
+    public void testHttpProtocolVersion() {
+      server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+
+      SendsStuff api =
+          Feign.builder()
+              .client(new TestProtocolVersionClient(protocolVersionName))
               .logger(logger)
               .logLevel(logLevel)
               .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -493,6 +559,27 @@ public class LoggerTest {
           softly.assertAll();
         }
       };
+    }
+  }
+
+  private static final class TestProtocolVersionClient extends Client.Default {
+    private final String protocolVersionName;
+
+    public TestProtocolVersionClient(String protocolVersionName) {
+      super(null, null);
+      this.protocolVersionName = protocolVersionName;
+    }
+
+    @Override
+    Response convertResponse(HttpURLConnection connection, Request request) throws IOException {
+      Response response = super.convertResponse(connection, request);
+      if (nonNull((protocolVersionName))) {
+        response =
+            response.toBuilder()
+                .protocolVersion(enumForName(ProtocolVersion.class, protocolVersionName))
+                .build();
+      }
+      return response;
     }
   }
 }

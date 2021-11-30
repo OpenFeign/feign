@@ -15,6 +15,7 @@ package feign;
 
 import static feign.Util.*;
 
+import feign.Request.ProtocolVersion;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
+  private final ProtocolVersion protocolVersion;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
@@ -36,6 +38,7 @@ public final class Response implements Closeable {
     this.reason = builder.reason; // nullable
     this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
+    this.protocolVersion = builder.protocolVersion;
   }
 
   public Builder toBuilder() {
@@ -53,6 +56,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
+    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
 
     Builder() {}
 
@@ -62,6 +66,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
+      this.protocolVersion = source.protocolVersion;
     }
 
     /**
@@ -129,6 +134,12 @@ public final class Response implements Closeable {
       return this;
     }
 
+    /** HTTP protocol version */
+    public Builder protocolVersion(ProtocolVersion protocolVersion) {
+      this.protocolVersion = protocolVersion;
+      return this;
+    }
+
     /**
      * The Request Template used for the original request.
      *
@@ -177,6 +188,15 @@ public final class Response implements Closeable {
   /** the request that generated this response */
   public Request request() {
     return request;
+  }
+
+  /**
+   * the HTTP protocol version
+   *
+   * @return HTTP protocol version or empty if a client does not provide it
+   */
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
   }
 
   public Charset charset() {

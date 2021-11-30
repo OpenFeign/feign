@@ -1,5 +1,5 @@
 /**
- * Copyright 2012-2020 The Feign Authors
+ * Copyright 2012-2021 The Feign Authors
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,8 +13,11 @@
  */
 package feign.okhttp;
 
+import static feign.Util.enumForName;
+
 import feign.Client;
 import feign.Request.HttpMethod;
+import feign.Request.ProtocolVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -93,6 +96,7 @@ public final class OkHttpClient implements Client {
   private static feign.Response toFeignResponse(Response response, feign.Request request)
       throws IOException {
     return feign.Response.builder()
+        .protocolVersion(enumForName(ProtocolVersion.class, response.protocol()))
         .status(response.code())
         .reason(response.message())
         .request(request)
