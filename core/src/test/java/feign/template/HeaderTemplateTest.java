@@ -13,38 +13,36 @@
  */
 package feign.template;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class HeaderTemplateTest {
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
-
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_name_is_null() {
-    HeaderTemplate.create(null, Collections.singletonList("test"));
-    exception.expectMessage("name is required.");
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> HeaderTemplate.create(null, Collections.singletonList("test")));
+    assertEquals("name is required.", exception.getMessage());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_name_is_empty() {
-    HeaderTemplate.create("", Collections.singletonList("test"));
-    exception.expectMessage("name is required.");
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> HeaderTemplate.create("", Collections.singletonList("test")));
+    assertEquals("name is required.", exception.getMessage());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_value_is_null() {
-    HeaderTemplate.create("test", null);
-    exception.expectMessage("values are required");
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -> HeaderTemplate.create("test", null));
+    assertEquals("values are required", exception.getMessage());
   }
 
   @Test
@@ -79,13 +77,13 @@ public class HeaderTemplateTest {
      */
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 1", "test 2"));
-    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
-        equalTo(Arrays.asList("test 1", "test 2")));
+    assertEquals(Arrays.asList("test 1", "test 2"),
+            new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 2", "test 1"));
-    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
-        equalTo(Arrays.asList("test 2", "test 1")));
+    assertEquals(Arrays.asList("test 2", "test 1"),
+            new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
   }
 
   @Test
@@ -97,23 +95,22 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 1", "test 2"));
-    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
-        equalTo(Arrays.asList("test 1", "test 2")));
+    assertEquals(Arrays.asList("test 1", "test 2"),
+            new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 2", "test 1"));
-    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
-        equalTo(Arrays.asList("test 2", "test 1")));
+    assertEquals(Arrays.asList("test 2", "test 1"),
+            new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
   }
 
   @Test
   public void it_should_support_http_date() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
-    assertEquals(
+    assertEquals("Wed, 4 Jul 2001 12:08:56 -0700",
         headerTemplate.expand(
-            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")),
-        "Wed, 4 Jul 2001 12:08:56 -0700");
+            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
   }
 }

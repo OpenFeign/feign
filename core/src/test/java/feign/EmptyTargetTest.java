@@ -14,17 +14,16 @@
 package feign;
 
 import feign.Request.HttpMethod;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import java.net.URI;
 import feign.Target.EmptyTarget;
+import org.junit.Test;
+
+import java.net.URI;
+
 import static feign.assertj.FeignAssertions.assertThat;
+import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class EmptyTargetTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void whenNameNotSupplied() {
@@ -46,11 +45,10 @@ public class EmptyTargetTest {
 
   @Test
   public void mustApplyToAbsoluteUrl() {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage("Request with non-absolute URL not supported with empty target");
-
-    EmptyTarget.create(UriInterface.class)
-        .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative"));
+    UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class,
+            () -> EmptyTarget.create(UriInterface.class)
+                    .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")));
+    assertEquals("Request with non-absolute URL not supported with empty target", exception.getMessage());
   }
 
   interface UriInterface {
