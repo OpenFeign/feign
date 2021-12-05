@@ -14,11 +14,9 @@
 package feign.template;
 
 import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -27,21 +25,21 @@ public class HeaderTemplateTest {
   @Test
   public void it_should_throw_exception_when_name_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-            () -> HeaderTemplate.create(null, Collections.singletonList("test")));
+        () -> HeaderTemplate.create(null, Collections.singletonList("test")));
     assertEquals("name is required.", exception.getMessage());
   }
 
   @Test
   public void it_should_throw_exception_when_name_is_empty() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-            () -> HeaderTemplate.create("", Collections.singletonList("test")));
+        () -> HeaderTemplate.create("", Collections.singletonList("test")));
     assertEquals("name is required.", exception.getMessage());
   }
 
   @Test
   public void it_should_throw_exception_when_value_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-            () -> HeaderTemplate.create("test", null));
+        () -> HeaderTemplate.create("test", null));
     assertEquals("values are required", exception.getMessage());
   }
 
@@ -78,12 +76,12 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 1", "test 2"));
     assertEquals(Arrays.asList("test 1", "test 2"),
-            new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
+        new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 2", "test 1"));
     assertEquals(Arrays.asList("test 2", "test 1"),
-            new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
+        new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
   }
 
   @Test
@@ -96,13 +94,13 @@ public class HeaderTemplateTest {
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 1", "test 2"));
     assertEquals(Arrays.asList("test 1", "test 2"),
-            new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
+        new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 2", "test 1"));
     assertEquals(Arrays.asList("test 2", "test 1"),
-            new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
+        new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
   }
 
   @Test

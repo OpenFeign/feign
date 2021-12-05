@@ -16,9 +16,7 @@ package feign;
 import feign.Request.HttpMethod;
 import feign.Target.EmptyTarget;
 import org.junit.Test;
-
 import java.net.URI;
-
 import static feign.assertj.FeignAssertions.assertThat;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -46,9 +44,10 @@ public class EmptyTargetTest {
   @Test
   public void mustApplyToAbsoluteUrl() {
     UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class,
-            () -> EmptyTarget.create(UriInterface.class)
-                    .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")));
-    assertEquals("Request with non-absolute URL not supported with empty target", exception.getMessage());
+        () -> EmptyTarget.create(UriInterface.class)
+            .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")));
+    assertEquals("Request with non-absolute URL not supported with empty target",
+        exception.getMessage());
   }
 
   interface UriInterface {
