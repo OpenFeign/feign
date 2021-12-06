@@ -18,7 +18,7 @@ import feign.Target.EmptyTarget;
 import org.junit.Test;
 import java.net.URI;
 import static feign.assertj.FeignAssertions.assertThat;
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 public class EmptyTargetTest {
