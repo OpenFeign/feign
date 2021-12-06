@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThrows;
 
 public class HeaderTemplateTest {
@@ -75,13 +77,13 @@ public class HeaderTemplateTest {
      */
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 1", "test 2"));
-    assertEquals(Arrays.asList("test 1", "test 2"),
-        new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
+    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
+        equalTo(Arrays.asList("test 1", "test 2")));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 2", "test 1"));
-    assertEquals(Arrays.asList("test 2", "test 1"),
-        new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
+    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
+        equalTo(Arrays.asList("test 2", "test 1")));
   }
 
   @Test
@@ -93,14 +95,14 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 1", "test 2"));
-    assertEquals(Arrays.asList("test 1", "test 2"),
-        new ArrayList<>(headerTemplateWithFirstOrdering.getValues()));
+    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
+        equalTo(Arrays.asList("test 1", "test 2")));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 2", "test 1"));
-    assertEquals(Arrays.asList("test 2", "test 1"),
-        new ArrayList<>(headerTemplateWithSecondOrdering.getValues()));
+    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
+        equalTo(Arrays.asList("test 2", "test 1")));
   }
 
   @Test
