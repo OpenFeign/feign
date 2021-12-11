@@ -1,11 +1,11 @@
 /**
  * Copyright 2012-2021 The Feign Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -26,9 +26,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -56,13 +58,12 @@ public class MeteredClientTest {
   @Mock
   private Timer timer;
 
-  MockClient mockClient;
-  MeteredClient meteredClient;
+  private MockClient mockClient;
 
   @SuppressWarnings("unchecked")
   @Before
   public void setUp() {
-    mockClient = new MockClient();
+    mockClient = new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde");
     when(meterRegistry.config()).thenReturn(config);
     when(meterRegistry.counter(anyString(), isA(Iterable.class))).thenReturn(counter);
     when(meterRegistry.timer(anyString(), isA(Iterable.class))).thenReturn(timer);
@@ -72,10 +73,7 @@ public class MeteredClientTest {
 
   @Test
   public void stopTimerOnHappyPath() {
-    mockClient = mockClient.ok(HttpMethod.GET, "/get", "1234567890abcde");
-    meteredClient = new MeteredClient(mockClient, meterRegistry);
-    SimpleSource simpleSource =
-        Feign.builder().client(meteredClient).target(new MockTarget<>(SimpleSource.class));
+    SimpleSource simpleSource = getSimpleSource();
 
     String response = simpleSource.get();
 
@@ -86,9 +84,7 @@ public class MeteredClientTest {
   @Test
   public void stopTimerOnFeignException() {
     mockClient = mockClient.add(HttpMethod.GET, "/get", HttpsURLConnection.HTTP_NOT_FOUND);
-    meteredClient = new MeteredClient(mockClient, meterRegistry);
-    SimpleSource simpleSource =
-        Feign.builder().client(meteredClient).target(new MockTarget<>(SimpleSource.class));
+    SimpleSource simpleSource = getSimpleSource();
 
     Exception exception = assertThrows(FeignException.class, simpleSource::get);
 
@@ -100,12 +96,9 @@ public class MeteredClientTest {
   @SuppressWarnings("unchecked")
   @Test
   public void stopTimerOnRuntimeException() {
-    when(meterRegistry.counter(anyString(), isA(Iterable.class))).thenThrow(
-        new RuntimeException("test runtime exception"));
-    mockClient = mockClient.ok(HttpMethod.GET, "/get", "1234567890abcde");
-    meteredClient = new MeteredClient(mockClient, meterRegistry);
-    SimpleSource simpleSource =
-        Feign.builder().client(meteredClient).target(new MockTarget<>(SimpleSource.class));
+    when(meterRegistry.counter(anyString(), isA(Iterable.class)))
+        .thenThrow(new RuntimeException("test runtime exception"));
+    SimpleSource simpleSource = getSimpleSource();
 
     Exception exception = assertThrows(RuntimeException.class, simpleSource::get);
 
@@ -115,18 +108,22 @@ public class MeteredClientTest {
 
   @Test
   public void stopTimerOnIOException() throws IOException {
-    mockClient = spy(mockClient.ok(HttpMethod.GET, "/get", "1234567890abcde"));
+    mockClient = spy(mockClient);
     doThrow(new IOException("test input/output exception")).when(mockClient)
         .execute(isA(Request.class), isA(Request.Options.class));
-    meteredClient = new MeteredClient(mockClient, meterRegistry);
-    SimpleSource simpleSource =
-        Feign.builder().client(meteredClient).target(new MockTarget<>(SimpleSource.class));
+    SimpleSource simpleSource = getSimpleSource();
 
     Exception exception = assertThrows(RetryableException.class, simpleSource::get);
 
     assertEquals("message", "test input/output exception executing GET /get",
         exception.getMessage());
     verify(timer, times(5)).record(anyLong(), isA(TimeUnit.class));
+  }
+
+  private SimpleSource getSimpleSource() {
+    return Feign.builder()
+        .client(new MeteredClient(mockClient, meterRegistry))
+        .target(new MockTarget<>(SimpleSource.class));
   }
 
 }
