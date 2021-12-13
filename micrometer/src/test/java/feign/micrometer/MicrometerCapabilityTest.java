@@ -15,6 +15,7 @@ package feign.micrometer;
 
 import feign.Capability;
 import feign.Util;
+import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
@@ -106,5 +107,25 @@ public class MicrometerCapabilityTest
   @Override
   protected boolean doesMetricIncludeUri(Id metricId, String uri) {
     return uri.equals(metricId.getTag("uri"));
+  }
+
+  @Override
+  protected boolean doesMetricHasCounter(Meter meter) {
+    for (Measurement measurement : meter.measure()) {
+      if ("COUNT".equals(measurement.getStatistic().name())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  protected long getMetricCounter(Meter meter) {
+    for (Measurement measurement : meter.measure()) {
+      if ("COUNT".equals(measurement.getStatistic().name())) {
+        return (long) measurement.getValue();
+      }
+    }
+    return 0;
   }
 }

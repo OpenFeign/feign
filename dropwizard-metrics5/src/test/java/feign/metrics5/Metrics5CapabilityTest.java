@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import feign.Capability;
 import feign.Util;
 import feign.micrometer.AbstractMetricsTestBase;
+import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
@@ -100,5 +101,15 @@ public class Metrics5CapabilityTest
   @Override
   protected boolean doesMetricIncludeUri(MetricName metricId, String uri) {
     return uri.equals(metricId.getTags().get("uri"));
+  }
+
+  @Override
+  protected boolean doesMetricHasCounter(Metric metric) {
+    return metric instanceof Metered;
+  }
+
+  @Override
+  protected long getMetricCounter(Metric metric) {
+    return ((Metered) metric).getCount();
   }
 }

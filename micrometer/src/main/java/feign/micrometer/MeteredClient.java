@@ -54,7 +54,6 @@ public class MeteredClient implements Client {
       final Response response = client.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
       timer = createTimer(request, response, options, null);
-      sample.stop(timer);
       return response;
     } catch (FeignException e) {
       timer = createTimer(request, null, options, e);

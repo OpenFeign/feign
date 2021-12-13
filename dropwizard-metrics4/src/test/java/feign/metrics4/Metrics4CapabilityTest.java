@@ -13,6 +13,7 @@
  */
 package feign.metrics4;
 
+import com.codahale.metrics.Metered;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import feign.Capability;
@@ -95,5 +96,15 @@ public class Metrics4CapabilityTest
   @Override
   protected boolean doesMetricIncludeUri(String metricId, String uri) {
     return metricId.contains(uri);
+  }
+
+  @Override
+  protected boolean doesMetricHasCounter(Metric metric) {
+    return metric instanceof Metered;
+  }
+
+  @Override
+  protected long getMetricCounter(Metric metric) {
+    return ((Metered) metric).getCount();
   }
 }

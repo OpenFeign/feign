@@ -77,6 +77,15 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                 assertThat(
                     "Expect all metric names to include host name:" + metricId,
                     doesMetricIncludeHost(metricId)));
+
+    final Map<METRIC_ID, METRIC> clientMetrics =
+        getFeignMetrics().entrySet().stream()
+            .filter(entry -> isClientMetric(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    clientMetrics.values().stream()
+        .filter(this::doesMetricHasCounter)
+        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
   }
 
   protected abstract boolean doesMetricIncludeHost(METRIC_ID metricId);
@@ -250,4 +259,8 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   protected abstract boolean isDecoderMetric(METRIC_ID metricId);
 
   protected abstract boolean doesMetricIncludeUri(METRIC_ID metricId, String uri);
+
+  protected abstract boolean doesMetricHasCounter(METRIC metric);
+
+  protected abstract long getMetricCounter(METRIC metric);
 }
