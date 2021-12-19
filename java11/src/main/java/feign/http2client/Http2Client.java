@@ -128,7 +128,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
         .body(
             new ByteArrayInputStream(httpResponse.body()),
             length.isPresent() ? (int) length.getAsLong() : null)
-        .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse("OK"))
+        .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
         .request(request)
         .status(httpResponse.statusCode())
         .headers(castMapCollectType(httpResponse.headers().map()))
