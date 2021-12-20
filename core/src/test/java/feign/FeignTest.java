@@ -365,14 +365,14 @@ public class FeignTest {
     server.enqueue(new MockResponse());
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("name", "%7Balice");
-    api.queryMapEncoded(queryMap);
+    api.queryMap(queryMap);
     assertThat(server.takeRequest())
         .hasPath("/?name=%7Balice");
 
     server.enqueue(new MockResponse());
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("%7Bname", "%7Balice");
-    api.queryMapEncoded(queryMap);
+    api.queryMap(queryMap);
     assertThat(server.takeRequest())
         .hasPath("/?%7Bname=%7Balice");
   }
@@ -970,9 +970,6 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMap(@QueryMap Map<String, Object> queryMap);
-
-    @RequestLine("GET /")
-    void queryMapEncoded(@QueryMap(encoded = true) Map<String, Object> queryMap);
 
     @RequestLine("GET /?name={name}")
     void queryMapWithQueryParams(@Param("name") String name,

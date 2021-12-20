@@ -302,27 +302,22 @@ public class ReflectiveFeign extends Feign {
       for (Entry<String, Object> currEntry : queryMap.entrySet()) {
         Collection<String> values = new ArrayList<String>();
 
-        boolean encoded = metadata.queryMapEncoded();
         Object currValue = currEntry.getValue();
         if (currValue instanceof Iterable<?>) {
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
-            values.add(nextObject == null ? null
-                : encoded ? nextObject.toString()
-                    : UriUtils.encode(nextObject.toString()));
+            values.add(nextObject == null ? null : UriUtils.encode(nextObject.toString()));
           }
         } else if (currValue instanceof Object[]) {
           for (Object value : (Object[]) currValue) {
-            values.add(value == null ? null
-                : encoded ? value.toString() : UriUtils.encode(value.toString()));
+            values.add(value == null ? null : UriUtils.encode(value.toString()));
           }
         } else {
-          values.add(currValue == null ? null
-              : encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
+          values.add(currValue == null ? null : UriUtils.encode(currValue.toString()));
         }
 
-        mutable.query(encoded ? currEntry.getKey() : UriUtils.encode(currEntry.getKey()), values);
+        mutable.query(UriUtils.encode(currEntry.getKey()), values);
       }
       return mutable;
     }
