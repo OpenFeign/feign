@@ -86,6 +86,15 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     clientMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
+
+    final Map<METRIC_ID, METRIC> decoderMetrics =
+        getFeignMetrics().entrySet().stream()
+            .filter(entry -> isDecoderMetric(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    decoderMetrics.values().stream()
+        .filter(this::doesMetricHasCounter)
+        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
   }
 
   protected abstract boolean doesMetricIncludeHost(METRIC_ID metricId);
