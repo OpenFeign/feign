@@ -62,7 +62,6 @@ public class MeteredDecoder implements Decoder {
     try {
       decoded = decoder.decode(meteredResponse, type);
       timer = createTimer(response, type, null);
-      sample.stop(timer);
     } catch (IOException | RuntimeException e) {
       timer = createTimer(response, type, e);
       createExceptionCounter(response, type, e).count();
