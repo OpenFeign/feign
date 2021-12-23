@@ -21,6 +21,9 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.querymap.FieldQueryMapEncoder;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -101,6 +104,9 @@ public abstract class Feign {
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
+    private SSLSocketFactory sslSocketFactory = null;
+    private HostnameVerifier hostnameVerifier = null;
+    private boolean requestBufferingEnabled = true;
     private Retryer retryer = new Retryer.Default();
     private Logger logger = new NoOpLogger();
     private Encoder encoder = new Encoder.Default();
@@ -128,6 +134,17 @@ public abstract class Feign {
 
     public Builder client(Client client) {
       this.client = client;
+      return this;
+    }
+
+    public Builder ssl(SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier) {
+      this.sslSocketFactory = sslSocketFactory;
+      this.hostnameVerifier = hostnameVerifier;
+      return this;
+    }
+
+    public Builder requestBuffering(boolean enabled) {
+      this.requestBufferingEnabled = enabled;
       return this;
     }
 
@@ -269,6 +286,12 @@ public abstract class Feign {
     }
 
     public Feign build() {
+      if (sslSocketFactory != null) {
+          this.client = new Client.Default(sslSocketFactory, hostnameVerifier, requestBufferingEnabled);
+      } else if (!requestBufferingEnabled) {
+        this.client = new Client.Default(null, hostnameVerifier, false);
+      }
+
       Client client = Capability.enrich(this.client, capabilities);
       Retryer retryer = Capability.enrich(this.retryer, capabilities);
       List<RequestInterceptor> requestInterceptors = this.requestInterceptors.stream()

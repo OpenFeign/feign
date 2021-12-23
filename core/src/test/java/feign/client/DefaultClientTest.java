@@ -16,7 +16,6 @@ package feign.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -29,8 +28,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
 import okio.Buffer;
 import org.junit.Test;
 import feign.Client;
@@ -47,16 +44,11 @@ import okhttp3.mockwebserver.SocketPolicy;
 public class DefaultClientTest extends AbstractClientTest {
 
   protected Client disableHostnameVerification =
-      new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
-        @Override
-        public boolean verify(String s, SSLSession sslSession) {
-          return true;
-        }
-      });
+      new Client.Default(TrustingSSLSocketFactory.get(), (peerHost, sslSession) -> true);
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null, false));
+    return Feign.builder().ssl(TrustingSSLSocketFactory.get(), null).requestBuffering(false);
   }
 
   @Test
