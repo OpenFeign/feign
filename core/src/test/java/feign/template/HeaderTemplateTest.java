@@ -13,37 +13,41 @@
  */
 package feign.template;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class HeaderTemplateTest {
 
-  @Rule public ExpectedException exception = ExpectedException.none();
-
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_name_is_null() {
-    HeaderTemplate.create(null, Collections.singletonList("test"));
-    exception.expectMessage("name is required.");
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> HeaderTemplate.create(null, Collections.singletonList("test")));
+    assertEquals("name is required.", exception.getMessage());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_name_is_empty() {
-    HeaderTemplate.create("", Collections.singletonList("test"));
-    exception.expectMessage("name is required.");
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> HeaderTemplate.create("", Collections.singletonList("test")));
+    assertEquals("name is required.", exception.getMessage());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void it_should_throw_exception_when_value_is_null() {
-    HeaderTemplate.create("test", null);
-    exception.expectMessage("values are required");
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> HeaderTemplate.create("test", null));
+    assertEquals("values are required", exception.getMessage());
   }
 
   @Test
@@ -117,8 +121,8 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
     assertEquals(
+        "Wed, 4 Jul 2001 12:08:56 -0700",
         headerTemplate.expand(
-            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")),
-        "Wed, 4 Jul 2001 12:08:56 -0700");
+            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
   }
 }

@@ -13,7 +13,7 @@
  */
 package feign;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import feign.Request.Options;
 import java.io.IOException;

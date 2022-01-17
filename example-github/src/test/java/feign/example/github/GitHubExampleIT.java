@@ -13,7 +13,7 @@
  */
 package feign.example.github;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.util.Arrays;
