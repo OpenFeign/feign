@@ -13,7 +13,7 @@
  */
 package feign.example.wikipedia;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.hamcrest.CoreMatchers;
