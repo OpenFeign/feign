@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.metrics4;
 
+import com.codahale.metrics.Metered;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import feign.Capability;
@@ -97,6 +98,16 @@ public class Metrics4CapabilityTest
   @Override
   protected boolean doesMetricIncludeUri(String metricId, String uri) {
     return metricId.contains(uri);
+  }
+
+  @Override
+  protected boolean doesMetricHasCounter(Metric metric) {
+    return metric instanceof Metered;
+  }
+
+  @Override
+  protected long getMetricCounter(Metric metric) {
+    return ((Metered) metric).getCount();
   }
 
 }

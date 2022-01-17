@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -65,6 +65,22 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     metrics.keySet().forEach(metricId -> assertThat(
         "Expect all metric names to include host name:" + metricId,
         doesMetricIncludeHost(metricId)));
+
+    final Map<METRIC_ID, METRIC> clientMetrics = getFeignMetrics().entrySet().stream()
+        .filter(entry -> isClientMetric(entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    clientMetrics.values().stream()
+        .filter(this::doesMetricHasCounter)
+        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
+
+    final Map<METRIC_ID, METRIC> decoderMetrics = getFeignMetrics().entrySet().stream()
+        .filter(entry -> isDecoderMetric(entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    decoderMetrics.values().stream()
+        .filter(this::doesMetricHasCounter)
+        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
   }
 
   protected abstract boolean doesMetricIncludeHost(METRIC_ID metricId);
@@ -220,5 +236,9 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   protected abstract boolean isDecoderMetric(METRIC_ID metricId);
 
   protected abstract boolean doesMetricIncludeUri(METRIC_ID metricId, String uri);
+
+  protected abstract boolean doesMetricHasCounter(METRIC metric);
+
+  protected abstract long getMetricCounter(METRIC metric);
 
 }

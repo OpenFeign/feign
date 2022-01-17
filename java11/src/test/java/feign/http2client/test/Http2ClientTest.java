@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -68,6 +68,20 @@ public class Http2ClientTest extends AbstractClientTest {
   @Test
   public void reasonPhraseIsOptional() throws IOException, InterruptedException {
     server.enqueue(new MockResponse()
+        .setStatus("HTTP/1.1 " + 200));
+
+    final AbstractClientTest.TestInterface api = newBuilder()
+        .target(AbstractClientTest.TestInterface.class, "http://localhost:" + server.getPort());
+
+    final Response response = api.post("foo");
+
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.reason()).isNull();
+  }
+
+  @Test
+  public void reasonPhraseInHeader() throws IOException, InterruptedException {
+    server.enqueue(new MockResponse()
         .addHeader("Reason-Phrase", "There is A reason")
         .setStatus("HTTP/1.1 " + 200));
 
@@ -79,7 +93,6 @@ public class Http2ClientTest extends AbstractClientTest {
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("There is A reason");
   }
-
 
   @Override
   @Test

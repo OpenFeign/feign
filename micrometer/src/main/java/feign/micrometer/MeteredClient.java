@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -54,7 +54,6 @@ public class MeteredClient implements Client {
       final Response response = client.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
       timer = createTimer(request, response, options, null);
-      sample.stop(timer);
       return response;
     } catch (FeignException e) {
       timer = createTimer(request, null, options, e);
