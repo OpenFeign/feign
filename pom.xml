@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2021 The Feign Authors
+    Copyright 2012-2022 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -83,7 +83,7 @@
     <json.version>20210307</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <jackson.version>2.13.0</jackson.version>
+    <jackson.version>2.13.1</jackson.version>
     <assertj.version>3.21.0</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.0.0</mockito.version>
@@ -582,7 +582,7 @@
           </excludes>
           <strictCheck>true</strictCheck>
           <mapping>
-            <java>JAVADOC_STYLE</java>
+            <java>SLASHSTAR_STYLE</java>
           </mapping>
         </configuration>
         <executions>
