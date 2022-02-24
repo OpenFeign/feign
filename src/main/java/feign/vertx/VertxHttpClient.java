@@ -32,6 +32,7 @@ import java.util.stream.StreamSupport;
 @SuppressWarnings("unused")
 public final class VertxHttpClient {
   private final HttpClient httpClient;
+  private long timeout = -1;
 
   /**
    * Constructor from {@link Vertx} instance and HTTP client options.
@@ -43,6 +44,17 @@ public final class VertxHttpClient {
     checkNotNull(vertx, "Argument vertx must not be null");
     checkNotNull(options, "Argument options must be not null");
     this.httpClient = vertx.createHttpClient(options);
+  }
+
+  /**
+   * Constructor from {@link Vertx} instance, HTTP client options and request timeout.
+   * @param vertx vertx instance
+   * @param options HTTP options
+   * @param timeout request timeout
+   */
+  public VertxHttpClient(final Vertx vertx, final HttpClientOptions options, long timeout) {
+    this(vertx, options);
+    this.timeout = timeout;
   }
 
   /**
@@ -102,7 +114,8 @@ public final class VertxHttpClient {
         .request(HttpMethod.valueOf(request.httpMethod().name()),
             port,
             host,
-            requestUri);
+            requestUri)
+        .timeout(timeout);
 
     /* Add headers to request */
     for (final Map.Entry<String, Collection<String>> header : request.headers().entrySet()) {
