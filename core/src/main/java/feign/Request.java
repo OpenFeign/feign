@@ -46,7 +46,7 @@ public final class Request implements Serializable {
     HTTP_2("HTTP/2.0"),
     MOCK;
 
-    String protocolVersion;
+    final String protocolVersion;
 
     ProtocolVersion() {
       protocolVersion = name();

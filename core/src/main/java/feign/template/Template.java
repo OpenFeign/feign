@@ -331,7 +331,7 @@ public class Template {
     REQUIRED(true),
     NOT_REQUIRED(false);
 
-    private boolean shouldEncode;
+    private final boolean shouldEncode;
 
     EncodingOptions(boolean shouldEncode) {
       this.shouldEncode = shouldEncode;
