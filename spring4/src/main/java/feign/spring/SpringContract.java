@@ -17,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
+import feign.Util;
 import org.springframework.web.bind.annotation.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
@@ -101,17 +102,16 @@ public class SpringContract extends DeclarativeContract {
 
   private String parameterName(String firstPriority,
                                String secondPriority,
-                               Parameter parameter,
-                               String fallback) {
-    if (isNotEmpty(firstPriority)) {
+                               Parameter parameter) {
+    if (Util.isNotBlank(firstPriority)) {
       return firstPriority;
-    } else if (isNotEmpty(secondPriority)) {
+    } else if (Util.isNotBlank(secondPriority)) {
       return secondPriority;
     } else {
       if (parameter.isNamePresent()) {
         return parameter.getName();
       } else {
-        return fallback;
+        return firstPriority;
       }
     }
   }
@@ -120,7 +120,7 @@ public class SpringContract extends DeclarativeContract {
     return (parameterAnnotation, data, paramIndex) -> {
       Parameter parameter = data.method().getParameters()[paramIndex];
       String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
-          parameter, parameterAnnotation.value());
+          parameter);
       nameParam(data, name, paramIndex);
     };
   }
@@ -129,15 +129,11 @@ public class SpringContract extends DeclarativeContract {
     return (parameterAnnotation, data, paramIndex) -> {
       Parameter parameter = data.method().getParameters()[paramIndex];
       String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
-          parameter, parameterAnnotation.value());
+          parameter);
       Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
       data.template().query(name, query);
       nameParam(data, name, paramIndex);
     };
-  }
-
-  private boolean isNotEmpty(String s) {
-    return s != null && !s.isEmpty();
   }
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
