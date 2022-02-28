@@ -39,13 +39,7 @@ public class SpringContract extends DeclarativeContract {
     });
 
     registerMethodAnnotation(RequestMapping.class, (requestMapping, data) -> {
-      String[] paths;
-      if (requestMapping.path().length > 0) {
-        paths = requestMapping.path();
-      } else {
-        paths = requestMapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(requestMapping.path(), requestMapping.value()));
 
       if (requestMapping.method().length == 1)
         data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
@@ -53,65 +47,35 @@ public class SpringContract extends DeclarativeContract {
 
 
     registerMethodAnnotation(GetMapping.class, (mapping, data) -> {
-      String[] paths;
-      if (mapping.path().length > 0) {
-        paths = mapping.path();
-      } else {
-        paths = mapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(mapping.path(), mapping.value()));
       data.template().method(Request.HttpMethod.GET);
       handleProducesAnnotation(data, mapping.produces());
       handleConsumesAnnotation(data, mapping.consumes());
     });
 
     registerMethodAnnotation(PostMapping.class, (mapping, data) -> {
-      String[] paths;
-      if (mapping.path().length > 0) {
-        paths = mapping.path();
-      } else {
-        paths = mapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(mapping.path(), mapping.value()));
       data.template().method(Request.HttpMethod.POST);
       handleProducesAnnotation(data, mapping.produces());
       handleConsumesAnnotation(data, mapping.consumes());
     });
 
     registerMethodAnnotation(PutMapping.class, (mapping, data) -> {
-      String[] paths;
-      if (mapping.path().length > 0) {
-        paths = mapping.path();
-      } else {
-        paths = mapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(mapping.path(), mapping.value()));
       data.template().method(Request.HttpMethod.PUT);
       handleProducesAnnotation(data, mapping.produces());
       handleConsumesAnnotation(data, mapping.consumes());
     });
 
     registerMethodAnnotation(DeleteMapping.class, (mapping, data) -> {
-      String[] paths;
-      if (mapping.path().length > 0) {
-        paths = mapping.path();
-      } else {
-        paths = mapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(mapping.path(), mapping.value()));
       data.template().method(Request.HttpMethod.DELETE);
       handleProducesAnnotation(data, mapping.produces());
       handleConsumesAnnotation(data, mapping.consumes());
     });
 
     registerMethodAnnotation(PatchMapping.class, (mapping, data) -> {
-      String[] paths;
-      if (mapping.path().length > 0) {
-        paths = mapping.path();
-      } else {
-        paths = mapping.value();
-      }
-      appendMappings(data, paths);
+      appendMappings(data, mapping(mapping.path(), mapping.value()));
       data.template().method(Request.HttpMethod.PATCH);
       handleProducesAnnotation(data, mapping.produces());
       handleConsumesAnnotation(data, mapping.consumes());
@@ -131,40 +95,41 @@ public class SpringContract extends DeclarativeContract {
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
   }
 
+  private String[] mapping(String[] firstPriority, String[] fallback) {
+    return firstPriority.length > 0 ? firstPriority : fallback;
+  }
+
+  private String parameterName(String firstPriority,
+                               String secondPriority,
+                               Parameter parameter,
+                               String fallback) {
+    if (isNotEmpty(firstPriority)) {
+      return firstPriority;
+    } else if (isNotEmpty(secondPriority)) {
+      return secondPriority;
+    } else {
+      if (parameter.isNamePresent()) {
+        return parameter.getName();
+      } else {
+        return fallback;
+      }
+    }
+  }
+
   private DeclarativeContract.ParameterAnnotationProcessor<PathVariable> pathVariableParameterAnnotationProcessor() {
     return (parameterAnnotation, data, paramIndex) -> {
-      String name;
-      if (isNotEmpty(parameterAnnotation.name())) {
-        name = parameterAnnotation.name();
-      } else if (isNotEmpty(parameterAnnotation.value())) {
-        name = parameterAnnotation.value();
-      } else {
-        Parameter parameter = data.method().getParameters()[paramIndex];
-        if (parameter.isNamePresent()) {
-          name = parameter.getName();
-        } else {
-          name = parameterAnnotation.value();
-        }
-      }
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
+          parameter, parameterAnnotation.value());
       nameParam(data, name, paramIndex);
     };
   }
 
   private DeclarativeContract.ParameterAnnotationProcessor<RequestParam> requestParamParameterAnnotationProcessor() {
     return (parameterAnnotation, data, paramIndex) -> {
-      String name;
-      if (isNotEmpty(parameterAnnotation.name())) {
-        name = parameterAnnotation.name();
-      } else if (isNotEmpty(parameterAnnotation.value())) {
-        name = parameterAnnotation.value();
-      } else {
-        Parameter parameter = data.method().getParameters()[paramIndex];
-        if (parameter.isNamePresent()) {
-          name = parameter.getName();
-        } else {
-          name = parameterAnnotation.value();
-        }
-      }
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
+          parameter, parameterAnnotation.value());
       Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
       data.template().query(name, query);
       nameParam(data, name, paramIndex);
