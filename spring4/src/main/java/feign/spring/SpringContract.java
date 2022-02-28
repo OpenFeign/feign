@@ -16,6 +16,8 @@ package feign.spring;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
+import feign.Util;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.springframework.web.bind.annotation.*;
@@ -41,8 +43,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         RequestMapping.class,
         (requestMapping, data) -> {
-          String[] mappings = requestMapping.value();
-          appendMappings(data, mappings);
+          appendMappings(data, mapping(requestMapping.path(), requestMapping.value()));
 
           if (requestMapping.method().length == 1)
             data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
@@ -51,7 +52,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         GetMapping.class,
         (mapping, data) -> {
-          appendMappings(data, mapping.value());
+          appendMappings(data, mapping(mapping.path(), mapping.value()));
           data.template().method(Request.HttpMethod.GET);
           handleProducesAnnotation(data, mapping.produces());
           handleConsumesAnnotation(data, mapping.consumes());
@@ -60,7 +61,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         PostMapping.class,
         (mapping, data) -> {
-          appendMappings(data, mapping.value());
+          appendMappings(data, mapping(mapping.path(), mapping.value()));
           data.template().method(Request.HttpMethod.POST);
           handleProducesAnnotation(data, mapping.produces());
           handleConsumesAnnotation(data, mapping.consumes());
@@ -69,7 +70,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         PutMapping.class,
         (mapping, data) -> {
-          appendMappings(data, mapping.value());
+          appendMappings(data, mapping(mapping.path(), mapping.value()));
           data.template().method(Request.HttpMethod.PUT);
           handleProducesAnnotation(data, mapping.produces());
           handleConsumesAnnotation(data, mapping.consumes());
@@ -78,7 +79,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         DeleteMapping.class,
         (mapping, data) -> {
-          appendMappings(data, mapping.value());
+          appendMappings(data, mapping(mapping.path(), mapping.value()));
           data.template().method(Request.HttpMethod.DELETE);
           handleProducesAnnotation(data, mapping.produces());
           handleConsumesAnnotation(data, mapping.consumes());
@@ -87,7 +88,7 @@ public class SpringContract extends DeclarativeContract {
     registerMethodAnnotation(
         PatchMapping.class,
         (mapping, data) -> {
-          appendMappings(data, mapping.value());
+          appendMappings(data, mapping(mapping.path(), mapping.value()));
           data.template().method(Request.HttpMethod.PATCH);
           handleProducesAnnotation(data, mapping.produces());
           handleConsumesAnnotation(data, mapping.consumes());
@@ -103,26 +104,54 @@ public class SpringContract extends DeclarativeContract {
         (ann, data) -> {
           data.ignoreMethod();
         });
-    registerParameterAnnotation(
-        PathVariable.class,
-        (parameterAnnotation, data, paramIndex) -> {
-          String name = PathVariable.class.cast(parameterAnnotation).value();
-          nameParam(data, name, paramIndex);
-        });
+    registerParameterAnnotation(PathVariable.class, pathVariableParameterAnnotationProcessor());
 
     registerParameterAnnotation(
         RequestBody.class,
         (body, data, paramIndex) -> {
           handleProducesAnnotation(data, "application/json");
         });
-    registerParameterAnnotation(
-        RequestParam.class,
-        (parameterAnnotation, data, paramIndex) -> {
-          String name = RequestParam.class.cast(parameterAnnotation).value();
-          Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
-          data.template().query(name, query);
-          nameParam(data, name, paramIndex);
-        });
+    registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
+  }
+
+  private String[] mapping(String[] firstPriority, String[] fallback) {
+    return firstPriority.length > 0 ? firstPriority : fallback;
+  }
+
+  private String parameterName(String firstPriority, String secondPriority, Parameter parameter) {
+    if (Util.isNotBlank(firstPriority)) {
+      return firstPriority;
+    } else if (Util.isNotBlank(secondPriority)) {
+      return secondPriority;
+    } else {
+      if (parameter.isNamePresent()) {
+        return parameter.getName();
+      } else {
+        return firstPriority;
+      }
+    }
+  }
+
+  private DeclarativeContract.ParameterAnnotationProcessor<PathVariable>
+      pathVariableParameterAnnotationProcessor() {
+    return (parameterAnnotation, data, paramIndex) -> {
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      String name =
+          parameterName(parameterAnnotation.name(), parameterAnnotation.value(), parameter);
+      nameParam(data, name, paramIndex);
+    };
+  }
+
+  private DeclarativeContract.ParameterAnnotationProcessor<RequestParam>
+      requestParamParameterAnnotationProcessor() {
+    return (parameterAnnotation, data, paramIndex) -> {
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      String name =
+          parameterName(parameterAnnotation.name(), parameterAnnotation.value(), parameter);
+      Collection<String> query = addTemplatedParam(data.template().queries().get(name), name);
+      data.template().query(name, query);
+      nameParam(data, name, paramIndex);
+    };
   }
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
