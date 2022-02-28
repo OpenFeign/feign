@@ -49,6 +49,7 @@ public class SpringContractTest {
         .noContent(HttpMethod.GET, "/health/1")
         .noContent(HttpMethod.GET, "/health/1?deep=true")
         .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
+        .noContent(HttpMethod.GET, "/health/name?deep=true&dryRun=true")
         .ok(HttpMethod.GET, "/health/generic", "{}");
     resource = Feign.builder()
         .contract(new SpringContract())
@@ -56,6 +57,20 @@ public class SpringContractTest {
         .decoder(new JacksonDecoder())
         .client(mockClient)
         .target(new MockTarget<>(HealthResource.class));
+  }
+
+  @Test
+  public void noPath() {
+    resource.getStatus();
+
+    mockClient.verifyOne(HttpMethod.GET, "/health");
+  }
+
+  @Test
+  public void testWithName() {
+    resource.checkWithName("name", true, true);
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/name?deep=true&dryRun=true");
   }
 
   @Test
@@ -129,6 +144,12 @@ public class SpringContractTest {
         reason = "This customer is not found in the system")
     @ExceptionHandler(MissingResourceException.class)
     void missingResourceExceptionHandler();
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    void checkWithName(
+                       @PathVariable(name = "id") String campaignId,
+                       @RequestParam(name = "deep", defaultValue = "false") boolean deepCheck,
+                       @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun);
 
   }
 
