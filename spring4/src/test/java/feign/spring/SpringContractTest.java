@@ -147,9 +147,9 @@ public class SpringContractTest {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     void checkWithName(
-            @PathVariable(name = "id") String campaignId,
-            @RequestParam(name = "deep", defaultValue = "false") boolean deepCheck,
-            @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun);
+                       @PathVariable(name = "id") String campaignId,
+                       @RequestParam(name = "deep", defaultValue = "false") boolean deepCheck,
+                       @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun);
 
   }
 

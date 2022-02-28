@@ -40,7 +40,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(RequestMapping.class, (requestMapping, data) -> {
       String[] paths;
-      if(requestMapping.path().length > 0) {
+      if (requestMapping.path().length > 0) {
         paths = requestMapping.path();
       } else {
         paths = requestMapping.value();
@@ -54,7 +54,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(GetMapping.class, (mapping, data) -> {
       String[] paths;
-      if(mapping.path().length > 0) {
+      if (mapping.path().length > 0) {
         paths = mapping.path();
       } else {
         paths = mapping.value();
@@ -67,7 +67,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(PostMapping.class, (mapping, data) -> {
       String[] paths;
-      if(mapping.path().length > 0) {
+      if (mapping.path().length > 0) {
         paths = mapping.path();
       } else {
         paths = mapping.value();
@@ -80,7 +80,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(PutMapping.class, (mapping, data) -> {
       String[] paths;
-      if(mapping.path().length > 0) {
+      if (mapping.path().length > 0) {
         paths = mapping.path();
       } else {
         paths = mapping.value();
@@ -93,7 +93,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(DeleteMapping.class, (mapping, data) -> {
       String[] paths;
-      if(mapping.path().length > 0) {
+      if (mapping.path().length > 0) {
         paths = mapping.path();
       } else {
         paths = mapping.value();
@@ -106,7 +106,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(PatchMapping.class, (mapping, data) -> {
       String[] paths;
-      if(mapping.path().length > 0) {
+      if (mapping.path().length > 0) {
         paths = mapping.path();
       } else {
         paths = mapping.value();
@@ -134,13 +134,13 @@ public class SpringContract extends DeclarativeContract {
   private DeclarativeContract.ParameterAnnotationProcessor<PathVariable> pathVariableParameterAnnotationProcessor() {
     return (parameterAnnotation, data, paramIndex) -> {
       String name;
-      if(isNotEmpty(parameterAnnotation.name())) {
+      if (isNotEmpty(parameterAnnotation.name())) {
         name = parameterAnnotation.name();
-      } else if(isNotEmpty(parameterAnnotation.value())) {
+      } else if (isNotEmpty(parameterAnnotation.value())) {
         name = parameterAnnotation.value();
       } else {
         Parameter parameter = data.method().getParameters()[paramIndex];
-        if(parameter.isNamePresent()) {
+        if (parameter.isNamePresent()) {
           name = parameter.getName();
         } else {
           name = parameterAnnotation.value();
@@ -153,13 +153,13 @@ public class SpringContract extends DeclarativeContract {
   private DeclarativeContract.ParameterAnnotationProcessor<RequestParam> requestParamParameterAnnotationProcessor() {
     return (parameterAnnotation, data, paramIndex) -> {
       String name;
-      if(isNotEmpty(parameterAnnotation.name())) {
+      if (isNotEmpty(parameterAnnotation.name())) {
         name = parameterAnnotation.name();
-      } else if(isNotEmpty(parameterAnnotation.value())) {
+      } else if (isNotEmpty(parameterAnnotation.value())) {
         name = parameterAnnotation.value();
       } else {
         Parameter parameter = data.method().getParameters()[paramIndex];
-        if(parameter.isNamePresent()) {
+        if (parameter.isNamePresent()) {
           name = parameter.getName();
         } else {
           name = parameterAnnotation.value();
