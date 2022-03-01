@@ -436,6 +436,14 @@ public class DefaultContractTest {
     assertThat(md.headerMapIndex()).isEqualTo(0);
   }
 
+  @Test
+  public void headerMapUserObject() throws Exception {
+    final MethodMetadata md =
+            parseAndValidateMetadata(HeaderMapInterface.class, "headerMapUserObject",
+                    HeaderMapUserObject.class);
+    assertThat(md.headerMapIndex()).isEqualTo(0);
+  }
+
   interface Methods {
 
     @RequestLine("POST /")
@@ -534,7 +542,7 @@ public class DefaultContractTest {
   interface AutoDiscoverParamNames {
 
     @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
-    Response recordsByNameAndType(@Param int domainId, @Param String name, @Param() String type);
+    Response recordsByNameAndType(@Param("domainId") int domainId, @Param("name") String name, @Param("type") String type);
   }
 
   interface FormParams {
@@ -571,6 +579,29 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void headerMapSubClass(@HeaderMap SubClassHeaders httpHeaders);
+
+    @RequestLine("POST /")
+    void headerMapUserObject(@HeaderMap HeaderMapUserObject httpHeaders);
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+    public void setName(String name) {
+      this.name = name;
+    }
+    public String getGrade() {
+      return grade;
+    }
+    public void setGrade(String grade) {
+      this.grade = grade;
+    }
   }
 
   interface HeaderParams {
