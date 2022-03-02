@@ -239,7 +239,7 @@ public class ReflectiveFeign extends Feign {
       }
 
       if (metadata.headerMapIndex() != null) {
-        //add header map parameters for a resolution of the user pojo object
+        // add header map parameters for a resolution of the user pojo object
         Object value = argv[metadata.headerMapIndex()];
         Map<String, Object> headerMap = toQueryMap(value);
         template = addHeaderMapHeaders(headerMap, template);

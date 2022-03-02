@@ -263,9 +263,9 @@ public class FeignTest {
     api.HeaderMapUserObject(headerMap);
 
     assertThat(server.takeRequest())
-            .hasHeaders(
-                    entry("name1", Collections.singletonList("hello")),
-                    entry("grade1", Collections.singletonList("5")));
+        .hasHeaders(
+            entry("name1", Collections.singletonList("hello")),
+            entry("grade1", Collections.singletonList("5")));
   }
 
   @Test
@@ -1028,12 +1028,15 @@ public class FeignTest {
     public String getName() {
       return name;
     }
+
     public void setName(String name) {
       this.name = name;
     }
+
     public String getGrade() {
       return grade;
     }
+
     public void setGrade(String grade) {
       this.grade = grade;
     }
