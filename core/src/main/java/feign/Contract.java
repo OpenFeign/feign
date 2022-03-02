@@ -156,10 +156,10 @@ public interface Contract {
       }
 
       if (data.headerMapIndex() != null) {
-        checkMapString(
-            "HeaderMap",
-            parameterTypes[data.headerMapIndex()],
-            genericParameterTypes[data.headerMapIndex()]);
+        // check header map parameter for map type
+        if (Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()])) {
+          checkMapKeys("HeaderMap", genericParameterTypes[data.headerMapIndex()]);
+        }
       }
 
       if (data.queryMapIndex() != null) {
