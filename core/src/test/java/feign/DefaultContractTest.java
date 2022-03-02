@@ -439,8 +439,8 @@ public class DefaultContractTest {
   @Test
   public void headerMapUserObject() throws Exception {
     final MethodMetadata md =
-            parseAndValidateMetadata(HeaderMapInterface.class, "headerMapUserObject",
-                    HeaderMapUserObject.class);
+            parseAndValidateMetadata(HeaderMapInterface.class,
+                    "headerMapUserObject", HeaderMapUserObject.class);
     assertThat(md.headerMapIndex()).isEqualTo(0);
   }
 

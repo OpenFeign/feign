@@ -259,13 +259,13 @@ public class FeignTest {
 
     HeaderMapUserObject headerMap = new HeaderMapUserObject();
     headerMap.setName("hello");
-    headerMap.setGrade("6");
+    headerMap.setGrade("5");
     api.HeaderMapUserObject(headerMap);
 
     assertThat(server.takeRequest())
             .hasHeaders(
                     entry("name1", Collections.singletonList("hello")),
-                    entry("grade1", Collections.singletonList("6")));
+                    entry("grade1", Collections.singletonList("5")));
   }
 
   @Test
