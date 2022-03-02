@@ -135,7 +135,13 @@ public final class ApacheHttp5Client implements Client {
         entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(new String(data), contentType);
+        String content;
+        if (request.charset() != null) {
+          content = new String(data, request.charset());
+        } else {
+          content = new String(data);
+        }
+        entity = new StringEntity(content, contentType);
       }
 
       requestBuilder.setEntity(entity);
