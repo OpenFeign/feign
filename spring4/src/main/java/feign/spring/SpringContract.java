@@ -13,15 +13,15 @@
  */
 package feign.spring;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Collection;
-import feign.Util;
-import org.springframework.web.bind.annotation.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
+import feign.Util;
+import org.springframework.web.bind.annotation.*;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.util.*;
+import static feign.Util.checkState;
 
 public class SpringContract extends DeclarativeContract {
 
@@ -94,6 +94,8 @@ public class SpringContract extends DeclarativeContract {
       handleProducesAnnotation(data, "application/json");
     });
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
+    registerParameterAnnotation(RequestPart.class, requestPartParameterAnnotationProcessor());
+    registerParameterAnnotation(RequestHeader.class, requestHeaderParameterAnnotationProcessor());
   }
 
   private String[] mapping(String[] firstPriority, String[] fallback) {
@@ -135,6 +137,40 @@ public class SpringContract extends DeclarativeContract {
       nameParam(data, name, paramIndex);
     };
   }
+
+  private DeclarativeContract.ParameterAnnotationProcessor<RequestHeader> requestHeaderParameterAnnotationProcessor() {
+    return (parameterAnnotation, data, paramIndex) -> {
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      checkState(data.headerMapIndex() == null, "Header map can only be present once.");
+      if (Map.class.isAssignableFrom(parameter.getType())
+          || isUserPojo(parameter.getType())) {
+        data.headerMapIndex(paramIndex);
+        return;
+      }
+
+      String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
+          parameter);
+      Collection<String> headers = addTemplatedParam(data.template().headers().get(name), name);
+      data.template().header(name, headers);
+      nameParam(data, name, paramIndex);
+    };
+  }
+
+  private DeclarativeContract.ParameterAnnotationProcessor<RequestPart> requestPartParameterAnnotationProcessor() {
+    return (parameterAnnotation, data, paramIndex) -> {
+      Parameter parameter = data.method().getParameters()[paramIndex];
+      String name = parameterName(parameterAnnotation.name(), parameterAnnotation.value(),
+          parameter);
+      data.template().methodMetadata().formParams().add(name);
+      nameParam(data, name, paramIndex);
+    };
+  }
+
+  private boolean isUserPojo(Type type) {
+    String typeName = type.toString();
+    return !typeName.startsWith("class java.");
+  }
+
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
     for (int i = 0; i < mappings.length; i++) {
