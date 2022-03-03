@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import feign.Feign;
+import feign.Param;
 import feign.Request;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -25,8 +26,7 @@ import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.MissingResourceException;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +50,10 @@ public class SpringContractTest {
             .noContent(HttpMethod.GET, "/health/1?deep=true")
             .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
             .noContent(HttpMethod.GET, "/health/name?deep=true&dryRun=true")
+            .noContent(HttpMethod.POST, "/health/part/1")
+            .noContent(HttpMethod.GET, "/health/header")
+            .noContent(HttpMethod.GET, "/health/header/map")
+            .noContent(HttpMethod.GET, "/health/header/pojo")
             .ok(HttpMethod.GET, "/health/generic", "{}");
     resource =
         Feign.builder()
@@ -72,6 +76,48 @@ public class SpringContractTest {
     resource.checkWithName("name", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/name?deep=true&dryRun=true");
+  }
+
+  @Test
+  public void testRequestPart() {
+    resource.checkRequestPart("1", "hello", "6");
+
+    final Request request = mockClient.verifyOne(HttpMethod.POST, "/health/part/1");
+    assertThat(
+        request.requestTemplate().methodMetadata().formParams(), contains("name1", "grade1"));
+  }
+
+  @Test
+  public void testRequestHeader() {
+    resource.checkRequestHeader("hello", "6");
+
+    final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header");
+    assertThat(request.headers(), hasEntry("name1", Arrays.asList("hello")));
+    assertThat(request.headers(), hasEntry("grade1", Arrays.asList("6")));
+  }
+
+  @Test
+  public void testRequestHeaderMap() {
+    Map<String, String> map = new HashMap<>();
+    map.put("name1", "hello");
+    map.put("grade1", "6");
+    resource.checkRequestHeaderMap(map);
+
+    final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/map");
+    assertThat(request.headers(), hasEntry("name1", Arrays.asList("hello")));
+    assertThat(request.headers(), hasEntry("grade1", Arrays.asList("6")));
+  }
+
+  @Test
+  public void testRequestHeaderPojo() {
+    HeaderMapUserObject object = new HeaderMapUserObject();
+    object.setName("hello");
+    object.setGrade("6");
+    resource.checkRequestHeaderPojo(object);
+
+    final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/pojo");
+    assertThat(request.headers(), hasEntry("name1", Arrays.asList("hello")));
+    assertThat(request.headers(), hasEntry("grade1", Arrays.asList("6")));
   }
 
   @Test
@@ -149,5 +195,45 @@ public class SpringContractTest {
         @PathVariable(name = "id") String campaignId,
         @RequestParam(name = "deep", defaultValue = "false") boolean deepCheck,
         @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun);
+
+    @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
+    void checkRequestPart(
+        @PathVariable(name = "id") String campaignId,
+        @RequestPart(name = "name1") String name,
+        @RequestPart(name = "grade1") String grade);
+
+    @RequestMapping(value = "/header", method = RequestMethod.GET)
+    void checkRequestHeader(
+        @RequestHeader(name = "name1") String name, @RequestHeader(name = "grade1") String grade);
+
+    @RequestMapping(value = "/header/map", method = RequestMethod.GET)
+    void checkRequestHeaderMap(@RequestHeader Map<String, String> headerMap);
+
+    @RequestMapping(value = "/header/pojo", method = RequestMethod.GET)
+    void checkRequestHeaderPojo(@RequestHeader HeaderMapUserObject object);
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getGrade() {
+      return grade;
+    }
+
+    public void setGrade(String grade) {
+      this.grade = grade;
+    }
   }
 }
