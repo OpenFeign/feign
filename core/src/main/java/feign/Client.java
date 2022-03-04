@@ -115,7 +115,7 @@ public interface Client {
             connection.getRequestMethod(), connection.getURL()));
       }
 
-      Map<String, Collection<String>> headers =  new TreeMap<>(CASE_INSENSITIVE_ORDER);
+      Map<String, Collection<String>> headers = new TreeMap<>(CASE_INSENSITIVE_ORDER);
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
         // response message
         if (field.getKey() != null) {
