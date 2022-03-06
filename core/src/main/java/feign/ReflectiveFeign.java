@@ -332,13 +332,14 @@ public class ReflectiveFeign extends Feign {
                     : encoded ? value.toString() : UriUtils.encode(value.toString()));
           }
         } else {
-          values.add(
-              currValue == null
-                  ? null
-                  : encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
+          if (currValue != null) {
+            values.add(encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
+          }
         }
 
-        mutable.query(encoded ? currEntry.getKey() : UriUtils.encode(currEntry.getKey()), values);
+        if (values.size() > 0) {
+          mutable.query(encoded ? currEntry.getKey() : UriUtils.encode(currEntry.getKey()), values);
+        }
       }
       return mutable;
     }

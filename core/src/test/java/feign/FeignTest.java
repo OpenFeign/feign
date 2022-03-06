@@ -314,6 +314,34 @@ public class FeignTest {
   }
 
   @Test
+  public void queryMapWithNull() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", null);
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest()).hasPath("/?name=alice");
+  }
+
+  @Test
+  public void queryMapWithEmpty() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", "");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey");
+  }
+
+  @Test
   public void queryMapIterableValuesExpanded() throws Exception {
     server.enqueue(new MockResponse());
 
