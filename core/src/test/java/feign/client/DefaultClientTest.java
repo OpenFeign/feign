@@ -172,6 +172,24 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
+  public void canExeptCaseInsensitiveHeader() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(
+        new MockResponse()
+            .addHeader("content-encoding", "gzip")
+            .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull().isEqualToIgnoringCase(responseData);
+  }
+
+  @Test
   public void canSupportDeflate() throws Exception {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";

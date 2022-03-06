@@ -20,6 +20,7 @@ import static feign.Util.ENCODING_GZIP;
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.isNotBlank;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.format;
 
 import feign.Request.Options;
@@ -32,9 +33,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -117,7 +118,7 @@ public interface Client {
                 status, connection.getRequestMethod(), connection.getURL()));
       }
 
-      Map<String, Collection<String>> headers = new LinkedHashMap<>();
+      Map<String, Collection<String>> headers = new TreeMap<>(CASE_INSENSITIVE_ORDER);
       for (Map.Entry<String, List<String>> field : connection.getHeaderFields().entrySet()) {
         // response message
         if (field.getKey() != null) {
@@ -133,9 +134,9 @@ public interface Client {
       if (status >= 400) {
         stream = connection.getErrorStream();
       } else {
-        if (this.isGzip(connection.getHeaderFields().get(CONTENT_ENCODING))) {
+        if (this.isGzip(headers.get(CONTENT_ENCODING))) {
           stream = new GZIPInputStream(connection.getInputStream());
-        } else if (this.isDeflate(connection.getHeaderFields().get(CONTENT_ENCODING))) {
+        } else if (this.isDeflate(headers.get(CONTENT_ENCODING))) {
           stream = new InflaterInputStream(connection.getInputStream());
         } else {
           stream = connection.getInputStream();
