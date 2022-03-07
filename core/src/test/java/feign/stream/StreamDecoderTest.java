@@ -27,6 +27,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Test;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
