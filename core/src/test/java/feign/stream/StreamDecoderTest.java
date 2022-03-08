@@ -21,6 +21,7 @@ import feign.codec.Decoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Test;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -66,7 +67,24 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create(new Decoder.Default()))
+        .decoder(StreamDecoder.create(
+            (response, type) -> new BufferedReader(response.body().asReader(UTF_8)).lines()
+                .iterator()))
+        .doNotCloseAfterDecode()
+        .target(StreamInterface.class, server.url("/").toString());
+
+    try (Stream<String> stream = api.get()) {
+      assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
+    }
+  }
+
+  @Test
+  public void simpleDefaultStreamTest() {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo\nbar"));
+
+    StreamInterface api = Feign.builder()
+        .decoder(StreamDecoder.create((r, t) -> new Object()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
@@ -86,7 +104,7 @@ public class StreamDecoderTest {
         .build();
 
     TestCloseableIterator it = new TestCloseableIterator();
-    StreamDecoder decoder = new StreamDecoder(new TestIteratorDecoder(it));
+    StreamDecoder decoder = new StreamDecoder((r, t) -> it);
 
     try (Stream<?> stream =
         (Stream<?>) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {
@@ -94,20 +112,6 @@ public class StreamDecoderTest {
       assertThat(it.called).isTrue();
     } finally {
       assertThat(it.closed).isTrue();
-    }
-  }
-
-  static class TestIteratorDecoder extends Decoder.Default implements IteratorDecoder {
-
-    final TestCloseableIterator testCloseableIterator;
-
-    TestIteratorDecoder(TestCloseableIterator testCloseableIterator) {
-      this.testCloseableIterator = testCloseableIterator;
-    }
-
-    @Override
-    public Iterator<?> decodeIterator(Response response, Type type) throws FeignException {
-      return testCloseableIterator;
     }
   }
 
