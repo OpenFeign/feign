@@ -16,7 +16,6 @@ package feign.stream;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.Decoder;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -25,7 +24,6 @@ import java.util.Iterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
 import static feign.Util.ensureClosed;
 
 /**
