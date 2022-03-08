@@ -16,6 +16,7 @@ package feign.stream;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.Decoder;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 /**
@@ -43,31 +45,36 @@ import static feign.Util.ensureClosed;
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code>
  * </pre>
+ * 
+ * @author mroccyen
  */
 public final class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
-  private final Decoder delegateDecoder;
 
-  StreamDecoder(Decoder iteratorDecoder, Decoder delegateDecoder) {
+  public StreamDecoder(Decoder iteratorDecoder) {
     this.iteratorDecoder = iteratorDecoder;
-    this.delegateDecoder = delegateDecoder;
   }
 
   @Override
   public Object decode(Response response, Type type)
       throws IOException, FeignException {
     if (!isStream(type)) {
-      if (delegateDecoder == null) {
-        throw new IllegalArgumentException("StreamDecoder supports types other than stream. " +
-            "When type is not stream, the delegate decoder needs to be setting.");
-      } else {
-        return delegateDecoder.decode(response, type);
-      }
+      return iteratorDecoder.decode(response, type);
     }
     ParameterizedType streamType = (ParameterizedType) type;
-    Iterator<?> iterator =
-        (Iterator<?>) iteratorDecoder.decode(response, new IteratorParameterizedType(streamType));
+    Object result = iteratorDecoder
+        .decode(response, new IteratorParameterizedType(streamType));
+
+    Iterator<?> iterator;
+    if (result instanceof Iterator<?>) {
+      iterator = (Iterator<?>) result;
+    } else {
+      // use default iterator decoder handle
+      Object defaultResult = new LineToIteratorDecoder()
+          .decode(response, new IteratorParameterizedType(streamType));
+      iterator = (Iterator<?>) defaultResult;
+    }
 
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(iterator, 0), false)
@@ -89,11 +96,7 @@ public final class StreamDecoder implements Decoder {
   }
 
   public static StreamDecoder create(Decoder iteratorDecoder) {
-    return new StreamDecoder(iteratorDecoder, null);
-  }
-
-  public static StreamDecoder create(Decoder iteratorDecoder, Decoder delegateDecoder) {
-    return new StreamDecoder(iteratorDecoder, delegateDecoder);
+    return new StreamDecoder(iteratorDecoder);
   }
 
   static final class IteratorParameterizedType implements ParameterizedType {
@@ -118,5 +121,18 @@ public final class StreamDecoder implements Decoder {
     public Type getOwnerType() {
       return null;
     }
+  }
+
+  /**
+   * Default implementation of Decodes an http response into an Iterator
+   */
+  public static class LineToIteratorDecoder implements Decoder {
+
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
+      BufferedReader bufferedReader = new BufferedReader(response.body().asReader(UTF_8));
+      return bufferedReader.lines().iterator();
+    }
+
   }
 }
