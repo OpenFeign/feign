@@ -239,8 +239,10 @@ public class ReflectiveFeign extends Feign {
       }
 
       if (metadata.headerMapIndex() != null) {
-        template =
-            addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()], template);
+        // add header map parameters for a resolution of the user pojo object
+        Object value = argv[metadata.headerMapIndex()];
+        Map<String, Object> headerMap = toQueryMap(value);
+        template = addHeaderMapHeaders(headerMap, template);
       }
 
       return template;
@@ -314,10 +316,14 @@ public class ReflectiveFeign extends Feign {
             values.add(value == null ? null : UriUtils.encode(value.toString()));
           }
         } else {
-          values.add(currValue == null ? null : UriUtils.encode(currValue.toString()));
+          if (currValue != null) {
+            values.add(UriUtils.encode(currValue.toString()));
+          }
         }
 
-        mutable.query(UriUtils.encode(currEntry.getKey()), values);
+        if (values.size() > 0) {
+          mutable.query(UriUtils.encode(currEntry.getKey()), values);
+        }
       }
       return mutable;
     }

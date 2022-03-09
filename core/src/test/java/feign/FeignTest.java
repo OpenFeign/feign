@@ -252,6 +252,23 @@ public class FeignTest {
   }
 
   @Test
+  public void HeaderMapUserObject() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    HeaderMapUserObject headerMap = new HeaderMapUserObject();
+    headerMap.setName("hello");
+    headerMap.setGrade("5");
+    api.HeaderMapUserObject(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(
+            entry("name1", Collections.singletonList("hello")),
+            entry("grade1", Collections.singletonList("5")));
+  }
+
+  @Test
   public void headerMapWithHeaderAnnotations() throws Exception {
     server.enqueue(new MockResponse());
 
@@ -295,6 +312,36 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
         .hasPath("/?name=alice&fooKey=fooValue");
+  }
+
+  @Test
+  public void queryMapWithNull() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", null);
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+        .hasPath("/?name=alice");
+  }
+
+  @Test
+  public void queryMapWithEmpty() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", "");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+        .hasPath("/?name=alice&fooKey");
   }
 
   @Test
@@ -965,6 +1012,9 @@ public class FeignTest {
     void headerMap(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
+    void HeaderMapUserObject(@HeaderMap HeaderMapUserObject headerMap);
+
+    @RequestLine("GET /")
     @Headers("Content-Encoding: deflate")
     void headerMapWithHeaderAnnotations(@HeaderMap Map<String, Object> headerMap);
 
@@ -993,6 +1043,29 @@ public class FeignTest {
       public String expand(Object value) {
         return String.valueOf(((Date) value).getTime());
       }
+    }
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getGrade() {
+      return grade;
+    }
+
+    public void setGrade(String grade) {
+      this.grade = grade;
     }
   }
 
