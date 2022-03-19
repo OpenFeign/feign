@@ -242,7 +242,7 @@ public class JAXBCodecTest {
   }
 
   /**
-   * Enabled via {@link feign.Feign.Builder#decode404()}
+   * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {

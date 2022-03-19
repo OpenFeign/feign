@@ -304,7 +304,7 @@ public class JacksonCodecTest {
     }
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
@@ -316,7 +316,7 @@ public class JacksonCodecTest {
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
   public void notFoundDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()

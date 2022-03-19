@@ -64,7 +64,7 @@ import java.util.Map;
  * <p/>
  * It is commonly the case that 404 (Not Found) status has semantic value in HTTP apis. While the
  * default behavior is to raise exeception, users can alternatively enable 404 processing via
- * {@link feign.Feign.Builder#decode404()}.
+ * {@link feign.Feign.Builder#dismiss404()}.
  */
 public interface ErrorDecoder {
 

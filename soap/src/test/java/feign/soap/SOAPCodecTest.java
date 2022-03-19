@@ -369,7 +369,7 @@ public class SOAPCodecTest {
   }
 
   /**
-   * Enabled via {@link feign.Feign.Builder#decode404()}
+   * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
   public void notFoundDecodesToNull() throws Exception {
