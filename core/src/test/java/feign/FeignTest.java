@@ -723,13 +723,13 @@ public class FeignTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Exception {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .decoder(new Decoder() {
           @Override
           public Object decode(Response response, Type type) throws IOException {
@@ -741,12 +741,12 @@ public class FeignTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Exception {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .errorDecoder(new IllegalArgumentExceptionOn404())
         .target("http://localhost:" + server.getPort());
     api.queryMap(Collections.<String, Object>emptyMap());
@@ -1168,8 +1168,8 @@ public class FeignTest {
       return this;
     }
 
-    TestInterfaceBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 

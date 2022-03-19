@@ -56,7 +56,7 @@ public class JsonDecoderTest {
   public void decodesArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -69,7 +69,7 @@ public class JsonDecoderTest {
   public void decodesObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -79,18 +79,29 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws IOException {
+  public void notFoundDecodesToEmpty() throws IOException {
+    Response response = Response.builder()
+        .status(404)
+        .reason("Not found")
+        .headers(Collections.emptyMap())
+        .request(request)
+        .build();
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+  }
+
+  @Test
+  public void nullBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .headers(Collections.emptyMap())
         .request(request)
         .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws IOException {
+  public void emptyBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -98,14 +109,14 @@ public class JsonDecoderTest {
         .body("", UTF_8)
         .request(request)
         .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
   public void unknownTypeThrowsDecodeException() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -121,7 +132,7 @@ public class JsonDecoderTest {
   public void badJsonThrowsWrappedJSONException() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -140,7 +151,7 @@ public class JsonDecoderTest {
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new Exception("test cause exception")));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -157,7 +168,7 @@ public class JsonDecoderTest {
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new IOException("test cause exception")));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -173,7 +184,7 @@ public class JsonDecoderTest {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new IOException("test exception"));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -188,7 +199,7 @@ public class JsonDecoderTest {
   public void decodesExtendedArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -201,7 +212,7 @@ public class JsonDecoderTest {
   public void decodeExtendedObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)

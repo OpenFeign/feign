@@ -40,7 +40,7 @@ public class OptionalDecoderTests {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final OptionalInterface api = Feign.builder()
-        .decode404()
+        .dismiss404()
         .decoder(new OptionalDecoder(new Decoder.Default()))
         .target(OptionalInterface.class, server.url("/").toString());
 
