@@ -83,26 +83,26 @@ public class SAXDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  public void nullBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
-    assertNull(decoder.decode(response, String.class));
+    assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
-    assertThat((byte[]) decoder.decode(response, byte[].class)).isNull();
+    assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
   }
 
   static enum NetworkStatus {

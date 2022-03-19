@@ -223,18 +223,18 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNullIterator() throws Exception {
+  public void nullBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
-  public void emptyBodyDecodesToNullIterator() throws Exception {
+  public void emptyBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -242,7 +242,7 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(new byte[0])
         .build();
-    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -306,25 +306,25 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToNullIterator() throws Exception {
+  public void notFoundDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 }

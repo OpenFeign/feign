@@ -37,7 +37,6 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
-import feign.jaxb.JAXBDecoder;
 
 @SuppressWarnings("deprecation")
 public class SOAPCodecTest {
@@ -380,8 +379,8 @@ public class SOAPCodecTest {
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
-        .decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new SOAPDecoder(new JAXBContextFactory.Builder().build())
+        .decode(response, byte[].class)).isEmpty();
   }
 
 

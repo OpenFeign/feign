@@ -24,7 +24,7 @@ public class StringDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
-    if (body == null) {
+    if (response.status() == 404 || response.status() == 204 || body == null) {
       return null;
     }
     if (String.class.equals(type)) {

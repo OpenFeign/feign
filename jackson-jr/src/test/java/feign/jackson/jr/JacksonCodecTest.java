@@ -90,18 +90,18 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  public void nullBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertNull(new JacksonJrDecoder().decode(response, String.class));
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  public void emptyBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -109,7 +109,7 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(new byte[0])
         .build();
-    assertNull(new JacksonJrDecoder().decode(response, String.class));
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
@@ -273,13 +273,13 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#decode404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 }
