@@ -90,7 +90,7 @@ public class ReactiveFeignIntegrationTest {
         .encoder(new JacksonEncoder())
         .decoder(new JacksonDecoder())
         .logger(new ConsoleLogger())
-        .decode404()
+        .dismiss404()
         .options(new Options())
         .logLevel(Level.FULL)
         .target(TestReactorService.class, this.getServerUrl());

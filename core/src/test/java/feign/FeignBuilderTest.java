@@ -66,7 +66,7 @@ public class FeignBuilderTest {
 
   /** Shows exception handling isn't required to coerce 404 to null or empty */
   @Test
-  public void testDecode404() {
+  public void testDismiss404() {
     server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setResponseCode(404));
@@ -75,7 +75,7 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse().setResponseCode(400));
 
     String url = "http://localhost:" + server.getPort();
-    TestInterface api = Feign.builder().decode404().target(TestInterface.class, url);
+    TestInterface api = Feign.builder().dismiss404().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
     assertThat(api.decodedLazyPost().hasNext()).isFalse(); // empty, not null!

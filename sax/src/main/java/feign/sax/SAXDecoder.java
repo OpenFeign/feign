@@ -13,6 +13,7 @@
  */
 package feign.sax;
 
+import feign.Util;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -60,6 +61,8 @@ public class SAXDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
+    if (response.status() == 404 || response.status() == 204)
+      return Util.emptyValueOf(type);
     if (response.body() == null)
       return null;
     ContentHandlerWithResult.Factory<?> handlerFactory = handlerFactories.get(type);

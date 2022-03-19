@@ -193,6 +193,11 @@ public final class HystrixFeign {
     }
 
     @Override
+    public Builder dismiss404() {
+      return (Builder) super.dismiss404();
+    }
+
+    @Override
     public Builder errorDecoder(ErrorDecoder errorDecoder) {
       return (Builder) super.errorDecoder(errorDecoder);
     }

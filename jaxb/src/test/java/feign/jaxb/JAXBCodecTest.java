@@ -242,10 +242,10 @@ public class JAXBCodecTest {
   }
 
   /**
-   * Enabled via {@link feign.Feign.Builder#decode404()}
+   * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -253,7 +253,7 @@ public class JAXBCodecTest {
         .headers(Collections.<String, Collection<String>>emptyMap())
         .build();
     assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
-        .decode(response, byte[].class)).isNull();
+        .decode(response, byte[].class)).isEmpty();
   }
 
   @XmlRootElement
