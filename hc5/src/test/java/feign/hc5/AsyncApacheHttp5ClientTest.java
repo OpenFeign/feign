@@ -572,14 +572,14 @@ public class AsyncApacheHttp5ClientTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Throwable {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));
 
     final TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
-            .decode404()
+            .dismiss404()
             .decoder(
                 (response, type) -> {
                   assertEquals(404, response.status());
@@ -591,13 +591,13 @@ public class AsyncApacheHttp5ClientTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Throwable {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
     final TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
-            .decode404()
+            .dismiss404()
             .errorDecoder(new IllegalArgumentExceptionOn404())
             .target("http://localhost:" + server.getPort());
 
@@ -1026,8 +1026,8 @@ public class AsyncApacheHttp5ClientTest {
       return this;
     }
 
-    TestInterfaceAsyncBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceAsyncBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 

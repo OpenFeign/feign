@@ -253,9 +253,9 @@ public class JAXBCodecTest {
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -268,7 +268,7 @@ public class JAXBCodecTest {
             (byte[])
                 new JAXBDecoder(new JAXBContextFactory.Builder().build())
                     .decode(response, byte[].class))
-        .isNull();
+        .isEmpty();
   }
 
   @XmlRootElement

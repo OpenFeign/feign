@@ -110,7 +110,7 @@ public abstract class Feign {
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
-    private boolean decode404;
+    private boolean dismiss404;
     private boolean closeAfterDecode = true;
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
@@ -176,9 +176,30 @@ public abstract class Feign {
      * custom {@link #client(Client) client}.
      *
      * @since 8.12
+     * @deprecated
      */
     public Builder decode404() {
-      this.decode404 = true;
+      this.dismiss404 = true;
+      return this;
+    }
+
+    /**
+     * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
+     * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
+     *
+     * <p>All first-party (ex gson) decoders return well-known empty values defined by {@link
+     * Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder) decoder}
+     * or make your own.
+     *
+     * <p>This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
+     * fallback policy. If your server returns a different status for not-found, correct via a
+     * custom {@link #client(Client) client}.
+     *
+     * @since 11.9
+     */
+    public Builder dismiss404() {
+      this.dismiss404 = true;
       return this;
     }
 
@@ -278,7 +299,7 @@ public abstract class Feign {
               requestInterceptors,
               logger,
               logLevel,
-              decode404,
+              dismiss404,
               closeAfterDecode,
               propagationPolicy,
               forceDecoding);

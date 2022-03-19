@@ -57,9 +57,9 @@ public class JacksonJaxbCodecTest {
     assertThat(decoder.decode(response, MockObject.class)).isEqualTo(new MockObject("Test"));
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -68,7 +68,7 @@ public class JacksonJaxbCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new JacksonJaxbJsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   @XmlRootElement

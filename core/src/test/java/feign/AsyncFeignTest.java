@@ -632,7 +632,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Throwable {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));
@@ -640,7 +640,7 @@ public class AsyncFeignTest {
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
-            .decode404()
+            .dismiss404()
             .decoder(
                 new Decoder() {
                   @Override
@@ -655,13 +655,13 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Throwable {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
-            .decode404()
+            .dismiss404()
             .errorDecoder(new IllegalArgumentExceptionOn404())
             .target("http://localhost:" + server.getPort());
 
@@ -1092,8 +1092,8 @@ public class AsyncFeignTest {
       return this;
     }
 
-    TestInterfaceAsyncBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceAsyncBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 

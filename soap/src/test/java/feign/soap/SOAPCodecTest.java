@@ -24,7 +24,6 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
-import feign.jaxb.JAXBDecoder;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -374,7 +373,7 @@ public class SOAPCodecTest {
     new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
   public void notFoundDecodesToNull() throws Exception {
     Response response =
@@ -387,9 +386,9 @@ public class SOAPCodecTest {
             .build();
     assertThat(
             (byte[])
-                new JAXBDecoder(new JAXBContextFactory.Builder().build())
+                new SOAPDecoder(new JAXBContextFactory.Builder().build())
                     .decode(response, byte[].class))
-        .isNull();
+        .isEmpty();
   }
 
   @XmlRootElement(name = "GetPrice")

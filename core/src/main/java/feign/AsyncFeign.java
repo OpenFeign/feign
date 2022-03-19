@@ -68,7 +68,7 @@ public abstract class AsyncFeign<C> extends Feign {
 
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private boolean decode404;
+    private boolean dismiss404;
     private boolean closeAfterDecode = true;
 
     public AsyncBuilder() {
@@ -104,9 +104,18 @@ public abstract class AsyncFeign<C> extends Feign {
 
     /**
      * @see Builder#decode404()
+     * @deprecated
      */
     public AsyncBuilder<C> decode404() {
-      this.decode404 = true;
+      this.dismiss404 = true;
+      return this;
+    }
+
+    /**
+     * @see Builder#dismiss404()
+     */
+    public AsyncBuilder<C> dismiss404() {
+      this.dismiss404 = true;
       return this;
     }
 
@@ -258,7 +267,7 @@ public abstract class AsyncFeign<C> extends Feign {
             asyncBuilder.logger,
             asyncBuilder.decoder,
             asyncBuilder.errorDecoder,
-            asyncBuilder.decode404,
+            asyncBuilder.dismiss404,
             asyncBuilder.closeAfterDecode);
 
     asyncBuilder.builder.client(this::stageExecution);

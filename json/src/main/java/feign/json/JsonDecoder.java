@@ -53,6 +53,14 @@ public class JsonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
+    if (response.status() == 404 || response.status() == 204)
+      if (JSONObject.class.isAssignableFrom((Class<?>) type)) return new JSONObject();
+      else if (JSONArray.class.isAssignableFrom((Class<?>) type)) return new JSONArray();
+      else
+        throw new DecodeException(
+            response.status(),
+            format("%s is not a type supported by this decoder.", type),
+            response.request());
     if (response.body() == null) return null;
     try (Reader reader = response.body().asReader(response.charset())) {
       Reader bodyReader = (reader.markSupported()) ? reader : new BufferedReader(reader);

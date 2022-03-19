@@ -15,7 +15,6 @@ package feign.json;
 
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,7 +63,7 @@ public class JsonDecoderTest {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
@@ -78,7 +77,7 @@ public class JsonDecoderTest {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
@@ -88,7 +87,19 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws IOException {
+  public void notFoundDecodesToEmpty() throws IOException {
+    Response response =
+        Response.builder()
+            .status(404)
+            .reason("Not found")
+            .headers(Collections.emptyMap())
+            .request(request)
+            .build();
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+  }
+
+  @Test
+  public void nullBodyDecodesToEmpty() throws IOException {
     Response response =
         Response.builder()
             .status(204)
@@ -96,11 +107,11 @@ public class JsonDecoderTest {
             .headers(Collections.emptyMap())
             .request(request)
             .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws IOException {
+  public void emptyBodyDecodesToEmpty() throws IOException {
     Response response =
         Response.builder()
             .status(204)
@@ -109,7 +120,7 @@ public class JsonDecoderTest {
             .body("", UTF_8)
             .request(request)
             .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
@@ -117,7 +128,7 @@ public class JsonDecoderTest {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
@@ -134,7 +145,7 @@ public class JsonDecoderTest {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
@@ -155,7 +166,7 @@ public class JsonDecoderTest {
         .thenThrow(new JSONException("test exception", new Exception("test cause exception")));
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(body)
@@ -174,7 +185,7 @@ public class JsonDecoderTest {
         .thenThrow(new JSONException("test exception", new IOException("test cause exception")));
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(body)
@@ -191,7 +202,7 @@ public class JsonDecoderTest {
     when(body.asReader(any())).thenThrow(new IOException("test exception"));
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(body)
@@ -207,7 +218,7 @@ public class JsonDecoderTest {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
@@ -221,7 +232,7 @@ public class JsonDecoderTest {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()
-            .status(204)
+            .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
             .body(json, UTF_8)

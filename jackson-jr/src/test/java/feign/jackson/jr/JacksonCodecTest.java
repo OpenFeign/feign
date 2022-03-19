@@ -17,7 +17,6 @@ import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
@@ -94,7 +93,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  public void nullBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -103,11 +102,11 @@ public class JacksonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertNull(new JacksonJrDecoder().decode(response, String.class));
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  public void emptyBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -117,7 +116,7 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
-    assertNull(new JacksonJrDecoder().decode(response, String.class));
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
@@ -287,9 +286,9 @@ public class JacksonCodecTest {
     }
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -298,6 +297,6 @@ public class JacksonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
   }
 }

@@ -59,7 +59,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       Options options,
       Decoder decoder,
       ErrorDecoder errorDecoder,
-      boolean decode404,
+      boolean dismiss404,
       boolean closeAfterDecode,
       ExceptionPropagationPolicy propagationPolicy,
       boolean forceDecoding) {
@@ -85,7 +85,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.decoder = null;
       this.asyncResponseHandler =
           new AsyncResponseHandler(
-              logLevel, logger, decoder, errorDecoder, decode404, closeAfterDecode);
+              logLevel, logger, decoder, errorDecoder, dismiss404, closeAfterDecode);
     }
   }
 
@@ -183,7 +183,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final List<RequestInterceptor> requestInterceptors;
     private final Logger logger;
     private final Logger.Level logLevel;
-    private final boolean decode404;
+    private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
     private final boolean forceDecoding;
@@ -194,7 +194,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         List<RequestInterceptor> requestInterceptors,
         Logger logger,
         Logger.Level logLevel,
-        boolean decode404,
+        boolean dismiss404,
         boolean closeAfterDecode,
         ExceptionPropagationPolicy propagationPolicy,
         boolean forceDecoding) {
@@ -203,7 +203,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.decode404 = decode404;
+      this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
       this.forceDecoding = forceDecoding;
@@ -228,7 +228,7 @@ final class SynchronousMethodHandler implements MethodHandler {
           options,
           decoder,
           errorDecoder,
-          decode404,
+          dismiss404,
           closeAfterDecode,
           propagationPolicy,
           forceDecoding);
