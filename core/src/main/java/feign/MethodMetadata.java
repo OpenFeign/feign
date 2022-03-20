@@ -29,7 +29,6 @@ public final class MethodMetadata implements Serializable {
   private Integer bodyIndex;
   private Integer headerMapIndex;
   private Integer queryMapIndex;
-  private boolean queryMapEncoded;
   private boolean alwaysEncodeBody;
   private transient Type bodyType;
   private final RequestTemplate template = new RequestTemplate();
@@ -107,15 +106,6 @@ public final class MethodMetadata implements Serializable {
 
   public MethodMetadata queryMapIndex(Integer queryMapIndex) {
     this.queryMapIndex = queryMapIndex;
-    return this;
-  }
-
-  public boolean queryMapEncoded() {
-    return queryMapEncoded;
-  }
-
-  public MethodMetadata queryMapEncoded(boolean queryMapEncoded) {
-    this.queryMapEncoded = queryMapEncoded;
     return this;
   }
 

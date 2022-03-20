@@ -56,7 +56,6 @@ import java.util.Map;
  * Once this conversion is applied, the query keys and resulting String values follow the same
  * contract as if they were set using {@link RequestTemplate#query(String, String...)}.
  */
-@SuppressWarnings("deprecation")
 @Retention(RUNTIME)
 @java.lang.annotation.Target(PARAMETER)
 public @interface QueryMap {
@@ -64,7 +63,15 @@ public @interface QueryMap {
   /**
    * Specifies whether parameter names and values are already encoded.
    *
+   * <p>Deprecation: there are two options
+   *
+   * <ul>
+   *   <li>if name or value are already encoded we do nothing;
+   *   <li>if name or value are not encoded we encode them.
+   * </ul>
+   *
    * @see Param#encoded
+   * @deprecated
    */
   boolean encoded() default false;
 }
