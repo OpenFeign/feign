@@ -310,7 +310,6 @@ public interface Contract {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
-        data.queryMapEncoded(queryMap.encoded());
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,
