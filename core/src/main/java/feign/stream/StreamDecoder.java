@@ -51,30 +51,27 @@ import static feign.Util.ensureClosed;
 public final class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
+  private final Decoder delegateDecoder;
 
-  public StreamDecoder(Decoder iteratorDecoder) {
+  StreamDecoder(Decoder iteratorDecoder, Decoder delegateDecoder) {
     this.iteratorDecoder = iteratorDecoder;
+    this.delegateDecoder = delegateDecoder;
   }
 
   @Override
   public Object decode(Response response, Type type)
       throws IOException, FeignException {
     if (!isStream(type)) {
-      return iteratorDecoder.decode(response, type);
+      if (delegateDecoder == null) {
+        throw new IllegalArgumentException("StreamDecoder supports types other than stream. " +
+            "When type is not stream, the delegate decoder needs to be setting.");
+      } else {
+        return delegateDecoder.decode(response, type);
+      }
     }
     ParameterizedType streamType = (ParameterizedType) type;
-    Object result = iteratorDecoder
-        .decode(response, new IteratorParameterizedType(streamType));
-
-    Iterator<?> iterator;
-    if (result instanceof Iterator<?>) {
-      iterator = (Iterator<?>) result;
-    } else {
-      // use default iterator decoder handle
-      Object defaultResult = new LineToIteratorDecoder()
-          .decode(response, new IteratorParameterizedType(streamType));
-      iterator = (Iterator<?>) defaultResult;
-    }
+    Iterator<?> iterator =
+        (Iterator<?>) iteratorDecoder.decode(response, new IteratorParameterizedType(streamType));
 
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(iterator, 0), false)
@@ -96,7 +93,11 @@ public final class StreamDecoder implements Decoder {
   }
 
   public static StreamDecoder create(Decoder iteratorDecoder) {
-    return new StreamDecoder(iteratorDecoder);
+    return new StreamDecoder(iteratorDecoder, null);
+  }
+
+  public static StreamDecoder create(Decoder iteratorDecoder, Decoder delegateDecoder) {
+    return new StreamDecoder(iteratorDecoder, delegateDecoder);
   }
 
   static final class IteratorParameterizedType implements ParameterizedType {
