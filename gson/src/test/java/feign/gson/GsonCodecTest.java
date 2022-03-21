@@ -226,15 +226,15 @@ public class GsonCodecTest {
         + "]");
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
         .headers(Collections.emptyMap())
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .build();
-    assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
   }
 }
