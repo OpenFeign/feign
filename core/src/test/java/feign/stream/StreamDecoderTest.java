@@ -16,15 +16,12 @@ package feign.stream;
 import com.fasterxml.jackson.core.type.TypeReference;
 import feign.*;
 import feign.Request.HttpMethod;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -39,6 +36,9 @@ public class StreamDecoderTest {
   interface StreamInterface {
     @RequestLine("GET /")
     Stream<String> get();
+
+    @RequestLine("GET /str")
+    String str();
 
     @RequestLine("GET /cars")
     Stream<Car> getCars();
@@ -84,13 +84,28 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create((r, t) -> new Object()))
+        .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
     try (Stream<String> stream = api.get()) {
       assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
     }
+  }
+
+  @Test
+  public void simpleDeleteDecoderTest() {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo\nbar"));
+
+    StreamInterface api = Feign.builder()
+        .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder(), (r, t) -> "str"))
+        // .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder()))
+        .doNotCloseAfterDecode()
+        .target(StreamInterface.class, server.url("/").toString());
+
+    String str = api.str();
+    assertThat(str).isEqualTo("str");
   }
 
   @Test
@@ -104,7 +119,7 @@ public class StreamDecoderTest {
         .build();
 
     TestCloseableIterator it = new TestCloseableIterator();
-    StreamDecoder decoder = new StreamDecoder((r, t) -> it);
+    StreamDecoder decoder = StreamDecoder.create((r, t) -> it);
 
     try (Stream<?> stream =
         (Stream<?>) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {
