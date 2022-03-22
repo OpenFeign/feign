@@ -128,16 +128,13 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       throw errorExecuting(request, e);
     }
-    long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
 
     if (decoder != null)
       return decoder.decode(response, metadata.returnType());
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
     asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
-        metadata.returnType(),
-        elapsedTime);
+        metadata.returnType(), elapsedTime(start));
 
     try {
       if (!resultFuture.isDone())

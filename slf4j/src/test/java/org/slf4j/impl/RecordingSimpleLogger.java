@@ -19,7 +19,10 @@ import org.junit.runners.model.Statement;
 import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import static org.junit.Assert.assertEquals;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
@@ -46,8 +49,10 @@ public final class RecordingSimpleLogger implements TestRule {
   /**
    * Newline delimited output that would be sent to stderr.
    */
-  public RecordingSimpleLogger expectMessages(String expectedMessages) {
-    this.expectedMessages = expectedMessages;
+  public RecordingSimpleLogger expectMessages(String... expectedMessages) {
+    this.expectedMessages =
+        Stream.of(expectedMessages).map(message -> message + System.lineSeparator())
+            .collect(Collectors.joining());
     return this;
   }
 
@@ -64,7 +69,7 @@ public final class RecordingSimpleLogger implements TestRule {
         try {
           System.setErr(new PrintStream(buff));
           base.evaluate();
-          assertEquals(expectedMessages, buff.toString());
+          assertThat(buff.toString(), startsWith(expectedMessages));
         } finally {
           System.setErr(stderr);
         }
