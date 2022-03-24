@@ -149,8 +149,10 @@ public interface Contract {
       }
 
       if (data.headerMapIndex() != null) {
-        checkMapString("HeaderMap", parameterTypes[data.headerMapIndex()],
-            genericParameterTypes[data.headerMapIndex()]);
+        // check header map parameter for map type
+        if (Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()])) {
+          checkMapKeys("HeaderMap", genericParameterTypes[data.headerMapIndex()]);
+        }
       }
 
       if (data.queryMapIndex() != null) {
@@ -308,7 +310,6 @@ public interface Contract {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
-        data.queryMapEncoded(queryMap.encoded());
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,

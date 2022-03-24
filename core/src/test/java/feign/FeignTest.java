@@ -252,6 +252,23 @@ public class FeignTest {
   }
 
   @Test
+  public void HeaderMapUserObject() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    HeaderMapUserObject headerMap = new HeaderMapUserObject();
+    headerMap.setName("hello");
+    headerMap.setGrade("5");
+    api.HeaderMapUserObject(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(
+            entry("name1", Collections.singletonList("hello")),
+            entry("grade1", Collections.singletonList("5")));
+  }
+
+  @Test
   public void headerMapWithHeaderAnnotations() throws Exception {
     server.enqueue(new MockResponse());
 
@@ -295,6 +312,36 @@ public class FeignTest {
 
     assertThat(server.takeRequest())
         .hasPath("/?name=alice&fooKey=fooValue");
+  }
+
+  @Test
+  public void queryMapWithNull() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", null);
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+        .hasPath("/?name=alice");
+  }
+
+  @Test
+  public void queryMapWithEmpty() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "alice");
+    queryMap.put("fooKey", "");
+    api.queryMap(queryMap);
+
+    assertThat(server.takeRequest())
+        .hasPath("/?name=alice&fooKey");
   }
 
   @Test
@@ -365,14 +412,14 @@ public class FeignTest {
     server.enqueue(new MockResponse());
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("name", "%7Balice");
-    api.queryMapEncoded(queryMap);
+    api.queryMap(queryMap);
     assertThat(server.takeRequest())
         .hasPath("/?name=%7Balice");
 
     server.enqueue(new MockResponse());
     queryMap = new LinkedHashMap<String, Object>();
     queryMap.put("%7Bname", "%7Balice");
-    api.queryMapEncoded(queryMap);
+    api.queryMap(queryMap);
     assertThat(server.takeRequest())
         .hasPath("/?%7Bname=%7Balice");
   }
@@ -677,13 +724,13 @@ public class FeignTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Exception {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .decoder(new Decoder() {
           @Override
           public Object decode(Response response, Type type) throws IOException {
@@ -695,12 +742,12 @@ public class FeignTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Exception {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .errorDecoder(new IllegalArgumentExceptionOn404())
         .target("http://localhost:" + server.getPort());
     api.queryMap(Collections.<String, Object>emptyMap());
@@ -999,14 +1046,14 @@ public class FeignTest {
     void headerMap(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
+    void HeaderMapUserObject(@HeaderMap HeaderMapUserObject headerMap);
+
+    @RequestLine("GET /")
     @Headers("Content-Encoding: deflate")
     void headerMapWithHeaderAnnotations(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
     void queryMap(@QueryMap Map<String, Object> queryMap);
-
-    @RequestLine("GET /")
-    void queryMapEncoded(@QueryMap(encoded = true) Map<String, Object> queryMap);
 
     @RequestLine("GET /?name={name}")
     void queryMapWithQueryParams(@Param("name") String name,
@@ -1036,6 +1083,29 @@ public class FeignTest {
       public String expand(Object value) {
         return String.valueOf(((Date) value).getTime());
       }
+    }
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getGrade() {
+      return grade;
+    }
+
+    public void setGrade(String grade) {
+      this.grade = grade;
     }
   }
 
@@ -1136,8 +1206,8 @@ public class FeignTest {
       return this;
     }
 
-    TestInterfaceBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 
