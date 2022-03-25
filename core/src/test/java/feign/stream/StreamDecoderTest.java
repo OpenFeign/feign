@@ -106,7 +106,6 @@ public class StreamDecoderTest {
           BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
           return bufferedReader.lines().iterator();
         }, (r, t) -> "str"))
-        // .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
