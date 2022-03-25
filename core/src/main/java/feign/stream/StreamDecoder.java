@@ -38,6 +38,11 @@ import static feign.Util.ensureClosed;
  *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create()))
  *   .doNotCloseAfterDecode() // Required for streaming
  *   .target(GitHub.class, "https://api.github.com");
+ * or
+ * Feign.builder()
+ *   .decoder(StreamDecoder.create(JacksonIteratorDecoder.create(), (r, t) -> "hello world")))
+ *   .doNotCloseAfterDecode() // Required for streaming
+ *   .target(GitHub.class, "https://api.github.com");
  * interface GitHub {
  *  {@literal @}RequestLine("GET /repos/{owner}/{repo}/contributors")
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
