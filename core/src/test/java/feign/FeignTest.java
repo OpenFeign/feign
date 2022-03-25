@@ -714,6 +714,7 @@ public class FeignTest {
   }
 
   private static class MockRetryer implements Retryer {
+
     boolean tripped;
 
     @Override
@@ -984,6 +985,33 @@ public class FeignTest {
     assertThat(server.takeRequest()).hasQueryParams("/");
   }
 
+  @Test
+  public void matrixParametersAreSupported() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+
+    List<String> owners = new ArrayList<>();
+    owners.add("Mark");
+    owners.add("Jeff");
+    owners.add("Susan");
+    api.matrixParameters(owners);
+    assertThat(server.takeRequest()).hasPath("/owners;owners=Mark;owners=Jeff;owners=Susan");
+  }
+
+  @Test
+  public void matrixParametersAlsoSupportMaps() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> properties = new LinkedHashMap<>();
+    properties.put("account", "a");
+    properties.put("name", "n");
+
+    api.matrixParametersWithMap(properties);
+    assertThat(server.takeRequest()).hasPath("/settings;account=a;name=n");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -1071,6 +1099,12 @@ public class FeignTest {
     @RequestLine("GET /")
     void queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
+    @RequestLine("GET /owners{;owners}")
+    void matrixParameters(@Param("owners") List<String> owners);
+
+    @RequestLine("GET /settings{;props}")
+    void matrixParametersWithMap(@Param("props") Map<String, Object> owners);
+
     class DateToMillis implements Param.Expander {
 
       @Override
@@ -1105,6 +1139,7 @@ public class FeignTest {
   }
 
   class TestInterfaceException extends Exception {
+
     TestInterfaceException(String message) {
       super(message);
     }

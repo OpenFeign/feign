@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import feign.Util;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -297,5 +298,50 @@ public class UriTemplateTest {
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expanded = uriTemplate.expand(Collections.singletonMap("url", "https://www.google.com"));
     assertThat(expanded).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
+  }
+
+  @Test
+  public void pathStyleExpansionSupported() {
+    String template = "{;who}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("who", "fred"));
+    assertThat(expanded).isEqualToIgnoringCase(";who=fred");
+  }
+
+  @Test
+  public void pathStyleExpansionEncodesReservedCharacters() {
+    String template = "{;half}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("half", "50%"));
+    assertThat(expanded).isEqualToIgnoringCase(";half=50%25");
+  }
+
+  @Test
+  public void pathStyleExpansionSupportedWithLists() {
+    String template = "{;list}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+
+    List<String> values = new ArrayList<>();
+    values.add("red");
+    values.add("green");
+    values.add("blue");
+
+    String expanded = uriTemplate.expand(Collections.singletonMap("list", values));
+    assertThat(expanded).isEqualToIgnoringCase(";list=red;list=green;list=blue");
+  }
+
+  @Test
+  public void pathStyleExpansionSupportedWithMap() {
+    String template = "/server/matrixParams{;parameters}";
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("account", "a");
+    parameters.put("name", "n");
+
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("parameters", parameters);
+
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(values);
+    assertThat(expanded).isEqualToIgnoringCase("/server/matrixParams;account=a;name=n");
   }
 }

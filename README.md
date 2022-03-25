@@ -171,6 +171,38 @@ resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 * Unresolved expressions are omitted.
 * All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
 
+We also have limited support for Level 3, Path Style Expressions, with the following restrictions:
+
+* Maps and Lists are expanded by default.
+* Only Single variable templates are supported.
+
+*Examples:*
+
+```
+{;who}             ;who=fred
+{;half}            ;half=50%25
+{;empty}           ;empty
+{;list}            ;list=red;list=green;list=blue
+{;map}             ;semi=%3B;dot=.;comma=%2C
+```
+
+```java
+public interface MatrixService {
+
+  @RequestLine("GET /repos{;owners}")
+  List<Contributor> contributors(@Param("owners") List<String> owners);
+
+  class Contributor {
+    String login;
+    int contributions;
+  }
+}
+```
+
+If `owners` in the above example is defined as `Matt, Jeff, Susan`, the uri will expand to `/repos;owners=Matt;owners=Jeff;owners=Susan` 
+
+For more information see [RFC 6570, Section 3.2.7](https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.7)
+
 #### Undefined vs. Empty Values ####
 
 Undefined expressions are expressions where the value for the expression is an explicit `null` or no value is provided.
