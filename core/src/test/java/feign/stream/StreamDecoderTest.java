@@ -84,7 +84,10 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder()))
+        .decoder(StreamDecoder.create((r, t) -> {
+          BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+          return bufferedReader.lines().iterator();
+        }))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
 
@@ -99,7 +102,10 @@ public class StreamDecoderTest {
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
     StreamInterface api = Feign.builder()
-        .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder(), (r, t) -> "str"))
+        .decoder(StreamDecoder.create((r, t) -> {
+          BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+          return bufferedReader.lines().iterator();
+        }, (r, t) -> "str"))
         // .decoder(StreamDecoder.create(new StreamDecoder.LineToIteratorDecoder()))
         .doNotCloseAfterDecode()
         .target(StreamInterface.class, server.url("/").toString());
