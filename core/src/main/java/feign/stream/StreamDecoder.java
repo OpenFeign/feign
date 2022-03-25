@@ -16,6 +16,7 @@ package feign.stream;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.Decoder;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 /**
@@ -43,6 +45,8 @@ import static feign.Util.ensureClosed;
  *   Stream<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
  * }</code>
  * </pre>
+ * 
+ * @author mroccyen
  */
 public final class StreamDecoder implements Decoder {
 
@@ -118,5 +122,18 @@ public final class StreamDecoder implements Decoder {
     public Type getOwnerType() {
       return null;
     }
+  }
+
+  /**
+   * Default implementation of Decodes an http response into an Iterator
+   */
+  public static class LineToIteratorDecoder implements Decoder {
+
+    @Override
+    public Object decode(Response response, Type type) throws IOException {
+      BufferedReader bufferedReader = new BufferedReader(response.body().asReader(UTF_8));
+      return bufferedReader.lines().iterator();
+    }
+
   }
 }
