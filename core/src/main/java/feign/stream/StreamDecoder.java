@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -52,22 +53,24 @@ import static feign.Util.ensureClosed;
 public final class StreamDecoder implements Decoder {
 
   private final Decoder iteratorDecoder;
-  private final Decoder delegateDecoder;
+  private final Optional<Decoder> delegateDecoder;
 
   StreamDecoder(Decoder iteratorDecoder, Decoder delegateDecoder) {
     this.iteratorDecoder = iteratorDecoder;
-    this.delegateDecoder = delegateDecoder;
+    this.delegateDecoder = delegateDecoder != null
+        ? Optional.of(delegateDecoder)
+        : Optional.empty();
   }
 
   @Override
   public Object decode(Response response, Type type)
       throws IOException, FeignException {
     if (!isStream(type)) {
-      if (delegateDecoder == null) {
+      if (!delegateDecoder.isPresent()) {
         throw new IllegalArgumentException("StreamDecoder supports types other than stream. " +
             "When type is not stream, the delegate decoder needs to be setting.");
       } else {
-        return delegateDecoder.decode(response, type);
+        return delegateDecoder.get().decode(response, type);
       }
     }
     ParameterizedType streamType = (ParameterizedType) type;
