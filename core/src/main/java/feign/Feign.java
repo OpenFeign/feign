@@ -98,6 +98,8 @@ public abstract class Feign {
 
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
+    private final List<ResponseInterceptor> responseInterceptors =
+        new ArrayList<ResponseInterceptor>();
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
@@ -228,6 +230,14 @@ public abstract class Feign {
     }
 
     /**
+     * Adds a single response interceptor to the builder.
+     */
+    public Builder responseInterceptor(ResponseInterceptor responseInterceptor) {
+      this.responseInterceptors.add(responseInterceptor);
+      return this;
+    }
+
+    /**
      * Sets the full set of request interceptors for the builder, overwriting any previous
      * interceptors.
      */
@@ -297,6 +307,9 @@ public abstract class Feign {
       List<RequestInterceptor> requestInterceptors = this.requestInterceptors.stream()
           .map(ri -> Capability.enrich(ri, capabilities))
           .collect(Collectors.toList());
+      List<ResponseInterceptor> responseInterceptors = this.responseInterceptors.stream()
+          .map(ri -> Capability.enrich(ri, capabilities))
+          .collect(Collectors.toList());
       Logger logger = Capability.enrich(this.logger, capabilities);
       Contract contract = Capability.enrich(this.contract, capabilities);
       Options options = Capability.enrich(this.options, capabilities);
@@ -307,8 +320,9 @@ public abstract class Feign {
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
 
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
+              responseInterceptors,logger, logLevel, dismiss404, closeAfterDecode,
+              propagationPolicy, forceDecoding);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
