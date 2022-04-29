@@ -57,9 +57,7 @@ public final class StreamDecoder implements Decoder {
 
   StreamDecoder(Decoder iteratorDecoder, Decoder delegateDecoder) {
     this.iteratorDecoder = iteratorDecoder;
-    this.delegateDecoder = delegateDecoder != null
-        ? Optional.of(delegateDecoder)
-        : Optional.empty();
+    this.delegateDecoder = Optional.ofNullable(delegateDecoder);
   }
 
   @Override
