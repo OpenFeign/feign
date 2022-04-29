@@ -568,6 +568,39 @@ public class Example {
 }
 ```
 
+If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
+
+Here's how to configure Stream decoder without delegate decoder:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }))
+            .target(GitHub.class, "https://api.github.com");
+  }
+}
+``` 
+
+Here's how to configure Stream decoder with delegate decoder:
+
+```java
+
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }, (r, t) -> "this is delegate decoder"))
+            .target(GitHub.class, "https://api.github.com");
+  }
+}
+```
+
 ### Encoders
 The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
