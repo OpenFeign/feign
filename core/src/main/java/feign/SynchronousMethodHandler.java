@@ -13,6 +13,9 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
+import static feign.FeignException.errorExecuting;
+import static feign.Util.checkNotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,11 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
+import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import static feign.ExceptionPropagationPolicy.UNWRAP;
-import static feign.FeignException.errorExecuting;
-import static feign.Util.checkNotNull;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
@@ -36,7 +37,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
-  private final List<ResponseInterceptor> responseInterceptors;
+  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
@@ -49,7 +50,7 @@ final class SynchronousMethodHandler implements MethodHandler {
 
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, List<ResponseInterceptor> responseInterceptors,
+      List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
@@ -61,14 +62,13 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
     this.requestInterceptors =
         checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
-    this.responseInterceptors =
-        checkNotNull(responseInterceptors, "responseInterceptors for %s", target);
     this.logger = checkNotNull(logger, "logger for %s", target);
     this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
+    this.responseInterceptor = responseInterceptor;
 
     if (forceDecoding) {
       // internal only: usual handling will be short-circuited, and all responses will be passed to
@@ -133,18 +133,19 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-    for (ResponseInterceptor interceptor : responseInterceptors) {
-      interceptor.beforeDecode(response);
-    }
-
     if (decoder != null) {
-      Object object = decoder.decode(response, metadata.returnType());
-
-      for (ResponseInterceptor interceptor : responseInterceptors) {
-        interceptor.afterDecode(object);
+      if (responseInterceptor != null) {
+        responseInterceptor.aroundDecode(response, (res) -> {
+          try {
+            return decoder.decode(res, metadata.returnType());
+          } catch (IOException e) {
+            throw new DecodeException(res.status(), "decode error cause of io exception",
+                res.request(), e);
+          }
+        });
+      } else {
+        return decoder.decode(response, metadata.returnType());
       }
-
-      return object;
     }
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
@@ -155,12 +156,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     try {
       if (!resultFuture.isDone())
         throw new IllegalStateException("Response handling not done");
-
-      Object object = resultFuture.join();
-      for (ResponseInterceptor interceptor : responseInterceptors) {
-        interceptor.afterDecode(object);
-      }
-      return object;
+      return resultFuture.join();
     } catch (CompletionException e) {
       Throwable cause = e.getCause();
       if (cause != null)
@@ -196,7 +192,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
-    private final List<ResponseInterceptor> responseInterceptors;
+    private final ResponseInterceptor responseInterceptor;
     private final Logger logger;
     private final Logger.Level logLevel;
     private final boolean dismiss404;
@@ -205,13 +201,13 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean forceDecoding;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        List<ResponseInterceptor> responseInterceptors,
+        ResponseInterceptor responseInterceptor,
         Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
         ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.responseInterceptors = checkNotNull(responseInterceptors, "responseInterceptors");
+      this.responseInterceptor = responseInterceptor;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.dismiss404 = dismiss404;
@@ -227,7 +223,7 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 Decoder decoder,
                                 ErrorDecoder errorDecoder) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
-          responseInterceptors, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
+          responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
           errorDecoder, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
     }
   }
