@@ -82,7 +82,7 @@ class DefaultConstructorException extends Exception {}
 ```
 
 However, if you want to have parameters (such  as the feign.Request object or response body or response headers), you have to annotate its 
-constructor appropriately (the body annotation is optional, provided there aren't paramters which will clash)
+constructor appropriately (the body annotation is optional, provided there aren't parameters which will clash)
 
 All the following examples are valid exceptions:
 ```java
@@ -295,7 +295,7 @@ the interface small and readable.
 
 Having this meta-annotation in place it can be used to transform the interface into a much smaller one, keeping the same
 behavior.
-- `contributers` will throw a `NoDataFoundException` for status code `404` as defined on method level and a 
+- `contributors` will throw a `NoDataFoundException` for status code `404` as defined on method level and a 
   `GithubRemoteException` for all other status codes
 - `languages` will throw  a `NoDataFoundException` for status code `404` as defined on method level and a 
   `GithubRemoteException` for all other status codes

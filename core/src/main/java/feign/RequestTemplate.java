@@ -443,7 +443,7 @@ public final class RequestTemplate implements Serializable {
     }
 
     /*
-     * templates may provide query parameters. since we want to manage those explicity, we will need
+     * templates may provide query parameters. since we want to manage those explicitly, we will need
      * to extract those out, leaving the uriTemplate with only the path to deal with.
      */
     Matcher queryMatcher = QUERY_STRING_PATTERN.matcher(uri);

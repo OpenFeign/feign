@@ -36,7 +36,7 @@ import static feign.Util.ensureClosed;
 /**
  * Jackson decoder which return a closeable iterator. Returned iterator auto-close the
  * {@code Response} when it reached json array end or failed to parse stream. If this iterator is
- * not fetched till the end, it has to be casted to {@code Closeable} and explicity
+ * not fetched till the end, it has to be casted to {@code Closeable} and explicitly
  * {@code Closeable#close} by the consumer.
  * <p>
  * <p>

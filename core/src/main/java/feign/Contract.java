@@ -179,7 +179,7 @@ public interface Contract {
         keyClass = (Class<?>) parameterTypes[0];
       } else if (genericType instanceof Class<?>) {
         // raw class, type parameters cannot be inferred directly, but we can scan any extended
-        // interfaces looking for any explict types
+        // interfaces looking for any explicit types
         final Type[] interfaces = ((Class<?>) genericType).getGenericInterfaces();
         for (final Type extended : interfaces) {
           if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
