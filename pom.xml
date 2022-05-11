@@ -83,7 +83,7 @@
     <json.version>20210307</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <jackson.version>2.13.1</jackson.version>
+    <jackson.version>2.13.2.1</jackson.version>
     <assertj.version>3.21.0</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.0.0</mockito.version>
