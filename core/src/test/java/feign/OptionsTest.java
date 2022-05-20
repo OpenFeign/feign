@@ -30,9 +30,18 @@ import org.junit.rules.ExpectedException;
 @SuppressWarnings("deprecation")
 public class OptionsTest {
 
+  static class ChildOptions extends Request.Options {
+    public ChildOptions(int connectTimeoutMillis, int readTimeoutMillis) {
+      super(connectTimeoutMillis, readTimeoutMillis);
+    }
+  }
+
   interface OptionsInterface {
     @RequestLine("GET /")
     String get(Request.Options options);
+
+    @RequestLine("POST /")
+    String getChildOptions(ChildOptions options);
 
     @RequestLine("GET /")
     String get();
@@ -67,5 +76,18 @@ public class OptionsTest {
             .target(OptionsInterface.class, server.url("/").toString());
 
     assertThat(api.get(new Request.Options(1000, 4 * 1000))).isEqualTo("foo");
+  }
+
+  @Test
+  public void normalResponseForChildOptionsTest() {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
+
+    final OptionsInterface api =
+        Feign.builder()
+            .options(new ChildOptions(1000, 1000))
+            .target(OptionsInterface.class, server.url("/").toString());
+
+    assertThat(api.getChildOptions(new ChildOptions(1000, 4 * 1000))).isEqualTo("foo");
   }
 }
