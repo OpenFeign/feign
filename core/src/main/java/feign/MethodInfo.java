@@ -35,7 +35,8 @@ class MethodInfo {
 
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
-    if (type instanceof ParameterizedType && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
+    if (type instanceof ParameterizedType
+        && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
       this.asyncReturnType = true;
       this.underlyingReturnType = ((ParameterizedType) type).getActualTypeArguments()[0];
     } else {
