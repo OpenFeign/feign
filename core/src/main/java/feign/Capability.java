@@ -48,7 +48,7 @@ public interface Capability {
         // Contract enrichedContract = cap3.enrich(cap2.enrich(cap1.enrich(contract)));
         .reduce(
             componentToEnrich,
-            (component, capability) -> invoke(component, capability),
+            Capability::invoke,
             (component, enrichedComponent) -> enrichedComponent);
   }
 
@@ -69,6 +69,10 @@ public interface Capability {
   }
 
   default Client enrich(Client client) {
+    return client;
+  }
+
+  default <C> AsyncClient<C> enrich(AsyncClient<C> client) {
     return client;
   }
 

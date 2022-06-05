@@ -15,6 +15,8 @@ package feign;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -70,6 +72,7 @@ public abstract class AsyncFeign<C> extends Feign {
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private boolean dismiss404;
     private boolean closeAfterDecode = true;
+    private List<Capability> capabilities = new ArrayList<>();
 
     public AsyncBuilder() {
       super();
@@ -237,6 +240,15 @@ public abstract class AsyncFeign<C> extends Feign {
       builder.invocationHandlerFactory(invocationHandlerFactory);
       return this;
     }
+
+    /**
+     * @see Builder#addCapability(Capability)
+     */
+    public AsyncBuilder<C> addCapability(Capability capability) {
+      builder.addCapability(capability);
+      this.capabilities.add(capability);
+      return this;
+    }
   }
 
   private final ThreadLocal<AsyncInvocation<C>> activeContext;
@@ -255,15 +267,18 @@ public abstract class AsyncFeign<C> extends Feign {
     this.activeContext = new ThreadLocal<>();
 
     this.defaultContextSupplier = asyncBuilder.defaultContextSupplier;
-    this.client = asyncBuilder.client;
 
-    this.logLevel = asyncBuilder.logLevel;
-    this.logger = asyncBuilder.logger;
+    this.client = asyncBuilder.client instanceof AsyncClient.SyncBased
+        ? asyncBuilder.client
+        : Capability.enrich(asyncBuilder.client, asyncBuilder.capabilities);
+    this.logLevel = Capability.enrich(asyncBuilder.logLevel, asyncBuilder.capabilities);
+    this.logger = Capability.enrich(asyncBuilder.logger, asyncBuilder.capabilities);
+    Decoder decoder = Capability.enrich(asyncBuilder.decoder, asyncBuilder.capabilities);
 
     this.responseHandler = new AsyncResponseHandler(
-        asyncBuilder.logLevel,
-        asyncBuilder.logger,
-        asyncBuilder.decoder,
+        this.logLevel,
+        this.logger,
+        decoder,
         asyncBuilder.errorDecoder,
         asyncBuilder.dismiss404,
         asyncBuilder.closeAfterDecode);

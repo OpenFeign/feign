@@ -40,7 +40,7 @@ public interface AsyncClient<C> {
    */
   CompletableFuture<Response> execute(Request request, Options options, Optional<C> requestContext);
 
-  class Default<C> implements AsyncClient<C> {
+  class Default<C> implements AsyncClient<C>, SyncBased {
 
     private final Client client;
     private final ExecutorService executorService;
@@ -76,7 +76,7 @@ public interface AsyncClient<C> {
    *
    * @param <C> - unused context; synchronous clients handle context internally
    */
-  class Pseudo<C> implements AsyncClient<C> {
+  class Pseudo<C> implements AsyncClient<C>, SyncBased {
 
     private final Client client;
 
@@ -97,5 +97,12 @@ public interface AsyncClient<C> {
 
       return result;
     }
+  }
+
+  /**
+   * A marker interface to denote those implementations of {@link AsyncClient} that use underlying
+   * {@link Client} and thus don't need extra enrichment from {@link Capability}.
+   */
+  interface SyncBased {
   }
 }
