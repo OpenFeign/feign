@@ -80,7 +80,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
 
-public class AsyncOkHttpClientTest {
+public class OkHttpClientAsyncTest {
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
@@ -974,7 +974,7 @@ public class AsyncOkHttpClientTest {
 
     private final AsyncFeign.AsyncBuilder<Object> delegate =
         AsyncFeign.asyncBuilder()
-            .client(new AsyncOkHttpClient())
+            .client(new OkHttpClient())
             .decoder(new Decoder.Default()).encoder((object, bodyType, template) -> {
               if (object instanceof Map) {
                 template.body(new Gson().toJson(object));
