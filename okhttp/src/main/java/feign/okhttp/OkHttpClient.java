@@ -27,7 +27,6 @@ import feign.Client;
 import feign.Request.HttpMethod;
 import feign.Request.ProtocolVersion;
 import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
 import static feign.Util.enumForName;
 
 /**
@@ -191,12 +190,12 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
     CompletableFuture<feign.Response> responseFuture = new CompletableFuture<>();
     requestScoped.newCall(request).enqueue(new Callback() {
       @Override
-      public void onFailure(@NotNull Call call, @NotNull IOException e) {
+      public void onFailure(Call call, IOException e) {
         responseFuture.completeExceptionally(e);
       }
 
       @Override
-      public void onResponse(@NotNull Call call, @NotNull okhttp3.Response response)
+      public void onResponse(Call call, okhttp3.Response response)
           throws IOException {
         final feign.Response r =
             toFeignResponse(response, input).toBuilder().request(input).build();
