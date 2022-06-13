@@ -1,3 +1,7 @@
+### Version 11.9
+
+* `OkHttpClient` now implements `AsyncClient`
+
 ### Version 10.9
 
 * Configurable to disable streaming mode for Default client by verils (#1182) 
