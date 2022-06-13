@@ -16,18 +16,34 @@ package feign.hc5;
 import static feign.Util.UTF_8;
 import static feign.Util.enumForName;
 
-import feign.*;
-import java.io.*;
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import feign.Util;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -174,14 +190,14 @@ public final class ApacheHttp5Client implements Client {
 
     final String reason = httpResponse.getReasonPhrase();
 
-    final Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    final Map<String, Collection<String>> headers = new HashMap<>();
     for (final Header header : httpResponse.getHeaders()) {
       final String name = header.getName();
       final String value = header.getValue();
 
       Collection<String> headerValues = headers.get(name);
       if (headerValues == null) {
-        headerValues = new ArrayList<String>();
+        headerValues = new ArrayList<>();
         headers.put(name, headerValues);
       }
       headerValues.add(value);
@@ -222,7 +238,6 @@ public final class ApacheHttp5Client implements Client {
         return entity.getContent();
       }
 
-      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
@@ -236,7 +251,11 @@ public final class ApacheHttp5Client implements Client {
 
       @Override
       public void close() throws IOException {
-        EntityUtils.consume(entity);
+        try {
+          EntityUtils.consume(entity);
+        } finally {
+          httpResponse.close();
+        }
       }
     };
   }
