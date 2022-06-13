@@ -19,7 +19,10 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import feign.AsyncClient;
 import feign.Client;
 import feign.Request.HttpMethod;
 import feign.Request.ProtocolVersion;
@@ -35,7 +38,7 @@ import static feign.Util.enumForName;
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");
  */
-public final class OkHttpClient implements Client {
+public final class OkHttpClient implements Client, AsyncClient<Object> {
 
   private final okhttp3.OkHttpClient delegate;
 
@@ -153,9 +156,7 @@ public final class OkHttpClient implements Client {
     };
   }
 
-  @Override
-  public feign.Response execute(feign.Request input, feign.Request.Options options)
-      throws IOException {
+  private okhttp3.OkHttpClient getClient(feign.Request.Options options) {
     okhttp3.OkHttpClient requestScoped;
     if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
         || delegate.readTimeoutMillis() != options.readTimeoutMillis()
@@ -168,8 +169,39 @@ public final class OkHttpClient implements Client {
     } else {
       requestScoped = delegate;
     }
+    return requestScoped;
+  }
+
+  @Override
+  public feign.Response execute(feign.Request input, feign.Request.Options options)
+      throws IOException {
+    okhttp3.OkHttpClient requestScoped = getClient(options);
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
     return toFeignResponse(response, input).toBuilder().request(input).build();
+  }
+
+  @Override
+  public CompletableFuture<feign.Response> execute(feign.Request input,
+                                                   feign.Request.Options options,
+                                                   Optional<Object> requestContext) {
+    okhttp3.OkHttpClient requestScoped = getClient(options);
+    Request request = toOkHttpRequest(input);
+    CompletableFuture<feign.Response> responseFuture = new CompletableFuture<>();
+    requestScoped.newCall(request).enqueue(new Callback() {
+      @Override
+      public void onFailure(Call call, IOException e) {
+        responseFuture.completeExceptionally(e);
+      }
+
+      @Override
+      public void onResponse(Call call, okhttp3.Response response)
+          throws IOException {
+        final feign.Response r =
+            toFeignResponse(response, input).toBuilder().request(input).build();
+        responseFuture.complete(r);
+      }
+    });
+    return responseFuture;
   }
 }
