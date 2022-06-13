@@ -237,7 +237,6 @@ public final class ApacheHttpClient implements Client {
           if (httpResponse instanceof CloseableHttpResponse)
             ((CloseableHttpResponse) httpResponse).close();
         }
-          ((CloseableHttpResponse) httpResponse).close();
       }
     };
   }
