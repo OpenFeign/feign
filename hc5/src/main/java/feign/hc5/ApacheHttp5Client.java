@@ -94,11 +94,11 @@ public final class ApacheHttp5Client implements Client {
     // per request timeouts
     final RequestConfig requestConfig =
         (client instanceof Configurable
-                ? RequestConfig.copy(((Configurable) client).getConfig())
-                : RequestConfig.custom())
-            .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
-            .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
-            .build();
+            ? RequestConfig.copy(((Configurable) client).getConfig())
+            : RequestConfig.custom())
+                .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
+                .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
+                .build();
     context.setRequestConfig(requestConfig);
     return context;
   }
@@ -250,8 +250,10 @@ public final class ApacheHttp5Client implements Client {
 
       @Override
       public void close() throws IOException {
-        try (httpResponse) {
+        try {
           EntityUtils.consume(entity);
+        } finally {
+          httpResponse.close();
         }
       }
     };
