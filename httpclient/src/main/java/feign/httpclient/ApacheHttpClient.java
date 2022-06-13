@@ -231,7 +231,12 @@ public final class ApacheHttpClient implements Client {
       @Override
       public void close() throws IOException {
         EntityUtils.consume(entity);
-        if (httpResponse instanceof CloseableHttpResponse)
+        try {
+          EntityUtils.consume(entity);
+        } finally {
+          if (httpResponse instanceof CloseableHttpResponse)
+            ((CloseableHttpResponse) httpResponse).close();
+        }
           ((CloseableHttpResponse) httpResponse).close();
       }
     };
