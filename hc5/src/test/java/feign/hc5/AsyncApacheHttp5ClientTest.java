@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -509,8 +509,9 @@ public class AsyncApacheHttp5ClientTest {
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals(Collections.singletonList("http://bar.com"),
-        unwrap(api.response()).headers().get("Location"));
+    assertThat(unwrap(api.response()).headers()).hasEntrySatisfying("Location", value -> {
+      assertThat(value).contains("http://bar.com");
+    });
 
     execs.shutdown();
   }
@@ -528,13 +529,13 @@ public class AsyncApacheHttp5ClientTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Throwable {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));
 
     final TestInterfaceAsync api =
-        new TestInterfaceAsyncBuilder().decode404().decoder((response, type) -> {
+        new TestInterfaceAsyncBuilder().dismiss404().decoder((response, type) -> {
           assertEquals(404, response.status());
           throw new NoSuchElementException();
         }).target("http://localhost:" + server.getPort());
@@ -543,11 +544,11 @@ public class AsyncApacheHttp5ClientTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Throwable {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
-    final TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decode404()
+    final TestInterfaceAsync api = new TestInterfaceAsyncBuilder().dismiss404()
         .errorDecoder(new IllegalArgumentExceptionOn404())
         .target("http://localhost:" + server.getPort());
 
@@ -955,8 +956,8 @@ public class AsyncApacheHttp5ClientTest {
       return this;
     }
 
-    TestInterfaceAsyncBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceAsyncBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 

@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.3-SNAPSHOT</version>
+    <version>11.9-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-hystrix</artifactId>
@@ -33,18 +33,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>com.netflix.archaius</groupId>
-        <artifactId>archaius-core</artifactId>
-        <version>0.7.7</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.netflix.hystrix</groupId>
-        <artifactId>hystrix-core</artifactId>
-        <version>1.5.18</version>
-      </dependency>
-
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
@@ -62,11 +50,14 @@
     <dependency>
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
+      <version>0.7.7</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.hystrix</groupId>
       <artifactId>hystrix-core</artifactId>
+      <version>1.5.18</version>
     </dependency>
 
     <dependency>

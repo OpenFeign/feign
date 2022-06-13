@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,7 +32,7 @@ final class DefaultMethodHandler implements MethodHandler {
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
   private final MethodHandle unboundHandle;
 
-  // handle is effectively final after bindTo has been called.
+  // handle is effectively final after bindTo has been called...
   private MethodHandle handle;
 
   public DefaultMethodHandler(Method defaultMethod) {
@@ -52,9 +53,37 @@ final class DefaultMethodHandler implements MethodHandler {
     try {
       return safeReadLookup(declaringClass);
     } catch (NoSuchMethodException e) {
-      return legacyReadLookup();
+      try {
+        return androidLookup(declaringClass);
+      } catch (InstantiationException | NoSuchMethodException instantiationException) {
+        return legacyReadLookup();
+      }
     }
   }
+
+  public Lookup androidLookup(Class<?> declaringClass) throws InstantiationException,
+      InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    Lookup lookup;
+    try {
+      // Android 9+ double reflection
+      Class<?> classReference = Class.class;
+      Class<?>[] classType = new Class[] {Class.class};
+      Method reflectedGetDeclaredConstructor = classReference.getDeclaredMethod(
+          "getDeclaredConstructor",
+          Class[].class);
+      reflectedGetDeclaredConstructor.setAccessible(true);
+      Constructor<?> someHiddenMethod =
+          (Constructor<?>) reflectedGetDeclaredConstructor.invoke(Lookup.class, (Object) classType);
+      lookup = (Lookup) someHiddenMethod.newInstance(declaringClass);
+    } catch (IllegalAccessException ex0) {
+      // Android < 9 reflection
+      Constructor<Lookup> lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class);
+      lookupConstructor.setAccessible(true);
+      lookup = lookupConstructor.newInstance(declaringClass);
+    }
+    return (lookup);
+  }
+
 
   /**
    * equivalent to:

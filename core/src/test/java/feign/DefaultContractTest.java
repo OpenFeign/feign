@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,10 +13,6 @@
  */
 package feign;
 
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.MapEntry.entry;
 import com.google.gson.reflect.TypeToken;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
@@ -25,6 +21,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import java.net.URI;
 import java.util.*;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 /**
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected
@@ -328,30 +327,6 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapEncodedDefault() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
-
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
-  public void queryMapEncodedTrue() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapEncoded", Map.class);
-
-    assertThat(md.queryMapEncoded()).isTrue();
-  }
-
-  @Test
-  public void queryMapEncodedFalse() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapNotEncoded", Map.class);
-
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
   public void queryMapMapSubclass() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapMapSubclass",
@@ -390,24 +365,6 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapPojoObjectEncoded() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectEncoded", Object.class);
-
-    assertThat(md.queryMapIndex()).isEqualTo(0);
-    assertThat(md.queryMapEncoded()).isTrue();
-  }
-
-  @Test
-  public void queryMapPojoObjectNotEncoded() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectNotEncoded", Object.class);
-
-    assertThat(md.queryMapIndex()).isEqualTo(0);
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(SlashNeedToBeEncoded.class,
         "getQueues", String.class);
@@ -434,6 +391,14 @@ public class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(HeaderMapInterface.class, "headerMapSubClass",
             SubClassHeaders.class);
+    assertThat(md.headerMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void headerMapUserObject() throws Exception {
+    final MethodMetadata md =
+        parseAndValidateMetadata(HeaderMapInterface.class,
+            "headerMapUserObject", HeaderMapUserObject.class);
     assertThat(md.headerMapIndex()).isEqualTo(0);
   }
 
@@ -535,7 +500,9 @@ public class DefaultContractTest {
   interface AutoDiscoverParamNames {
 
     @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
-    Response recordsByNameAndType(@Param int domainId, @Param String name, @Param() String type);
+    Response recordsByNameAndType(@Param("domainId") int domainId,
+                                  @Param("name") String name,
+                                  @Param("type") String type);
   }
 
   interface FormParams {
@@ -572,6 +539,32 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void headerMapSubClass(@HeaderMap SubClassHeaders httpHeaders);
+
+    @RequestLine("POST /")
+    void headerMapUserObject(@HeaderMap HeaderMapUserObject httpHeaders);
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getGrade() {
+      return grade;
+    }
+
+    public void setGrade(String grade) {
+      this.grade = grade;
+    }
   }
 
   interface HeaderParams {
@@ -611,19 +604,7 @@ public class DefaultContractTest {
     void queryMapMapSubclass(@QueryMap SortedMap<String, String> queryMap);
 
     @RequestLine("POST /")
-    void queryMapEncoded(@QueryMap(encoded = true) Map<String, String> queryMap);
-
-    @RequestLine("POST /")
-    void queryMapNotEncoded(@QueryMap(encoded = false) Map<String, String> queryMap);
-
-    @RequestLine("POST /")
     void pojoObject(@QueryMap Object object);
-
-    @RequestLine("POST /")
-    void pojoObjectEncoded(@QueryMap(encoded = true) Object object);
-
-    @RequestLine("POST /")
-    void pojoObjectNotEncoded(@QueryMap(encoded = false) Object object);
 
     // invalid
     @RequestLine("POST /")
@@ -641,67 +622,6 @@ public class DefaultContractTest {
 
     @RequestLine(value = "GET /api/{zoneId}")
     String getZone(@Param("ZoneId") String vhost);
-  }
-
-  @Headers("Foo: Bar")
-  interface SimpleParameterizedBaseApi<M> {
-
-    @RequestLine("GET /api/{zoneId}")
-    M get(@Param("key") String key);
-  }
-
-  interface SimpleParameterizedApi extends SimpleParameterizedBaseApi<String> {
-
-  }
-
-  @Test
-  public void simpleParameterizedBaseApi() throws Exception {
-    final List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
-
-    assertThat(md).hasSize(1);
-
-    assertThat(md.get(0).configKey())
-        .isEqualTo("SimpleParameterizedApi#get(String)");
-    assertThat(md.get(0).returnType())
-        .isEqualTo(String.class);
-    assertThat(md.get(0).template())
-        .hasHeaders(entry("Foo", asList("Bar")));
-  }
-
-  @Test
-  public void parameterizedApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
-    contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
-  }
-
-  interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
-
-    @Override
-    @RequestLine("GET /api/{zoneId}")
-    String get(@Param("key") String key);
-  }
-
-  @Test
-  public void overrideBaseApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Overrides unsupported: OverrideParameterizedApi#get(String)");
-    contract.parseAndValidateMetadata(OverrideParameterizedApi.class);
-  }
-
-  interface Child<T> extends SimpleParameterizedBaseApi<List<T>> {
-
-  }
-
-  interface GrandChild extends Child<String> {
-
-  }
-
-  @Test
-  public void onlySingleLevelInheritanceSupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Only single-level inheritance supported: GrandChild");
-    contract.parseAndValidateMetadata(GrandChild.class);
   }
 
   @Headers("Foo: Bar")

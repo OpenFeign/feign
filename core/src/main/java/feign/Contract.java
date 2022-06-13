@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,15 +13,23 @@
  */
 package feign;
 
-import static feign.Util.checkState;
-import static feign.Util.emptyToNull;
+import feign.Request.HttpMethod;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import feign.Request.HttpMethod;
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
 
 /**
  * Defines what annotations and values are valid on interfaces.
@@ -47,11 +55,6 @@ public interface Contract {
           targetType.getSimpleName());
       checkState(targetType.getInterfaces().length <= 1, "Only single inheritance supported: %s",
           targetType.getSimpleName());
-      if (targetType.getInterfaces().length == 1) {
-        checkState(targetType.getInterfaces()[0].getInterfaces().length == 0,
-            "Only single-level inheritance supported: %s",
-            targetType.getSimpleName());
-      }
       final Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
       for (final Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class ||
@@ -60,8 +63,16 @@ public interface Contract {
           continue;
         }
         final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
-        checkState(!result.containsKey(metadata.configKey()), "Overrides unsupported: %s",
-            metadata.configKey());
+        if (result.containsKey(metadata.configKey())) {
+          MethodMetadata existingMetadata = result.get(metadata.configKey());
+          Type existingReturnType = existingMetadata.returnType();
+          Type overridingReturnType = metadata.returnType();
+          Type resolvedType = Types.resolveReturnType(existingReturnType, overridingReturnType);
+          if (resolvedType.equals(overridingReturnType)) {
+            result.put(metadata.configKey(), metadata);
+          }
+          continue;
+        }
         result.put(metadata.configKey(), metadata);
       }
       return new ArrayList<>(result.values());
@@ -82,8 +93,12 @@ public interface Contract {
       final MethodMetadata data = new MethodMetadata();
       data.targetType(targetType);
       data.method(method);
-      data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
+      data.returnType(
+          Types.resolve(targetType, targetType, method.getGenericReturnType()));
       data.configKey(Feign.configKey(targetType, method));
+      if (AlwaysEncodeBodyContract.class.isAssignableFrom(this.getClass())) {
+        data.alwaysEncodeBody(true);
+      }
 
       if (targetType.getInterfaces().length == 1) {
         processAnnotationOnClass(data, targetType.getInterfaces()[0]);
@@ -117,24 +132,28 @@ public interface Contract {
 
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
+        } else if (!isHttpAnnotation
+            && !Request.Options.class.isAssignableFrom(parameterTypes[i])) {
           if (data.isAlreadyProcessed(i)) {
             checkState(data.formParams().isEmpty() || data.bodyIndex() == null,
                 "Body parameters cannot be used with form parameters.%s", data.warnings());
-          } else {
+          } else if (!data.alwaysEncodeBody()) {
             checkState(data.formParams().isEmpty(),
                 "Body parameters cannot be used with form parameters.%s", data.warnings());
             checkState(data.bodyIndex() == null,
                 "Method has too many Body parameters: %s%s", method, data.warnings());
             data.bodyIndex(i);
-            data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
+            data.bodyType(
+                Types.resolve(targetType, targetType, genericParameterTypes[i]));
           }
         }
       }
 
       if (data.headerMapIndex() != null) {
-        checkMapString("HeaderMap", parameterTypes[data.headerMapIndex()],
-            genericParameterTypes[data.headerMapIndex()]);
+        // check header map parameter for map type
+        if (Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()])) {
+          checkMapKeys("HeaderMap", genericParameterTypes[data.headerMapIndex()]);
+        }
       }
 
       if (data.queryMapIndex() != null) {
@@ -162,15 +181,13 @@ public interface Contract {
       } else if (genericType instanceof Class<?>) {
         // raw class, type parameters cannot be inferred directly, but we can scan any extended
         // interfaces looking for any explict types
-        final Type[] interfaces = ((Class) genericType).getGenericInterfaces();
-        if (interfaces != null) {
-          for (final Type extended : interfaces) {
-            if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
-              // use the first extended interface we find.
-              final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
-              keyClass = (Class<?>) parameterTypes[0];
-              break;
-            }
+        final Type[] interfaces = ((Class<?>) genericType).getGenericInterfaces();
+        for (final Type extended : interfaces) {
+          if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
+            // use the first extended interface we find.
+            final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
+            keyClass = (Class<?>) parameterTypes[0];
+            break;
           }
         }
       }
@@ -294,7 +311,6 @@ public interface Contract {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
-        data.queryMapEncoded(queryMap.encoded());
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,
@@ -316,6 +332,5 @@ public interface Contract {
       }
       return result;
     }
-
   }
 }

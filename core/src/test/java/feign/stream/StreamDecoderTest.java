@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,12 +14,11 @@
 package feign.stream;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import feign.Feign;
-import feign.Request;
+import feign.*;
 import feign.Request.HttpMethod;
-import feign.RequestLine;
-import feign.Response;
-import feign.Util;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,9 +27,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Test;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,6 +36,9 @@ public class StreamDecoderTest {
   interface StreamInterface {
     @RequestLine("GET /")
     Stream<String> get();
+
+    @RequestLine("GET /str")
+    String str();
 
     @RequestLine("GET /cars")
     Stream<Car> getCars();
@@ -80,6 +79,41 @@ public class StreamDecoderTest {
   }
 
   @Test
+  public void simpleDefaultStreamTest() {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo\nbar"));
+
+    StreamInterface api = Feign.builder()
+        .decoder(StreamDecoder.create((r, t) -> {
+          BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+          return bufferedReader.lines().iterator();
+        }))
+        .doNotCloseAfterDecode()
+        .target(StreamInterface.class, server.url("/").toString());
+
+    try (Stream<String> stream = api.get()) {
+      assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
+    }
+  }
+
+  @Test
+  public void simpleDeleteDecoderTest() {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo\nbar"));
+
+    StreamInterface api = Feign.builder()
+        .decoder(StreamDecoder.create((r, t) -> {
+          BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+          return bufferedReader.lines().iterator();
+        }, (r, t) -> "str"))
+        .doNotCloseAfterDecode()
+        .target(StreamInterface.class, server.url("/").toString());
+
+    String str = api.str();
+    assertThat(str).isEqualTo("str");
+  }
+
+  @Test
   public void shouldCloseIteratorWhenStreamClosed() throws IOException {
     Response response = Response.builder()
         .status(200)
@@ -90,10 +124,10 @@ public class StreamDecoderTest {
         .build();
 
     TestCloseableIterator it = new TestCloseableIterator();
-    StreamDecoder decoder = new StreamDecoder((r, t) -> it);
+    StreamDecoder decoder = StreamDecoder.create((r, t) -> it);
 
     try (Stream<?> stream =
-        (Stream) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {
+        (Stream<?>) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {
       assertThat(stream.collect(Collectors.toList())).hasSize(1);
       assertThat(it.called).isTrue();
     } finally {

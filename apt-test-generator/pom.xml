@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.3-SNAPSHOT</version>
+    <version>11.9-SNAPSHOT</version>
   </parent>
 
   <groupId>io.github.openfeign.experimental</groupId>
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>com.github.jknack</groupId>
       <artifactId>handlebars</artifactId>
-      <version>4.1.2</version>
+      <version>4.3.0</version>
     </dependency>
 
     <dependency>
@@ -48,9 +48,16 @@
     <dependency>
       <groupId>com.google.testing.compile</groupId>
       <artifactId>compile-testing</artifactId>
-      <version>0.18</version>
+      <version>0.19</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.25</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -171,4 +178,18 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>active-on-jdk-16</id>
+      <activation>
+        <jdk>[16,)</jdk>
+      </activation>
+
+      <properties>
+        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <jvm.options>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</jvm.options>
+      </properties>
+    </profile>
+  </profiles>
 </project>

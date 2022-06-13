@@ -171,6 +171,38 @@ resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 * Unresolved expressions are omitted.
 * All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
 
+We also have limited support for Level 3, Path Style Expressions, with the following restrictions:
+
+* Maps and Lists are expanded by default.
+* Only Single variable templates are supported.
+
+*Examples:*
+
+```
+{;who}             ;who=fred
+{;half}            ;half=50%25
+{;empty}           ;empty
+{;list}            ;list=red;list=green;list=blue
+{;map}             ;semi=%3B;dot=.;comma=%2C
+```
+
+```java
+public interface MatrixService {
+
+  @RequestLine("GET /repos{;owners}")
+  List<Contributor> contributors(@Param("owners") List<String> owners);
+
+  class Contributor {
+    String login;
+    int contributions;
+  }
+}
+```
+
+If `owners` in the above example is defined as `Matt, Jeff, Susan`, the uri will expand to `/repos;owners=Matt;owners=Jeff;owners=Susan` 
+
+For more information see [RFC 6570, Section 3.2.7](https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.7)
+
 #### Undefined vs. Empty Values ####
 
 Undefined expressions are expressions where the value for the expression is an explicit `null` or no value is provided.
@@ -444,7 +476,7 @@ public class Example {
 ```
 
 ### Java 11 Http2
-[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
+[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](https://openjdk.java.net/jeps/321) that implements HTTP/2.
 
 To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
 
@@ -532,6 +564,39 @@ public class Example {
     JsonpApi jsonpApi = Feign.builder()
                          .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
                          .target(JsonpApi.class, "https://some-jsonp-api.com");
+  }
+}
+```
+
+If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
+
+Here's how to configure Stream decoder without delegate decoder:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }))
+            .target(GitHub.class, "https://api.github.com");
+  }
+}
+``` 
+
+Here's how to configure Stream decoder with delegate decoder:
+
+```java
+
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }, (r, t) -> "this is delegate decoder"))
+            .target(GitHub.class, "https://api.github.com");
   }
 }
 ```
@@ -765,6 +830,8 @@ public class Example {
 
 The SLF4JLogger (see above) may also be of interest.
 
+To filter out sensitive information like authorization or tokens
+override methods `shouldLogRequestHeader` or `shouldLogResponseHeader`.
 
 #### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.

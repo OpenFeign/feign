@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign.hc5;
 
 import static feign.Util.UTF_8;
+import static feign.Util.enumForName;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -134,7 +135,13 @@ public final class ApacheHttp5Client implements Client {
         entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(new String(data), contentType);
+        String content;
+        if (request.charset() != null) {
+          content = new String(data, request.charset());
+        } else {
+          content = new String(data);
+        }
+        entity = new StringEntity(content, contentType);
       }
 
       requestBuilder.setEntity(entity);
@@ -181,6 +188,8 @@ public final class ApacheHttp5Client implements Client {
     }
 
     return Response.builder()
+        .protocolVersion(enumForName(Request.ProtocolVersion.class,
+            httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)

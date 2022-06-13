@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,11 +14,11 @@
 package feign.reactive;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.RequestLine;
 import feign.Target;
@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
@@ -60,7 +60,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
     StepVerifier.create((Mono) result)
@@ -78,7 +78,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
     StepVerifier.create((Mono) result)
@@ -95,7 +95,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method, should result in an error */
     StepVerifier.create((Mono) result)
@@ -115,7 +115,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)
@@ -135,7 +135,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)
@@ -154,7 +154,7 @@ public class ReactiveInvocationHandlerTest {
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Flowable.class);
-    verifyZeroInteractions(this.methodHandler);
+    verifyNoInteractions(this.methodHandler);
 
     /* subscribe and execute the method */
     StepVerifier.create((Flowable) result)

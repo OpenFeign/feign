@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -49,7 +49,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-import static feign.ExceptionPropagationPolicy.*;
 import static feign.Util.*;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -541,8 +540,9 @@ public class FeignUnderAsyncTest {
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.response().headers().get("Location"),
-        Collections.singletonList("http://bar.com"));
+    assertThat(api.response().headers()).hasEntrySatisfying("Location", value -> {
+      assertThat(value).contains("http://bar.com");
+    });
 
     execs.shutdown();
   }
@@ -582,13 +582,13 @@ public class FeignUnderAsyncTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDecode404Mode() throws Exception {
+  public void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(DecodeException.class);
     thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .decoder(new Decoder() {
           @Override
           public Object decode(Response response, Type type) throws IOException {
@@ -600,12 +600,12 @@ public class FeignUnderAsyncTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDecode404Mode() throws Exception {
+  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
     thrown.expect(IllegalArgumentException.class);
 
     TestInterface api = new TestInterfaceBuilder()
-        .decode404()
+        .dismiss404()
         .errorDecoder(new IllegalArgumentExceptionOn404())
         .target("http://localhost:" + server.getPort());
     api.queryMap(Collections.<String, Object>emptyMap());
@@ -1000,8 +1000,8 @@ public class FeignUnderAsyncTest {
       return this;
     }
 
-    TestInterfaceBuilder decode404() {
-      delegate.decode404();
+    TestInterfaceBuilder dismiss404() {
+      delegate.dismiss404();
       return this;
     }
 

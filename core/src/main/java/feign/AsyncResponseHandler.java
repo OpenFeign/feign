@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -37,17 +37,17 @@ class AsyncResponseHandler {
 
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
-  private final boolean decode404;
+  private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
   AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean decode404, boolean closeAfterDecode) {
+      boolean dismiss404, boolean closeAfterDecode) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
-    this.decode404 = decode404;
+    this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
   }
 
@@ -88,7 +88,7 @@ class AsyncResponseHandler {
           shouldClose = closeAfterDecode;
           resultFuture.complete(result);
         }
-      } else if (decode404 && response.status() == 404 && !isVoidType(returnType)) {
+      } else if (dismiss404 && response.status() == 404 && !isVoidType(returnType)) {
         final Object result = decode(response, returnType);
         shouldClose = closeAfterDecode;
         resultFuture.complete(result);

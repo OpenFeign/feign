@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,14 @@
  */
 package feign.micrometer;
 
+import feign.Capability;
+import feign.Util;
+import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Meter.Id;
+import io.micrometer.core.instrument.MockClock;
+import io.micrometer.core.instrument.simple.SimpleConfig;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,16 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import feign.Capability;
-import feign.Util;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.MockClock;
-import io.micrometer.core.instrument.simple.SimpleConfig;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
+
 
   @Override
   protected SimpleMeterRegistry createMetricsRegistry() {
@@ -97,5 +99,39 @@ public class MicrometerCapabilityTest
         .orElse(null);
   }
 
+  @Override
+  protected boolean isClientMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isDecoderMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.codec.Decoder");
+  }
+
+  @Override
+  protected boolean doesMetricIncludeUri(Id metricId, String uri) {
+    return uri.equals(metricId.getTag("uri"));
+  }
+
+  @Override
+  protected boolean doesMetricHasCounter(Meter meter) {
+    for (Measurement measurement : meter.measure()) {
+      if ("COUNT".equals(measurement.getStatistic().name())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  protected long getMetricCounter(Meter meter) {
+    for (Measurement measurement : meter.measure()) {
+      if ("COUNT".equals(measurement.getStatistic().name())) {
+        return (long) measurement.getValue();
+      }
+    }
+    return 0;
+  }
 
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,13 +13,13 @@
  */
 package feign;
 
+import feign.Contract.BaseContract;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import feign.Contract.BaseContract;
 
 /**
  * {@link Contract} base implementation that works by declaring witch annotations should be
@@ -43,7 +43,7 @@ public abstract class DeclarativeContract extends BaseContract {
    * (unless they are the same).
    *
    * @param data metadata collected so far relating to the current java method.
-   * @param clz the class to process
+   * @param targetType the class to process
    */
   @Override
   protected final void processAnnotationOnClass(MethodMetadata data, Class<?> targetType) {

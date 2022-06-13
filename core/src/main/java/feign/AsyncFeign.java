@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -63,12 +63,12 @@ public abstract class AsyncFeign<C> extends Feign {
     private Supplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client;
 
-    private final Logger.Level logLevel = Logger.Level.NONE;
-    private final Logger logger = new NoOpLogger();
+    private Logger.Level logLevel = Logger.Level.NONE;
+    private Logger logger = new NoOpLogger();
 
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private boolean decode404;
+    private boolean dismiss404;
     private boolean closeAfterDecode = true;
 
     public AsyncBuilder() {
@@ -104,9 +104,18 @@ public abstract class AsyncFeign<C> extends Feign {
 
     /**
      * @see Builder#decode404()
+     * @deprecated
      */
     public AsyncBuilder<C> decode404() {
-      this.decode404 = true;
+      this.dismiss404 = true;
+      return this;
+    }
+
+    /**
+     * @see Builder#dismiss404()
+     */
+    public AsyncBuilder<C> dismiss404() {
+      this.dismiss404 = true;
       return this;
     }
 
@@ -159,6 +168,7 @@ public abstract class AsyncFeign<C> extends Feign {
      */
     public AsyncBuilder<C> logLevel(Logger.Level logLevel) {
       builder.logLevel(logLevel);
+      this.logLevel = logLevel;
       return this;
     }
 
@@ -175,6 +185,7 @@ public abstract class AsyncFeign<C> extends Feign {
      */
     public AsyncBuilder<C> logger(Logger logger) {
       builder.logger(logger);
+      this.logger = logger;
       return this;
     }
 
@@ -254,7 +265,7 @@ public abstract class AsyncFeign<C> extends Feign {
         asyncBuilder.logger,
         asyncBuilder.decoder,
         asyncBuilder.errorDecoder,
-        asyncBuilder.decode404,
+        asyncBuilder.dismiss404,
         asyncBuilder.closeAfterDecode);
 
     asyncBuilder.builder.client(this::stageExecution);

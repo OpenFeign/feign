@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +24,7 @@ public class StringDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException {
     Response.Body body = response.body();
-    if (body == null) {
+    if (response.status() == 404 || response.status() == 204 || body == null) {
       return null;
     }
     if (String.class.equals(type)) {

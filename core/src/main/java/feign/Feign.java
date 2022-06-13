@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,13 +13,6 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import feign.Logger.Level;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -28,6 +21,12 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.querymap.FieldQueryMapEncoder;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
@@ -111,7 +110,7 @@ public abstract class Feign {
     private Options options = new Options();
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
-    private boolean decode404;
+    private boolean dismiss404;
     private boolean closeAfterDecode = true;
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
@@ -181,9 +180,32 @@ public abstract class Feign {
      * custom {@link #client(Client) client}.
      *
      * @since 8.12
+     * @deprecated
      */
     public Builder decode404() {
-      this.decode404 = true;
+      this.dismiss404 = true;
+      return this;
+    }
+
+    /**
+     * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
+     * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
+     *
+     * <p/>
+     * All first-party (ex gson) decoders return well-known empty values defined by
+     * {@link Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder)
+     * decoder} or make your own.
+     *
+     * <p/>
+     * This flag only works with 404, as opposed to all or arbitrary status codes. This was an
+     * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
+     * fallback policy. If your server returns a different status for not-found, correct via a
+     * custom {@link #client(Client) client}.
+     *
+     * @since 11.9
+     */
+    public Builder dismiss404() {
+      this.dismiss404 = true;
       return this;
     }
 
@@ -286,7 +308,7 @@ public abstract class Feign {
 
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, decode404, closeAfterDecode, propagationPolicy, forceDecoding);
+              logLevel, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
