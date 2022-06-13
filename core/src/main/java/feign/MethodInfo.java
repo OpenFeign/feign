@@ -33,14 +33,15 @@ class MethodInfo {
   MethodInfo(Class<?> targetType, Method method) {
     this.configKey = Feign.configKey(targetType, method);
 
-    final Type type = method.getGenericReturnType();
+    final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
-    if (method.getReturnType() != CompletableFuture.class) {
-      this.asyncReturnType = false;
-      this.underlyingReturnType = type;
-    } else {
+    if (type instanceof ParameterizedType
+        && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
       this.asyncReturnType = true;
       this.underlyingReturnType = ((ParameterizedType) type).getActualTypeArguments()[0];
+    } else {
+      this.asyncReturnType = false;
+      this.underlyingReturnType = type;
     }
   }
 
