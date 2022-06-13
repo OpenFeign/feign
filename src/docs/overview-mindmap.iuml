@@ -11,6 +11,7 @@
 ** async clients
 *** java.net.URL
 *** Apache HC5
+*** OkHttp
 ** contracts
 *** Feign
 *** JAX-RS
