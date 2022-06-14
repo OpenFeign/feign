@@ -16,12 +16,11 @@ package feign.metrics5;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
 import feign.*;
 import feign.Request.Options;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
-import io.dropwizard.metrics5.Timer.Context;
+import io.dropwizard.metrics5.Timer;
 
 /**
  * Warp feign {@link Client} with metrics.
@@ -53,7 +52,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
   @Override
   public Response execute(Request request, Options options) throws IOException {
     final RequestTemplate template = request.requestTemplate();
-    try (final Context timer = createTimer(template)) {
+    try (final Timer.Context timer = createTimer(template)) {
       Response response = delegate.execute(request, options);
       recordSuccess(template, response);
       return response;
@@ -74,13 +73,13 @@ public class MeteredClient implements Client, AsyncClient<Object> {
                                              Options options,
                                              Optional<Object> requestContext) {
     final RequestTemplate template = request.requestTemplate();
-    final Context timer = createTimer(template);
+    final Timer.Context timer = createTimer(template);
     return asyncDelegate.execute(request, options, requestContext)
         .whenComplete((response, th) -> {
           if (th == null) {
             recordSuccess(template, response);
           } else if (th instanceof FeignException) {
-            FeignException e = (FeignException) th; 
+            FeignException e = (FeignException) th;
             recordFailure(template, e);
           } else if (th instanceof Exception) {
             Exception e = (Exception) th;
@@ -90,7 +89,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
         .whenComplete((response, th) -> timer.close());
   }
 
-  private Context createTimer(RequestTemplate template) {
+  private Timer.Context createTimer(RequestTemplate template) {
     return metricRegistry
         .timer(
             metricName

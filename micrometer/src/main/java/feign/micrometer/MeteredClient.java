@@ -50,7 +50,8 @@ public class MeteredClient implements Client, AsyncClient<Object> {
   }
 
   public MeteredClient(AsyncClient<Object> asyncClient, MeterRegistry meterRegistry) {
-    this(asyncClient, meterRegistry, new FeignMetricName(AsyncClient.class), new FeignMetricTagResolver());
+    this(asyncClient, meterRegistry, new FeignMetricName(AsyncClient.class),
+        new FeignMetricTagResolver());
   }
 
   public MeteredClient(AsyncClient<Object> asyncClient,
