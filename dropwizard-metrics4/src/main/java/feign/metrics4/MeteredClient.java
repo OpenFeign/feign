@@ -24,18 +24,15 @@ import feign.Request.Options;
 /**
  * Warp feign {@link Client} with metrics.
  */
-public class MeteredClient implements Client, AsyncClient<Object> {
+public class MeteredClient extends DelegatingClient<Object> {
 
-  private final Client delegate;
-  private final AsyncClient<Object> asyncDelegate;
   private final MetricRegistry metricRegistry;
   private final FeignMetricName metricName;
   private final MetricSuppliers metricSuppliers;
 
   public MeteredClient(Client client, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
-    this.delegate = client;
-    this.asyncDelegate = client instanceof AsyncClient ? (AsyncClient<Object>) client : null;
+    super(client);
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Client.class);
@@ -43,8 +40,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
 
   public MeteredClient(AsyncClient<Object> asyncClient, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
-    this.delegate = asyncClient instanceof Client ? (Client) asyncClient : null;
-    this.asyncDelegate = asyncClient;
+    super(asyncClient);
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Client.class);
@@ -54,7 +50,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
   public Response execute(Request request, Options options) throws IOException {
     final RequestTemplate template = request.requestTemplate();
     try (final Timer.Context classTimer = createTimer(template)) {
-      Response response = delegate.execute(request, options);
+      Response response = super.execute(request, options);
       recordSuccess(template, response);
       return response;
     } catch (FeignException e) {
@@ -75,7 +71,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
                                              Optional<Object> requestContext) {
     final RequestTemplate template = request.requestTemplate();
     final Timer.Context timer = createTimer(template);
-    return asyncDelegate.execute(request, options, requestContext)
+    return super.execute(request, options, requestContext)
         .whenComplete((response, th) -> {
           if (th == null) {
             recordSuccess(template, response);

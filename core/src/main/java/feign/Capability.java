@@ -32,7 +32,6 @@ import feign.codec.Encoder;
  */
 public interface Capability {
 
-
   static <E> E enrich(E componentToEnrich, List<Capability> capabilities) {
     return capabilities.stream()
         // invoke each individual capability and feed the result to the next one.
@@ -59,7 +58,7 @@ public interface Capability {
         .findFirst()
         .map(method -> {
           try {
-            return (E) method.invoke(capability, target);
+            return target instanceof Incapable ? target : (E) method.invoke(capability, target);
           } catch (IllegalAccessException | IllegalArgumentException
               | InvocationTargetException e) {
             throw new RuntimeException("Unable to enrich " + target, e);

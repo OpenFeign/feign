@@ -72,7 +72,7 @@ public abstract class AsyncFeign<C> extends Feign {
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private boolean dismiss404;
     private boolean closeAfterDecode = true;
-    private List<Capability> capabilities = new ArrayList<>();
+    private final List<Capability> capabilities = new ArrayList<>();
 
     public AsyncBuilder() {
       super();
@@ -256,101 +256,31 @@ public abstract class AsyncFeign<C> extends Feign {
   private final Feign feign;
 
   private final Supplier<C> defaultContextSupplier;
-  private final AsyncClient<C> client;
-
-  private final Logger.Level logLevel;
-  private final Logger logger;
-
-  private final AsyncResponseHandler responseHandler;
 
   protected AsyncFeign(AsyncBuilder<C> asyncBuilder) {
     this.activeContext = new ThreadLocal<>();
 
     this.defaultContextSupplier = asyncBuilder.defaultContextSupplier;
 
-    this.client = Capability.enrich(asyncBuilder.client, asyncBuilder.capabilities);
-    this.logLevel = Capability.enrich(asyncBuilder.logLevel, asyncBuilder.capabilities);
-    this.logger = Capability.enrich(asyncBuilder.logger, asyncBuilder.capabilities);
+    AsyncClient<C> client = Capability.enrich(asyncBuilder.client, asyncBuilder.capabilities);
+    Logger.Level logLevel = Capability.enrich(asyncBuilder.logLevel, asyncBuilder.capabilities);
+    Logger logger = Capability.enrich(asyncBuilder.logger, asyncBuilder.capabilities);
     Decoder decoder = Capability.enrich(asyncBuilder.decoder, asyncBuilder.capabilities);
 
-    this.responseHandler = new AsyncResponseHandler(
-        this.logLevel,
-        this.logger,
+    AsyncResponseHandler responseHandler = new AsyncResponseHandler(
+        logLevel,
+        logger,
         decoder,
         asyncBuilder.errorDecoder,
         asyncBuilder.dismiss404,
         asyncBuilder.closeAfterDecode);
 
     this.feign = asyncBuilder.builder
-        .client(this::stageExecution)
-        .skipClientEnrichment() // don't enrich the wrapper
-        .decoder(this::stageDecode)
-        .skipDecoderEnrichment() // don't enrich the wrapper
+        .client(new AsyncClientWrapper(client))
+        .decoder(new AsyncDecoderWrapper(logger, logLevel, responseHandler))
         .forceDecoding() // force all handling through stageDecode
         .build();
   }
-
-  private Response stageExecution(Request request, Options options) {
-    final Response result = Response.builder()
-        .status(200)
-        .request(request)
-        .build();
-
-    final AsyncInvocation<C> invocationContext = activeContext.get();
-
-    invocationContext.setResponseFuture(
-        client.execute(request, options, Optional.ofNullable(invocationContext.context())));
-
-    return result;
-  }
-
-  // from SynchronousMethodHandler
-  long elapsedTime(long start) {
-    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-  }
-
-
-  private Object stageDecode(Response response, Type type) {
-    final AsyncInvocation<C> invocationContext = activeContext.get();
-
-    final CompletableFuture<Object> result = new CompletableFuture<>();
-
-    invocationContext.responseFuture().whenComplete((r, t) -> {
-      final long elapsedTime = elapsedTime(invocationContext.startNanos());
-
-      if (t != null) {
-        if (logLevel != Logger.Level.NONE && t instanceof IOException) {
-          final IOException e = (IOException) t;
-          logger.logIOException(invocationContext.configKey(), logLevel, e, elapsedTime);
-        }
-        result.completeExceptionally(t);
-      } else {
-        responseHandler.handleResponse(result, invocationContext.configKey(), r,
-            invocationContext.underlyingType(), elapsedTime);
-      }
-    });
-
-    result.whenComplete((r, t) -> {
-      if (result.isCancelled()) {
-        invocationContext.responseFuture().cancel(true);
-      }
-    });
-
-    if (invocationContext.isAsyncReturnType()) {
-      return result;
-    }
-    try {
-      return result.join();
-    } catch (final CompletionException e) {
-      final Response r = invocationContext.responseFuture().join();
-      Throwable cause = e.getCause();
-      if (cause == null) {
-        cause = e;
-      }
-      throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
-    }
-  }
-
 
   protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
     activeContext.set(invocationContext);
@@ -370,4 +300,89 @@ public abstract class AsyncFeign<C> extends Feign {
   }
 
   protected abstract <T> T wrap(Class<T> type, T instance, C context);
+
+  class AsyncClientWrapper implements Client, Incapable {
+
+    private final AsyncClient<C> client;
+
+    public AsyncClientWrapper(AsyncClient<C> client) {
+      this.client = client;
+    }
+
+    @Override
+    public Response execute(Request request, Request.Options options) throws IOException {
+      final Response result = Response.builder()
+          .status(200)
+          .request(request)
+          .build();
+
+      final AsyncInvocation<C> invocationContext = activeContext.get();
+
+      invocationContext.setResponseFuture(
+          client.execute(request, options, Optional.ofNullable(invocationContext.context())));
+
+      return result;
+    }
+  }
+
+  class AsyncDecoderWrapper implements Decoder, Incapable {
+
+    private final Logger logger;
+    private final Logger.Level logLevel;
+    private final AsyncResponseHandler responseHandler;
+
+    public AsyncDecoderWrapper(Logger logger, Logger.Level logLevel,
+        AsyncResponseHandler responseHandler) {
+      this.logger = logger;
+      this.logLevel = logLevel;
+      this.responseHandler = responseHandler;
+    }
+
+    @Override
+    public Object decode(Response response, Type type) throws IOException, FeignException {
+      final AsyncInvocation<C> invocationContext = activeContext.get();
+
+      final CompletableFuture<Object> result = new CompletableFuture<>();
+
+      invocationContext.responseFuture().whenComplete((r, t) -> {
+        final long elapsedTime = elapsedTime(invocationContext.startNanos());
+
+        if (t != null) {
+          if (logLevel != Logger.Level.NONE && t instanceof IOException) {
+            final IOException e = (IOException) t;
+            logger.logIOException(invocationContext.configKey(), logLevel, e, elapsedTime);
+          }
+          result.completeExceptionally(t);
+        } else {
+          responseHandler.handleResponse(result, invocationContext.configKey(), r,
+              invocationContext.underlyingType(), elapsedTime);
+        }
+      });
+
+      result.whenComplete((r, t) -> {
+        if (result.isCancelled()) {
+          invocationContext.responseFuture().cancel(true);
+        }
+      });
+
+      if (invocationContext.isAsyncReturnType()) {
+        return result;
+      }
+      try {
+        return result.join();
+      } catch (final CompletionException e) {
+        final Response r = invocationContext.responseFuture().join();
+        Throwable cause = e.getCause();
+        if (cause == null) {
+          cause = e;
+        }
+        throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
+      }
+    }
+
+    // from SynchronousMethodHandler
+    long elapsedTime(long start) {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+    }
+  }
 }

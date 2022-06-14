@@ -27,10 +27,8 @@ import io.micrometer.core.instrument.Timer;
 /**
  * Warp feign {@link Client} with metrics.
  */
-public class MeteredClient implements Client, AsyncClient<Object> {
+public class MeteredClient extends DelegatingClient<Object> {
 
-  private final Client delegate;
-  private final AsyncClient<Object> asyncDelegate;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
   private final MetricTagResolver metricTagResolver;
@@ -43,8 +41,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
-    this.delegate = client;
-    this.asyncDelegate = client instanceof AsyncClient ? (AsyncClient<Object>) client : null;
+    super(client);
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
     this.metricTagResolver = metricTagResolver;
@@ -59,8 +56,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
-    this.delegate = asyncClient instanceof Client ? (Client) asyncClient : null;
-    this.asyncDelegate = asyncClient;
+    super(asyncClient);
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
     this.metricTagResolver = metricTagResolver;
@@ -71,7 +67,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
     final Timer.Sample sample = Timer.start(meterRegistry);
     Timer timer = null;
     try {
-      final Response response = delegate.execute(request, options);
+      final Response response = super.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
       timer = createTimer(request, response, options, null);
       return response;
@@ -98,7 +94,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
                                              Options options,
                                              Optional<Object> requestContext) {
     final Timer.Sample sample = Timer.start(meterRegistry);
-    return asyncDelegate.execute(request, options, requestContext)
+    return super.execute(request, options, requestContext)
         .whenComplete((response, th) -> {
           Timer timer;
           if (th == null) {

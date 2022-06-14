@@ -115,8 +115,7 @@ public abstract class Feign {
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
     private List<Capability> capabilities = new ArrayList<>();
-    private boolean enrichClient = true;
-    private boolean enrichDecoder = true;
+    private boolean skipEnrichment = false;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -285,28 +284,8 @@ public abstract class Feign {
       return this;
     }
 
-    /**
-     * Internal - indicates that Builder should not enrich <code>client</code>. Default is
-     * <code>true</code>. <code>AsyncFeign</code> calls this function when it creates a wrapper
-     * around actual <code>client</code>.
-     */
-    Builder skipClientEnrichment() {
-      this.enrichClient = false;
-      return this;
-    }
-
-    /**
-     * Internal - indicates that Builder should not enrich <code>decoder</code>. Default is
-     * <code>true</code>. <code>AsyncFeign</code> calls this function when it creates a wrapper
-     * around actual <code>decoder</code>.
-     */
-    Builder skipDecoderEnrichment() {
-      this.enrichDecoder = false;
-      return this;
-    }
-
     public <T> T target(Class<T> apiType, String url) {
-      return target(new HardCodedTarget<T>(apiType, url));
+      return target(new HardCodedTarget<>(apiType, url));
     }
 
     public <T> T target(Target<T> target) {
@@ -314,8 +293,7 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      Client client =
-          this.enrichClient ? Capability.enrich(this.client, capabilities) : this.client;
+      Client client = Capability.enrich(this.client, capabilities);
       Retryer retryer = Capability.enrich(this.retryer, capabilities);
       List<RequestInterceptor> requestInterceptors = this.requestInterceptors.stream()
           .map(ri -> Capability.enrich(ri, capabilities))
@@ -324,8 +302,7 @@ public abstract class Feign {
       Contract contract = Capability.enrich(this.contract, capabilities);
       Options options = Capability.enrich(this.options, capabilities);
       Encoder encoder = Capability.enrich(this.encoder, capabilities);
-      Decoder decoder =
-          this.enrichDecoder ? Capability.enrich(this.decoder, capabilities) : this.decoder;
+      Decoder decoder = Capability.enrich(this.decoder, capabilities);
       InvocationHandlerFactory invocationHandlerFactory =
           Capability.enrich(this.invocationHandlerFactory, capabilities);
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
