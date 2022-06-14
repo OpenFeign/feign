@@ -115,6 +115,7 @@ public abstract class Feign {
     private ExceptionPropagationPolicy propagationPolicy = NONE;
     private boolean forceDecoding = false;
     private List<Capability> capabilities = new ArrayList<>();
+    private boolean enrichClient = true;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -283,6 +284,16 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * Internal - indicates that Builder should not enrich <code>client</code>. Default is
+     * <code>true</code>. <code>AsyncFeign</code> calls this function when it creates a wrapper
+     * around actual <code>client</code>.
+     */
+    Builder skipClientEnrichment() {
+      this.enrichClient = false;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -292,7 +303,8 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      Client client = Capability.enrich(this.client, capabilities);
+      Client client =
+          this.enrichClient ? Capability.enrich(this.client, capabilities) : this.client;
       Retryer retryer = Capability.enrich(this.retryer, capabilities);
       List<RequestInterceptor> requestInterceptors = this.requestInterceptors.stream()
           .map(ri -> Capability.enrich(ri, capabilities))

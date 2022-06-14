@@ -281,11 +281,10 @@ public abstract class AsyncFeign<C> extends Feign {
         asyncBuilder.dismiss404,
         asyncBuilder.closeAfterDecode);
 
-    asyncBuilder.builder.client(this::stageExecution); // TODO: figure out how to prevent enrichment of this wrapper
-    asyncBuilder.builder.decoder(this::stageDecode);
-    asyncBuilder.builder.forceDecoding(); // force all handling through stageDecode
-
-    this.feign = asyncBuilder.builder.build();
+    this.feign = asyncBuilder.builder
+        .client(this::stageExecution).skipClientEnrichment() // don't enrich the wrapper
+        .decoder(this::stageDecode).forceDecoding() // force all handling through stageDecode
+        .build();
   }
 
   private Response stageExecution(Request request, Options options) {
@@ -298,7 +297,6 @@ public abstract class AsyncFeign<C> extends Feign {
 
     invocationContext.setResponseFuture(
         client.execute(request, options, Optional.ofNullable(invocationContext.context())));
-
 
     return result;
   }
