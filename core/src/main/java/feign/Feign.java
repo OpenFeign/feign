@@ -296,9 +296,9 @@ public abstract class Feign {
     }
 
     /**
-     * Internal - indicates that Builder should not enrich <code>client</code>. Default is
+     * Internal - indicates that Builder should not enrich <code>decoder</code>. Default is
      * <code>true</code>. <code>AsyncFeign</code> calls this function when it creates a wrapper
-     * around actual <code>client</code>.
+     * around actual <code>decoder</code>.
      */
     Builder skipDecoderEnrichment() {
       this.enrichDecoder = false;
