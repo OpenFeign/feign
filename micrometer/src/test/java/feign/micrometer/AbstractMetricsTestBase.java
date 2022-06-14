@@ -17,9 +17,11 @@ import feign.*;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +34,13 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     @RequestLine("GET /get")
     String get(String body);
+
+  }
+
+  public interface CompletableSource {
+
+    @RequestLine("GET /get")
+    CompletableFuture<String> get(String body);
 
   }
 
@@ -54,6 +63,23 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     source.get("0x3456789");
 
+    assertMetricsCapability();
+  }
+
+  @Test
+  public final void addAsyncMetricsCapability() {
+    final CompletableSource source = AsyncFeign.asyncBuilder()
+        .client(new MockClient()
+            .ok(HttpMethod.GET, "/get", "1234567890abcde"))
+        .addCapability(createMetricCapability())
+        .target(new MockTarget<>(CompletableSource.class));
+
+    source.get("0x3456789").join();
+
+    assertMetricsCapability();
+  }
+
+  private void assertMetricsCapability() {
     Map<METRIC_ID, METRIC> metrics = getFeignMetrics();
     assertThat(metrics, aMapWithSize(7));
     metrics.keySet().forEach(metricId -> assertThat(
@@ -70,6 +96,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         .filter(entry -> isClientMetric(entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    assertThat(clientMetrics, aMapWithSize(2));
     clientMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
@@ -78,6 +105,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         .filter(entry -> isDecoderMetric(entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    assertThat(decoderMetrics, aMapWithSize(2));
     decoderMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));

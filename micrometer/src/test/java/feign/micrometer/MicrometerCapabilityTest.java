@@ -21,6 +21,8 @@ import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +30,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
@@ -55,8 +59,10 @@ public class MicrometerCapabilityTest
 
   @Override
   protected boolean doesMetricIdIncludeClient(Id metricId) {
-    return metricId.getTag("client")
-        .contains("feign.micrometer.AbstractMetricsTestBase$SimpleSource");
+    String tag = metricId.getTag("client");
+    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
+    Matcher<String> containsSource = containsString("Source");
+    return allOf(containsBase, containsSource).matches(tag);
   }
 
   @Override

@@ -13,7 +13,6 @@
  */
 package feign.metrics5;
 
-import static org.hamcrest.Matchers.hasEntry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,6 +23,8 @@ import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
+import org.hamcrest.Matcher;
+import static org.hamcrest.Matchers.*;
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
@@ -45,8 +46,10 @@ public class Metrics5CapabilityTest
 
   @Override
   protected boolean doesMetricIdIncludeClient(MetricName metricId) {
-    return hasEntry("client", "feign.micrometer.AbstractMetricsTestBase$SimpleSource")
-        .matches(metricId.getTags());
+    String tag = metricId.getTags().get("client");
+    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
+    Matcher<String> containsSource = containsString("Source");
+    return allOf(containsBase, containsSource).matches(tag);
   }
 
   @Override

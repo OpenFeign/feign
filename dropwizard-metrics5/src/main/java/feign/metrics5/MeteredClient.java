@@ -27,8 +27,8 @@ import io.dropwizard.metrics5.Timer;
  */
 public class MeteredClient implements Client, AsyncClient<Object> {
 
-  private Client delegate;
-  private AsyncClient<Object> asyncDelegate;
+  private final Client delegate;
+  private final AsyncClient<Object> asyncDelegate;
   private final MetricRegistry metricRegistry;
   private final FeignMetricName metricName;
   private final MetricSuppliers metricSuppliers;
@@ -36,14 +36,16 @@ public class MeteredClient implements Client, AsyncClient<Object> {
   public MeteredClient(Client client, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
     this.delegate = client;
+    this.asyncDelegate = client instanceof AsyncClient ? (AsyncClient<Object>) client : null;
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Client.class);
   }
 
-  public MeteredClient(AsyncClient<Object> client, MetricRegistry metricRegistry,
+  public MeteredClient(AsyncClient<Object> asyncClient, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
-    this.asyncDelegate = client;
+    this.delegate = asyncClient instanceof Client ? (Client) asyncClient : null;
+    this.asyncDelegate = asyncClient;
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Client.class);

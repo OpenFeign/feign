@@ -282,8 +282,11 @@ public abstract class AsyncFeign<C> extends Feign {
         asyncBuilder.closeAfterDecode);
 
     this.feign = asyncBuilder.builder
-        .client(this::stageExecution).skipClientEnrichment() // don't enrich the wrapper
-        .decoder(this::stageDecode).forceDecoding() // force all handling through stageDecode
+        .client(this::stageExecution)
+        .skipClientEnrichment() // don't enrich the wrapper
+        .decoder(this::stageDecode)
+        .skipDecoderEnrichment() // don't enrich the wrapper
+        .forceDecoding() // force all handling through stageDecode
         .build();
   }
 

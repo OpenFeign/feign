@@ -116,6 +116,7 @@ public abstract class Feign {
     private boolean forceDecoding = false;
     private List<Capability> capabilities = new ArrayList<>();
     private boolean enrichClient = true;
+    private boolean enrichDecoder = true;
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -294,6 +295,16 @@ public abstract class Feign {
       return this;
     }
 
+    /**
+     * Internal - indicates that Builder should not enrich <code>client</code>. Default is
+     * <code>true</code>. <code>AsyncFeign</code> calls this function when it creates a wrapper
+     * around actual <code>client</code>.
+     */
+    Builder skipDecoderEnrichment() {
+      this.enrichDecoder = false;
+      return this;
+    }
+
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<T>(apiType, url));
     }
@@ -313,7 +324,8 @@ public abstract class Feign {
       Contract contract = Capability.enrich(this.contract, capabilities);
       Options options = Capability.enrich(this.options, capabilities);
       Encoder encoder = Capability.enrich(this.encoder, capabilities);
-      Decoder decoder = Capability.enrich(this.decoder, capabilities);
+      Decoder decoder =
+          this.enrichDecoder ? Capability.enrich(this.decoder, capabilities) : this.decoder;
       InvocationHandlerFactory invocationHandlerFactory =
           Capability.enrich(this.invocationHandlerFactory, capabilities);
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);

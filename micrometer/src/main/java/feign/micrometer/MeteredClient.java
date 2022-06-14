@@ -13,24 +13,24 @@
  */
 package feign.micrometer;
 
+import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import feign.*;
 import feign.Request.Options;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
  * Warp feign {@link Client} with metrics.
  */
 public class MeteredClient implements Client, AsyncClient<Object> {
 
-  private Client delegate;
-  private AsyncClient<Object> asyncDelegate;
+  private final Client delegate;
+  private final AsyncClient<Object> asyncDelegate;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
   private final MetricTagResolver metricTagResolver;
@@ -44,13 +44,14 @@ public class MeteredClient implements Client, AsyncClient<Object> {
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
     this.delegate = client;
+    this.asyncDelegate = client instanceof AsyncClient ? (AsyncClient<Object>) client : null;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
     this.metricTagResolver = metricTagResolver;
   }
 
   public MeteredClient(AsyncClient<Object> asyncClient, MeterRegistry meterRegistry) {
-    this(asyncClient, meterRegistry, new FeignMetricName(AsyncClient.class),
+    this(asyncClient, meterRegistry, new FeignMetricName(Client.class),
         new FeignMetricTagResolver());
   }
 
@@ -58,6 +59,7 @@ public class MeteredClient implements Client, AsyncClient<Object> {
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
+    this.delegate = asyncClient instanceof Client ? (Client) asyncClient : null;
     this.asyncDelegate = asyncClient;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
@@ -129,9 +131,8 @@ public class MeteredClient implements Client, AsyncClient<Object> {
             Tag.of("status_group", responseStatus / 100 + "xx"),
             Tag.of("uri", template.methodMetadata().template().path()))
         .and(extraTags);
-    meterRegistry.counter(
-        metricName.name("http_response_code"),
-        allTags)
+    meterRegistry
+        .counter(metricName.name("http_response_code"), allTags)
         .increment();
   }
 
