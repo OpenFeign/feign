@@ -268,9 +268,7 @@ public abstract class AsyncFeign<C> extends Feign {
 
     this.defaultContextSupplier = asyncBuilder.defaultContextSupplier;
 
-    this.client = asyncBuilder.client instanceof AsyncClient.SyncBased
-        ? asyncBuilder.client
-        : Capability.enrich(asyncBuilder.client, asyncBuilder.capabilities);
+    this.client = Capability.enrich(asyncBuilder.client, asyncBuilder.capabilities);
     this.logLevel = Capability.enrich(asyncBuilder.logLevel, asyncBuilder.capabilities);
     this.logger = Capability.enrich(asyncBuilder.logger, asyncBuilder.capabilities);
     Decoder decoder = Capability.enrich(asyncBuilder.decoder, asyncBuilder.capabilities);
@@ -283,7 +281,7 @@ public abstract class AsyncFeign<C> extends Feign {
         asyncBuilder.dismiss404,
         asyncBuilder.closeAfterDecode);
 
-    asyncBuilder.builder.client(this::stageExecution);
+    asyncBuilder.builder.client(this::stageExecution); // TODO: figure out how to prevent enrichment of this wrapper
     asyncBuilder.builder.decoder(this::stageDecode);
     asyncBuilder.builder.forceDecoding(); // force all handling through stageDecode
 

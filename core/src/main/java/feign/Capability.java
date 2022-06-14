@@ -72,7 +72,7 @@ public interface Capability {
     return client;
   }
 
-  default <C> AsyncClient<C> enrich(AsyncClient<C> client) {
+  default AsyncClient<Object> enrich(AsyncClient<Object> client) {
     return client;
   }
 

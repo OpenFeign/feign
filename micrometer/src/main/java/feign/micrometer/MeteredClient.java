@@ -20,14 +20,17 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
  * Warp feign {@link Client} with metrics.
  */
-public class MeteredClient implements Client {
+public class MeteredClient implements Client, AsyncClient<Object> {
 
-  private final Client client;
+  private Client delegate;
+  private AsyncClient<Object> asyncDelegate;
   private final MeterRegistry meterRegistry;
   private final MetricName metricName;
   private final MetricTagResolver metricTagResolver;
@@ -40,7 +43,21 @@ public class MeteredClient implements Client {
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
-    this.client = client;
+    this.delegate = client;
+    this.meterRegistry = meterRegistry;
+    this.metricName = metricName;
+    this.metricTagResolver = metricTagResolver;
+  }
+
+  public MeteredClient(AsyncClient<Object> asyncClient, MeterRegistry meterRegistry) {
+    this(asyncClient, meterRegistry, new FeignMetricName(AsyncClient.class), new FeignMetricTagResolver());
+  }
+
+  public MeteredClient(AsyncClient<Object> asyncClient,
+      MeterRegistry meterRegistry,
+      MetricName metricName,
+      MetricTagResolver metricTagResolver) {
+    this.asyncDelegate = asyncClient;
     this.meterRegistry = meterRegistry;
     this.metricName = metricName;
     this.metricTagResolver = metricTagResolver;
@@ -51,7 +68,7 @@ public class MeteredClient implements Client {
     final Timer.Sample sample = Timer.start(meterRegistry);
     Timer timer = null;
     try {
-      final Response response = client.execute(request, options);
+      final Response response = delegate.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
       timer = createTimer(request, response, options, null);
       return response;
@@ -71,6 +88,31 @@ public class MeteredClient implements Client {
       }
       sample.stop(timer);
     }
+  }
+
+  @Override
+  public CompletableFuture<Response> execute(Request request,
+                                             Options options,
+                                             Optional<Object> requestContext) {
+    final Timer.Sample sample = Timer.start(meterRegistry);
+    return asyncDelegate.execute(request, options, requestContext)
+        .whenComplete((response, th) -> {
+          Timer timer;
+          if (th == null) {
+            countResponseCode(request, response, options, response.status(), null);
+            timer = createTimer(request, response, options, null);
+          } else if (th instanceof FeignException) {
+            FeignException e = (FeignException) th;
+            timer = createTimer(request, response, options, e);
+            countResponseCode(request, response, options, e.status(), e);
+          } else if (th instanceof Exception) {
+            Exception e = (Exception) th;
+            timer = createTimer(request, response, options, e);
+          } else {
+            timer = createTimer(request, response, options, null);
+          }
+          sample.stop(timer);
+        });
   }
 
   protected void countResponseCode(Request request,
