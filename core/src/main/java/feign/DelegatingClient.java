@@ -36,7 +36,7 @@ public abstract class DelegatingClient<C> implements Client, AsyncClient<C> {
   }
 
   private static <T> T cast(Object arg, Class<T> clazz) {
-    if (arg.getClass().isAssignableFrom(clazz)) {
+    if (clazz.isAssignableFrom(arg.getClass())) {
       return clazz.cast(arg);
     }
     throw new IllegalArgumentException(arg + " is not a type of " + clazz);
