@@ -13,26 +13,38 @@
  */
 package feign.metrics5;
 
-
 import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
 import feign.*;
 import feign.Request.Options;
+import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 
 /**
  * Warp feign {@link Client} with metrics.
  */
-public class MeteredClient implements Client {
+public class MeteredClient implements Client, AsyncClient<Object> {
 
-  private final Client client;
+  private Client delegate;
+  private AsyncClient<Object> asyncDelegate;
   private final MetricRegistry metricRegistry;
   private final FeignMetricName metricName;
   private final MetricSuppliers metricSuppliers;
 
   public MeteredClient(Client client, MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
-    this.client = client;
+    this.delegate = client;
+    this.metricRegistry = metricRegistry;
+    this.metricSuppliers = metricSuppliers;
+    this.metricName = new FeignMetricName(Client.class);
+  }
+
+  public MeteredClient(AsyncClient<Object> client, MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers) {
+    this.asyncDelegate = client;
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Client.class);
@@ -41,35 +53,85 @@ public class MeteredClient implements Client {
   @Override
   public Response execute(Request request, Options options) throws IOException {
     final RequestTemplate template = request.requestTemplate();
-    try (final Context classTimer =
-        metricRegistry.timer(
-            metricName.metricName(template.methodMetadata(),
-                template.feignTarget())
-                .tagged("uri", template.methodMetadata().template().path()),
-            metricSuppliers.timers()).time()) {
-      Response response = client.execute(request, options);
-      metricRegistry.counter(
-          metricName
-              .metricName(template.methodMetadata(), template.feignTarget(), "http_response_code")
-              .tagged("http_status", String.valueOf(response.status()))
-              .tagged("status_group", response.status() / 100 + "xx")
-              .tagged("uri", template.methodMetadata().template().path()))
-          .inc();
+    try (final Context timer = createTimer(template)) {
+      Response response = delegate.execute(request, options);
+      recordSuccess(template, response);
       return response;
     } catch (FeignException e) {
-      metricRegistry.counter(
-          metricName
-              .metricName(template.methodMetadata(), template.feignTarget(), "http_response_code")
-              .tagged("http_status", String.valueOf(e.status()))
-              .tagged("status_group", e.status() / 100 + "xx")
-              .tagged("uri", template.methodMetadata().template().path()))
-          .inc();
+      recordFailure(template, e);
       throw e;
     } catch (IOException | RuntimeException e) {
+      recordFailure(template, e);
       throw e;
     } catch (Exception e) {
+      recordFailure(template, e);
       throw new IOException(e);
     }
   }
 
+  @Override
+  public CompletableFuture<Response> execute(Request request,
+                                             Options options,
+                                             Optional<Object> requestContext) {
+    final RequestTemplate template = request.requestTemplate();
+    final Context timer = createTimer(template);
+    return asyncDelegate.execute(request, options, requestContext)
+        .whenComplete((response, th) -> {
+          if (th == null) {
+            recordSuccess(template, response);
+          } else if (th instanceof FeignException) {
+            FeignException e = (FeignException) th; 
+            recordFailure(template, e);
+          } else if (th instanceof Exception) {
+            Exception e = (Exception) th;
+            recordFailure(template, e);
+          }
+        })
+        .whenComplete((response, th) -> timer.close());
+  }
+
+  private Context createTimer(RequestTemplate template) {
+    return metricRegistry
+        .timer(
+            metricName
+                .metricName(template.methodMetadata(), template.feignTarget())
+                .tagged("uri", template.methodMetadata().template().path()),
+            metricSuppliers.timers())
+        .time();
+  }
+
+  private void recordSuccess(RequestTemplate template, Response response) {
+    metricRegistry
+        .counter(
+            httpResponseCode(template)
+                .tagged("http_status", String.valueOf(response.status()))
+                .tagged("status_group", response.status() / 100 + "xx")
+                .tagged("uri", template.methodMetadata().template().path()))
+        .inc();
+  }
+
+  private void recordFailure(RequestTemplate template, FeignException e) {
+    metricRegistry
+        .counter(
+            httpResponseCode(template)
+                .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("http_status", String.valueOf(e.status()))
+                .tagged("status_group", e.status() / 100 + "xx")
+                .tagged("uri", template.methodMetadata().template().path()))
+        .inc();
+  }
+
+  private void recordFailure(RequestTemplate template, Exception e) {
+    metricRegistry
+        .counter(
+            httpResponseCode(template)
+                .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("uri", template.methodMetadata().template().path()))
+        .inc();
+  }
+
+  private MetricName httpResponseCode(RequestTemplate template) {
+    return metricName
+        .metricName(template.methodMetadata(), template.feignTarget(), "http_response_code");
+  }
 }
