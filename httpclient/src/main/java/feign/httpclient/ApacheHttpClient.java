@@ -20,9 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.Configurable;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ByteArrayEntity;
@@ -233,6 +231,12 @@ public final class ApacheHttpClient implements Client {
       @Override
       public void close() throws IOException {
         EntityUtils.consume(entity);
+        try {
+          EntityUtils.consume(entity);
+        } finally {
+          if (httpResponse instanceof CloseableHttpResponse)
+            ((CloseableHttpResponse) httpResponse).close();
+        }
       }
     };
   }
