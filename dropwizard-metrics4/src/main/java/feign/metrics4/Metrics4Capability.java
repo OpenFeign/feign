@@ -47,7 +47,7 @@ public class Metrics4Capability implements Capability {
 
   @Override
   public AsyncClient<Object> enrich(AsyncClient<Object> client) {
-    return new MeteredClient(client, metricRegistry, metricSuppliers);
+    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers);
   }
 
   @Override
@@ -62,8 +62,7 @@ public class Metrics4Capability implements Capability {
 
   @Override
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
-    return new MeteredInvocationHandleFactory(invocationHandlerFactory, metricRegistry,
-        metricSuppliers);
+    return new MeteredInvocationHandleFactory(
+        invocationHandlerFactory, metricRegistry, metricSuppliers);
   }
-
 }

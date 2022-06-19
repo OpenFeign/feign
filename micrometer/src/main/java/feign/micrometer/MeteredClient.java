@@ -13,53 +13,31 @@
  */
 package feign.micrometer;
 
-import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import feign.*;
+import feign.Client;
+import feign.FeignException;
+import feign.Request;
 import feign.Request.Options;
+import feign.Response;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import java.io.IOException;
 
-/**
- * Warp feign {@link Client} with metrics.
- */
-public class MeteredClient extends DelegatingClient<Object> {
+/** Warp feign {@link Client} with metrics. */
+public class MeteredClient extends BaseMeteredClient implements Client {
 
-  private final MeterRegistry meterRegistry;
-  private final MetricName metricName;
-  private final MetricTagResolver metricTagResolver;
+  private final Client client;
 
   public MeteredClient(Client client, MeterRegistry meterRegistry) {
     this(client, meterRegistry, new FeignMetricName(Client.class), new FeignMetricTagResolver());
   }
 
-  public MeteredClient(Client client,
+  public MeteredClient(
+      Client client,
       MeterRegistry meterRegistry,
       MetricName metricName,
       MetricTagResolver metricTagResolver) {
-    super(client);
-    this.meterRegistry = meterRegistry;
-    this.metricName = metricName;
-    this.metricTagResolver = metricTagResolver;
-  }
-
-  public MeteredClient(AsyncClient<Object> asyncClient, MeterRegistry meterRegistry) {
-    this(asyncClient, meterRegistry, new FeignMetricName(Client.class),
-        new FeignMetricTagResolver());
-  }
-
-  public MeteredClient(AsyncClient<Object> asyncClient,
-      MeterRegistry meterRegistry,
-      MetricName metricName,
-      MetricTagResolver metricTagResolver) {
-    super(asyncClient);
-    this.meterRegistry = meterRegistry;
-    this.metricName = metricName;
-    this.metricTagResolver = metricTagResolver;
+    super(meterRegistry, metricName, metricTagResolver);
+    this.client = client;
   }
 
   @Override
@@ -67,7 +45,7 @@ public class MeteredClient extends DelegatingClient<Object> {
     final Timer.Sample sample = Timer.start(meterRegistry);
     Timer timer = null;
     try {
-      final Response response = super.execute(request, options);
+      final Response response = client.execute(request, options);
       countResponseCode(request, response, options, response.status(), null);
       timer = createTimer(request, response, options, null);
       return response;
@@ -87,67 +65,5 @@ public class MeteredClient extends DelegatingClient<Object> {
       }
       sample.stop(timer);
     }
-  }
-
-  @Override
-  public CompletableFuture<Response> execute(Request request,
-                                             Options options,
-                                             Optional<Object> requestContext) {
-    final Timer.Sample sample = Timer.start(meterRegistry);
-    return super.execute(request, options, requestContext)
-        .whenComplete((response, th) -> {
-          Timer timer;
-          if (th == null) {
-            countResponseCode(request, response, options, response.status(), null);
-            timer = createTimer(request, response, options, null);
-          } else if (th instanceof FeignException) {
-            FeignException e = (FeignException) th;
-            timer = createTimer(request, response, options, e);
-            countResponseCode(request, response, options, e.status(), e);
-          } else if (th instanceof Exception) {
-            Exception e = (Exception) th;
-            timer = createTimer(request, response, options, e);
-          } else {
-            timer = createTimer(request, response, options, null);
-          }
-          sample.stop(timer);
-        });
-  }
-
-  protected void countResponseCode(Request request,
-                                   Response response,
-                                   Options options,
-                                   int responseStatus,
-                                   Exception e) {
-    final Tag[] extraTags = extraTags(request, response, options, e);
-    final RequestTemplate template = request.requestTemplate();
-    final Tags allTags = metricTagResolver
-        .tag(template.methodMetadata(), template.feignTarget(), e,
-            Tag.of("http_status", String.valueOf(responseStatus)),
-            Tag.of("status_group", responseStatus / 100 + "xx"),
-            Tag.of("uri", template.methodMetadata().template().path()))
-        .and(extraTags);
-    meterRegistry
-        .counter(metricName.name("http_response_code"), allTags)
-        .increment();
-  }
-
-  protected Timer createTimer(Request request,
-                              Response response,
-                              Options options,
-                              Exception e) {
-    final RequestTemplate template = request.requestTemplate();
-    final Tags allTags = metricTagResolver
-        .tag(template.methodMetadata(), template.feignTarget(), e,
-            Tag.of("uri", template.methodMetadata().template().path()))
-        .and(extraTags(request, response, options, e));
-    return meterRegistry.timer(metricName.name(e), allTags);
-  }
-
-  protected Tag[] extraTags(Request request,
-                            Response response,
-                            Options options,
-                            Exception e) {
-    return EMPTY_TAGS_ARRAY;
   }
 }

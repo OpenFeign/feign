@@ -45,7 +45,7 @@ public class MicrometerCapability implements Capability {
 
   @Override
   public AsyncClient<Object> enrich(AsyncClient<Object> client) {
-    return new MeteredClient(client, meterRegistry);
+    return new MeteredAsyncClient(client, meterRegistry);
   }
 
   @Override
@@ -62,5 +62,4 @@ public class MicrometerCapability implements Capability {
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return new MeteredInvocationHandleFactory(invocationHandlerFactory, meterRegistry);
   }
-
 }
