@@ -23,7 +23,6 @@ import java.lang.reflect.WildcardType;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 @Experimental
 public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
@@ -99,7 +98,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
   private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
 
-  public ReflectiveAsyncFeign(Feign feign, Supplier<C> defaultContextSupplier,
+  public ReflectiveAsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier,
       ThreadLocal<AsyncInvocation<C>> contextHolder) {
     super(feign, defaultContextSupplier);
     this.activeContextHolder = contextHolder;

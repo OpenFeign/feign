@@ -55,18 +55,19 @@ public class CapabilityTest {
 
   @Test
   public void enrichClient() {
-    Client enriched = Capability.enrich(new Client.Default(null, null), Client.class, Arrays.asList(
-        new Capability() {
-          @Override
-          public Client enrich(Client client) {
-            return new AClient(client);
-          }
-        }, new Capability() {
-          @Override
-          public Client enrich(Client client) {
-            return new BClient(client);
-          }
-        }));
+    Client enriched =
+        (Client) Capability.enrich(new Client.Default(null, null), Client.class, Arrays.asList(
+            new Capability() {
+              @Override
+              public Client enrich(Client client) {
+                return new AClient(client);
+              }
+            }, new Capability() {
+              @Override
+              public Client enrich(Client client) {
+                return new BClient(client);
+              }
+            }));
 
     assertThat(enriched, CoreMatchers.instanceOf(BClient.class));
   }

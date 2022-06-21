@@ -14,12 +14,9 @@
 package feign;
 
 import feign.Logger.Level;
-import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
-import feign.codec.Encoder;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -27,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Enhances {@link Feign} to provide support for asynchronous clients. Context (for example for
@@ -64,26 +60,27 @@ public abstract class AsyncFeign<C> extends Feign {
 
   public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>> {
 
-    private Supplier<C> defaultContextSupplier = () -> null;
+    private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
         new Client.Default(null, null), LazyInitializedExecutorService.instance);
 
-    private boolean closeAfterDecode = true;
-
+    @Deprecated
     public AsyncBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
+      this.defaultContextSupplier = supplier::get;
+      return this;
+    }
+
+    public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
       this.defaultContextSupplier = supplier;
       return this;
     }
+
 
     public AsyncBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
       return this;
     }
 
-    public AsyncBuilder<C> doNotCloseAfterDecode() {
-      this.closeAfterDecode = false;
-      return this;
-    }
 
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<>(apiType, url));
@@ -102,17 +99,11 @@ public abstract class AsyncFeign<C> extends Feign {
     }
 
     public AsyncFeign<C> build() {
+      super.enrich();
       ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
-      Supplier<C> defaultContextSupplier =
-          Capability.enrich(this.defaultContextSupplier, Supplier.class, capabilities);
-      AsyncClient<C> client = Capability.enrich(this.client, AsyncClient.class, capabilities);
-
-      Logger logger = Capability.enrich(this.logger, Logger.class, capabilities);
-
-      Decoder decoder = Capability.enrich(this.decoder, Decoder.class, capabilities);
 
       AsyncResponseHandler responseHandler =
-          Capability.enrich(
+          (AsyncResponseHandler) Capability.enrich(
               new AsyncResponseHandler(
                   logLevel,
                   logger,
@@ -122,19 +113,7 @@ public abstract class AsyncFeign<C> extends Feign {
                   closeAfterDecode),
               AsyncResponseHandler.class,
               capabilities);
-      List<RequestInterceptor> requestInterceptors =
-          this.requestInterceptors.stream()
-              .map(ri -> Capability.enrich(ri, RequestInterceptor.class, capabilities))
-              .collect(Collectors.toList());
 
-      Contract contract = Capability.enrich(this.contract, Contract.class, capabilities);
-      Encoder encoder = Capability.enrich(this.encoder, Encoder.class, capabilities);
-      QueryMapEncoder queryMapEncoder =
-          Capability.enrich(this.queryMapEncoder, QueryMapEncoder.class, capabilities);
-      Options options = Capability.enrich(this.options, Options.class, capabilities);
-      InvocationHandlerFactory invocationHandlerFactory =
-          Capability.enrich(this.invocationHandlerFactory, InvocationHandlerFactory.class,
-              capabilities);
 
       return new ReflectiveAsyncFeign<>(Feign.builder()
           .logLevel(logLevel)
@@ -229,9 +208,9 @@ public abstract class AsyncFeign<C> extends Feign {
   }
 
   private final Feign feign;
-  private Supplier<C> defaultContextSupplier;
+  private AsyncContextSupplier<C> defaultContextSupplier;
 
-  protected AsyncFeign(Feign feign, Supplier<C> defaultContextSupplier) {
+  protected AsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier) {
     this.feign = feign;
     this.defaultContextSupplier = defaultContextSupplier;
   }
@@ -240,7 +219,7 @@ public abstract class AsyncFeign<C> extends Feign {
 
   @Override
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, defaultContextSupplier.get());
+    return newInstance(target, defaultContextSupplier.newContext());
   }
 
   public <T> T newInstance(Target<T> target, C context) {

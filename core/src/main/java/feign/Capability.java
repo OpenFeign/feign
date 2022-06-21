@@ -17,6 +17,7 @@ import feign.Logger.Level;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
@@ -32,9 +33,9 @@ import java.util.List;
  */
 public interface Capability {
 
-  static <E> E enrich(E componentToEnrich,
-                      Class<E> capabilityToEnrich,
-                      List<Capability> capabilities) {
+  static Object enrich(Object componentToEnrich,
+                       Class<?> capabilityToEnrich,
+                       List<Capability> capabilities) {
     return capabilities.stream()
         // invoke each individual capability and feed the result to the next one.
         // This is equivalent to:
@@ -53,14 +54,14 @@ public interface Capability {
             (component, enrichedComponent) -> enrichedComponent);
   }
 
-  static <E> E invoke(E target, Capability capability, Class<E> capabilityToEnrich) {
+  static Object invoke(Object target, Capability capability, Class<?> capabilityToEnrich) {
     return Arrays.stream(capability.getClass().getMethods())
         .filter(method -> method.getName().equals("enrich"))
         .filter(method -> method.getReturnType().isAssignableFrom(capabilityToEnrich))
         .findFirst()
         .map(method -> {
           try {
-            return (E) method.invoke(capability, target);
+            return method.invoke(capability, target);
           } catch (IllegalAccessException | IllegalArgumentException
               | InvocationTargetException e) {
             throw new RuntimeException("Unable to enrich " + target, e);
@@ -109,6 +110,10 @@ public interface Capability {
     return decoder;
   }
 
+  default ErrorDecoder enrich(ErrorDecoder decoder) {
+    return decoder;
+  }
+
   default InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return invocationHandlerFactory;
   }
@@ -117,4 +122,11 @@ public interface Capability {
     return queryMapEncoder;
   }
 
+  default AsyncResponseHandler enrich(AsyncResponseHandler asyncResponseHandler) {
+    return asyncResponseHandler;
+  }
+
+  default <C> AsyncContextSupplier<C> enrich(AsyncContextSupplier<C> asyncContextSupplier) {
+    return asyncContextSupplier;
+  }
 }

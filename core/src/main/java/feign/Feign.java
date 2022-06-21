@@ -14,15 +14,11 @@
 package feign;
 
 import feign.ReflectiveFeign.ParseHandlersByName;
-import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
-import feign.codec.Encoder;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -96,30 +92,10 @@ public abstract class Feign {
   public static class Builder extends BaseBuilder<Builder> {
 
     private Client client = new Client.Default(null, null);
-    private boolean closeAfterDecode = true;
     private boolean forceDecoding = false;
-    private boolean skipEnrichment = false;
 
     public Builder client(Client client) {
       this.client = client;
-      return this;
-    }
-
-    /**
-     * This flag indicates that the response should not be automatically closed upon completion of
-     * decoding the message. This should be set if you plan on processing the response into a
-     * lazy-evaluated construct, such as a {@link java.util.Iterator}.
-     *
-     * </p>
-     * Feign standard decoders do not have built in support for this flag. If you are using this
-     * flag, you MUST also use a custom Decoder, and be sure to close all resources appropriately
-     * somewhere in the Decoder (you can use {@link Util#ensureClosed} for convenience).
-     *
-     * @since 9.6
-     *
-     */
-    public Builder doNotCloseAfterDecode() {
-      this.closeAfterDecode = false;
       return this;
     }
 
@@ -140,22 +116,7 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      Client client = Capability.enrich(this.client, Client.class, capabilities);
-      Retryer retryer = Capability.enrich(this.retryer, Retryer.class, capabilities);
-      List<RequestInterceptor> requestInterceptors =
-          this.requestInterceptors.stream()
-              .map(ri -> Capability.enrich(ri, RequestInterceptor.class, capabilities))
-              .collect(Collectors.toList());
-      Logger logger = Capability.enrich(this.logger, Logger.class, capabilities);
-      Contract contract = Capability.enrich(this.contract, Contract.class, capabilities);
-      Options options = Capability.enrich(this.options, Options.class, capabilities);
-      Encoder encoder = Capability.enrich(this.encoder, Encoder.class, capabilities);
-      Decoder decoder = Capability.enrich(this.decoder, Decoder.class, capabilities);
-      InvocationHandlerFactory invocationHandlerFactory =
-          Capability.enrich(this.invocationHandlerFactory, InvocationHandlerFactory.class,
-              capabilities);
-      QueryMapEncoder queryMapEncoder =
-          Capability.enrich(this.queryMapEncoder, QueryMapEncoder.class, capabilities);
+      super.enrich();
 
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
