@@ -13,17 +13,21 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Enhances {@link Feign} to provide support for asynchronous clients. Context (for example for
@@ -106,6 +110,7 @@ public abstract class AsyncFeign<C> extends Feign {
      * @see Builder#decode404()
      * @deprecated
      */
+    @Deprecated
     public AsyncBuilder<C> decode404() {
       this.dismiss404 = true;
       return this;
@@ -219,6 +224,11 @@ public abstract class AsyncFeign<C> extends Feign {
      */
     public AsyncBuilder<C> requestInterceptor(RequestInterceptor requestInterceptor) {
       builder.requestInterceptor(requestInterceptor);
+      return this;
+    }
+
+    public AsyncBuilder<C> responseInterceptor(ResponseInterceptor responseInterceptor) {
+      builder.responseInterceptor(responseInterceptor);
       return this;
     }
 

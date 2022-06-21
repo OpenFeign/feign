@@ -23,14 +23,15 @@ import java.util.function.Function;
  */
 public interface ResponseInterceptor {
 
+  ResponseInterceptor DEFAULT = InvocationContext::proceed;
+
   /**
-   * Called for response around decode, user can use supplied {@link Function} decoder function to
-   * decode response data.
+   * Called for response around decode, must either manually invoke
+   * {@link InvocationContext#proceed} or manually create a new response object
    *
-   * @param response
-   * @param decoder
-   * @return
+   * @param invocationContext information surrounding the response been decoded
+   * @return decoded response
    */
-  void aroundDecode(Response response, Function<Response, Object> decoder);
+  Object aroundDecode(InvocationContext invocationContext);
 
 }

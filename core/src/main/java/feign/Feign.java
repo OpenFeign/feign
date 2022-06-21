@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.NONE;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -27,7 +28,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -51,7 +51,11 @@ public abstract class Feign {
    *
    * <pre>
    * <ul>
-   *   <li>{@code Route53}: would match a class {@code route53.Route53}</li>
+   *   <li>{@code
+   * Route53
+   * }: would match a class {@code
+   * route53.Route53
+   * }</li>
    *   <li>{@code Route53#list()}: would match a method {@code route53.Route53#list()}</li>
    *   <li>{@code Route53#listAt(Marker)}: would match a method {@code
    * route53.Route53#listAt(Marker)}</li>
@@ -97,8 +101,8 @@ public abstract class Feign {
   public static class Builder {
 
     private final List<RequestInterceptor> requestInterceptors =
-        new ArrayList<RequestInterceptor>();
-    private ResponseInterceptor responseInterceptor = null;
+        new ArrayList<>();
+    private ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
     private Logger.Level logLevel = Logger.Level.NONE;
     private Contract contract = new Contract.Default();
     private Client client = new Client.Default(null, null);
@@ -183,6 +187,7 @@ public abstract class Feign {
      * @since 8.12
      * @deprecated
      */
+    @Deprecated
     public Builder decode404() {
       this.dismiss404 = true;
       return this;
@@ -293,7 +298,7 @@ public abstract class Feign {
     }
 
     public <T> T target(Class<T> apiType, String url) {
-      return target(new HardCodedTarget<T>(apiType, url));
+      return target(new HardCodedTarget<>(apiType, url));
     }
 
     public <T> T target(Target<T> target) {

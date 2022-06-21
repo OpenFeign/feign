@@ -16,17 +16,16 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Request.Options;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Request.Options;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
@@ -134,18 +133,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     if (decoder != null) {
-      if (responseInterceptor != null) {
-        responseInterceptor.aroundDecode(response, (res) -> {
-          try {
-            return decoder.decode(res, metadata.returnType());
-          } catch (IOException e) {
-            throw new DecodeException(res.status(), "decode error cause of io exception",
-                res.request(), e);
-          }
-        });
-      } else {
-        return decoder.decode(response, metadata.returnType());
-      }
+      return responseInterceptor.aroundDecode(new InvocationContext(decoder, metadata, response));
     }
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
