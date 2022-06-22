@@ -13,6 +13,8 @@
  */
 package feign.metrics5;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
 
 import feign.Capability;
@@ -25,6 +27,7 @@ import io.dropwizard.metrics5.MetricRegistry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.hamcrest.Matcher;
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
@@ -34,6 +37,7 @@ public class Metrics5CapabilityTest
     return new MetricRegistry();
   }
 
+  @Override
   protected Capability createMetricCapability() {
     return new Metrics5Capability(metricsRegistry);
   }
@@ -45,8 +49,10 @@ public class Metrics5CapabilityTest
 
   @Override
   protected boolean doesMetricIdIncludeClient(MetricName metricId) {
-    return hasEntry("client", "feign.micrometer.AbstractMetricsTestBase$SimpleSource")
-        .matches(metricId.getTags());
+    String tag = metricId.getTags().get("client");
+    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
+    Matcher<String> containsSource = containsString("Source");
+    return allOf(containsBase, containsSource).matches(tag);
   }
 
   @Override
@@ -91,6 +97,11 @@ public class Metrics5CapabilityTest
   @Override
   protected boolean isClientMetric(MetricName metricId) {
     return metricId.getKey().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isAsyncClientMetric(MetricName metricId) {
+    return metricId.getKey().startsWith("feign.AsyncClient");
   }
 
   @Override

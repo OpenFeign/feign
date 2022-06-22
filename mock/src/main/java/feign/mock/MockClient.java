@@ -15,25 +15,17 @@ package feign.mock;
 
 import static feign.Util.UTF_8;
 
-import feign.Client;
-import feign.Request;
+import feign.*;
 import feign.Request.ProtocolVersion;
-import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
-public class MockClient implements Client {
+public class MockClient implements Client, AsyncClient<Object> {
 
-  class RequestResponse {
+  static class RequestResponse {
 
     private final RequestKey requestKey;
 
@@ -45,9 +37,9 @@ public class MockClient implements Client {
     }
   }
 
-  private final List<RequestResponse> responses = new ArrayList<RequestResponse>();
+  private final List<RequestResponse> responses = new ArrayList<>();
 
-  private final Map<RequestKey, List<Request>> requests = new HashMap<RequestKey, List<Request>>();
+  private final Map<RequestKey, List<Request>> requests = new HashMap<>();
 
   private boolean sequential;
 
@@ -74,6 +66,21 @@ public class MockClient implements Client {
     return responseBuilder.request(request).build();
   }
 
+  @Override
+  public CompletableFuture<Response> execute(
+      Request request, Request.Options options, Optional<Object> requestContext) {
+    RequestKey requestKey = RequestKey.create(request);
+    Response.Builder responseBuilder;
+    if (sequential) {
+      responseBuilder = executeSequential(requestKey);
+    } else {
+      responseBuilder = executeAny(request, requestKey);
+    }
+    responseBuilder.protocolVersion(ProtocolVersion.MOCK);
+
+    return CompletableFuture.completedFuture(responseBuilder.request(request).build());
+  }
+
   private Response.Builder executeSequential(RequestKey requestKey) {
     Response.Builder responseBuilder;
     if (responseIterator == null) {
@@ -98,7 +105,7 @@ public class MockClient implements Client {
     if (requests.containsKey(requestKey)) {
       requests.get(requestKey).add(request);
     } else {
-      requests.put(requestKey, new ArrayList<Request>(Arrays.asList(request)));
+      requests.put(requestKey, new ArrayList<>(Arrays.asList(request)));
     }
 
     responseBuilder = getResponseBuilder(request, requestKey);

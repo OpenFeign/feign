@@ -13,7 +13,13 @@
  */
 package feign;
 
-import java.lang.reflect.*;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +60,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       final MethodInfo methodInfo =
           methodInfoLookup.computeIfAbsent(method, m -> new MethodInfo(type, m));
 
-      setInvocationContext(new AsyncInvocation<C>(context, methodInfo));
+      setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
         return method.invoke(instance, args);
       } catch (final InvocationTargetException e) {
@@ -89,8 +95,22 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
     }
   }
 
-  public ReflectiveAsyncFeign(AsyncBuilder<C> asyncBuilder) {
-    super(asyncBuilder);
+  private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
+
+  public ReflectiveAsyncFeign(
+      Feign feign,
+      AsyncContextSupplier<C> defaultContextSupplier,
+      ThreadLocal<AsyncInvocation<C>> contextHolder) {
+    super(feign, defaultContextSupplier);
+    this.activeContextHolder = contextHolder;
+  }
+
+  protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
+    activeContextHolder.set(invocationContext);
+  }
+
+  protected void clearInvocationContext() {
+    activeContextHolder.remove();
   }
 
   private String getFullMethodName(Class<?> type, Type retType, Method m) {

@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public final class FeignMetricName {
+final class FeignMetricName {
 
   private final Class<?> meteredComponent;
 

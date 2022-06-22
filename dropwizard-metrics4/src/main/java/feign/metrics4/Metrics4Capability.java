@@ -15,6 +15,7 @@ package feign.metrics4;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
+import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -42,6 +43,11 @@ public class Metrics4Capability implements Capability {
   @Override
   public Client enrich(Client client) {
     return new MeteredClient(client, metricRegistry, metricSuppliers);
+  }
+
+  @Override
+  public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers);
   }
 
   @Override

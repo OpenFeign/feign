@@ -14,14 +14,25 @@
 package feign.micrometer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
-import feign.*;
+import feign.AsyncFeign;
+import feign.Capability;
+import feign.Feign;
+import feign.FeignException;
+import feign.Param;
+import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -33,6 +44,12 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     @RequestLine("GET /get")
     String get(String body);
+  }
+
+  public interface CompletableSource {
+
+    @RequestLine("GET /get")
+    CompletableFuture<String> get(String body);
   }
 
   protected MR metricsRegistry;
@@ -54,6 +71,23 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     source.get("0x3456789");
 
+    assertMetricsCapability(false);
+  }
+
+  @Test
+  public final void addAsyncMetricsCapability() {
+    final CompletableSource source =
+        AsyncFeign.asyncBuilder()
+            .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
+            .addCapability(createMetricCapability())
+            .target(new MockTarget<>(CompletableSource.class));
+
+    source.get("0x3456789").join();
+
+    assertMetricsCapability(true);
+  }
+
+  private void assertMetricsCapability(boolean asyncClient) {
     Map<METRIC_ID, METRIC> metrics = getFeignMetrics();
     assertThat(metrics, aMapWithSize(7));
     metrics
@@ -78,11 +112,20 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                     "Expect all metric names to include host name:" + metricId,
                     doesMetricIncludeHost(metricId)));
 
-    final Map<METRIC_ID, METRIC> clientMetrics =
-        getFeignMetrics().entrySet().stream()
-            .filter(entry -> isClientMetric(entry.getKey()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    final Map<METRIC_ID, METRIC> clientMetrics;
+    if (asyncClient) {
+      clientMetrics =
+          getFeignMetrics().entrySet().stream()
+              .filter(entry -> isAsyncClientMetric(entry.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    } else {
+      clientMetrics =
+          getFeignMetrics().entrySet().stream()
+              .filter(entry -> isClientMetric(entry.getKey()))
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+    assertThat(clientMetrics, aMapWithSize(2));
     clientMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
@@ -92,6 +135,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
             .filter(entry -> isDecoderMetric(entry.getKey()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+    assertThat(decoderMetrics, aMapWithSize(2));
     decoderMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
@@ -264,6 +308,8 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   protected abstract boolean isClientMetric(METRIC_ID metricId);
+
+  protected abstract boolean isAsyncClientMetric(METRIC_ID metricId);
 
   protected abstract boolean isDecoderMetric(METRIC_ID metricId);
 
