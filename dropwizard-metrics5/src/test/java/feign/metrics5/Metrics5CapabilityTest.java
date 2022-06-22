@@ -13,10 +13,9 @@
  */
 package feign.metrics5;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
 import feign.Capability;
 import feign.Util;
 import feign.micrometer.AbstractMetricsTestBase;
@@ -24,16 +23,20 @@ import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
+import org.hamcrest.Matcher;
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
-
 
   @Override
   protected MetricRegistry createMetricsRegistry() {
     return new MetricRegistry();
   }
 
+  @Override
   protected Capability createMetricCapability() {
     return new Metrics5Capability(metricsRegistry);
   }
@@ -45,8 +48,10 @@ public class Metrics5CapabilityTest
 
   @Override
   protected boolean doesMetricIdIncludeClient(MetricName metricId) {
-    return hasEntry("client", "feign.micrometer.AbstractMetricsTestBase$SimpleSource")
-        .matches(metricId.getTags());
+    String tag = metricId.getTags().get("client");
+    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
+    Matcher<String> containsSource = containsString("Source");
+    return allOf(containsBase, containsSource).matches(tag);
   }
 
   @Override
@@ -62,28 +67,27 @@ public class Metrics5CapabilityTest
 
   @Override
   protected Metric getMetric(String suffix, String... tags) {
-    Util.checkArgument(tags.length % 2 == 0, "tags must contain key-value pairs %s",
-        Arrays.toString(tags));
+    Util.checkArgument(
+        tags.length % 2 == 0, "tags must contain key-value pairs %s", Arrays.toString(tags));
 
-
-    return getFeignMetrics().entrySet()
-        .stream()
-        .filter(entry -> {
-          MetricName name = entry.getKey();
-          if (!name.getKey().endsWith(suffix)) {
-            return false;
-          }
-
-          for (int i = 0; i < tags.length; i += 2) {
-            if (name.getTags().containsKey(tags[i])) {
-              if (!name.getTags().get(tags[i]).equals(tags[i + 1])) {
+    return getFeignMetrics().entrySet().stream()
+        .filter(
+            entry -> {
+              MetricName name = entry.getKey();
+              if (!name.getKey().endsWith(suffix)) {
                 return false;
               }
-            }
-          }
 
-          return true;
-        })
+              for (int i = 0; i < tags.length; i += 2) {
+                if (name.getTags().containsKey(tags[i])) {
+                  if (!name.getTags().get(tags[i]).equals(tags[i + 1])) {
+                    return false;
+                  }
+                }
+              }
+
+              return true;
+            })
         .findAny()
         .map(Entry::getValue)
         .orElse(null);
@@ -92,6 +96,11 @@ public class Metrics5CapabilityTest
   @Override
   protected boolean isClientMetric(MetricName metricId) {
     return metricId.getKey().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isAsyncClientMetric(MetricName metricId) {
+    return metricId.getKey().startsWith("feign.AsyncClient");
   }
 
   @Override
@@ -113,5 +122,4 @@ public class Metrics5CapabilityTest
   protected long getMetricCounter(Metric metric) {
     return ((Metered) metric).getCount();
   }
-
 }

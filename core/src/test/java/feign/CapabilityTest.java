@@ -13,19 +13,24 @@
  */
 package feign;
 
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
-import feign.Request.Options;
+import org.hamcrest.CoreMatchers;
+import org.junit.Test;
 
 public class CapabilityTest {
 
   private class AClient implements Client {
 
-    public AClient(Client client) {}
+    public AClient(Client client) {
+      if (!(client instanceof Client.Default)) {
+        throw new RuntimeException(
+            "Test is chaining invokations, expected Default Client instace here");
+      }
+    }
+
 
     @Override
     public Response execute(Request request, Options options) throws IOException {
@@ -37,7 +42,7 @@ public class CapabilityTest {
 
     public BClient(Client client) {
       if (!(client instanceof AClient)) {
-        throw new RuntimeException("Test is chaing invokations, expected AClient instace here");
+        throw new RuntimeException("Test is chaining invokations, expected AClient instace here");
       }
     }
 
@@ -50,18 +55,19 @@ public class CapabilityTest {
 
   @Test
   public void enrichClient() {
-    Client enriched = Capability.enrich(new Client.Default(null, null), Arrays.asList(
-        new Capability() {
-          @Override
-          public Client enrich(Client client) {
-            return new AClient(client);
-          }
-        }, new Capability() {
-          @Override
-          public Client enrich(Client client) {
-            return new BClient(client);
-          }
-        }));
+    Client enriched =
+        (Client) Capability.enrich(new Client.Default(null, null), Client.class, Arrays.asList(
+            new Capability() {
+              @Override
+              public Client enrich(Client client) {
+                return new AClient(client);
+              }
+            }, new Capability() {
+              @Override
+              public Client enrich(Client client) {
+                return new BClient(client);
+              }
+            }));
 
     assertThat(enriched, CoreMatchers.instanceOf(BClient.class));
   }

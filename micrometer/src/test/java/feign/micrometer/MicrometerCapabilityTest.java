@@ -13,6 +13,8 @@
  */
 package feign.micrometer;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import feign.Capability;
 import feign.Util;
 import io.micrometer.core.instrument.Measurement;
@@ -28,16 +30,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.hamcrest.Matcher;
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
-
 
   @Override
   protected SimpleMeterRegistry createMetricsRegistry() {
     return new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
   }
 
+  @Override
   protected Capability createMetricCapability() {
     return new MicrometerCapability(metricsRegistry);
   }
@@ -47,16 +50,15 @@ public class MicrometerCapabilityTest
     List<Meter> metrics = new ArrayList<>();
     metricsRegistry.forEachMeter(metrics::add);
     metrics.removeIf(meter -> !meter.getId().getName().startsWith("feign."));
-    return metrics.stream()
-        .collect(Collectors.toMap(
-            Meter::getId,
-            Function.identity()));
+    return metrics.stream().collect(Collectors.toMap(Meter::getId, Function.identity()));
   }
 
   @Override
   protected boolean doesMetricIdIncludeClient(Id metricId) {
-    return metricId.getTag("client")
-        .contains("feign.micrometer.AbstractMetricsTestBase$SimpleSource");
+    String tag = metricId.getTag("client");
+    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
+    Matcher<String> containsSource = containsString("Source");
+    return allOf(containsBase, containsSource).matches(tag);
   }
 
   @Override
@@ -69,31 +71,29 @@ public class MicrometerCapabilityTest
     return metricId.getTag("host").equals("");
   }
 
-
   @Override
   protected Meter getMetric(String suffix, String... tags) {
-    Util.checkArgument(tags.length % 2 == 0, "tags must contain key-value pairs %s",
-        Arrays.toString(tags));
+    Util.checkArgument(
+        tags.length % 2 == 0, "tags must contain key-value pairs %s", Arrays.toString(tags));
 
-
-    return getFeignMetrics().entrySet()
-        .stream()
-        .filter(entry -> {
-          Id name = entry.getKey();
-          if (!name.getName().endsWith(suffix)) {
-            return false;
-          }
-
-          for (int i = 0; i < tags.length; i += 2) {
-            if (name.getTag(tags[i]) != null) {
-              if (!name.getTag(tags[i]).equals(tags[i + 1])) {
+    return getFeignMetrics().entrySet().stream()
+        .filter(
+            entry -> {
+              Id name = entry.getKey();
+              if (!name.getName().endsWith(suffix)) {
                 return false;
               }
-            }
-          }
 
-          return true;
-        })
+              for (int i = 0; i < tags.length; i += 2) {
+                if (name.getTag(tags[i]) != null) {
+                  if (!name.getTag(tags[i]).equals(tags[i + 1])) {
+                    return false;
+                  }
+                }
+              }
+
+              return true;
+            })
         .findAny()
         .map(Entry::getValue)
         .orElse(null);
@@ -102,6 +102,11 @@ public class MicrometerCapabilityTest
   @Override
   protected boolean isClientMetric(Id metricId) {
     return metricId.getName().startsWith("feign.Client");
+  }
+
+  @Override
+  protected boolean isAsyncClientMetric(Id metricId) {
+    return metricId.getName().startsWith("feign.AsyncClient");
   }
 
   @Override
@@ -133,5 +138,4 @@ public class MicrometerCapabilityTest
     }
     return 0;
   }
-
 }
