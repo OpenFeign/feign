@@ -13,6 +13,7 @@
  */
 package feign.micrometer;
 
+import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -43,6 +44,11 @@ public class MicrometerCapability implements Capability {
   }
 
   @Override
+  public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+    return new MeteredAsyncClient(client, meterRegistry);
+  }
+
+  @Override
   public Encoder enrich(Encoder encoder) {
     return new MeteredEncoder(encoder, meterRegistry);
   }
@@ -56,5 +62,4 @@ public class MicrometerCapability implements Capability {
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return new MeteredInvocationHandleFactory(invocationHandlerFactory, meterRegistry);
   }
-
 }

@@ -13,6 +13,7 @@
  */
 package feign.metrics5;
 
+import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -45,6 +46,11 @@ public class Metrics5Capability implements Capability {
   }
 
   @Override
+  public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers);
+  }
+
+  @Override
   public Encoder enrich(Encoder encoder) {
     return new MeteredEncoder(encoder, metricRegistry, metricSuppliers);
   }
@@ -56,8 +62,7 @@ public class Metrics5Capability implements Capability {
 
   @Override
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
-    return new MeteredInvocationHandleFactory(invocationHandlerFactory, metricRegistry,
-        metricSuppliers);
+    return new MeteredInvocationHandleFactory(
+        invocationHandlerFactory, metricRegistry, metricSuppliers);
   }
-
 }

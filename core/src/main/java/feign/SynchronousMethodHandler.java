@@ -77,7 +77,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     } else {
       this.decoder = null;
       this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-          dismiss404, closeAfterDecode);
+          dismiss404, closeAfterDecode, responseInterceptor);
     }
   }
 
@@ -133,13 +133,13 @@ final class SynchronousMethodHandler implements MethodHandler {
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     if (decoder != null) {
-      return responseInterceptor.aroundDecode(new InvocationContext(decoder, metadata, response));
+      return responseInterceptor
+          .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
     }
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
     asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
-        metadata.returnType(),
-        elapsedTime);
+        metadata.returnType(), elapsedTime);
 
     try {
       if (!resultFuture.isDone())

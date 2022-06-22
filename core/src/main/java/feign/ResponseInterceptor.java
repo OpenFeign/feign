@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 /**
@@ -32,6 +33,6 @@ public interface ResponseInterceptor {
    * @param invocationContext information surrounding the response been decoded
    * @return decoded response
    */
-  Object aroundDecode(InvocationContext invocationContext);
+  Object aroundDecode(InvocationContext invocationContext) throws IOException;
 
 }

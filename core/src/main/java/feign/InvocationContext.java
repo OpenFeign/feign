@@ -13,40 +13,45 @@
  */
 package feign;
 
+import static feign.FeignException.errorReading;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 public class InvocationContext {
 
   private final Decoder decoder;
-  private final MethodMetadata metadata;
+  private final Type returnType;
   private final Response response;
 
-  public InvocationContext(Decoder decoder, MethodMetadata metadata, Response response) {
+  InvocationContext(Decoder decoder, Type returnType, Response response) {
     this.decoder = decoder;
-    this.metadata = metadata;
+    this.returnType = returnType;
     this.response = response;
   }
 
   public Object proceed() {
     try {
-      return decoder.decode(response, metadata.returnType());
+      return decoder.decode(response, returnType);
+    } catch (final FeignException e) {
+      throw e;
+    } catch (final RuntimeException e) {
+      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     } catch (IOException e) {
-      throw new DecodeException(response.status(), "decode error cause of io exception",
-          response.request(), e);
+      throw errorReading(response.request(), response, e);
     }
   }
 
-  public Decoder getDecoder() {
+  public Decoder decoder() {
     return decoder;
   }
 
-  public MethodMetadata getMetadata() {
-    return metadata;
+  public Type returnType() {
+    return returnType;
   }
 
-  public Response getResponse() {
+  public Response response() {
     return response;
   }
 

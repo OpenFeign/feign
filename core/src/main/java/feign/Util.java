@@ -13,6 +13,8 @@
  */
 package feign;
 
+import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -30,12 +33,23 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import static java.lang.String.format;
-import static java.util.Objects.nonNull;
 
 /**
  * Utilities, typically copied in from guava, so as to avoid dependency conflicts.
@@ -170,7 +184,7 @@ public class Util {
     if (iterable instanceof Collection) {
       collection = (Collection<T>) iterable;
     } else {
-      collection = new ArrayList<T>();
+      collection = new ArrayList<>();
       for (T element : iterable) {
         collection.add(element);
       }
@@ -251,7 +265,7 @@ public class Util {
 
   private static final Map<Class<?>, Supplier<Object>> EMPTIES;
   static {
-    final Map<Class<?>, Supplier<Object>> empties = new LinkedHashMap<Class<?>, Supplier<Object>>();
+    final Map<Class<?>, Supplier<Object>> empties = new LinkedHashMap<>();
     empties.put(boolean.class, () -> false);
     empties.put(Boolean.class, () -> false);
     empties.put(byte[].class, () -> new byte[0]);
@@ -390,6 +404,17 @@ public class Util {
       }
     }
     return null;
+  }
+
+  public static List<Field> allFields(Class<?> clazz) {
+    if (Objects.equals(clazz, Object.class)) {
+      return Collections.emptyList();
+    }
+
+    List<Field> fields = new ArrayList<>();
+    fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+    fields.addAll(allFields(clazz.getSuperclass()));
+    return fields;
   }
 
 }

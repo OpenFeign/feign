@@ -13,14 +13,10 @@
  */
 package feign;
 
-import feign.Logger.NoOpLogger;
-import feign.Request.Options;
+import feign.Logger.Level;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -43,7 +39,6 @@ import java.util.function.Supplier;
  * completion is done by the {@link AsyncClient}, it is important that any subsequent processing on
  * the thread be short - generally, this should involve notifying some other thread of the work to
  * be done (for example, creating and submitting a task to an {@link ExecutorService}).
- *
  */
 @Experimental
 public abstract class AsyncFeign<C> extends Feign {
@@ -54,88 +49,38 @@ public abstract class AsyncFeign<C> extends Feign {
 
   private static class LazyInitializedExecutorService {
 
-    private static final ExecutorService instance = Executors.newCachedThreadPool(r -> {
-      final Thread result = new Thread(r);
-      result.setDaemon(true);
-      return result;
-    });
+    private static final ExecutorService instance =
+        Executors.newCachedThreadPool(
+            r -> {
+              final Thread result = new Thread(r);
+              result.setDaemon(true);
+              return result;
+            });
   }
 
-  public static class AsyncBuilder<C> {
+  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>> {
 
-    private final Builder builder;
-    private Supplier<C> defaultContextSupplier = () -> null;
-    private AsyncClient<C> client;
+    private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
+    private AsyncClient<C> client = new AsyncClient.Default<>(
+        new Client.Default(null, null), LazyInitializedExecutorService.instance);
 
-    private Logger.Level logLevel = Logger.Level.NONE;
-    private Logger logger = new NoOpLogger();
-
-    private Decoder decoder = new Decoder.Default();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private boolean dismiss404;
-    private boolean closeAfterDecode = true;
-
-    public AsyncBuilder() {
-      super();
-      this.builder = Feign.builder();
+    @Deprecated
+    public AsyncBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
+      this.defaultContextSupplier = supplier::get;
+      return this;
     }
 
-    public AsyncBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
+    public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
       this.defaultContextSupplier = supplier;
       return this;
     }
+
 
     public AsyncBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
       return this;
     }
 
-    /**
-     * @see Builder#mapAndDecode(ResponseMapper, Decoder)
-     */
-    public AsyncBuilder<C> mapAndDecode(ResponseMapper mapper, Decoder decoder) {
-      this.decoder = (response, type) -> decoder.decode(mapper.map(response, type), type);
-      return this;
-    }
-
-    /**
-     * @see Builder#decoder(Decoder)
-     */
-    public AsyncBuilder<C> decoder(Decoder decoder) {
-      this.decoder = decoder;
-      return this;
-    }
-
-    /**
-     * @see Builder#decode404()
-     * @deprecated
-     */
-    @Deprecated
-    public AsyncBuilder<C> decode404() {
-      this.dismiss404 = true;
-      return this;
-    }
-
-    /**
-     * @see Builder#dismiss404()
-     */
-    public AsyncBuilder<C> dismiss404() {
-      this.dismiss404 = true;
-      return this;
-    }
-
-    /**
-     * @see Builder#errorDecoder(ErrorDecoder)
-     */
-    public AsyncBuilder<C> errorDecoder(ErrorDecoder errorDecoder) {
-      this.errorDecoder = errorDecoder;
-      return this;
-    }
-
-    public AsyncBuilder<C> doNotCloseAfterDecode() {
-      this.closeAfterDecode = false;
-      return this;
-    }
 
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<>(apiType, url));
@@ -153,212 +98,129 @@ public abstract class AsyncFeign<C> extends Feign {
       return build().newInstance(target, context);
     }
 
-    private AsyncBuilder<C> lazyInits() {
-      if (client == null) {
-        client = new AsyncClient.Default<>(new Client.Default(null, null),
-            LazyInitializedExecutorService.instance);
-      }
-
-      return this;
-    }
-
     public AsyncFeign<C> build() {
-      return new ReflectiveAsyncFeign<>(lazyInits());
+      super.enrich();
+      ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
+
+      AsyncResponseHandler responseHandler =
+          (AsyncResponseHandler) Capability.enrich(
+              new AsyncResponseHandler(
+                  logLevel,
+                  logger,
+                  decoder,
+                  errorDecoder,
+                  dismiss404,
+                  closeAfterDecode, responseInterceptor),
+              AsyncResponseHandler.class,
+              capabilities);
+
+
+      return new ReflectiveAsyncFeign<>(Feign.builder()
+          .logLevel(logLevel)
+          .client(stageExecution(activeContextHolder, client))
+          .decoder(stageDecode(activeContextHolder, logger, logLevel, responseHandler))
+          .forceDecoding() // force all handling through stageDecode
+          .contract(contract)
+          .logger(logger)
+          .encoder(encoder)
+          .queryMapEncoder(queryMapEncoder)
+          .options(options)
+          .requestInterceptors(requestInterceptors)
+          .responseInterceptor(responseInterceptor)
+          .invocationHandlerFactory(invocationHandlerFactory)
+          .build(), defaultContextSupplier, activeContextHolder);
     }
 
-    // start of builder delgates
+    private Client stageExecution(
+                                  ThreadLocal<AsyncInvocation<C>> activeContext,
+                                  AsyncClient<C> client) {
+      return (request, options) -> {
+        final Response result = Response.builder().status(200).request(request).build();
 
-    /**
-     * @see Builder#logLevel(Logger.Level)
-     */
-    public AsyncBuilder<C> logLevel(Logger.Level logLevel) {
-      builder.logLevel(logLevel);
-      this.logLevel = logLevel;
-      return this;
+        final AsyncInvocation<C> invocationContext = activeContext.get();
+
+        invocationContext.setResponseFuture(
+            client.execute(request, options, Optional.ofNullable(invocationContext.context())));
+
+        return result;
+      };
     }
 
-    /**
-     * @see Builder#contract(Contract)
-     */
-    public AsyncBuilder<C> contract(Contract contract) {
-      builder.contract(contract);
-      return this;
+    // from SynchronousMethodHandler
+    long elapsedTime(long start) {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     }
 
-    /**
-     * @see Builder#logLevel(Logger.Level)
-     */
-    public AsyncBuilder<C> logger(Logger logger) {
-      builder.logger(logger);
-      this.logger = logger;
-      return this;
-    }
+    private Decoder stageDecode(
+                                ThreadLocal<AsyncInvocation<C>> activeContext,
+                                Logger logger,
+                                Level logLevel,
+                                AsyncResponseHandler responseHandler) {
+      return (response, type) -> {
+        final AsyncInvocation<C> invocationContext = activeContext.get();
 
-    /**
-     * @see Builder#encoder(Encoder)
-     */
-    public AsyncBuilder<C> encoder(Encoder encoder) {
-      builder.encoder(encoder);
-      return this;
-    }
+        final CompletableFuture<Object> result = new CompletableFuture<>();
 
-    /**
-     * @see Builder#queryMapEncoder(QueryMapEncoder)
-     */
-    public AsyncBuilder<C> queryMapEncoder(QueryMapEncoder queryMapEncoder) {
-      builder.queryMapEncoder(queryMapEncoder);
-      return this;
-    }
+        invocationContext
+            .responseFuture()
+            .whenComplete(
+                (r, t) -> {
+                  final long elapsedTime = elapsedTime(invocationContext.startNanos());
 
+                  if (t != null) {
+                    if (logLevel != Logger.Level.NONE && t instanceof IOException) {
+                      final IOException e = (IOException) t;
+                      logger.logIOException(invocationContext.configKey(), logLevel, e,
+                          elapsedTime);
+                    }
+                    result.completeExceptionally(t);
+                  } else {
+                    responseHandler.handleResponse(
+                        result,
+                        invocationContext.configKey(),
+                        r,
+                        invocationContext.underlyingType(),
+                        elapsedTime);
+                  }
+                });
 
-    /**
-     * @see Builder#options(Options)
-     */
-    public AsyncBuilder<C> options(Options options) {
-      builder.options(options);
-      return this;
-    }
+        result.whenComplete(
+            (r, t) -> {
+              if (result.isCancelled()) {
+                invocationContext.responseFuture().cancel(true);
+              }
+            });
 
-    /**
-     * @see Builder#requestInterceptor(RequestInterceptor)
-     */
-    public AsyncBuilder<C> requestInterceptor(RequestInterceptor requestInterceptor) {
-      builder.requestInterceptor(requestInterceptor);
-      return this;
-    }
-
-    public AsyncBuilder<C> responseInterceptor(ResponseInterceptor responseInterceptor) {
-      builder.responseInterceptor(responseInterceptor);
-      return this;
-    }
-
-    /**
-     * @see Builder#requestInterceptors(Iterable)
-     */
-    public AsyncBuilder<C> requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
-      builder.requestInterceptors(requestInterceptors);
-      return this;
-    }
-
-    /**
-     * @see Builder#invocationHandlerFactory(InvocationHandlerFactory)
-     */
-    public AsyncBuilder<C> invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
-      builder.invocationHandlerFactory(invocationHandlerFactory);
-      return this;
+        if (invocationContext.isAsyncReturnType()) {
+          return result;
+        }
+        try {
+          return result.join();
+        } catch (final CompletionException e) {
+          final Response r = invocationContext.responseFuture().join();
+          Throwable cause = e.getCause();
+          if (cause == null) {
+            cause = e;
+          }
+          throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
+        }
+      };
     }
   }
-
-  private final ThreadLocal<AsyncInvocation<C>> activeContext;
 
   private final Feign feign;
+  private AsyncContextSupplier<C> defaultContextSupplier;
 
-  private final Supplier<C> defaultContextSupplier;
-  private final AsyncClient<C> client;
-
-  private final Logger.Level logLevel;
-  private final Logger logger;
-
-  private final AsyncResponseHandler responseHandler;
-
-  protected AsyncFeign(AsyncBuilder<C> asyncBuilder) {
-    this.activeContext = new ThreadLocal<>();
-
-    this.defaultContextSupplier = asyncBuilder.defaultContextSupplier;
-    this.client = asyncBuilder.client;
-
-    this.logLevel = asyncBuilder.logLevel;
-    this.logger = asyncBuilder.logger;
-
-    this.responseHandler = new AsyncResponseHandler(
-        asyncBuilder.logLevel,
-        asyncBuilder.logger,
-        asyncBuilder.decoder,
-        asyncBuilder.errorDecoder,
-        asyncBuilder.dismiss404,
-        asyncBuilder.closeAfterDecode);
-
-    asyncBuilder.builder.client(this::stageExecution);
-    asyncBuilder.builder.decoder(this::stageDecode);
-    asyncBuilder.builder.forceDecoding(); // force all handling through stageDecode
-
-    this.feign = asyncBuilder.builder.build();
-  }
-
-  private Response stageExecution(Request request, Options options) {
-    final Response result = Response.builder()
-        .status(200)
-        .request(request)
-        .build();
-
-    final AsyncInvocation<C> invocationContext = activeContext.get();
-
-    invocationContext.setResponseFuture(
-        client.execute(request, options, Optional.ofNullable(invocationContext.context())));
-
-
-    return result;
-  }
-
-  // from SynchronousMethodHandler
-  long elapsedTime(long start) {
-    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+  protected AsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier) {
+    this.feign = feign;
+    this.defaultContextSupplier = defaultContextSupplier;
   }
 
 
-  private Object stageDecode(Response response, Type type) {
-    final AsyncInvocation<C> invocationContext = activeContext.get();
-
-    final CompletableFuture<Object> result = new CompletableFuture<>();
-
-    invocationContext.responseFuture().whenComplete((r, t) -> {
-      final long elapsedTime = elapsedTime(invocationContext.startNanos());
-
-      if (t != null) {
-        if (logLevel != Logger.Level.NONE && t instanceof IOException) {
-          final IOException e = (IOException) t;
-          logger.logIOException(invocationContext.configKey(), logLevel, e, elapsedTime);
-        }
-        result.completeExceptionally(t);
-      } else {
-        responseHandler.handleResponse(result, invocationContext.configKey(), r,
-            invocationContext.underlyingType(), elapsedTime);
-      }
-    });
-
-    result.whenComplete((r, t) -> {
-      if (result.isCancelled()) {
-        invocationContext.responseFuture().cancel(true);
-      }
-    });
-
-    if (invocationContext.isAsyncReturnType()) {
-      return result;
-    }
-    try {
-      return result.join();
-    } catch (final CompletionException e) {
-      final Response r = invocationContext.responseFuture().join();
-      Throwable cause = e.getCause();
-      if (cause == null) {
-        cause = e;
-      }
-      throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
-    }
-  }
-
-
-  protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
-    activeContext.set(invocationContext);
-  }
-
-  protected void clearInvocationContext() {
-    activeContext.remove();
-  }
 
   @Override
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, defaultContextSupplier.get());
+    return newInstance(target, defaultContextSupplier.newContext());
   }
 
   public <T> T newInstance(Target<T> target, C context) {
