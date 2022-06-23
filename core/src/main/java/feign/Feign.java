@@ -96,6 +96,7 @@ public abstract class Feign {
 
     public Builder client(Client client) {
       this.client = client;
+
       return this;
     }
 
@@ -119,8 +120,9 @@ public abstract class Feign {
       super.enrich();
 
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
-              logLevel, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
+              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
+              propagationPolicy, forceDecoding);
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);

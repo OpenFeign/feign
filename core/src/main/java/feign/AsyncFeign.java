@@ -110,7 +110,7 @@ public abstract class AsyncFeign<C> extends Feign {
                   decoder,
                   errorDecoder,
                   dismiss404,
-                  closeAfterDecode),
+                  closeAfterDecode, responseInterceptor),
               AsyncResponseHandler.class,
               capabilities);
 
@@ -126,6 +126,7 @@ public abstract class AsyncFeign<C> extends Feign {
           .queryMapEncoder(queryMapEncoder)
           .options(options)
           .requestInterceptors(requestInterceptors)
+          .responseInterceptor(responseInterceptor)
           .invocationHandlerFactory(invocationHandlerFactory)
           .build(), defaultContextSupplier, activeContextHolder);
     }
