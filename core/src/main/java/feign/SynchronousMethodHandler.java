@@ -37,6 +37,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
+  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
@@ -52,6 +53,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       Client client,
       Retryer retryer,
       List<RequestInterceptor> requestInterceptors,
+      ResponseInterceptor responseInterceptor,
       Logger logger,
       Logger.Level logLevel,
       MethodMetadata metadata,
@@ -75,6 +77,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
+    this.responseInterceptor = responseInterceptor;
 
     if (forceDecoding) {
       // internal only: usual handling will be short-circuited, and all responses will be passed to
@@ -85,7 +88,13 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.decoder = null;
       this.asyncResponseHandler =
           new AsyncResponseHandler(
-              logLevel, logger, decoder, errorDecoder, dismiss404, closeAfterDecode);
+              logLevel,
+              logger,
+              decoder,
+              errorDecoder,
+              dismiss404,
+              closeAfterDecode,
+              responseInterceptor);
     }
   }
 
@@ -137,7 +146,10 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-    if (decoder != null) return decoder.decode(response, metadata.returnType());
+    if (decoder != null) {
+      return responseInterceptor.aroundDecode(
+          new InvocationContext(decoder, metadata.returnType(), response));
+    }
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
     asyncResponseHandler.handleResponse(
@@ -145,7 +157,6 @@ final class SynchronousMethodHandler implements MethodHandler {
 
     try {
       if (!resultFuture.isDone()) throw new IllegalStateException("Response handling not done");
-
       return resultFuture.join();
     } catch (CompletionException e) {
       Throwable cause = e.getCause();
@@ -181,6 +192,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
+    private final ResponseInterceptor responseInterceptor;
     private final Logger logger;
     private final Logger.Level logLevel;
     private final boolean dismiss404;
@@ -192,6 +204,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         Client client,
         Retryer retryer,
         List<RequestInterceptor> requestInterceptors,
+        ResponseInterceptor responseInterceptor,
         Logger logger,
         Logger.Level logLevel,
         boolean dismiss404,
@@ -201,6 +214,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.responseInterceptor = responseInterceptor;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.dismiss404 = dismiss404;
@@ -221,6 +235,7 @@ final class SynchronousMethodHandler implements MethodHandler {
           client,
           retryer,
           requestInterceptors,
+          responseInterceptor,
           logger,
           logLevel,
           md,

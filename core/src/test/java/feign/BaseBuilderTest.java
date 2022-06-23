@@ -66,7 +66,7 @@ public class BaseBuilderTest {
   @Test
   public void checkEnrichTouchesAllAsyncBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    test(AsyncFeign.asyncBuilder().requestInterceptor(template -> {}), 12);
+    test(AsyncFeign.asyncBuilder().requestInterceptor(template -> {}), 13);
   }
 
   private void test(BaseBuilder<?> builder, int expectedFieldsCount)
@@ -90,6 +90,6 @@ public class BaseBuilderTest {
   @Test
   public void checkEnrichTouchesAllBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    test(Feign.builder().requestInterceptor(template -> {}), 11);
+    test(Feign.builder().requestInterceptor(template -> {}), 12);
   }
 }

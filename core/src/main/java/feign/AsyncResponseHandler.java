@@ -17,7 +17,6 @@ import static feign.FeignException.errorReading;
 import static feign.Util.ensureClosed;
 
 import feign.Logger.Level;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
@@ -41,13 +40,16 @@ class AsyncResponseHandler {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
+  private final ResponseInterceptor responseInterceptor;
+
   AsyncResponseHandler(
       Level logLevel,
       Logger logger,
       Decoder decoder,
       ErrorDecoder errorDecoder,
       boolean dismiss404,
-      boolean closeAfterDecode) {
+      boolean closeAfterDecode,
+      ResponseInterceptor responseInterceptor) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
@@ -55,6 +57,7 @@ class AsyncResponseHandler {
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
+    this.responseInterceptor = responseInterceptor;
   }
 
   boolean isVoidType(Type returnType) {
@@ -116,12 +119,6 @@ class AsyncResponseHandler {
   }
 
   Object decode(Response response, Type type) throws IOException {
-    try {
-      return decoder.decode(response, type);
-    } catch (final FeignException e) {
-      throw e;
-    } catch (final RuntimeException e) {
-      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
-    }
+    return responseInterceptor.aroundDecode(new InvocationContext(decoder, type, response));
   }
 }

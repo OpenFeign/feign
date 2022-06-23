@@ -35,6 +35,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   private final B thisB;
 
   protected final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
+  protected ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new Contract.Default();
   protected Retryer retryer = new Retryer.Default();
@@ -179,6 +180,12 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     for (RequestInterceptor requestInterceptor : requestInterceptors) {
       this.requestInterceptors.add(requestInterceptor);
     }
+    return thisB;
+  }
+
+  /** Adds a single response interceptor to the builder. */
+  public B responseInterceptor(ResponseInterceptor responseInterceptor) {
+    this.responseInterceptor = responseInterceptor;
     return thisB;
   }
 
