@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 public class HeaderTemplateTest {
 
@@ -112,5 +113,15 @@ public class HeaderTemplateTest {
     assertEquals("Wed, 4 Jul 2001 12:08:56 -0700",
         headerTemplate.expand(
             Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
+  }
+
+  @Test
+  public void it_should_support_json_literal_values() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("CustomHeader", Collections.singletonList(
+            "{\"key0\":\"value0\",\"key1\":\"value1\",\"key2\":\"value2\",\"nested\":{\"key3\":\"value3\"}}"));
+    assertTrue(
+        headerTemplate.getValues().contains(
+            "{\"key0\":\"value0\",\"key1\":\"value1\",\"key2\":\"value2\",\"nested\":{\"key3\":\"value3\"}}"));
   }
 }
