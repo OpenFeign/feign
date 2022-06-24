@@ -216,7 +216,7 @@ public class Template {
       /* check to see if we have an expression or a literal */
       String chunk = tokenizer.next();
 
-      if (chunk.startsWith("{") && !isValidJsonLiteral(chunk)) {
+      if (chunk.startsWith("{") && !isValidJsonLiteral(fragment)) {
         Expression expression = Expressions.create(chunk);
         if (expression == null) {
           this.templateChunks.add(Literal.create(this.encodeLiteral(chunk)));
