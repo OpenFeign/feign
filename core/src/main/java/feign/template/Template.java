@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A Generic representation of a Template Expression as defined by
@@ -214,7 +216,7 @@ public class Template {
       /* check to see if we have an expression or a literal */
       String chunk = tokenizer.next();
 
-      if (chunk.startsWith("{")) {
+      if (chunk.startsWith("{") && !isValidJsonLiteral(chunk)) {
         Expression expression = Expressions.create(chunk);
         if (expression == null) {
           this.templateChunks.add(Literal.create(this.encodeLiteral(chunk)));
@@ -225,6 +227,15 @@ public class Template {
         this.templateChunks.add(Literal.create(this.encodeLiteral(chunk)));
       }
     }
+  }
+
+  public boolean isValidJsonLiteral(String json) {
+    try {
+      new JSONObject(json);
+    } catch (JSONException e) {
+      return false;
+    }
+    return true;
   }
 
   @Override
