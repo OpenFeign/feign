@@ -1,12 +1,11 @@
-# Feign JAXRS
-This module overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+# Feign Jakarta
+This module overrides annotation processing to instead use standard ones supplied by the Jakarta specification.  This is currently targeted at the 3.1 spec.
 
 ## Limitations
-While it may appear possible to reuse the same interface across client and server, bear in mind that JAX-RS resource
- annotations were not designed to be processed by clients.  Moreover, JAX-RS 2.0 has a different package hierarchy for
-client invocation.  Finally, JAX-RS is a large spec and attempts to implement it completely would be a project larger
-than feign itself.  In other words, this implementation is *best efforts* and concedes far from 100% compatibility with
-server interface behavior.
+While it may appear possible to reuse the same interface across client and server, bear in mind that Jakarta resource
+ annotations were not designed to be processed by clients. Finally, Jakarta is a large spec and attempts to implement
+it completely would be a project larger than feign itself.  In other words, this implementation is *best efforts* and 
+concedes far from 100% compatibility with server interface behavior.
 
 ## Currently Supported Annotation Processing
 Feign only supports processing java interfaces (not abstract or concrete classes).
