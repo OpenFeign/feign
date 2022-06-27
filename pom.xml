@@ -89,16 +89,16 @@
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.0.0</mockito.version>
 
-    <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
+    <animal-sniffer-maven-plugin.version>1.21</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
-    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
     <license-maven-plugin.version>4.1</license-maven-plugin.version>
     <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-bundle-plugin.version>5.1.2</maven-bundle-plugin.version>
-    <centralsync-maven-plugin.version>0.1.0</centralsync-maven-plugin.version>
+    <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
     <bom-generator.version>0.40.1</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
@@ -436,7 +436,7 @@
               <!-- surefire uses ASM to do some bytecode magic... need to bump version to be java 11 compatible -->
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm</artifactId>
-              <version>9.2</version>
+              <version>9.3</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -504,7 +504,7 @@
           <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>7.0-beta</version>
+            <version>9.3</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -734,7 +734,7 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.8</version>
+        <version>1.6.13</version>
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>

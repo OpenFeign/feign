@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2012-2021 The Feign Authors
+# Copyright 2012-2022 The Feign Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +30,7 @@ echo "release version is: ${tag} and next snapshot is: ${snapshot}"
 
 # Update the versions, removing the snapshots, then create a new tag for the release, this will
 # start the travis-ci release process.
-./mvnw -B versions:set scm:checkin -DremoveSnapshot -DgenerateBackupPoms=false -Dmessage="prepare release ${tag}" -DpushChanges=false
+./mvnw -B versions:set license:format scm:checkin -DremoveSnapshot -DgenerateBackupPoms=false -Dmessage="prepare release ${tag}" -DpushChanges=false
 
 # tag the release
 echo "pushing tag ${tag}"
