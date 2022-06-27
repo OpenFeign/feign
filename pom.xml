@@ -89,7 +89,7 @@
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.0.0</mockito.version>
 
-    <animal-sniffer-maven-plugin.version>1.17</animal-sniffer-maven-plugin.version>
+    <animal-sniffer-maven-plugin.version>1.21</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
