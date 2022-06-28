@@ -191,8 +191,8 @@ workflows:
           filters:
             <<: *all-branches
       - test:
-          jdk: '14-buster'
-          name: 'jdk 14'
+          jdk: '17-buster'
+          name: 'jdk 17'
           filters:
             <<: *all-branches
       - test:
@@ -212,8 +212,8 @@ workflows:
           filters:
             <<: *master-only
       - test:
-          jdk: '14-buster'
-          name: 'jdk 14'
+          jdk: '17-buster'
+          name: 'jdk 17'
           filters:
             <<: *master-only
       - deploy:
@@ -222,7 +222,7 @@ workflows:
           requires:
             - 'jdk 8'
             - 'jdk 11'
-            - 'jdk 14'
+            - 'jdk 17'
           context: Sonatype
           filters:
             <<: *master-only
