@@ -69,7 +69,7 @@ commands:
       - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
-            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
+            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11,:feign-jakarta -DskipTests=true deploy
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
