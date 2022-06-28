@@ -36,8 +36,8 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Tests interfaces defined per {@link JakartaContract} are interpreted into expected {@link feign
- * .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
+ * {@link feign .RequestTemplate template} instances.
  */
 public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
 
@@ -64,7 +64,8 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @HttpMethod("PATCH")
-    public @interface PATCH {}
+    public @interface PATCH {
+    }
   }
 
   interface WithQueryParamsInPath {
@@ -179,7 +180,8 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
     Response pathParamWithMultipleRegex(
-        @PathParam("param1") String param1, @PathParam("param2") String param2);
+                                        @PathParam("param1") String param1,
+                                        @PathParam("param2") String param2);
   }
 
   @Path("/{baseparam: [0-9]+}")
@@ -188,7 +190,8 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
     Response pathParamWithMultipleRegex(
-        @PathParam("param1") String param1, @PathParam("param2") String param2);
+                                        @PathParam("param1") String param1,
+                                        @PathParam("param2") String param2);
   }
 
   interface WithURIParam {
@@ -203,9 +206,9 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
     @GET
     @Path("/domains/{domainId}/records")
     Response recordsByNameAndType(
-        @PathParam("domainId") int id,
-        @QueryParam("name") String nameFilter,
-        @QueryParam("type") String typeFilter);
+                                  @PathParam("domainId") int id,
+                                  @QueryParam("name") String nameFilter,
+                                  @QueryParam("type") String typeFilter);
 
     @GET
     Response empty(@QueryParam("") String empty);
@@ -215,9 +218,9 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
 
     @POST
     void login(
-        @FormParam("customer_name") String customer,
-        @FormParam("user_name") String user,
-        @FormParam("password") String password);
+               @FormParam("customer_name") String customer,
+               @FormParam("user_name") String user,
+               @FormParam("password") String password);
 
     @GET
     Response emptyFormParam(@FormParam("") String empty);
@@ -283,9 +286,9 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
     @Path("/api/stuff?multiple=stuff")
     @Produces("application/json")
     Response getWithHeaders(
-        @HeaderParam("Accept") String accept,
-        @QueryParam("multiple") String multiple,
-        @QueryParam("another") String another);
+                            @HeaderParam("Accept") String accept,
+                            @QueryParam("multiple") String multiple,
+                            @QueryParam("another") String another);
   }
 
   @Override
@@ -295,7 +298,10 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
 
   @Override
   protected MethodMetadata parseAndValidateMetadata(
-      Class<?> targetType, String method, Class<?>... parameterTypes) throws NoSuchMethodException {
+                                                    Class<?> targetType,
+                                                    String method,
+                                                    Class<?>... parameterTypes)
+      throws NoSuchMethodException {
     return contract.parseAndValidateMetadata(
         targetType, targetType.getMethod(method, parameterTypes));
   }
