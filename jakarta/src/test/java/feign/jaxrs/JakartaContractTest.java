@@ -16,17 +16,14 @@ package feign.jaxrs;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
-
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.lang.annotation.*;
 import java.net.URI;
 import java.util.*;
-
 import feign.MethodMetadata;
 import feign.Response;
 
