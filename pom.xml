@@ -761,23 +761,12 @@
     <profile>
       <id>java11</id>
       <activation>
-        <jdk>11</jdk>
+        <jdk>[11,)</jdk>
       </activation>
       <modules>
         <module>java11</module>
+        <module>jakarta</module>
       </modules>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-release-plugin</artifactId>
-            <configuration>
-              <!-- so far we don't have a way to release using java 11 -->
-              <dryRun>true</dryRun>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
 
     <profile>
@@ -865,16 +854,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-
-    <profile>
-      <id>active-on-jdk-11</id>
-      <activation>
-        <jdk>[11,)</jdk>
-      </activation>
-      <modules>
-        <module>java11</module>
-      </modules>
     </profile>
   </profiles>
 </project>
