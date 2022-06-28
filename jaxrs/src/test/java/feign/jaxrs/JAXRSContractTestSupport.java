@@ -23,10 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,30 +43,15 @@ public abstract class JAXRSContractTestSupport<E> {
   public final ExpectedException thrown = ExpectedException.none();
   protected E contract = createContract();
 
-  protected interface Methods {
-
-    @POST
-    void post();
-
-    @PUT
-    void put();
-
-    @GET
-    void get();
-
-    @DELETE
-    void delete();
-  }
-
   @Test
   public void httpMethods() throws Exception {
-    assertThat(parseAndValidateMetadata(Methods.class, "post").template()).hasMethod("POST");
+    assertThat(parseAndValidateMetadata(methodsClass(), "post").template()).hasMethod("POST");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "put").template()).hasMethod("PUT");
+    assertThat(parseAndValidateMetadata(methodsClass(), "put").template()).hasMethod("PUT");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "get").template()).hasMethod("GET");
+    assertThat(parseAndValidateMetadata(methodsClass(), "get").template()).hasMethod("GET");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "delete").template()).hasMethod("DELETE");
+    assertThat(parseAndValidateMetadata(methodsClass(), "delete").template()).hasMethod("DELETE");
   }
 
   @Test
@@ -419,6 +400,8 @@ public abstract class JAXRSContractTestSupport<E> {
                         entry("multiple", Arrays.asList("stuff", "{multiple}")),
                         entry("another", Collections.singletonList("{another}")));
   }
+
+  protected abstract Class<?> methodsClass();
 
   protected abstract Class<?> customMethodClass();
 

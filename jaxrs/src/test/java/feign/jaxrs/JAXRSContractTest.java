@@ -22,11 +22,13 @@ import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -39,19 +41,19 @@ import javax.ws.rs.core.MediaType;
  */
 public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
 
-  @Override
-  protected JAXRSContract createContract() {
-    return new JAXRSContract();
-  }
+  protected interface Methods {
 
-  @Override
-  protected MethodMetadata parseAndValidateMetadata(
-                                                    Class<?> targetType,
-                                                    String method,
-                                                    Class<?>... parameterTypes)
-      throws NoSuchMethodException {
-    return contract.parseAndValidateMetadata(
-        targetType, targetType.getMethod(method, parameterTypes));
+    @POST
+    void post();
+
+    @PUT
+    void put();
+
+    @GET
+    void get();
+
+    @DELETE
+    void delete();
   }
 
   protected interface CustomMethod {
@@ -287,6 +289,26 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
                             @HeaderParam("Accept") String accept,
                             @QueryParam("multiple") String multiple,
                             @QueryParam("another") String another);
+  }
+
+  @Override
+  protected JAXRSContract createContract() {
+    return new JAXRSContract();
+  }
+
+  @Override
+  protected MethodMetadata parseAndValidateMetadata(
+                                                    Class<?> targetType,
+                                                    String method,
+                                                    Class<?>... parameterTypes)
+      throws NoSuchMethodException {
+    return contract.parseAndValidateMetadata(
+        targetType, targetType.getMethod(method, parameterTypes));
+  }
+
+  @Override
+  protected Class<?> methodsClass() {
+    return Methods.class;
   }
 
   @Override
