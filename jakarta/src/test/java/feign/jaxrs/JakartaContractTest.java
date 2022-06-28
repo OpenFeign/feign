@@ -15,33 +15,33 @@ package feign.jaxrs;
 
 import feign.MethodMetadata;
 import feign.Response;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 /**
- * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected
+ * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
+public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
 
-  protected interface Methods {
+  interface Methods {
 
     @POST
     void post();
@@ -56,7 +56,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
     void delete();
   }
 
-  protected interface CustomMethod {
+  interface CustomMethod {
 
     @PATCH
     Response patch();
@@ -68,7 +68,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
     }
   }
 
-  protected interface WithQueryParamsInPath {
+  interface WithQueryParamsInPath {
 
     @GET
     @Path("/")
@@ -93,7 +93,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
 
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_HTML)
-  protected interface ProducesAndConsumes {
+  interface ProducesAndConsumes {
 
     @GET
     @Produces("application/xml")
@@ -131,7 +131,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
     Response producesAndConsumes();
   }
 
-  protected interface BodyParams {
+  interface BodyParams {
 
     @POST
     Response post(List<String> body);
@@ -141,7 +141,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("")
-  protected interface EmptyPathOnType {
+  interface EmptyPathOnType {
 
     @GET
     Response base();
@@ -152,7 +152,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("/base")
-  protected interface PathOnType {
+  interface PathOnType {
 
     @GET
     Response base();
@@ -167,7 +167,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
 
     @GET
     @Path("/{param}")
-    Response emptyPathParam(@PathParam("") String empty);
+    Response emptyPathParam(@PathParam(value = "") String empty);
 
     @GET
     @Path("/{   param   }")
@@ -185,7 +185,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("/{baseparam: [0-9]+}")
-  protected interface ComplexPathOnType {
+  interface ComplexPathOnType {
 
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
@@ -194,14 +194,14 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
                                         @PathParam("param2") String param2);
   }
 
-  protected interface WithURIParam {
+  interface WithURIParam {
 
     @GET
     @Path("/{1}/{2}")
     Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
   }
 
-  protected interface WithPathAndQueryParams {
+  interface WithPathAndQueryParams {
 
     @GET
     @Path("/domains/{domainId}/records")
@@ -214,7 +214,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
     Response empty(@QueryParam("") String empty);
   }
 
-  protected interface FormParams {
+  interface FormParams {
 
     @POST
     void login(
@@ -226,7 +226,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
     Response emptyFormParam(@FormParam("") String empty);
   }
 
-  protected interface HeaderParams {
+  interface HeaderParams {
 
     @POST
     void logout(@HeaderParam("Auth-Token") String token);
@@ -236,7 +236,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("base")
-  protected interface PathsWithoutAnySlashes {
+  interface PathsWithoutAnySlashes {
 
     @GET
     @Path("specific")
@@ -244,7 +244,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("/base")
-  protected interface PathsWithSomeSlashes {
+  interface PathsWithSomeSlashes {
 
     @GET
     @Path("specific")
@@ -252,7 +252,7 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("base")
-  protected interface PathsWithSomeOtherSlashes {
+  interface PathsWithSomeOtherSlashes {
 
     @GET
     @Path("/specific")
@@ -260,27 +260,27 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Path("/")
-  protected interface ClassRootPath {
+  interface ClassRootPath {
     @GET
     @Path("/specific")
     Response get();
   }
 
   @Path("/base/")
-  protected interface ClassPathWithTrailingSlash {
+  interface ClassPathWithTrailingSlash {
     @GET
     @Path("/specific")
     Response get();
   }
 
   @Path("/base/")
-  protected interface MethodWithFirstPathThenGetWithoutLeadingSlash {
+  interface MethodWithFirstPathThenGetWithoutLeadingSlash {
     @Path("specific")
     @GET
     Response get();
   }
 
-  protected interface MixedAnnotations {
+  interface MixedAnnotations {
 
     @GET
     @Path("/api/stuff?multiple=stuff")
@@ -292,8 +292,8 @@ public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
   }
 
   @Override
-  protected JAXRSContract createContract() {
-    return new JAXRSContract();
+  protected JakartaContract createContract() {
+    return new JakartaContract();
   }
 
   @Override
