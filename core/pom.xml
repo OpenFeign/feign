@@ -33,12 +33,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jvnet</groupId>
-      <artifactId>animal-sniffer-annotation</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
     </dependency>
@@ -92,6 +86,33 @@
             <goals>
               <goal>test-jar</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <message>feign-core should never include any dependencies, this is a design choice to keep core light and extend functionality using modules</message>
+                  <excludes>
+                    <exclude>*:*:*:*:*:*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>*:*:*:*:test:*</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+              <fail>true</fail>
+            </configuration>
           </execution>
         </executions>
       </plugin>
