@@ -187,7 +187,6 @@
       </activation>
 
       <properties>
-        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <jvm.options>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</jvm.options>
       </properties>
     </profile>
