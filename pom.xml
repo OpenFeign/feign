@@ -97,7 +97,7 @@
     <license-maven-plugin.version>4.1</license-maven-plugin.version>
     <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-    <maven-bundle-plugin.version>5.1.2</maven-bundle-plugin.version>
+    <maven-bundle-plugin.version>5.1.6</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
     <bom-generator.version>0.40.1</bom-generator.version>
