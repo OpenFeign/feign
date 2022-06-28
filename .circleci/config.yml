@@ -41,7 +41,7 @@ commands:
       - run:
           name: 'Resolving Dependencies'
           command: |
-            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
+            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true -B
   verify-formatting:
     steps:
       - run:
@@ -121,7 +121,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            mvn -o test
+            mvn -B test
       - verify-formatting
   android-test:
     # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
