@@ -404,7 +404,7 @@
         <plugin>
           <groupId>io.takari</groupId>
           <artifactId>maven</artifactId>
-          <version>0.3.4</version>
+          <version>0.7.7</version>
         </plugin>
 
         <plugin>
