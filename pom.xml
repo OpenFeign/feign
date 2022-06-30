@@ -85,7 +85,7 @@
     <junit.version>4.13.2</junit.version>
     <jackson.version>2.13.3</jackson.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <assertj.version>3.21.0</assertj.version>
+    <assertj.version>3.23.1</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.0.0</mockito.version>
 
