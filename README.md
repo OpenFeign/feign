@@ -1093,3 +1093,35 @@ public class MyApp {
 Initial implementation include 2 async clients:
 - `AsyncClient.Default`
 - `AsyncApacheHttp5Client`
+
+## Maven’s Bill of Material (BOM)
+
+Keeping all feign libraries on the same version is essential to avoid incompatible binaries. When consuming external dependencies, can be tricky to make sure only one version is present.
+
+With that in mind, feign build generates a module called `feign-bom` that locks the versions for all `feign-*` modules.
+
+The Bill Of Material is a special POM file that groups dependency versions that are known to be valid and tested to work together. This will reduce the developers’ pain of having to test the compatibility of different versions and reduce the chances to have version mismatches.
+
+
+[Here](https://repo1.maven.org/maven2/io/github/openfeign/feign-bom/11.9/feign-bom-11.9.pom) is one example of what feign BOM file looks like.
+
+#### Usage
+
+```xml
+<project>
+
+...
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-bom</artifactId>
+        <version>??feign.version??</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
+```
