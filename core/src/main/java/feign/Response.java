@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,25 +13,12 @@
  */
 package feign;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
-import static feign.Util.UTF_8;
-import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import feign.Request.ProtocolVersion;
+import static feign.Util.*;
 
 /**
  * An immutable response to an http invocation which only returns string content.
@@ -43,16 +30,16 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
+  private final ProtocolVersion protocolVersion;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
     this.status = builder.status;
     this.request = builder.request;
     this.reason = builder.reason; // nullable
-    this.headers = (builder.headers != null)
-        ? Collections.unmodifiableMap(caseInsensitiveCopyOf(builder.headers))
-        : new LinkedHashMap<>();
+    this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
+    this.protocolVersion = builder.protocolVersion;
   }
 
   public Builder toBuilder() {
@@ -69,6 +56,8 @@ public final class Response implements Closeable {
     Map<String, Collection<String>> headers;
     Body body;
     Request request;
+    private RequestTemplate requestTemplate;
+    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
 
     Builder() {}
 
@@ -78,6 +67,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
+      this.protocolVersion = source.protocolVersion;
     }
 
     /** @see Response#status */
@@ -131,6 +121,26 @@ public final class Response implements Closeable {
       return this;
     }
 
+    /**
+     * HTTP protocol version
+     */
+    public Builder protocolVersion(ProtocolVersion protocolVersion) {
+      this.protocolVersion = protocolVersion;
+      return this;
+    }
+
+    /**
+     * The Request Template used for the original request.
+     *
+     * @param requestTemplate used.
+     * @return builder reference.
+     */
+    @Experimental
+    public Builder requestTemplate(RequestTemplate requestTemplate) {
+      this.requestTemplate = requestTemplate;
+      return this;
+    }
+
     public Response build() {
       return new Response(this);
     }
@@ -173,6 +183,34 @@ public final class Response implements Closeable {
    */
   public Request request() {
     return request;
+  }
+
+  /**
+   * the HTTP protocol version
+   *
+   * @return HTTP protocol version or empty if a client does not provide it
+   */
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
+  }
+
+  public Charset charset() {
+
+    Collection<String> contentTypeHeaders = headers().get("Content-Type");
+
+    if (contentTypeHeaders != null) {
+      for (String contentTypeHeader : contentTypeHeaders) {
+        String[] contentTypeParmeters = contentTypeHeader.split(";");
+        if (contentTypeParmeters.length > 1) {
+          String[] charsetParts = contentTypeParmeters[1].split("=");
+          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+            return Charset.forName(charsetParts[1]);
+          }
+        }
+      }
+    }
+
+    return Util.UTF_8;
   }
 
   @Override
@@ -221,11 +259,16 @@ public final class Response implements Closeable {
 
     /**
      * It is the responsibility of the caller to close the stream.
+     *
+     * @deprecated favor {@link Body#asReader(Charset)}
      */
-    Reader asReader() throws IOException;
+    @Deprecated
+    default Reader asReader() throws IOException {
+      return asReader(StandardCharsets.UTF_8);
+    }
 
     /**
-     *
+     * It is the responsibility of the caller to close the stream.
      */
     Reader asReader(Charset charset) throws IOException;
   }
@@ -258,12 +301,13 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public InputStream asInputStream() throws IOException {
+    public InputStream asInputStream() {
       return inputStream;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public Reader asReader() throws IOException {
+    public Reader asReader() {
       return new InputStreamReader(inputStream, UTF_8);
     }
 
@@ -277,6 +321,7 @@ public final class Response implements Closeable {
     public void close() throws IOException {
       inputStream.close();
     }
+
   }
 
   private static final class ByteArrayBody implements Response.Body {
@@ -317,6 +362,7 @@ public final class Response implements Closeable {
       return new ByteArrayInputStream(data);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Reader asReader() throws IOException {
       return new InputStreamReader(asInputStream(), UTF_8);
@@ -331,23 +377,6 @@ public final class Response implements Closeable {
     @Override
     public void close() throws IOException {}
 
-    @Override
-    public String toString() {
-      return decodeOrDefault(data, UTF_8, "Binary data");
-    }
   }
 
-  private static Map<String, Collection<String>> caseInsensitiveCopyOf(Map<String, Collection<String>> headers) {
-    Map<String, Collection<String>> result =
-        new TreeMap<String, Collection<String>>(String.CASE_INSENSITIVE_ORDER);
-
-    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-      String headerName = entry.getKey();
-      if (!result.containsKey(headerName)) {
-        result.put(headerName.toLowerCase(Locale.ROOT), new LinkedList<String>());
-      }
-      result.get(headerName).addAll(entry.getValue());
-    }
-    return result;
-  }
 }

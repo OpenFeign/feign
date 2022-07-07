@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2019 The Feign Authors
+    Copyright 2012-2022 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,21 +20,31 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.3.0-SNAPSHOT</version>
+    <version>12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-benchmark</artifactId>
   <name>Feign Benchmark (JMH)</name>
 
   <properties>
-    <jmh.version>1.20</jmh.version>
-    <!-- override default bytecode version for src/main from parent pom -->
-    <main.java.version>1.8</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
+    <jmh.version>1.35</jmh.version>
+    <rx.netty.version>0.5.3</rx.netty.version>
+    <rx.java.version>1.3.8</rx.java.version>
+    <netty.version>4.1.78.Final</netty.version>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${netty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -59,38 +69,47 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.60</version>
+      <version>${bouncy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>${netty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>${netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty-http</artifactId>
-      <version>0.5.2</version>
+      <version>${rx.netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty-spectator-http</artifactId>
-      <version>0.5.2</version>
+      <version>${rx.netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty-common</artifactId>
-      <version>0.5.2</version>
+      <version>${rx.netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxnetty-tcp</artifactId>
-      <version>0.5.2</version>
+      <version>${rx.netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-buffer</artifactId>
-      <version>4.1.5.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxjava</artifactId>
-      <version>1.2.6</version>
+      <version>${rx.java.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
@@ -107,7 +126,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
     </dependency>
-
   </dependencies>
 
   <build>
@@ -116,7 +134,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.2</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <phase>package</phase>

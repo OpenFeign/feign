@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,26 +17,28 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.scheduler.Scheduler;
 
 public class ReactorInvocationHandler extends ReactiveInvocationHandler {
+  private final Scheduler scheduler;
 
   ReactorInvocationHandler(Target<?> target,
-      Map<Method, MethodHandler> dispatch) {
+      Map<Method, MethodHandler> dispatch,
+      Scheduler scheduler) {
     super(target, dispatch);
+    this.scheduler = scheduler;
   }
 
   @Override
   protected Publisher invoke(Method method, MethodHandler methodHandler, Object[] arguments) {
-    Callable<?> invocation = this.invokeMethod(methodHandler, arguments);
+    Publisher<?> invocation = this.invokeMethod(methodHandler, arguments);
     if (Flux.class.isAssignableFrom(method.getReturnType())) {
-      return Flux.from(Mono.fromCallable(invocation)).subscribeOn(Schedulers.elastic());
+      return Flux.from(invocation).subscribeOn(scheduler);
     } else if (Mono.class.isAssignableFrom(method.getReturnType())) {
-      return Mono.fromCallable(invocation).subscribeOn(Schedulers.elastic());
+      return Mono.from(invocation).subscribeOn(scheduler);
     }
     throw new IllegalArgumentException(
         "Return type " + method.getReturnType().getName() + " is not supported");

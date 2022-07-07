@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -28,6 +28,32 @@ public class QueryTemplateTest {
     QueryTemplate template =
         QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"), Util.UTF_8);
     assertThat(template.toString()).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
+  }
+
+  @Test
+  public void expandEmptyCollection() {
+    QueryTemplate template =
+        QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded = template.expand(Collections.singletonMap("people", Collections.emptyList()));
+    assertThat(expanded).isEqualToIgnoringCase("people=");
+  }
+
+  @Test
+  public void expandCollection() {
+    QueryTemplate template =
+        QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded =
+        template.expand(Collections.singletonMap("people", Arrays.asList("Bob", "James", "Jason")));
+    assertThat(expanded).isEqualToIgnoringCase("people=Bob&people=James&people=Jason");
+  }
+
+  @Test
+  public void expandCollectionWithBlanks() {
+    QueryTemplate template =
+        QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
+    String expanded = template.expand(
+        Collections.singletonMap("people", Arrays.asList("", "Jason", "James")));
+    assertThat(expanded).isEqualToIgnoringCase("people=&people=Jason&people=James");
   }
 
   @Test
@@ -84,7 +110,7 @@ public class QueryTemplateTest {
         QueryTemplate
             .create("name", Arrays.asList("James", "Jason"), Util.UTF_8, CollectionFormat.CSV);
     String expanded = template.expand(Collections.emptyMap());
-    assertThat(expanded).isEqualToIgnoringCase("name=James,Jason");
+    assertThat(expanded).isEqualToIgnoringCase("name=James%2CJason");
   }
 
   @Test
@@ -125,7 +151,7 @@ public class QueryTemplateTest {
         QueryTemplate.create("collection",
             Collections.singletonList("{collection}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("collection", "one,two,three"));
-    assertThat(expanded).isEqualToIgnoringCase("collection=one,two,three");
+    assertThat(expanded).isEqualToIgnoringCase("collection=one%2Ctwo%2Cthree");
   }
 
   @Test
@@ -162,7 +188,7 @@ public class QueryTemplateTest {
     String expanded = template.expand(
         Collections.singletonMap("json", "{\"name\":\"feign\",\"version\": \"10\"}"));
     assertThat(expanded).isEqualToIgnoringCase(
-        "json=%7B%22name%22:%22feign%22,%22version%22:%20%2210%22%7D");
+        "json=%7B%22name%22%3A%22feign%22%2C%22version%22%3A%20%2210%22%7D");
   }
 
 
@@ -174,6 +200,17 @@ public class QueryTemplateTest {
     String expanded = template.expand(Collections.singletonMap("collection[]",
         Arrays.asList("1", "2")));
     /* brackets will be pct-encoded */
-    assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1,2");
+    assertThat(expanded).isEqualToIgnoringCase("collection%5B%5D=1%2C2");
+  }
+
+  @Test
+  public void expandCollectionValueWithDollar() {
+    QueryTemplate template =
+        QueryTemplate.create("$collection", Collections.singletonList("{$collection}"),
+            Util.UTF_8, CollectionFormat.CSV);
+    String expanded = template.expand(Collections.singletonMap("$collection",
+        Arrays.asList("1", "2")));
+    /* dollar will be pct-encoded */
+    assertThat(expanded).isEqualToIgnoringCase("%24collection=1%2C2");
   }
 }

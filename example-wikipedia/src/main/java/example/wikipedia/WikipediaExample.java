@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,10 +20,8 @@ import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import feign.Feign;
-import feign.Logger;
-import feign.Param;
-import feign.RequestLine;
+import java.util.concurrent.TimeUnit;
+import feign.*;
 import feign.gson.GsonDecoder;
 
 public class WikipediaExample {
@@ -61,6 +59,7 @@ public class WikipediaExample {
         .decoder(new GsonDecoder(gson))
         .logger(new Logger.ErrorLogger())
         .logLevel(Logger.Level.BASIC)
+        .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
         .target(Wikipedia.class, "https://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");

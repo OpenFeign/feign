@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,8 @@
 package feign.reactive;
 
 import feign.Feign;
-import feign.reactive.ReactiveFeign.Builder;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -29,24 +30,36 @@ public class ReactorFeign extends ReactiveFeign {
 
   public static class Builder extends ReactiveFeign.Builder {
 
+    private Scheduler scheduler = Schedulers.elastic();
+
     @Override
     public Feign build() {
-      super.invocationHandlerFactory(new ReactorInvocationHandlerFactory());
+      super.invocationHandlerFactory(new ReactorInvocationHandlerFactory(scheduler));
       return super.build();
     }
 
     @Override
-    public Feign.Builder invocationHandlerFactory(
-                                                  InvocationHandlerFactory invocationHandlerFactory) {
+    public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       throw new UnsupportedOperationException(
           "Invocation Handler Factory overrides are not supported.");
+    }
+
+    public Builder scheduleOn(Scheduler scheduler) {
+      this.scheduler = scheduler;
+      return this;
     }
   }
 
   private static class ReactorInvocationHandlerFactory implements InvocationHandlerFactory {
+    private final Scheduler scheduler;
+
+    private ReactorInvocationHandlerFactory(Scheduler scheduler) {
+      this.scheduler = scheduler;
+    }
+
     @Override
     public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-      return new ReactorInvocationHandler(target, dispatch);
+      return new ReactorInvocationHandler(target, dispatch, scheduler);
     }
   }
 }

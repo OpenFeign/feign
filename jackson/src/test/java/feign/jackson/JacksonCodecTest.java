@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,7 +18,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -29,10 +28,12 @@ import feign.Util;
 import org.junit.Test;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("deprecation")
 public class JacksonCodecTest {
 
   private String zonesJson = ""//
@@ -171,6 +173,29 @@ public class JacksonCodecTest {
   }
 
   @Test
+  public void decoderCharset() throws IOException {
+    Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
+
+    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(headers)
+        .body(new String("" //
+            + "{" + System.lineSeparator()
+            + "  \"name\" : \"DENOMINATOR.IO.\"," + System.lineSeparator()
+            + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\"" + System.lineSeparator()
+            + "}").getBytes(StandardCharsets.ISO_8859_1))
+        .build();
+    assertEquals(zone.get("id"),
+        ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType()))
+            .get("id"));
+  }
+
+  @Test
   public void decodesIterator() throws Exception {
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("denominator.io."));
@@ -198,18 +223,18 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNullIterator() throws Exception {
+  public void nullBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 
   @Test
-  public void emptyBodyDecodesToNullIterator() throws Exception {
+  public void emptyBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -217,7 +242,7 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(new byte[0])
         .build();
-    assertNull(JacksonIteratorDecoder.create().decode(response, Iterator.class));
+    assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -279,7 +304,7 @@ public class JacksonCodecTest {
     }
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
   public void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
@@ -291,7 +316,7 @@ public class JacksonCodecTest {
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
   }
 
-  /** Enabled via {@link feign.Feign.Builder#decode404()} */
+  /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
   public void notFoundDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()

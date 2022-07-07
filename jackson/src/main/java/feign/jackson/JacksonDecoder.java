@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,15 +13,17 @@
  */
 package feign.jackson;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Collections;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -45,11 +47,11 @@ public class JacksonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (response.status() == 404)
+    if (response.status() == 404 || response.status() == 204)
       return Util.emptyValueOf(type);
     if (response.body() == null)
       return null;
-    Reader reader = response.body().asReader();
+    Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
@@ -68,4 +70,5 @@ public class JacksonDecoder implements Decoder {
       throw e;
     }
   }
+
 }

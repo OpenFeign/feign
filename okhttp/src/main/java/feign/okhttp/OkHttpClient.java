@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,10 +19,15 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import feign.AsyncClient;
 import feign.Client;
 import feign.Request.HttpMethod;
+import feign.Request.ProtocolVersion;
 import okhttp3.*;
+import static feign.Util.enumForName;
 
 /**
  * This module directs Feign's http requests to
@@ -33,7 +38,7 @@ import okhttp3.*;
  * GitHub github = Feign.builder().client(new OkHttpClient()).target(GitHub.class,
  * "https://api.github.com");
  */
-public final class OkHttpClient implements Client {
+public final class OkHttpClient implements Client, AsyncClient<Object> {
 
   private final okhttp3.OkHttpClient delegate;
 
@@ -71,7 +76,7 @@ public final class OkHttpClient implements Client {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    byte[] inputBody = input.requestBody().asBytes();
+    byte[] inputBody = input.body();
     boolean isMethodWithBody =
         HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
             || HttpMethod.PATCH == input.httpMethod();
@@ -92,6 +97,7 @@ public final class OkHttpClient implements Client {
   private static feign.Response toFeignResponse(Response response, feign.Request request)
       throws IOException {
     return feign.Response.builder()
+        .protocolVersion(enumForName(ProtocolVersion.class, response.protocol()))
         .status(response.code())
         .reason(response.message())
         .request(request)
@@ -137,6 +143,7 @@ public final class OkHttpClient implements Client {
         return input.byteStream();
       }
 
+      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return input.charStream();
@@ -149,12 +156,11 @@ public final class OkHttpClient implements Client {
     };
   }
 
-  @Override
-  public feign.Response execute(feign.Request input, feign.Request.Options options)
-      throws IOException {
+  private okhttp3.OkHttpClient getClient(feign.Request.Options options) {
     okhttp3.OkHttpClient requestScoped;
     if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
-        || delegate.readTimeoutMillis() != options.readTimeoutMillis()) {
+        || delegate.readTimeoutMillis() != options.readTimeoutMillis()
+        || delegate.followRedirects() != options.isFollowRedirects()) {
       requestScoped = delegate.newBuilder()
           .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
           .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
@@ -163,8 +169,39 @@ public final class OkHttpClient implements Client {
     } else {
       requestScoped = delegate;
     }
+    return requestScoped;
+  }
+
+  @Override
+  public feign.Response execute(feign.Request input, feign.Request.Options options)
+      throws IOException {
+    okhttp3.OkHttpClient requestScoped = getClient(options);
     Request request = toOkHttpRequest(input);
     Response response = requestScoped.newCall(request).execute();
     return toFeignResponse(response, input).toBuilder().request(input).build();
+  }
+
+  @Override
+  public CompletableFuture<feign.Response> execute(feign.Request input,
+                                                   feign.Request.Options options,
+                                                   Optional<Object> requestContext) {
+    okhttp3.OkHttpClient requestScoped = getClient(options);
+    Request request = toOkHttpRequest(input);
+    CompletableFuture<feign.Response> responseFuture = new CompletableFuture<>();
+    requestScoped.newCall(request).enqueue(new Callback() {
+      @Override
+      public void onFailure(Call call, IOException e) {
+        responseFuture.completeExceptionally(e);
+      }
+
+      @Override
+      public void onResponse(Call call, okhttp3.Response response)
+          throws IOException {
+        final feign.Response r =
+            toFeignResponse(response, input).toBuilder().request(input).build();
+        responseFuture.complete(r);
+      }
+    });
+    return responseFuture;
   }
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,24 +15,27 @@ package feign.template;
 
 import feign.CollectionFormat;
 import feign.Util;
+import feign.template.Template.EncodingOptions;
+import feign.template.Template.ExpansionOptions;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
  * Template for a Query String parameter.
  */
-public final class QueryTemplate extends Template {
+public final class QueryTemplate {
 
   private static final String UNDEF = "undef";
-  private List<String> values;
+  private List<Template> values;
   private final Template name;
   private final CollectionFormat collectionFormat;
   private boolean pure = false;
@@ -46,7 +49,14 @@ public final class QueryTemplate extends Template {
    * @return a QueryTemplate.
    */
   public static QueryTemplate create(String name, Iterable<String> values, Charset charset) {
-    return create(name, values, charset, CollectionFormat.EXPLODED);
+    return create(name, values, charset, CollectionFormat.EXPLODED, true);
+  }
+
+  public static QueryTemplate create(String name,
+                                     Iterable<String> values,
+                                     Charset charset,
+                                     CollectionFormat collectionFormat) {
+    return create(name, values, charset, collectionFormat, true);
   }
 
   /**
@@ -56,12 +66,14 @@ public final class QueryTemplate extends Template {
    * @param values in the template.
    * @param charset for the template.
    * @param collectionFormat to use.
+   * @param decodeSlash if slash characters should be decoded
    * @return a QueryTemplate
    */
   public static QueryTemplate create(String name,
                                      Iterable<String> values,
                                      Charset charset,
-                                     CollectionFormat collectionFormat) {
+                                     CollectionFormat collectionFormat,
+                                     boolean decodeSlash) {
     if (Util.isBlank(name)) {
       throw new IllegalArgumentException("name is required.");
     }
@@ -75,16 +87,7 @@ public final class QueryTemplate extends Template {
         .filter(Util::isNotBlank)
         .collect(Collectors.toList());
 
-    StringBuilder template = new StringBuilder();
-    Iterator<String> iterator = remaining.iterator();
-    while (iterator.hasNext()) {
-      template.append(iterator.next());
-      if (iterator.hasNext()) {
-        template.append(COLLECTION_DELIMITER);
-      }
-    }
-
-    return new QueryTemplate(template.toString(), name, remaining, charset, collectionFormat);
+    return new QueryTemplate(name, remaining, charset, collectionFormat, decodeSlash);
   }
 
   /**
@@ -96,36 +99,50 @@ public final class QueryTemplate extends Template {
    */
   public static QueryTemplate append(QueryTemplate queryTemplate,
                                      Iterable<String> values,
-                                     CollectionFormat collectionFormat) {
+                                     CollectionFormat collectionFormat,
+                                     boolean decodeSlash) {
     List<String> queryValues = new ArrayList<>(queryTemplate.getValues());
     queryValues.addAll(StreamSupport.stream(values.spliterator(), false)
         .filter(Util::isNotBlank)
         .collect(Collectors.toList()));
-    return create(queryTemplate.getName(), queryValues, queryTemplate.getCharset(),
-        collectionFormat);
+    return create(queryTemplate.getName(), queryValues, StandardCharsets.UTF_8,
+        collectionFormat, decodeSlash);
   }
 
   /**
    * Create a new Query Template.
    *
-   * @param template for the Query String.
    * @param name of the query parameter.
    * @param values for the parameter.
    * @param collectionFormat to use.
    */
   private QueryTemplate(
-      String template,
       String name,
       Iterable<String> values,
       Charset charset,
-      CollectionFormat collectionFormat) {
-    super(template, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, true, charset);
+      CollectionFormat collectionFormat,
+      boolean decodeSlash) {
+    this.values = new CopyOnWriteArrayList<>();
     this.name = new Template(name, ExpansionOptions.ALLOW_UNRESOLVED, EncodingOptions.REQUIRED,
-        false, charset);
+        !decodeSlash, charset);
     this.collectionFormat = collectionFormat;
-    this.values = StreamSupport.stream(values.spliterator(), false)
-        .filter(Util::isNotBlank)
-        .collect(Collectors.toList());
+
+    /* parse each value into a template chunk for resolution later */
+    for (String value : values) {
+      if (value.isEmpty()) {
+        /* skip */
+        continue;
+      }
+
+      this.values.add(
+          new Template(
+              value,
+              ExpansionOptions.REQUIRED,
+              EncodingOptions.REQUIRED,
+              !decodeSlash,
+              charset));
+    }
+
     if (this.values.isEmpty()) {
       /* in this case, we have a pure parameter */
       this.pure = true;
@@ -134,7 +151,17 @@ public final class QueryTemplate extends Template {
   }
 
   public List<String> getValues() {
-    return values;
+    return Collections.unmodifiableList(this.values.stream()
+        .map(Template::toString)
+        .collect(Collectors.toList()));
+  }
+
+  public List<String> getVariables() {
+    List<String> variables = new ArrayList<>(this.name.getVariables());
+    for (Template template : this.values) {
+      variables.addAll(template.getVariables());
+    }
+    return Collections.unmodifiableList(variables);
   }
 
   public String getName() {
@@ -143,7 +170,7 @@ public final class QueryTemplate extends Template {
 
   @Override
   public String toString() {
-    return this.queryString(this.name.toString(), super.toString());
+    return this.queryString(this.name.toString(), this.getValues());
   }
 
   /**
@@ -153,39 +180,43 @@ public final class QueryTemplate extends Template {
    * @param variables containing the values for expansion.
    * @return the expanded template.
    */
-  @Override
   public String expand(Map<String, ?> variables) {
     String name = this.name.expand(variables);
-    return this.queryString(name, super.expand(variables));
-  }
 
-  @Override
-  protected String resolveExpression(Expression expression, Map<String, ?> variables) {
-    if (variables.containsKey(expression.getName())) {
-      if (variables.get(expression.getName()) == null) {
-        /* explicit undefined */
-        return UNDEF;
-      }
-      return super.resolveExpression(expression, variables);
-    }
-
-    /* mark the variable as undefined */
-    return UNDEF;
-  }
-
-  private String queryString(String name, String values) {
     if (this.pure) {
       return name;
     }
 
-    /* covert the comma separated values into a value query string */
-    List<String> resolved = Arrays.stream(values.split(COLLECTION_DELIMITER))
-        .filter(Objects::nonNull)
-        .filter(s -> !UNDEF.equalsIgnoreCase(s))
-        .collect(Collectors.toList());
+    List<String> expanded = new ArrayList<>();
+    for (Template template : this.values) {
+      String result = template.expand(variables);
+      if (result == null) {
+        continue;
+      }
 
-    if (!resolved.isEmpty()) {
-      return this.collectionFormat.join(name, resolved, this.getCharset()).toString();
+      /*
+       * check for an iterable result, and if one is there, we need to split it into individual
+       * values
+       */
+      if (result.contains(",")) {
+        /* we need to split it */
+        expanded.addAll(Arrays.asList(result.split(",")));
+      } else {
+        expanded.add(result);
+      }
+    }
+
+    return this.queryString(name, Collections.unmodifiableList(expanded));
+  }
+
+
+  private String queryString(String name, List<String> values) {
+    if (this.pure) {
+      return name;
+    }
+
+    if (!values.isEmpty()) {
+      return this.collectionFormat.join(name, values, StandardCharsets.UTF_8).toString();
     }
 
     /* nothing to return, all values are unresolved */

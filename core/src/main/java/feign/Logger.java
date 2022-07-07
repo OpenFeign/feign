@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,9 +19,8 @@ import java.io.StringWriter;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
-import static feign.Util.UTF_8;
-import static feign.Util.decodeOrDefault;
-import static feign.Util.valuesOrEmpty;
+import static feign.Util.*;
+import static java.util.Objects.nonNull;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -29,8 +28,7 @@ import static feign.Util.valuesOrEmpty;
 public abstract class Logger {
 
   protected static String methodTag(String configKey) {
-    return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('(')))
-        .append("] ").toString();
+    return '[' + configKey.substring(0, configKey.indexOf('(')) + "] ";
   }
 
   /**
@@ -43,23 +41,47 @@ public abstract class Logger {
    */
   protected abstract void log(String configKey, String format, Object... args);
 
+  /**
+   * Override to filter out request headers.
+   *
+   * @param header header name
+   * @return true to log a request header
+   */
+  protected boolean shouldLogRequestHeader(String header) {
+    return true;
+  }
+
+  /**
+   * Override to filter out response headers.
+   *
+   * @param header header name
+   * @return true to log a response header
+   */
+  protected boolean shouldLogResponseHeader(String header) {
+    return true;
+  }
+
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
+    String protocolVersion = resolveProtocolVersion(request.protocolVersion());
+    log(configKey, "---> %s %s %s", request.httpMethod().name(), request.url(),
+        protocolVersion);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
-        for (String value : valuesOrEmpty(request.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogRequestHeader(field)) {
+          for (String value : valuesOrEmpty(request.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
       int bodyLength = 0;
-      if (request.requestBody().asBytes() != null) {
-        bodyLength = request.requestBody().asBytes().length;
+      if (request.body() != null) {
+        bodyLength = request.length();
         if (logLevel.ordinal() >= Level.FULL.ordinal()) {
           String bodyText =
               request.charset() != null
-                  ? new String(request.requestBody().asBytes(), request.charset())
+                  ? new String(request.body(), request.charset())
                   : null;
           log(configKey, ""); // CRLF
           log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
@@ -78,16 +100,19 @@ public abstract class Logger {
                                             Response response,
                                             long elapsedTime)
       throws IOException {
+    String protocolVersion = resolveProtocolVersion(response.protocolVersion());
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
-        for (String value : valuesOrEmpty(response.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogResponseHeader(field)) {
+          for (String value : valuesOrEmpty(response.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
@@ -127,6 +152,13 @@ public abstract class Logger {
     return ioe;
   }
 
+  protected static String resolveProtocolVersion(Request.ProtocolVersion protocolVersion) {
+    if (nonNull(protocolVersion)) {
+      return protocolVersion.toString();
+    }
+    return "UNKNOWN";
+  }
+
   /**
    * Controls the level of logging.
    */
@@ -164,8 +196,44 @@ public abstract class Logger {
    */
   public static class JavaLogger extends Logger {
 
-    final java.util.logging.Logger logger =
-        java.util.logging.Logger.getLogger(Logger.class.getName());
+    final java.util.logging.Logger logger;
+
+    /**
+     * @deprecated Use {@link #JavaLogger(String)} or {@link #JavaLogger(Class)} instead.
+     *
+     *             This constructor can be used to create just one logger. Example =
+     *             {@code Logger.JavaLogger().appendToFile("logs/first.log")}
+     *
+     *             If you create multiple loggers for multiple clients and provide different files
+     *             to write log - you'll have unexpected behavior - all clients will write same log
+     *             to each file.
+     *
+     *             That's why this constructor will be removed in future.
+     */
+    @Deprecated
+    public JavaLogger() {
+      logger = java.util.logging.Logger.getLogger(Logger.class.getName());
+    }
+
+    /**
+     * Constructor for JavaLogger class
+     * 
+     * @param loggerName a name for the logger. This should be a dot-separated name and should
+     *        normally be based on the package name or class name of the subsystem, such as java.net
+     *        or javax.swing
+     */
+    public JavaLogger(String loggerName) {
+      logger = java.util.logging.Logger.getLogger(loggerName);
+    }
+
+    /**
+     * Constructor for JavaLogger class
+     *
+     * @param clazz the returned logger will be named after clazz
+     */
+    public JavaLogger(Class<?> clazz) {
+      logger = java.util.logging.Logger.getLogger(clazz.getName());
+    }
 
     @Override
     protected void logRequest(String configKey, Level logLevel, Request request) {

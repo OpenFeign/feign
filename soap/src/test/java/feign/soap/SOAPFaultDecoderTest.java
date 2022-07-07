@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -31,6 +31,7 @@ import feign.Response;
 import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 
+@SuppressWarnings("deprecation")
 public class SOAPFaultDecoderTest {
 
   @Rule
@@ -85,31 +86,34 @@ public class SOAPFaultDecoderTest {
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
     Assertions.assertThat(error).isInstanceOf(FeignException.class)
-        .hasMessage("status 503 reading Service#foo()");
+        .hasMessage(
+            "[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: [Service Unavailable]");
   }
 
   @Test
   public void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
+    String responseBody = "<?xml version = '1.0' encoding = 'UTF-8'?>\n" +
+        "<SOAP-ENV:Envelope\n" +
+        "   xmlns:SOAP-ENV = \"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
+        "   xmlns:xsi = \"http://www.w3.org/1999/XMLSchema-instance\"\n" +
+        "   xmlns:xsd = \"http://www.w3.org/1999/XMLSchema\">\n" +
+        "   <SOAP-ENV:Body>\n" +
+        "   </SOAP-ENV:Body>\n" +
+        "</SOAP-ENV:Envelope>";
     Response response = Response.builder()
         .status(500)
         .reason("Internal Server Error")
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
-        .body("<?xml version = '1.0' encoding = 'UTF-8'?>\n" +
-            "<SOAP-ENV:Envelope\n" +
-            "   xmlns:SOAP-ENV = \"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-            "   xmlns:xsi = \"http://www.w3.org/1999/XMLSchema-instance\"\n" +
-            "   xmlns:xsd = \"http://www.w3.org/1999/XMLSchema\">\n" +
-            "   <SOAP-ENV:Body>\n" +
-            "   </SOAP-ENV:Body>\n" +
-            "</SOAP-ENV:Envelope>", UTF_8)
+        .body(responseBody, UTF_8)
         .build();
 
     Exception error =
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
     Assertions.assertThat(error).isInstanceOf(FeignException.class)
-        .hasMessage("status 500 reading Service#foo()");
+        .hasMessage("[500 Internal Server Error] during [GET] to [/api] [Service#foo()]: ["
+            + responseBody + "]");
   }
 
   private static byte[] getResourceBytes(String resourcePath) throws IOException {

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -45,22 +45,22 @@ import feign.jaxb.JAXBContextFactory;
  * <p>
  * Basic example with with Feign.Builder:
  * </p>
- * 
+ *
  * <pre>
- * 
+ *
  * public interface MyApi {
- * 
+ *
  *    &#64;RequestLine("POST /getObject")
  *    &#64;Headers({
  *      "SOAPAction: getObject",
  *      "Content-Type: text/xml"
  *    })
  *    MyJaxbObjectResponse getObject(MyJaxbObjectRequest request);
- *    
+ *
  * }
- * 
+ *
  * ...
- * 
+ *
  * JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
  *     .withMarshallerJAXBEncoding("UTF-8")
  *     .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -69,7 +69,7 @@ import feign.jaxb.JAXBContextFactory;
  * api = Feign.builder()
  *     .encoder(new SOAPEncoder(jaxbFactory))
  *     .target(MyApi.class, "http://api");
- *     
+ *
  * ...
  *
  * try {
@@ -78,7 +78,7 @@ import feign.jaxb.JAXBContextFactory;
  *    log.info(faultException.getFault().getFaultString());
  * }
  * </pre>
- * 
+ *
  * <p>
  * The JAXBContextFactory should be reused across requests as it caches the created JAXB contexts.
  * </p>
@@ -124,6 +124,9 @@ public class SOAPEncoder implements Encoder {
           Boolean.toString(writeXmlDeclaration));
       soapMessage.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, charsetEncoding.displayName());
       soapMessage.getSOAPBody().addDocument(document);
+
+      soapMessage = modifySOAPMessage(soapMessage);
+
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       if (formattedOutput) {
         Transformer t = TransformerFactory.newInstance().newTransformer();
@@ -138,6 +141,30 @@ public class SOAPEncoder implements Encoder {
         | TransformerFactoryConfigurationError | TransformerException e) {
       throw new EncodeException(e.toString(), e);
     }
+  }
+
+  /**
+   * Override this in order to modify the SOAP message object before it's finally encoded. <br>
+   * This might be useful to add SOAP Headers, which are not supported by this SOAPEncoder directly.
+   * <br>
+   * This is an example of how to add a security header: <code>
+   *   protected SOAPMessage modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+   *     SOAPFactory soapFactory = SOAPFactory.newInstance();
+   *     String uri = "http://schemas.xmlsoap.org/ws/2002/12/secext";
+   *     String prefix = "wss";
+   *     SOAPElement security = soapFactory.createElement("Security", prefix, uri);
+   *     SOAPElement usernameToken = soapFactory.createElement("UsernameToken", prefix, uri);
+   *     usernameToken.addChildElement("Username", prefix, uri).setValue("test");
+   *     usernameToken.addChildElement("Password", prefix, uri).setValue("test");
+   *     security.addChildElement(usernameToken);
+   *     soapMessage.getSOAPHeader().addChildElement(security);
+   *     return soapMessage;
+   *   }
+   * </code>
+   */
+  protected SOAPMessage modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+    // Intentionally blank
+    return soapMessage;
   }
 
   /**
@@ -177,9 +204,9 @@ public class SOAPEncoder implements Encoder {
 
     /**
      * The protocol used to create message factory. Default is "SOAP 1.1 Protocol".
-     * 
+     *
      * @param soapProtocol a string constant representing the MessageFactory protocol.
-     * 
+     *
      * @see SOAPConstants#SOAP_1_1_PROTOCOL
      * @see SOAPConstants#SOAP_1_2_PROTOCOL
      * @see SOAPConstants#DYNAMIC_SOAP_PROTOCOL

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,21 +17,14 @@ import static feign.Util.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import feign.Client;
-import feign.Request;
-import feign.Response;
-import feign.Util;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import feign.*;
+import feign.Request.ProtocolVersion;
 
-public class MockClient implements Client {
+public class MockClient implements Client, AsyncClient<Object> {
 
-  class RequestResponse {
+  static class RequestResponse {
 
     private final RequestKey requestKey;
 
@@ -44,9 +37,9 @@ public class MockClient implements Client {
 
   }
 
-  private final List<RequestResponse> responses = new ArrayList<RequestResponse>();
+  private final List<RequestResponse> responses = new ArrayList<>();
 
-  private final Map<RequestKey, List<Request>> requests = new HashMap<RequestKey, List<Request>>();
+  private final Map<RequestKey, List<Request>> requests = new HashMap<>();
 
   private boolean sequential;
 
@@ -68,8 +61,25 @@ public class MockClient implements Client {
     } else {
       responseBuilder = executeAny(request, requestKey);
     }
+    responseBuilder.protocolVersion(ProtocolVersion.MOCK);
 
     return responseBuilder.request(request).build();
+  }
+
+  @Override
+  public CompletableFuture<Response> execute(Request request,
+                                             Request.Options options,
+                                             Optional<Object> requestContext) {
+    RequestKey requestKey = RequestKey.create(request);
+    Response.Builder responseBuilder;
+    if (sequential) {
+      responseBuilder = executeSequential(requestKey);
+    } else {
+      responseBuilder = executeAny(request, requestKey);
+    }
+    responseBuilder.protocolVersion(ProtocolVersion.MOCK);
+
+    return CompletableFuture.completedFuture(responseBuilder.request(request).build());
   }
 
   private Response.Builder executeSequential(RequestKey requestKey) {
@@ -97,7 +107,7 @@ public class MockClient implements Client {
     if (requests.containsKey(requestKey)) {
       requests.get(requestKey).add(request);
     } else {
-      requests.put(requestKey, new ArrayList<Request>(Arrays.asList(request)));
+      requests.put(requestKey, new ArrayList<>(Arrays.asList(request)));
     }
 
     responseBuilder = getResponseBuilder(request, requestKey);
@@ -222,6 +232,10 @@ public class MockClient implements Client {
     return verifyTimes(method, url, 1).get(0);
   }
 
+  public Request verifyOne(RequestKey requestKey) {
+    return verifyTimes(requestKey, 1).get(0);
+  }
+
   public List<Request> verifyTimes(final HttpMethod method, final String url, final int times) {
     if (times < 0) {
       throw new IllegalArgumentException("times must be a non negative number");
@@ -248,10 +262,48 @@ public class MockClient implements Client {
     return result;
   }
 
+  public List<Request> verifyTimes(RequestKey requestKey, final int times) {
+    if (times < 0) {
+      throw new IllegalArgumentException("times must be a non negative number");
+    }
+
+    if (times == 0) {
+      verifyNever(requestKey);
+      return Collections.emptyList();
+    }
+
+    List<Request> result = null;
+    for (Map.Entry<RequestKey, List<Request>> request : requests.entrySet()) {
+      if (request.getKey().equalsExtended(requestKey)) {
+        result = request.getValue();
+      }
+    }
+    if (result == null) {
+      throw new VerificationAssertionError("Wanted: '%s' but never invoked! Got: %s", requestKey,
+          requests.keySet());
+    }
+
+    if (result.size() != times) {
+      throw new VerificationAssertionError("Wanted: '%s' to be invoked: '%s' times but got: '%s'!",
+          requestKey,
+          times, result.size());
+    }
+
+    return result;
+  }
+
   public void verifyNever(HttpMethod method, String url) {
     RequestKey requestKey = RequestKey.builder(method, url).build();
     if (requests.containsKey(requestKey)) {
       throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!", requestKey);
+    }
+  }
+
+  public void verifyNever(RequestKey requestKey) {
+    for (RequestKey recorderRequestKey : requests.keySet()) {
+      if (recorderRequestKey.equalsExtended(requestKey)) {
+        throw new VerificationAssertionError("Do not wanted: '%s' but was invoked!", requestKey);
+      }
     }
   }
 

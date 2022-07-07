@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,21 +14,21 @@
 package feign;
 
 import java.lang.annotation.Retention;
-import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A named template parameter applied to {@link Headers}, {@linkplain RequestLine} or
- * {@linkplain Body}
+ * A named template parameter applied to {@link Headers}, {@linkplain RequestLine},
+ * {@linkplain Body}, POJO fields or beans properties when it expanding
  */
 @Retention(RUNTIME)
-@java.lang.annotation.Target(PARAMETER)
+@java.lang.annotation.Target({PARAMETER, FIELD, METHOD})
 public @interface Param {
 
   /**
    * The name of the template parameter.
    */
-  String value();
+  String value() default "";
 
   /**
    * How to expand the value of this parameter, if {@link ToStringExpander} isn't adequate.
@@ -36,10 +36,12 @@ public @interface Param {
   Class<? extends Expander> expander() default ToStringExpander.class;
 
   /**
-   * Specifies whether argument is already encoded The value is ignored for headers (headers are
-   * never encoded)
+   * {@code encoded} has been maintained for backward compatibility and should be deprecated. We no
+   * longer need it as values that are already pct-encoded should be identified during expansion and
+   * passed through without any changes
    *
    * @see QueryMap#encoded
+   * @deprecated
    */
   boolean encoded() default false;
 

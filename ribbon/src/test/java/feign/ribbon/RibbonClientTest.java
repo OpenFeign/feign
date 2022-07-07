@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,16 +19,18 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -47,6 +49,7 @@ import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
 
+@Ignore("inconsistent, deprecated toolset")
 public class RibbonClientTest {
 
   @Rule
@@ -292,7 +295,8 @@ public class RibbonClientTest {
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
 
-    Request.Options options = new Request.Options(1000, 1000, false);
+    Request.Options options =
+        new Request.Options(1000, TimeUnit.MILLISECONDS, 1000, TimeUnit.MILLISECONDS, false);
     TestInterface api = Feign.builder()
         .options(options)
         .client(RibbonClient.create())
@@ -324,7 +328,8 @@ public class RibbonClientTest {
     getConfigInstance().setProperty(serverListKey(),
         hostAndPort(server1.url("").url()) + "," + hostAndPort(server2.url("").url()));
 
-    Request.Options options = new Request.Options(1000, 1000, true);
+    Request.Options options =
+        new Request.Options(1000, TimeUnit.MILLISECONDS, 1000, TimeUnit.MILLISECONDS, true);
     TestInterface api = Feign.builder()
         .options(options)
         .client(RibbonClient.create())
@@ -344,7 +349,8 @@ public class RibbonClientTest {
 
   @Test
   public void testFeignOptionsClientConfig() {
-    Request.Options options = new Request.Options(1111, 22222);
+    Request.Options options =
+        new Request.Options(1111, TimeUnit.MILLISECONDS, 22222, TimeUnit.MILLISECONDS, true);
     IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
     assertThat(config.get(CommonClientConfigKey.ConnectTimeout),
         equalTo(options.connectTimeoutMillis()));

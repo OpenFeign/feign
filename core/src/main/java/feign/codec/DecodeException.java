@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign.codec;
 
 import feign.FeignException;
+import feign.Request;
 import static feign.Util.checkNotNull;
 
 /**
@@ -28,15 +29,15 @@ public class DecodeException extends FeignException {
   /**
    * @param message the reason for the failure.
    */
-  public DecodeException(int status, String message) {
-    super(status, checkNotNull(message, "message"));
+  public DecodeException(int status, String message, Request request) {
+    super(status, checkNotNull(message, "message"), request);
   }
 
   /**
    * @param message possibly null reason for the failure.
    * @param cause the cause of the error.
    */
-  public DecodeException(int status, String message, Throwable cause) {
-    super(status, message, checkNotNull(cause, "cause"));
+  public DecodeException(int status, String message, Request request, Throwable cause) {
+    super(status, message, request, checkNotNull(cause, "cause"));
   }
 }

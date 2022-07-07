@@ -4,7 +4,7 @@ Reactive Streams Wrapper
 This module wraps Feign's http requests in a [Reactive Streams](https://reactive-streams.org) 
 Publisher, enabling the use of Reactive Stream `Publisher` return types.  Supported Reactive Streams implementations are:
  
-* [Reactor](https://projectreactor.io/ (`Mono` and `Flux`)
+* [Reactor](https://projectreactor.io/) (`Mono` and `Flux`)
 * [ReactiveX (RxJava)](https://reactivex.io) (`Flowable` only)
 
 To use these wrappers, add the `feign-reactive-wrappers` module, and your desired `reactive-streams` 
@@ -31,7 +31,6 @@ public class ExampleReactor {
       .target(GitHubReactor.class, "https://api.github.com");
     
     List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
-      .map(Contributor::new)
       .collect(Collectors.toList())
       .block();
   }
@@ -57,7 +56,6 @@ public class ExampleRxJava2 {
       .target(GitHub.class, "https://api.github.com");
     
     List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
-      .map(Contributor::new)
       .collect(Collectors.toList())
       .block();
   }

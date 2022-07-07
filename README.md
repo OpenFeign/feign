@@ -1,11 +1,12 @@
 # Feign makes writing java http clients easier
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/OpenFeign/feign.svg?branch=master)](https://travis-ci.org/OpenFeign/feign)
+[![CircleCI](https://circleci.com/gh/OpenFeign/feign/tree/master.svg?style=svg)](https://circleci.com/gh/OpenFeign/feign/tree/master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/badge.png)](https://search.maven.org/artifact/io.github.openfeign/feign-core/)
 
 Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
 
+---
 ### Why Feign and not X?
 
 Feign uses tools like Jersey and CXF to write java clients for ReST or SOAP services. Furthermore, Feign allows you to write your own code on top of http libraries such as Apache HC. Feign connects your code to http APIs with minimal overhead and code via customizable decoders and error handling, which can be written to any text-based http API.
@@ -18,6 +19,44 @@ Feign works by processing annotations into a templatized request. Arguments are 
 
 Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11.  For those that need JDK 6 compatibility, please use Feign 9.x
 
+## Feature overview
+
+This is a map with current key features provided by feign:
+
+![MindMap overview](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/OpenFeign/feign/master/src/docs/overview-mindmap.iuml)
+
+# Roadmap
+## Feign 11 and beyond
+Making _API_ clients easier
+
+Short Term - What we're working on now. ⏰
+---
+* Response Caching
+  * Support caching of api responses.  Allow for users to define under what conditions a response is eligible for caching and what type of caching mechanism should be used.
+  * Support in-memory caching and external cache implementations (EhCache, Google, Spring, etc...)
+* Complete URI Template expression support
+  * Support [level 1 through level 4](https://tools.ietf.org/html/rfc6570#section-1.2) URI template expressions.
+  * Use [URI Templates TCK](https://github.com/uri-templates/uritemplate-test) to verify compliance.
+* `Logger` API refactor
+  * Refactor the `Logger` API to adhere closer to frameworks like SLF4J providing a common mental model for logging within Feign.  This model will be used by Feign itself throughout and provide clearer direction on how the `Logger` will be used.
+* `Retry` API refactor
+  * Refactor the `Retry` API to support user-supplied conditions and better control over back-off policies. **This may result in non-backward-compatible breaking changes**
+
+Medium Term - What's up next. ⏲
+---
+* Async execution support via `CompletableFuture`
+  * Allow for `Future` chaining and executor management for the request/response lifecycle.  **Implementation will require non-backward-compatible breaking changes**.  However this feature is required before Reactive execution can be considered.
+* Reactive execution support via [Reactive Streams](https://www.reactive-streams.org/)
+  * For JDK 9+, consider a native implementation that uses `java.util.concurrent.Flow`.
+  * Support for [Project Reactor](https://projectreactor.io/) and [RxJava 2+](https://github.com/ReactiveX/RxJava) implementations on JDK 8.
+
+Long Term - The future ☁️
+---
+* Additional Circuit Breaker Support.
+  * Support additional Circuit Breaker implementations like [Resilience4J](https://resilience4j.readme.io/) and Spring Circuit Breaker
+
+---
+
 ### Basics
 
 Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/samples/src/main/java/com/example/retrofit/SimpleService.java).
@@ -26,6 +65,10 @@ Usage typically looks like this, an adaptation of the [canonical Retrofit sample
 interface GitHub {
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @RequestLine("POST /repos/{owner}/{repo}/issues")
+  void createIssue(Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+
 }
 
 public static class Contributor {
@@ -33,12 +76,20 @@ public static class Contributor {
   int contributions;
 }
 
+public static class Issue {
+  String title;
+  String body;
+  List<String> assignees;
+  int milestone;
+  List<String> labels;
+}
+
 public class MyApp {
   public static void main(String... args) {
     GitHub github = Feign.builder()
                          .decoder(new GsonDecoder())
                          .target(GitHub.class, "https://api.github.com");
-  
+
     // Fetch and print a list of the contributors to this library.
     List<Contributor> contributors = github.contributors("OpenFeign", "feign");
     for (Contributor contributor : contributors) {
@@ -56,25 +107,38 @@ should work.  Feign's default contract defines the following annotations:
 | Annotation     | Interface Target | Usage |
 |----------------|------------------|-------|
 | `@RequestLine` | Method           | Defines the `HttpMethod` and `UriTemplate` for request.  `Expressions`, values wrapped in curly-braces `{expression}` are resolved using their corresponding `@Param` annotated parameters. |
-| `@Param`       | Parameter        | Defines a template variable, whose value will be used to resolve the corresponding template `Expression`, by name. |
+| `@Param`       | Parameter        | Defines a template variable, whose value will be used to resolve the corresponding template `Expression`, by name provided as annotation value. If value is missing it will try to get the name from bytecode method parameter name (if the code was compiled with `-parameters` flag). |
 | `@Headers`     | Method, Type     | Defines a `HeaderTemplate`; a variation on a `UriTemplate`.  that uses `@Param` annotated values to resolve the corresponding `Expressions`.  When used on a `Type`, the template will be applied to every request.  When used on a `Method`, the template will apply only to the annotated method. |
 | `@QueryMap`    | Parameter        | Defines a `Map` of name-value pairs, or POJO, to expand into a query string. |
 | `@HeaderMap`   | Parameter        | Defines a `Map` of name-value pairs, to expand into `Http Headers` |
 | `@Body`        | Method           | Defines a `Template`, similar to a `UriTemplate` and `HeaderTemplate`, that uses `@Param` annotated values to resolve the corresponding `Expressions`.|
 
+
+> **Overriding the Request Line**
+>
+> If there is a need to target a request to a different host then the one supplied when the Feign client was created, or
+> you want to supply a target host for each request, include a `java.net.URI` parameter and Feign will use that value
+> as the request target.
+>
+> ```java
+> @RequestLine("POST /repos/{owner}/{repo}/issues")
+> void createIssue(URI host, Issue issue, @Param("owner") String owner, @Param("repo") String repo);
+> ```
+>
+
 ### Templates and Expressions
 
 Feign `Expressions` represent Simple String Expressions (Level 1) as defined by [URI Template - RFC 6570](https://tools.ietf.org/html/rfc6570).  `Expressions` are expanded using
-their corresponding `Param` annotated method parameters.  
+their corresponding `Param` annotated method parameters.
 
 *Example*
 
 ```java
 public interface GitHub {
-  
+
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
   List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repository);
-  
+
   class Contributor {
     String login;
     int contributions;
@@ -86,10 +150,10 @@ public class MyApp {
     GitHub github = Feign.builder()
                          .decoder(new GsonDecoder())
                          .target(GitHub.class, "https://api.github.com");
-    
+
     /* The owner and repository parameters will be used to expand the owner and repo expressions
      * defined in the RequestLine.
-     * 
+     *
      * the resulting uri will be https://api.github.com/repos/OpenFeign/feign/contributors
      */
     github.contributors("OpenFeign", "feign");
@@ -106,6 +170,38 @@ resolved values.  *Example* `owner` must be alphabetic. `{owner:[a-zA-Z]*}`
 
 * Unresolved expressions are omitted.
 * All literals and variable values are pct-encoded, if not already encoded or marked `encoded` via a `@Param` annotation.
+
+We also have limited support for Level 3, Path Style Expressions, with the following restrictions:
+
+* Maps and Lists are expanded by default.
+* Only Single variable templates are supported.
+
+*Examples:*
+
+```
+{;who}             ;who=fred
+{;half}            ;half=50%25
+{;empty}           ;empty
+{;list}            ;list=red;list=green;list=blue
+{;map}             ;semi=%3B;dot=.;comma=%2C
+```
+
+```java
+public interface MatrixService {
+
+  @RequestLine("GET /repos{;owners}")
+  List<Contributor> contributors(@Param("owners") List<String> owners);
+
+  class Contributor {
+    String login;
+    int contributions;
+  }
+}
+```
+
+If `owners` in the above example is defined as `Matt, Jeff, Susan`, the uri will expand to `/repos;owners=Matt;owners=Jeff;owners=Susan` 
+
+For more information see [RFC 6570, Section 3.2.7](https://datatracker.ietf.org/doc/html/rfc6570#section-3.2.7)
 
 #### Undefined vs. Empty Values ####
 
@@ -157,7 +253,7 @@ See [Advanced Usage](#advanced-usage) for more examples.
 
 > **What about slashes? `/`**
 >
-> `@RequestLine` and `@QueryMap` templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.  
+> @RequestLine templates do not encode slash `/` characters by default.  To change this behavior, set the `decodeSlash` property on the `@RequestLine` to `false`.
 
 > **What about plus? `+`**
 >
@@ -166,7 +262,7 @@ See [Advanced Usage](#advanced-usage) for more examples.
 > `+` symbol should not represent a space and is explicitly encoded as `%2B` when found on a query string.
 >
 > If you wish to use `+` as a space, then use the literal ` ` character or encode the value directly as `%20`
- 
+
 ##### Custom Expansion
 
 The `@Param` annotation has an optional property `expander` allowing for complete control over the individual parameter's expansion.
@@ -180,9 +276,9 @@ public interface Expander {
 The result of this method adheres to the same rules stated above.  If the result is `null` or an empty string,
 the value is omitted.  If the value is not pct-encoded, it will be.  See [Custom @Param Expansion](#custom-param-expansion) for more examples.
 
-#### Request Headers Expansion 
+#### Request Headers Expansion
 
-`Headers` and `HeaderMap` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion) 
+`Headers` and `HeaderMap` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion)
 with the following alterations:
 
 * Unresolved expressions are omitted.  If the result is an empty header value, the entire header is removed.
@@ -190,7 +286,7 @@ with the following alterations:
 
 See [Headers](#headers) for examples.
 
-> **A Note on `@Param` parameters and their names**: 
+> **A Note on `@Param` parameters and their names**:
 >
 > All expressions with the same name, regardless of their position on the `@RequestLine`, `@QueryMap`, `@BodyTemplate`, or `@Headers` will resolve to the same value.
 > In the following example, the value of `contentType`, will be used to resolve both the header and path expression:
@@ -202,12 +298,12 @@ See [Headers](#headers) for examples.
 >   String getDocumentByType(@Param("contentType") String type);
 > }
 >```
-> 
+>
 > Keep this in mind when designing your interfaces.
 
 #### Request Body Expansion
 
-`Body` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion) 
+`Body` templates follow the same rules as [Request Parameter Expansion](#request-parameter-expansion)
 with the following alterations:
 
 * Unresolved expressions are omitted.
@@ -217,7 +313,10 @@ with the following alterations:
 ---
 ### Customization
 
-Feign has several aspects that can be customized.  For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.  For example:
+Feign has several aspects that can be customized.  
+For simple cases, you can use `Feign.builder()` to construct an API interface with your custom components.<br>
+For request setting, you can use `options(Request.Options options)` on `target()` to set connectTimeout, connectTimeoutUnit, readTimeout, readTimeoutUnit, followRedirects.<br>
+For example:
 
 ```java
 interface Bank {
@@ -227,8 +326,9 @@ interface Bank {
 
 public class BankService {
   public static void main(String[] args) {
-    Bank bank = Feign.builder().decoder(
-        new AccountDecoder())
+    Bank bank = Feign.builder()
+        .decoder(new AccountDecoder())
+        .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
         .target(Bank.class, "https://api.examplebank.com");
   }
 }
@@ -245,7 +345,7 @@ public class CloudService {
     CloudDNS cloudDNS = Feign.builder()
       .target(new CloudIdentityTarget<CloudDNS>(user, apiKey));
   }
-  
+
   class CloudIdentityTarget extends Target<CloudDNS> {
     /* implementation of a Target */
   }
@@ -291,6 +391,9 @@ public class Example {
   }
 }
 ```
+
+For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
+the [Jackson Jr Module](./jackson-jr).
 
 ### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
@@ -373,7 +476,7 @@ public class Example {
 ```
 
 ### Java 11 Http2
-[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](http://www.javamagazine.mozaicreader.com/JulyAug2017#&pageSet=39&page=0) that implements HTTP/2.
+[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](https://openjdk.java.net/jeps/321) that implements HTTP/2.
 
 To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
 
@@ -428,6 +531,7 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .logger(new Slf4jLogger())
+                     .logLevel(Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
 }
@@ -460,6 +564,39 @@ public class Example {
     JsonpApi jsonpApi = Feign.builder()
                          .mapAndDecode((response, type) -> jsopUnwrap(response, type), new GsonDecoder())
                          .target(JsonpApi.class, "https://some-jsonp-api.com");
+  }
+}
+```
+
+If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
+
+Here's how to configure Stream decoder without delegate decoder:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }))
+            .target(GitHub.class, "https://api.github.com");
+  }
+}
+``` 
+
+Here's how to configure Stream decoder with delegate decoder:
+
+```java
+
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+            .decoder(StreamDecoder.create((r, t) -> {
+              BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
+              return bufferedReader.lines().iterator();
+            }, (r, t) -> "this is delegate decoder"))
+            .target(GitHub.class, "https://api.github.com");
   }
 }
 ```
@@ -504,7 +641,7 @@ public class Example {
     LoginClient client = Feign.builder()
                               .encoder(new GsonEncoder())
                               .target(LoginClient.class, "https://foo.com");
-    
+
     client.login(new Credentials("denominator", "secret"));
   }
 }
@@ -581,9 +718,12 @@ These approaches specify header entries as part of the api and do not require an
 when building the Feign client.
 
 #### Setting headers per target
-In cases where headers should differ for the same api based on different endpoints or where per-request
-customization is required, headers can be set as part of the client using a `RequestInterceptor` or a
-`Target`.
+To customize headers for each request method on a Target, a RequestInterceptor can be used. RequestInterceptors can be
+shared across Target instances and are expected to be thread-safe. RequestInterceptors are applied to all request
+methods on a Target.
+
+If you need per method customization, a custom Target is required, as the a RequestInterceptor does not have access to
+the current method metadata.
 
 For an example of setting headers using a `RequestInterceptor`, see the `Request Interceptors` section.
 
@@ -594,7 +734,7 @@ Headers can be set as part of a custom `Target`.
     public DynamicAuthTokenTarget(Class<T> clazz,
                                   UrlAndTokenProvider provider,
                                   ThreadLocal<String> requestIdProvider);
-    
+
     @Override
     public Request apply(RequestTemplate input) {
       TokenIdAndPublicURL urlAndToken = provider.get();
@@ -607,7 +747,7 @@ Headers can be set as part of a custom `Target`.
       return input.request();
     }
   }
-  
+
   public class Example {
     public static void main(String[] args) {
       Bank bank = Feign.builder()
@@ -678,15 +818,20 @@ public class Example {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
                      .decoder(new GsonDecoder())
-                     .logger(new Logger.JavaLogger().appendToFile("logs/http.log"))
+                     .logger(new Logger.JavaLogger("GitHub.Logger").appendToFile("logs/http.log"))
                      .logLevel(Logger.Level.FULL)
                      .target(GitHub.class, "https://api.github.com");
   }
 }
 ```
 
+> **A Note on JavaLogger**:
+> Avoid using of default ```JavaLogger()``` constructor - it was marked as deprecated and will be removed soon.
+
 The SLF4JLogger (see above) may also be of interest.
 
+To filter out sensitive information like authorization or tokens
+override methods `shouldLogRequestHeader` or `shouldLogResponseHeader`.
 
 #### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
@@ -825,11 +970,63 @@ public class Example {
 ```
 
 `Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
-`false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be 
+`false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be
 created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
 
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
 cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
+
+### Metrics
+By default, feign won't collect any metrics.
+
+But, it's possible to add metric collection capabilities to any feign client.
+
+Metric Capabilities provide a first-class Metrics API that users can tap into to gain insight into the request/response lifecycle.
+
+#### Dropwizard Metrics 4
+
+```
+public class MyApp {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                         .addCapability(new Metrics4Capability())
+                         .target(GitHub.class, "https://api.github.com");
+
+    github.contributors("OpenFeign", "feign");
+    // metrics will be available from this point onwards
+  }
+}
+```
+
+#### Dropwizard Metrics 5
+
+```
+public class MyApp {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                         .addCapability(new Metrics5Capability())
+                         .target(GitHub.class, "https://api.github.com");
+
+    github.contributors("OpenFeign", "feign");
+    // metrics will be available from this point onwards
+  }
+}
+```
+
+#### Micrometer
+
+```
+public class MyApp {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                         .addCapability(new MicrometerCapability())
+                         .target(GitHub.class, "https://api.github.com");
+
+    github.contributors("OpenFeign", "feign");
+    // metrics will be available from this point onwards
+  }
+}
+```
 
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
@@ -865,4 +1062,66 @@ interface GitHub {
                 .target(GitHub.class, "https://api.github.com");
   }
 }
+```
+
+
+### Async execution via `CompletableFuture`
+
+Feign 10.8 introduces a new builder `AsyncFeign` that allow methods to return `CompletableFuture` instances.
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  CompletableFuture<List<Contributor>> contributors(@Param("owner") String owner, @Param("repo") String repo);
+}
+
+public class MyApp {
+  public static void main(String... args) {
+    GitHub github = AsyncFeign.asyncBuilder()
+                         .decoder(new GsonDecoder())
+                         .target(GitHub.class, "https://api.github.com");
+
+    // Fetch and print a list of the contributors to this library.
+    CompletableFuture<List<Contributor>> contributors = github.contributors("OpenFeign", "feign");
+    for (Contributor contributor : contributors.get(1, TimeUnit.SECONDS)) {
+      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+    }
+  }
+}
+```
+
+Initial implementation include 2 async clients:
+- `AsyncClient.Default`
+- `AsyncApacheHttp5Client`
+
+## Maven’s Bill of Material (BOM)
+
+Keeping all feign libraries on the same version is essential to avoid incompatible binaries. When consuming external dependencies, can be tricky to make sure only one version is present.
+
+With that in mind, feign build generates a module called `feign-bom` that locks the versions for all `feign-*` modules.
+
+The Bill Of Material is a special POM file that groups dependency versions that are known to be valid and tested to work together. This will reduce the developers’ pain of having to test the compatibility of different versions and reduce the chances to have version mismatches.
+
+
+[Here](https://repo1.maven.org/maven2/io/github/openfeign/feign-bom/11.9/feign-bom-11.9.pom) is one example of what feign BOM file looks like.
+
+#### Usage
+
+```xml
+<project>
+
+...
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-bom</artifactId>
+        <version>??feign.version??</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
 ```

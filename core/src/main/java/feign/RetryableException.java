@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -31,8 +31,8 @@ public class RetryableException extends FeignException {
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
   public RetryableException(int status, String message, HttpMethod httpMethod, Throwable cause,
-      Date retryAfter) {
-    super(status, message, cause);
+      Date retryAfter, Request request) {
+    super(status, message, request, cause);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
@@ -40,8 +40,9 @@ public class RetryableException extends FeignException {
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
-  public RetryableException(int status, String message, HttpMethod httpMethod, Date retryAfter) {
-    super(status, message);
+  public RetryableException(int status, String message, HttpMethod httpMethod, Date retryAfter,
+      Request request) {
+    super(status, message, request);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }

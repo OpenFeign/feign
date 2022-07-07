@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,8 +14,7 @@
 package feign.client;
 
 import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.Assert.assertEquals;
 import feign.Client;
 import feign.CollectionFormat;
@@ -89,8 +88,12 @@ public abstract class AbstractClientTest {
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
     assertThat(response.headers())
-        .containsEntry("Content-Length", Collections.singletonList("3"))
-        .containsEntry("Foo", Collections.singletonList("Bar"));
+        .hasEntrySatisfying("Content-Length", value -> {
+          assertThat(value).contains("3");
+        })
+        .hasEntrySatisfying("Foo", value -> {
+          assertThat(value).contains("Bar");
+        });
     assertThat(response.body().asInputStream())
         .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
@@ -118,7 +121,9 @@ public abstract class AbstractClientTest {
   @Test
   public void parsesErrorResponse() {
     thrown.expect(FeignException.class);
-    thrown.expectMessage("status 500 reading TestInterface#get()");
+    thrown.expectMessage(
+        "[500 Server Error] during [GET] to [http://localhost:" + server.getPort()
+            + "/] [TestInterface#get()]: [ARGHH]");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -139,6 +144,22 @@ public abstract class AbstractClientTest {
 
     try {
       api.get();
+    } catch (FeignException e) {
+      assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
+    }
+  }
+
+  @Test
+  public void parsesUnauthorizedResponseBody() {
+    String expectedResponseBody = "ARGHH";
+
+    server.enqueue(new MockResponse().setResponseCode(401).setBody("ARGHH"));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.postForString("HELLO");
     } catch (FeignException e) {
       assertThat(e.contentUTF8()).isEqualTo(expectedResponseBody);
     }
@@ -272,7 +293,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
   }
 
   @Test
@@ -284,7 +305,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader()));
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
   }
 
   @Test
@@ -294,10 +315,10 @@ public abstract class AbstractClientTest {
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     // should use utf-8 encoding by default
-    api.postWithContentType("àáâãäåèéêë", "text/plain");
+    api.postWithContentType("àáâãäåèéêë", "text/plain; charset=UTF-8");
 
-    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-        .hasBody("àáâãäåèéêë");
+    String body = server.takeRequest().getBody().readUtf8();
+    assertThat(body).isEqualToIgnoringCase("àáâãäåèéêë");
   }
 
   @Test
@@ -375,6 +396,10 @@ public abstract class AbstractClientTest {
     @RequestLine("POST /path/{to}/resource")
     @Headers("Accept: text/plain")
     Response post(@Param("to") String to, String body);
+
+    @RequestLine("POST /?foo=bar&foo=baz&qux=")
+    @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: text/plain"})
+    String postForString(String body);
 
     @RequestLine("GET /")
     @Headers("Accept: text/plain")

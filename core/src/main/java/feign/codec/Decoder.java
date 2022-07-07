@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -58,7 +58,7 @@ import feign.Util;
  * List<Foo>}. <br/>
  * <h3>Note on exception propagation</h3> Exceptions thrown by {@link Decoder}s get wrapped in a
  * {@link DecodeException} unless they are a subclass of {@link FeignException} already, and unless
- * the client was configured with {@link Feign.Builder#decode404()}.
+ * the client was configured with {@link Feign.Builder#dismiss404()}.
  */
 public interface Decoder {
 

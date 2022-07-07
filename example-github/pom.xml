@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2019 The Feign Authors
+    Copyright 2012-2022 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>10.3.0-SNAPSHOT</version>
+    <version>12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-example-github</artifactId>
@@ -54,7 +54,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.3</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -92,6 +92,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <!--
+              Travis does not inject GITHUB_TOKEN when building PRs, which will make module fail
+              https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
+
+              ignoring test errors for any build that is not master
+          -->
+          <testFailureIgnore>true</testFailureIgnore>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -103,4 +112,26 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <activation>
+        <property>
+          <name>env.TRAVIS_PULL_REQUEST</name>
+          <value>false</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <testFailureIgnore>false</testFailureIgnore>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

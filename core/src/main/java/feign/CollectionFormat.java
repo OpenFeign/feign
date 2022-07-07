@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -74,21 +74,21 @@ public enum CollectionFormat {
       if (separator == null) {
         // exploded
         builder.append(valueCount++ == 0 ? "" : "&");
-        builder.append(UriUtils.queryEncode(field, charset));
+        builder.append(UriUtils.encode(field, charset));
         if (value != null) {
           builder.append('=');
-          builder.append(UriUtils.queryEncode(value, charset));
+          builder.append(value);
         }
       } else {
         // delimited with a separator character
         if (builder.length() == 0) {
-          builder.append(UriUtils.queryEncode(field, charset));
+          builder.append(UriUtils.encode(field, charset));
         }
         if (value == null) {
           continue;
         }
-        builder.append(valueCount++ == 0 ? "=" : separator);
-        builder.append(UriUtils.queryEncode(value, charset));
+        builder.append(valueCount++ == 0 ? "=" : UriUtils.encode(separator, charset));
+        builder.append(value);
       }
     }
     return builder;

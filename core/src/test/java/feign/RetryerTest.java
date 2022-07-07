@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,18 +17,23 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.util.Collections;
 import java.util.Date;
 import feign.Retryer.Default;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("deprecation")
 public class RetryerTest {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
 
+  private final static Request REQUEST = Request
+      .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+
   @Test
   public void only5TriesAllowedAndExponentialBackoff() throws Exception {
-    RetryableException e = new RetryableException(-1, null, null, null);
+    RetryableException e = new RetryableException(-1, null, null, null, REQUEST);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
     assertEquals(0, retryer.sleptForMillis);
@@ -54,21 +59,22 @@ public class RetryerTest {
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() throws Exception {
+  public void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer = new Retryer.Default() {
       protected long currentTimeMillis() {
         return 0;
       }
     };
 
-    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    retryer.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000), REQUEST));
     assertEquals(2, retryer.attempt);
     assertEquals(1000, retryer.sleptForMillis);
   }
 
   @Test(expected = RetryableException.class)
   public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(-1, null, null, new Date(5000)));
+    Retryer.NEVER_RETRY
+        .continueOrPropagate(new RetryableException(-1, null, null, new Date(5000), REQUEST));
   }
 
   @Test
@@ -77,7 +83,8 @@ public class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000));
+        new RetryableException(-1, null, null, new Date(System.currentTimeMillis() + 5000),
+            REQUEST);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

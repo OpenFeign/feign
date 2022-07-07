@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,11 +18,9 @@ import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
 import static java.util.Locale.US;
 import static java.util.concurrent.TimeUnit.SECONDS;
-
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -66,7 +64,7 @@ import java.util.Map;
  * <p/>
  * It is commonly the case that 404 (Not Found) status has semantic value in HTTP apis. While the
  * default behavior is to raise exeception, users can alternatively enable 404 processing via
- * {@link feign.Feign.Builder#decode404()}.
+ * {@link feign.Feign.Builder#dismiss404()}.
  */
 public interface ErrorDecoder {
 
@@ -104,7 +102,8 @@ public interface ErrorDecoder {
             exception.getMessage(),
             response.request().httpMethod(),
             exception,
-            retryAfter);
+            retryAfter,
+            response.request());
       }
       return exception;
     }

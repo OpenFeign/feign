@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,16 +14,15 @@
 package feign.reactive;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import feign.Client;
-import feign.InvocationHandlerFactory;
 import feign.Logger;
 import feign.Logger.Level;
 import feign.Param;
@@ -38,20 +37,16 @@ import feign.Response;
 import feign.ResponseMapper;
 import feign.RetryableException;
 import feign.Retryer;
-import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.jaxrs.JAXRSContract;
 import io.reactivex.Flowable;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import okhttp3.mockwebserver.MockResponse;
@@ -63,6 +58,7 @@ import org.mockito.AdditionalAnswers;
 import org.mockito.stubbing.Answer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class ReactiveFeignIntegrationTest {
 
@@ -94,22 +90,24 @@ public class ReactiveFeignIntegrationTest {
         .encoder(new JacksonEncoder())
         .decoder(new JacksonDecoder())
         .logger(new ConsoleLogger())
-        .decode404()
+        .dismiss404()
         .options(new Options())
         .logLevel(Level.FULL)
         .target(TestReactorService.class, this.getServerUrl());
     assertThat(service).isNotNull();
 
-    String version = service.version()
-        .block();
-    assertThat(version).isNotNull();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/version");
 
 
     /* test encoding and decoding */
-    User user = service.user("test")
-        .blockFirst();
-    assertThat(user).isNotNull().hasFieldOrPropertyWithValue("username", "test");
+    StepVerifier.create(service.user("test"))
+        .assertNext(user -> assertThat(user).hasFieldOrPropertyWithValue("username", "test"))
+        .expectComplete()
+        .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
 
   }
@@ -127,15 +125,17 @@ public class ReactiveFeignIntegrationTest {
         .target(TestReactiveXService.class, this.getServerUrl());
     assertThat(service).isNotNull();
 
-    String version = service.version()
-        .firstElement().blockingGet();
-    assertThat(version).isNotNull();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/version");
 
     /* test encoding and decoding */
-    User user = service.user("test")
-        .firstElement().blockingGet();
-    assertThat(user).isNotNull().hasFieldOrPropertyWithValue("username", "test");
+    StepVerifier.create(service.user("test"))
+        .assertNext(user -> assertThat(user).hasFieldOrPropertyWithValue("username", "test"))
+        .expectComplete()
+        .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
   }
 
@@ -164,7 +164,10 @@ public class ReactiveFeignIntegrationTest {
     TestReactorService service = ReactorFeign.builder()
         .requestInterceptor(mockInterceptor)
         .target(TestReactorService.class, this.getServerUrl());
-    service.version().block();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     verify(mockInterceptor, times(1)).apply(any(RequestTemplate.class));
   }
 
@@ -176,7 +179,10 @@ public class ReactiveFeignIntegrationTest {
     TestReactorService service = ReactorFeign.builder()
         .requestInterceptors(Arrays.asList(mockInterceptor, mockInterceptor))
         .target(TestReactorService.class, this.getServerUrl());
-    service.version().block();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     verify(mockInterceptor, times(2)).apply(any(RequestTemplate.class));
   }
 
@@ -193,7 +199,10 @@ public class ReactiveFeignIntegrationTest {
     TestReactorService service = ReactorFeign.builder()
         .mapAndDecode(responseMapper, decoder)
         .target(TestReactorService.class, this.getServerUrl());
-    service.version().block();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     verify(responseMapper, times(1))
         .map(any(Response.class), any(Type.class));
     verify(decoder, times(1)).decode(any(Response.class), any(Type.class));
@@ -208,16 +217,16 @@ public class ReactiveFeignIntegrationTest {
     TestReactiveXService service = RxJavaFeign.builder()
         .queryMapEncoder(encoder)
         .target(TestReactiveXService.class, this.getServerUrl());
-    String results = service.search(new SearchQuery())
-        .blockingSingle();
-    assertThat(results).isNotEmpty();
+    StepVerifier.create(service.search(new SearchQuery()))
+        .expectNext("No Results Found")
+        .expectComplete()
+        .verify();
     verify(encoder, times(1)).encode(any(Object.class));
   }
 
-  @SuppressWarnings({"ResultOfMethodCallIgnored", "ThrowableNotThrown"})
+  @SuppressWarnings({"ThrowableNotThrown"})
   @Test
   public void testErrorDecoder() {
-    this.thrown.expect(RuntimeException.class);
     this.webServer.enqueue(new MockResponse().setBody("Bad Request").setResponseCode(400));
 
     ErrorDecoder errorDecoder = mock(ErrorDecoder.class);
@@ -227,8 +236,11 @@ public class ReactiveFeignIntegrationTest {
     TestReactiveXService service = RxJavaFeign.builder()
         .errorDecoder(errorDecoder)
         .target(TestReactiveXService.class, this.getServerUrl());
-    service.search(new SearchQuery())
-        .blockingSingle();
+    StepVerifier.create(service.search(new SearchQuery()))
+        .expectErrorSatisfies(ex -> assertThat(ex)
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("bad request"))
+        .verify();
     verify(errorDecoder, times(1)).decode(anyString(), any(Response.class));
   }
 
@@ -243,7 +255,10 @@ public class ReactiveFeignIntegrationTest {
     TestReactorService service = ReactorFeign.builder()
         .retryer(spy)
         .target(TestReactorService.class, this.getServerUrl());
-    service.version().log().block();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     verify(spy, times(1)).continueOrPropagate(any(RetryableException.class));
   }
 
@@ -261,7 +276,10 @@ public class ReactiveFeignIntegrationTest {
     TestReactorService service = ReactorFeign.builder()
         .client(client)
         .target(TestReactorService.class, this.getServerUrl());
-    service.version().block();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     verify(client, times(1)).execute(any(Request.class), any(Options.class));
   }
 
@@ -272,8 +290,10 @@ public class ReactiveFeignIntegrationTest {
     TestJaxRSReactorService service = ReactorFeign.builder()
         .contract(new JAXRSContract())
         .target(TestJaxRSReactorService.class, this.getServerUrl());
-    String version = service.version().block();
-    assertThat(version).isNotNull();
+    StepVerifier.create(service.version())
+        .expectNext("1.0")
+        .expectComplete()
+        .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/version");
   }
 

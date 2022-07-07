@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,11 +13,17 @@
  */
 package feign.querymap;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * the query map will be generated using member variable names as query parameter names.
@@ -30,32 +36,32 @@ import java.util.stream.Collectors;
 public class FieldQueryMapEncoder implements QueryMapEncoder {
 
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata =
-      new HashMap<Class<?>, ObjectParamMetadata>();
+      new ConcurrentHashMap<>();
 
   @Override
   public Map<String, Object> encode(Object object) throws EncodeException {
+    ObjectParamMetadata metadata =
+        classToMetadata.computeIfAbsent(object.getClass(), ObjectParamMetadata::parseObjectType);
+
+    return metadata.objectFields.stream()
+        .map(field -> this.FieldValuePair(object, field))
+        .filter(fieldObjectPair -> fieldObjectPair.right.isPresent())
+        .collect(Collectors.toMap(this::fieldName,
+            fieldObjectPair -> fieldObjectPair.right.get()));
+
+  }
+
+  private String fieldName(Pair<Field, Optional<Object>> pair) {
+    Param alias = pair.left.getAnnotation(Param.class);
+    return alias != null ? alias.value() : pair.left.getName();
+  }
+
+  private Pair<Field, Optional<Object>> FieldValuePair(Object object, Field field) {
     try {
-      ObjectParamMetadata metadata = getMetadata(object.getClass());
-      Map<String, Object> fieldNameToValue = new HashMap<String, Object>();
-      for (Field field : metadata.objectFields) {
-        Object value = field.get(object);
-        if (value != null && value != object) {
-          fieldNameToValue.put(field.getName(), value);
-        }
-      }
-      return fieldNameToValue;
+      return Pair.pair(field, Optional.ofNullable(field.get(object)));
     } catch (IllegalAccessException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
-  }
-
-  private ObjectParamMetadata getMetadata(Class<?> objectType) {
-    ObjectParamMetadata metadata = classToMetadata.get(objectType);
-    if (metadata == null) {
-      metadata = ObjectParamMetadata.parseObjectType(objectType);
-      classToMetadata.put(objectType, metadata);
-    }
-    return metadata;
   }
 
   private static class ObjectParamMetadata {
@@ -80,4 +86,20 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
           .collect(Collectors.toList()));
     }
   }
+
+  private static class Pair<T, U> {
+    private Pair(T left, U right) {
+      this.right = right;
+      this.left = left;
+    }
+
+    public final T left;
+    public final U right;
+
+    public static <T, U> Pair<T, U> pair(T left, U right) {
+      return new Pair<>(left, right);
+    }
+
+  }
+
 }

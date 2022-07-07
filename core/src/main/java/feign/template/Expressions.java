@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2019 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,36 +13,20 @@
  */
 package feign.template;
 
+import feign.Param.Expander;
 import feign.Util;
-import feign.template.UriUtils.FragmentType;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Expressions {
-  private static Map<Pattern, Class<? extends Expression>> expressions;
 
-  static {
-    expressions = new LinkedHashMap<>();
+  private static final String PATH_STYLE_MODIFIER = ";";
+  private static final Pattern EXPRESSION_PATTERN = Pattern.compile("^([+#./;?&]?)(.*)$");
 
-    /*
-     * basic pattern for variable names. this is compliant with RFC 6570 Simple Expressions ONLY
-     * with the following additional values allowed without required pct-encoding:
-     *
-     * - brackets - dashes
-     *
-     * see https://tools.ietf.org/html/rfc6570#section-2.3 for more information.
-     */
-    expressions.put(Pattern.compile("(\\w[-\\w.\\[\\]]*[ ]*)(:(.+))?"),
-        SimpleExpression.class);
-  }
-
-  public static Expression create(final String value, final FragmentType type) {
+  public static Expression create(final String value) {
 
     /* remove the start and end braces */
     final String expression = stripBraces(value);
@@ -50,34 +34,38 @@ public final class Expressions {
       throw new IllegalArgumentException("an expression is required.");
     }
 
-    Optional<Entry<Pattern, Class<? extends Expression>>> matchedExpressionEntry =
-        expressions.entrySet()
-            .stream()
-            .filter(entry -> entry.getKey().matcher(expression).matches())
-            .findFirst();
-
-    if (!matchedExpressionEntry.isPresent()) {
-      /* not a valid expression */
-      return null;
-    }
-
-    Entry<Pattern, Class<? extends Expression>> matchedExpression = matchedExpressionEntry.get();
-    Pattern expressionPattern = matchedExpression.getKey();
-
     /* create a new regular expression matcher for the expression */
     String variableName = null;
     String variablePattern = null;
-    Matcher matcher = expressionPattern.matcher(expression);
+    String modifier = null;
+    Matcher matcher = EXPRESSION_PATTERN.matcher(expression);
     if (matcher.matches()) {
+      /* grab the modifier */
+      modifier = matcher.group(1).trim();
+
       /* we have a valid variable expression, extract the name from the first group */
-      variableName = matcher.group(1).trim();
-      if (matcher.group(2) != null && matcher.group(3) != null) {
-        /* this variable contains an optional pattern */
-        variablePattern = matcher.group(3);
+      variableName = matcher.group(2).trim();
+      if (variableName.contains(":")) {
+        /* split on the colon */
+        String[] parts = variableName.split(":");
+        variableName = parts[0];
+        variablePattern = parts[1];
+      }
+
+      /* look for nested expressions */
+      if (variableName.contains("{")) {
+        /* nested, literal */
+        return null;
       }
     }
 
-    return new SimpleExpression(variableName, variablePattern, type);
+    /* check for a modifier */
+    if (PATH_STYLE_MODIFIER.equalsIgnoreCase(modifier)) {
+      return new PathStyleExpression(variableName, variablePattern);
+    }
+
+    /* default to simple */
+    return new SimpleExpression(variableName, variablePattern);
   }
 
   private static String stripBraces(String expression) {
@@ -96,27 +84,37 @@ public final class Expressions {
    */
   static class SimpleExpression extends Expression {
 
-    private final FragmentType type;
+    private static final String DEFAULT_SEPARATOR = ",";
+    protected String separator = DEFAULT_SEPARATOR;
+    private boolean nameRequired = false;
 
-    SimpleExpression(String expression, String pattern, FragmentType type) {
-      super(expression, pattern);
-      this.type = type;
+    SimpleExpression(String name, String pattern) {
+      super(name, pattern);
     }
 
-    String encode(Object value) {
-      return UriUtils.encodeReserved(value.toString(), type, Util.UTF_8);
+    SimpleExpression(String name, String pattern, String separator, boolean nameRequired) {
+      this(name, pattern);
+      this.separator = separator;
+      this.nameRequired = nameRequired;
     }
 
+    protected String encode(Object value) {
+      return UriUtils.encode(value.toString(), Util.UTF_8);
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
-    String expand(Object variable, boolean encode) {
+    protected String expand(Object variable, boolean encode) {
       StringBuilder expanded = new StringBuilder();
       if (Iterable.class.isAssignableFrom(variable.getClass())) {
-        List<String> items = new ArrayList<>();
-        for (Object item : ((Iterable) variable)) {
-          items.add((encode) ? encode(item) : item.toString());
-        }
-        expanded.append(String.join(Template.COLLECTION_DELIMITER, items));
+        expanded.append(this.expandIterable((Iterable<?>) variable));
+      } else if (Map.class.isAssignableFrom(variable.getClass())) {
+        expanded.append(this.expandMap((Map<String, ?>) variable));
       } else {
+        if (this.nameRequired) {
+          expanded.append(this.encode(this.getName()))
+              .append("=");
+        }
         expanded.append((encode) ? encode(variable) : variable);
       }
 
@@ -127,6 +125,85 @@ public final class Expressions {
             + " does not match the expression pattern: " + this.getPattern());
       }
       return result;
+    }
+
+    protected String expandIterable(Iterable<?> values) {
+      StringBuilder result = new StringBuilder();
+      for (Object value : values) {
+        if (value == null) {
+          /* skip */
+          continue;
+        }
+
+        /* expand the value */
+        String expanded = this.encode(value);
+        if (expanded.isEmpty()) {
+          /* always append the separator */
+          result.append(this.separator);
+        } else {
+          if (result.length() != 0) {
+            if (!result.toString().equalsIgnoreCase(this.separator)) {
+              result.append(this.separator);
+            }
+          }
+          if (this.nameRequired) {
+            result.append(this.encode(this.getName()))
+                .append("=");
+          }
+          result.append(expanded);
+        }
+      }
+
+      /* return the expanded value */
+      return result.toString();
+    }
+
+    protected String expandMap(Map<String, ?> values) {
+      StringBuilder result = new StringBuilder();
+
+      for (Entry<String, ?> entry : values.entrySet()) {
+        StringBuilder expanded = new StringBuilder();
+        String name = this.encode(entry.getKey());
+        String value = this.encode(entry.getValue().toString());
+
+        expanded.append(name)
+            .append("=");
+        if (!value.isEmpty()) {
+          expanded.append(value);
+        }
+
+        if (result.length() != 0) {
+          result.append(this.separator);
+        }
+
+        result.append(expanded);
+      }
+      return result.toString();
+    }
+  }
+
+  public static class PathStyleExpression extends SimpleExpression implements Expander {
+
+    public PathStyleExpression(String name, String pattern) {
+      super(name, pattern, ";", true);
+    }
+
+    @Override
+    protected String expand(Object variable, boolean encode) {
+      return this.separator + super.expand(variable, encode);
+    }
+
+    @Override
+    public String expand(Object value) {
+      return this.expand(value, true);
+    }
+
+    @Override
+    public String getValue() {
+      if (this.getPattern() != null) {
+        return "{" + this.separator + this.getName() + ":" + this.getName() + "}";
+      }
+      return "{" + this.separator + this.getName() + "}";
     }
   }
 }
