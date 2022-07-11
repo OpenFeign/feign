@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,387 +13,35 @@
  */
 package feign.jaxrs;
 
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import java.lang.annotation.*;
-import java.net.URI;
-import java.util.*;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import feign.MethodMetadata;
 import feign.Response;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.net.URI;
+import java.util.List;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class JAXRSContractTest {
+public class JAXRSContractTest extends JAXRSContractTestSupport<JAXRSContract> {
 
-  private static final List<String> STRING_LIST = null;
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-  JAXRSContract contract = createContract();
-
-  protected JAXRSContract createContract() {
-    return new JAXRSContract();
-  }
-
-  @Test
-  public void httpMethods() throws Exception {
-    assertThat(parseAndValidateMetadata(Methods.class, "post").template())
-        .hasMethod("POST");
-
-    assertThat(parseAndValidateMetadata(Methods.class, "put").template())
-        .hasMethod("PUT");
-
-    assertThat(parseAndValidateMetadata(Methods.class, "get").template())
-        .hasMethod("GET");
-
-    assertThat(parseAndValidateMetadata(Methods.class, "delete").template())
-        .hasMethod("DELETE");
-  }
-
-  @Test
-  public void customMethodWithoutPath() throws Exception {
-    assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
-        .hasMethod("PATCH")
-        .hasUrl("/");
-  }
-
-  @Test
-  public void queryParamsInPathExtract() throws Exception {
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
-        .hasPath("/")
-        .hasQueries();
-
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")));
-
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08")));
-
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08")),
-            entry("limit", asList("1")));
-
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "empty").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("flag", new ArrayList<>()),
-            entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08")));
-  }
-
-  @Test
-  public void producesAddsAcceptHeader() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "produces");
-
-    /* multiple @Produces annotations should be additive */
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("application/xml")));
-  }
-
-  @Test
-  public void producesMultipleAddsAcceptHeader() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(ProducesAndConsumes.class, "producesMultiple");
-
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", Collections.singletonList("application/json")),
-            entry("Accept", asList("application/xml", "text/plain")));
-  }
-
-  @Test
-  public void producesNada() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Produces.value() was empty on ProducesAndConsumes#producesNada");
-
-    parseAndValidateMetadata(ProducesAndConsumes.class, "producesNada");
-  }
-
-  @Test
-  public void producesEmpty() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Produces.value() was empty on ProducesAndConsumes#producesEmpty");
-
-    parseAndValidateMetadata(ProducesAndConsumes.class, "producesEmpty");
-  }
-
-  @Test
-  public void consumesAddsContentTypeHeader() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(ProducesAndConsumes.class, "consumes");
-
-    /* multiple @Consumes annotations are additive */
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", asList("application/xml")),
-            entry("Accept", asList("text/html")));
-  }
-
-  @Test
-  public void consumesMultipleAddsContentTypeHeader() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(ProducesAndConsumes.class, "consumesMultiple");
-
-    assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/xml")),
-            entry("Accept", Collections.singletonList("text/html")));
-  }
-
-  @Test
-  public void consumesNada() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Consumes.value() was empty on ProducesAndConsumes#consumesNada");
-
-    parseAndValidateMetadata(ProducesAndConsumes.class, "consumesNada");
-  }
-
-  @Test
-  public void consumesEmpty() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Consumes.value() was empty on ProducesAndConsumes#consumesEmpty");
-
-    parseAndValidateMetadata(ProducesAndConsumes.class, "consumesEmpty");
-  }
-
-  @Test
-  public void producesAndConsumesOnClassAddsHeader() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(ProducesAndConsumes.class, "producesAndConsumes");
-
-    assertThat(md.template())
-        .hasHeaders(entry("Content-Type", asList("application/json")),
-            entry("Accept", asList("text/html")));
-  }
-
-  @Test
-  public void bodyParamIsGeneric() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
-
-    assertThat(md.bodyIndex())
-        .isEqualTo(0);
-    assertThat(md.bodyType())
-        .isEqualTo(JAXRSContractTest.class.getDeclaredField("STRING_LIST").getGenericType());
-  }
-
-  @Test
-  public void tooManyBodies() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Method has too many Body");
-
-    parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
-  }
-
-  @Test
-  public void emptyPathOnType() throws Exception {
-    assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "base").template())
-        .hasUrl("/");
-  }
-
-  @Test
-  public void emptyPathOnTypeSpecific() throws Exception {
-    assertThat(parseAndValidateMetadata(EmptyPathOnType.class, "get").template())
-        .hasUrl("/specific");
-  }
-
-  @Test
-  public void parsePathMethod() throws Exception {
-    assertThat(parseAndValidateMetadata(PathOnType.class, "base").template())
-        .hasUrl("/base");
-
-    assertThat(parseAndValidateMetadata(PathOnType.class, "get").template())
-        .hasUrl("/base/specific");
-  }
-
-  @Test
-  public void emptyPathOnMethod() throws Exception {
-    assertThat(parseAndValidateMetadata(PathOnType.class, "emptyPath").template())
-        .hasUrl("/base");
-  }
-
-  @Test
-  public void emptyPathParam() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("PathParam.value() was empty on parameter 0");
-
-    parseAndValidateMetadata(PathOnType.class, "emptyPathParam", String.class);
-  }
-
-  @Test
-  public void pathParamWithSpaces() throws Exception {
-    assertThat(parseAndValidateMetadata(
-        PathOnType.class, "pathParamWithSpaces", String.class).template())
-            .hasUrl("/base/{param}");
-  }
-
-  @Test
-  public void regexPathOnMethodOrType() throws Exception {
-    assertThat(parseAndValidateMetadata(
-        PathOnType.class, "pathParamWithRegex", String.class).template())
-            .hasUrl("/base/regex/{param}");
-
-    assertThat(parseAndValidateMetadata(
-        PathOnType.class, "pathParamWithMultipleRegex", String.class, String.class).template())
-            .hasUrl("/base/regex/{param1}/{param2}");
-
-    assertThat(parseAndValidateMetadata(
-        ComplexPathOnType.class, "pathParamWithMultipleRegex", String.class, String.class)
-            .template())
-                .hasUrl("/{baseparam}/regex/{param1}/{param2}");
-  }
-
-  @Test
-  public void withPathAndURIParams() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(WithURIParam.class,
-        "uriParam", String.class, URI.class, String.class);
-
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("1")),
-        // Skips 1 as it is a url index!
-        entry(2, asList("2")));
-
-    assertThat(md.urlIndex()).isEqualTo(1);
-  }
-
-  @Test
-  public void pathAndQueryParams() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(WithPathAndQueryParams.class,
-            "recordsByNameAndType", int.class, String.class, String.class);
-
-    assertThat(md.template())
-        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
-
-    assertThat(md.indexToName()).containsExactly(entry(0, asList("domainId")),
-        entry(1, asList("name")),
-        entry(2, asList("type")));
-  }
-
-  @Test
-  public void emptyQueryParam() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("QueryParam.value() was empty on parameter 0");
-
-    parseAndValidateMetadata(WithPathAndQueryParams.class, "empty", String.class);
-  }
-
-  @Test
-  public void formParamsParseIntoIndexToName() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "login", String.class, String.class, String.class);
-
-    assertThat(md.formParams())
-        .containsExactly("customer_name", "user_name", "password");
-
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("customer_name")),
-        entry(1, asList("user_name")),
-        entry(2, asList("password")));
-  }
-
-  /**
-   * Body type is only for the body param.
-   */
-  @Test
-  public void formParamsDoesNotSetBodyType() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "login", String.class, String.class, String.class);
-
-    assertThat(md.bodyType()).isNull();
-  }
-
-  @Test
-  public void emptyFormParam() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("FormParam.value() was empty on parameter 0");
-
-    parseAndValidateMetadata(FormParams.class, "emptyFormParam", String.class);
-  }
-
-  @Test
-  public void headerParamsParseIntoIndexToName() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
-
-    assertThat(md.template())
-        .hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
-
-    assertThat(md.indexToName())
-        .containsExactly(entry(0, asList("Auth-Token")));
-  }
-
-  @Test
-  public void emptyHeaderParam() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("HeaderParam.value() was empty on parameter 0");
-
-    parseAndValidateMetadata(HeaderParams.class, "emptyHeaderParam", String.class);
-  }
-
-  @Test
-  public void pathsWithoutSlashesParseCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(PathsWithoutAnySlashes.class, "get").template())
-        .hasUrl("/base/specific");
-  }
-
-  @Test
-  public void pathsWithSomeSlashesParseCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(PathsWithSomeSlashes.class, "get").template())
-        .hasUrl("/base/specific");
-  }
-
-  @Test
-  public void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(PathsWithSomeOtherSlashes.class, "get").template())
-        .hasUrl("/base/specific");
-  }
-
-  @Test
-  public void classWithRootPathParsesCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(ClassRootPath.class, "get").template())
-        .hasUrl("/specific");
-  }
-
-  @Test
-  public void classPathWithTrailingSlashParsesCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(ClassPathWithTrailingSlash.class, "get").template())
-        .hasUrl("/base/specific");
-  }
-
-  @Test
-  public void methodPathWithoutLeadingSlashParsesCorrectly() throws Exception {
-    assertThat(parseAndValidateMetadata(MethodWithFirstPathThenGetWithoutLeadingSlash.class, "get")
-        .template())
-            .hasUrl("/base/specific");
-  }
-
-
-  @Test
-  public void producesWithHeaderParamContainAllHeaders() throws Exception {
-    assertThat(parseAndValidateMetadata(MixedAnnotations.class, "getWithHeaders",
-        String.class, String.class, String.class)
-            .template())
-                .hasHeaders(entry("Accept", Arrays.asList("application/json", "{Accept}")))
-                .hasQueries(
-                    entry("multiple", Arrays.asList("stuff", "{multiple}")),
-                    entry("another", Collections.singletonList("{another}")));
-  }
-
-  interface Methods {
+  protected interface Methods {
 
     @POST
     void post();
@@ -408,7 +56,7 @@ public class JAXRSContractTest {
     void delete();
   }
 
-  interface CustomMethod {
+  protected interface CustomMethod {
 
     @PATCH
     Response patch();
@@ -417,11 +65,10 @@ public class JAXRSContractTest {
     @Retention(RetentionPolicy.RUNTIME)
     @HttpMethod("PATCH")
     public @interface PATCH {
-
     }
   }
 
-  interface WithQueryParamsInPath {
+  protected interface WithQueryParamsInPath {
 
     @GET
     @Path("/")
@@ -446,7 +93,7 @@ public class JAXRSContractTest {
 
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_HTML)
-  interface ProducesAndConsumes {
+  protected interface ProducesAndConsumes {
 
     @GET
     @Produces("application/xml")
@@ -484,7 +131,7 @@ public class JAXRSContractTest {
     Response producesAndConsumes();
   }
 
-  interface BodyParams {
+  protected interface BodyParams {
 
     @POST
     Response post(List<String> body);
@@ -494,7 +141,7 @@ public class JAXRSContractTest {
   }
 
   @Path("")
-  interface EmptyPathOnType {
+  protected interface EmptyPathOnType {
 
     @GET
     Response base();
@@ -505,7 +152,7 @@ public class JAXRSContractTest {
   }
 
   @Path("/base")
-  interface PathOnType {
+  protected interface PathOnType {
 
     @GET
     Response base();
@@ -532,31 +179,34 @@ public class JAXRSContractTest {
 
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
-    Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
+    Response pathParamWithMultipleRegex(
+                                        @PathParam("param1") String param1,
                                         @PathParam("param2") String param2);
   }
 
   @Path("/{baseparam: [0-9]+}")
-  interface ComplexPathOnType {
+  protected interface ComplexPathOnType {
 
     @GET
     @Path("regex/{param1:[0-9]*}/{  param2 : .+}")
-    Response pathParamWithMultipleRegex(@PathParam("param1") String param1,
+    Response pathParamWithMultipleRegex(
+                                        @PathParam("param1") String param1,
                                         @PathParam("param2") String param2);
   }
 
-  interface WithURIParam {
+  protected interface WithURIParam {
 
     @GET
     @Path("/{1}/{2}")
     Response uriParam(@PathParam("1") String one, URI endpoint, @PathParam("2") String two);
   }
 
-  interface WithPathAndQueryParams {
+  protected interface WithPathAndQueryParams {
 
     @GET
     @Path("/domains/{domainId}/records")
-    Response recordsByNameAndType(@PathParam("domainId") int id,
+    Response recordsByNameAndType(
+                                  @PathParam("domainId") int id,
                                   @QueryParam("name") String nameFilter,
                                   @QueryParam("type") String typeFilter);
 
@@ -564,7 +214,7 @@ public class JAXRSContractTest {
     Response empty(@QueryParam("") String empty);
   }
 
-  interface FormParams {
+  protected interface FormParams {
 
     @POST
     void login(
@@ -576,7 +226,7 @@ public class JAXRSContractTest {
     Response emptyFormParam(@FormParam("") String empty);
   }
 
-  interface HeaderParams {
+  protected interface HeaderParams {
 
     @POST
     void logout(@HeaderParam("Auth-Token") String token);
@@ -586,7 +236,7 @@ public class JAXRSContractTest {
   }
 
   @Path("base")
-  interface PathsWithoutAnySlashes {
+  protected interface PathsWithoutAnySlashes {
 
     @GET
     @Path("specific")
@@ -594,7 +244,7 @@ public class JAXRSContractTest {
   }
 
   @Path("/base")
-  interface PathsWithSomeSlashes {
+  protected interface PathsWithSomeSlashes {
 
     @GET
     @Path("specific")
@@ -602,7 +252,7 @@ public class JAXRSContractTest {
   }
 
   @Path("base")
-  interface PathsWithSomeOtherSlashes {
+  protected interface PathsWithSomeOtherSlashes {
 
     @GET
     @Path("/specific")
@@ -610,41 +260,144 @@ public class JAXRSContractTest {
   }
 
   @Path("/")
-  interface ClassRootPath {
+  protected interface ClassRootPath {
     @GET
     @Path("/specific")
     Response get();
   }
 
   @Path("/base/")
-  interface ClassPathWithTrailingSlash {
+  protected interface ClassPathWithTrailingSlash {
     @GET
     @Path("/specific")
     Response get();
   }
 
   @Path("/base/")
-  interface MethodWithFirstPathThenGetWithoutLeadingSlash {
+  protected interface MethodWithFirstPathThenGetWithoutLeadingSlash {
     @Path("specific")
     @GET
     Response get();
   }
 
-  protected MethodMetadata parseAndValidateMetadata(Class<?> targetType,
-                                                    String method,
-                                                    Class<?>... parameterTypes)
-      throws NoSuchMethodException {
-    return contract.parseAndValidateMetadata(targetType,
-        targetType.getMethod(method, parameterTypes));
-  }
-
-  interface MixedAnnotations {
+  protected interface MixedAnnotations {
 
     @GET
     @Path("/api/stuff?multiple=stuff")
     @Produces("application/json")
-    Response getWithHeaders(@HeaderParam("Accept") String accept,
+    Response getWithHeaders(
+                            @HeaderParam("Accept") String accept,
                             @QueryParam("multiple") String multiple,
                             @QueryParam("another") String another);
+  }
+
+  @Override
+  protected JAXRSContract createContract() {
+    return new JAXRSContract();
+  }
+
+  @Override
+  protected MethodMetadata parseAndValidateMetadata(
+                                                    Class<?> targetType,
+                                                    String method,
+                                                    Class<?>... parameterTypes)
+      throws NoSuchMethodException {
+    return contract.parseAndValidateMetadata(
+        targetType, targetType.getMethod(method, parameterTypes));
+  }
+
+  @Override
+  protected Class<?> methodsClass() {
+    return Methods.class;
+  }
+
+  @Override
+  protected Class<?> customMethodClass() {
+    return CustomMethod.class;
+  }
+
+  @Override
+  protected Class<?> withQueryParamsInPathClass() {
+    return WithQueryParamsInPath.class;
+  }
+
+  @Override
+  protected Class<?> producesAndConsumesClass() {
+    return ProducesAndConsumes.class;
+  }
+
+  @Override
+  protected Class<?> bodyParamsClass() {
+    return BodyParams.class;
+  }
+
+  @Override
+  protected Class<?> emptyPathOnTypeClass() {
+    return EmptyPathOnType.class;
+  }
+
+  @Override
+  protected Class<?> pathOnTypeClass() {
+    return PathOnType.class;
+  }
+
+  @Override
+  protected Class<?> complexPathOnTypeClass() {
+    return ComplexPathOnType.class;
+  }
+
+  @Override
+  protected Class<?> withURIParamClass() {
+    return WithURIParam.class;
+  }
+
+  @Override
+  protected Class<?> withPathAndQueryParamsClass() {
+    return WithPathAndQueryParams.class;
+  }
+
+  @Override
+  protected Class<?> formParamsClass() {
+    return FormParams.class;
+  }
+
+  @Override
+  protected Class<?> headerParamsClass() {
+    return HeaderParams.class;
+  }
+
+  @Override
+  protected Class<?> pathsWithoutAnySlashesClass() {
+    return PathsWithoutAnySlashes.class;
+  }
+
+  @Override
+  protected Class<?> pathsWithSomeSlashesClass() {
+    return PathsWithSomeSlashes.class;
+  }
+
+  @Override
+  protected Class<?> pathsWithSomeOtherSlashesClass() {
+    return PathsWithSomeOtherSlashes.class;
+  }
+
+  @Override
+  protected Class<?> classRootPathClass() {
+    return ClassRootPath.class;
+  }
+
+  @Override
+  protected Class<?> classPathWithTrailingSlashClass() {
+    return ClassPathWithTrailingSlash.class;
+  }
+
+  @Override
+  protected Class<?> methodWithFirstPathThenGetWithoutLeadingSlashClass() {
+    return MethodWithFirstPathThenGetWithoutLeadingSlash.class;
+  }
+
+  @Override
+  protected Class<?> mixedAnnotationsClass() {
+    return MixedAnnotations.class;
   }
 }

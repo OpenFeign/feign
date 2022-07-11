@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 import static feign.Util.*;
+import static java.util.Objects.nonNull;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -27,8 +28,7 @@ import static feign.Util.*;
 public abstract class Logger {
 
   protected static String methodTag(String configKey) {
-    return new StringBuilder().append('[').append(configKey.substring(0, configKey.indexOf('(')))
-        .append("] ").toString();
+    return '[' + configKey.substring(0, configKey.indexOf('(')) + "] ";
   }
 
   /**
@@ -41,13 +41,37 @@ public abstract class Logger {
    */
   protected abstract void log(String configKey, String format, Object... args);
 
+  /**
+   * Override to filter out request headers.
+   *
+   * @param header header name
+   * @return true to log a request header
+   */
+  protected boolean shouldLogRequestHeader(String header) {
+    return true;
+  }
+
+  /**
+   * Override to filter out response headers.
+   *
+   * @param header header name
+   * @return true to log a response header
+   */
+  protected boolean shouldLogResponseHeader(String header) {
+    return true;
+  }
+
   protected void logRequest(String configKey, Level logLevel, Request request) {
-    log(configKey, "---> %s %s HTTP/1.1", request.httpMethod().name(), request.url());
+    String protocolVersion = resolveProtocolVersion(request.protocolVersion());
+    log(configKey, "---> %s %s %s", request.httpMethod().name(), request.url(),
+        protocolVersion);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : request.headers().keySet()) {
-        for (String value : valuesOrEmpty(request.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogRequestHeader(field)) {
+          for (String value : valuesOrEmpty(request.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
@@ -76,16 +100,19 @@ public abstract class Logger {
                                             Response response,
                                             long elapsedTime)
       throws IOException {
+    String protocolVersion = resolveProtocolVersion(response.protocolVersion());
     String reason =
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- HTTP/1.1 %s%s (%sms)", status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
-        for (String value : valuesOrEmpty(response.headers(), field)) {
-          log(configKey, "%s: %s", field, value);
+        if (shouldLogResponseHeader(field)) {
+          for (String value : valuesOrEmpty(response.headers(), field)) {
+            log(configKey, "%s: %s", field, value);
+          }
         }
       }
 
@@ -123,6 +150,13 @@ public abstract class Logger {
       log(configKey, "<--- END ERROR");
     }
     return ioe;
+  }
+
+  protected static String resolveProtocolVersion(Request.ProtocolVersion protocolVersion) {
+    if (nonNull(protocolVersion)) {
+      return protocolVersion.toString();
+    }
+    return "UNKNOWN";
   }
 
   /**

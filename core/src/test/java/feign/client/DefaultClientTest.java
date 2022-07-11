@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -157,6 +157,25 @@ public class DefaultClientTest extends AbstractClientTest {
     final String responseData = "Compressed Data";
     server.enqueue(new MockResponse()
         .addHeader("Content-Encoding", "gzip")
+        .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+
+  }
+
+  @Test
+  public void canExeptCaseInsensitiveHeader() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("content-encoding", "gzip")
         .setBody(new Buffer().write(compress(responseData))));
 
     TestInterface api = newBuilder()

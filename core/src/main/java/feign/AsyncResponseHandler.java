@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,13 +15,12 @@ package feign;
 
 import static feign.FeignException.errorReading;
 import static feign.Util.ensureClosed;
+import feign.Logger.Level;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
-import feign.Logger.Level;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 
 /**
  * The response handler that is used to provide asynchronous support on top of standard response
@@ -37,18 +36,21 @@ class AsyncResponseHandler {
 
   private final Decoder decoder;
   private final ErrorDecoder errorDecoder;
-  private final boolean decode404;
+  private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
+  private final ResponseInterceptor responseInterceptor;
+
   AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean decode404, boolean closeAfterDecode) {
+      boolean dismiss404, boolean closeAfterDecode, ResponseInterceptor responseInterceptor) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
-    this.decode404 = decode404;
+    this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
+    this.responseInterceptor = responseInterceptor;
   }
 
   boolean isVoidType(Type returnType) {
@@ -88,7 +90,7 @@ class AsyncResponseHandler {
           shouldClose = closeAfterDecode;
           resultFuture.complete(result);
         }
-      } else if (decode404 && response.status() == 404 && !isVoidType(returnType)) {
+      } else if (dismiss404 && response.status() == 404 && !isVoidType(returnType)) {
         final Object result = decode(response, returnType);
         shouldClose = closeAfterDecode;
         resultFuture.complete(result);
@@ -111,12 +113,6 @@ class AsyncResponseHandler {
   }
 
   Object decode(Response response, Type type) throws IOException {
-    try {
-      return decoder.decode(response, type);
-    } catch (final FeignException e) {
-      throw e;
-    } catch (final RuntimeException e) {
-      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
-    }
+    return responseInterceptor.aroundDecode(new InvocationContext(decoder, type, response));
   }
 }

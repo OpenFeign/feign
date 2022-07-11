@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2021 The Feign Authors
+    Copyright 2012-2022 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.5-SNAPSHOT</version>
+    <version>12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-hystrix</artifactId>
@@ -33,18 +33,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>com.netflix.archaius</groupId>
-        <artifactId>archaius-core</artifactId>
-        <version>0.7.7</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.netflix.hystrix</groupId>
-        <artifactId>hystrix-core</artifactId>
-        <version>1.5.18</version>
-      </dependency>
-
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
@@ -62,11 +50,14 @@
     <dependency>
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
+      <version>0.7.7</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.hystrix</groupId>
       <artifactId>hystrix-core</artifactId>
+      <version>1.5.18</version>
     </dependency>
 
     <dependency>

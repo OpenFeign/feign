@@ -11,10 +11,12 @@
 ** async clients
 *** java.net.URL
 *** Apache HC5
+*** OkHttp
 ** contracts
 *** Feign
 *** JAX-RS
 *** JAX-RS 2
+*** JAX-RS 3 / Jakarta
 *** Spring 4
 *** SOAP
 *** Spring boot (3rd party)

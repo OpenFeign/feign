@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import java.util.Date;
 import static feign.Util.UTF_8;
 import static org.junit.Assert.*;
@@ -43,13 +44,15 @@ public class JsonEncoderTest {
   @Test
   public void encodesArray() {
     new JsonEncoder().encode(jsonArray, JSONArray.class, requestTemplate);
-    assertEquals("[{\"a\":\"b\",\"c\":1},123]", new String(requestTemplate.body(), UTF_8));
+    JSONAssert.assertEquals("[{\"a\":\"b\",\"c\":1},123]",
+        new String(requestTemplate.body(), UTF_8), false);
   }
 
   @Test
   public void encodesObject() {
     new JsonEncoder().encode(jsonObject, JSONObject.class, requestTemplate);
-    assertEquals("{\"a\":\"b\",\"c\":1}", new String(requestTemplate.body(), UTF_8));
+    JSONAssert.assertEquals("{\"a\":\"b\",\"c\":1}", new String(requestTemplate.body(), UTF_8),
+        false);
   }
 
   @Test

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,23 +13,26 @@
  */
 package feign.json;
 
+import static feign.Util.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import feign.Request;
 import feign.Response;
 import feign.codec.DecodeException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Date;
-import static feign.Util.UTF_8;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class JsonDecoderTest {
 
@@ -53,7 +56,7 @@ public class JsonDecoderTest {
   public void decodesArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -66,7 +69,7 @@ public class JsonDecoderTest {
   public void decodesObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -76,18 +79,29 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws IOException {
+  public void notFoundDecodesToEmpty() throws IOException {
+    Response response = Response.builder()
+        .status(404)
+        .reason("Not found")
+        .headers(Collections.emptyMap())
+        .request(request)
+        .build();
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+  }
+
+  @Test
+  public void nullBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
         .headers(Collections.emptyMap())
         .request(request)
         .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws IOException {
+  public void emptyBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -95,14 +109,14 @@ public class JsonDecoderTest {
         .body("", UTF_8)
         .request(request)
         .build();
-    assertNull(new JsonDecoder().decode(response, JSONObject.class));
+    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
   }
 
   @Test
   public void unknownTypeThrowsDecodeException() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -118,7 +132,7 @@ public class JsonDecoderTest {
   public void badJsonThrowsWrappedJSONException() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -137,7 +151,7 @@ public class JsonDecoderTest {
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new Exception("test cause exception")));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -154,7 +168,7 @@ public class JsonDecoderTest {
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new IOException("test cause exception")));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -170,7 +184,7 @@ public class JsonDecoderTest {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new IOException("test exception"));
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(body)
@@ -185,7 +199,7 @@ public class JsonDecoderTest {
   public void decodesExtendedArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)
@@ -198,7 +212,7 @@ public class JsonDecoderTest {
   public void decodeExtendedObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
-        .status(204)
+        .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
         .body(json, UTF_8)

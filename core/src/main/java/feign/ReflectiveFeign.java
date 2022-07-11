@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -239,8 +239,10 @@ public class ReflectiveFeign extends Feign {
       }
 
       if (metadata.headerMapIndex() != null) {
-        template =
-            addHeaderMapHeaders((Map<String, Object>) argv[metadata.headerMapIndex()], template);
+        // add header map parameters for a resolution of the user pojo object
+        Object value = argv[metadata.headerMapIndex()];
+        Map<String, Object> headerMap = toQueryMap(value);
+        template = addHeaderMapHeaders(headerMap, template);
       }
 
       return template;
@@ -302,27 +304,26 @@ public class ReflectiveFeign extends Feign {
       for (Entry<String, Object> currEntry : queryMap.entrySet()) {
         Collection<String> values = new ArrayList<String>();
 
-        boolean encoded = metadata.queryMapEncoded();
         Object currValue = currEntry.getValue();
         if (currValue instanceof Iterable<?>) {
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
-            values.add(nextObject == null ? null
-                : encoded ? nextObject.toString()
-                    : UriUtils.encode(nextObject.toString()));
+            values.add(nextObject == null ? null : UriUtils.encode(nextObject.toString()));
           }
         } else if (currValue instanceof Object[]) {
           for (Object value : (Object[]) currValue) {
-            values.add(value == null ? null
-                : encoded ? value.toString() : UriUtils.encode(value.toString()));
+            values.add(value == null ? null : UriUtils.encode(value.toString()));
           }
         } else {
-          values.add(currValue == null ? null
-              : encoded ? currValue.toString() : UriUtils.encode(currValue.toString()));
+          if (currValue != null) {
+            values.add(UriUtils.encode(currValue.toString()));
+          }
         }
 
-        mutable.query(encoded ? currEntry.getKey() : UriUtils.encode(currEntry.getKey()), values);
+        if (values.size() > 0) {
+          mutable.query(UriUtils.encode(currEntry.getKey()), values);
+        }
       }
       return mutable;
     }

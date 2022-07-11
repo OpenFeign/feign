@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,24 +14,41 @@
 package feign.hc5;
 
 import static feign.Util.UTF_8;
+import static feign.Util.enumForName;
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import feign.Util;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.URLEncodedUtils;
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.*;
-import feign.*;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -96,8 +113,7 @@ public final class ApacheHttp5Client implements Client {
     requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
 
     // request query params
-    final List<NameValuePair> queryParams =
-        URLEncodedUtils.parse(uri, requestBuilder.getCharset());
+    final List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset());
     for (final NameValuePair queryParam : queryParams) {
       requestBuilder.addParameter(queryParam);
     }
@@ -134,7 +150,13 @@ public final class ApacheHttp5Client implements Client {
         entity = new ByteArrayEntity(data, null);
       } else {
         final ContentType contentType = getContentType(request);
-        entity = new StringEntity(new String(data), contentType);
+        String content;
+        if (request.charset() != null) {
+          content = new String(data, request.charset());
+        } else {
+          content = new String(data);
+        }
+        entity = new StringEntity(content, contentType);
       }
 
       requestBuilder.setEntity(entity);
@@ -167,20 +189,22 @@ public final class ApacheHttp5Client implements Client {
 
     final String reason = httpResponse.getReasonPhrase();
 
-    final Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    final Map<String, Collection<String>> headers = new HashMap<>();
     for (final Header header : httpResponse.getHeaders()) {
       final String name = header.getName();
       final String value = header.getValue();
 
       Collection<String> headerValues = headers.get(name);
       if (headerValues == null) {
-        headerValues = new ArrayList<String>();
+        headerValues = new ArrayList<>();
         headers.put(name, headerValues);
       }
       headerValues.add(value);
     }
 
     return Response.builder()
+        .protocolVersion(
+            enumForName(Request.ProtocolVersion.class, httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)
@@ -213,7 +237,6 @@ public final class ApacheHttp5Client implements Client {
         return entity.getContent();
       }
 
-      @SuppressWarnings("deprecation")
       @Override
       public Reader asReader() throws IOException {
         return new InputStreamReader(asInputStream(), UTF_8);
@@ -227,7 +250,11 @@ public final class ApacheHttp5Client implements Client {
 
       @Override
       public void close() throws IOException {
-        EntityUtils.consume(entity);
+        try {
+          EntityUtils.consume(entity);
+        } finally {
+          httpResponse.close();
+        }
       }
     };
   }

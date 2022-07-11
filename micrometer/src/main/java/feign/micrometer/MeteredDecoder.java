@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -62,7 +62,6 @@ public class MeteredDecoder implements Decoder {
     try {
       decoded = decoder.decode(meteredResponse, type);
       timer = createTimer(response, type, null);
-      sample.stop(timer);
     } catch (IOException | RuntimeException e) {
       timer = createTimer(response, type, e);
       createExceptionCounter(response, type, e).count();
@@ -95,7 +94,7 @@ public class MeteredDecoder implements Decoder {
     final Tag[] extraTags = extraTags(response, type, e);
     final RequestTemplate template = response.request().requestTemplate();
     final Tags allTags = metricTagResolver.tag(template.methodMetadata(), template.feignTarget(),
-        Tag.of("uri", template.path()),
+        Tag.of("uri", template.methodMetadata().template().path()),
         Tag.of("exception_name", e.getClass().getSimpleName()))
         .and(extraTags);
     return meterRegistry.counter(metricName.name("error_count"), allTags);
@@ -110,6 +109,7 @@ public class MeteredDecoder implements Decoder {
   }
 
   protected Tag[] extraTags(Response response, Type type, Exception e) {
-    return EMPTY_TAGS_ARRAY;
+    RequestTemplate template = response.request().requestTemplate();
+    return new Tag[] {Tag.of("uri", template.methodMetadata().template().path())};
   }
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -327,30 +327,6 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapEncodedDefault() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
-
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
-  public void queryMapEncodedTrue() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapEncoded", Map.class);
-
-    assertThat(md.queryMapEncoded()).isTrue();
-  }
-
-  @Test
-  public void queryMapEncodedFalse() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapNotEncoded", Map.class);
-
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
   public void queryMapMapSubclass() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapMapSubclass",
@@ -389,24 +365,6 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapPojoObjectEncoded() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectEncoded", Object.class);
-
-    assertThat(md.queryMapIndex()).isEqualTo(0);
-    assertThat(md.queryMapEncoded()).isTrue();
-  }
-
-  @Test
-  public void queryMapPojoObjectNotEncoded() throws Exception {
-    final MethodMetadata md =
-        parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObjectNotEncoded", Object.class);
-
-    assertThat(md.queryMapIndex()).isEqualTo(0);
-    assertThat(md.queryMapEncoded()).isFalse();
-  }
-
-  @Test
   public void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(SlashNeedToBeEncoded.class,
         "getQueues", String.class);
@@ -433,6 +391,14 @@ public class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(HeaderMapInterface.class, "headerMapSubClass",
             SubClassHeaders.class);
+    assertThat(md.headerMapIndex()).isEqualTo(0);
+  }
+
+  @Test
+  public void headerMapUserObject() throws Exception {
+    final MethodMetadata md =
+        parseAndValidateMetadata(HeaderMapInterface.class,
+            "headerMapUserObject", HeaderMapUserObject.class);
     assertThat(md.headerMapIndex()).isEqualTo(0);
   }
 
@@ -534,7 +500,9 @@ public class DefaultContractTest {
   interface AutoDiscoverParamNames {
 
     @RequestLine("GET /domains/{domainId}/records?name={name}&type={type}")
-    Response recordsByNameAndType(@Param int domainId, @Param String name, @Param() String type);
+    Response recordsByNameAndType(@Param("domainId") int domainId,
+                                  @Param("name") String name,
+                                  @Param("type") String type);
   }
 
   interface FormParams {
@@ -571,6 +539,32 @@ public class DefaultContractTest {
 
     @RequestLine("POST /")
     void headerMapSubClass(@HeaderMap SubClassHeaders httpHeaders);
+
+    @RequestLine("POST /")
+    void headerMapUserObject(@HeaderMap HeaderMapUserObject httpHeaders);
+  }
+
+  class HeaderMapUserObject {
+    @Param("name1")
+    private String name;
+    @Param("grade1")
+    private String grade;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getGrade() {
+      return grade;
+    }
+
+    public void setGrade(String grade) {
+      this.grade = grade;
+    }
   }
 
   interface HeaderParams {
@@ -610,19 +604,7 @@ public class DefaultContractTest {
     void queryMapMapSubclass(@QueryMap SortedMap<String, String> queryMap);
 
     @RequestLine("POST /")
-    void queryMapEncoded(@QueryMap(encoded = true) Map<String, String> queryMap);
-
-    @RequestLine("POST /")
-    void queryMapNotEncoded(@QueryMap(encoded = false) Map<String, String> queryMap);
-
-    @RequestLine("POST /")
     void pojoObject(@QueryMap Object object);
-
-    @RequestLine("POST /")
-    void pojoObjectEncoded(@QueryMap(encoded = true) Object object);
-
-    @RequestLine("POST /")
-    void pojoObjectNotEncoded(@QueryMap(encoded = false) Object object);
 
     // invalid
     @RequestLine("POST /")

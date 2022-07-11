@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import feign.Request.ProtocolVersion;
 import static feign.Util.*;
 
 /**
@@ -29,6 +30,7 @@ public final class Response implements Closeable {
   private final Map<String, Collection<String>> headers;
   private final Body body;
   private final Request request;
+  private final ProtocolVersion protocolVersion;
 
   private Response(Builder builder) {
     checkState(builder.request != null, "original request is required");
@@ -37,7 +39,7 @@ public final class Response implements Closeable {
     this.reason = builder.reason; // nullable
     this.headers = caseInsensitiveCopyOf(builder.headers);
     this.body = builder.body; // nullable
-
+    this.protocolVersion = builder.protocolVersion;
   }
 
   public Builder toBuilder() {
@@ -55,6 +57,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
+    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
 
     Builder() {}
 
@@ -64,6 +67,7 @@ public final class Response implements Closeable {
       this.headers = source.headers;
       this.body = source.body;
       this.request = source.request;
+      this.protocolVersion = source.protocolVersion;
     }
 
     /** @see Response#status */
@@ -114,6 +118,14 @@ public final class Response implements Closeable {
     public Builder request(Request request) {
       checkNotNull(request, "request is required");
       this.request = request;
+      return this;
+    }
+
+    /**
+     * HTTP protocol version
+     */
+    public Builder protocolVersion(ProtocolVersion protocolVersion) {
+      this.protocolVersion = protocolVersion;
       return this;
     }
 
@@ -171,6 +183,15 @@ public final class Response implements Closeable {
    */
   public Request request() {
     return request;
+  }
+
+  /**
+   * the HTTP protocol version
+   *
+   * @return HTTP protocol version or empty if a client does not provide it
+   */
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
   }
 
   public Charset charset() {

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package feign.micrometer;
 
+import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -43,6 +44,11 @@ public class MicrometerCapability implements Capability {
   }
 
   @Override
+  public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+    return new MeteredAsyncClient(client, meterRegistry);
+  }
+
+  @Override
   public Encoder enrich(Encoder encoder) {
     return new MeteredEncoder(encoder, meterRegistry);
   }
@@ -56,5 +62,4 @@ public class MicrometerCapability implements Capability {
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return new MeteredInvocationHandleFactory(invocationHandlerFactory, meterRegistry);
   }
-
 }

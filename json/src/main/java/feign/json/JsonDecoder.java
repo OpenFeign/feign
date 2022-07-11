@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import static feign.Util.UTF_8;
 import static java.lang.String.format;
 
 /**
@@ -53,6 +52,14 @@ public class JsonDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
+    if (response.status() == 404 || response.status() == 204)
+      if (JSONObject.class.isAssignableFrom((Class<?>) type))
+        return new JSONObject();
+      else if (JSONArray.class.isAssignableFrom((Class<?>) type))
+        return new JSONArray();
+      else
+        throw new DecodeException(response.status(),
+            format("%s is not a type supported by this decoder.", type), response.request());
     if (response.body() == null)
       return null;
     try (Reader reader = response.body().asReader(response.charset())) {

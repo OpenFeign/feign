@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -27,12 +27,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import feign.Logger.Level;
+import feign.Request.ProtocolVersion;
+import static java.util.Objects.nonNull;
+import static feign.Util.enumForName;
 
 @RunWith(Enclosed.class)
 public class LoggerTest {
@@ -49,7 +51,7 @@ public class LoggerTest {
   interface SendsStuff {
 
     @RequestLine("POST /")
-    @Headers("Content-Type: application/json")
+    @Headers({"Content-Type: application/json", "X-Token: qwerty"})
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
     String login(
                  @Param("customer_name") String customer,
@@ -99,7 +101,7 @@ public class LoggerTest {
 
     @Test
     public void levelEmits() {
-      server.enqueue(new MockResponse().setBody("foo"));
+      server.enqueue(new MockResponse().setHeader("Y-Powered-By", "Mock").setBody("foo"));
 
       SendsStuff api = Feign.builder()
           .logger(logger)
@@ -134,6 +136,51 @@ public class LoggerTest {
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
+          .logger(logger)
+          .logLevel(logLevel)
+          .target(SendsStuff.class, "http://localhost:" + server.getPort());
+
+      api.login("netflix", "denominator", "password");
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class HttpProtocolVersionTest extends LoggerTest {
+
+    private final Level logLevel;
+    private final String protocolVersionName;
+
+    public HttpProtocolVersionTest(Level logLevel, String protocolVersionName,
+        List<String> expectedMessages) {
+      this.logLevel = logLevel;
+      this.protocolVersionName = protocolVersionName;
+      logger.expectMessages(expectedMessages);
+    }
+
+    @Parameters
+    public static Iterable<Object[]> data() {
+      return Arrays.asList(new Object[][] {
+          {Level.BASIC, null, Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
+          {Level.BASIC, "HTTP/1.1", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/1.1 200 \\([0-9]+ms\\)")},
+          {Level.BASIC, "HTTP/2.0", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- HTTP/2.0 200 \\([0-9]+ms\\)")},
+          {Level.BASIC, "HTTP-XYZ", Arrays.asList(
+              "\\[SendsStuff#login\\] ---> POST http://localhost:[0-9]+/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- UNKNOWN 200 \\([0-9]+ms\\)")}
+      });
+    }
+
+    @Test
+    public void testHttpProtocolVersion() {
+      server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+
+      SendsStuff api = Feign.builder()
+          .client(new TestProtocolVersionClient(protocolVersionName))
           .logger(logger)
           .logLevel(logLevel)
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
@@ -383,8 +430,21 @@ public class LoggerTest {
 
   private static final class RecordingLogger extends Logger implements TestRule {
 
+    private static final String PREFIX_X = "x-";
+    private static final String PREFIX_Y = "y-";
+
     private final List<String> messages = new ArrayList<>();
     private final List<String> expectedMessages = new ArrayList<>();
+
+    @Override
+    protected boolean shouldLogRequestHeader(String header) {
+      return !header.toLowerCase().startsWith(PREFIX_X);
+    }
+
+    @Override
+    protected boolean shouldLogResponseHeader(String header) {
+      return !header.toLowerCase().startsWith(PREFIX_Y);
+    }
 
     void expectMessages(List<String> expectedMessages) {
       this.expectedMessages.addAll(expectedMessages);
@@ -409,6 +469,27 @@ public class LoggerTest {
           softly.assertAll();
         }
       };
+    }
+  }
+
+  private static final class TestProtocolVersionClient extends Client.Default {
+    private final String protocolVersionName;
+
+    public TestProtocolVersionClient(String protocolVersionName) {
+      super(null, null);
+      this.protocolVersionName = protocolVersionName;
+    }
+
+    @Override
+    Response convertResponse(HttpURLConnection connection, Request request)
+        throws IOException {
+      Response response = super.convertResponse(connection, request);
+      if (nonNull((protocolVersionName))) {
+        response = response.toBuilder()
+            .protocolVersion(enumForName(ProtocolVersion.class, protocolVersionName))
+            .build();
+      }
+      return response;
     }
   }
 }

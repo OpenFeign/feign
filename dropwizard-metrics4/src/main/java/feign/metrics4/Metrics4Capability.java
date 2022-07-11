@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign.metrics4;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
+import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -45,6 +46,11 @@ public class Metrics4Capability implements Capability {
   }
 
   @Override
+  public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers);
+  }
+
+  @Override
   public Encoder enrich(Encoder encoder) {
     return new MeteredEncoder(encoder, metricRegistry, metricSuppliers);
   }
@@ -56,8 +62,7 @@ public class Metrics4Capability implements Capability {
 
   @Override
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
-    return new MeteredInvocationHandleFactory(invocationHandlerFactory, metricRegistry,
-        metricSuppliers);
+    return new MeteredInvocationHandleFactory(
+        invocationHandlerFactory, metricRegistry, metricSuppliers);
   }
-
 }

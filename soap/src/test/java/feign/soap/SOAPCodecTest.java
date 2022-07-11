@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -37,7 +37,6 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
-import feign.jaxb.JAXBDecoder;
 
 @SuppressWarnings("deprecation")
 public class SOAPCodecTest {
@@ -370,7 +369,7 @@ public class SOAPCodecTest {
   }
 
   /**
-   * Enabled via {@link feign.Feign.Builder#decode404()}
+   * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
   public void notFoundDecodesToNull() throws Exception {
@@ -380,8 +379,8 @@ public class SOAPCodecTest {
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertThat((byte[]) new JAXBDecoder(new JAXBContextFactory.Builder().build())
-        .decode(response, byte[].class)).isNull();
+    assertThat((byte[]) new SOAPDecoder(new JAXBContextFactory.Builder().build())
+        .decode(response, byte[].class)).isEmpty();
   }
 
 

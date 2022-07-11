@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,28 +13,24 @@
  */
 package feign.metrics5;
 
-
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
 import feign.MethodMetadata;
 import feign.Target;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-public final class FeignMetricName {
+final class FeignMetricName {
 
   private final Class<?> meteredComponent;
-
 
   public FeignMetricName(Class<?> meteredComponent) {
     this.meteredComponent = meteredComponent;
   }
 
-
   public MetricName metricName(MethodMetadata methodMetadata, Target<?> target, String suffix) {
-    return metricName(methodMetadata, target)
-        .resolve(suffix);
+    return metricName(methodMetadata, target).resolve(suffix);
   }
 
   public MetricName metricName(MethodMetadata methodMetadata, Target<?> target) {
@@ -53,11 +49,7 @@ public final class FeignMetricName {
       return new URI(targetUrl).getHost();
     } catch (final URISyntaxException e) {
       // can't get the host, in that case, just read first 20 chars from url
-      return targetUrl.length() <= 20
-          ? targetUrl
-          : targetUrl.substring(0, 20);
+      return targetUrl.length() <= 20 ? targetUrl : targetUrl.substring(0, 20);
     }
   }
-
-
 }

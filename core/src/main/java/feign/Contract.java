@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2021 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -132,7 +132,8 @@ public interface Contract {
 
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
-        } else if (!isHttpAnnotation && parameterTypes[i] != Request.Options.class) {
+        } else if (!isHttpAnnotation
+            && !Request.Options.class.isAssignableFrom(parameterTypes[i])) {
           if (data.isAlreadyProcessed(i)) {
             checkState(data.formParams().isEmpty() || data.bodyIndex() == null,
                 "Body parameters cannot be used with form parameters.%s", data.warnings());
@@ -149,8 +150,10 @@ public interface Contract {
       }
 
       if (data.headerMapIndex() != null) {
-        checkMapString("HeaderMap", parameterTypes[data.headerMapIndex()],
-            genericParameterTypes[data.headerMapIndex()]);
+        // check header map parameter for map type
+        if (Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()])) {
+          checkMapKeys("HeaderMap", genericParameterTypes[data.headerMapIndex()]);
+        }
       }
 
       if (data.queryMapIndex() != null) {
@@ -308,7 +311,6 @@ public interface Contract {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
-        data.queryMapEncoded(queryMap.encoded());
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,

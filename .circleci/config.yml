@@ -41,7 +41,7 @@ commands:
       - run:
           name: 'Resolving Dependencies'
           command: |
-            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true
+            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true -B
   verify-formatting:
     steps:
       - run:
@@ -65,11 +65,11 @@ commands:
       - run:
           name: 'Build JDK 11 Release modules locally'
           command: |
-            mvn -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11 -am -DskipTests=true install
+            mvn -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11,:feign-jakarta -am -DskipTests=true install
       - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
-            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11 -DskipTests=true deploy
+            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11,:feign-jakarta -DskipTests=true deploy
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
@@ -121,7 +121,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            mvn -o test
+            mvn -B test
       - verify-formatting
   android-test:
     # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
@@ -191,8 +191,8 @@ workflows:
           filters:
             <<: *all-branches
       - test:
-          jdk: '14-buster'
-          name: 'jdk 14'
+          jdk: '17-buster'
+          name: 'jdk 17'
           filters:
             <<: *all-branches
       - test:
@@ -212,8 +212,8 @@ workflows:
           filters:
             <<: *master-only
       - test:
-          jdk: '14-buster'
-          name: 'jdk 14'
+          jdk: '17-buster'
+          name: 'jdk 17'
           filters:
             <<: *master-only
       - deploy:
@@ -222,7 +222,7 @@ workflows:
           requires:
             - 'jdk 8'
             - 'jdk 11'
-            - 'jdk 14'
+            - 'jdk 17'
           context: Sonatype
           filters:
             <<: *master-only

@@ -1,5 +1,5 @@
-/**
- * Copyright 2012-2020 The Feign Authors
+/*
+ * Copyright 2012-2022 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,19 +13,19 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
+import static feign.FeignException.errorExecuting;
+import static feign.Util.checkNotNull;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Request.Options;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import static feign.ExceptionPropagationPolicy.UNWRAP;
-import static feign.FeignException.errorExecuting;
-import static feign.Util.checkNotNull;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
@@ -36,6 +36,7 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
+  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
@@ -48,10 +49,10 @@ final class SynchronousMethodHandler implements MethodHandler {
 
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, Logger logger,
-      Logger.Level logLevel, MethodMetadata metadata,
+      List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
+      Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ErrorDecoder errorDecoder, boolean decode404,
+      Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
       boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy,
       boolean forceDecoding) {
 
@@ -66,6 +67,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
+    this.responseInterceptor = responseInterceptor;
 
     if (forceDecoding) {
       // internal only: usual handling will be short-circuited, and all responses will be passed to
@@ -75,7 +77,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     } else {
       this.decoder = null;
       this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-          decode404, closeAfterDecode);
+          dismiss404, closeAfterDecode, responseInterceptor);
     }
   }
 
@@ -130,19 +132,18 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-
-    if (decoder != null)
-      return decoder.decode(response, metadata.returnType());
+    if (decoder != null) {
+      return responseInterceptor
+          .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
+    }
 
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
     asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
-        metadata.returnType(),
-        elapsedTime);
+        metadata.returnType(), elapsedTime);
 
     try {
       if (!resultFuture.isDone())
         throw new IllegalStateException("Response handling not done");
-
       return resultFuture.join();
     } catch (CompletionException e) {
       Throwable cause = e.getCause();
@@ -179,22 +180,25 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
+    private final ResponseInterceptor responseInterceptor;
     private final Logger logger;
     private final Logger.Level logLevel;
-    private final boolean decode404;
+    private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
     private final boolean forceDecoding;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        Logger logger, Logger.Level logLevel, boolean decode404, boolean closeAfterDecode,
+        ResponseInterceptor responseInterceptor,
+        Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
         ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.responseInterceptor = responseInterceptor;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.decode404 = decode404;
+      this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
       this.forceDecoding = forceDecoding;
@@ -206,9 +210,9 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 Options options,
                                 Decoder decoder,
                                 ErrorDecoder errorDecoder) {
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors, logger,
-          logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, decode404, closeAfterDecode, propagationPolicy, forceDecoding);
+      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
+          responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
+          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
     }
   }
 }
