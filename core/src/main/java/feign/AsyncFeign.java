@@ -14,8 +14,11 @@
 package feign;
 
 import feign.Logger.Level;
+import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -70,17 +73,46 @@ public abstract class AsyncFeign<C> extends Feign {
       return this;
     }
 
-    public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
-      this.defaultContextSupplier = supplier;
-      return this;
-    }
-
-
     public AsyncBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
       return this;
     }
 
+    @Override
+    public AsyncBuilder<C> mapAndDecode(ResponseMapper mapper, Decoder decoder) {
+      return super.mapAndDecode(mapper, decoder);
+    }
+
+    @Override
+    public AsyncBuilder<C> decoder(Decoder decoder) {
+      return super.decoder(decoder);
+    }
+
+    @Override
+    @Deprecated
+    public AsyncBuilder<C> decode404() {
+      return super.decode404();
+    }
+
+    @Override
+    public AsyncBuilder<C> dismiss404() {
+      return super.dismiss404();
+    }
+
+    @Override
+    public AsyncBuilder<C> errorDecoder(ErrorDecoder errorDecoder) {
+      return super.errorDecoder(errorDecoder);
+    }
+
+    @Override
+    public AsyncBuilder<C> doNotCloseAfterDecode() {
+      return super.doNotCloseAfterDecode();
+    }
+
+    public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
+      this.defaultContextSupplier = supplier;
+      return this;
+    }
 
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<>(apiType, url));
@@ -96,6 +128,51 @@ public abstract class AsyncFeign<C> extends Feign {
 
     public <T> T target(Target<T> target, C context) {
       return build().newInstance(target, context);
+    }
+
+    @Override
+    public AsyncBuilder<C> logLevel(Level logLevel) {
+      return super.logLevel(logLevel);
+    }
+
+    @Override
+    public AsyncBuilder<C> contract(Contract contract) {
+      return super.contract(contract);
+    }
+
+    @Override
+    public AsyncBuilder<C> logger(Logger logger) {
+      return super.logger(logger);
+    }
+
+    @Override
+    public AsyncBuilder<C> encoder(Encoder encoder) {
+      return super.encoder(encoder);
+    }
+
+    @Override
+    public AsyncBuilder<C> queryMapEncoder(QueryMapEncoder queryMapEncoder) {
+      return super.queryMapEncoder(queryMapEncoder);
+    }
+
+    @Override
+    public AsyncBuilder<C> options(Options options) {
+      return super.options(options);
+    }
+
+    @Override
+    public AsyncBuilder<C> requestInterceptor(RequestInterceptor requestInterceptor) {
+      return super.requestInterceptor(requestInterceptor);
+    }
+
+    @Override
+    public AsyncBuilder<C> requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
+      return super.requestInterceptors(requestInterceptors);
+    }
+
+    @Override
+    public AsyncBuilder<C> invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
     public AsyncFeign<C> build() {
@@ -215,8 +292,6 @@ public abstract class AsyncFeign<C> extends Feign {
     this.feign = feign;
     this.defaultContextSupplier = defaultContextSupplier;
   }
-
-
 
   @Override
   public <T> T newInstance(Target<T> target) {

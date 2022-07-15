@@ -14,8 +14,11 @@
 package feign;
 
 import feign.ReflectiveFeign.ParseHandlersByName;
+import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -94,10 +97,96 @@ public abstract class Feign {
     private Client client = new Client.Default(null, null);
     private boolean forceDecoding = false;
 
+    @Override
+    public Builder logLevel(Logger.Level logLevel) {
+      return super.logLevel(logLevel);
+    }
+
+    @Override
+    public Builder contract(Contract contract) {
+      return super.contract(contract);
+    }
+
     public Builder client(Client client) {
       this.client = client;
 
       return this;
+    }
+
+    @Override
+    public Builder retryer(Retryer retryer) {
+      return super.retryer(retryer);
+    }
+
+    @Override
+    public Builder logger(Logger logger) {
+      return super.logger(logger);
+    }
+
+    @Override
+    public Builder encoder(Encoder encoder) {
+      return super.encoder(encoder);
+    }
+
+    @Override
+    public Builder decoder(Decoder decoder) {
+      return super.decoder(decoder);
+    }
+
+    @Override
+    public Builder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
+      return super.queryMapEncoder(queryMapEncoder);
+    }
+
+    @Override
+    public Builder mapAndDecode(ResponseMapper mapper, Decoder decoder) {
+      return super.mapAndDecode(mapper, decoder);
+    }
+
+    @Deprecated
+    @Override
+    public Builder decode404() {
+      return super.decode404();
+    }
+
+    @Override
+    public Builder errorDecoder(ErrorDecoder errorDecoder) {
+      return super.errorDecoder(errorDecoder);
+    }
+
+    @Override
+    public Builder options(Options options) {
+      return super.options(options);
+    }
+
+    @Override
+    public Builder requestInterceptor(RequestInterceptor requestInterceptor) {
+      return super.requestInterceptor(requestInterceptor);
+    }
+
+    @Override
+    public Builder requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
+      return super.requestInterceptors(requestInterceptors);
+    }
+
+    @Override
+    public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+      return super.invocationHandlerFactory(invocationHandlerFactory);
+    }
+
+    @Override
+    public Builder doNotCloseAfterDecode() {
+      return super.doNotCloseAfterDecode();
+    }
+
+    @Override
+    public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
+      return super.exceptionPropagationPolicy(propagationPolicy);
+    }
+
+    @Override
+    public Builder addCapability(Capability capability) {
+      return super.addCapability(capability);
     }
 
     /**

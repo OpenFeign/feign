@@ -17,53 +17,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class BaseBuilderTest {
-
-  @Test
-  public void avoidDuplicationsBetweenBuilders() {
-    List<String> builderA = getExclusiveMethods(Feign.Builder.class);
-    List<String> builderB = getExclusiveMethods(AsyncFeign.AsyncBuilder.class);
-
-    assertThat(builderA).noneMatch(m -> builderB.contains(m));
-    assertThat(builderB).noneMatch(m -> builderA.contains(m));
-
-  }
-
-  @Test
-  public void avoidDuplicationsBetweenAsyncBuilderAndBaseBuilder() {
-    List<String> builderA = getExclusiveMethods(BaseBuilder.class);
-    List<String> builderB = getExclusiveMethods(AsyncFeign.AsyncBuilder.class);
-
-    assertThat(builderA).noneMatch(m -> builderB.contains(m));
-    assertThat(builderB).noneMatch(m -> builderA.contains(m));
-
-  }
-
-  @Test
-  public void avoidDuplicationsBetweenBuilderAndBaseBuilder() {
-    List<String> builderA = getExclusiveMethods(Feign.Builder.class);
-    List<String> builderB = getExclusiveMethods(BaseBuilder.class);
-
-    assertThat(builderA).noneMatch(m -> builderB.contains(m));
-    assertThat(builderB).noneMatch(m -> builderA.contains(m));
-
-  }
-
-  private List<String> getExclusiveMethods(Class<?> clazz) {
-    return Arrays.stream(clazz.getDeclaredMethods())
-        .filter(m -> !Objects.equals(m.getName(), "target"))
-        .filter(m -> !Objects.equals(m.getName(), "build"))
-        .filter(m -> !m.isSynthetic())
-        .map(m -> m.getName() + "#" + Arrays.toString(m.getParameterTypes()))
-        .collect(Collectors.toList());
-  }
 
   @Test
   public void checkEnrichTouchesAllAsyncBuilderFields()
