@@ -13,6 +13,9 @@
  */
 package feign;
 
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.future.FutureKt;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -63,6 +66,12 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
       setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
+        if (MethodKt.isSuspend(method)) {
+          CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
+          Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+          return FutureKt.await(result, continuation);
+        }
+
         return method.invoke(instance, args);
       } catch (final InvocationTargetException e) {
         Throwable cause = e.getCause();

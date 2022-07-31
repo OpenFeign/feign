@@ -35,7 +35,15 @@ class MethodInfo {
 
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
-    if (type instanceof ParameterizedType
+    if (MethodKt.isSuspend(method)) {
+      this.asyncReturnType = true;
+      this.underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
+      if (this.underlyingReturnType == null) {
+        throw new IllegalArgumentException(String.format(
+                "Method %s can't have continuation argument, only kotlin method is allowed",
+                this.configKey));
+      }
+    } else if (type instanceof ParameterizedType
         && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
       this.asyncReturnType = true;
       this.underlyingReturnType = ((ParameterizedType) type).getActualTypeArguments()[0];
