@@ -38,24 +38,28 @@
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-jdk8</artifactId>
       <version>${kotlin.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-reflect</artifactId>
       <version>${kotlin.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-coroutines-jdk8</artifactId>
       <version>${kotlinx.coroutines.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-coroutines-reactor</artifactId>
       <version>${kotlinx.coroutines.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <dependency>

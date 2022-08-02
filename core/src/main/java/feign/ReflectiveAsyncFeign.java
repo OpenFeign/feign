@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.kotlinSupport.KotlinDetector;
+import feign.kotlinSupport.MethodKt;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
 
@@ -66,7 +68,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
       setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
-        if (MethodKt.isSuspend(method)) {
+        if (KotlinDetector.isSuspendingFunction(method)) {
           CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
           Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
           return FutureKt.await(result, continuation);

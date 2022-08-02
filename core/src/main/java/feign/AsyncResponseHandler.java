@@ -18,7 +18,7 @@ import static feign.Util.ensureClosed;
 import feign.Logger.Level;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import kotlin.Unit;
+import feign.kotlinSupport.KotlinDetector;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -56,7 +56,7 @@ class AsyncResponseHandler {
   }
 
   boolean isVoidType(Type returnType) {
-    return Void.class == returnType || void.class == returnType || Unit.class == returnType;
+    return Void.class == returnType || void.class == returnType || KotlinDetector.isUnitType(returnType);
   }
 
   void handleResponse(CompletableFuture<Object> resultFuture,

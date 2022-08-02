@@ -13,6 +13,9 @@
  */
 package feign;
 
+import feign.kotlinSupport.KotlinDetector;
+import feign.kotlinSupport.MethodKt;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -35,7 +38,7 @@ class MethodInfo {
 
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
-    if (MethodKt.isSuspend(method)) {
+    if (KotlinDetector.isSuspendingFunction(method)) {
       this.asyncReturnType = true;
       this.underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
       if (this.underlyingReturnType == null) {
