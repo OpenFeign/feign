@@ -13,8 +13,8 @@
  */
 package feign;
 
+import feign.kotlin.MethodKt;
 import feign.kotlinSupport.KotlinDetector;
-import feign.kotlinSupport.MethodKt;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;

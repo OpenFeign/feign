@@ -14,7 +14,6 @@
 package feign;
 
 import feign.kotlinSupport.KotlinDetector;
-import feign.kotlinSupport.MethodKt;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
 
