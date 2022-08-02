@@ -35,6 +35,7 @@ public abstract class Feign {
   }
 
   /**
+   * HI
    * Configuration keys are formatted as unresolved <a href=
    * "http://docs.oracle.com/javase/6/docs/jdk/api/javadoc/doclet/com/sun/javadoc/SeeTag.html" >see
    * tags</a>. This method exposes that format, in case you need to create the same value as
