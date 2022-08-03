@@ -43,23 +43,11 @@ public abstract class ClassUtils {
 	/** Prefix for internal non-primitive array class names: {@code "[L"}. */
 	private static final String NON_PRIMITIVE_ARRAY_PREFIX = "[L";
 
-	/** A reusable empty class array constant. */
-	private static final Class<?>[] EMPTY_CLASS_ARRAY = {};
-
 	/** The package separator character: {@code '.'}. */
 	private static final char PACKAGE_SEPARATOR = '.';
 
-	/** The path separator character: {@code '/'}. */
-	private static final char PATH_SEPARATOR = '/';
-
 	/** The nested class separator character: {@code '$'}. */
 	private static final char NESTED_CLASS_SEPARATOR = '$';
-
-	/** The CGLIB class separator: {@code "$$"}. */
-	public static final String CGLIB_CLASS_SEPARATOR = "$$";
-
-	/** The ".class" file suffix. */
-	public static final String CLASS_FILE_SUFFIX = ".class";
 
 
 	/**
@@ -67,12 +55,6 @@ public abstract class ClassUtils {
 	 * type as value, for example: Integer.class -> int.class.
 	 */
 	private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new IdentityHashMap<>(9);
-
-	/**
-	 * Map with primitive type as key and corresponding wrapper
-	 * type as value, for example: int.class -> Integer.class.
-	 */
-	private static final Map<Class<?>, Class<?>> primitiveTypeToWrapperMap = new IdentityHashMap<>(9);
 
 	/**
 	 * Map with primitive type name as key and corresponding primitive
@@ -85,12 +67,6 @@ public abstract class ClassUtils {
 	 * Primarily for efficient deserialization of remote invocations.
 	 */
 	private static final Map<String, Class<?>> commonClassCache = new HashMap<>(64);
-
-	/**
-	 * Common Java language interfaces which are supposed to be ignored
-	 * when searching for 'primary' user-level interfaces.
-	 */
-	private static final Set<Class<?>> javaLanguageInterfaces;
 
 
 	static {
@@ -106,7 +82,6 @@ public abstract class ClassUtils {
 
 		// Map entry iteration is less expensive to initialize than forEach with lambdas
 		for (Map.Entry<Class<?>, Class<?>> entry : primitiveWrapperTypeMap.entrySet()) {
-			primitiveTypeToWrapperMap.put(entry.getValue(), entry.getKey());
 			registerCommonClasses(entry.getKey());
 		}
 
@@ -130,7 +105,6 @@ public abstract class ClassUtils {
 		Class<?>[] javaLanguageInterfaceArray = {Serializable.class, Externalizable.class,
 				Closeable.class, AutoCloseable.class, Cloneable.class, Comparable.class};
 		registerCommonClasses(javaLanguageInterfaceArray);
-		javaLanguageInterfaces = new HashSet<>(Arrays.asList(javaLanguageInterfaceArray));
 	}
 
 
@@ -157,7 +131,7 @@ public abstract class ClassUtils {
 	 * @see Thread#getContextClassLoader()
 	 * @see ClassLoader#getSystemClassLoader()
 	 */
-	public static ClassLoader getDefaultClassLoader() {
+	private static ClassLoader getDefaultClassLoader() {
 		ClassLoader cl = null;
 		try {
 			cl = Thread.currentThread().getContextClassLoader();
@@ -252,42 +226,6 @@ public abstract class ClassUtils {
 	}
 
 	/**
-	 * Resolve the given class name into a Class instance. Supports
-	 * primitives (like "int") and array class names (like "String[]").
-	 * <p>This is effectively equivalent to the {@code forName}
-	 * method with the same arguments, with the only difference being
-	 * the exceptions thrown in case of class loading failure.
-	 * @param className the name of the Class
-	 * @param classLoader the class loader to use
-	 * (may be {@code null}, which indicates the default class loader)
-	 * @return a class instance for the supplied name
-	 * @throws IllegalArgumentException if the class name was not resolvable
-	 * (that is, the class could not be found or the class file could not be loaded)
-	 * @throws IllegalStateException if the corresponding class is resolvable but
-	 * there was a readability mismatch in the inheritance hierarchy of the class
-	 * (typically a missing dependency declaration in a Jigsaw module definition
-	 * for a superclass or interface implemented by the class to be loaded here)
-	 * @see #forName(String, ClassLoader)
-	 */
-	public static Class<?> resolveClassName(String className, ClassLoader classLoader)
-			throws IllegalArgumentException {
-
-		try {
-			return forName(className, classLoader);
-		}
-		catch (IllegalAccessError err) {
-			throw new IllegalStateException("Readability mismatch in inheritance hierarchy of class [" +
-					className + "]: " + err.getMessage(), err);
-		}
-		catch (LinkageError err) {
-			throw new IllegalArgumentException("Unresolvable class definition for class [" + className + "]", err);
-		}
-		catch (ClassNotFoundException ex) {
-			throw new IllegalArgumentException("Could not find class [" + className + "]", ex);
-		}
-	}
-
-	/**
 	 * Determine whether the {@link Class} identified by the supplied name is present
 	 * and can be loaded. Will return {@code false} if either the class or
 	 * one of its dependencies is not present or cannot be loaded.
@@ -317,89 +255,6 @@ public abstract class ClassUtils {
 	}
 
 	/**
-	 * Check whether the given class is visible in the given ClassLoader.
-	 * @param clazz the class to check (typically an interface)
-	 * @param classLoader the ClassLoader to check against
-	 * (may be {@code null} in which case this method will always return {@code true})
-	 */
-	public static boolean isVisible(Class<?> clazz, ClassLoader classLoader) {
-		if (classLoader == null) {
-			return true;
-		}
-		try {
-			if (clazz.getClassLoader() == classLoader) {
-				return true;
-			}
-		}
-		catch (SecurityException ex) {
-			// Fall through to loadable check below
-		}
-
-		// Visible if same Class can be loaded from given ClassLoader
-		return isLoadable(clazz, classLoader);
-	}
-
-	/**
-	 * Check whether the given class is cache-safe in the given context,
-	 * i.e. whether it is loaded by the given ClassLoader or a parent of it.
-	 * @param clazz the class to analyze
-	 * @param classLoader the ClassLoader to potentially cache metadata in
-	 * (may be {@code null} which indicates the system class loader)
-	 */
-	public static boolean isCacheSafe(Class<?> clazz, ClassLoader classLoader) {
-		Assert.notNull(clazz, "Class must not be null");
-		try {
-			ClassLoader target = clazz.getClassLoader();
-			// Common cases
-			if (target == classLoader || target == null) {
-				return true;
-			}
-			if (classLoader == null) {
-				return false;
-			}
-			// Check for match in ancestors -> positive
-			ClassLoader current = classLoader;
-			while (current != null) {
-				current = current.getParent();
-				if (current == target) {
-					return true;
-				}
-			}
-			// Check for match in children -> negative
-			while (target != null) {
-				target = target.getParent();
-				if (target == classLoader) {
-					return false;
-				}
-			}
-		}
-		catch (SecurityException ex) {
-			// Fall through to loadable check below
-		}
-
-		// Fallback for ClassLoaders without parent/child relationship:
-		// safe if same Class can be loaded from given ClassLoader
-		return (classLoader != null && isLoadable(clazz, classLoader));
-	}
-
-	/**
-	 * Check whether the given class is loadable in the given ClassLoader.
-	 * @param clazz the class to check (typically an interface)
-	 * @param classLoader the ClassLoader to check against
-	 * @since 5.0.6
-	 */
-	private static boolean isLoadable(Class<?> clazz, ClassLoader classLoader) {
-		try {
-			return (clazz == classLoader.loadClass(clazz.getName()));
-			// Else: different class with same name found
-		}
-		catch (ClassNotFoundException ex) {
-			// No corresponding class found at all
-			return false;
-		}
-	}
-
-	/**
 	 * Resolve the given class name as primitive class, if appropriate,
 	 * according to the JVM's naming rules for primitive classes.
 	 * <p>Also supports the JVM's internal class names for primitive arrays.
@@ -409,7 +264,7 @@ public abstract class ClassUtils {
 	 * @return the primitive class, or {@code null} if the name does not denote
 	 * a primitive class or primitive array class
 	 */
-	public static Class<?> resolvePrimitiveClassName(String name) {
+	private static Class<?> resolvePrimitiveClassName(String name) {
 		Class<?> result = null;
 		// Most class names will be quite long, considering that they
 		// SHOULD sit in a package, so a length check is worthwhile.
