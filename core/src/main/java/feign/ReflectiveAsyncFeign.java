@@ -15,7 +15,6 @@ package feign;
 
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

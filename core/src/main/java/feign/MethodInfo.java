@@ -14,7 +14,6 @@
 package feign;
 
 import feign.kotlin.MethodKt;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -42,8 +41,8 @@ class MethodInfo {
       this.underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
       if (this.underlyingReturnType == null) {
         throw new IllegalArgumentException(String.format(
-                "Method %s can't have continuation argument, only kotlin method is allowed",
-                this.configKey));
+            "Method %s can't have continuation argument, only kotlin method is allowed",
+            this.configKey));
       }
     } else if (type instanceof ParameterizedType
         && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
