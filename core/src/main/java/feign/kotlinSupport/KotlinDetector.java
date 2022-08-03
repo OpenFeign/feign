@@ -8,35 +8,28 @@ import java.lang.reflect.Type;
 
 @SuppressWarnings("unchecked")
 public abstract class KotlinDetector {
-	private static final Class<? extends Annotation> kotlinMetadata;
 	private static final boolean supportsKotlin;
+	private static final Class<? extends Annotation> kotlinMetadata;
 
 	static {
 		ClassLoader classLoader = KotlinDetector.class.getClassLoader();
-		kotlinMetadata = (Class<? extends Annotation>) ClassUtils.tryGetForName("kotlin.Metadata", classLoader);;
 		supportsKotlin = ClassUtils.isPresent("feign.kotlin.MethodKt", classLoader);
+		kotlinMetadata = supportsKotlin
+			? (Class<? extends Annotation>) ClassUtils.tryGetForName("kotlin.Metadata", classLoader)
+			: null;
 	}
 
-	/**
-	 * Return {@code true} if the method is a suspending function.
-	 * @since 5.3
-	 */
 	public static boolean isSuspendingFunction(Method method) {
-		if (KotlinDetector.isKotlinType(method.getDeclaringClass())) {
-			Class<?>[] types = method.getParameterTypes();
-			if (types.length > 0 && "kotlin.coroutines.Continuation".equals(types[types.length - 1].getName())) {
-				return true;
-			}
+		if (!KotlinDetector.isKotlinType(method.getDeclaringClass())) {
+			return false;
 		}
-		return false;
+
+		Class<?>[] params = method.getParameterTypes();
+		return params.length > 0 && "kotlin.coroutines.Continuation".equals(params[params.length - 1].getName());
 	}
 
-	/**
-	 * Determine whether the given {@code Class} is a Kotlin type
-	 * (with Kotlin metadata present on it).
-	 */
 	private static boolean isKotlinType(Class<?> clazz) {
-		return (supportsKotlin && clazz.getDeclaredAnnotation(kotlinMetadata) != null);
+		return supportsKotlin && clazz.getDeclaredAnnotation(kotlinMetadata) != null;
 	}
 
 	public static boolean isUnitType(Type type) {

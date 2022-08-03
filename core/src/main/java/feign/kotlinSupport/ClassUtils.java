@@ -15,8 +15,11 @@ abstract class ClassUtils {
 			return tryGetForName(className, classLoader) != null;
 		}
 		catch (IllegalAccessError err) {
-			throw new IllegalStateException("Readability mismatch in inheritance hierarchy of class [" +
-					className + "]: " + err.getMessage(), err);
+			String message = String.format(
+				"Readability mismatch in inheritance hierarchy of class [%s]: %s",
+				className, err.getMessage()
+			);
+			throw new IllegalStateException(message, err);
 		}
 		catch (Throwable ex) {
 			return false;
