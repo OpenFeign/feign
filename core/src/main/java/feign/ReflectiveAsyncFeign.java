@@ -13,7 +13,6 @@
  */
 package feign;
 
-import feign.kotlinSupport.KotlinDetector;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
 

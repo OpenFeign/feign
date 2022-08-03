@@ -1,4 +1,4 @@
-package feign.kotlinSupport;
+package feign;
 
 import kotlin.Unit;
 

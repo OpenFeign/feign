@@ -14,7 +14,6 @@
 package feign;
 
 import feign.kotlin.MethodKt;
-import feign.kotlinSupport.KotlinDetector;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
