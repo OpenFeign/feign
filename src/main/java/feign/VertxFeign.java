@@ -1,5 +1,6 @@
 package feign;
 
+import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
 
@@ -88,6 +89,7 @@ public final class VertxFeign extends Feign {
     private Decoder decoder = new Decoder.Default();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private HttpClientOptions options = new HttpClientOptions();
+    private long timeout = -1;
     private boolean decode404;
 
     /** Unsupported operation. */
@@ -257,6 +259,20 @@ public final class VertxFeign extends Feign {
     }
 
     /**
+     * Configures the amount of time in milliseconds after which if the request does not return any data within the timeout
+     * period an {@link java.util.concurrent.TimeoutException} fails the request.
+     * <p>
+     * Setting zero or a negative {@code value} disables the timeout.
+     *
+     * @param timeout The quantity of time in milliseconds.
+     * @return this builder
+     */
+    public Builder timeout(long timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    /**
      * Adds a single request interceptor to the builder.
      *
      * @param requestInterceptor  request interceptor to add
@@ -325,7 +341,7 @@ public final class VertxFeign extends Feign {
     public VertxFeign build() {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
-      final VertxHttpClient client = new VertxHttpClient(vertx, this.options);
+      final VertxHttpClient client = new VertxHttpClient(vertx, this.options, timeout);
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
