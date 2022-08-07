@@ -1,6 +1,5 @@
 package feign;
 
-import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
 
@@ -259,8 +258,8 @@ public final class VertxFeign extends Feign {
     }
 
     /**
-     * Configures the amount of time in milliseconds after which if the request does not return any data within the timeout
-     * period an {@link java.util.concurrent.TimeoutException} fails the request.
+     * Configures the amount of time in milliseconds after which if the request does not return any data within the
+     * timeout period an {@link java.util.concurrent.TimeoutException} fails the request.
      * <p>
      * Setting zero or a negative {@code value} disables the timeout.
      *

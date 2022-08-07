@@ -7,7 +7,6 @@ import feign.codec.ErrorDecoder;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Future;
 import io.vertx.core.VertxException;
-import io.vertx.core.impl.NoStackTraceThrowable;
 
 import java.io.IOException;
 import java.time.Duration;
