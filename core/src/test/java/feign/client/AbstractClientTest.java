@@ -14,7 +14,8 @@
 package feign.client;
 
 import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
 import feign.Client;
 import feign.CollectionFormat;
@@ -28,13 +29,18 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPOutputStream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -386,6 +392,60 @@ public abstract class AbstractClientTest {
         .hasOneOfPath("/?foo=bar,baz", "/?foo=bar%2Cbaz");
   }
 
+  @Test
+  public void canSupportGzip() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("Content-Encoding", "gzip")
+        .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+  }
+
+  @Test
+  public void canSupportDeflate() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("Content-Encoding", "deflate")
+        .setBody(new Buffer().write(deflate(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+  }
+
+  @Test
+  public void canExceptCaseInsensitiveHeader() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .addHeader("content-encoding", "gzip")
+        .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    String result = api.get();
+
+    /* verify that the response is unzipped */
+    assertThat(result).isNotNull()
+        .isEqualToIgnoringCase(responseData);
+  }
+
   @SuppressWarnings("UnusedReturnValue")
   public interface TestInterface {
 
@@ -433,6 +493,24 @@ public abstract class AbstractClientTest {
     @RequestLine("POST /?foo=bar&foo=baz&qux=")
     @Headers({"Foo: Bar", "Foo: Baz", "Qux: ", "Content-Type: {contentType}"})
     Response postWithContentType(String body, @Param("contentType") String contentType);
+  }
+
+  private byte[] compress(String data) throws Exception {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
+      GZIPOutputStream gzipOutputStream = new GZIPOutputStream(bos);
+      gzipOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
+      gzipOutputStream.close();
+      return bos.toByteArray();
+    }
+  }
+
+  private byte[] deflate(String data) throws Exception {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
+      DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(bos);
+      deflaterOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
+      deflaterOutputStream.close();
+      return bos.toByteArray();
+    }
   }
 
 }
