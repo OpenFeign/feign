@@ -13,6 +13,8 @@
  */
 package feign.googlehttpclient;
 
+import static org.junit.Assume.assumeFalse;
+
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.client.AbstractClientTest;
@@ -33,4 +35,23 @@ public class GoogleHttpClientTest extends AbstractClientTest {
 
   @Override
   public void parsesUnauthorizedResponseBody() {}
+
+  /*
+   * Google HTTP client with NetHttpTransport does not support gzip and deflate compression
+   * out-of-the-box. You can replace the transport with Apache HTTP Client.
+   */
+  @Override
+  public void canSupportGzip() throws Exception {
+    assumeFalse("Google HTTP client client do not support gzip compression", false);
+  }
+
+  @Override
+  public void canSupportDeflate() throws Exception {
+    assumeFalse("Google HTTP client client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canExceptCaseInsensitiveHeader() throws Exception {
+    assumeFalse("Google HTTP client client do not support gzip compression", false);
+  }
 }
