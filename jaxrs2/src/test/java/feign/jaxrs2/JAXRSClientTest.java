@@ -29,6 +29,7 @@ import java.util.Collections;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -141,6 +142,24 @@ public class JAXRSClientTest extends AbstractClientTest {
         .hasHeaders(MapEntry.entry("Content-Type",
             Collections.singletonList("application/json;charset=utf-8")))
         .hasMethod("POST");
+  }
+
+  /*
+   * JaxRS does not support gzip and deflate compression out-of-the-box.
+   */
+  @Override
+  public void canSupportGzip() throws Exception {
+    assumeFalse("JaxRS client do not support gzip compression", false);
+  }
+
+  @Override
+  public void canSupportDeflate() throws Exception {
+    assumeFalse("JaxRS client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canExceptCaseInsensitiveHeader() throws Exception {
+    assumeFalse("JaxRS client do not support gzip compression", false);
   }
 
   public interface JaxRSClientTestInterface {
