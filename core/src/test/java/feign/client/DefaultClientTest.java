@@ -150,21 +150,4 @@ public class DefaultClientTest extends AbstractClientTest {
     assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
   }
 
-  private byte[] compress(String data) throws Exception {
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
-      GZIPOutputStream gzipOutputStream = new GZIPOutputStream(bos);
-      gzipOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
-      gzipOutputStream.close();
-      return bos.toByteArray();
-    }
-  }
-
-  private byte[] deflate(String data) throws Exception {
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length())) {
-      DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(bos);
-      deflaterOutputStream.write(data.getBytes(StandardCharsets.UTF_8), 0, data.length());
-      deflaterOutputStream.close();
-      return bos.toByteArray();
-    }
-  }
 }
