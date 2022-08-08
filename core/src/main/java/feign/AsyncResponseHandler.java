@@ -55,7 +55,7 @@ class AsyncResponseHandler {
 
   boolean isVoidType(Type returnType) {
     return Void.class == returnType || void.class == returnType
-        || KotlinDetector.isUnitType(returnType);
+        || returnType.getTypeName().equals("kotlin.Unit");
   }
 
   void handleResponse(CompletableFuture<Object> resultFuture,

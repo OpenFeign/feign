@@ -13,19 +13,18 @@
  */
 package feign;
 
-import feign.kotlin.MethodKt;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
 @Experimental
-class MethodInfo {
+public class MethodInfo {
   private final String configKey;
   private final Type underlyingReturnType;
   private final boolean asyncReturnType;
 
-  MethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
+  protected MethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
     this.configKey = configKey;
     this.underlyingReturnType = underlyingReturnType;
     this.asyncReturnType = asyncReturnType;
@@ -36,15 +35,7 @@ class MethodInfo {
 
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
-    if (KotlinDetector.isSuspendingFunction(method)) {
-      this.asyncReturnType = true;
-      this.underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
-      if (this.underlyingReturnType == null) {
-        throw new IllegalArgumentException(String.format(
-            "Method %s can't have continuation argument, only kotlin method is allowed",
-            this.configKey));
-      }
-    } else if (type instanceof ParameterizedType
+    if (type instanceof ParameterizedType
         && Types.getRawType(type).isAssignableFrom(CompletableFuture.class)) {
       this.asyncReturnType = true;
       this.underlyingReturnType = ((ParameterizedType) type).getActualTypeArguments()[0];

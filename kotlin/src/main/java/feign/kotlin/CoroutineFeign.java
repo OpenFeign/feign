@@ -11,8 +11,15 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign;
+package feign.kotlin;
 
+import feign.AsyncContextSupplier;
+import feign.AsyncFeign;
+import feign.AsyncInvocation;
+import feign.AsyncJoinException;
+import feign.Experimental;
+import feign.Feign;
+import feign.MethodInfo;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,9 +30,11 @@ import java.lang.reflect.WildcardType;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.future.FutureKt;
 
 @Experimental
-public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
+public class CoroutineFeign<C> extends AsyncFeign<C> {
 
   private class AsyncFeignInvocationHandler<T> implements InvocationHandler {
 
@@ -46,8 +55,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
         try {
           final Object otherHandler =
-              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0])
-                  : null;
+              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
           return equals(otherHandler);
         } catch (final IllegalArgumentException e) {
           return false;
@@ -59,10 +67,16 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       }
 
       final MethodInfo methodInfo =
-          methodInfoLookup.computeIfAbsent(method, m -> new MethodInfo(type, m));
+          methodInfoLookup.computeIfAbsent(method, m -> KotlinMethodInfo.createInstance(type, m));
 
       setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
+        if (KotlinDetector.isSuspendingFunction(method)) {
+          CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
+          Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+          return FutureKt.await(result, continuation);
+        }
+
         return method.invoke(instance, args);
       } catch (final InvocationTargetException e) {
         Throwable cause = e.getCause();
@@ -98,7 +112,9 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
   private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
 
-  public ReflectiveAsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier,
+  public CoroutineFeign(
+      Feign feign,
+      AsyncContextSupplier<C> defaultContextSupplier,
       ThreadLocal<AsyncInvocation<C>> contextHolder) {
     super(feign, defaultContextSupplier);
     this.activeContextHolder = contextHolder;
@@ -111,7 +127,6 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
   protected void clearInvocationContext() {
     activeContextHolder.remove();
   }
-
 
   private String getFullMethodName(Class<?> type, Type retType, Method m) {
     return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
@@ -131,26 +146,29 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       }
 
       if (retType != CompletableFuture.class) {
-        throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
-            + getFullMethodName(type, retType, m));
+        throw new IllegalArgumentException(
+            "Method return type is not CompleteableFuture: " + getFullMethodName(type, retType, m));
       }
 
       final Type genRetType = m.getGenericReturnType();
 
       if (!ParameterizedType.class.isInstance(genRetType)) {
-        throw new IllegalArgumentException("Method return type is not parameterized: "
-            + getFullMethodName(type, genRetType, m));
+        throw new IllegalArgumentException(
+            "Method return type is not parameterized: " + getFullMethodName(type, genRetType, m));
       }
 
-      if (WildcardType.class
-          .isInstance(ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0])) {
+      if (WildcardType.class.isInstance(
+          ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0])) {
         throw new IllegalArgumentException(
             "Wildcards are not supported for return-type parameters: "
                 + getFullMethodName(type, genRetType, m));
       }
     }
 
-    return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type},
-        new AsyncFeignInvocationHandler<>(type, instance, context)));
+    return type.cast(
+        Proxy.newProxyInstance(
+            type.getClassLoader(),
+            new Class<?>[] {type},
+            new AsyncFeignInvocationHandler<>(type, instance, context)));
   }
 }

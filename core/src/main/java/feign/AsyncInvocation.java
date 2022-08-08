@@ -20,14 +20,14 @@ import java.util.concurrent.CompletableFuture;
  * A specific invocation of an APU
  */
 @Experimental
-class AsyncInvocation<C> {
+public class AsyncInvocation<C> {
 
   private final C context;
   private final MethodInfo methodInfo;
   private final long startNanos;
   private CompletableFuture<Response> responseFuture;
 
-  AsyncInvocation(C context, MethodInfo methodInfo) {
+  public AsyncInvocation(C context, MethodInfo methodInfo) {
     super();
     this.context = context;
     this.methodInfo = methodInfo;

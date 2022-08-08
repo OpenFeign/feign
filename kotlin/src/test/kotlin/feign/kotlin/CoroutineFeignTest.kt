@@ -25,6 +25,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.IOException
 import java.lang.reflect.Type
+import feign.kotlin.CoroutineFeign
 
 class SuspendTest {
     @Test
@@ -118,7 +119,7 @@ class SuspendTest {
     }
 
     internal class TestInterfaceAsyncBuilder {
-        private val delegate = AsyncFeign.asyncBuilder<Void>()
+        private val delegate = CoroutineFeign.asyncBuilder<Void>()
             .decoder(Decoder.Default()).encoder { `object`, bodyType, template ->
                 if (`object` is Map<*, *>) {
                     template.body(Gson().toJson(`object`))
