@@ -88,7 +88,7 @@
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
       <artifactId>jersey-hk2</artifactId>
-      <version>2.26</version>
+      <version>3.0.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
