@@ -34,7 +34,7 @@ public class FeignMetricTagResolver implements MetricTagResolver {
 
   @Override
   public Tags tag(MethodMetadata methodMetadata, Target<?> target, Throwable e, Tag... tags) {
-    return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), tags);
+    return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), e, tags);
   }
 
   @Override
