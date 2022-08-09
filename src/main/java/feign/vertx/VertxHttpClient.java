@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -32,29 +33,28 @@ import java.util.stream.StreamSupport;
 @SuppressWarnings("unused")
 public final class VertxHttpClient {
   private final HttpClient httpClient;
-  private long timeout = -1;
-
-  /**
-   * Constructor from {@link Vertx} instance and HTTP client options.
-   *
-   * @param vertx  vertx instance
-   * @param options  HTTP options
-   */
-  public VertxHttpClient(final Vertx vertx, final HttpClientOptions options) {
-    checkNotNull(vertx, "Argument vertx must not be null");
-    checkNotNull(options, "Argument options must be not null");
-    this.httpClient = vertx.createHttpClient(options);
-  }
+  private final long timeout;
+  private final UnaryOperator<HttpRequest<Buffer>> requestPreProcessor;
 
   /**
    * Constructor from {@link Vertx} instance, HTTP client options and request timeout.
-   * @param vertx vertx instance
-   * @param options HTTP options
-   * @param timeout request timeout
+   * @param vertx  vertx instance
+   * @param options  HTTP options
+   * @param timeout  request timeout
+   * @param requestPreProcessor  request pre-processor
    */
-  public VertxHttpClient(final Vertx vertx, final HttpClientOptions options, long timeout) {
-    this(vertx, options);
+  public VertxHttpClient(
+      final Vertx vertx,
+      final HttpClientOptions options,
+      final long timeout,
+      final UnaryOperator<HttpRequest<Buffer>> requestPreProcessor) {
+    checkNotNull(vertx, "Argument vertx must not be null");
+    checkNotNull(options, "Argument options must be not null");
+    checkNotNull(requestPreProcessor, "Argument requestPreProcessor must be not null");
+
+    this.httpClient = vertx.createHttpClient(options);
     this.timeout = timeout;
+    this.requestPreProcessor = requestPreProcessor;
   }
 
   /**
@@ -122,6 +122,6 @@ public final class VertxHttpClient {
       httpClientRequest = httpClientRequest.putHeader(header.getKey(), header.getValue());
     }
 
-    return httpClientRequest;
+    return requestPreProcessor.apply(httpClientRequest);
   }
 }

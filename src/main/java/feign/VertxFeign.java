@@ -10,8 +10,10 @@ import feign.codec.ErrorDecoder;
 import feign.vertx.VertxDelegatingContract;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.ext.web.client.HttpRequest;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * Allows Feign interfaces to return Vert.x {@link io.vertx.core.Future Future}s.
@@ -90,6 +93,7 @@ public final class VertxFeign extends Feign {
     private HttpClientOptions options = new HttpClientOptions();
     private long timeout = -1;
     private boolean decode404;
+    private UnaryOperator<HttpRequest<Buffer>> requestPreProcessor = UnaryOperator.identity();
 
     /** Unsupported operation. */
     @Override
@@ -263,11 +267,30 @@ public final class VertxFeign extends Feign {
      * <p>
      * Setting zero or a negative {@code value} disables the timeout.
      *
-     * @param timeout The quantity of time in milliseconds.
+     * @param timeout  The quantity of time in milliseconds.
      * @return this builder
      */
     public Builder timeout(long timeout) {
       this.timeout = timeout;
+      return this;
+    }
+
+    /**
+     * Defines operation to execute on each {@link HttpRequest} before it sent. Used to make setup on request level.
+     * <p>Example:
+     *
+     * <pre>
+     * var client = VertxFeign
+     *     .builder()
+     *     .vertx(vertx)
+     *     .requestPreProcessor(req -&#62; req.ssl(true));
+     * </pre>
+     *
+     * @param requestPreProcessor  operation to execute on each request
+     * @return updated request
+     */
+    public Builder requestPreProcessor(UnaryOperator<HttpRequest<Buffer>> requestPreProcessor) {
+      this.requestPreProcessor = requestPreProcessor;
       return this;
     }
 
@@ -340,7 +363,7 @@ public final class VertxFeign extends Feign {
     public VertxFeign build() {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
-      final VertxHttpClient client = new VertxHttpClient(vertx, this.options, timeout);
+      final VertxHttpClient client = new VertxHttpClient(vertx, options, timeout, requestPreProcessor);
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
