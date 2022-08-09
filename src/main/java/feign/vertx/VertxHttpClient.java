@@ -103,11 +103,17 @@ public final class VertxHttpClient {
   private HttpRequest<Buffer> makeHttpClientRequest(final Request request)
       throws MalformedURLException {
     final URL url = new URL(request.url());
-    final int port = url.getPort() > -1
-        ? url.getPort()
-        : HttpClientOptions.DEFAULT_DEFAULT_PORT;
     final String host = url.getHost();
     final String requestUri = url.getFile();
+
+    int port;
+    if (url.getPort() > -1) {
+      port = url.getPort();
+    } else if (url.getProtocol().equalsIgnoreCase("https")) {
+      port = 443;
+    } else {
+      port = HttpClientOptions.DEFAULT_DEFAULT_PORT;
+    }
 
     HttpRequest<Buffer> httpClientRequest = WebClient
         .wrap(this.httpClient)
