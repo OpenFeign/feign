@@ -186,18 +186,17 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
       ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
 
       AsyncResponseHandler responseHandler =
-          (AsyncResponseHandler)
-              Capability.enrich(
-                  new AsyncResponseHandler(
-                      logLevel,
-                      logger,
-                      decoder,
-                      errorDecoder,
-                      dismiss404,
-                      closeAfterDecode,
-                      responseInterceptor),
-                  AsyncResponseHandler.class,
-                  capabilities);
+          (AsyncResponseHandler) Capability.enrich(
+              new AsyncResponseHandler(
+                  logLevel,
+                  logger,
+                  decoder,
+                  errorDecoder,
+                  dismiss404,
+                  closeAfterDecode,
+                  responseInterceptor),
+              AsyncResponseHandler.class,
+              capabilities);
 
       return new CoroutineFeign<>(
           Feign.builder()
@@ -219,7 +218,8 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
     }
 
     private Client stageExecution(
-        ThreadLocal<AsyncInvocation<C>> activeContext, AsyncClient<C> client) {
+                                  ThreadLocal<AsyncInvocation<C>> activeContext,
+                                  AsyncClient<C> client) {
       return (request, options) -> {
         final Response result = Response.builder().status(200).request(request).build();
 
@@ -238,10 +238,10 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
     }
 
     private Decoder stageDecode(
-        ThreadLocal<AsyncInvocation<C>> activeContext,
-        Logger logger,
-        Level logLevel,
-        AsyncResponseHandler responseHandler) {
+                                ThreadLocal<AsyncInvocation<C>> activeContext,
+                                Logger logger,
+                                Level logLevel,
+                                AsyncResponseHandler responseHandler) {
       return (response, type) -> {
         final AsyncInvocation<C> invocationContext = activeContext.get();
 
