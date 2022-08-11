@@ -34,31 +34,31 @@ public class AsyncInvocation<C> {
     this.startNanos = System.nanoTime();
   }
 
-  C context() {
+  public C context() {
     return context;
   }
 
-  String configKey() {
+  public String configKey() {
     return methodInfo.configKey();
   }
 
-  long startNanos() {
+  public long startNanos() {
     return startNanos;
   }
 
-  Type underlyingType() {
+  public Type underlyingType() {
     return methodInfo.underlyingReturnType();
   }
 
-  boolean isAsyncReturnType() {
+  public boolean isAsyncReturnType() {
     return methodInfo.isAsyncReturnType();
   }
 
-  void setResponseFuture(CompletableFuture<Response> responseFuture) {
+  public void setResponseFuture(CompletableFuture<Response> responseFuture) {
     this.responseFuture = responseFuture;
   }
 
-  CompletableFuture<Response> responseFuture() {
+  public CompletableFuture<Response> responseFuture() {
     return responseFuture;
   }
 }

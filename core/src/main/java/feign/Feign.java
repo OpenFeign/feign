@@ -192,7 +192,7 @@ public abstract class Feign {
     /**
      * Internal - used to indicate that the decoder should be immediately called
      */
-    Builder forceDecoding() {
+    public /* FIXME should not be public */ Builder forceDecoding() {
       this.forceDecoding = true;
       return this;
     }

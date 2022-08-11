@@ -13,13 +13,25 @@
  */
 package feign.kotlin;
 
+import feign.AsyncClient;
 import feign.AsyncContextSupplier;
 import feign.AsyncFeign;
 import feign.AsyncInvocation;
 import feign.AsyncJoinException;
+import feign.AsyncResponseHandler;
+import feign.BaseBuilder;
+import feign.Capability;
+import feign.Client;
 import feign.Experimental;
 import feign.Feign;
+import feign.Logger;
+import feign.Logger.Level;
 import feign.MethodInfo;
+import feign.Response;
+import feign.Target;
+import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,15 +40,35 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
 
 @Experimental
 public class CoroutineFeign<C> extends AsyncFeign<C> {
+  public static <C> CoroutineBuilder<C> coBuilder() {
+    return new CoroutineBuilder<>();
+  }
 
-  private class AsyncFeignInvocationHandler<T> implements InvocationHandler {
+  private static class LazyInitializedExecutorService {
+
+    private static final ExecutorService instance =
+        Executors.newCachedThreadPool(
+            r -> {
+              final Thread result = new Thread(r);
+              result.setDaemon(true);
+              return result;
+            });
+  }
+
+  private class CoroutineFeignInvocationHandler<T> implements InvocationHandler {
 
     private final Map<Method, MethodInfo> methodInfoLookup = new ConcurrentHashMap<>();
 
@@ -44,7 +76,7 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
     private final T instance;
     private final C context;
 
-    AsyncFeignInvocationHandler(Class<T> type, T instance, C context) {
+    CoroutineFeignInvocationHandler(Class<T> type, T instance, C context) {
       this.type = type;
       this.instance = instance;
       this.context = context;
@@ -92,8 +124,8 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof AsyncFeignInvocationHandler) {
-        final AsyncFeignInvocationHandler<?> other = (AsyncFeignInvocationHandler<?>) obj;
+      if (obj instanceof CoroutineFeignInvocationHandler) {
+        final CoroutineFeignInvocationHandler<?> other = (CoroutineFeignInvocationHandler<?>) obj;
         return instance.equals(other.instance);
       }
       return false;
@@ -110,9 +142,161 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
     }
   }
 
-  private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
+  public static class CoroutineBuilder<C> extends BaseBuilder<CoroutineBuilder<C>> {
 
-  public CoroutineFeign(
+    private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
+    private AsyncClient<C> client =
+        new AsyncClient.Default<>(
+            new Client.Default(null, null), LazyInitializedExecutorService.instance);
+
+    @Deprecated
+    public CoroutineBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
+      this.defaultContextSupplier = supplier::get;
+      return this;
+    }
+
+    public CoroutineBuilder<C> client(AsyncClient<C> client) {
+      this.client = client;
+      return this;
+    }
+
+    public CoroutineBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
+      this.defaultContextSupplier = supplier;
+      return this;
+    }
+
+    public <T> T target(Class<T> apiType, String url) {
+      return target(new HardCodedTarget<>(apiType, url));
+    }
+
+    public <T> T target(Class<T> apiType, String url, C context) {
+      return target(new HardCodedTarget<>(apiType, url), context);
+    }
+
+    public <T> T target(Target<T> target) {
+      return build().newInstance(target);
+    }
+
+    public <T> T target(Target<T> target, C context) {
+      return build().newInstance(target, context);
+    }
+
+    public CoroutineFeign<C> build() {
+      super.enrich();
+      ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
+
+      AsyncResponseHandler responseHandler =
+          (AsyncResponseHandler)
+              Capability.enrich(
+                  new AsyncResponseHandler(
+                      logLevel,
+                      logger,
+                      decoder,
+                      errorDecoder,
+                      dismiss404,
+                      closeAfterDecode,
+                      responseInterceptor),
+                  AsyncResponseHandler.class,
+                  capabilities);
+
+      return new CoroutineFeign<>(
+          Feign.builder()
+              .logLevel(logLevel)
+              .client(stageExecution(activeContextHolder, client))
+              .decoder(stageDecode(activeContextHolder, logger, logLevel, responseHandler))
+              .forceDecoding() // force all handling through stageDecode
+              .contract(contract)
+              .logger(logger)
+              .encoder(encoder)
+              .queryMapEncoder(queryMapEncoder)
+              .options(options)
+              .requestInterceptors(requestInterceptors)
+              .responseInterceptor(responseInterceptor)
+              .invocationHandlerFactory(invocationHandlerFactory)
+              .build(),
+          defaultContextSupplier,
+          activeContextHolder);
+    }
+
+    private Client stageExecution(
+        ThreadLocal<AsyncInvocation<C>> activeContext, AsyncClient<C> client) {
+      return (request, options) -> {
+        final Response result = Response.builder().status(200).request(request).build();
+
+        final AsyncInvocation<C> invocationContext = activeContext.get();
+
+        invocationContext.setResponseFuture(
+            client.execute(request, options, Optional.ofNullable(invocationContext.context())));
+
+        return result;
+      };
+    }
+
+    // from SynchronousMethodHandler
+    long elapsedTime(long start) {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+    }
+
+    private Decoder stageDecode(
+        ThreadLocal<AsyncInvocation<C>> activeContext,
+        Logger logger,
+        Level logLevel,
+        AsyncResponseHandler responseHandler) {
+      return (response, type) -> {
+        final AsyncInvocation<C> invocationContext = activeContext.get();
+
+        final CompletableFuture<Object> result = new CompletableFuture<>();
+
+        invocationContext
+            .responseFuture()
+            .whenComplete(
+                (r, t) -> {
+                  final long elapsedTime = elapsedTime(invocationContext.startNanos());
+
+                  if (t != null) {
+                    if (logLevel != Logger.Level.NONE && t instanceof IOException) {
+                      final IOException e = (IOException) t;
+                      logger.logIOException(
+                          invocationContext.configKey(), logLevel, e, elapsedTime);
+                    }
+                    result.completeExceptionally(t);
+                  } else {
+                    responseHandler.handleResponse(
+                        result,
+                        invocationContext.configKey(),
+                        r,
+                        invocationContext.underlyingType(),
+                        elapsedTime);
+                  }
+                });
+
+        result.whenComplete(
+            (r, t) -> {
+              if (result.isCancelled()) {
+                invocationContext.responseFuture().cancel(true);
+              }
+            });
+
+        if (invocationContext.isAsyncReturnType()) {
+          return result;
+        }
+        try {
+          return result.join();
+        } catch (final CompletionException e) {
+          final Response r = invocationContext.responseFuture().join();
+          Throwable cause = e.getCause();
+          if (cause == null) {
+            cause = e;
+          }
+          throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
+        }
+      };
+    }
+  }
+
+  protected ThreadLocal<AsyncInvocation<C>> activeContextHolder;
+
+  protected CoroutineFeign(
       Feign feign,
       AsyncContextSupplier<C> defaultContextSupplier,
       ThreadLocal<AsyncInvocation<C>> contextHolder) {
@@ -169,6 +353,6 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
         Proxy.newProxyInstance(
             type.getClassLoader(),
             new Class<?>[] {type},
-            new AsyncFeignInvocationHandler<>(type, instance, context)));
+            new CoroutineFeignInvocationHandler<>(type, instance, context)));
   }
 }

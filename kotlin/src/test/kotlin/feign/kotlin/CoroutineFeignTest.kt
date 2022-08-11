@@ -119,7 +119,7 @@ class SuspendTest {
     }
 
     internal class TestInterfaceAsyncBuilder {
-        private val delegate = CoroutineFeign.asyncBuilder<Void>()
+        private val delegate = CoroutineFeign.coBuilder<Void>()
             .decoder(Decoder.Default()).encoder { `object`, bodyType, template ->
                 if (`object` is Map<*, *>) {
                     template.body(Gson().toJson(`object`))
