@@ -19,7 +19,7 @@ non-blocking HTTP client of Vertx.
     <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-vertx</artifactId>
-        <version>5.0.0</version>
+        <version>5.1.0</version>
     </dependency>
     ...
 </dependencies>
@@ -28,7 +28,7 @@ non-blocking HTTP client of Vertx.
 ### With Gradle
 
 ```groovy
-compile group: 'io.github.openfeign', name: 'feign-vertx', version: '5.0.0'
+compile group: 'io.github.openfeign', name: 'feign-vertx', version: '5.1.0'
 ```
 
 ## Compatibility
