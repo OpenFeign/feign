@@ -1,7 +1,6 @@
 package feign;
 
 import static feign.Util.checkNotNull;
-import static feign.Util.checkState;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -9,17 +8,25 @@ import feign.codec.Encoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Copy of private {@code ReflectiveFeign.BuildTemplateByResolvingArgs}.
  */
 class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
+  private final QueryMapEncoder queryMapEncoder;
   final MethodMetadata metadata;
+  final Target<?> target;
   private final Map<Integer, Param.Expander> indexToExpander = new HashMap<>();
 
-  BuildTemplateByResolvingArgs(final MethodMetadata metadata) {
+  BuildTemplateByResolvingArgs(
+      final MethodMetadata metadata,
+      final QueryMapEncoder queryMapEncoder,
+      final Target target) {
     this.metadata = metadata;
+    this.target = target;
+    this.queryMapEncoder = queryMapEncoder;
 
     if (metadata.indexToExpander() != null) {
       indexToExpander.putAll(metadata.indexToExpander());
@@ -59,7 +66,7 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
 
       if (value != null) { // Null values are skipped.
         if (indexToExpander.containsKey(i)) {
-          value = indexToExpander.get(i).expand(value);
+          value = expandElements(indexToExpander.get(i), value);
         }
 
         for (final String name : entry.getValue()) {
@@ -71,28 +78,56 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
     RequestTemplate template = resolve(argv, mutable, varBuilder);
 
     if (metadata.queryMapIndex() != null) {
-      /* Add query map parameters after initial resolve so that they take precedence over any
-         predefined values */
-      template = addQueryMapQueryParameters(argv, template);
+      // add query map parameters after initial resolve so that they take
+      // precedence over any predefined values
+      Object value = argv[metadata.queryMapIndex()];
+      Map<String, Object> queryMap = toQueryMap(value);
+      template = addQueryMapQueryParameters(queryMap, template);
     }
 
     if (metadata.headerMapIndex() != null) {
-      template = addHeaderMapHeaders(argv, template);
+      // add header map parameters for a resolution of the user pojo object
+      Object value = argv[metadata.headerMapIndex()];
+      Map<String, Object> headerMap = toQueryMap(value);
+      template = addHeaderMapHeaders(headerMap, template);
     }
 
     return template;
   }
 
+  private Map<String, Object> toQueryMap(Object value) {
+    if (value instanceof Map) {
+      return (Map<String, Object>) value;
+    }
+    try {
+      return queryMapEncoder.encode(value);
+    } catch (EncodeException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private Object expandElements(Param.Expander expander, Object value) {
+    if (value instanceof Iterable) {
+      return expandIterable(expander, (Iterable) value);
+    }
+    return expander.expand(value);
+  }
+
+  private List<String> expandIterable(Param.Expander expander, Iterable value) {
+    List<String> values = new ArrayList<>();
+    for (Object element : value) {
+      if (element != null) {
+        values.add(expander.expand(element));
+      }
+    }
+    return values;
+  }
+
   @SuppressWarnings("unchecked")
   private RequestTemplate addHeaderMapHeaders(
-      final Object[] argv,
+      final Map<String, Object> headerMap,
       final RequestTemplate mutableRequestTemplate) {
-    final Map<Object, Object> headerMap = (Map<Object, Object>) argv[metadata.headerMapIndex()];
-
-    for (final Map.Entry<Object, Object> currEntry : headerMap.entrySet()) {
-      checkState(currEntry.getKey().getClass() == String.class,
-          "HeaderMap key must be a String: %s", currEntry.getKey());
-
+    for (final Map.Entry<String, Object> currEntry : headerMap.entrySet()) {
       final Object currValue = currEntry.getValue();
       final Collection<String> values = new ArrayList<>();
 
@@ -104,7 +139,7 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
         values.add(currValue == null ? null : currValue.toString());
       }
 
-      mutableRequestTemplate.header((String) currEntry.getKey(), values);
+      mutableRequestTemplate.header(currEntry.getKey(), values);
     }
 
     return mutableRequestTemplate;
@@ -112,14 +147,9 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
 
   @SuppressWarnings("unchecked")
   private RequestTemplate addQueryMapQueryParameters(
-      final Object[] argv,
+      final Map<String, Object> queryMap,
       final RequestTemplate mutableRequestTemplate) {
-    final Map<Object, Object> queryMap = (Map<Object, Object>) argv[metadata.queryMapIndex()];
-
-    for (final Map.Entry<Object, Object> currEntry : queryMap.entrySet()) {
-      checkState(currEntry.getKey().getClass() == String.class,
-          "QueryMap key must be a String: %s", currEntry.getKey());
-
+    for (final Map.Entry<String, Object> currEntry : queryMap.entrySet()) {
       final Object currValue = currEntry.getValue();
       final Collection<String> values = new ArrayList<>();
 
@@ -131,7 +161,7 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
         values.add(currValue == null ? null : currValue.toString());
       }
 
-      mutableRequestTemplate.query((String) currEntry.getKey(), values);
+      mutableRequestTemplate.query(currEntry.getKey(), values);
     }
 
     return mutableRequestTemplate;
@@ -150,8 +180,12 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   static final class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
-    BuildFormEncodedTemplateFromArgs(final MethodMetadata metadata, final Encoder encoder) {
-      super(metadata);
+    BuildFormEncodedTemplateFromArgs(
+        final MethodMetadata metadata,
+        final QueryMapEncoder queryMapEncoder,
+        final Target target,
+        final Encoder encoder) {
+      super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
     }
 
@@ -186,8 +220,12 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   static final class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
-    BuildEncodedTemplateFromArgs(final MethodMetadata metadata, final Encoder encoder) {
-      super(metadata);
+    BuildEncodedTemplateFromArgs(
+        final MethodMetadata metadata,
+        final QueryMapEncoder queryMapEncoder,
+        final Target target,
+        final Encoder encoder) {
+      super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
     }
 

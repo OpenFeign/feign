@@ -7,6 +7,7 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.querymap.FieldQueryMapEncoder;
 import feign.vertx.VertxDelegatingContract;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Vertx;
@@ -89,6 +90,8 @@ public final class VertxFeign extends Feign {
     private Logger logger = new Logger.NoOpLogger();
     private Encoder encoder = new Encoder.Default();
     private Decoder decoder = new Decoder.Default();
+    private QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+    private List<Capability> capabilities = new ArrayList<>();
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
     private HttpClientOptions options = new HttpClientOptions();
     private long timeout = -1;
@@ -200,6 +203,33 @@ public final class VertxFeign extends Feign {
     }
 
     /**
+     * Sets query map encoder.
+     *
+     * @param queryMapEncoder  query map encoder
+     *
+     * @return this builder
+     */
+    @Override
+    public Builder queryMapEncoder(final QueryMapEncoder queryMapEncoder) {
+      this.queryMapEncoder = checkNotNull(queryMapEncoder, "Argument queryMapEncoder must be not null");
+      return this;
+    }
+
+    /**
+     * Adds a single capability to the builder.
+     *
+     * @param capability  capability
+     *
+     * @return this builder
+     */
+    @Override
+    public Builder addCapability(Capability capability) {
+      checkNotNull(capability, "Argument capability must be not null");
+      this.capabilities.add(capability);
+      return this;
+    }
+
+    /**
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
      *
@@ -290,7 +320,7 @@ public final class VertxFeign extends Feign {
      * @return updated request
      */
     public Builder requestPreProcessor(UnaryOperator<HttpRequest<Buffer>> requestPreProcessor) {
-      this.requestPreProcessor = requestPreProcessor;
+      this.requestPreProcessor = checkNotNull(requestPreProcessor, "Argument requestPreProcessor must be not null");
       return this;
     }
 
@@ -368,7 +398,7 @@ public final class VertxFeign extends Feign {
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
       final ParseHandlersByName handlersByName = new ParseHandlersByName(
-          contract, options, encoder, decoder, errorDecoder, methodHandlerFactory);
+          contract, options, encoder, decoder, queryMapEncoder, capabilities, errorDecoder, methodHandlerFactory);
       final InvocationHandlerFactory invocationHandlerFactory =
           new VertxInvocationHandler.Factory();
 
@@ -381,6 +411,8 @@ public final class VertxFeign extends Feign {
     private final HttpClientOptions options;
     private final Encoder encoder;
     private final Decoder decoder;
+    private final QueryMapEncoder queryMapEncoder;
+    private final List<Capability> capabilities;
     private final ErrorDecoder errorDecoder;
     private final AsynchronousMethodHandler.Factory factory;
 
@@ -389,18 +421,22 @@ public final class VertxFeign extends Feign {
         final HttpClientOptions options,
         final Encoder encoder,
         final Decoder decoder,
+        final QueryMapEncoder queryMapEncoder,
+        final List<Capability> capabilities,
         final ErrorDecoder errorDecoder,
         final AsynchronousMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
-      this.errorDecoder = errorDecoder;
       this.encoder = encoder;
       this.decoder = decoder;
+      this.queryMapEncoder = queryMapEncoder;
+      this.capabilities = capabilities;
+      this.errorDecoder = errorDecoder;
     }
 
-    private Map<String, MethodHandler> apply(final Target key) {
-      final List<MethodMetadata> metadatas = contract.parseAndValidateMetadata(key.type());
+    private Map<String, MethodHandler> apply(final Target target) {
+      final List<MethodMetadata> metadatas = contract.parseAndValidateMetadata(target.type());
       final Map<String, MethodHandler> result = new HashMap<>();
 
       for (final MethodMetadata metadata : metadatas) {
@@ -409,16 +445,16 @@ public final class VertxFeign extends Feign {
         if (!metadata.formParams().isEmpty()
             && metadata.template().bodyTemplate() == null) {
           buildTemplate = new BuildTemplateByResolvingArgs
-              .BuildFormEncodedTemplateFromArgs(metadata, encoder);
+              .BuildFormEncodedTemplateFromArgs(metadata, queryMapEncoder, target, encoder);
         } else if (metadata.bodyIndex() != null) {
           buildTemplate = new BuildTemplateByResolvingArgs
-              .BuildEncodedTemplateFromArgs(metadata, encoder);
+              .BuildEncodedTemplateFromArgs(metadata, queryMapEncoder, target, encoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(metadata);
+          buildTemplate = new BuildTemplateByResolvingArgs(metadata, queryMapEncoder, target);
         }
 
         result.put(metadata.configKey(), factory.create(
-                key, metadata, buildTemplate, decoder, errorDecoder));
+                target, metadata, buildTemplate, decoder, errorDecoder));
       }
 
       return result;

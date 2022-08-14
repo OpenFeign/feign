@@ -19,7 +19,7 @@ public class IceCreamOrder {
   private final Set<Mixin> mixins;            // and some mixins ...
   private Instant orderTimestamp;             // and give it to me right now !
 
-  IceCreamOrder() {
+  public IceCreamOrder() {
     this(Instant.now());
   }
 
@@ -30,7 +30,7 @@ public class IceCreamOrder {
     this.orderTimestamp = orderTimestamp;
   }
 
-  IceCreamOrder addBall(final Flavor ballFlavor) {
+  public IceCreamOrder addBall(final Flavor ballFlavor) {
     final Integer ballCount = balls.containsKey(ballFlavor)
         ? balls.get(ballFlavor) + 1
         : 1;
