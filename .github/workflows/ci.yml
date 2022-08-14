@@ -36,7 +36,7 @@ jobs:
           ./run-tests.zsh
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: mvn clean install source:jar javadoc:jar deploy -DskipTests=true --settings settings.xml
 
       - name: Report coverage
