@@ -393,6 +393,8 @@ public final class VertxFeign extends Feign {
     public VertxFeign build() {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
+      super.enrich();
+
       final VertxHttpClient client = new VertxHttpClient(vertx, options, timeout, requestPreProcessor);
       final AsynchronousMethodHandler.Factory methodHandlerFactory =
           new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
