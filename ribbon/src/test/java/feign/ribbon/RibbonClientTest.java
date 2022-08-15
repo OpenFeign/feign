@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -339,7 +340,7 @@ public class RibbonClientTest {
     try {
       Response response = api.get();
       assertEquals(200, response.status());
-      assertEquals("Hello", response.body().toString());
+      assertEquals("Hello", new Scanner(response.body().asInputStream()).nextLine());
     } catch (Exception ignored) {
       ignored.printStackTrace();
       fail("Shouldn't throw ");

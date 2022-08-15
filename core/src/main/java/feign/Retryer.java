@@ -14,7 +14,6 @@
 package feign;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.util.Date;
 
 /**
@@ -97,11 +96,13 @@ public interface Retryer extends Cloneable {
     }
 
     /**
-     * Calculates the time interval to a retry attempt when a Retry-After date header is provided. <br>
-     * The interval is given as the difference in milliseconds between the retryAfter date
-     * and the current date. If the retryAfter date is in the past, the interval is negative.
+     * Calculates the time interval to a retry attempt when a Retry-After date header is provided.
+     * <br>
+     * The interval is given as the difference in milliseconds between the retryAfter date and the
+     * current date. If the retryAfter date is in the past, the interval is negative.
      *
-     * @return time in milliseconds from now until the next attempt or negative amount if retryAfter is in the past.
+     * @return time in milliseconds from now until the next attempt or negative amount if retryAfter
+     *         is in the past.
      */
     long intervalFromRetryAfter(Date retryAfter) {
       long interval = retryAfter.getTime() - currentTimeMillis();
