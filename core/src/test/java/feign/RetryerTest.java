@@ -40,19 +40,19 @@ public class RetryerTest {
 
     retryer.continueOrPropagate(e);
     assertEquals(2, retryer.attempt);
-    assertEquals(150, retryer.sleptForMillis);
+    assertEquals(100, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
     assertEquals(3, retryer.attempt);
-    assertEquals(375, retryer.sleptForMillis);
+    assertEquals(250, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
     assertEquals(4, retryer.attempt);
-    assertEquals(712, retryer.sleptForMillis);
+    assertEquals(475, retryer.sleptForMillis);
 
     retryer.continueOrPropagate(e);
     assertEquals(5, retryer.attempt);
-    assertEquals(1218, retryer.sleptForMillis);
+    assertEquals(812, retryer.sleptForMillis);
 
     thrown.expect(RetryableException.class);
     retryer.continueOrPropagate(e);
@@ -91,7 +91,7 @@ public class RetryerTest {
       Assert.fail("Retryer continued despite interruption");
     } catch (RetryableException e) {
       Assert.assertTrue("Interrupted status not reset", Thread.interrupted());
-      Assert.assertEquals("Retry attempt not registered as expected", 2, retryer.attempt);
+      Assert.assertEquals("Retry attempt not registered as expected", 1, retryer.attempt);
       Assert.assertEquals("Unexpected exception found", expected, e);
     }
   }
