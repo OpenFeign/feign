@@ -15,6 +15,8 @@ package feign;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.util.Date;
+
 /**
  * Cloned for each invocation to {@link Client#execute(Request, feign.Request.Options)}.
  * Implementations may keep state to determine if retry operations should continue or not.
@@ -47,35 +49,38 @@ public interface Retryer extends Cloneable {
       this.attempt = 1;
     }
 
-    // visible for testing;
-    protected long currentTimeMillis() {
-      return System.currentTimeMillis();
-    }
-
+    @Override
     public void continueOrPropagate(RetryableException e) {
-      if (attempt++ >= maxAttempts) {
+      if (attempt >= maxAttempts) {
         throw e;
       }
 
       long interval;
-      if (e.retryAfter() != null) {
-        interval = e.retryAfter().getTime() - currentTimeMillis();
-        if (interval > maxPeriod) {
-          interval = maxPeriod;
-        }
+      if (e.retryAfter() == null) {
+        interval = nextMaxInterval();
+      } else {
+        interval = intervalFromRetryAfter(e.retryAfter());
+
         if (interval < 0) {
+          attempt++;
           return;
         }
-      } else {
-        interval = nextMaxInterval();
       }
+
       try {
         Thread.sleep(interval);
       } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
         throw e;
       }
+
       sleptForMillis += interval;
+      attempt++;
+    }
+
+    @Override
+    public Retryer clone() {
+      return new Default(period, maxPeriod, maxAttempts);
     }
 
     /**
@@ -86,13 +91,27 @@ public interface Retryer extends Cloneable {
      * @return time in milliseconds from now until the next attempt.
      */
     long nextMaxInterval() {
-      long interval = (long) (period * Math.pow(1.5, attempt - 1));
-      return interval > maxPeriod ? maxPeriod : interval;
+      long interval = (long) (period * Math.pow(1.5, attempt - 1.0));
+
+      return Math.min(interval, maxPeriod);
     }
 
-    @Override
-    public Retryer clone() {
-      return new Default(period, maxPeriod, maxAttempts);
+    /**
+     * Calculates the time interval to a retry attempt when a Retry-After date header is provided. <br>
+     * The interval is given as the difference in milliseconds between the retryAfter date
+     * and the current date. If the retryAfter date is in the past, the interval is negative.
+     *
+     * @return time in milliseconds from now until the next attempt or negative amount if retryAfter is in the past.
+     */
+    long intervalFromRetryAfter(Date retryAfter) {
+      long interval = retryAfter.getTime() - currentTimeMillis();
+
+      return Math.min(interval, maxPeriod);
+    }
+
+    // visible for testing;
+    protected long currentTimeMillis() {
+      return System.currentTimeMillis();
     }
   }
 
