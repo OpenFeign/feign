@@ -13,7 +13,6 @@
  */
 package feign.ribbon;
 
-import feign.RetryableException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
@@ -38,7 +37,7 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  public void loadBalancingDefaultPolicyRoundRobin() {
+  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
@@ -76,16 +75,13 @@ public class LoadBalancingTargetTest {
     getConfigInstance().setProperty(serverListKey,
         hostAndPort(server1.url("").url()));
 
-    LoadBalancingTarget<TestInterface> target =
-        LoadBalancingTarget.create(TestInterface.class, "http://" + name + "/context-path");
-    TestInterface api = Feign.builder().target(target);
-
     try {
+      LoadBalancingTarget<TestInterface> target =
+          LoadBalancingTarget.create(TestInterface.class, "http://" + name + "/context-path");
+      TestInterface api = Feign.builder().target(target);
+
       api.get();
 
-      assertEquals("http:///context-path", target.url());
-      assertEquals("/context-path/servers", server1.takeRequest().getPath());
-    } catch (RetryableException e) {
       assertEquals("http:///context-path", target.url());
       assertEquals("/context-path/servers", server1.takeRequest().getPath());
     } finally {
