@@ -39,13 +39,16 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   // Google http client doesn't support PATCH. See:
   // https://github.com/googleapis/google-http-java-client/issues/167
   @Override
-  public void noResponseBodyForPatch() {}
+  public void noResponseBodyForPatch() {
+  }
 
   @Override
-  public void testPatch() {}
+  public void testPatch() {
+  }
 
   @Override
-  public void parsesUnauthorizedResponseBody() {}
+  public void parsesUnauthorizedResponseBody() {
+  }
 
   /*
    * Google HTTP client with NetHttpTransport does not support gzip and deflate compression
@@ -69,17 +72,17 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   @Test
   public void testContentTypeHeaderGetsAddedOnce() throws Exception {
     server.enqueue(new MockResponse()
-            .setBody("AAAAAAAA"));
+        .setBody("AAAAAAAA"));
     TestInterface api = newBuilder()
-            .target(TestInterface.class, "http://localhost:" + server.getPort());
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
     assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
 
     MockWebServerAssertions.assertThat(server.takeRequest())
-            .hasHeaders(entry("Content-Type", Collections.singletonList("text/plain")),
-                    entry("Content-Length", Collections.singletonList("3")))
-            .hasMethod("POST");
+        .hasHeaders(entry("Content-Type", Collections.singletonList("text/plain")),
+            entry("Content-Length", Collections.singletonList("3")))
+        .hasMethod("POST");
   }
 }

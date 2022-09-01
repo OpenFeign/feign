@@ -22,10 +22,12 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
+
 import feign.Client;
 import feign.Request;
 import feign.Response;
