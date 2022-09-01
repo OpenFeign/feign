@@ -21,9 +21,7 @@ import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import okhttp3.mockwebserver.MockResponse;
 import org.junit.Test;
-
 import java.util.Collections;
-
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
@@ -39,16 +37,13 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   // Google http client doesn't support PATCH. See:
   // https://github.com/googleapis/google-http-java-client/issues/167
   @Override
-  public void noResponseBodyForPatch() {
-  }
+  public void noResponseBodyForPatch() {}
 
   @Override
-  public void testPatch() {
-  }
+  public void testPatch() {}
 
   @Override
-  public void parsesUnauthorizedResponseBody() {
-  }
+  public void parsesUnauthorizedResponseBody() {}
 
   /*
    * Google HTTP client with NetHttpTransport does not support gzip and deflate compression

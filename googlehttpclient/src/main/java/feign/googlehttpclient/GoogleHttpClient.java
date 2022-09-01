@@ -22,12 +22,10 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
-
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -90,7 +88,8 @@ public class GoogleHttpClient implements Client {
     final HttpHeaders headers = new HttpHeaders();
     for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
       // We already set the Content-Type header via ByteArrayContent
-      // Content-Type is defined as a singleton field https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3-7
+      // Content-Type is defined as a singleton field
+      // https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3-7
       if (!header.getKey().equals("Content-Type")) {
         headers.set(header.getKey(), header.getValue());
       }
