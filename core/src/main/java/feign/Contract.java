@@ -130,6 +130,10 @@ public interface Contract {
           data.ignoreParamater(i);
         }
 
+        if ("kotlin.coroutines.Continuation".equals(parameterTypes[i].getName())) {
+          data.ignoreParamater(i);
+        }
+
         if (parameterTypes[i] == URI.class) {
           data.urlIndex(i);
         } else if (!isHttpAnnotation

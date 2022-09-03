@@ -102,6 +102,27 @@ class CoroutineFeignTest {
         assertThat(firstOrder).isEqualTo(Unit)
     }
 
+    @Test
+    fun `sut should run correctly when using http body`(): Unit = runBlocking {
+        // Arrange
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("HELLO WORLD"))
+
+        val client = TestInterfaceAsyncBuilder()
+            .target("http://localhost:" + server.port)
+
+        // Act
+        val firstOrder = client.findOrderWithHttpBody(
+            order = IceCreamOrder(
+                id = "1",
+                no = 2,
+            )
+        )
+
+        // Assert
+        assertThat(firstOrder).isEqualTo(Unit)
+    }
+
     internal class GsonDecoder : Decoder {
         private val gson = Gson()
 
@@ -180,6 +201,9 @@ class CoroutineFeignTest {
 
         @RequestLine("GET /icecream/orders/{orderId}")
         suspend fun findOrder4(@Param("orderId") orderId: Int): Unit
+
+        @RequestLine("POST /icecream/orders")
+        suspend fun findOrderWithHttpBody(order: IceCreamOrder): Unit
     }
 
     data class IceCreamOrder(
