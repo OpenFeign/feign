@@ -20,5 +20,8 @@ import java.lang.reflect.Type
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.kotlinFunction
 
+val Method.isSuspend: Boolean
+    get() = kotlinFunction?.isSuspend == true
+
 val Method.kotlinMethodReturnType: Type?
     get() = kotlinFunction?.returnType?.javaType

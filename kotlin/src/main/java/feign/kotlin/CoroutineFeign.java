@@ -103,7 +103,7 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
 
       setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
-        if (KotlinDetector.isSuspendingFunction(method)) {
+        if (MethodKt.isSuspend(method)) {
           CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
           Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
           return FutureKt.await(result, continuation);

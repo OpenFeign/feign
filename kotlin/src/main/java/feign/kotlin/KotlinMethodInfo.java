@@ -34,7 +34,7 @@ class KotlinMethodInfo extends MethodInfo {
 
     Type underlyingReturnType;
     boolean asyncReturnType;
-    if (KotlinDetector.isSuspendingFunction(method)) {
+    if (MethodKt.isSuspend(method)) {
       asyncReturnType = true;
       underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
       if (underlyingReturnType == null) {
