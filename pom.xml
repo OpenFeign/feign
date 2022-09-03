@@ -51,6 +51,7 @@
     <module>kotlin</module>
     <module>micrometer</module>
     <module>example-github</module>
+    <module>example-github-with-coroutine</module>
     <module>example-wikipedia</module>
     <module>mock</module>
     <module>apt-test-generator</module>

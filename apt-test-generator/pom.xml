@@ -46,6 +46,12 @@
     </dependency>
 
     <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-example-github-with-coroutine</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.testing.compile</groupId>
       <artifactId>compile-testing</artifactId>
       <version>0.19</version>
