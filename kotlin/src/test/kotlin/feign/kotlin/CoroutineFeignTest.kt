@@ -11,10 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign
+package feign.kotlin
 
 import com.google.gson.Gson
 import com.google.gson.JsonIOException
+import feign.Param
+import feign.QueryMapEncoder
+import feign.RequestInterceptor
+import feign.RequestLine
+import feign.Response
+import feign.Util
 import feign.codec.Decoder
 import feign.codec.Encoder
 import feign.codec.ErrorDecoder
@@ -25,9 +31,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.IOException
 import java.lang.reflect.Type
-import feign.kotlin.CoroutineFeign
 
-class SuspendTest {
+class CoroutineFeignTest {
     @Test
     fun shouldRun1(): Unit = runBlocking {
         // Arrange
