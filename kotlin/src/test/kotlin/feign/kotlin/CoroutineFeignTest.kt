@@ -34,7 +34,7 @@ import java.lang.reflect.Type
 
 class CoroutineFeignTest {
     @Test
-    fun shouldRun1(): Unit = runBlocking {
+    fun `sut should run correctly when response is basic type`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
         val expected = "Hello Worlda"
@@ -43,14 +43,14 @@ class CoroutineFeignTest {
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder = client.findOrder1(orderId = 1)
+        val firstOrder: String = client.findOrderThatReturningBasicType(orderId = 1)
 
         // Assert
         assertThat(firstOrder).isEqualTo(expected)
     }
 
     @Test
-    fun shouldRun2(): Unit = runBlocking {
+    fun `sut should run correctly when response is complex type`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
         val expected = IceCreamOrder(
@@ -64,14 +64,14 @@ class CoroutineFeignTest {
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder = client.findOrder2(orderId = 1)
+        val firstOrder: IceCreamOrder = client.findOrderThatReturningComplexType(orderId = 1)
 
         // Assert
         assertThat(firstOrder).isEqualTo(expected)
     }
 
     @Test
-    fun shouldRun3(): Unit = runBlocking {
+    fun `sut should run correctly when empty response is represented by java_lang_Void`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("HELLO WORLD"))
@@ -80,14 +80,14 @@ class CoroutineFeignTest {
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder = client.findOrder3(orderId = 1)
+        val firstOrder: Void = client.findOrderThatReturningVoid(orderId = 1)
 
         // Assert
         assertThat(firstOrder).isNull()
     }
 
     @Test
-    fun shouldRun4(): Unit = runBlocking {
+    fun `sut should run correctly when empty response is represented by kotlin_Unit`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("HELLO WORLD"))
@@ -96,7 +96,7 @@ class CoroutineFeignTest {
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder = client.findOrder4(orderId = 1)
+        val firstOrder: Unit = client.findOrderThatReturningUnit(orderId = 1)
 
         // Assert
         assertThat(firstOrder).isEqualTo(Unit)
@@ -191,16 +191,16 @@ class CoroutineFeignTest {
 
     internal interface TestInterfaceAsync {
         @RequestLine("GET /icecream/orders/{orderId}")
-        suspend fun findOrder1(@Param("orderId") orderId: Int): String
+        suspend fun findOrderThatReturningBasicType(@Param("orderId") orderId: Int): String
 
         @RequestLine("GET /icecream/orders/{orderId}")
-        suspend fun findOrder2(@Param("orderId") orderId: Int): IceCreamOrder
+        suspend fun findOrderThatReturningComplexType(@Param("orderId") orderId: Int): IceCreamOrder
 
         @RequestLine("GET /icecream/orders/{orderId}")
-        suspend fun findOrder3(@Param("orderId") orderId: Int): Void
+        suspend fun findOrderThatReturningVoid(@Param("orderId") orderId: Int): Void
 
         @RequestLine("GET /icecream/orders/{orderId}")
-        suspend fun findOrder4(@Param("orderId") orderId: Int): Unit
+        suspend fun findOrderThatReturningUnit(@Param("orderId") orderId: Int): Unit
 
         @RequestLine("POST /icecream/orders")
         suspend fun findOrderWithHttpBody(order: IceCreamOrder): Unit
