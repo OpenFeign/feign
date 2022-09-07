@@ -84,7 +84,12 @@ public class GoogleHttpClient implements Client {
     // Setup headers
     final HttpHeaders headers = new HttpHeaders();
     for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
-      headers.set(header.getKey(), header.getValue());
+      // We already set the Content-Type header via ByteArrayContent
+      // Content-Type is defined as a singleton field
+      // https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3-7
+      if (!header.getKey().equals("Content-Type")) {
+        headers.set(header.getKey(), header.getValue());
+      }
     }
     // Some servers don't do well with no Accept header
     if (inputRequest.headers().get("Accept") == null) {
