@@ -19,12 +19,12 @@ import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
 @Experimental
-class MethodInfo {
+public class MethodInfo {
   private final String configKey;
   private final Type underlyingReturnType;
   private final boolean asyncReturnType;
 
-  MethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
+  protected MethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
     this.configKey = configKey;
     this.underlyingReturnType = underlyingReturnType;
     this.asyncReturnType = asyncReturnType;

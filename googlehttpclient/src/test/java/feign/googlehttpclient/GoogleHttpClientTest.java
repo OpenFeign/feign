@@ -15,7 +15,16 @@ package feign.googlehttpclient;
 
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Response;
+import feign.Util;
+import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
+import okhttp3.mockwebserver.MockResponse;
+import org.junit.Test;
+import java.util.Collections;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
@@ -55,4 +64,20 @@ public class GoogleHttpClientTest extends AbstractClientTest {
     assumeFalse("Google HTTP client client do not support gzip compression", false);
   }
 
+  @Test
+  public void testContentTypeHeaderGetsAddedOnce() throws Exception {
+    server.enqueue(new MockResponse()
+        .setBody("AAAAAAAA"));
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = api.postWithContentType("foo", "text/plain");
+    // Response length should not be null
+    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasHeaders(entry("Content-Type", Collections.singletonList("text/plain")),
+            entry("Content-Length", Collections.singletonList("3")))
+        .hasMethod("POST");
+  }
 }
