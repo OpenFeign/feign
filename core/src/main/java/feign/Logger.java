@@ -13,7 +13,9 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.UTF_8;
+import static feign.Util.decodeOrDefault;
+import static feign.Util.valuesOrEmpty;
 import static java.util.Objects.nonNull;
 
 import java.io.IOException;
@@ -131,7 +133,7 @@ public abstract class Logger {
     return response;
   }
 
-  protected IOException logIOException(
+  public IOException logIOException(
       String configKey, Level logLevel, IOException ioe, long elapsedTime) {
     log(
         configKey,

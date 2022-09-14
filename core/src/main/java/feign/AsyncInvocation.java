@@ -18,45 +18,45 @@ import java.util.concurrent.CompletableFuture;
 
 /** A specific invocation of an APU */
 @Experimental
-class AsyncInvocation<C> {
+public class AsyncInvocation<C> {
 
   private final C context;
   private final MethodInfo methodInfo;
   private final long startNanos;
   private CompletableFuture<Response> responseFuture;
 
-  AsyncInvocation(C context, MethodInfo methodInfo) {
+  public AsyncInvocation(C context, MethodInfo methodInfo) {
     super();
     this.context = context;
     this.methodInfo = methodInfo;
     this.startNanos = System.nanoTime();
   }
 
-  C context() {
+  public C context() {
     return context;
   }
 
-  String configKey() {
+  public String configKey() {
     return methodInfo.configKey();
   }
 
-  long startNanos() {
+  public long startNanos() {
     return startNanos;
   }
 
-  Type underlyingType() {
+  public Type underlyingType() {
     return methodInfo.underlyingReturnType();
   }
 
-  boolean isAsyncReturnType() {
+  public boolean isAsyncReturnType() {
     return methodInfo.isAsyncReturnType();
   }
 
-  void setResponseFuture(CompletableFuture<Response> responseFuture) {
+  public void setResponseFuture(CompletableFuture<Response> responseFuture) {
     this.responseFuture = responseFuture;
   }
 
-  CompletableFuture<Response> responseFuture() {
+  public CompletableFuture<Response> responseFuture() {
     return responseFuture;
   }
 }
