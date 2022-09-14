@@ -48,8 +48,10 @@
     <module>reactive</module>
     <module>dropwizard-metrics4</module>
     <module>dropwizard-metrics5</module>
+    <module>kotlin</module>
     <module>micrometer</module>
     <module>example-github</module>
+    <module>example-github-with-coroutine</module>
     <module>example-wikipedia</module>
     <module>mock</module>
     <module>apt-test-generator</module>
@@ -271,6 +273,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-slf4j</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-kotlin</artifactId>
         <version>${project.version}</version>
       </dependency>
 
