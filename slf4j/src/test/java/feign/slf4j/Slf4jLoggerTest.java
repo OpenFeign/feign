@@ -25,7 +25,7 @@ import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.RecordingSimpleLogger;
+import org.slf4j.simple.RecordingSimpleLogger;
 
 @SuppressWarnings("deprecation")
 public class Slf4jLoggerTest {
