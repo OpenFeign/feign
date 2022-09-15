@@ -54,7 +54,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk14</artifactId>
-      <version>2.0.0</version>
+      <version>2.0.1</version>
       <scope>test</scope>
     </dependency>
 
