@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Logger.Level;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
@@ -204,21 +205,19 @@ public abstract class AsyncFeign<C> {
               AsyncResponseHandler.class,
               capabilities);
 
-
-      return new ReflectiveAsyncFeign<>(Feign.builder()
-          .logLevel(logLevel)
-          .client(stageExecution(activeContextHolder, client))
-          .decoder(stageDecode(activeContextHolder, logger, logLevel, responseHandler))
-          .forceDecoding() // force all handling through stageDecode
-          .contract(contract)
-          .logger(logger)
-          .encoder(encoder)
-          .queryMapEncoder(queryMapEncoder)
-          .options(options)
-          .requestInterceptors(requestInterceptors)
-          .responseInterceptor(responseInterceptor)
-          .invocationHandlerFactory(invocationHandlerFactory)
-          .build(), defaultContextSupplier, activeContextHolder, methodInfoResolver);
+      final SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+          new SynchronousMethodHandler.Factory(stageExecution(activeContextHolder, client), retryer,
+              requestInterceptors,
+              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
+              propagationPolicy, true);
+      final ParseHandlersByName handlersByName =
+          new ParseHandlersByName(contract, options, encoder,
+              stageDecode(activeContextHolder, logger, logLevel, responseHandler), queryMapEncoder,
+              errorDecoder, synchronousMethodHandlerFactory);
+      final ReflectiveFeign feign =
+          new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveAsyncFeign<>(feign, defaultContextSupplier, activeContextHolder,
+          methodInfoResolver);
     }
 
     private Client stageExecution(
