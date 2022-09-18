@@ -145,7 +145,7 @@ class CoroutineFeignTest {
     }
 
     internal class TestInterfaceAsyncBuilder {
-        private val delegate = CoroutineFeign.coBuilder<Void>()
+        private val delegate = CoroutineFeign.builder<Void>()
             .decoder(Decoder.Default()).encoder { `object`, bodyType, template ->
                 if (`object` is Map<*, *>) {
                     template.body(Gson().toJson(`object`))

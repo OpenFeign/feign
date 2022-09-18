@@ -33,8 +33,16 @@ import kotlinx.coroutines.future.FutureKt;
 
 @Experimental
 public class CoroutineFeign<C> {
-  public static <C> CoroutineBuilder<C> coBuilder() {
+  public static <C> CoroutineBuilder<C> builder() {
     return new CoroutineBuilder<>();
+  }
+
+  /**
+   * @deprecated use {@link #builder()} instead.
+   */
+  @Deprecated()
+  public static <C> CoroutineBuilder<C> coBuilder() {
+    return builder();
   }
 
   private static class LazyInitializedExecutorService {
