@@ -16,43 +16,23 @@ package feign.kotlin;
 import feign.AsyncClient;
 import feign.AsyncContextSupplier;
 import feign.AsyncFeign;
-import feign.AsyncInvocation;
-import feign.AsyncJoinException;
-import feign.AsyncResponseHandler;
 import feign.BaseBuilder;
-import feign.Capability;
 import feign.Client;
 import feign.Experimental;
-import feign.Feign;
-import feign.Logger;
-import feign.Logger.Level;
-import feign.MethodInfo;
-import feign.Response;
 import feign.Target;
 import feign.Target.HardCodedTarget;
-import feign.codec.Decoder;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.future.FutureKt;
 
 @Experimental
-public class CoroutineFeign<C> extends AsyncFeign<C> {
+public class CoroutineFeign<C> {
   public static <C> CoroutineBuilder<C> coBuilder() {
     return new CoroutineBuilder<>();
   }
@@ -68,26 +48,22 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
             });
   }
 
-  private class CoroutineFeignInvocationHandler<T> implements InvocationHandler {
+  private static class CoroutineFeignInvocationHandler<T> implements InvocationHandler {
 
-    private final Map<Method, MethodInfo> methodInfoLookup = new ConcurrentHashMap<>();
-
-    private final Class<T> type;
     private final T instance;
-    private final C context;
 
-    CoroutineFeignInvocationHandler(Class<T> type, T instance, C context) {
-      this.type = type;
+    CoroutineFeignInvocationHandler(T instance) {
       this.instance = instance;
-      this.context = context;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
         try {
-          final Object otherHandler =
-              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
+          final Object otherHandler = args.length > 0 && args[0] != null
+              ? Proxy.getInvocationHandler(args[0])
+              : null;
           return equals(otherHandler);
         } catch (final IllegalArgumentException e) {
           return false;
@@ -98,30 +74,15 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
         return toString();
       }
 
-      final MethodInfo methodInfo =
-          methodInfoLookup.computeIfAbsent(method, m -> KotlinMethodInfo.createInstance(type, m));
-
-      setInvocationContext(new AsyncInvocation<>(context, methodInfo));
-      try {
-        if (MethodKt.isSuspend(method)) {
-          CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
-          Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
-          return FutureKt.await(result, continuation);
-        }
-
-        return method.invoke(instance, args);
-      } catch (final InvocationTargetException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof AsyncJoinException) {
-          cause = cause.getCause();
-        }
-        throw cause;
-      } finally {
-        clearInvocationContext();
+      if (MethodKt.isSuspend(method)) {
+        CompletableFuture<?> result = (CompletableFuture<?>) method.invoke(instance, args);
+        Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+        return FutureKt.await(result, continuation);
       }
+
+      return method.invoke(instance, args);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
       if (obj instanceof CoroutineFeignInvocationHandler) {
@@ -145,9 +106,8 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
   public static class CoroutineBuilder<C> extends BaseBuilder<CoroutineBuilder<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
-    private AsyncClient<C> client =
-        new AsyncClient.Default<>(
-            new Client.Default(null, null), LazyInitializedExecutorService.instance);
+    private AsyncClient<C> client = new AsyncClient.Default<>(
+        new Client.Default(null, null), LazyInitializedExecutorService.instance);
 
     @Deprecated
     public CoroutineBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
@@ -181,178 +141,51 @@ public class CoroutineFeign<C> extends AsyncFeign<C> {
       return build().newInstance(target, context);
     }
 
+    @SuppressWarnings("unchecked")
     public CoroutineFeign<C> build() {
       super.enrich();
-      ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
 
-      AsyncResponseHandler responseHandler =
-          (AsyncResponseHandler) Capability.enrich(
-              new AsyncResponseHandler(
-                  logLevel,
-                  logger,
-                  decoder,
-                  errorDecoder,
-                  dismiss404,
-                  closeAfterDecode,
-                  responseInterceptor),
-              AsyncResponseHandler.class,
-              capabilities);
-
-      return new CoroutineFeign<>(
-          Feign.builder()
-              .logLevel(logLevel)
-              .client(stageExecution(activeContextHolder, client))
-              .decoder(stageDecode(activeContextHolder, logger, logLevel, responseHandler))
-              .forceDecoding() // force all handling through stageDecode
-              .contract(contract)
-              .logger(logger)
-              .encoder(encoder)
-              .queryMapEncoder(queryMapEncoder)
-              .options(options)
-              .requestInterceptors(requestInterceptors)
-              .responseInterceptor(responseInterceptor)
-              .invocationHandlerFactory(invocationHandlerFactory)
-              .build(),
-          defaultContextSupplier,
-          activeContextHolder);
-    }
-
-    private Client stageExecution(
-                                  ThreadLocal<AsyncInvocation<C>> activeContext,
-                                  AsyncClient<C> client) {
-      return (request, options) -> {
-        final Response result = Response.builder().status(200).request(request).build();
-
-        final AsyncInvocation<C> invocationContext = activeContext.get();
-
-        invocationContext.setResponseFuture(
-            client.execute(request, options, Optional.ofNullable(invocationContext.context())));
-
-        return result;
-      };
-    }
-
-    // from SynchronousMethodHandler
-    long elapsedTime(long start) {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-    }
-
-    private Decoder stageDecode(
-                                ThreadLocal<AsyncInvocation<C>> activeContext,
-                                Logger logger,
-                                Level logLevel,
-                                AsyncResponseHandler responseHandler) {
-      return (response, type) -> {
-        final AsyncInvocation<C> invocationContext = activeContext.get();
-
-        final CompletableFuture<Object> result = new CompletableFuture<>();
-
-        invocationContext
-            .responseFuture()
-            .whenComplete(
-                (r, t) -> {
-                  final long elapsedTime = elapsedTime(invocationContext.startNanos());
-
-                  if (t != null) {
-                    if (logLevel != Logger.Level.NONE && t instanceof IOException) {
-                      final IOException e = (IOException) t;
-                      logger.logIOException(
-                          invocationContext.configKey(), logLevel, e, elapsedTime);
-                    }
-                    result.completeExceptionally(t);
-                  } else {
-                    responseHandler.handleResponse(
-                        result,
-                        invocationContext.configKey(),
-                        r,
-                        invocationContext.underlyingType(),
-                        elapsedTime);
-                  }
-                });
-
-        result.whenComplete(
-            (r, t) -> {
-              if (result.isCancelled()) {
-                invocationContext.responseFuture().cancel(true);
-              }
-            });
-
-        if (invocationContext.isAsyncReturnType()) {
-          return result;
-        }
-        try {
-          return result.join();
-        } catch (final CompletionException e) {
-          final Response r = invocationContext.responseFuture().join();
-          Throwable cause = e.getCause();
-          if (cause == null) {
-            cause = e;
-          }
-          throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
-        }
-      };
+      AsyncFeign<C> asyncFeign = (AsyncFeign<C>) AsyncFeign.asyncBuilder()
+          .logLevel(logLevel)
+          .client((AsyncClient<Object>) client)
+          .decoder(decoder)
+          .contract(contract)
+          .retryer(retryer)
+          .logger(logger)
+          .encoder(encoder)
+          .queryMapEncoder(queryMapEncoder)
+          .options(options)
+          .requestInterceptors(requestInterceptors)
+          .responseInterceptor(responseInterceptor)
+          .invocationHandlerFactory(invocationHandlerFactory)
+          .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
+          .methodInfoResolver(KotlinMethodInfo::createInstance)
+          .build();
+      return new CoroutineFeign<>(asyncFeign);
     }
   }
 
-  protected ThreadLocal<AsyncInvocation<C>> activeContextHolder;
+  private final AsyncFeign<C> feign;
 
-  protected CoroutineFeign(
-      Feign feign,
-      AsyncContextSupplier<C> defaultContextSupplier,
-      ThreadLocal<AsyncInvocation<C>> contextHolder) {
-    super(feign, defaultContextSupplier);
-    this.activeContextHolder = contextHolder;
+  protected CoroutineFeign(AsyncFeign<C> feign) {
+    this.feign = feign;
   }
 
-  protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
-    activeContextHolder.set(invocationContext);
+  public <T> T newInstance(Target<T> target) {
+    T instance = feign.newInstance(target);
+    return wrap(target.type(), instance);
   }
 
-  protected void clearInvocationContext() {
-    activeContextHolder.remove();
+  public <T> T newInstance(Target<T> target, C context) {
+    T instance = feign.newInstance(target, context);
+    return wrap(target.type(), instance);
   }
 
-  private String getFullMethodName(Class<?> type, Type retType, Method m) {
-    return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
-  }
-
-  @Override
-  protected <T> T wrap(Class<T> type, T instance, C context) {
-    if (!type.isInterface()) {
-      throw new IllegalArgumentException("Type must be an interface: " + type);
-    }
-
-    for (final Method m : type.getMethods()) {
-      final Class<?> retType = m.getReturnType();
-
-      if (!CompletableFuture.class.isAssignableFrom(retType)) {
-        continue; // synchronous case
-      }
-
-      if (retType != CompletableFuture.class) {
-        throw new IllegalArgumentException(
-            "Method return type is not CompleteableFuture: " + getFullMethodName(type, retType, m));
-      }
-
-      final Type genRetType = m.getGenericReturnType();
-
-      if (!ParameterizedType.class.isInstance(genRetType)) {
-        throw new IllegalArgumentException(
-            "Method return type is not parameterized: " + getFullMethodName(type, genRetType, m));
-      }
-
-      if (WildcardType.class.isInstance(
-          ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0])) {
-        throw new IllegalArgumentException(
-            "Wildcards are not supported for return-type parameters: "
-                + getFullMethodName(type, genRetType, m));
-      }
-    }
-
+  private <T> T wrap(Class<T> type, T instance) {
     return type.cast(
         Proxy.newProxyInstance(
             type.getClassLoader(),
             new Class<?>[] {type},
-            new CoroutineFeignInvocationHandler<>(type, instance, context)));
+            new CoroutineFeignInvocationHandler<>(instance)));
   }
 }
