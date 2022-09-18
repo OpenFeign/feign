@@ -206,15 +206,15 @@ public abstract class AsyncFeign<C> {
               AsyncResponseHandler.class,
               capabilities);
 
-      final MethodHandler.Factory synchronousMethodHandlerFactory =
-          new SynchronousMethodHandler.Factory(stageExecution(activeContextHolder, client), retryer,
-              requestInterceptors,
-              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy, true);
+      final MethodHandler.Factory methodHandlerFactory =
+          new AsynchronousMethodHandler.Factory(stageExecution(activeContextHolder, client),
+              retryer, requestInterceptors,
+              responseInterceptor, logger, logLevel,
+              propagationPolicy);
       final ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder,
               stageDecode(activeContextHolder, logger, logLevel, responseHandler), queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
+              errorDecoder, methodHandlerFactory);
       final ReflectiveFeign feign =
           new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
       return new ReflectiveAsyncFeign<>(feign, defaultContextSupplier, activeContextHolder,
