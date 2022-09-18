@@ -200,14 +200,14 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      MethodHandler.Factory synchronousMethodHandlerFactory =
+      MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
               propagationPolicy);
-      ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
+      ParseHandlersByName<Object> handlersByName =
+          new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
 

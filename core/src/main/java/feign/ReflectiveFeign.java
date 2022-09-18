@@ -26,13 +26,13 @@ import feign.Request.Options;
 import feign.codec.*;
 import feign.template.UriUtils;
 
-public class ReflectiveFeign extends Feign {
+public class ReflectiveFeign<C> extends Feign {
 
-  private final ParseHandlersByName targetToHandlersByName;
+  private final ParseHandlersByName<C> targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
 
-  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
+  ReflectiveFeign(ParseHandlersByName<C> targetToHandlersByName, InvocationHandlerFactory factory,
       QueryMapEncoder queryMapEncoder) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
@@ -120,7 +120,7 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  static final class ParseHandlersByName {
+  static final class ParseHandlersByName<C> {
 
     private final Contract contract;
     private final Options options;
@@ -128,7 +128,7 @@ public class ReflectiveFeign extends Feign {
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
-    private final MethodHandler.Factory factory;
+    private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
@@ -137,7 +137,7 @@ public class ReflectiveFeign extends Feign {
         Decoder decoder,
         QueryMapEncoder queryMapEncoder,
         ErrorDecoder errorDecoder,
-        MethodHandler.Factory factory) {
+        MethodHandler.Factory<C> factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;

@@ -27,7 +27,7 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
 
-final class AsynchronousMethodHandler implements MethodHandler {
+final class AsynchronousMethodHandler<C> implements MethodHandler {
 
   private final MethodMetadata metadata;
   private final Target<?> target;
@@ -139,7 +139,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
         .orElse(this.options);
   }
 
-  static class Factory implements MethodHandler.Factory {
+  static class Factory<C> implements MethodHandler.Factory<C> {
 
     private final Client client;
     private final Retryer retryer;
@@ -168,7 +168,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
                                 Options options,
                                 Decoder decoder,
                                 ErrorDecoder errorDecoder) {
-      return new AsynchronousMethodHandler(target, client, retryer, requestInterceptors,
+      return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
           propagationPolicy);
     }
