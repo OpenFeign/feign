@@ -153,7 +153,7 @@ public class CoroutineFeign<C> {
     public CoroutineFeign<C> build() {
       super.enrich();
 
-      AsyncFeign<C> asyncFeign = (AsyncFeign<C>) AsyncFeign.asyncBuilder()
+      AsyncFeign<C> asyncFeign = (AsyncFeign<C>) AsyncFeign.builder()
           .logLevel(logLevel)
           .client((AsyncClient<Object>) client)
           .decoder(decoder)

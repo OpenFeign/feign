@@ -45,9 +45,16 @@ import java.util.function.Supplier;
  */
 @Experimental
 public abstract class AsyncFeign<C> {
-
-  public static <C> AsyncBuilder<C> asyncBuilder() {
+  public static <C> AsyncBuilder<C> builder() {
     return new AsyncBuilder<>();
+  }
+
+  /**
+   * @deprecated use {@link #builder()} instead.
+   */
+  @Deprecated()
+  public static <C> AsyncBuilder<C> asyncBuilder() {
+    return builder();
   }
 
   private static class LazyInitializedExecutorService {

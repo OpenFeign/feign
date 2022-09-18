@@ -76,7 +76,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   @Test
   public final void addAsyncMetricsCapability() {
     final CompletableSource source =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
             .addCapability(createMetricCapability())
             .target(new MockTarget<>(CompletableSource.class));
