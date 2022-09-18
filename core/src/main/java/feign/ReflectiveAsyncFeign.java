@@ -13,108 +13,19 @@
  */
 package feign;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Experimental
 public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
 
-  private class AsyncFeignInvocationHandler<T> implements InvocationHandler {
-
-    private final Map<Method, MethodInfo> methodInfoLookup = new ConcurrentHashMap<>();
-
-    private final Class<T> type;
-    private final T instance;
-    private final C context;
-
-    AsyncFeignInvocationHandler(Class<T> type, T instance, C context) {
-      this.type = type;
-      this.instance = instance;
-      this.context = context;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
-        try {
-          final Object otherHandler =
-              args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0])
-                  : null;
-          return equals(otherHandler);
-        } catch (final IllegalArgumentException e) {
-          return false;
-        }
-      } else if ("hashCode".equals(method.getName()) && method.getParameterCount() == 0) {
-        return hashCode();
-      } else if ("toString".equals(method.getName()) && method.getParameterCount() == 0) {
-        return toString();
-      }
-
-      final MethodInfo methodInfo =
-          methodInfoLookup.computeIfAbsent(method, m -> methodInfoResolver.resolve(type, m));
-
-      setInvocationContext(new AsyncInvocation<>(context, methodInfo));
-      try {
-        return method.invoke(instance, args);
-      } catch (final InvocationTargetException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof AsyncJoinException) {
-          cause = cause.getCause();
-        }
-        throw cause;
-      } finally {
-        clearInvocationContext();
-      }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean equals(Object obj) {
-      if (obj instanceof AsyncFeignInvocationHandler) {
-        final AsyncFeignInvocationHandler<?> other = (AsyncFeignInvocationHandler<?>) obj;
-        return instance.equals(other.instance);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return instance.hashCode();
-    }
-
-    @Override
-    public String toString() {
-      return instance.toString();
-    }
-  }
-
-  private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
-  private final MethodInfoResolver methodInfoResolver;
-
   public ReflectiveAsyncFeign(ReflectiveFeign<C> feign,
-      AsyncContextSupplier<C> defaultContextSupplier,
-      ThreadLocal<AsyncInvocation<C>> contextHolder, MethodInfoResolver methodInfoResolver) {
+      AsyncContextSupplier<C> defaultContextSupplier) {
     super(feign, defaultContextSupplier);
-    this.activeContextHolder = contextHolder;
-    this.methodInfoResolver = methodInfoResolver;
   }
-
-  protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
-    activeContextHolder.set(invocationContext);
-  }
-
-  protected void clearInvocationContext() {
-    activeContextHolder.remove();
-  }
-
 
   private String getFullMethodName(Class<?> type, Type retType, Method m) {
     return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
@@ -153,7 +64,6 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       }
     }
 
-    return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type},
-        new AsyncFeignInvocationHandler<>(type, instance, context)));
+    return instance;
   }
 }

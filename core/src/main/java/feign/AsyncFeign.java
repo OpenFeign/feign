@@ -21,13 +21,9 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -192,7 +188,6 @@ public abstract class AsyncFeign<C> {
 
     public AsyncFeign<C> build() {
       super.enrich();
-      ThreadLocal<AsyncInvocation<C>> activeContextHolder = new ThreadLocal<>();
 
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler) Capability.enrich(
@@ -207,99 +202,22 @@ public abstract class AsyncFeign<C> {
               capabilities);
 
       final MethodHandler.Factory<C> methodHandlerFactory =
-          new AsynchronousMethodHandler.Factory<>(stageExecution(activeContextHolder, client),
-              retryer, requestInterceptors,
-              responseInterceptor, logger, logLevel,
-              propagationPolicy);
+          new AsynchronousMethodHandler.Factory<>(
+              client, retryer, requestInterceptors,
+              responseHandler, logger, logLevel,
+              propagationPolicy, methodInfoResolver);
       final ParseHandlersByName<C> handlersByName =
           new ParseHandlersByName<>(contract, options, encoder,
-              stageDecode(activeContextHolder, logger, logLevel, responseHandler), queryMapEncoder,
+              decoder, queryMapEncoder,
               errorDecoder, methodHandlerFactory);
       final ReflectiveFeign<C> feign =
           new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
-      return new ReflectiveAsyncFeign<>(feign, defaultContextSupplier, activeContextHolder,
-          methodInfoResolver);
-    }
-
-    private Client stageExecution(
-                                  ThreadLocal<AsyncInvocation<C>> activeContext,
-                                  AsyncClient<C> client) {
-      return (request, options) -> {
-        final Response result = Response.builder().status(200).request(request).build();
-
-        final AsyncInvocation<C> invocationContext = activeContext.get();
-
-        invocationContext.setResponseFuture(
-            client.execute(request, options, Optional.ofNullable(invocationContext.context())));
-
-        return result;
-      };
-    }
-
-    // from SynchronousMethodHandler
-    long elapsedTime(long start) {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-    }
-
-    private Decoder stageDecode(
-                                ThreadLocal<AsyncInvocation<C>> activeContext,
-                                Logger logger,
-                                Level logLevel,
-                                AsyncResponseHandler responseHandler) {
-      return (response, type) -> {
-        final AsyncInvocation<C> invocationContext = activeContext.get();
-
-        final CompletableFuture<Object> result = new CompletableFuture<>();
-
-        invocationContext
-            .responseFuture()
-            .whenComplete(
-                (r, t) -> {
-                  final long elapsedTime = elapsedTime(invocationContext.startNanos());
-
-                  if (t != null) {
-                    if (logLevel != Logger.Level.NONE && t instanceof IOException) {
-                      final IOException e = (IOException) t;
-                      logger.logIOException(invocationContext.configKey(), logLevel, e,
-                          elapsedTime);
-                    }
-                    result.completeExceptionally(t);
-                  } else {
-                    responseHandler.handleResponse(
-                        result,
-                        invocationContext.configKey(),
-                        r,
-                        invocationContext.underlyingType(),
-                        elapsedTime);
-                  }
-                });
-
-        result.whenComplete(
-            (r, t) -> {
-              if (result.isCancelled()) {
-                invocationContext.responseFuture().cancel(true);
-              }
-            });
-
-        if (invocationContext.isAsyncReturnType()) {
-          return result;
-        }
-        try {
-          return result.join();
-        } catch (final CompletionException e) {
-          final Response r = invocationContext.responseFuture().join();
-          Throwable cause = e.getCause();
-          if (cause == null) {
-            cause = e;
-          }
-          throw new AsyncJoinException(r.status(), cause.getMessage(), r.request(), cause);
-        }
-      };
+      return new ReflectiveAsyncFeign<>(feign, defaultContextSupplier);
     }
   }
 
   private final ReflectiveFeign<C> feign;
-  private AsyncContextSupplier<C> defaultContextSupplier;
+  private final AsyncContextSupplier<C> defaultContextSupplier;
 
   protected AsyncFeign(ReflectiveFeign<C> feign, AsyncContextSupplier<C> defaultContextSupplier) {
     this.feign = feign;

@@ -19,9 +19,11 @@ import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.FeignException.errorExecuting;
@@ -31,24 +33,25 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
 
   private final MethodMetadata metadata;
   private final Target<?> target;
-  private final Client client;
+  private final AsyncClient<C> client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
-  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
-  private final Decoder decoder;
   private final C requestContext;
+  private final AsyncResponseHandler asyncResponseHandler;
+  private final MethodInfo methodInfo;
 
 
-  private AsynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
+  private AsynchronousMethodHandler(Target<?> target, AsyncClient<C> client, Retryer retryer,
+      List<RequestInterceptor> requestInterceptors,
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ExceptionPropagationPolicy propagationPolicy, C requestContext) {
+      AsyncResponseHandler asyncResponseHandler, ExceptionPropagationPolicy propagationPolicy,
+      C requestContext, MethodInfo methodInfo) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -61,9 +64,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.responseInterceptor = responseInterceptor;
-    this.decoder = decoder;
     this.requestContext = requestContext;
+    this.asyncResponseHandler = asyncResponseHandler;
+    this.methodInfo = methodInfo;
   }
 
   @Override
@@ -71,52 +74,130 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     RequestTemplate template = buildTemplateFromArgs.create(argv);
     Options options = findOptions(argv);
     Retryer retryer = this.retryer.clone();
-    while (true) {
-      try {
-        return executeAndDecode(template, options);
-      } catch (RetryableException e) {
-        try {
-          retryer.continueOrPropagate(e);
-        } catch (RetryableException th) {
-          Throwable cause = th.getCause();
-          if (propagationPolicy == UNWRAP && cause != null) {
-            throw cause;
-          } else {
-            throw th;
-          }
-        }
-        if (logLevel != Logger.Level.NONE) {
-          logger.logRetry(metadata.configKey(), logLevel);
-        }
-        continue;
+    try {
+      if (methodInfo.isAsyncReturnType()) {
+        return executeAndDecode(template, options, retryer);
+      } else {
+        return executeAndDecode(template, options, retryer).join();
       }
+    } catch (CompletionException e) {
+      throw e.getCause();
     }
   }
 
-  Object executeAndDecode(RequestTemplate template, Options options) throws Throwable {
+  private CompletableFuture<Object> executeAndDecode(RequestTemplate template,
+                                                     Options options,
+                                                     Retryer retryer) {
+    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+
+    executeAndDecode(template, options)
+        .whenComplete((response, throwable) -> {
+          if (throwable != null) {
+            if (shouldRetry(retryer, throwable, resultFuture)) {
+              if (logLevel != Logger.Level.NONE) {
+                logger.logRetry(metadata.configKey(), logLevel);
+              }
+
+              executeAndDecode(template, options, retryer)
+                  .whenComplete(pipeTo(resultFuture));
+            }
+          } else {
+            resultFuture.complete(response);
+          }
+        });
+
+    return resultFuture;
+  }
+
+  private boolean shouldRetry(Retryer retryer,
+                              Throwable throwable,
+                              CompletableFuture<Object> resultFuture) {
+    if (throwable instanceof CompletionException) {
+      throwable = throwable.getCause();
+    }
+
+    if (!(throwable instanceof RetryableException)) {
+      resultFuture.completeExceptionally(throwable);
+      return false;
+    }
+
+    RetryableException retryableException = (RetryableException) throwable;
+    try {
+      retryer.continueOrPropagate(retryableException);
+      return true;
+    } catch (RetryableException th) {
+      Throwable cause = th.getCause();
+      if (propagationPolicy == UNWRAP && cause != null) {
+        resultFuture.completeExceptionally(cause);
+      } else {
+        resultFuture.completeExceptionally(th);
+      }
+      return false;
+    }
+  }
+
+  private static <T> BiConsumer<? super T, ? super Throwable> pipeTo(CompletableFuture<T> completableFuture) {
+    return (value, throwable) -> {
+      if (throwable != null) {
+        completableFuture.completeExceptionally(throwable);
+      } else {
+        completableFuture.complete(value);
+      }
+    };
+  }
+
+  private CompletableFuture<Object> executeAndDecode(RequestTemplate template, Options options) {
     Request request = targetRequest(template);
 
     if (logLevel != Logger.Level.NONE) {
       logger.logRequest(metadata.configKey(), logLevel, request);
     }
 
-    Response response;
     long start = System.nanoTime();
-    try {
-      response = client.execute(request, options);
-      // ensure the request is set. TODO: remove in Feign 12
-      response = response.toBuilder()
-          .request(request)
-          .requestTemplate(template)
-          .build();
-    } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
-      }
-      throw errorExecuting(request, e);
+    return client.execute(request, options, Optional.ofNullable(requestContext))
+        .thenApply(response -> {
+          // TODO: remove in Feign 12
+          return ensureRequestIsSet(response, template, request);
+        })
+        .exceptionally(throwable -> {
+          CompletionException completionException = throwable instanceof CompletionException
+              ? (CompletionException) throwable
+              : new CompletionException(throwable);
+          if (completionException.getCause() instanceof IOException) {
+            IOException ioException = (IOException) completionException.getCause();
+            if (logLevel != Logger.Level.NONE) {
+              logger.logIOException(metadata.configKey(), logLevel, ioException,
+                  elapsedTime(start));
+            }
+
+            throw errorExecuting(request, ioException);
+          } else {
+            throw completionException;
+          }
+        })
+        .thenCompose(response -> handleResponse(response, elapsedTime(start)));
+  }
+
+  private static Response ensureRequestIsSet(Response response,
+                                             RequestTemplate template,
+                                             Request request) {
+    return response.toBuilder()
+        .request(request)
+        .requestTemplate(template)
+        .build();
+  }
+
+  private CompletableFuture<Object> handleResponse(Response response, long elapsedTime) {
+    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+
+    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
+        methodInfo.underlyingReturnType(), elapsedTime);
+
+    if (!resultFuture.isDone()) {
+      resultFuture.completeExceptionally(new IllegalStateException("Response handling not done"));
     }
-    return responseInterceptor
-        .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
+
+    return resultFuture;
   }
 
   private long elapsedTime(long start) {
@@ -143,25 +224,28 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
 
   static class Factory<C> implements MethodHandler.Factory<C> {
 
-    private final Client client;
+    private final AsyncClient<C> client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
-    private final ResponseInterceptor responseInterceptor;
+    private final AsyncResponseHandler responseHandler;
     private final Logger logger;
     private final Logger.Level logLevel;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final MethodInfoResolver methodInfoResolver;
 
-    Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        ResponseInterceptor responseInterceptor,
+    Factory(AsyncClient<C> client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
+        AsyncResponseHandler responseHandler,
         Logger logger, Logger.Level logLevel,
-        ExceptionPropagationPolicy propagationPolicy) {
+        ExceptionPropagationPolicy propagationPolicy,
+        MethodInfoResolver methodInfoResolver) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.responseInterceptor = responseInterceptor;
+      this.responseHandler = responseHandler;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.propagationPolicy = propagationPolicy;
+      this.methodInfoResolver = methodInfoResolver;
     }
 
     public MethodHandler create(Target<?> target,
@@ -172,8 +256,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
                                 ErrorDecoder errorDecoder,
                                 C requestContext) {
       return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
-          responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          propagationPolicy, requestContext);
+          logger, logLevel, md, buildTemplateFromArgs, options, responseHandler,
+          propagationPolicy, requestContext,
+          methodInfoResolver.resolve(target.type(), md.method()));
     }
   }
 }
