@@ -66,6 +66,7 @@ public abstract class AsyncFeign<C> extends Feign {
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
         new Client.Default(null, null), LazyInitializedExecutorService.instance);
+    private MethodInfoResolver methodInfoResolver = MethodInfo::new;
 
     @Deprecated
     public AsyncBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
@@ -75,6 +76,11 @@ public abstract class AsyncFeign<C> extends Feign {
 
     public AsyncBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
+      return this;
+    }
+
+    public AsyncBuilder<C> methodInfoResolver(MethodInfoResolver methodInfoResolver) {
+      this.methodInfoResolver = methodInfoResolver;
       return this;
     }
 
@@ -205,7 +211,7 @@ public abstract class AsyncFeign<C> extends Feign {
           .requestInterceptors(requestInterceptors)
           .responseInterceptor(responseInterceptor)
           .invocationHandlerFactory(invocationHandlerFactory)
-          .build(), defaultContextSupplier, activeContextHolder, MethodInfo::new);
+          .build(), defaultContextSupplier, activeContextHolder, methodInfoResolver);
     }
 
     private Client stageExecution(
