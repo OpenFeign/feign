@@ -19,6 +19,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -208,7 +209,7 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+      MethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
               propagationPolicy, forceDecoding);

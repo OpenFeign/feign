@@ -13,6 +13,7 @@
  */
 package feign;
 
+import feign.InvocationHandlerFactory.MethodHandler;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Logger.Level;
 import feign.Request.Options;
@@ -205,7 +206,7 @@ public abstract class AsyncFeign<C> {
               AsyncResponseHandler.class,
               capabilities);
 
-      final SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+      final MethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(stageExecution(activeContextHolder, client), retryer,
               requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,

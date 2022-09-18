@@ -175,7 +175,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         .orElse(this.options);
   }
 
-  static class Factory {
+  static class Factory implements MethodHandler.Factory {
 
     private final Client client;
     private final Retryer retryer;
