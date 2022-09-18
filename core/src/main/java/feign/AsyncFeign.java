@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  * be done (for example, creating and submitting a task to an {@link ExecutorService}).
  */
 @Experimental
-public abstract class AsyncFeign<C> extends Feign {
+public abstract class AsyncFeign<C> {
 
   public static <C> AsyncBuilder<C> asyncBuilder() {
     return new AsyncBuilder<>();
@@ -299,7 +299,6 @@ public abstract class AsyncFeign<C> extends Feign {
     this.defaultContextSupplier = defaultContextSupplier;
   }
 
-  @Override
   public <T> T newInstance(Target<T> target) {
     return newInstance(target, defaultContextSupplier.newContext());
   }
