@@ -205,7 +205,7 @@ public abstract class AsyncFeign<C> extends Feign {
           .requestInterceptors(requestInterceptors)
           .responseInterceptor(responseInterceptor)
           .invocationHandlerFactory(invocationHandlerFactory)
-          .build(), defaultContextSupplier, activeContextHolder);
+          .build(), defaultContextSupplier, activeContextHolder, MethodInfo::new);
     }
 
     private Client stageExecution(
