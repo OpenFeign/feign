@@ -189,7 +189,8 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options,
                                 Decoder decoder,
-                                ErrorDecoder errorDecoder) {
+                                ErrorDecoder errorDecoder,
+                                Object requestContext) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
           errorDecoder, dismiss404, closeAfterDecode, propagationPolicy);

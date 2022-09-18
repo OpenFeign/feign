@@ -40,7 +40,8 @@ public interface InvocationHandlerFactory {
                            RequestTemplate.Factory buildTemplateFromArgs,
                            Request.Options options,
                            Decoder decoder,
-                           ErrorDecoder errorDecoder);
+                           ErrorDecoder errorDecoder,
+                           C requestContext);
     }
   }
 

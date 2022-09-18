@@ -41,13 +41,14 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
   private final Decoder decoder;
+  private final C requestContext;
 
 
   private AsynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
       List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ExceptionPropagationPolicy propagationPolicy) {
+      Decoder decoder, ExceptionPropagationPolicy propagationPolicy, C requestContext) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -62,6 +63,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     this.propagationPolicy = propagationPolicy;
     this.responseInterceptor = responseInterceptor;
     this.decoder = decoder;
+    this.requestContext = requestContext;
   }
 
   @Override
@@ -167,10 +169,11 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options,
                                 Decoder decoder,
-                                ErrorDecoder errorDecoder) {
+                                ErrorDecoder errorDecoder,
+                                C requestContext) {
       return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          propagationPolicy);
+          propagationPolicy, requestContext);
     }
   }
 }

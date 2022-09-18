@@ -99,7 +99,8 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
   private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
   private final MethodInfoResolver methodInfoResolver;
 
-  public ReflectiveAsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier,
+  public ReflectiveAsyncFeign(ReflectiveFeign<C> feign,
+      AsyncContextSupplier<C> defaultContextSupplier,
       ThreadLocal<AsyncInvocation<C>> contextHolder, MethodInfoResolver methodInfoResolver) {
     super(feign, defaultContextSupplier);
     this.activeContextHolder = contextHolder;

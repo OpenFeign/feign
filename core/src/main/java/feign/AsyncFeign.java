@@ -298,10 +298,10 @@ public abstract class AsyncFeign<C> {
     }
   }
 
-  private final Feign feign;
+  private final ReflectiveFeign<C> feign;
   private AsyncContextSupplier<C> defaultContextSupplier;
 
-  protected AsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier) {
+  protected AsyncFeign(ReflectiveFeign<C> feign, AsyncContextSupplier<C> defaultContextSupplier) {
     this.feign = feign;
     this.defaultContextSupplier = defaultContextSupplier;
   }
@@ -311,7 +311,7 @@ public abstract class AsyncFeign<C> {
   }
 
   public <T> T newInstance(Target<T> target, C context) {
-    return wrap(target.type(), feign.newInstance(target), context);
+    return wrap(target.type(), feign.newInstance(target, context), context);
   }
 
   protected abstract <T> T wrap(Class<T> type, T instance, C context);
