@@ -14,7 +14,6 @@
 package feign.micrometer;
 
 import java.util.concurrent.TimeUnit;
-
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
@@ -53,7 +52,7 @@ class FeignHeaderInstrumentationTest {
   @BeforeEach
   void setup() {
     observationRegistry.observationConfig()
-            .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
+        .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
     observationRegistry.observationConfig().observationHandler(new HeaderMutatingHandler());
   }
 
