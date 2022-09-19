@@ -59,7 +59,7 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
   }
 
   String getStatusValue(@Nullable Response response) {
-    return response != null ? response.reason() : "CLIENT_ERROR";
+    return response != null ? String.valueOf(response.status()) : "CLIENT_ERROR";
   }
 
   String getMethodString(@Nullable RequestTemplate request) {
