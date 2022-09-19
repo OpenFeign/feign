@@ -573,7 +573,7 @@ public class OkHttpClientAsyncTest {
 
     // fake client as Client.Default follows redirects.
     final TestInterfaceAsync api =
-        AsyncFeign.<Void>asyncBuilder()
+        AsyncFeign.<Void>builder()
             .client(new AsyncClient.Default<>((request, options) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -783,7 +783,7 @@ public class OkHttpClientAsyncTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -1024,7 +1024,7 @@ public class OkHttpClientAsyncTest {
   static final class TestInterfaceAsyncBuilder {
 
     private final AsyncFeign.AsyncBuilder<Object> delegate =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .client(new OkHttpClient())
             .decoder(new Decoder.Default())
             .encoder(

@@ -575,7 +575,7 @@ public class Http2ClientAsyncTest {
 
     // fake client as Client.Default follows redirects.
     final TestInterfaceAsync api =
-        AsyncFeign.<Void>asyncBuilder()
+        AsyncFeign.<Void>builder()
             .client(new AsyncClient.Default<>((request, options) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -785,7 +785,7 @@ public class Http2ClientAsyncTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -1026,7 +1026,7 @@ public class Http2ClientAsyncTest {
   static final class TestInterfaceAsyncBuilder {
 
     private final AsyncFeign.AsyncBuilder<Object> delegate =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .client(new Http2Client())
             .decoder(new Decoder.Default())
             .encoder(

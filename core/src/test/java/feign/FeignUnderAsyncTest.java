@@ -488,7 +488,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     TestInterface api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .decoder(
                 (response, type) -> {
                   throw new IOException("timeout");
@@ -509,7 +509,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     TestInterface api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .decoder(
                 (response, type) -> {
                   throw new IOException("timeout");
@@ -542,7 +542,7 @@ public class FeignUnderAsyncTest {
 
     // fake client as Client.Default follows redirects.
     TestInterface api =
-        AsyncFeign.<Void>asyncBuilder()
+        AsyncFeign.<Void>builder()
             .client(new AsyncClient.Default<>((request, options) -> response, execs))
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -655,10 +655,10 @@ public class FeignUnderAsyncTest {
         new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
     Target<OtherTestInterface> t3 =
         new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
-    TestInterface i1 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterface i2 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterface i3 = AsyncFeign.asyncBuilder().target(t2);
-    OtherTestInterface i4 = AsyncFeign.asyncBuilder().target(t3);
+    TestInterface i1 = AsyncFeign.builder().target(t1);
+    TestInterface i2 = AsyncFeign.builder().target(t1);
+    TestInterface i3 = AsyncFeign.builder().target(t2);
+    OtherTestInterface i4 = AsyncFeign.builder().target(t3);
 
     assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
@@ -685,7 +685,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     OtherTestInterface api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .target(OtherTestInterface.class, "http://localhost:" + server.getPort());
 
     assertThat(api.binaryResponseBody()).containsExactly(expectedResponse);
@@ -697,7 +697,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse());
 
     OtherTestInterface api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .target(OtherTestInterface.class, "http://localhost:" + server.getPort());
 
     api.binaryRequestBody(expectedRequest);
@@ -754,7 +754,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     TestInterface api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -981,7 +981,7 @@ public class FeignUnderAsyncTest {
   static final class TestInterfaceBuilder {
 
     private final AsyncFeign.AsyncBuilder<Void> delegate =
-        AsyncFeign.<Void>asyncBuilder()
+        AsyncFeign.<Void>builder()
             .decoder(new Decoder.Default())
             .encoder(
                 new Encoder() {
