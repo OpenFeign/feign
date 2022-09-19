@@ -86,7 +86,7 @@ interface GitHub {
         fun connect(): GitHub {
             val decoder: Decoder = feign.gson.GsonDecoder()
             val encoder: Encoder = GsonEncoder()
-            return CoroutineFeign.coBuilder<Unit>()
+            return CoroutineFeign.builder<Unit>()
                 .encoder(encoder)
                 .decoder(decoder)
                 .errorDecoder(GitHubErrorDecoder(decoder))
