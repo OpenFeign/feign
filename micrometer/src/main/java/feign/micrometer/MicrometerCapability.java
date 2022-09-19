@@ -14,6 +14,7 @@
 package feign.micrometer;
 
 import feign.AsyncClient;
+import feign.BaseBuilder;
 import feign.Capability;
 import feign.Client;
 import feign.InvocationHandlerFactory;
@@ -24,18 +25,35 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
 
 public class MicrometerCapability implements Capability {
 
   private final MeterRegistry meterRegistry;
 
+  private final ObservationRegistry observationRegistry;
+
   public MicrometerCapability() {
-    this(new SimpleMeterRegistry(SimpleConfig.DEFAULT, Clock.SYSTEM));
+    this(new SimpleMeterRegistry(SimpleConfig.DEFAULT, Clock.SYSTEM), ObservationRegistry.NOOP);
     Metrics.addRegistry(meterRegistry);
   }
 
   public MicrometerCapability(MeterRegistry meterRegistry) {
+    this(meterRegistry, ObservationRegistry.NOOP);
+  }
+
+  public MicrometerCapability(MeterRegistry meterRegistry,
+      ObservationRegistry observationRegistry) {
     this.meterRegistry = meterRegistry;
+    this.observationRegistry = observationRegistry;
+  }
+
+  @Override
+  public <B extends BaseBuilder<B>> BaseBuilder<B> enrich(BaseBuilder<B> baseBuilder) {
+    if (!observationRegistry.isNoop()) {
+      baseBuilder.clientInterceptor(new ObservedClientInterceptor(observationRegistry));
+    }
+    return baseBuilder;
   }
 
   @Override

@@ -185,6 +185,16 @@ public abstract class AsyncFeign<C> {
     }
 
     @Override
+    public AsyncBuilder<C> clientInterceptor(ClientInterceptor clientInterceptor) {
+      return super.clientInterceptor(clientInterceptor);
+    }
+
+    @Override
+    public AsyncBuilder<C> clientInterceptors(Iterable<ClientInterceptor> clientInterceptors) {
+      return super.clientInterceptors(clientInterceptors);
+    }
+
+    @Override
     public AsyncBuilder<C> invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }

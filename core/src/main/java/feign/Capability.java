@@ -86,6 +86,10 @@ public interface Capability {
     return requestInterceptor;
   }
 
+  default ClientInterceptor enrich(ClientInterceptor clientInterceptor) {
+    return clientInterceptor;
+  }
+
   default ResponseInterceptor enrich(ResponseInterceptor responseInterceptor) {
     return responseInterceptor;
   }
@@ -136,5 +140,9 @@ public interface Capability {
 
   default MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
     return methodInfoResolver;
+  }
+
+  default <B extends BaseBuilder<B>> BaseBuilder<B> enrich(BaseBuilder<B> baseBuilder) {
+    return baseBuilder;
   }
 }

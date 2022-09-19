@@ -35,6 +35,8 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
 
   protected final List<RequestInterceptor> requestInterceptors =
       new ArrayList<>();
+  protected final List<ClientInterceptor> clientInterceptors =
+      new ArrayList<>();
   protected ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new Contract.Default();
@@ -198,6 +200,26 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   }
 
   /**
+   * Adds a single client interceptor to the builder.
+   */
+  public B clientInterceptor(ClientInterceptor clientInterceptor) {
+    this.clientInterceptors.add(clientInterceptor);
+    return thisB;
+  }
+
+  /**
+   * Sets the full set of request interceptors for the builder, overwriting any previous
+   * interceptors.
+   */
+  public B clientInterceptors(Iterable<ClientInterceptor> clientInterceptors) {
+    this.clientInterceptors.clear();
+    for (ClientInterceptor clientInterceptor : clientInterceptors) {
+      this.clientInterceptors.add(clientInterceptor);
+    }
+    return thisB;
+  }
+
+  /**
    * Adds a single response interceptor to the builder.
    */
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
@@ -228,6 +250,8 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     if (capabilities.isEmpty()) {
       return thisB;
     }
+
+    capabilities.forEach(capability -> capability.enrich(thisB));
 
     getFieldsToEnrich().forEach(field -> {
       field.setAccessible(true);
