@@ -13,6 +13,8 @@
  */
 package feign.micrometer;
 
+import java.util.concurrent.TimeUnit;
+
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
@@ -21,6 +23,7 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
@@ -28,6 +31,7 @@ import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import okhttp3.OkHttpClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -37,9 +41,21 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WireMockTest
 class FeignHeaderInstrumentationTest {
+
+  MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+  ObservationRegistry observationRegistry = ObservationRegistry.create();
+
+  @BeforeEach
+  void setup() {
+    observationRegistry.observationConfig()
+            .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
+    observationRegistry.observationConfig().observationHandler(new HeaderMutatingHandler());
+  }
 
   @Test
   void getTemplatedPathForUri(WireMockRuntimeInfo wmRuntimeInfo) {
@@ -49,16 +65,12 @@ class FeignHeaderInstrumentationTest {
     testClient.templated("1", "2");
 
     verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
+    Timer timer = meterRegistry.get("http.client.requests").timer();
+    assertThat(timer.count()).isEqualTo(1);
+    assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
   }
 
   private TestClient clientInstrumentedWithObservations(String url) {
-    MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    ObservationRegistry observationRegistry = ObservationRegistry.create();
-
-    observationRegistry.observationConfig()
-        .observationHandler(new DefaultMeterObservationHandler(meterRegistry));
-    observationRegistry.observationConfig().observationHandler(new HeaderMutatingHandler());
-
     return Feign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
         .addCapability(new MicrometerCapability(meterRegistry, observationRegistry))
