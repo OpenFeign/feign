@@ -13,16 +13,11 @@
  */
 package feign;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class ClientInvocationContext {
 
   private final RequestTemplate requestTemplate;
 
   private final Request.Options options;
-
-  private final Map<Object, Object> holder = new HashMap<>();
 
   public ClientInvocationContext(RequestTemplate requestTemplate, Request.Options options) {
     this.requestTemplate = requestTemplate;
@@ -35,9 +30,5 @@ public class ClientInvocationContext {
 
   public Request.Options getOptions() {
     return options;
-  }
-
-  public Map<Object, Object> getHolder() {
-    return holder;
   }
 }

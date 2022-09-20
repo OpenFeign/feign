@@ -13,41 +13,26 @@
  */
 package feign;
 
+import java.util.Iterator;
+
 /**
  * Zero or One {@code ClientInterceptor} may be configured for purposes such as tracing - mutate
  * headers, execute the call, parse the response and close any previously created objects.
  */
 public interface ClientInterceptor {
 
-  ClientInterceptor DEFAULT = new ClientInterceptor() {
-    @Override
-    public void beforeExecute(ClientInvocationContext context) {}
-
-    @Override
-    public void afterExecute(ClientInvocationContext context,
-                             Response response,
-                             Throwable exception) {
-
-    }
-  };
+  ClientInterceptor DEFAULT = (context, iterator) -> null;
 
   /**
-   * Called before the request was made. Can be used to mutate the request and create objects that
-   * later will be passed to {@link #afterExecute(ClientInvocationContext, Response, Throwable)}.
+   * Allows to make an around instrumentation. Remember to call the next interceptor by calling
+   * {@code ClientInterceptor interceptor = iterator.next(); return interceptor.around(context, iterator)}.
    *
-   * @param clientInvocationContext information surrounding the request
+   * @param context input context to send a request
+   * @param iterator iterator to the next {@link ClientInterceptor}
+   * @return response or an exception - remember to rethrow an exception if it occurrs
+   * @throws FeignException exception while trying to send a request
    */
-  void beforeExecute(ClientInvocationContext clientInvocationContext);
-
-  /**
-   *
-   * @param clientInvocationContext information surrounding the request
-   * @param response received undecoded response (can be null when an exception occurred)
-   * @param exception exception that occurred while trying to send the request or receive the
-   *        response (can be null when there was no exception)
-   */
-  void afterExecute(ClientInvocationContext clientInvocationContext,
-                    Response response,
-                    Throwable exception);
+  Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator)
+      throws FeignException;
 
 }

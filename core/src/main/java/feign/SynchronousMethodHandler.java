@@ -21,6 +21,8 @@ import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -115,37 +117,11 @@ final class SynchronousMethodHandler implements MethodHandler {
 
   Object executeAndDecode(RequestTemplate template, Options options) throws Throwable {
     ClientInvocationContext context = new ClientInvocationContext(template, options);
-    for (ClientInterceptor interceptor : this.clientInterceptors) {
-      interceptor.beforeExecute(context);
-    }
-
-    Request request = targetRequest(template);
-
-    if (logLevel != Logger.Level.NONE) {
-      logger.logRequest(metadata.configKey(), logLevel, request);
-    }
-
-    Response response = null;
-    Throwable throwable = null;
     long start = System.nanoTime();
-    try {
-      response = client.execute(request, options);
-      // ensure the request is set. TODO: remove in Feign 12
-      response = response.toBuilder()
-          .request(request)
-          .requestTemplate(template)
-          .build();
-    } catch (IOException e) {
-      throwable = e;
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
-      }
-      throw errorExecuting(request, e);
-    } finally {
-      for (ClientInterceptor interceptor : this.clientInterceptors) {
-        interceptor.afterExecute(context, response, throwable);
-      }
-    }
+    InterceptorChain interceptorChain =
+        new InterceptorChain(this.clientInterceptors, new HttpCall(this.metadata, this.target,
+            this.requestInterceptors, this.logger, this.logLevel, this.client, start));
+    Response response = interceptorChain.call(context);
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
     if (decoder != null) {
@@ -169,17 +145,6 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
   }
 
-  long elapsedTime(long start) {
-    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-  }
-
-  Request targetRequest(RequestTemplate template) {
-    for (RequestInterceptor interceptor : requestInterceptors) {
-      interceptor.apply(template);
-    }
-    return target.apply(template);
-  }
-
   Options findOptions(Object[] argv) {
     if (argv == null || argv.length == 0) {
       return this.options;
@@ -189,6 +154,92 @@ final class SynchronousMethodHandler implements MethodHandler {
         .map(Options.class::cast)
         .findFirst()
         .orElse(this.options);
+  }
+
+  static class HttpCall {
+    private final MethodMetadata metadata;
+    private final Target<?> target;
+    private final List<RequestInterceptor> requestInterceptors;
+    private final Logger logger;
+    private final Logger.Level logLevel;
+    private final Client client;
+
+    private final long start;
+
+    HttpCall(MethodMetadata metadata, Target<?> target,
+        List<RequestInterceptor> requestInterceptors, Logger logger, Logger.Level logLevel,
+        Client client, long start) {
+      this.metadata = metadata;
+      this.target = target;
+      this.requestInterceptors = requestInterceptors;
+      this.logger = logger;
+      this.logLevel = logLevel;
+      this.client = client;
+      this.start = start;
+    }
+
+    Response call(RequestTemplate template, Request.Options options) {
+      Request request = targetRequest(template);
+
+      if (logLevel != Logger.Level.NONE) {
+        logger.logRequest(metadata.configKey(), logLevel, request);
+      }
+
+      Response response;
+      try {
+        response = client.execute(request, options);
+        // ensure the request is set. TODO: remove in Feign 12
+        return response.toBuilder()
+            .request(request)
+            .requestTemplate(template)
+            .build();
+      } catch (IOException e) {
+        if (logLevel != Logger.Level.NONE) {
+          logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
+        }
+        throw errorExecuting(request, e);
+      }
+    }
+
+    Request targetRequest(RequestTemplate template) {
+      for (RequestInterceptor interceptor : requestInterceptors) {
+        interceptor.apply(template);
+      }
+      return target.apply(template);
+    }
+
+    long elapsedTime(long start) {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+    }
+  }
+
+  private static class HttpCallingInterceptor implements ClientInterceptor {
+
+    private final HttpCall httpCall;
+
+    HttpCallingInterceptor(HttpCall httpCall) {
+      this.httpCall = httpCall;
+    }
+
+    @Override
+    public Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator) {
+      return httpCall.call(context.getRequestTemplate(), context.getOptions());
+    }
+  }
+
+  private static class InterceptorChain {
+    private final List<ClientInterceptor> interceptors;
+
+    InterceptorChain(List<ClientInterceptor> interceptors, HttpCall httpCall) {
+      this.interceptors = new ArrayList<>(interceptors);
+      this.interceptors.add(new HttpCallingInterceptor(httpCall));
+    }
+
+    Response call(ClientInvocationContext context) {
+      Iterator<ClientInterceptor> iterator = this.interceptors.iterator();
+      ClientInterceptor next = iterator.next();
+      return next.around(context, iterator);
+    }
   }
 
   static class Factory {
