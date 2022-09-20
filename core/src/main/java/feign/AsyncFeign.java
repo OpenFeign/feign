@@ -217,7 +217,7 @@ public abstract class AsyncFeign<C> {
 
       final SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(stageExecution(activeContextHolder, client), retryer,
-              requestInterceptors,
+              requestInterceptors, this.clientInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
               propagationPolicy, true);
       final ParseHandlersByName handlersByName =
