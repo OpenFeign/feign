@@ -19,6 +19,7 @@ import feign.AsyncFeign;
 import feign.BaseBuilder;
 import feign.Client;
 import feign.Experimental;
+import feign.MethodInfoResolver;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import java.lang.reflect.InvocationHandler;
@@ -116,6 +117,7 @@ public class CoroutineFeign<C> {
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
         new Client.Default(null, null), LazyInitializedExecutorService.instance);
+    private MethodInfoResolver methodInfoResolver = KotlinMethodInfo::createInstance;
 
     @Deprecated
     public CoroutineBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
@@ -130,6 +132,11 @@ public class CoroutineFeign<C> {
 
     public CoroutineBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
       this.defaultContextSupplier = supplier;
+      return this;
+    }
+
+    public CoroutineBuilder<C> methodInfoResolver(MethodInfoResolver methodInfoResolver) {
+      this.methodInfoResolver = methodInfoResolver;
       return this;
     }
 
@@ -167,7 +174,7 @@ public class CoroutineFeign<C> {
           .responseInterceptor(responseInterceptor)
           .invocationHandlerFactory(invocationHandlerFactory)
           .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
-          .methodInfoResolver(KotlinMethodInfo::createInstance)
+          .methodInfoResolver(methodInfoResolver)
           .build();
       return new CoroutineFeign<>(asyncFeign);
     }
