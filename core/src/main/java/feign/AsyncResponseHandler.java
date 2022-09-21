@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
  * handling
  */
 @Experimental
-class AsyncResponseHandler {
+public class AsyncResponseHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
@@ -42,7 +42,7 @@ class AsyncResponseHandler {
 
   private final ResponseInterceptor responseInterceptor;
 
-  AsyncResponseHandler(
+  public AsyncResponseHandler(
       Level logLevel,
       Logger logger,
       Decoder decoder,
@@ -61,10 +61,12 @@ class AsyncResponseHandler {
   }
 
   boolean isVoidType(Type returnType) {
-    return Void.class == returnType || void.class == returnType;
+    return Void.class == returnType
+        || void.class == returnType
+        || returnType.getTypeName().equals("kotlin.Unit");
   }
 
-  void handleResponse(
+  public void handleResponse(
       CompletableFuture<Object> resultFuture,
       String configKey,
       Response response,

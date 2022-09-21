@@ -482,7 +482,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .decoder(
                 (response, type) -> {
                   throw new IOException("timeout");
@@ -507,7 +507,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .decoder(
                 (response, type) -> {
                   throw new IOException("timeout");
@@ -541,7 +541,7 @@ public class AsyncApacheHttp5ClientTest {
 
     // fake client as Client.Default follows redirects.
     final TestInterfaceAsync api =
-        AsyncFeign.<Void>asyncBuilder()
+        AsyncFeign.<Void>builder()
             .client(new AsyncClient.Default<>((request, options) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -631,10 +631,10 @@ public class AsyncApacheHttp5ClientTest {
     final Target<OtherTestInterfaceAsync> t3 =
         new HardCodedTarget<OtherTestInterfaceAsync>(
             OtherTestInterfaceAsync.class, "http://localhost:8080");
-    final TestInterfaceAsync i1 = AsyncFeign.asyncBuilder().target(t1);
-    final TestInterfaceAsync i2 = AsyncFeign.asyncBuilder().target(t1);
-    final TestInterfaceAsync i3 = AsyncFeign.asyncBuilder().target(t2);
-    final OtherTestInterfaceAsync i4 = AsyncFeign.asyncBuilder().target(t3);
+    final TestInterfaceAsync i1 = AsyncFeign.builder().target(t1);
+    final TestInterfaceAsync i2 = AsyncFeign.builder().target(t1);
+    final TestInterfaceAsync i3 = AsyncFeign.builder().target(t2);
+    final OtherTestInterfaceAsync i4 = AsyncFeign.builder().target(t3);
 
     assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
@@ -662,7 +662,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     final OtherTestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .target(OtherTestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
@@ -674,7 +674,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse());
 
     final OtherTestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .target(OtherTestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     final CompletableFuture<?> cf = api.binaryRequestBody(expectedRequest);
@@ -748,7 +748,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -989,7 +989,7 @@ public class AsyncApacheHttp5ClientTest {
   static final class TestInterfaceAsyncBuilder {
 
     private final AsyncFeign.AsyncBuilder<HttpClientContext> delegate =
-        AsyncFeign.<HttpClientContext>asyncBuilder()
+        AsyncFeign.<HttpClientContext>builder()
             .client(new AsyncApacheHttp5Client())
             .decoder(new Decoder.Default())
             .encoder(

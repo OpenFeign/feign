@@ -20,12 +20,12 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.11-SNAPSHOT</version>
+    <version>11.10-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-example-github</artifactId>
+  <artifactId>feign-example-github-with-coroutine</artifactId>
   <packaging>jar</packaging>
-  <name>GitHub Example</name>
+  <name>GitHub Example With Coroutine</name>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -35,6 +35,10 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-kotlin</artifactId>
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
@@ -129,6 +133,35 @@
             <configuration>
               <testFailureIgnore>false</testFailureIgnore>
             </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>kotlin-maven-plugin</artifactId>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <version>${kotlin.version}</version>
+            <executions>
+              <execution>
+                <id>compile</id>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <sourceDirs>
+                    <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                  </sourceDirs>
+                </configuration>
+              </execution>
+              <execution>
+                <id>test-compile</id>
+                <goals>
+                  <goal>test-compile</goal>
+                </goals>
+                <configuration>
+                  <sourceDirs>
+                    <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                  </sourceDirs>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

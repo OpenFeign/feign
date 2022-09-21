@@ -1077,7 +1077,7 @@ interface GitHub {
 
 public class MyApp {
   public static void main(String... args) {
-    GitHub github = AsyncFeign.asyncBuilder()
+    GitHub github = AsyncFeign.builder()
                          .decoder(new GsonDecoder())
                          .target(GitHub.class, "https://api.github.com");
 
