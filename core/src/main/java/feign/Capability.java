@@ -133,4 +133,8 @@ public interface Capability {
   default <C> AsyncContextSupplier<C> enrich(AsyncContextSupplier<C> asyncContextSupplier) {
     return asyncContextSupplier;
   }
+
+  default MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
+    return methodInfoResolver;
+  }
 }

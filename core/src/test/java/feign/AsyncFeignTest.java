@@ -503,7 +503,7 @@ public class AsyncFeignTest {
   public void throwsFeignExceptionIncludingBody() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
+    TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
     }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -524,7 +524,7 @@ public class AsyncFeignTest {
   public void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
+    TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
     }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -549,7 +549,7 @@ public class AsyncFeignTest {
     ExecutorService execs = Executors.newSingleThreadExecutor();
 
     // fake client as Client.Default follows redirects.
-    TestInterfaceAsync api = AsyncFeign.<Void>asyncBuilder()
+    TestInterfaceAsync api = AsyncFeign.<Void>builder()
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -625,10 +625,10 @@ public class AsyncFeignTest {
     Target<OtherTestInterfaceAsync> t3 =
         new HardCodedTarget<>(OtherTestInterfaceAsync.class,
             "http://localhost:8080");
-    TestInterfaceAsync i1 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterfaceAsync i2 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterfaceAsync i3 = AsyncFeign.asyncBuilder().target(t2);
-    OtherTestInterfaceAsync i4 = AsyncFeign.asyncBuilder().target(t3);
+    TestInterfaceAsync i1 = AsyncFeign.builder().target(t1);
+    TestInterfaceAsync i2 = AsyncFeign.builder().target(t1);
+    TestInterfaceAsync i3 = AsyncFeign.builder().target(t2);
+    OtherTestInterfaceAsync i4 = AsyncFeign.builder().target(t3);
 
     assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
@@ -651,7 +651,7 @@ public class AsyncFeignTest {
     byte[] expectedResponse = {12, 34, 56};
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
-    OtherTestInterfaceAsync api = AsyncFeign.asyncBuilder().target(OtherTestInterfaceAsync.class,
+    OtherTestInterfaceAsync api = AsyncFeign.builder().target(OtherTestInterfaceAsync.class,
         "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
@@ -662,7 +662,7 @@ public class AsyncFeignTest {
     byte[] expectedRequest = {12, 34, 56};
     server.enqueue(new MockResponse());
 
-    OtherTestInterfaceAsync api = AsyncFeign.asyncBuilder().target(OtherTestInterfaceAsync.class,
+    OtherTestInterfaceAsync api = AsyncFeign.builder().target(OtherTestInterfaceAsync.class,
         "http://localhost:" + server.getPort());
 
     CompletableFuture<?> cf = api.binaryRequestBody(expectedRequest);
@@ -733,7 +733,7 @@ public class AsyncFeignTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+        AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertEquals("RESPONSE!", unwrap(api.post()));
@@ -962,7 +962,7 @@ public class AsyncFeignTest {
 
   static final class TestInterfaceAsyncBuilder {
 
-    private final AsyncFeign.AsyncBuilder<Void> delegate = AsyncFeign.<Void>asyncBuilder()
+    private final AsyncFeign.AsyncBuilder<Void> delegate = AsyncFeign.<Void>builder()
         .decoder(new Decoder.Default()).encoder(new Encoder() {
 
           @SuppressWarnings("deprecation")
@@ -1018,31 +1018,31 @@ public class AsyncFeignTest {
   @Test
   public void testNonInterface() {
     thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.asyncBuilder().target(NonInterface.class, "http://localhost");
+    AsyncFeign.builder().target(NonInterface.class, "http://localhost");
   }
 
   @Test
   public void testExtendedCFReturnType() {
     thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.asyncBuilder().target(ExtendedCFApi.class, "http://localhost");
+    AsyncFeign.builder().target(ExtendedCFApi.class, "http://localhost");
   }
 
   @Test
   public void testLowerWildReturnType() {
     thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.asyncBuilder().target(LowerWildApi.class, "http://localhost");
+    AsyncFeign.builder().target(LowerWildApi.class, "http://localhost");
   }
 
   @Test
   public void testUpperWildReturnType() {
     thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.asyncBuilder().target(UpperWildApi.class, "http://localhost");
+    AsyncFeign.builder().target(UpperWildApi.class, "http://localhost");
   }
 
   @Test
   public void testrWildReturnType() {
     thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.asyncBuilder().target(WildApi.class, "http://localhost");
+    AsyncFeign.builder().target(WildApi.class, "http://localhost");
   }
 
 

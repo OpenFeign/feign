@@ -13,14 +13,16 @@
  */
 package feign;
 
+import static feign.Util.UTF_8;
+import static feign.Util.decodeOrDefault;
+import static feign.Util.valuesOrEmpty;
+import static java.util.Objects.nonNull;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
-import static feign.Util.*;
-import static java.util.Objects.nonNull;
 
 /**
  * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
@@ -137,10 +139,10 @@ public abstract class Logger {
     return response;
   }
 
-  protected IOException logIOException(String configKey,
-                                       Level logLevel,
-                                       IOException ioe,
-                                       long elapsedTime) {
+  public IOException logIOException(String configKey,
+                                    Level logLevel,
+                                    IOException ioe,
+                                    long elapsedTime) {
     log(configKey, "<--- ERROR %s: %s (%sms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
@@ -217,7 +219,7 @@ public abstract class Logger {
 
     /**
      * Constructor for JavaLogger class
-     * 
+     *
      * @param loggerName a name for the logger. This should be a dot-separated name and should
      *        normally be based on the package name or class name of the subsystem, such as java.net
      *        or javax.swing

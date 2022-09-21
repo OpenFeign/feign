@@ -59,7 +59,7 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
       }
 
       final MethodInfo methodInfo =
-          methodInfoLookup.computeIfAbsent(method, m -> new MethodInfo(type, m));
+          methodInfoLookup.computeIfAbsent(method, m -> methodInfoResolver.resolve(type, m));
 
       setInvocationContext(new AsyncInvocation<>(context, methodInfo));
       try {
@@ -97,11 +97,13 @@ public class ReflectiveAsyncFeign<C> extends AsyncFeign<C> {
   }
 
   private ThreadLocal<AsyncInvocation<C>> activeContextHolder;
+  private final MethodInfoResolver methodInfoResolver;
 
   public ReflectiveAsyncFeign(Feign feign, AsyncContextSupplier<C> defaultContextSupplier,
-      ThreadLocal<AsyncInvocation<C>> contextHolder) {
+      ThreadLocal<AsyncInvocation<C>> contextHolder, MethodInfoResolver methodInfoResolver) {
     super(feign, defaultContextSupplier);
     this.activeContextHolder = contextHolder;
+    this.methodInfoResolver = methodInfoResolver;
   }
 
   protected void setInvocationContext(AsyncInvocation<C> invocationContext) {
