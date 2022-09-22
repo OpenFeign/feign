@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import feign.template.util.JSONException;
 import feign.template.util.JSONObject;
 
