@@ -1,14 +1,14 @@
 package feign.template.util;
 
-/*
-Public Domain.
- */
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
+/*
+ * Modified and Utilized with the Feign project via Public Domain
+ */
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a
@@ -52,7 +52,8 @@ import java.util.Map;
  * </ul>
  *
  * @author JSON.org
- * @version 2016-08/15
+ * @author Justin Ziegler
+ * @version 2022-09-21
  */
 public class JSONArray implements Iterable<Object> {
 

@@ -1,9 +1,5 @@
 package feign.template.util;
 
-/*
-Public Domain.
-*/
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -19,6 +15,10 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+/*
+ * Modified and Utilized with the Feign project via Public Domain
+ */
 
 /**
  * A JSONObject is an unordered collection of name/value pairs. Its external
@@ -71,7 +71,8 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * @author JSON.org
- * @version 2016-08-15
+ * @author Justin Ziegler
+ * @version 2022-09-21
  */
 public class JSONObject {
     /**

@@ -1,15 +1,15 @@
 package feign.template.util;
 
+/*
+ * Utilized with the Feign project via Public Domain
+ */
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-
-/*
-Public Domain.
- */
 
 /**
  * A JSONTokener takes a source string and extracts characters and tokens from
