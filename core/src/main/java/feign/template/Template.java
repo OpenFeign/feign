@@ -23,6 +23,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import feign.template.util.JSONException;
+import feign.template.util.JSONObject;
+
 /**
  * A Generic representation of a Template Expression as defined by
  * <a href="https://tools.ietf.org/html/rfc6570">RFC 6570</a>, with some relaxed rules, allowing the
@@ -228,7 +231,12 @@ public class Template {
   }
 
   boolean isValidJsonLiteral(String jsonLiteral) {
-    
+    try {
+      JSONObject jsonObject = new JSONObject(jsonLiteral);
+    } catch (JSONException ex) {
+      return false;
+    }
+    return true;
   }
 
   @Override
