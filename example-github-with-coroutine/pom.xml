@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.10-SNAPSHOT</version>
+    <version>12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-example-github-with-coroutine</artifactId>
@@ -135,8 +135,8 @@
             </configuration>
           </plugin>
           <plugin>
-            <artifactId>kotlin-maven-plugin</artifactId>
             <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-maven-plugin</artifactId>
             <version>${kotlin.version}</version>
             <executions>
               <execution>
