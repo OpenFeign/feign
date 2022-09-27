@@ -43,7 +43,7 @@ public class ObservedClientInterceptor implements ClientInterceptor {
   public Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator)
       throws FeignException {
     FeignContext feignContext = new FeignContext(context.getRequestTemplate());
-    Observation observation = FeignDocumentedObservation.DEFAULT
+    Observation observation = FeignObservationDocumentation.DEFAULT
         .observation(this.customFeignObservationConvention,
             DefaultFeignObservationConvention.INSTANCE, feignContext, this.observationRegistry)
         .start();

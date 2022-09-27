@@ -16,14 +16,14 @@ package feign.micrometer;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
 /**
- * {@link DocumentedObservation} for Feign.
+ * {@link ObservationDocumentation} for Feign.
  * 
  * @since 1.10.0
  */
-public enum FeignDocumentedObservation implements DocumentedObservation {
+public enum FeignObservationDocumentation implements ObservationDocumentation {
 
   DEFAULT {
     @Override

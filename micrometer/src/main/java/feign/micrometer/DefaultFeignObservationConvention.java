@@ -50,11 +50,11 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
     String templatedUrl = context.getCarrier().methodMetadata().template().url();
     return KeyValues.of(
-        FeignDocumentedObservation.HttpClientTags.METHOD
+        FeignObservationDocumentation.HttpClientTags.METHOD
             .withValue(getMethodString(context.getCarrier())),
-        FeignDocumentedObservation.HttpClientTags.URI
+        FeignObservationDocumentation.HttpClientTags.URI
             .withValue(templatedUrl),
-        FeignDocumentedObservation.HttpClientTags.STATUS
+        FeignObservationDocumentation.HttpClientTags.STATUS
             .withValue(getStatusValue(context.getResponse())));
   }
 
