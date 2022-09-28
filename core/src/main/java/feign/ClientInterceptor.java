@@ -21,7 +21,15 @@ import java.util.Iterator;
  */
 public interface ClientInterceptor {
 
-  ClientInterceptor DEFAULT = (context, iterator) -> null;
+  /**
+   * Returns the default instance of {@link ClientInterceptor}. We don't need to check if the
+   * iterator has a next entry because the {@link SynchronousMethodHandler} will add 1 entry. That
+   * means that in the default scenario an iterator to that entry will be passed here.
+   */
+  ClientInterceptor DEFAULT = (context, iterator) -> {
+    ClientInterceptor next = iterator.next();
+    return next.around(context, iterator);
+  };
 
   /**
    * Allows to make an around instrumentation. Remember to call the next interceptor by calling
