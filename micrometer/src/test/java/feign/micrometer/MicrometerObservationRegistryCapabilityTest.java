@@ -13,18 +13,32 @@
  */
 package feign.micrometer;
 
+import feign.AsyncFeign;
 import feign.Capability;
+import feign.Feign;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
+import org.junit.Before;
 
 public class MicrometerObservationRegistryCapabilityTest extends MicrometerCapabilityTest {
 
   ObservationRegistry observationRegistry = ObservationRegistry.create();
 
-  @Override
-  protected Capability createMetricCapability() {
+  @Before
+  public void setupRegistry() {
     observationRegistry.observationConfig()
         .observationHandler(new DefaultMeterObservationHandler(metricsRegistry));
-    return new MicrometerCapability(metricsRegistry, observationRegistry);
+  }
+
+  @Override
+  protected Feign.Builder customizeBuilder(Feign.Builder builder) {
+    return super.customizeBuilder(builder)
+        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry));
+  }
+
+  @Override
+  protected <C> AsyncFeign.AsyncBuilder<C> customizeBuilder(AsyncFeign.AsyncBuilder<C> builder) {
+    return super.customizeBuilder(builder)
+        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry));
   }
 }

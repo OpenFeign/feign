@@ -14,10 +14,8 @@
 package feign.micrometer;
 
 import feign.AsyncClient;
-import feign.BaseBuilder;
 import feign.Capability;
 import feign.Client;
-import feign.ClientInterceptor;
 import feign.InvocationHandlerFactory;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -26,40 +24,23 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.ObservationRegistry;
 
 public class MicrometerCapability implements Capability {
 
   private final MeterRegistry meterRegistry;
 
-  private final ObservationRegistry observationRegistry;
-
   public MicrometerCapability() {
-    this(new SimpleMeterRegistry(SimpleConfig.DEFAULT, Clock.SYSTEM), ObservationRegistry.NOOP);
+    this(new SimpleMeterRegistry(SimpleConfig.DEFAULT, Clock.SYSTEM));
     Metrics.addRegistry(meterRegistry);
   }
 
   public MicrometerCapability(MeterRegistry meterRegistry) {
-    this(meterRegistry, ObservationRegistry.NOOP);
-  }
-
-  public MicrometerCapability(MeterRegistry meterRegistry,
-      ObservationRegistry observationRegistry) {
     this.meterRegistry = meterRegistry;
-    this.observationRegistry = observationRegistry;
   }
 
   @Override
   public Client enrich(Client client) {
     return new MeteredClient(client, meterRegistry);
-  }
-
-  @Override
-  public ClientInterceptor enrich(ClientInterceptor clientInterceptor) {
-    if (!this.observationRegistry.isNoop()) {
-      return new ObservedClientInterceptor(observationRegistry);
-    }
-    return clientInterceptor;
   }
 
   @Override

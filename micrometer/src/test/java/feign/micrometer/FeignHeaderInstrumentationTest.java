@@ -73,8 +73,7 @@ class FeignHeaderInstrumentationTest {
   private TestClient clientInstrumentedWithObservations(String url) {
     return Feign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
-        .addCapability(new MicrometerCapability(meterRegistry, observationRegistry))
-        .clientInterceptor(ClientInterceptor.DEFAULT)
+        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry))
         .target(TestClient.class, url);
   }
 
