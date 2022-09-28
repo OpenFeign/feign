@@ -251,8 +251,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
       return thisB;
     }
 
-    capabilities.forEach(capability -> capability.enrich(thisB));
-
     getFieldsToEnrich().forEach(field -> {
       field.setAccessible(true);
       try {

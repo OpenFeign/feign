@@ -16,6 +16,7 @@ package feign.micrometer;
 import java.util.concurrent.TimeUnit;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import feign.ClientInterceptor;
 import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
@@ -73,6 +74,7 @@ class FeignHeaderInstrumentationTest {
     return Feign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
         .addCapability(new MicrometerCapability(meterRegistry, observationRegistry))
+        .clientInterceptor(ClientInterceptor.DEFAULT)
         .target(TestClient.class, url);
   }
 

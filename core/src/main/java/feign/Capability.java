@@ -141,8 +141,4 @@ public interface Capability {
   default MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
     return methodInfoResolver;
   }
-
-  default <B extends BaseBuilder<B>> BaseBuilder<B> enrich(BaseBuilder<B> baseBuilder) {
-    return baseBuilder;
-  }
 }

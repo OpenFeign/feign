@@ -17,6 +17,7 @@ import feign.AsyncClient;
 import feign.BaseBuilder;
 import feign.Capability;
 import feign.Client;
+import feign.ClientInterceptor;
 import feign.InvocationHandlerFactory;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -49,16 +50,16 @@ public class MicrometerCapability implements Capability {
   }
 
   @Override
-  public <B extends BaseBuilder<B>> BaseBuilder<B> enrich(BaseBuilder<B> baseBuilder) {
-    if (!observationRegistry.isNoop()) {
-      baseBuilder.clientInterceptor(new ObservedClientInterceptor(observationRegistry));
-    }
-    return baseBuilder;
+  public Client enrich(Client client) {
+    return new MeteredClient(client, meterRegistry);
   }
 
   @Override
-  public Client enrich(Client client) {
-    return new MeteredClient(client, meterRegistry);
+  public ClientInterceptor enrich(ClientInterceptor clientInterceptor) {
+    if (!this.observationRegistry.isNoop()) {
+      return new ObservedClientInterceptor(observationRegistry);
+    }
+    return clientInterceptor;
   }
 
   @Override
