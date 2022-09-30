@@ -83,7 +83,7 @@ public class SpringContract extends DeclarativeContract {
     });
 
     registerMethodAnnotation(ResponseBody.class, (body, data) -> {
-      handleConsumesAnnotation(data, "application/json");
+      handleProducesAnnotation(data, "application/json");
     });
     registerMethodAnnotation(ExceptionHandler.class, (ann, data) -> {
       data.ignoreMethod();
@@ -91,7 +91,7 @@ public class SpringContract extends DeclarativeContract {
     registerParameterAnnotation(PathVariable.class, pathVariableParameterAnnotationProcessor());
 
     registerParameterAnnotation(RequestBody.class, (body, data, paramIndex) -> {
-      handleProducesAnnotation(data, "application/json");
+      handleConsumesAnnotation(data, "application/json");
     });
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
     registerParameterAnnotation(RequestPart.class, requestPartParameterAnnotationProcessor());
