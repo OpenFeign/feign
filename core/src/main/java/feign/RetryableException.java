@@ -13,8 +13,9 @@
  */
 package feign;
 
-import feign.Request.HttpMethod;
 import java.util.Date;
+
+import feign.Request.HttpMethod;
 
 /**
  * This exception is raised when the {@link Response} is deemed to be retryable, typically via an
@@ -43,6 +44,13 @@ public class RetryableException extends FeignException {
   public RetryableException(int status, String message, HttpMethod httpMethod, Date retryAfter,
       Request request) {
     super(status, message, request);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
+  }
+
+  public RetryableException(String message, HttpMethod httpMethod, Throwable cause,
+                            Date retryAfter, Request request) {
+    super(500, message, request, cause);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }

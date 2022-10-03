@@ -13,6 +13,9 @@
  */
 package feign;
 
+import static feign.Util.*;
+import static java.lang.String.format;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,8 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static feign.Util.*;
-import static java.lang.String.format;
 
 /**
  * Origin exception type for all Http Apis.
@@ -263,7 +264,6 @@ public class FeignException extends RuntimeException {
 
   static FeignException errorExecuting(Request request, IOException cause) {
     return new RetryableException(
-        -1,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,
