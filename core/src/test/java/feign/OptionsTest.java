@@ -87,4 +87,10 @@ public class OptionsTest {
 
     assertThat(api.getChildOptions(new ChildOptions(1000, 4 * 1000))).isEqualTo("foo");
   }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldNotAcceptNegativeConnectExceptionStatus() {
+    new Request.Options(1000, TimeUnit.MILLISECONDS,
+        1000, TimeUnit.MILLISECONDS, Boolean.TRUE, -1);
+  }
 }

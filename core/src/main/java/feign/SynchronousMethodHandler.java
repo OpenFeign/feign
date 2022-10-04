@@ -128,7 +128,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       if (logLevel != Logger.Level.NONE) {
         logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
       }
-      throw errorExecuting(request, e);
+      throw errorExecuting(request, e, options.connectExceptionStatus());
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 

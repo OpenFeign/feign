@@ -51,11 +51,31 @@ public class FeignExceptionTest {
         null);
 
     FeignException exception =
-        FeignException.errorExecuting(request, new IOException("connection timeout"));
+        FeignException.errorExecuting(request, new IOException("connection timeout"), 500);
     assertThat(exception.responseBody()).isEmpty();
     assertThat(exception.content()).isNullOrEmpty();
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
+  }
+
+  @Test
+  public void shouldThrowCustomHttpStatusCode() {
+    Request request = Request.create(Request.HttpMethod.GET,
+        "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    int connectExceptionStatus = 0;
+
+    FeignException exception =
+        FeignException.errorExecuting(request, new IOException("connection timeout"),
+            connectExceptionStatus);
+    assertThat(exception.responseBody()).isEmpty();
+    assertThat(exception.content()).isNullOrEmpty();
+    assertThat(exception.hasRequest()).isTrue();
+    assertThat(exception.request()).isNotNull();
+    assertThat(exception.status()).isEqualTo(connectExceptionStatus);
   }
 
   @Test

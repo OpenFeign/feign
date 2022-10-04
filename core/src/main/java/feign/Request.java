@@ -264,6 +264,7 @@ public final class Request implements Serializable {
     private final long readTimeout;
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
+    private final int connectExceptionStatus;
 
     /**
      * Creates a new Options instance.
@@ -278,7 +279,7 @@ public final class Request implements Serializable {
     public Options(int connectTimeoutMillis, int readTimeoutMillis, boolean followRedirects) {
       this(connectTimeoutMillis, TimeUnit.MILLISECONDS,
           readTimeoutMillis, TimeUnit.MILLISECONDS,
-          followRedirects);
+          followRedirects, 500);
     }
 
     /**
@@ -289,7 +290,10 @@ public final class Request implements Serializable {
      * @param readTimeout value.
      * @param readTimeoutUnit with the TimeUnit for the timeout value.
      * @param followRedirects if the request should follow 3xx redirections.
+     *
+     * @deprecated please use {@link #Options(long, TimeUnit, long, TimeUnit, boolean, int)}
      */
+    @Deprecated
     public Options(long connectTimeout, TimeUnit connectTimeoutUnit,
         long readTimeout, TimeUnit readTimeoutUnit,
         boolean followRedirects) {
@@ -299,6 +303,32 @@ public final class Request implements Serializable {
       this.readTimeout = readTimeout;
       this.readTimeoutUnit = readTimeoutUnit;
       this.followRedirects = followRedirects;
+      this.connectExceptionStatus = 500;
+    }
+
+    /**
+     * Creates a new Options Instance.
+     *
+     * @param connectTimeout value.
+     * @param connectTimeoutUnit with the TimeUnit for the timeout value.
+     * @param readTimeout value.
+     * @param readTimeoutUnit with the TimeUnit for the timeout value.
+     * @param followRedirects if the request should follow 3xx redirections.
+     * @param connectExceptionStatus status from exception
+     */
+    public Options(long connectTimeout, TimeUnit connectTimeoutUnit,
+        long readTimeout, TimeUnit readTimeoutUnit,
+        boolean followRedirects, int connectExceptionStatus) {
+      super();
+      if (connectExceptionStatus < 0) {
+        throw new IllegalArgumentException("ConnectException status must be a non negative number");
+      }
+      this.connectTimeout = connectTimeout;
+      this.connectTimeoutUnit = connectTimeoutUnit;
+      this.readTimeout = readTimeout;
+      this.readTimeoutUnit = readTimeoutUnit;
+      this.followRedirects = followRedirects;
+      this.connectExceptionStatus = connectExceptionStatus;
     }
 
     /**
@@ -323,7 +353,7 @@ public final class Request implements Serializable {
      * </ul>
      */
     public Options() {
-      this(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true);
+      this(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true, 500);
     }
 
     /**
@@ -388,6 +418,15 @@ public final class Request implements Serializable {
      */
     public TimeUnit readTimeoutUnit() {
       return readTimeoutUnit;
+    }
+
+    /**
+     * HTTP status code for connect exception value.
+     *
+     * @return HTTP status code for connect exceptions
+     */
+    public int connectExceptionStatus() {
+      return connectExceptionStatus;
     }
 
   }

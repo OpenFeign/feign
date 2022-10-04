@@ -261,9 +261,11 @@ public class FeignException extends RuntimeException {
     }
   }
 
-  static FeignException errorExecuting(Request request, IOException cause) {
+  static FeignException errorExecuting(Request request,
+                                       IOException cause,
+                                       int connectExceptionStatus) {
     return new RetryableException(
-        -1,
+        connectExceptionStatus,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,
