@@ -45,7 +45,8 @@ public class ObservedClientInterceptor implements ClientInterceptor {
     FeignContext feignContext = new FeignContext(context.getRequestTemplate());
     Observation observation = FeignObservationDocumentation.DEFAULT
         .observation(this.customFeignObservationConvention,
-            DefaultFeignObservationConvention.INSTANCE, feignContext, this.observationRegistry)
+            DefaultFeignObservationConvention.INSTANCE, () -> feignContext,
+            this.observationRegistry)
         .start();
     Exception ex = null;
     Response response = null;
