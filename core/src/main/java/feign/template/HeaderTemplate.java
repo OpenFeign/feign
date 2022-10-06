@@ -48,6 +48,18 @@ public final class HeaderTemplate {
     return new HeaderTemplate(name, values, Util.UTF_8);
   }
 
+  public static HeaderTemplate literal(String name, Iterable<String> values) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+
+    if (values == null) {
+      throw new IllegalArgumentException("values are required");
+    }
+
+    return new HeaderTemplate(name, values, Util.UTF_8, true);
+  }
+
   /**
    * Append values to a Header Template.
    *
@@ -65,6 +77,23 @@ public final class HeaderTemplate {
   }
 
   /**
+   * Append values to a Header Template, as literals
+   *
+   * @param headerTemplate to append to.
+   * @param values to append.
+   * @return a new Header Template with the values added.
+   */
+  public static HeaderTemplate appendLiteral(
+      HeaderTemplate headerTemplate, Iterable<String> values) {
+    LinkedHashSet<String> headerValues = new LinkedHashSet<>(headerTemplate.getValues());
+    headerValues.addAll(
+        StreamSupport.stream(values.spliterator(), false)
+            .filter(Util::isNotBlank)
+            .collect(Collectors.toCollection(LinkedHashSet::new)));
+    return literal(headerTemplate.getName(), headerValues);
+  }
+
+  /**
    * Create a new Header Template.
    *
    * @param name of the Header.
@@ -72,6 +101,18 @@ public final class HeaderTemplate {
    * @param charset to use when encoding the values.
    */
   private HeaderTemplate(String name, Iterable<String> values, Charset charset) {
+    this(name, values, charset, false);
+  }
+
+  /**
+   * Create a new Header Template.
+   *
+   * @param name of the header
+   * @param values of the header
+   * @param charset for the header
+   * @param literal indicator. Will treat all values as literals instead of possible expressions.
+   */
+  private HeaderTemplate(String name, Iterable<String> values, Charset charset, boolean literal) {
     this.name = name;
 
     for (String value : values) {
@@ -80,9 +121,19 @@ public final class HeaderTemplate {
         continue;
       }
 
-      this.values.add(
-          new Template(
-              value, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset));
+      if (literal) {
+        this.values.add(
+            new Template(
+                ExpansionOptions.ALLOW_UNRESOLVED,
+                EncodingOptions.NOT_REQUIRED,
+                false,
+                charset,
+                Collections.singletonList(Literal.create(value))));
+      } else {
+        this.values.add(
+            new Template(
+                value, ExpansionOptions.REQUIRED, EncodingOptions.NOT_REQUIRED, false, charset));
+      }
     }
   }
 
