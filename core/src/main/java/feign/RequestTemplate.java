@@ -232,7 +232,8 @@ public final class RequestTemplate implements Serializable {
         String header = headerTemplate.expand(variables);
         if (!header.isEmpty()) {
           /* append the header as a new literal as the value has already been expanded. */
-          resolved.header(headerTemplate.getName(), header);
+          resolved.appendHeader(
+              headerTemplate.getName(), Collections.singletonList(header), true);
         }
       }
     }
@@ -723,13 +724,26 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Create a Header Template.
+   * Append the Header. Will create a new Header if it doesn't already exist. Treats all values as
+   * potentially expressions.
    *
    * @param name of the header
    * @param values for the header, may be expressions.
    * @return a RequestTemplate for chaining.
    */
   private RequestTemplate appendHeader(String name, Iterable<String> values) {
+    return this.appendHeader(name, values, false);
+  }
+
+  /**
+   * Append the Header. Will create a new Header if it doesn't already exist.
+   *
+   * @param name of the header
+   * @param values for the header, may be expressions.
+   * @param literal indicator, to treat the values as literals and not expressions
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate appendHeader(String name, Iterable<String> values, boolean literal) {
     if (!values.iterator().hasNext()) {
       /* empty value, clear the existing values */
       this.headers.remove(name);
@@ -745,9 +759,17 @@ public final class RequestTemplate implements Serializable {
     }
     this.headers.compute(name, (headerName, headerTemplate) -> {
       if (headerTemplate == null) {
-        return HeaderTemplate.create(headerName, values);
+        if (literal) {
+          return HeaderTemplate.literal(headerName, values);
+        } else {
+          return HeaderTemplate.create(headerName, values);
+        }
       } else {
-        return HeaderTemplate.append(headerTemplate, values);
+        if (literal) {
+          return HeaderTemplate.appendLiteral(headerTemplate, values);
+        } else {
+          return HeaderTemplate.append(headerTemplate, values);
+        }
       }
     });
     return this;
