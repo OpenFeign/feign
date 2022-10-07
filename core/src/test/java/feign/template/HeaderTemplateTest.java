@@ -125,4 +125,17 @@ public class HeaderTemplateTest {
         headerTemplate.expand(
             Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
   }
+
+  @Test
+  public void it_should_support_json_literal_values() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("CustomHeader", Collections.singletonList("{jsonParam}"));
+
+    assertEquals(
+        "{\"string\": \"val\", \"string2\": \"this should not be truncated\"}",
+        headerTemplate.expand(
+            Collections.singletonMap(
+                "jsonParam",
+                "{\"string\": \"val\", \"string2\": \"this should not be truncated\"}")));
+  }
 }
