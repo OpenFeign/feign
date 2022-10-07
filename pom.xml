@@ -444,7 +444,7 @@
               <!-- surefire uses ASM to do some bytecode magic... need to bump version to be java 11 compatible -->
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm</artifactId>
-              <version>9.3</version>
+              <version>9.4</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -512,18 +512,14 @@
           <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>9.3</version>
+            <version>9.4</version>
           </dependency>
         </dependencies>
       </plugin>
 
-      <!-- Ensures checksums are added to published jars -->
       <plugin>
         <artifactId>maven-install-plugin</artifactId>
         <version>${maven-install-plugin.version}</version>
-        <configuration>
-          <createChecksum>true</createChecksum>
-        </configuration>
       </plugin>
 
       <plugin>
