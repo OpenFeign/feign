@@ -203,7 +203,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void noResponseBodyForPost() {
+  public void noResponseBodyForPost() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = newBuilder()
@@ -213,7 +213,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void noResponseBodyForPut() {
+  public void noResponseBodyForPut() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = newBuilder()
