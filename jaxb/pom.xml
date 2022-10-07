@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>11.10-SNAPSHOT</version>
+    <version>12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jaxb</artifactId>
@@ -89,7 +89,7 @@
         <dependency>
           <groupId>org.glassfish.jaxb</groupId>
           <artifactId>jaxb-core</artifactId>
-          <version>4.0.0</version>
+          <version>4.0.1</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
