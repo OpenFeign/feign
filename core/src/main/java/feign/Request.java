@@ -31,13 +31,27 @@ public final class Request implements Serializable {
   public enum HttpMethod {
     GET,
     HEAD,
-    POST,
-    PUT,
+    POST(true),
+    PUT(true),
     DELETE,
     CONNECT,
     OPTIONS,
     TRACE,
-    PATCH
+    PATCH(true);
+
+    private final boolean withBody;
+
+    HttpMethod() {
+      this(false);
+    }
+
+    HttpMethod(boolean withBody) {
+      this.withBody = withBody;
+    }
+
+    public boolean isWithBody() {
+      return this.withBody;
+    }
   }
 
   public enum ProtocolVersion {

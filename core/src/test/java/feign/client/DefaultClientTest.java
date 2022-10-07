@@ -14,6 +14,7 @@
 package feign.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 
@@ -22,6 +23,7 @@ import feign.Client.Proxied;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
+import feign.assertj.MockWebServerAssertions;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -30,6 +32,7 @@ import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
+import java.util.Collections;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import okhttp3.mockwebserver.MockResponse;
@@ -90,6 +93,22 @@ public class DefaultClientTest extends AbstractClientTest {
     thrown.expect(RetryableException.class);
     thrown.expectCause(isA(ProtocolException.class));
     super.testPatch();
+  }
+
+  @Override
+  public void noResponseBodyForPost() throws Exception {
+    super.noResponseBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
+  }
+
+  @Override
+  public void noResponseBodyForPut() throws Exception {
+    super.noResponseBodyForPut();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("PUT")
+        .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
   @Test

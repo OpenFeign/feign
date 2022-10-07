@@ -199,8 +199,19 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      if (request.body() != null) {
-        if (disableRequestBuffering) {
+      boolean hasEmptyBody = false;
+      byte[] body = request.body();
+      if (body == null && request.httpMethod().isWithBody()) {
+        body = new byte[0];
+        hasEmptyBody = true;
+      }
+
+      if (body != null) {
+        /*
+         * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
+         * retry logic applies to such requests.
+         */
+        if (disableRequestBuffering && !hasEmptyBody) {
           if (contentLength != null) {
             connection.setFixedLengthStreamingMode(contentLength);
           } else {
@@ -215,7 +226,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          out.write(request.body());
+          out.write(body);
         } finally {
           try {
             out.close();
