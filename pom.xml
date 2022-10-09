@@ -53,6 +53,7 @@
     <module>example-github</module>
     <module>example-github-with-coroutine</module>
     <module>example-wikipedia</module>
+    <module>example-wikipedia-with-springboot</module>
     <module>mock</module>
     <module>apt-test-generator</module>
     <module>benchmark</module>
