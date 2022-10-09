@@ -19,6 +19,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -95,7 +96,6 @@ public abstract class Feign {
   public static class Builder extends BaseBuilder<Builder> {
 
     private Client client = new Client.Default(null, null);
-    private boolean forceDecoding = false;
 
     @Override
     public Builder logLevel(Logger.Level logLevel) {
@@ -189,14 +189,6 @@ public abstract class Feign {
       return super.addCapability(capability);
     }
 
-    /**
-     * Internal - used to indicate that the decoder should be immediately called
-     */
-    public /* FIXME should not be public */ Builder forceDecoding() {
-      this.forceDecoding = true;
-      return this;
-    }
-
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<>(apiType, url));
     }
@@ -208,14 +200,14 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+      MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy, forceDecoding);
-      ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
+              propagationPolicy);
+      ParseHandlersByName<Object> handlersByName =
+          new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
 

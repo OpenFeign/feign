@@ -139,6 +139,51 @@ public class FeignExceptionTest {
         });
   }
 
+  @Test
+  public void lengthOfBodyExceptionTest() {
+    String bigResponse = "I love a storm in early May\n" +
+        "When springtime’s boisterous, firstborn thunder\n" +
+        "Over the sky will gaily wander\n" +
+        "And growl and roar as though in play.\n" +
+        "\n" +
+        "A peal, another — gleeful, cheering…\n" +
+        "Rain, raindust… On the trees, behold!-\n" +
+        "The drops hang, each a long pearl earring;\n" +
+        "Bright sunshine paints the thin threads gold.\n" +
+        "\n" +
+        "A stream downhill goes rushing reckless,\n" +
+        "And in the woods the birds rejoice.\n" +
+        "Din. Clamour. Noise. All nature echoes\n" +
+        "The thunder’s youthful, merry voice.\n" +
+        "\n" +
+        "You’ll say: ‘Tis laughing, carefree Hebe —\n" +
+        "She fed her father’s eagle, and\n" +
+        "The Storm Cup brimming with a seething\n" +
+        "And bubbling wine dropped from her hand";
+
+    Request request = Request.create(
+        Request.HttpMethod.GET,
+        "/home",
+        Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    Response response = Response.builder()
+        .status(400)
+        .request(request)
+        .body(bigResponse, StandardCharsets.UTF_8)
+        .build();
+
+    FeignException defaultException = FeignException.errorStatus("methodKey", response);
+    assertThat(defaultException.getMessage().length()).isLessThan(bigResponse.length());
+
+    FeignException customLengthBodyException =
+        FeignException.errorStatus("methodKey", response, 4000, 2000);
+    assertThat(customLengthBodyException.getMessage().length())
+        .isGreaterThanOrEqualTo(bigResponse.length());
+  }
+
   @Test(expected = NullPointerException.class)
   public void nullRequestShouldThrowNPEwThrowable() {
     new Derived(404, "message", null, new Throwable());
