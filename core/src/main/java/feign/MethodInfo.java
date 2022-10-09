@@ -20,19 +20,15 @@ import java.util.concurrent.CompletableFuture;
 
 @Experimental
 public class MethodInfo {
-  private final String configKey;
   private final Type underlyingReturnType;
   private final boolean asyncReturnType;
 
-  protected MethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
-    this.configKey = configKey;
+  protected MethodInfo(Type underlyingReturnType, boolean asyncReturnType) {
     this.underlyingReturnType = underlyingReturnType;
     this.asyncReturnType = asyncReturnType;
   }
 
   MethodInfo(Class<?> targetType, Method method) {
-    this.configKey = Feign.configKey(targetType, method);
-
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
     if (type instanceof ParameterizedType
@@ -43,10 +39,6 @@ public class MethodInfo {
       this.asyncReturnType = false;
       this.underlyingReturnType = type;
     }
-  }
-
-  String configKey() {
-    return configKey;
   }
 
   Type underlyingReturnType() {
