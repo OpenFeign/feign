@@ -42,9 +42,6 @@ final class SynchronousMethodHandler implements MethodHandler {
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
-
-  // only one of decoder and asyncResponseHandler will be non-null
-  private final Decoder decoder;
   private final AsyncResponseHandler asyncResponseHandler;
 
 
@@ -53,8 +50,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy,
-      boolean forceDecoding) {
+      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -68,17 +64,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
     this.responseInterceptor = responseInterceptor;
-
-    if (forceDecoding) {
-      // internal only: usual handling will be short-circuited, and all responses will be passed to
-      // decoder directly!
-      this.decoder = decoder;
-      this.asyncResponseHandler = null;
-    } else {
-      this.decoder = null;
-      this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-          dismiss404, closeAfterDecode, responseInterceptor);
-    }
+    this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
+        dismiss404, closeAfterDecode, responseInterceptor);
   }
 
   @Override
@@ -132,11 +119,6 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-    if (decoder != null) {
-      return responseInterceptor
-          .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
-    }
-
     CompletableFuture<Object> resultFuture = new CompletableFuture<>();
     asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
         metadata.returnType(), elapsedTime);
@@ -175,7 +157,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         .orElse(this.options);
   }
 
-  static class Factory {
+  static class Factory implements MethodHandler.Factory<Object> {
 
     private final Client client;
     private final Retryer retryer;
@@ -186,12 +168,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
-    private final boolean forceDecoding;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
         ResponseInterceptor responseInterceptor,
         Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
+        ExceptionPropagationPolicy propagationPolicy) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -201,7 +182,6 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
-      this.forceDecoding = forceDecoding;
     }
 
     public MethodHandler create(Target<?> target,
@@ -209,10 +189,11 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options,
                                 Decoder decoder,
-                                ErrorDecoder errorDecoder) {
+                                ErrorDecoder errorDecoder,
+                                Object requestContext) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
+          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy);
     }
   }
 }
