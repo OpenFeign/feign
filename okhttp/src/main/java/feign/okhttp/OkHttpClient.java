@@ -77,10 +77,7 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
     }
 
     byte[] inputBody = input.body();
-    boolean isMethodWithBody =
-        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
-            || HttpMethod.PATCH == input.httpMethod();
-    if (isMethodWithBody) {
+    if (input.httpMethod().isWithBody()) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
         // write an empty BODY to conform with okhttp 2.4.0+

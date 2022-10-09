@@ -24,6 +24,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
+import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
 import org.junit.Rule;
 import org.junit.Test;
@@ -986,6 +987,21 @@ public class FeignTest {
 
   }
 
+  @Test
+  public void supportComplexHeaders() throws Exception {
+    TestInterface api = new TestInterfaceBuilder()
+        .target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    /* demonstrate that a complex header, like a JSON document, is supported */
+    String complex = "{ \"object\": \"value\", \"second\": \"string\" }";
+
+    api.supportComplexHttpHeaders(complex);
+    assertThat(server.takeRequest())
+        .hasHeaders(MapEntry.entry("custom", Collections.singletonList(complex)))
+        .hasPath("/settings");
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -1076,6 +1092,10 @@ public class FeignTest {
 
     @RequestLine("GET /settings{;props}")
     void matrixParametersWithMap(@Param("props") Map<String, Object> owners);
+
+    @RequestLine("GET /settings")
+    @Headers("Custom: {complex}")
+    void supportComplexHttpHeaders(@Param("complex") String complex);
 
     class DateToMillis implements Param.Expander {
 
