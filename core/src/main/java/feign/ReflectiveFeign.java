@@ -27,14 +27,14 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class ReflectiveFeign extends Feign {
+public class ReflectiveFeign<C> extends Feign {
 
-  private final ParseHandlersByName targetToHandlersByName;
+  private final ParseHandlersByName<C> targetToHandlersByName;
   private final InvocationHandlerFactory factory;
   private final QueryMapEncoder queryMapEncoder;
 
   ReflectiveFeign(
-      ParseHandlersByName targetToHandlersByName,
+      ParseHandlersByName<C> targetToHandlersByName,
       InvocationHandlerFactory factory,
       QueryMapEncoder queryMapEncoder) {
     this.targetToHandlersByName = targetToHandlersByName;
@@ -46,10 +46,13 @@ public class ReflectiveFeign extends Feign {
    * creates an api binding to the {@code target}. As this invokes reflection, care should be taken
    * to cache the result.
    */
-  @SuppressWarnings("unchecked")
-  @Override
   public <T> T newInstance(Target<T> target) {
-    Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
+    return newInstance(target, null);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> T newInstance(Target<T> target, C requestContext) {
+    Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target, requestContext);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
     List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
 
@@ -125,7 +128,7 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  static final class ParseHandlersByName {
+  static final class ParseHandlersByName<C> {
 
     private final Contract contract;
     private final Options options;
@@ -133,7 +136,7 @@ public class ReflectiveFeign extends Feign {
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
-    private final SynchronousMethodHandler.Factory factory;
+    private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
@@ -142,7 +145,7 @@ public class ReflectiveFeign extends Feign {
         Decoder decoder,
         QueryMapEncoder queryMapEncoder,
         ErrorDecoder errorDecoder,
-        SynchronousMethodHandler.Factory factory) {
+        MethodHandler.Factory<C> factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -152,7 +155,7 @@ public class ReflectiveFeign extends Feign {
       this.decoder = checkNotNull(decoder, "decoder");
     }
 
-    public Map<String, MethodHandler> apply(Target target) {
+    public Map<String, MethodHandler> apply(Target target, C requestContext) {
       List<MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
@@ -175,7 +178,8 @@ public class ReflectiveFeign extends Feign {
         } else {
           result.put(
               md.configKey(),
-              factory.create(target, md, buildTemplate, options, decoder, errorDecoder));
+              factory.create(
+                  target, md, buildTemplate, options, decoder, errorDecoder, requestContext));
         }
       }
       return result;
