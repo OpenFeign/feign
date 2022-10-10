@@ -36,6 +36,19 @@ public class AsyncResponseHandler {
         responseInterceptor);
   }
 
+  public CompletableFuture<Object> handleResponse(String configKey,
+                                                  Response response,
+                                                  Type returnType,
+                                                  long elapsedTime) {
+    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+    handleResponse(resultFuture, configKey, response, returnType, elapsedTime);
+    return resultFuture;
+  }
+
+  /**
+   * @deprecated use {@link #handleResponse(String, Response, Type, long)} instead.
+   */
+  @Deprecated()
   public void handleResponse(CompletableFuture<Object> resultFuture,
                              String configKey,
                              Response response,
