@@ -436,13 +436,12 @@ public class ReflectiveFeign<C> extends Feign {
 
         final Type genRetType = m.getGenericReturnType();
 
-        if (!ParameterizedType.class.isInstance(genRetType)) {
+        if (!(genRetType instanceof ParameterizedType)) {
           throw new IllegalArgumentException("Method return type is not parameterized: "
               + getFullMethodName(type, genRetType, m));
         }
 
-        if (WildcardType.class
-            .isInstance(ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0])) {
+        if (((ParameterizedType) genRetType).getActualTypeArguments()[0] instanceof WildcardType) {
           throw new IllegalArgumentException(
               "Wildcards are not supported for return-type parameters: "
                   + getFullMethodName(type, genRetType, m));
