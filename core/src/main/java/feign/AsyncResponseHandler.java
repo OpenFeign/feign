@@ -13,12 +13,9 @@
  */
 package feign;
 
-import static feign.FeignException.errorReading;
-import static feign.Util.ensureClosed;
 import feign.Logger.Level;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,30 +25,15 @@ import java.util.concurrent.CompletableFuture;
  */
 @Experimental
 public class AsyncResponseHandler {
-
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
-
-  private final Level logLevel;
-  private final Logger logger;
-
-  private final Decoder decoder;
-  private final ErrorDecoder errorDecoder;
-  private final boolean dismiss404;
-  private final boolean closeAfterDecode;
-
-  private final ResponseInterceptor responseInterceptor;
+  private final ResponseHandler responseHandler;
 
   public AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
       ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
       ResponseInterceptor responseInterceptor) {
-    super();
-    this.logLevel = logLevel;
-    this.logger = logger;
-    this.decoder = decoder;
-    this.errorDecoder = errorDecoder;
-    this.dismiss404 = dismiss404;
-    this.closeAfterDecode = closeAfterDecode;
-    this.responseInterceptor = responseInterceptor;
+    this.responseHandler = new ResponseHandler(
+        logLevel, logger, decoder,
+        errorDecoder, dismiss404, closeAfterDecode,
+        responseInterceptor);
   }
 
   public void handleResponse(CompletableFuture<Object> resultFuture,
@@ -61,96 +43,9 @@ public class AsyncResponseHandler {
                              long elapsedTime) {
     try {
       resultFuture.complete(
-          handleResponse(configKey, response, returnType, elapsedTime));
+          this.responseHandler.handleResponse(configKey, response, returnType, elapsedTime));
     } catch (Exception e) {
       resultFuture.completeExceptionally(e);
-    }
-  }
-
-  private Object handleResponse(String configKey,
-                                Response response,
-                                Type returnType,
-                                long elapsedTime)
-      throws Exception {
-    try {
-      response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
-      if (returnType == Response.class) {
-        return disconnectResponseBodyIfNeeded(response);
-      }
-
-      final boolean shouldDecodeResponseBody = (response.status() >= 200 && response.status() < 300)
-          || (response.status() == 404 && dismiss404 && !isVoidType(returnType));
-
-      if (!shouldDecodeResponseBody) {
-        throw decodeError(configKey, response);
-      }
-
-      return decode(response, returnType);
-    } catch (final IOException e) {
-      if (logLevel != Level.NONE) {
-        logger.logIOException(configKey, logLevel, e, elapsedTime);
-      }
-      throw errorReading(response.request(), response, e);
-    }
-  }
-
-  private boolean isVoidType(Type returnType) {
-    return returnType == Void.class
-        || returnType == void.class
-        || returnType.getTypeName().equals("kotlin.Unit");
-  }
-
-  private Response logAndRebufferResponseIfNeeded(String configKey,
-                                                  Response response,
-                                                  long elapsedTime)
-      throws IOException {
-    if (logLevel == Level.NONE) {
-      return response;
-    }
-
-    return logger.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
-  }
-
-  private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
-    final boolean shouldDisconnectResponseBody = response.body() != null
-        && response.body().length() != null
-        && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
-    if (!shouldDisconnectResponseBody) {
-      return response;
-    }
-
-    try {
-      final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-      return response.toBuilder().body(bodyData).build();
-    } finally {
-      ensureClosed(response.body());
-    }
-  }
-
-  private Object decode(Response response, Type type) throws IOException {
-    if (isVoidType(type)) {
-      ensureClosed(response.body());
-      return null;
-    }
-
-    try {
-      final Object result = responseInterceptor.aroundDecode(
-          new InvocationContext(decoder, type, response));
-      if (closeAfterDecode) {
-        ensureClosed(response.body());
-      }
-      return result;
-    } catch (Exception e) {
-      ensureClosed(response.body());
-      throw e;
-    }
-  }
-
-  private Exception decodeError(String methodKey, Response response) {
-    try {
-      return errorDecoder.decode(methodKey, response);
-    } finally {
-      ensureClosed(response.body());
     }
   }
 }
