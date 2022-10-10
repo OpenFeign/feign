@@ -30,13 +30,13 @@ public class ReflectiveFeign<C> extends Feign {
 
   private final ParseHandlersByName<C> targetToHandlersByName;
   private final InvocationHandlerFactory factory;
-  private final QueryMapEncoder queryMapEncoder;
+  private final AsyncContextSupplier<C> defaultContextSupplier;
 
   ReflectiveFeign(ParseHandlersByName<C> targetToHandlersByName, InvocationHandlerFactory factory,
-      QueryMapEncoder queryMapEncoder) {
+      AsyncContextSupplier<C> defaultContextSupplier) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
-    this.queryMapEncoder = queryMapEncoder;
+    this.defaultContextSupplier = defaultContextSupplier;
   }
 
   /**
@@ -44,7 +44,7 @@ public class ReflectiveFeign<C> extends Feign {
    * to cache the result.
    */
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, null);
+    return newInstance(target, defaultContextSupplier.newContext());
   }
 
   @SuppressWarnings("unchecked")

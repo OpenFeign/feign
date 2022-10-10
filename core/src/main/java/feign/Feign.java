@@ -207,7 +207,7 @@ public abstract class Feign {
       ParseHandlersByName<Object> handlersByName =
           new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
   }
 

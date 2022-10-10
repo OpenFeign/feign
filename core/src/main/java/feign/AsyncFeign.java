@@ -215,21 +215,20 @@ public final class AsyncFeign<C> {
               decoder, queryMapEncoder,
               errorDecoder, methodHandlerFactory);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
-      return new AsyncFeign<>(feign, defaultContextSupplier);
+          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
+      return new AsyncFeign<>(feign);
     }
   }
 
   private final ReflectiveFeign<C> feign;
-  private final AsyncContextSupplier<C> defaultContextSupplier;
 
-  private AsyncFeign(ReflectiveFeign<C> feign, AsyncContextSupplier<C> defaultContextSupplier) {
+  private AsyncFeign(ReflectiveFeign<C> feign) {
     this.feign = feign;
-    this.defaultContextSupplier = defaultContextSupplier;
   }
 
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, defaultContextSupplier.newContext());
+    verifyTargetSpecfication(target);
+    return feign.newInstance(target);
   }
 
   public <T> T newInstance(Target<T> target, C context) {
