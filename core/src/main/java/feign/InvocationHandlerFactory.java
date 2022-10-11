@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -31,6 +33,16 @@ public interface InvocationHandlerFactory {
   interface MethodHandler {
 
     Object invoke(Object[] argv) throws Throwable;
+
+    interface Factory<C> {
+      MethodHandler create(Target<?> target,
+                           MethodMetadata md,
+                           RequestTemplate.Factory buildTemplateFromArgs,
+                           Request.Options options,
+                           Decoder decoder,
+                           ErrorDecoder errorDecoder,
+                           C requestContext);
+    }
   }
 
   static final class Default implements InvocationHandlerFactory {
