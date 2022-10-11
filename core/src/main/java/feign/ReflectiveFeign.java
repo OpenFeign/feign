@@ -23,23 +23,27 @@ import feign.codec.*;
 import feign.template.UriUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 
 public class ReflectiveFeign<C> extends Feign {
 
   private final ParseHandlersByName<C> targetToHandlersByName;
   private final InvocationHandlerFactory factory;
-  private final QueryMapEncoder queryMapEncoder;
+  private final AsyncContextSupplier<C> defaultContextSupplier;
 
   ReflectiveFeign(
       ParseHandlersByName<C> targetToHandlersByName,
       InvocationHandlerFactory factory,
-      QueryMapEncoder queryMapEncoder) {
+      AsyncContextSupplier<C> defaultContextSupplier) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
-    this.queryMapEncoder = queryMapEncoder;
+    this.defaultContextSupplier = defaultContextSupplier;
   }
 
   /**
@@ -47,11 +51,13 @@ public class ReflectiveFeign<C> extends Feign {
    * to cache the result.
    */
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, null);
+    return newInstance(target, defaultContextSupplier.newContext());
   }
 
   @SuppressWarnings("unchecked")
   public <T> T newInstance(Target<T> target, C requestContext) {
+    TargetSpecificationVerifier.verify(target);
+
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target, requestContext);
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
     List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
@@ -412,6 +418,46 @@ public class ReflectiveFeign<C> extends Feign {
         throw new EncodeException(e.getMessage(), e);
       }
       return super.resolve(argv, mutable, variables);
+    }
+  }
+
+  private static class TargetSpecificationVerifier {
+    public static <T> void verify(Target<T> target) {
+      Class<T> type = target.type();
+      if (!type.isInterface()) {
+        throw new IllegalArgumentException("Type must be an interface: " + type);
+      }
+
+      for (final Method m : type.getMethods()) {
+        final Class<?> retType = m.getReturnType();
+
+        if (!CompletableFuture.class.isAssignableFrom(retType)) {
+          continue; // synchronous case
+        }
+
+        if (retType != CompletableFuture.class) {
+          throw new IllegalArgumentException(
+              "Method return type is not CompleteableFuture: "
+                  + getFullMethodName(type, retType, m));
+        }
+
+        final Type genRetType = m.getGenericReturnType();
+
+        if (!(genRetType instanceof ParameterizedType)) {
+          throw new IllegalArgumentException(
+              "Method return type is not parameterized: " + getFullMethodName(type, genRetType, m));
+        }
+
+        if (((ParameterizedType) genRetType).getActualTypeArguments()[0] instanceof WildcardType) {
+          throw new IllegalArgumentException(
+              "Wildcards are not supported for return-type parameters: "
+                  + getFullMethodName(type, genRetType, m));
+        }
+      }
+    }
+
+    private static String getFullMethodName(Class<?> type, Type retType, Method m) {
+      return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
     }
   }
 }

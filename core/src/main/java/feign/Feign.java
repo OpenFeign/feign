@@ -219,7 +219,7 @@ public abstract class Feign {
               queryMapEncoder,
               errorDecoder,
               synchronousMethodHandlerFactory);
-      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
+      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
   }
 
