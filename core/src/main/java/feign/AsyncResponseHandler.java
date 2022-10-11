@@ -24,10 +24,10 @@ import java.util.concurrent.CompletableFuture;
  * handling
  */
 @Experimental
-public class AsyncResponseHandler {
+class AsyncResponseHandler {
   private final ResponseHandler responseHandler;
 
-  public AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
+  AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
       ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
       ResponseInterceptor responseInterceptor) {
     this.responseHandler = new ResponseHandler(
@@ -49,7 +49,7 @@ public class AsyncResponseHandler {
    * @deprecated use {@link #handleResponse(String, Response, Type, long)} instead.
    */
   @Deprecated()
-  public void handleResponse(CompletableFuture<Object> resultFuture,
+  void handleResponse(CompletableFuture<Object> resultFuture,
                              String configKey,
                              Response response,
                              Type returnType,
