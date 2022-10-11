@@ -33,7 +33,6 @@ public class MethodInfoTest {
     @Test
     public void testCompletableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertEquals("AsyncClient#log()", mi.configKey());
       assertTrue(mi.isAsyncReturnType());
       assertEquals(String.class, mi.underlyingReturnType());
     }
@@ -50,7 +49,6 @@ public class MethodInfoTest {
     @Test
     public void testGenericCompletableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertEquals("AsyncClient#log()", mi.configKey());
       assertTrue(mi.isAsyncReturnType());
       assertEquals(String.class, mi.underlyingReturnType());
     }
@@ -64,7 +62,6 @@ public class MethodInfoTest {
     @Test
     public void testString() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertEquals("SyncClient#log()", mi.configKey());
       assertFalse(mi.isAsyncReturnType());
       assertEquals(String.class, mi.underlyingReturnType());
     }
@@ -98,7 +95,6 @@ public class MethodInfoTest {
     @Test
     public void testListOfStrings() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertEquals("SyncClient#log()", mi.configKey());
       assertFalse(mi.isAsyncReturnType());
       assertTrue(Types.equals(new ListOfStrings(), mi.underlyingReturnType()));
     }
