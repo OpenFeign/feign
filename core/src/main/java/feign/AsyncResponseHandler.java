@@ -50,10 +50,10 @@ class AsyncResponseHandler {
    */
   @Deprecated()
   void handleResponse(CompletableFuture<Object> resultFuture,
-                             String configKey,
-                             Response response,
-                             Type returnType,
-                             long elapsedTime) {
+                      String configKey,
+                      Response response,
+                      Type returnType,
+                      long elapsedTime) {
     try {
       resultFuture.complete(
           this.responseHandler.handleResponse(configKey, response, returnType, elapsedTime));
