@@ -21,10 +21,6 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -215,63 +211,22 @@ public final class AsyncFeign<C> {
               decoder, queryMapEncoder,
               errorDecoder, methodHandlerFactory);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, queryMapEncoder);
-      return new AsyncFeign<>(feign, defaultContextSupplier);
+          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
+      return new AsyncFeign<>(feign);
     }
   }
 
   private final ReflectiveFeign<C> feign;
-  private final AsyncContextSupplier<C> defaultContextSupplier;
 
-  private AsyncFeign(ReflectiveFeign<C> feign, AsyncContextSupplier<C> defaultContextSupplier) {
+  private AsyncFeign(ReflectiveFeign<C> feign) {
     this.feign = feign;
-    this.defaultContextSupplier = defaultContextSupplier;
   }
 
   public <T> T newInstance(Target<T> target) {
-    return newInstance(target, defaultContextSupplier.newContext());
+    return feign.newInstance(target);
   }
 
   public <T> T newInstance(Target<T> target, C context) {
-    verifyTargetSpecfication(target);
     return feign.newInstance(target, context);
-  }
-
-  private <T> void verifyTargetSpecfication(Target<T> target) {
-    Class<T> type = target.type();
-    if (!type.isInterface()) {
-      throw new IllegalArgumentException("Type must be an interface: " + type);
-    }
-
-    for (final Method m : type.getMethods()) {
-      final Class<?> retType = m.getReturnType();
-
-      if (!CompletableFuture.class.isAssignableFrom(retType)) {
-        continue; // synchronous case
-      }
-
-      if (retType != CompletableFuture.class) {
-        throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
-            + getFullMethodName(type, retType, m));
-      }
-
-      final Type genRetType = m.getGenericReturnType();
-
-      if (!ParameterizedType.class.isInstance(genRetType)) {
-        throw new IllegalArgumentException("Method return type is not parameterized: "
-            + getFullMethodName(type, genRetType, m));
-      }
-
-      if (WildcardType.class
-          .isInstance(ParameterizedType.class.cast(genRetType).getActualTypeArguments()[0])) {
-        throw new IllegalArgumentException(
-            "Wildcards are not supported for return-type parameters: "
-                + getFullMethodName(type, genRetType, m));
-      }
-    }
-  }
-
-  private String getFullMethodName(Class<?> type, Type retType, Method m) {
-    return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
   }
 }
