@@ -133,7 +133,7 @@ public abstract class Logger {
     return response;
   }
 
-  public IOException logIOException(
+  protected IOException logIOException(
       String configKey, Level logLevel, IOException ioe, long elapsedTime) {
     log(
         configKey,
