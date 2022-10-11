@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * handling
  */
 @Experimental
-public class AsyncResponseHandler {
+class AsyncResponseHandler {
 
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
@@ -41,7 +41,7 @@ public class AsyncResponseHandler {
 
   private final ResponseInterceptor responseInterceptor;
 
-  public AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
+  AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
       ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
       ResponseInterceptor responseInterceptor) {
     super();
@@ -59,11 +59,11 @@ public class AsyncResponseHandler {
         || returnType.getTypeName().equals("kotlin.Unit");
   }
 
-  public void handleResponse(CompletableFuture<Object> resultFuture,
-                             String configKey,
-                             Response response,
-                             Type returnType,
-                             long elapsedTime) {
+  void handleResponse(CompletableFuture<Object> resultFuture,
+                      String configKey,
+                      Response response,
+                      Type returnType,
+                      long elapsedTime) {
     // copied fairly liberally from SynchronousMethodHandler
     boolean shouldClose = true;
 
