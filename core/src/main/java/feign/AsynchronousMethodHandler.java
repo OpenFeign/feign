@@ -195,20 +195,8 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   }
 
   private CompletableFuture<Object> handleResponse(Response response, long elapsedTime) {
-    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-
-    asyncResponseHandler.handleResponse(
-        resultFuture,
-        metadata.configKey(),
-        response,
-        methodInfo.underlyingReturnType(),
-        elapsedTime);
-
-    if (!resultFuture.isDone()) {
-      resultFuture.completeExceptionally(new IllegalStateException("Response handling not done"));
-    }
-
-    return resultFuture;
+    return asyncResponseHandler.handleResponse(
+        metadata.configKey(), response, methodInfo.underlyingReturnType(), elapsedTime);
   }
 
   private long elapsedTime(long start) {

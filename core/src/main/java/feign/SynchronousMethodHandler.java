@@ -23,27 +23,22 @@ import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 final class SynchronousMethodHandler implements MethodHandler {
-
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
-  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
-  private final AsyncResponseHandler asyncResponseHandler;
+  private final ResponseHandler responseHandler;
 
   private SynchronousMethodHandler(
       Target<?> target,
@@ -73,9 +68,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.responseInterceptor = responseInterceptor;
-    this.asyncResponseHandler =
-        new AsyncResponseHandler(
+    this.responseHandler =
+        new ResponseHandler(
             logLevel,
             logger,
             decoder,
@@ -131,20 +125,10 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       throw errorExecuting(request, e);
     }
+
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    asyncResponseHandler.handleResponse(
-        resultFuture, metadata.configKey(), response, metadata.returnType(), elapsedTime);
-
-    try {
-      if (!resultFuture.isDone()) throw new IllegalStateException("Response handling not done");
-      return resultFuture.join();
-    } catch (CompletionException e) {
-      Throwable cause = e.getCause();
-      if (cause != null) throw cause;
-      throw e;
-    }
+    return responseHandler.handleResponse(
+        metadata.configKey(), response, metadata.returnType(), elapsedTime);
   }
 
   long elapsedTime(long start) {
