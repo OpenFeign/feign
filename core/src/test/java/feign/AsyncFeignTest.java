@@ -564,7 +564,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void ensureRetryerClonesItself() throws Exception {
+  public void ensureRetryerClonesItself() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
@@ -572,7 +572,7 @@ public class AsyncFeignTest {
 
     MockRetryer retryer = new MockRetryer();
 
-    FeignTest.TestInterface api = Feign.builder()
+    TestInterfaceAsync api = AsyncFeign.builder()
         .retryer(retryer)
         .errorDecoder(new ErrorDecoder() {
           @Override
@@ -580,15 +580,15 @@ public class AsyncFeignTest {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
                 null, response.request());
           }
-        }).target(FeignTest.TestInterface.class, "http://localhost:" + server.getPort());
+        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    api.post();
-    api.post(); // if retryer instance was reused, this statement will throw an exception
+    unwrap(api.post());
+    unwrap(api.post()); // if retryer instance was reused, this statement will throw an exception
     assertEquals(4, server.getRequestCount());
   }
 
   @Test
-  public void throwsOriginalExceptionAfterFailedRetries() throws Exception {
+  public void throwsOriginalExceptionAfterFailedRetries() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
@@ -596,7 +596,7 @@ public class AsyncFeignTest {
     thrown.expect(TestInterfaceException.class);
     thrown.expectMessage(message);
 
-    TestInterfaceAsync api = Feign.builder()
+    TestInterfaceAsync api = AsyncFeign.builder()
         .exceptionPropagationPolicy(UNWRAP)
         .retryer(new Retryer.Default(1, 1, 2))
         .errorDecoder(new ErrorDecoder() {
@@ -607,11 +607,11 @@ public class AsyncFeignTest {
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    api.post();
+    unwrap(api.post());
   }
 
   @Test
-  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Exception {
+  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
@@ -619,7 +619,7 @@ public class AsyncFeignTest {
     thrown.expect(RetryableException.class);
     thrown.expectMessage(message);
 
-    TestInterfaceAsync api = Feign.builder()
+    TestInterfaceAsync api = AsyncFeign.builder()
         .exceptionPropagationPolicy(UNWRAP)
         .retryer(new Retryer.Default(1, 1, 2))
         .errorDecoder(new ErrorDecoder() {
@@ -630,7 +630,7 @@ public class AsyncFeignTest {
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    api.post();
+    unwrap(api.post());
   }
 
   @SuppressWarnings("deprecation")
