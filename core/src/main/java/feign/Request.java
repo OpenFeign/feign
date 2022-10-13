@@ -30,7 +30,21 @@ import static feign.Util.valuesOrEmpty;
 public final class Request implements Serializable {
 
   public enum HttpMethod {
-    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+    GET, HEAD, POST(true), PUT(true), DELETE, CONNECT, OPTIONS, TRACE, PATCH(true);
+
+    private final boolean withBody;
+
+    HttpMethod() {
+      this(false);
+    }
+
+    HttpMethod(boolean withBody) {
+      this.withBody = withBody;
+    }
+
+    public boolean isWithBody() {
+      return this.withBody;
+    }
   }
 
   public enum ProtocolVersion {

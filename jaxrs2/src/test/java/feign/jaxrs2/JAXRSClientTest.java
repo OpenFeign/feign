@@ -51,7 +51,7 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void noResponseBodyForPut() {
+  public void noResponseBodyForPut() throws Exception {
     try {
       super.noResponseBodyForPut();
     } catch (final IllegalStateException e) {

@@ -13,11 +13,17 @@
  */
 package feign.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.core.Is.isA;
-import static org.junit.Assert.assertEquals;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import feign.Client;
+import feign.Client.Proxied;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.RetryableException;
+import feign.assertj.MockWebServerAssertions;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.SocketPolicy;
+import org.junit.Test;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -26,20 +32,11 @@ import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPOutputStream;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import okio.Buffer;
-import org.junit.Test;
-import feign.Client;
-import feign.Client.Proxied;
-import feign.Feign;
-import feign.Feign.Builder;
-import feign.RetryableException;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
+import java.util.Collections;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.hamcrest.core.Is.isA;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -95,6 +92,22 @@ public class DefaultClientTest extends AbstractClientTest {
     thrown.expect(RetryableException.class);
     thrown.expectCause(isA(ProtocolException.class));
     super.testPatch();
+  }
+
+  @Override
+  public void noResponseBodyForPost() throws Exception {
+    super.noResponseBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
+  }
+
+  @Override
+  public void noResponseBodyForPut() throws Exception {
+    super.noResponseBodyForPut();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("PUT")
+        .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
   @Test
