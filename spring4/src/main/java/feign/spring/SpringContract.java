@@ -44,6 +44,9 @@ public class SpringContract extends DeclarativeContract {
 
       if (requestMapping.method().length == 1)
         data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
+
+      handleProducesAnnotation(data, requestMapping.produces());
+      handleConsumesAnnotation(data, requestMapping.consumes());
     });
 
 
@@ -84,6 +87,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerMethodAnnotation(ResponseBody.class, (body, data) -> {
       handleProducesAnnotation(data, "application/json");
+      //handleConsumesAnnotation(data, "application/json");
     });
     registerMethodAnnotation(ExceptionHandler.class, (ann, data) -> {
       data.ignoreMethod();
@@ -92,6 +96,7 @@ public class SpringContract extends DeclarativeContract {
 
     registerParameterAnnotation(RequestBody.class, (body, data, paramIndex) -> {
       handleConsumesAnnotation(data, "application/json");
+      //handleProducesAnnotation(data, "application/json");
     });
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
     registerParameterAnnotation(RequestPart.class, requestPartParameterAnnotationProcessor());
