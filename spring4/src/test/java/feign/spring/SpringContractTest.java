@@ -17,21 +17,23 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import feign.Feign;
-import feign.Param;
-import feign.Request;
+import feign.*;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
 import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 public class SpringContractTest {
@@ -43,6 +45,12 @@ public class SpringContractTest {
 
   @Before
   public void setup() throws IOException {
+    Response.Builder response =
+        Response.builder()
+            .status(200)
+            .body("hello world", StandardCharsets.UTF_8)
+            .headers(
+                Collections.singletonMap("Content-Type", Collections.singletonList("text/plain")));
     mockClient =
         new MockClient()
             .noContent(HttpMethod.GET, "/health")
@@ -54,14 +62,45 @@ public class SpringContractTest {
             .noContent(HttpMethod.GET, "/health/header")
             .noContent(HttpMethod.GET, "/health/header/map")
             .noContent(HttpMethod.GET, "/health/header/pojo")
-            .ok(HttpMethod.GET, "/health/generic", "{}");
+            .ok(HttpMethod.GET, "/health/generic", "{}")
+            .add(HttpMethod.POST, "/health/text", response);
     resource =
         Feign.builder()
             .contract(new SpringContract())
             .encoder(new JacksonEncoder())
-            .decoder(new JacksonDecoder())
+            .mapAndDecode(new TextResponseMapper(), new JacksonDecoder())
             .client(mockClient)
             .target(new MockTarget<>(HealthResource.class));
+  }
+
+  class TextResponseMapper implements ResponseMapper {
+    @Override
+    public Response map(Response response, Type type) {
+      Map<String, Collection<String>> headers = response.headers();
+      if (headers == null || headers.isEmpty()) {
+        return response;
+      }
+      Collection<String> head = headers.get("Content-Type");
+      if (head == null || head.isEmpty()) {
+        return response;
+      }
+      String contentType = head.iterator().next();
+      if (contentType.startsWith("text/plain")) {
+        try {
+          Reader reader = response.body().asReader(StandardCharsets.UTF_8);
+          char[] buff = new char[1024];
+          String text = "";
+          int n = 0;
+          while ((n = reader.read(buff)) > 0) {
+            text += new String(buff, 0, n);
+          }
+          response = response.toBuilder().body("\"" + text + "\"", StandardCharsets.UTF_8).build();
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      }
+      return response;
+    }
   }
 
   @Test
@@ -157,6 +196,14 @@ public class SpringContractTest {
     resource.missingResourceExceptionHandler();
   }
 
+  @Test
+  public void testConsumeAndProduce() {
+    resource.produceText(new HashMap<>());
+    Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
+    assertThat(request.headers(), hasEntry("Content-Type", Arrays.asList("application/json")));
+    assertThat(request.headers(), hasEntry("Accept", Arrays.asList("text/plain")));
+  }
+
   interface GenericResource<DTO> {
 
     @RequestMapping(value = "generic", method = RequestMethod.GET)
@@ -169,6 +216,13 @@ public class SpringContractTest {
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody String getStatus();
+
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = "/text",
+        produces = MediaType.TEXT_PLAIN_VALUE,
+        consumes = MediaType.APPLICATION_JSON_VALUE)
+    public String produceText(@RequestBody Map<String, Object> data);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public void check(
