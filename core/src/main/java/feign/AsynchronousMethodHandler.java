@@ -93,7 +93,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     executeAndDecode(template, options)
         .whenComplete((response, throwable) -> {
           if (throwable != null) {
-            if (shouldRetry(retryer, throwable, resultFuture)) {
+            if (!resultFuture.isDone() && shouldRetry(retryer, throwable, resultFuture)) {
               if (logLevel != Logger.Level.NONE) {
                 logger.logRetry(metadata.configKey(), logLevel);
               }

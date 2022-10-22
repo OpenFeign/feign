@@ -48,16 +48,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
@@ -653,6 +658,53 @@ public class AsyncFeignTest {
       assertThat(value).contains("http://bar.com");
     });
 
+    execs.shutdown();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1}) // TODO: Modify it to work even if it is more than 2 tries
+  public void cancelRetry(final int expectedTryCount) throws Throwable {
+    // Arrange
+    final CompletableFuture<Boolean> maximumTryCompleted = new CompletableFuture<>();
+    final AtomicInteger actualTryCount = new AtomicInteger();
+    final AtomicBoolean isCancelled = new AtomicBoolean(true);
+
+    final int RUNNING_TIME_MILLIS = 100;
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    final AsyncClient<Void> clientMock =
+        (request, options, requestContext) -> CompletableFuture.supplyAsync(() -> {
+          final int tryCount = actualTryCount.addAndGet(1);
+          if (tryCount < expectedTryCount) {
+            throw new CompletionException(new IOException());
+          }
+
+          if (tryCount > expectedTryCount) {
+            isCancelled.set(false);
+            throw new CompletionException(new IOException());
+          }
+
+          maximumTryCompleted.complete(true);
+          try {
+            Thread.sleep(RUNNING_TIME_MILLIS);
+            throw new IOException();
+          } catch (Throwable e) {
+            throw new CompletionException(e);
+          }
+        }, execs);
+    final TestInterfaceAsync sut = AsyncFeign.<Void>builder()
+        .client(clientMock)
+        .retryer(new Retryer.Default(0, Long.MAX_VALUE, expectedTryCount * 2))
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    // Act
+    final CompletableFuture<String> actual = sut.post();
+    maximumTryCompleted.join();
+    actual.cancel(true);
+    Thread.sleep(RUNNING_TIME_MILLIS * 5);
+
+    // Assert
+    assertThat(actualTryCount.get()).isEqualTo(expectedTryCount);
+    assertThat(isCancelled.get()).isTrue();
     execs.shutdown();
   }
 
