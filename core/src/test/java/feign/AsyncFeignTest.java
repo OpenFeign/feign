@@ -662,7 +662,7 @@ public class AsyncFeignTest {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {1}) // TODO: Modify it to work even if it is more than 2 tries
+  @ValueSource(ints = {1, 5, 10, 100, 1000})
   public void cancelRetry(final int expectedTryCount) throws Throwable {
     // Arrange
     final CompletableFuture<Boolean> maximumTryCompleted = new CompletableFuture<>();
