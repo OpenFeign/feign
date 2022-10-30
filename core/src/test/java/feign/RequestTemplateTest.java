@@ -307,8 +307,29 @@ public class RequestTemplateTest {
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
         .hasHeaders(
-            entry("Content-Length",
-                Collections.singletonList(String.valueOf(template.body().length))));
+            entry("Content-Length", Collections.singletonList("80")));
+//                Collections.singletonList(String.valueOf(template.body().length))));
+  }
+
+  @Test
+  public void resolveTemplateWithMultiPartMixedPostShouldNotSetContentLength() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.POST)
+            .bodyTemplate(
+                    "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", " +
+                            "\"password\": \"{password}\"%7D",
+                    Util.UTF_8);
+
+    template = template.header("Content-Type", "multipart/mixed; boundary=batch_42j3h42kj5h35345hk3jh3kjh55hj32j5h");
+    template = template.resolve(
+            mapOf(
+                    "customer_name", "netflix",
+                    "user_name", "denominator",
+                    "password", "password"));
+
+    assertThat(template)
+            .hasBody(
+                    "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}")
+            .hasNoHeader("Content-Length");
   }
 
   @Test

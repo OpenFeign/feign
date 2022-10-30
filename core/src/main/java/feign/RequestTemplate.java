@@ -749,7 +749,7 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
-    if (name.equals("Content-Type")) {
+    if (name.equals(CONTENT_TYPE)) {
       // a client can only produce content of one single type, so always override Content-Type and
       // only add a single type
       this.headers.remove(name);
@@ -846,7 +846,12 @@ public final class RequestTemplate implements Serializable {
     this.bodyTemplate = null;
 
     header(CONTENT_LENGTH, Collections.emptyList());
-    if (body.length() > 0) {
+
+    Collection<String> contentType = this.headers().get(CONTENT_TYPE);
+    boolean isMultiPartMixedRequest = contentType != null && contentType.stream().anyMatch(s -> s.startsWith("multipart/mixed;"));
+
+    // #1810 If is multipart/mixed request then should not add `Content-Length` header. https://github.com/OpenFeign/feign/issues/1810
+    if (body.length() > 0 && !isMultiPartMixedRequest) {
       header(CONTENT_LENGTH, String.valueOf(body.length()));
     }
 
