@@ -55,28 +55,18 @@ public class ReflectiveFeign<C> extends Feign {
   public <T> T newInstance(Target<T> target, C requestContext) {
     TargetSpecificationVerifier.verify(target);
 
-    Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target, requestContext);
-    Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
-    List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
-
-    for (Method method : target.type().getMethods()) {
-      if (method.getDeclaringClass() == Object.class) {
-        continue;
-      } else if (Util.isDefault(method)) {
-        DefaultMethodHandler handler = new DefaultMethodHandler(method);
-        defaultMethodHandlers.add(handler);
-        methodToHandler.put(method, handler);
-      } else {
-        methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
-      }
-    }
+    Map<Method, MethodHandler> methodToHandler =
+        targetToHandlersByName.apply(target, requestContext);
     InvocationHandler handler = factory.create(target, methodToHandler);
     T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
         new Class<?>[] {target.type()}, handler);
 
-    for (DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
-      defaultMethodHandler.bindTo(proxy);
+    for (MethodHandler methodHandler : methodToHandler.values()) {
+      if (methodHandler instanceof DefaultMethodHandler) {
+        ((DefaultMethodHandler) methodHandler).bindTo(proxy);
+      }
     }
+
     return proxy;
   }
 
@@ -156,13 +146,27 @@ public class ReflectiveFeign<C> extends Feign {
       this.decoder = checkNotNull(decoder, "decoder");
     }
 
-    public Map<String, MethodHandler> apply(Target target, C requestContext) {
-      List<MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type());
-      Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
-      for (MethodMetadata md : metadata) {
-        MethodHandler handler = createMethodHandler(target, md, requestContext);
-        result.put(md.configKey(), handler);
+    public Map<Method, MethodHandler> apply(Target target, C requestContext) {
+      final Map<Method, MethodHandler> result = new LinkedHashMap<>();
+
+      final List<MethodMetadata> metadataList = contract.parseAndValidateMetadata(target.type());
+      for (MethodMetadata md : metadataList) {
+        final Method method = md.method();
+        if (method.getDeclaringClass() == Object.class) {
+          continue;
+        }
+
+        final MethodHandler handler = createMethodHandler(target, md, requestContext);
+        result.put(method, handler);
       }
+
+      for (Method method : target.type().getMethods()) {
+        if (Util.isDefault(method)) {
+          final MethodHandler handler = new DefaultMethodHandler(method);
+          result.put(method, handler);
+        }
+      }
+
       return result;
     }
 
