@@ -160,26 +160,34 @@ public class ReflectiveFeign<C> extends Feign {
       List<MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type());
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
       for (MethodMetadata md : metadata) {
-        BuildTemplateByResolvingArgs buildTemplate;
-        if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate =
-              new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, target);
-        }
-        if (md.isIgnored()) {
-          result.put(md.configKey(), args -> {
-            throw new IllegalStateException(md.configKey() + " is not a method handled by feign");
-          });
-        } else {
-          result.put(md.configKey(),
-              factory.create(target, md, buildTemplate, options, decoder, errorDecoder,
-                  requestContext));
-        }
+        MethodHandler handler = createMethodHandler(target, md, requestContext);
+        result.put(md.configKey(), handler);
       }
       return result;
+    }
+
+    private MethodHandler createMethodHandler(final Target<?> target,
+                                              final MethodMetadata md,
+                                              final C requestContext) {
+      if (md.isIgnored()) {
+        return args -> {
+          throw new IllegalStateException(md.configKey() + " is not a method handled by feign");
+        };
+      }
+
+      BuildTemplateByResolvingArgs buildTemplate = getBuildTemplate(target, md);
+      return factory.create(
+          target, md, buildTemplate, options, decoder, errorDecoder, requestContext);
+    }
+
+    private BuildTemplateByResolvingArgs getBuildTemplate(Target target, MethodMetadata md) {
+      if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
+        return new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
+      } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
+        return new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
+      } else {
+        return new BuildTemplateByResolvingArgs(md, queryMapEncoder, target);
+      }
     }
   }
 
