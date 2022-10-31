@@ -86,7 +86,7 @@
     <json.version>20220924</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <jackson.version>2.14.0-rc2</jackson.version>
+    <jackson.version>2.14.0-rc3</jackson.version>
     <jackson-databind.version>2.14.0-rc2</jackson-databind.version>
     <assertj.version>3.23.1</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
