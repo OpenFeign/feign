@@ -897,16 +897,19 @@ public interface Api {
 }
 ```
 
-When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
+When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. You can annotate a specific field of `CustomPojo` with the `@Param` annotation to specify a different name to the query parameter. The following POJO will generate query params of "/find?name={name}&number={number}&region_id={regionId}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
 
 ```java
 public class CustomPojo {
   private final String name;
   private final int number;
+  @Param("region_id")
+  private final String regionId;
 
-  public CustomPojo (String name, int number) {
+  public CustomPojo (String name, int number, String regionId) {
     this.name = name;
     this.number = number;
+    this.regionId = regionId;
   }
 }
 ```
