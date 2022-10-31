@@ -171,7 +171,7 @@ public class CoroutineFeign<C> {
           .queryMapEncoder(queryMapEncoder)
           .options(options)
           .requestInterceptors(requestInterceptors)
-          .responseInterceptor(responseInterceptor)
+          .responseInterceptors(responseInterceptors)
           .invocationHandlerFactory(invocationHandlerFactory)
           .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
           .methodInfoResolver(methodInfoResolver)

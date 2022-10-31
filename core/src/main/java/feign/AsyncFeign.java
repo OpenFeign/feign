@@ -14,8 +14,8 @@
 package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Logger.Level;
+import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -197,7 +197,7 @@ public final class AsyncFeign<C> {
                   decoder,
                   errorDecoder,
                   dismiss404,
-                  closeAfterDecode, responseInterceptor),
+                  closeAfterDecode, executionChain()),
               AsyncResponseHandler.class,
               capabilities);
 

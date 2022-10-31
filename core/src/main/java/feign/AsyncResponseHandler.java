@@ -27,13 +27,10 @@ import java.util.concurrent.CompletableFuture;
 class AsyncResponseHandler {
   private final ResponseHandler responseHandler;
 
-  AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
-      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
-      ResponseInterceptor responseInterceptor) {
-    this.responseHandler = new ResponseHandler(
-        logLevel, logger, decoder,
-        errorDecoder, dismiss404, closeAfterDecode,
-        responseInterceptor);
+  AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
+      boolean dismiss404, boolean closeAfterDecode, ResponseInterceptor.Chain executionChain) {
+    this.responseHandler = new ResponseHandler(logLevel, logger, decoder, errorDecoder, dismiss404,
+        closeAfterDecode, executionChain);
   }
 
   public CompletableFuture<Object> handleResponse(String configKey,

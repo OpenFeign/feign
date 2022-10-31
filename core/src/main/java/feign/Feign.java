@@ -13,13 +13,13 @@
  */
 package feign;
 
+import feign.InvocationHandlerFactory.MethodHandler;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -202,7 +202,7 @@ public abstract class Feign {
 
       MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
+              executionChain(), logger, logLevel, dismiss404, closeAfterDecode,
               propagationPolicy);
       ParseHandlersByName<Object> handlersByName =
           new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
