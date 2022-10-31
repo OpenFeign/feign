@@ -210,6 +210,16 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void resolveTemplateWithHeaderContainingJsonLiteral() {
+    String json = "{\"A\":{\"B\":\"C\"}}";
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).header("A-Header", json);
+
+    template.resolve(new LinkedHashMap<>());
+    assertThat(template).hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
   public void resolveTemplateWithHeaderWithJson() {
     String json = "{ \"string\": \"val\", \"string2\": \"this should not be truncated\"}";
     RequestTemplate template =
