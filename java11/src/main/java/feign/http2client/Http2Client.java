@@ -190,20 +190,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       requestBuilder.headers(asString(headers));
     }
 
-    switch (request.httpMethod()) {
-      case GET:
-        return requestBuilder.GET();
-      case POST:
-        return requestBuilder.POST(body);
-      case PUT:
-        return requestBuilder.PUT(body);
-      case DELETE:
-        return requestBuilder.DELETE();
-      default:
-        // fall back scenario, http implementations may restrict some methods
-        return requestBuilder.method(request.httpMethod().toString(), body);
-    }
-
+    return requestBuilder.method(request.httpMethod().toString(), body);
   }
 
   /**
