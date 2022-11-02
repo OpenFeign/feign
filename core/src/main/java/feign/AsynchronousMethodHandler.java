@@ -88,18 +88,18 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   private CompletableFuture<Object> executeAndDecode(RequestTemplate template,
                                                      Options options,
                                                      Retryer retryer) {
-    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+    CancellableFuture<Object> resultFuture = new CancellableFuture<>();
 
     executeAndDecode(template, options)
         .whenComplete((response, throwable) -> {
           if (throwable != null) {
-            if (shouldRetry(retryer, throwable, resultFuture)) {
+            if (!resultFuture.isDone() && shouldRetry(retryer, throwable, resultFuture)) {
               if (logLevel != Logger.Level.NONE) {
                 logger.logRetry(metadata.configKey(), logLevel);
               }
 
-              executeAndDecode(template, options, retryer)
-                  .whenComplete(pipeTo(resultFuture));
+              resultFuture.setInner(
+                  executeAndDecode(template, options, retryer));
             }
           } else {
             resultFuture.complete(response);
@@ -107,6 +107,38 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         });
 
     return resultFuture;
+  }
+
+  private static class CancellableFuture<T> extends CompletableFuture<T> {
+    private CompletableFuture<T> inner = null;
+
+    public void setInner(CompletableFuture<T> value) {
+      inner = value;
+      inner.whenComplete(pipeTo(this));
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      final boolean result = super.cancel(mayInterruptIfRunning);
+      if (inner != null) {
+        inner.cancel(mayInterruptIfRunning);
+      }
+      return result;
+    }
+
+    private static <T> BiConsumer<? super T, ? super Throwable> pipeTo(CompletableFuture<T> completableFuture) {
+      return (value, throwable) -> {
+        if (completableFuture.isDone()) {
+          return;
+        }
+
+        if (throwable != null) {
+          completableFuture.completeExceptionally(throwable);
+        } else {
+          completableFuture.complete(value);
+        }
+      };
+    }
   }
 
   private boolean shouldRetry(Retryer retryer,
@@ -134,16 +166,6 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
       }
       return false;
     }
-  }
-
-  private static <T> BiConsumer<? super T, ? super Throwable> pipeTo(CompletableFuture<T> completableFuture) {
-    return (value, throwable) -> {
-      if (throwable != null) {
-        completableFuture.completeExceptionally(throwable);
-      } else {
-        completableFuture.complete(value);
-      }
-    };
   }
 
   private CompletableFuture<Object> executeAndDecode(RequestTemplate template, Options options) {

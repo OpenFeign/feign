@@ -86,6 +86,7 @@
     <json.version>20220924</json.version>
 
     <junit.version>4.13.2</junit.version>
+    <junit5.version>5.9.1</junit5.version>
     <jackson.version>2.14.0-rc3</jackson.version>
     <jackson-databind.version>2.14.0-rc3</jackson-databind.version>
     <assertj.version>3.23.1</assertj.version>
@@ -298,6 +299,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-params</artifactId>
+        <version>${junit5.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
         <version>${hamcrest.version}</version>
@@ -396,6 +403,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
 
