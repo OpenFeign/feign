@@ -17,57 +17,56 @@ import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
 import feign.Request.Options;
 import feign.codec.*;
 import feign.template.UriUtils;
 
-public class ReflectiveFeign extends Feign {
+public class ReflectiveFeign<C> extends Feign {
 
-  private final ParseHandlersByName targetToHandlersByName;
+  private final ParseHandlersByName<C> targetToHandlersByName;
   private final InvocationHandlerFactory factory;
-  private final QueryMapEncoder queryMapEncoder;
+  private final AsyncContextSupplier<C> defaultContextSupplier;
 
-  ReflectiveFeign(ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory,
-      QueryMapEncoder queryMapEncoder) {
+  ReflectiveFeign(ParseHandlersByName<C> targetToHandlersByName, InvocationHandlerFactory factory,
+      AsyncContextSupplier<C> defaultContextSupplier) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
-    this.queryMapEncoder = queryMapEncoder;
+    this.defaultContextSupplier = defaultContextSupplier;
   }
 
   /**
    * creates an api binding to the {@code target}. As this invokes reflection, care should be taken
    * to cache the result.
    */
-  @SuppressWarnings("unchecked")
-  @Override
   public <T> T newInstance(Target<T> target) {
-    Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
-    Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
-    List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
+    return newInstance(target, defaultContextSupplier.newContext());
+  }
 
-    for (Method method : target.type().getMethods()) {
-      if (method.getDeclaringClass() == Object.class) {
-        continue;
-      } else if (Util.isDefault(method)) {
-        DefaultMethodHandler handler = new DefaultMethodHandler(method);
-        defaultMethodHandlers.add(handler);
-        methodToHandler.put(method, handler);
-      } else {
-        methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
-      }
-    }
+  @SuppressWarnings("unchecked")
+  public <T> T newInstance(Target<T> target, C requestContext) {
+    TargetSpecificationVerifier.verify(target);
+
+    Map<Method, MethodHandler> methodToHandler =
+        targetToHandlersByName.apply(target, requestContext);
     InvocationHandler handler = factory.create(target, methodToHandler);
     T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
         new Class<?>[] {target.type()}, handler);
 
-    for (DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
-      defaultMethodHandler.bindTo(proxy);
+    for (MethodHandler methodHandler : methodToHandler.values()) {
+      if (methodHandler instanceof DefaultMethodHandler) {
+        ((DefaultMethodHandler) methodHandler).bindTo(proxy);
+      }
     }
+
     return proxy;
   }
 
@@ -120,7 +119,7 @@ public class ReflectiveFeign extends Feign {
     }
   }
 
-  static final class ParseHandlersByName {
+  static final class ParseHandlersByName<C> {
 
     private final Contract contract;
     private final Options options;
@@ -128,7 +127,7 @@ public class ReflectiveFeign extends Feign {
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
-    private final SynchronousMethodHandler.Factory factory;
+    private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
@@ -137,7 +136,7 @@ public class ReflectiveFeign extends Feign {
         Decoder decoder,
         QueryMapEncoder queryMapEncoder,
         ErrorDecoder errorDecoder,
-        SynchronousMethodHandler.Factory factory) {
+        MethodHandler.Factory<C> factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -147,29 +146,52 @@ public class ReflectiveFeign extends Feign {
       this.decoder = checkNotNull(decoder, "decoder");
     }
 
-    public Map<String, MethodHandler> apply(Target target) {
-      List<MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type());
-      Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
-      for (MethodMetadata md : metadata) {
-        BuildTemplateByResolvingArgs buildTemplate;
-        if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
-          buildTemplate =
-              new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
-          buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, target);
+    public Map<Method, MethodHandler> apply(Target target, C requestContext) {
+      final Map<Method, MethodHandler> result = new LinkedHashMap<>();
+
+      final List<MethodMetadata> metadataList = contract.parseAndValidateMetadata(target.type());
+      for (MethodMetadata md : metadataList) {
+        final Method method = md.method();
+        if (method.getDeclaringClass() == Object.class) {
+          continue;
         }
-        if (md.isIgnored()) {
-          result.put(md.configKey(), args -> {
-            throw new IllegalStateException(md.configKey() + " is not a method handled by feign");
-          });
-        } else {
-          result.put(md.configKey(),
-              factory.create(target, md, buildTemplate, options, decoder, errorDecoder));
+
+        final MethodHandler handler = createMethodHandler(target, md, requestContext);
+        result.put(method, handler);
+      }
+
+      for (Method method : target.type().getMethods()) {
+        if (Util.isDefault(method)) {
+          final MethodHandler handler = new DefaultMethodHandler(method);
+          result.put(method, handler);
         }
       }
+
       return result;
+    }
+
+    private MethodHandler createMethodHandler(final Target<?> target,
+                                              final MethodMetadata md,
+                                              final C requestContext) {
+      if (md.isIgnored()) {
+        return args -> {
+          throw new IllegalStateException(md.configKey() + " is not a method handled by feign");
+        };
+      }
+
+      BuildTemplateByResolvingArgs buildTemplate = getBuildTemplate(target, md);
+      return factory.create(
+          target, md, buildTemplate, options, decoder, errorDecoder, requestContext);
+    }
+
+    private BuildTemplateByResolvingArgs getBuildTemplate(Target target, MethodMetadata md) {
+      if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
+        return new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
+      } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
+        return new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
+      } else {
+        return new BuildTemplateByResolvingArgs(md, queryMapEncoder, target);
+      }
     }
   }
 
@@ -402,6 +424,45 @@ public class ReflectiveFeign extends Feign {
         throw new EncodeException(e.getMessage(), e);
       }
       return super.resolve(argv, mutable, variables);
+    }
+  }
+
+  private static class TargetSpecificationVerifier {
+    public static <T> void verify(Target<T> target) {
+      Class<T> type = target.type();
+      if (!type.isInterface()) {
+        throw new IllegalArgumentException("Type must be an interface: " + type);
+      }
+
+      for (final Method m : type.getMethods()) {
+        final Class<?> retType = m.getReturnType();
+
+        if (!CompletableFuture.class.isAssignableFrom(retType)) {
+          continue; // synchronous case
+        }
+
+        if (retType != CompletableFuture.class) {
+          throw new IllegalArgumentException("Method return type is not CompleteableFuture: "
+              + getFullMethodName(type, retType, m));
+        }
+
+        final Type genRetType = m.getGenericReturnType();
+
+        if (!(genRetType instanceof ParameterizedType)) {
+          throw new IllegalArgumentException("Method return type is not parameterized: "
+              + getFullMethodName(type, genRetType, m));
+        }
+
+        if (((ParameterizedType) genRetType).getActualTypeArguments()[0] instanceof WildcardType) {
+          throw new IllegalArgumentException(
+              "Wildcards are not supported for return-type parameters: "
+                  + getFullMethodName(type, genRetType, m));
+        }
+      }
+    }
+
+    private static String getFullMethodName(Class<?> type, Type retType, Method m) {
+      return retType.getTypeName() + " " + type.toGenericString() + "." + m.getName();
     }
   }
 }

@@ -25,31 +25,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 final class SynchronousMethodHandler implements MethodHandler {
-
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
-
   private final List<ClientInterceptor> clientInterceptors;
-  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
-
-  // only one of decoder and asyncResponseHandler will be non-null
-  private final Decoder decoder;
-  private final AsyncResponseHandler asyncResponseHandler;
+  private final ResponseHandler responseHandler;
 
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
@@ -58,8 +50,7 @@ final class SynchronousMethodHandler implements MethodHandler {
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
       Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy,
-      boolean forceDecoding) {
+      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -74,18 +65,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.responseInterceptor = responseInterceptor;
-
-    if (forceDecoding) {
-      // internal only: usual handling will be short-circuited, and all responses will be passed to
-      // decoder directly!
-      this.decoder = decoder;
-      this.asyncResponseHandler = null;
-    } else {
-      this.decoder = null;
-      this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-          dismiss404, closeAfterDecode, responseInterceptor);
-    }
+    this.responseHandler = new ResponseHandler(logLevel, logger, decoder, errorDecoder,
+        dismiss404, closeAfterDecode, responseInterceptor);
   }
 
   @Override
@@ -121,28 +102,13 @@ final class SynchronousMethodHandler implements MethodHandler {
     InterceptorChain interceptorChain =
         new InterceptorChain(this.clientInterceptors, new HttpCall(this.metadata, this.target,
             this.requestInterceptors, this.logger, this.logLevel, this.client, start));
-    Response response = interceptorChain.call(context);
+    ClientInterceptor.WrappedResponse wrappedResponse = interceptorChain.call(context);
+    if (wrappedResponse.isAsync()) {
+      throw new IllegalStateException("You're trying to use the async version in a sync context");
+    }
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-    if (decoder != null) {
-      return responseInterceptor
-          .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
-    }
-
-    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
-        metadata.returnType(), elapsedTime);
-
-    try {
-      if (!resultFuture.isDone())
-        throw new IllegalStateException("Response handling not done");
-      return resultFuture.join();
-    } catch (CompletionException e) {
-      Throwable cause = e.getCause();
-      if (cause != null)
-        throw cause;
-      throw e;
-    }
+    return responseHandler.handleResponse(
+        metadata.configKey(), wrappedResponse.unwrapSync(), metadata.returnType(), elapsedTime);
   }
 
   Options findOptions(Object[] argv) {
@@ -155,6 +121,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         .findFirst()
         .orElse(this.options);
   }
+
 
   static class HttpCall {
     private final MethodMetadata metadata;
@@ -222,8 +189,9 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
 
     @Override
-    public Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator) {
-      return httpCall.call(context.getRequestTemplate(), context.getOptions());
+    public WrappedResponse around(ClientInvocationContext context,
+                                  Iterator<ClientInterceptor> iterator) {
+      return new SyncResponse(httpCall.call(context.getRequestTemplate(), context.getOptions()));
     }
   }
 
@@ -235,19 +203,18 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.interceptors.add(new HttpCallingInterceptor(httpCall));
     }
 
-    Response call(ClientInvocationContext context) {
+    ClientInterceptor.WrappedResponse call(ClientInvocationContext context) {
       Iterator<ClientInterceptor> iterator = this.interceptors.iterator();
       ClientInterceptor next = iterator.next();
       return next.around(context, iterator);
     }
   }
 
-  static class Factory {
+  static class Factory implements MethodHandler.Factory<Object> {
 
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
-
     private final List<ClientInterceptor> clientInterceptors;
     private final ResponseInterceptor responseInterceptor;
     private final Logger logger;
@@ -255,12 +222,11 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
-    private final boolean forceDecoding;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
         List<ClientInterceptor> clientInterceptors, ResponseInterceptor responseInterceptor,
         Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
+        ExceptionPropagationPolicy propagationPolicy) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -271,7 +237,6 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
-      this.forceDecoding = forceDecoding;
     }
 
     public MethodHandler create(Target<?> target,
@@ -279,11 +244,12 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Options options,
                                 Decoder decoder,
-                                ErrorDecoder errorDecoder) {
+                                ErrorDecoder errorDecoder,
+                                Object requestContext) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
           clientInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
+          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy);
     }
   }
 }

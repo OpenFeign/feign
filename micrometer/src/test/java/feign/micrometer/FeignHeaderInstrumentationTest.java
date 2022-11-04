@@ -13,9 +13,12 @@
  */
 package feign.micrometer;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import feign.AsyncFeign;
 import feign.ClientInterceptor;
 import feign.Feign;
 import feign.Param;
@@ -70,6 +73,21 @@ class FeignHeaderInstrumentationTest {
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
   }
 
+  @Test
+  void getTemplatedPathForUriForAsync(WireMockRuntimeInfo wmRuntimeInfo)
+      throws ExecutionException, InterruptedException {
+    stubFor(get(anyUrl()).willReturn(ok()));
+
+    AsyncTestClient testClient =
+        asyncClientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+    testClient.templated("1", "2").get();
+
+    verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
+    Timer timer = meterRegistry.get("http.client.requests").timer();
+    assertThat(timer.count()).isEqualTo(1);
+    assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
+  }
+
   private TestClient clientInstrumentedWithObservations(String url) {
     return Feign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
@@ -77,10 +95,24 @@ class FeignHeaderInstrumentationTest {
         .target(TestClient.class, url);
   }
 
+  private AsyncTestClient asyncClientInstrumentedWithObservations(String url) {
+    return AsyncFeign.builder()
+        .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
+        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry))
+        .target(AsyncTestClient.class, url);
+  }
+
   public interface TestClient {
 
     @RequestLine("GET /customers/{customerId}/carts/{cartId}")
     String templated(@Param("customerId") String customerId, @Param("cartId") String cartId);
+  }
+
+  public interface AsyncTestClient {
+
+    @RequestLine("GET /customers/{customerId}/carts/{cartId}")
+    CompletableFuture<String> templated(@Param("customerId") String customerId,
+                                        @Param("cartId") String cartId);
   }
 
   static class HeaderMutatingHandler

@@ -44,6 +44,14 @@ public class Http2ClientTest extends AbstractClientTest {
     @RequestLine("POST /timeout")
     @Headers({"Accept: text/plain"})
     String timeout();
+
+    @RequestLine("GET /anything")
+    @Body("some request body")
+    String getWithBody();
+
+    @RequestLine("DELETE /anything")
+    @Body("some request body")
+    String deleteWithBody();
   }
 
   @Override
@@ -113,6 +121,24 @@ public class Http2ClientTest extends AbstractClientTest {
     thrown.expectCause(CoreMatchers.isA(HttpTimeoutException.class));
 
     api.timeout();
+  }
+
+  @Test
+  public void testGetWithRequestBody() {
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.getWithBody();
+    Assertions.assertThat(result)
+        .contains("\"data\": \"some request body\"");
+  }
+
+  @Test
+  public void testDeleteWithRequestBody() {
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.deleteWithBody();
+    Assertions.assertThat(result)
+        .contains("\"data\": \"some request body\"");
   }
 
   @Override

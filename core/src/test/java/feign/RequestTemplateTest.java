@@ -206,6 +206,42 @@ public class RequestTemplateTest {
         .hasHeaders(entry("Encoded", Collections.singletonList("{{{{dont_expand_me}}")));
   }
 
+  @Test
+  public void resolveTemplateWithHeaderContainingJsonLiteral() {
+    String json = "{\"A\":{\"B\":\"C\"}}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", json);
+
+    template.resolve(new LinkedHashMap<>());
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithJson() {
+    String json = "{ \"string\": \"val\", \"string2\": \"this should not be truncated\"}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", "{aHeader}");
+
+    template = template.resolve(mapOf("aHeader", json));
+
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithNestedJson() {
+    String json =
+        "{ \"string\": \"val\", \"string2\": \"this should not be truncated\", \"property\": {\"nested\": true}}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", "{aHeader}");
+
+    template = template.resolve(mapOf("aHeader", json));
+
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
   /**
    * This ensures we don't mess up vnd types
    */

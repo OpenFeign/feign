@@ -14,6 +14,7 @@
 package feign.micrometer;
 
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 import feign.Client;
 import feign.ClientInterceptor;
 import feign.ClientInvocationContext;
@@ -40,7 +41,8 @@ public class ObservedClientInterceptor implements ClientInterceptor {
   }
 
   @Override
-  public Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator)
+  public WrappedResponse around(ClientInvocationContext context,
+                                Iterator<ClientInterceptor> iterator)
       throws FeignException {
     FeignContext feignContext = new FeignContext(context.getRequestTemplate());
     Observation observation = FeignObservationDocumentation.DEFAULT
@@ -49,20 +51,36 @@ public class ObservedClientInterceptor implements ClientInterceptor {
             this.observationRegistry)
         .start();
     Exception ex = null;
-    Response response = null;
+    WrappedResponse response = null;
     try {
       ClientInterceptor interceptor = iterator.next();
       response = interceptor.around(context, iterator);
-      return response;
+      if (response.isSync()) {
+        return response;
+      }
+      CompletableFuture<Response> asyncResponse = response.unwrapAsync();
+      return new AsyncResponse(asyncResponse.handle((res, throwable) -> {
+        finalizeObservation(feignContext, observation, throwable, res);
+        return res;
+      }));
     } catch (FeignException exception) {
       ex = exception;
       throw exception;
     } finally {
-      feignContext.setResponse(response);
-      if (ex != null) {
-        observation.error(ex);
+      if (response != null && response.isSync()) {
+        finalizeObservation(feignContext, observation, ex, response.unwrapSync());
       }
-      observation.stop();
     }
+  }
+
+  private void finalizeObservation(FeignContext feignContext,
+                                   Observation observation,
+                                   Throwable ex,
+                                   Response response) {
+    feignContext.setResponse(response);
+    if (ex != null) {
+      observation.error(ex);
+    }
+    observation.stop();
   }
 }

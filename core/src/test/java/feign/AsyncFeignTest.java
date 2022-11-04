@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,16 +48,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
@@ -484,6 +490,31 @@ public class AsyncFeignTest {
     assertEquals("fail", unwrap(api.post()));
   }
 
+  /**
+   * when you must parse a 2xx status to determine if the operation succeeded or not.
+   */
+  @Test
+  public void retryableExceptionInDecoder() throws Exception {
+    server.enqueue(new MockResponse().setBody("retry!"));
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    TestInterfaceAsync api = new TestInterfaceAsyncBuilder()
+        .decoder(new StringDecoder() {
+          @Override
+          public Object decode(Response response, Type type) throws IOException {
+            String string = super.decode(response, type).toString();
+            if ("retry!".equals(string)) {
+              throw new RetryableException(response.status(), string, HttpMethod.POST, null,
+                  response.request());
+            }
+            return string;
+          }
+        }).target("http://localhost:" + server.getPort());
+
+    assertThat(api.post().get()).isEqualTo("success!");
+    assertThat(server.getRequestCount()).isEqualTo(2);
+  }
+
   @Test
   public void doesntRetryAfterResponseIsSent() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
@@ -537,6 +568,76 @@ public class AsyncFeignTest {
     }
   }
 
+  @Test
+  public void ensureRetryerClonesItself() throws Throwable {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 4"));
+
+    MockRetryer retryer = new MockRetryer();
+
+    TestInterfaceAsync api = AsyncFeign.builder()
+        .retryer(retryer)
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
+                null, response.request());
+          }
+        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    unwrap(api.post());
+    unwrap(api.post()); // if retryer instance was reused, this statement will throw an exception
+    assertEquals(4, server.getRequestCount());
+  }
+
+  @Test
+  public void throwsOriginalExceptionAfterFailedRetries() throws Throwable {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
+
+    final String message = "the innerest";
+    thrown.expect(TestInterfaceException.class);
+    thrown.expectMessage(message);
+
+    TestInterfaceAsync api = AsyncFeign.builder()
+        .exceptionPropagationPolicy(UNWRAP)
+        .retryer(new Retryer.Default(1, 1, 2))
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
+                new TestInterfaceException(message), null, response.request());
+          }
+        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    unwrap(api.post());
+  }
+
+  @Test
+  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Throwable {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
+
+    String message = "play it again sam!";
+    thrown.expect(RetryableException.class);
+    thrown.expectMessage(message);
+
+    TestInterfaceAsync api = AsyncFeign.builder()
+        .exceptionPropagationPolicy(UNWRAP)
+        .retryer(new Retryer.Default(1, 1, 2))
+        .errorDecoder(new ErrorDecoder() {
+          @Override
+          public Exception decode(String methodKey, Response response) {
+            return new RetryableException(response.status(), message, HttpMethod.POST, null,
+                response.request());
+          }
+        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    unwrap(api.post());
+  }
+
   @SuppressWarnings("deprecation")
   @Test
   public void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
@@ -558,6 +659,72 @@ public class AsyncFeignTest {
     });
 
     execs.shutdown();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 5, 10, 100, 1000})
+  public void cancelRetry(final int expectedTryCount) throws Throwable {
+    // Arrange
+    final CompletableFuture<Boolean> maximumTryCompleted = new CompletableFuture<>();
+    final AtomicInteger actualTryCount = new AtomicInteger();
+    final AtomicBoolean isCancelled = new AtomicBoolean(true);
+
+    final int RUNNING_TIME_MILLIS = 100;
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    final AsyncClient<Void> clientMock =
+        (request, options, requestContext) -> CompletableFuture.supplyAsync(() -> {
+          final int tryCount = actualTryCount.addAndGet(1);
+          if (tryCount < expectedTryCount) {
+            throw new CompletionException(new IOException());
+          }
+
+          if (tryCount > expectedTryCount) {
+            isCancelled.set(false);
+            throw new CompletionException(new IOException());
+          }
+
+          maximumTryCompleted.complete(true);
+          try {
+            Thread.sleep(RUNNING_TIME_MILLIS);
+            throw new IOException();
+          } catch (Throwable e) {
+            throw new CompletionException(e);
+          }
+        }, execs);
+    final TestInterfaceAsync sut = AsyncFeign.<Void>builder()
+        .client(clientMock)
+        .retryer(new Retryer.Default(0, Long.MAX_VALUE, expectedTryCount * 2))
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    // Act
+    final CompletableFuture<String> actual = sut.post();
+    maximumTryCompleted.join();
+    actual.cancel(true);
+    Thread.sleep(RUNNING_TIME_MILLIS * 5);
+
+    // Assert
+    assertThat(actualTryCount.get()).isEqualTo(expectedTryCount);
+    assertThat(isCancelled.get()).isTrue();
+    execs.shutdown();
+  }
+
+  private static class MockRetryer implements Retryer {
+
+    boolean tripped;
+
+    @Override
+    public void continueOrPropagate(RetryableException e) {
+      if (tripped) {
+        throw new RuntimeException("retryer instance should never be reused");
+      }
+      tripped = true;
+      return;
+    }
+
+    @Override
+    public Retryer clone() {
+      return new MockRetryer();
+    }
   }
 
   @Test

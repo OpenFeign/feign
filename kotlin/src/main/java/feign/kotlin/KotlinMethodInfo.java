@@ -23,13 +23,11 @@ import java.util.concurrent.CompletableFuture;
 
 class KotlinMethodInfo extends MethodInfo {
 
-  KotlinMethodInfo(String configKey, Type underlyingReturnType, boolean asyncReturnType) {
-    super(configKey, underlyingReturnType, asyncReturnType);
+  KotlinMethodInfo(Type underlyingReturnType, boolean asyncReturnType) {
+    super(underlyingReturnType, asyncReturnType);
   }
 
   static KotlinMethodInfo createInstance(Class<?> targetType, Method method) {
-    String configKey = Feign.configKey(targetType, method);
-
     final Type type = Types.resolve(targetType, targetType, method.getGenericReturnType());
 
     Type underlyingReturnType;
@@ -38,6 +36,7 @@ class KotlinMethodInfo extends MethodInfo {
       asyncReturnType = true;
       underlyingReturnType = MethodKt.getKotlinMethodReturnType(method);
       if (underlyingReturnType == null) {
+        String configKey = Feign.configKey(targetType, method);
         throw new IllegalArgumentException(
             String.format(
                 "Method %s can't have continuation argument, only kotlin method is allowed",
@@ -52,6 +51,6 @@ class KotlinMethodInfo extends MethodInfo {
       underlyingReturnType = type;
     }
 
-    return new KotlinMethodInfo(configKey, underlyingReturnType, asyncReturnType);
+    return new KotlinMethodInfo(underlyingReturnType, asyncReturnType);
   }
 }

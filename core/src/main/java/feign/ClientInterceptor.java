@@ -14,6 +14,7 @@
 package feign;
 
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Zero or One {@code ClientInterceptor} may be configured for purposes such as tracing - mutate
@@ -40,7 +41,90 @@ public interface ClientInterceptor {
    * @return response or an exception - remember to rethrow an exception if it occurrs
    * @throws FeignException exception while trying to send a request
    */
-  Response around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator)
+  WrappedResponse around(ClientInvocationContext context, Iterator<ClientInterceptor> iterator)
       throws FeignException;
 
+  /**
+   * Wrapper around a response. Used in both synchronous and asynchronous communication. For
+   * synchronous the unwrapped object must be of type {@link Response}. For asynchronous the
+   * unwrapped object must be of type {@code CompletableFuture<Response>}
+   */
+  interface WrappedResponse {
+    /**
+     * Unwraps the actual response type for sync communication.
+     * 
+     * @return the actual response type for sync
+     */
+    Response unwrapSync();
+
+    /**
+     * Unwraps the actual response type for async communications.
+     * 
+     * @return the actual response type for async
+     */
+    CompletableFuture<Response> unwrapAsync();
+
+    /**
+     * Returns {@code true} for async communication.
+     * 
+     * @return {@code true} for async communication
+     */
+    boolean isAsync();
+
+    /**
+     * Returns {@code true} for sync communication.
+     * 
+     * @return {@code true} for sync communication
+     */
+    default boolean isSync() {
+      return !isAsync();
+    }
+
+  }
+
+  class AsyncResponse implements ClientInterceptor.WrappedResponse {
+    private final CompletableFuture<Response> response;
+
+    public AsyncResponse(CompletableFuture<Response> response) {
+      this.response = response;
+    }
+
+    @Override
+    public Response unwrapSync() {
+      throw new UnsupportedOperationException("AsyncResponse must be used only in async scope");
+    }
+
+    @Override
+    public CompletableFuture<Response> unwrapAsync() {
+      return this.response;
+    }
+
+    @Override
+    public boolean isAsync() {
+      return true;
+    }
+  }
+
+  class SyncResponse implements ClientInterceptor.WrappedResponse {
+    private final Response response;
+
+    public SyncResponse(Response response) {
+      this.response = response;
+    }
+
+    @Override
+    public Response unwrapSync() {
+      return this.response;
+    }
+
+    @Override
+    public CompletableFuture<Response> unwrapAsync() {
+      throw new UnsupportedOperationException("SyncResponse must be used only in sync scope");
+    }
+
+    @Override
+    public boolean isAsync() {
+      return false;
+    }
+  }
 }
