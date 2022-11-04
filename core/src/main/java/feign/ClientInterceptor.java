@@ -82,6 +82,9 @@ public interface ClientInterceptor {
 
   }
 
+  /**
+   * {@link WrappedResponse} for async communication.
+   */
   class AsyncResponse implements ClientInterceptor.WrappedResponse {
     private final CompletableFuture<Response> response;
 
@@ -105,6 +108,9 @@ public interface ClientInterceptor {
     }
   }
 
+  /**
+   * {@link WrappedResponse} for sync communication.
+   */
   class SyncResponse implements ClientInterceptor.WrappedResponse {
     private final Response response;
 
