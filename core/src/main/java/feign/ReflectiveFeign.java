@@ -180,8 +180,7 @@ public class ReflectiveFeign<C> extends Feign {
       }
 
       BuildTemplateByResolvingArgs buildTemplate = getBuildTemplate(target, md);
-      return factory.create(
-          target, md, buildTemplate, options, decoder, errorDecoder, requestContext);
+      return factory.create(target, md, buildTemplate, requestContext);
     }
 
     private BuildTemplateByResolvingArgs getBuildTemplate(Target target, MethodMetadata md) {

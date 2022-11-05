@@ -274,9 +274,6 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options,
-                                Decoder decoder,
-                                ErrorDecoder errorDecoder,
                                 C requestContext) {
       return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
           logger, logLevel, md, buildTemplateFromArgs, options, responseHandler,
