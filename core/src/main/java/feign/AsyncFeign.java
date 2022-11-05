@@ -205,7 +205,8 @@ public final class AsyncFeign<C> {
           new AsynchronousMethodHandler.Factory<>(
               client, retryer, requestInterceptors,
               responseHandler, logger, logLevel,
-              propagationPolicy, methodInfoResolver);
+              propagationPolicy, methodInfoResolver,
+              options, decoder, errorDecoder);
       final ParseHandlersByName<C> handlersByName =
           new ParseHandlersByName<>(contract, options, encoder,
               decoder, queryMapEncoder,
