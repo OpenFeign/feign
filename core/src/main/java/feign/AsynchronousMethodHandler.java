@@ -253,6 +253,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     private final Logger.Level logLevel;
     private final ExceptionPropagationPolicy propagationPolicy;
     private final MethodInfoResolver methodInfoResolver;
+    private final Options options;
+    private final Decoder decoder;
+    private final ErrorDecoder errorDecoder;
 
     Factory(
         AsyncClient<C> client,
@@ -262,7 +265,10 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         Logger logger,
         Logger.Level logLevel,
         ExceptionPropagationPolicy propagationPolicy,
-        MethodInfoResolver methodInfoResolver) {
+        MethodInfoResolver methodInfoResolver,
+        Options options,
+        Decoder decoder,
+        ErrorDecoder errorDecoder) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -271,15 +277,15 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.propagationPolicy = propagationPolicy;
       this.methodInfoResolver = methodInfoResolver;
+      this.options = checkNotNull(options, "options");
+      this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
+      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     public MethodHandler create(
         Target<?> target,
         MethodMetadata md,
         RequestTemplate.Factory buildTemplateFromArgs,
-        Options options,
-        Decoder decoder,
-        ErrorDecoder errorDecoder,
         C requestContext) {
       return new AsynchronousMethodHandler<C>(
           target,

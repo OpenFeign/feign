@@ -209,16 +209,13 @@ public abstract class Feign {
               logLevel,
               dismiss404,
               closeAfterDecode,
-              propagationPolicy);
+              propagationPolicy,
+              options,
+              decoder,
+              errorDecoder);
       ParseHandlersByName<Object> handlersByName =
           new ParseHandlersByName<>(
-              contract,
-              options,
-              encoder,
-              decoder,
-              queryMapEncoder,
-              errorDecoder,
-              synchronousMethodHandlerFactory);
+              contract, encoder, queryMapEncoder, synchronousMethodHandlerFactory);
       return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
   }
