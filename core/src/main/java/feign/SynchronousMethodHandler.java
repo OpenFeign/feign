@@ -150,11 +150,17 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final Options options;
+    private final Decoder decoder;
+    private final ErrorDecoder errorDecoder;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
         ResponseInterceptor.Chain executionChain,
         Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy) {
+        ExceptionPropagationPolicy propagationPolicy,
+        Options options,
+        Decoder decoder,
+        ErrorDecoder errorDecoder) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -164,15 +170,15 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
+      this.options = checkNotNull(options, "options");
+      this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
+      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     @Override
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
                                 RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options,
-                                Decoder decoder,
-                                ErrorDecoder errorDecoder,
                                 Object requestContext) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
           executionChain, logger, logLevel, md, buildTemplateFromArgs, options, decoder,

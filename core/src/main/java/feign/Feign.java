@@ -203,10 +203,10 @@ public abstract class Feign {
       MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               executionChain(), logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy);
+              propagationPolicy, options, decoder, errorDecoder);
       ParseHandlersByName<Object> handlersByName =
-          new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
+          new ParseHandlersByName<>(contract, encoder, queryMapEncoder,
+              synchronousMethodHandlerFactory);
       return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
   }

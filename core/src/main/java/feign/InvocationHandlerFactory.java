@@ -38,9 +38,6 @@ public interface InvocationHandlerFactory {
       MethodHandler create(Target<?> target,
                            MethodMetadata md,
                            RequestTemplate.Factory buildTemplateFromArgs,
-                           Request.Options options,
-                           Decoder decoder,
-                           ErrorDecoder errorDecoder,
                            C requestContext);
     }
   }
