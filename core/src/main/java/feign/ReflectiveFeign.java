@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Param.Expander;
-import feign.Request.Options;
 import feign.codec.*;
 import feign.template.UriUtils;
 
@@ -122,28 +121,19 @@ public class ReflectiveFeign<C> extends Feign {
   static final class ParseHandlersByName<C> {
 
     private final Contract contract;
-    private final Options options;
     private final Encoder encoder;
-    private final Decoder decoder;
-    private final ErrorDecoder errorDecoder;
     private final QueryMapEncoder queryMapEncoder;
     private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
-        Options options,
         Encoder encoder,
-        Decoder decoder,
         QueryMapEncoder queryMapEncoder,
-        ErrorDecoder errorDecoder,
         MethodHandler.Factory<C> factory) {
       this.contract = contract;
-      this.options = options;
       this.factory = factory;
-      this.errorDecoder = errorDecoder;
       this.queryMapEncoder = queryMapEncoder;
       this.encoder = checkNotNull(encoder, "encoder");
-      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     public Map<Method, MethodHandler> apply(Target target, C requestContext) {
@@ -180,8 +170,7 @@ public class ReflectiveFeign<C> extends Feign {
       }
 
       BuildTemplateByResolvingArgs buildTemplate = getBuildTemplate(target, md);
-      return factory.create(
-          target, md, buildTemplate, options, decoder, errorDecoder, requestContext);
+      return factory.create(target, md, buildTemplate, requestContext);
     }
 
     private BuildTemplateByResolvingArgs getBuildTemplate(Target target, MethodMetadata md) {
