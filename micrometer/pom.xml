@@ -27,7 +27,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <micrometer.version>1.10.0</micrometer.version>
   </properties>
 
   <dependencies>
@@ -43,7 +42,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-core</artifactId>
-      <version>${micrometer.version}</version>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -52,20 +51,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.micrometer</groupId>
-      <artifactId>micrometer-test</artifactId>
-      <version>${micrometer.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-okhttp</artifactId>
-      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -85,22 +72,4 @@
     </plugins>
   </build>
 
-  <repositories>
-    <repository>
-      <id>spring-snapshots</id>
-      <name>Spring Snapshots</name>
-      <url>https://repo.spring.io/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>
