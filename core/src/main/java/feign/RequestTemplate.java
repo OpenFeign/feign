@@ -13,16 +13,30 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.checkNotNull;
 
 import feign.Request.HttpMethod;
-import feign.template.*;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -767,12 +781,10 @@ public final class RequestTemplate implements Serializable {
             } else {
               return HeaderTemplate.create(headerName, values);
             }
+          } else if (literal) {
+            return HeaderTemplate.appendLiteral(headerTemplate, values);
           } else {
-            if (literal) {
-              return HeaderTemplate.appendLiteral(headerTemplate, values);
-            } else {
-              return HeaderTemplate.append(headerTemplate, values);
-            }
+            return HeaderTemplate.append(headerTemplate, values);
           }
         });
     return this;
@@ -794,7 +806,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Returns an immutable copy of the Headers for this request.
+   * Returns an copy of the Headers for this request.
    *
    * @return the currently applied headers.
    */
@@ -806,10 +818,10 @@ public final class RequestTemplate implements Serializable {
 
           /* add the expanded collection, but only if it has values */
           if (!values.isEmpty()) {
-            headerMap.put(key, Collections.unmodifiableList(values));
+            headerMap.put(key, values);
           }
         });
-    return Collections.unmodifiableMap(headerMap);
+    return headerMap;
   }
 
   /**
