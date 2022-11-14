@@ -13,16 +13,17 @@
  */
 package feign;
 
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import static feign.Util.checkNotNull;
-import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
@@ -204,6 +205,26 @@ public final class Request implements Serializable {
    */
   public Map<String, Collection<String>> headers() {
     return Collections.unmodifiableMap(headers);
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param value
+   */
+  public void header(String key, String value) {
+    header(key, Arrays.asList(value));
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param values
+   */
+  public void header(String key, Collection<String> values) {
+    headers.put(key, values);
   }
 
   /**
