@@ -182,11 +182,6 @@ public final class AsyncFeign<C> {
     }
 
     @Override
-    public AsyncBuilder<C> clientInterceptors(Iterable<ClientInterceptor> clientInterceptors) {
-      return super.clientInterceptors(clientInterceptors);
-    }
-
-    @Override
     public AsyncBuilder<C> invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
@@ -209,12 +204,11 @@ public final class AsyncFeign<C> {
       final MethodHandler.Factory<C> methodHandlerFactory =
           new AsynchronousMethodHandler.Factory<>(
               client, retryer, requestInterceptors,
-              clientInterceptors, responseHandler, logger, logLevel,
-              propagationPolicy, methodInfoResolver);
+              responseHandler, logger, logLevel,
+              propagationPolicy, methodInfoResolver,
+              options, decoder, errorDecoder);
       final ParseHandlersByName<C> handlersByName =
-          new ParseHandlersByName<>(contract, options, encoder,
-              decoder, queryMapEncoder,
-              errorDecoder, methodHandlerFactory);
+          new ParseHandlersByName<>(contract, encoder, queryMapEncoder, methodHandlerFactory);
       final ReflectiveFeign<C> feign =
           new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
       return new AsyncFeign<>(feign);

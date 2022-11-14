@@ -13,29 +13,6 @@
  */
 package feign.micrometer;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import feign.AsyncFeign;
-import feign.ClientInterceptor;
-import feign.Feign;
-import feign.Param;
-import feign.RequestLine;
-import feign.RequestTemplate;
-import feign.Response;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationHandler;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.transport.RequestReplySenderContext;
-import okhttp3.OkHttpClient;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -45,6 +22,28 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import feign.AsyncFeign;
+import feign.Feign;
+import feign.Param;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationHandler;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.transport.RequestReplySenderContext;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import okhttp3.OkHttpClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @WireMockTest
 class FeignHeaderInstrumentationTest {
@@ -91,14 +90,14 @@ class FeignHeaderInstrumentationTest {
   private TestClient clientInstrumentedWithObservations(String url) {
     return Feign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
-        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry))
+        .addCapability(new MicrometerObservationCapability(this.observationRegistry))
         .target(TestClient.class, url);
   }
 
   private AsyncTestClient asyncClientInstrumentedWithObservations(String url) {
     return AsyncFeign.builder()
         .client(new feign.okhttp.OkHttpClient(new OkHttpClient()))
-        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry))
+        .addCapability(new MicrometerObservationCapability(this.observationRegistry))
         .target(AsyncTestClient.class, url);
   }
 
@@ -116,11 +115,11 @@ class FeignHeaderInstrumentationTest {
   }
 
   static class HeaderMutatingHandler
-      implements ObservationHandler<RequestReplySenderContext<RequestTemplate, Response>> {
+      implements ObservationHandler<RequestReplySenderContext<Request, Response>> {
 
     @Override
-    public void onStart(RequestReplySenderContext<RequestTemplate, Response> context) {
-      RequestTemplate carrier = context.getCarrier();
+    public void onStart(RequestReplySenderContext<Request, Response> context) {
+      Request carrier = context.getCarrier();
       carrier.header("foo", "bar");
     }
 

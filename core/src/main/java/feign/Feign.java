@@ -170,16 +170,6 @@ public abstract class Feign {
     }
 
     @Override
-    public Builder clientInterceptor(ClientInterceptor clientInterceptor) {
-      return super.clientInterceptor(clientInterceptor);
-    }
-
-    @Override
-    public Builder clientInterceptors(Iterable<ClientInterceptor> clientInterceptors) {
-      return super.clientInterceptors(clientInterceptors);
-    }
-
-    @Override
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
@@ -212,12 +202,11 @@ public abstract class Feign {
 
       MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-              clientInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy);
+              propagationPolicy, options, decoder, errorDecoder);
       ParseHandlersByName<Object> handlersByName =
-          new ParseHandlersByName<>(contract, options, encoder, decoder, queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
+          new ParseHandlersByName<>(contract, encoder, queryMapEncoder,
+              synchronousMethodHandlerFactory);
       return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
   }

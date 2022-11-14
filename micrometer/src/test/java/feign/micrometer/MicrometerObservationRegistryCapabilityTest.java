@@ -14,7 +14,6 @@
 package feign.micrometer;
 
 import feign.AsyncFeign;
-import feign.Capability;
 import feign.Feign;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
@@ -33,12 +32,12 @@ public class MicrometerObservationRegistryCapabilityTest extends MicrometerCapab
   @Override
   protected Feign.Builder customizeBuilder(Feign.Builder builder) {
     return super.customizeBuilder(builder)
-        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry));
+        .addCapability(new MicrometerObservationCapability(this.observationRegistry));
   }
 
   @Override
   protected <C> AsyncFeign.AsyncBuilder<C> customizeBuilder(AsyncFeign.AsyncBuilder<C> builder) {
     return super.customizeBuilder(builder)
-        .clientInterceptor(new ObservedClientInterceptor(this.observationRegistry));
+        .addCapability(new MicrometerObservationCapability(this.observationRegistry));
   }
 }

@@ -86,10 +86,6 @@ public interface Capability {
     return requestInterceptor;
   }
 
-  default ClientInterceptor enrich(ClientInterceptor clientInterceptor) {
-    return clientInterceptor;
-  }
-
   default ResponseInterceptor enrich(ResponseInterceptor responseInterceptor) {
     return responseInterceptor;
   }

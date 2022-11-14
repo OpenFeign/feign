@@ -13,7 +13,7 @@
  */
 package feign.micrometer;
 
-import feign.RequestTemplate;
+import feign.Request;
 import feign.Response;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import io.micrometer.observation.transport.SenderContext;
@@ -24,11 +24,11 @@ import io.micrometer.observation.transport.SenderContext;
  * @author Marcin Grzejszczak
  * @since 1.10.0
  */
-public class FeignContext extends RequestReplySenderContext<RequestTemplate, Response> {
+public class FeignContext extends RequestReplySenderContext<Request, Response> {
 
-  public FeignContext(RequestTemplate requestTemplate) {
-    super((carrier, key, value) -> carrier.header(key, value));
-    setCarrier(requestTemplate);
+  public FeignContext(Request request) {
+    super(Request::header);
+    setCarrier(request);
   }
 
 }

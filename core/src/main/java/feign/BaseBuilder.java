@@ -27,7 +27,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public abstract class BaseBuilder<B extends BaseBuilder<B>> {
@@ -35,8 +34,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   private final B thisB;
 
   protected final List<RequestInterceptor> requestInterceptors =
-      new ArrayList<>();
-  protected final List<ClientInterceptor> clientInterceptors =
       new ArrayList<>();
   protected ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
   protected Logger.Level logLevel = Logger.Level.NONE;
@@ -196,26 +193,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     this.requestInterceptors.clear();
     for (RequestInterceptor requestInterceptor : requestInterceptors) {
       this.requestInterceptors.add(requestInterceptor);
-    }
-    return thisB;
-  }
-
-  /**
-   * Adds a single client interceptor to the builder.
-   */
-  public B clientInterceptor(ClientInterceptor clientInterceptor) {
-    this.clientInterceptors.add(clientInterceptor);
-    return thisB;
-  }
-
-  /**
-   * Sets the full set of request interceptors for the builder, overwriting any previous
-   * interceptors.
-   */
-  public B clientInterceptors(Iterable<ClientInterceptor> clientInterceptors) {
-    this.clientInterceptors.clear();
-    for (ClientInterceptor clientInterceptor : clientInterceptors) {
-      this.clientInterceptors.add(clientInterceptor);
     }
     return thisB;
   }

@@ -27,6 +27,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <micrometer.version>1.10.0</micrometer.version>
   </properties>
 
   <dependencies>
@@ -42,7 +43,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-core</artifactId>
-      <version>1.10.0</version>
+      <version>${micrometer.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -51,8 +52,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-test</artifactId>
+      <version>${micrometer.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-okhttp</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -71,5 +84,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>
