@@ -21,7 +21,7 @@ import io.micrometer.observation.docs.ObservationDocumentation;
 /**
  * {@link ObservationDocumentation} for Feign.
  * 
- * @since 1.10.0
+ * @since 12.1
  */
 public enum FeignObservationDocumentation implements ObservationDocumentation {
 
@@ -42,37 +42,37 @@ public enum FeignObservationDocumentation implements ObservationDocumentation {
     STATUS {
       @Override
       public String asString() {
-        return "status";
+        return "http.status_code";
       }
     },
     METHOD {
       @Override
       public String asString() {
-        return "method";
+        return "http.method";
       }
     },
     URI {
       @Override
       public String asString() {
-        return "uri";
+        return "http.url";
       }
     },
     TARGET_SCHEME {
       @Override
       public String asString() {
-        return "target.scheme";
+        return "http.scheme";
       }
     },
     TARGET_HOST {
       @Override
       public String asString() {
-        return "target.host";
+        return "net.peer.host";
       }
     },
     TARGET_PORT {
       @Override
       public String asString() {
-        return "target.port";
+        return "net.peer.port";
       }
     }
 

@@ -22,7 +22,7 @@ import io.micrometer.observation.transport.SenderContext;
  * A {@link SenderContext} for Feign.
  *
  * @author Marcin Grzejszczak
- * @since 1.10.0
+ * @since 12.1
  */
 public class FeignContext extends RequestReplySenderContext<Request, Response> {
 

@@ -20,7 +20,7 @@ import io.micrometer.observation.ObservationConvention;
 /**
  * {@link ObservationConvention} for Feign.
  *
- * @since 1.10.0
+ * @since 12.1
  * @see DefaultApacheHttpClientObservationConvention
  */
 public interface FeignObservationConvention extends ObservationConvention<FeignContext> {

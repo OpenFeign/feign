@@ -21,7 +21,7 @@ import io.micrometer.common.lang.Nullable;
 /**
  * Default implementation of {@link FeignObservationConvention}.
  *
- * @since 1.10.0
+ * @since 12.1
  * @see FeignObservationConvention
  */
 public class DefaultFeignObservationConvention implements FeignObservationConvention {
@@ -63,6 +63,9 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
   }
 
   String getMethodString(@Nullable Request request) {
+    if (request == null) {
+      return "UNKNOWN";
+    }
     return request.httpMethod().name();
   }
 
