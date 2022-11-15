@@ -93,7 +93,7 @@ public class SOAPEncoder implements Encoder {
   private final JAXBContextFactory jaxbContextFactory;
   private final String soapProtocol;
 
-  private SOAPEncoder(Builder builder) {
+  protected SOAPEncoder(Builder builder) {
     this.jaxbContextFactory = builder.jaxbContextFactory;
     this.writeXmlDeclaration = builder.writeXmlDeclaration;
     this.charsetEncoding = builder.charsetEncoding;
