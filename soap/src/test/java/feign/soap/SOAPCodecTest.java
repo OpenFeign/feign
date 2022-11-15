@@ -403,7 +403,7 @@ public class SOAPCodecTest {
     String soapEnvelop = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
             "<env:Envelope xmlns:env=\"http://www.w3.org/2003/05/soap-envelope\">" +
             "<env:Header>" +
-            "<wss:Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">" +
+            "<wss:Security xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">" +
             "<wss:UsernameToken>" +
             "<wss:Username>test</wss:Username>" +
             "<wss:Password>test</wss:Password>" +
