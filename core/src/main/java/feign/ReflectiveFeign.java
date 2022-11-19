@@ -116,15 +116,12 @@ public class ReflectiveFeign<C> extends Feign {
   static final class ParseHandlersByName<C> {
 
     private final Contract contract;
-    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
-        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         MethodHandler.Factory<C> factory) {
       this.contract = contract;
-      this.requestTemplateFactoryResolver = requestTemplateFactoryResolver;
       this.factory = factory;
     }
 
