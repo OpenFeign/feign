@@ -206,6 +206,7 @@ public final class AsyncFeign<C> {
               client, retryer, requestInterceptors,
               responseHandler, logger, logLevel,
               propagationPolicy, methodInfoResolver,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               options, decoder, errorDecoder);
       final ParseHandlersByName<C> handlersByName =
           new ParseHandlersByName<>(contract,
