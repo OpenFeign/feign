@@ -121,19 +121,16 @@ public class ReflectiveFeign<C> extends Feign {
   static final class ParseHandlersByName<C> {
 
     private final Contract contract;
-    private final Encoder encoder;
-    private final QueryMapEncoder queryMapEncoder;
+    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final MethodHandler.Factory<C> factory;
 
     ParseHandlersByName(
         Contract contract,
-        Encoder encoder,
-        QueryMapEncoder queryMapEncoder,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         MethodHandler.Factory<C> factory) {
       this.contract = contract;
+      this.requestTemplateFactoryResolver = requestTemplateFactoryResolver;
       this.factory = factory;
-      this.queryMapEncoder = queryMapEncoder;
-      this.encoder = checkNotNull(encoder, "encoder");
     }
 
     public Map<Method, MethodHandler> apply(Target target, C requestContext) {
@@ -169,11 +166,23 @@ public class ReflectiveFeign<C> extends Feign {
         };
       }
 
-      BuildTemplateByResolvingArgs buildTemplate = getBuildTemplate(target, md);
+      RequestTemplate.Factory buildTemplate = requestTemplateFactoryResolver.resolve(target, md);
       return factory.create(target, md, buildTemplate, requestContext);
     }
+  }
 
-    private BuildTemplateByResolvingArgs getBuildTemplate(Target target, MethodMetadata md) {
+  static final class RequestTemplateFactoryResolver {
+    private final Encoder encoder;
+    private final QueryMapEncoder queryMapEncoder;
+
+    RequestTemplateFactoryResolver(
+        Encoder encoder,
+        QueryMapEncoder queryMapEncoder) {
+      this.encoder = checkNotNull(encoder, "encoder");
+      this.queryMapEncoder = checkNotNull(queryMapEncoder, "queryMapEncoder");
+    }
+
+    public RequestTemplate.Factory resolve(Target<?> target, MethodMetadata md) {
       if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
         return new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
       } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
