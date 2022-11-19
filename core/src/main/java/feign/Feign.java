@@ -203,7 +203,9 @@ public abstract class Feign {
       MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy, options, decoder, errorDecoder);
+              propagationPolicy,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              options, decoder, errorDecoder);
       ParseHandlersByName<Object> handlersByName =
           new ParseHandlersByName<>(contract,
               new RequestTemplateFactoryResolver(encoder, queryMapEncoder),

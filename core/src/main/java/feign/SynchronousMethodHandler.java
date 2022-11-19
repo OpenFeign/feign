@@ -150,6 +150,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final boolean dismiss404;
     private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
@@ -158,6 +159,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         ResponseInterceptor responseInterceptor,
         Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
         ExceptionPropagationPolicy propagationPolicy,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         Options options,
         Decoder decoder,
         ErrorDecoder errorDecoder) {
@@ -170,6 +172,8 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.dismiss404 = dismiss404;
       this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
+      this.requestTemplateFactoryResolver =
+          checkNotNull(requestTemplateFactoryResolver, "requestTemplateFactoryResolver");
       this.options = checkNotNull(options, "options");
       this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
       this.decoder = checkNotNull(decoder, "decoder");
