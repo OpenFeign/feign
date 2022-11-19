@@ -207,7 +207,8 @@ public abstract class Feign {
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseHandler, logger, logLevel, propagationPolicy, options);
       ParseHandlersByName<Object> handlersByName =
-          new ParseHandlersByName<>(contract, encoder, queryMapEncoder,
+          new ParseHandlersByName<>(contract,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               synchronousMethodHandlerFactory);
       return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
     }
