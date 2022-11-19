@@ -41,11 +41,10 @@ final class SynchronousMethodHandler implements MethodHandler {
 
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
+      List<RequestInterceptor> requestInterceptors,
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy) {
+      ResponseHandler responseHandler, ExceptionPropagationPolicy propagationPolicy) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -58,8 +57,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.responseHandler = new ResponseHandler(logLevel, logger, decoder, errorDecoder,
-        dismiss404, closeAfterDecode, responseInterceptor);
+    this.responseHandler = responseHandler;
   }
 
   @Override
@@ -144,35 +142,25 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
-    private final ResponseInterceptor responseInterceptor;
+    private final ResponseHandler responseHandler;
     private final Logger logger;
     private final Logger.Level logLevel;
-    private final boolean dismiss404;
-    private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
     private final Options options;
-    private final Decoder decoder;
-    private final ErrorDecoder errorDecoder;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        ResponseInterceptor responseInterceptor,
-        Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
+        ResponseHandler responseHandler,
+        Logger logger, Logger.Level logLevel,
         ExceptionPropagationPolicy propagationPolicy,
-        Options options,
-        Decoder decoder,
-        ErrorDecoder errorDecoder) {
+        Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.responseInterceptor = responseInterceptor;
+      this.responseHandler = checkNotNull(responseHandler, "responseHandler");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.dismiss404 = dismiss404;
-      this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
       this.options = checkNotNull(options, "options");
-      this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
-      this.decoder = checkNotNull(decoder, "decoder");
     }
 
     public MethodHandler create(Target<?> target,
@@ -180,8 +168,8 @@ final class SynchronousMethodHandler implements MethodHandler {
                                 RequestTemplate.Factory buildTemplateFromArgs,
                                 Object requestContext) {
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
-          responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy);
+          logger, logLevel, md, buildTemplateFromArgs, options,
+          responseHandler, propagationPolicy);
     }
   }
 }
