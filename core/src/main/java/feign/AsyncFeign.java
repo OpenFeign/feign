@@ -14,7 +14,6 @@
 package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Logger.Level;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
@@ -208,11 +207,9 @@ public final class AsyncFeign<C> {
               propagationPolicy, methodInfoResolver,
               new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               options, decoder, errorDecoder);
-      final ParseHandlersByName<C> handlersByName =
-          new ParseHandlersByName<>(contract,
-              methodHandlerFactory);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
+          new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+              defaultContextSupplier);
       return new AsyncFeign<>(feign);
     }
   }
