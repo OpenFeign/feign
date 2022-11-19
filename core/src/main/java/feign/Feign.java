@@ -13,7 +13,6 @@
  */
 package feign;
 
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -200,16 +199,14 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
+      MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
               propagationPolicy,
               new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               options, decoder, errorDecoder);
-      ParseHandlersByName<Object> handlersByName =
-          new ParseHandlersByName<>(contract,
-              synchronousMethodHandlerFactory);
-      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
+      return new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+          () -> null);
     }
   }
 
