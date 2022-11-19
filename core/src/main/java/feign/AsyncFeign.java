@@ -209,7 +209,7 @@ public final class AsyncFeign<C> {
               options, decoder, errorDecoder);
       final ParseHandlersByName<C> handlersByName =
           new ParseHandlersByName<>(contract,
-              new ReflectiveFeign.RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               methodHandlerFactory);
       final ReflectiveFeign<C> feign =
           new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
