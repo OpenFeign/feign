@@ -181,8 +181,9 @@ final class SynchronousMethodHandler implements MethodHandler {
 
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
-                                RequestTemplate.Factory buildTemplateFromArgs,
                                 Object requestContext) {
+      final RequestTemplate.Factory buildTemplateFromArgs =
+          requestTemplateFactoryResolver.resolve(target, md);
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
           responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
           errorDecoder, dismiss404, closeAfterDecode, propagationPolicy);

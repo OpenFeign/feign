@@ -37,7 +37,6 @@ public interface InvocationHandlerFactory {
     interface Factory<C> {
       MethodHandler create(Target<?> target,
                            MethodMetadata md,
-                           RequestTemplate.Factory buildTemplateFromArgs,
                            C requestContext);
     }
   }
