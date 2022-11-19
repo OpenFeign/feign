@@ -161,8 +161,7 @@ public class ReflectiveFeign<C> extends Feign {
         };
       }
 
-      RequestTemplate.Factory buildTemplate = requestTemplateFactoryResolver.resolve(target, md);
-      return factory.create(target, md, buildTemplate, requestContext);
+      return factory.create(target, md, requestContext);
     }
   }
 
