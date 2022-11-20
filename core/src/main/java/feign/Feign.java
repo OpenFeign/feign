@@ -199,20 +199,25 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
+      final ResponseHandler responseHandler =
+          new ResponseHandler(
+              logLevel,
+              logger,
+              decoder,
+              errorDecoder,
+              dismiss404,
+              closeAfterDecode,
+              responseInterceptor);
       MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(
               client,
               retryer,
               requestInterceptors,
-              responseInterceptor,
+              responseHandler,
               logger,
               logLevel,
-              dismiss404,
-              closeAfterDecode,
               propagationPolicy,
-              options,
-              decoder,
-              errorDecoder);
+              options);
       ParseHandlersByName<Object> handlersByName =
           new ParseHandlersByName<>(
               contract, encoder, queryMapEncoder, synchronousMethodHandlerFactory);
