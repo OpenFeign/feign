@@ -246,6 +246,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     private final Logger.Level logLevel;
     private final ExceptionPropagationPolicy propagationPolicy;
     private final MethodInfoResolver methodInfoResolver;
+    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
     private final Decoder decoder;
     private final ErrorDecoder errorDecoder;
@@ -255,6 +256,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         Logger logger, Logger.Level logLevel,
         ExceptionPropagationPolicy propagationPolicy,
         MethodInfoResolver methodInfoResolver,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         Options options,
         Decoder decoder,
         ErrorDecoder errorDecoder) {
@@ -266,6 +268,8 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.propagationPolicy = propagationPolicy;
       this.methodInfoResolver = methodInfoResolver;
+      this.requestTemplateFactoryResolver =
+          checkNotNull(requestTemplateFactoryResolver, "requestTemplateFactoryResolver");
       this.options = checkNotNull(options, "options");
       this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
       this.decoder = checkNotNull(decoder, "decoder");
@@ -273,8 +277,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
 
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
-                                RequestTemplate.Factory buildTemplateFromArgs,
                                 C requestContext) {
+      final RequestTemplate.Factory buildTemplateFromArgs =
+          requestTemplateFactoryResolver.resolve(target, md);
       return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
           logger, logLevel, md, buildTemplateFromArgs, options, responseHandler,
           propagationPolicy, requestContext,
