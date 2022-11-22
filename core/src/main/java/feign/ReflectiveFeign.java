@@ -32,11 +32,12 @@ public class ReflectiveFeign<C> extends Feign {
   private final AsyncContextSupplier<C> defaultContextSupplier;
 
   ReflectiveFeign(
-      ParseHandlersByName<C> targetToHandlersByName,
-      InvocationHandlerFactory factory,
+      Contract contract,
+      MethodHandler.Factory<C> methodHandlerFactory,
+      InvocationHandlerFactory invocationHandlerFactory,
       AsyncContextSupplier<C> defaultContextSupplier) {
-    this.targetToHandlersByName = targetToHandlersByName;
-    this.factory = factory;
+    this.targetToHandlersByName = new ParseHandlersByName<C>(contract, methodHandlerFactory);
+    this.factory = invocationHandlerFactory;
     this.defaultContextSupplier = defaultContextSupplier;
   }
 
@@ -118,7 +119,7 @@ public class ReflectiveFeign<C> extends Feign {
     }
   }
 
-  static final class ParseHandlersByName<C> {
+  private static final class ParseHandlersByName<C> {
 
     private final Contract contract;
     private final MethodHandler.Factory<C> factory;
