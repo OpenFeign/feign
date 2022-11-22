@@ -31,11 +31,7 @@ public interface InvocationHandlerFactory {
     Object invoke(Object[] argv) throws Throwable;
 
     interface Factory<C> {
-      MethodHandler create(
-          Target<?> target,
-          MethodMetadata md,
-          RequestTemplate.Factory buildTemplateFromArgs,
-          C requestContext);
+      MethodHandler create(Target<?> target, MethodMetadata md, C requestContext);
     }
   }
 

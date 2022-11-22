@@ -148,6 +148,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Logger logger;
     private final Logger.Level logLevel;
     private final ExceptionPropagationPolicy propagationPolicy;
+    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
 
     Factory(
@@ -158,6 +159,7 @@ final class SynchronousMethodHandler implements MethodHandler {
         Logger logger,
         Logger.Level logLevel,
         ExceptionPropagationPolicy propagationPolicy,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
@@ -166,14 +168,14 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
       this.propagationPolicy = propagationPolicy;
+      this.requestTemplateFactoryResolver =
+          checkNotNull(requestTemplateFactoryResolver, "requestTemplateFactoryResolver");
       this.options = checkNotNull(options, "options");
     }
 
-    public MethodHandler create(
-        Target<?> target,
-        MethodMetadata md,
-        RequestTemplate.Factory buildTemplateFromArgs,
-        Object requestContext) {
+    public MethodHandler create(Target<?> target, MethodMetadata md, Object requestContext) {
+      final RequestTemplate.Factory buildTemplateFromArgs =
+          requestTemplateFactoryResolver.resolve(target, md);
       return new SynchronousMethodHandler(
           target,
           client,
