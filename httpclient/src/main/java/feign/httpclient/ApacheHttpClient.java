@@ -92,6 +92,7 @@ public final class ApacheHttpClient implements Client {
             : RequestConfig.custom())
                 .setConnectTimeout(options.connectTimeoutMillis())
                 .setSocketTimeout(options.readTimeoutMillis())
+                .setRedirectsEnabled(options.isFollowRedirects())
                 .build();
     requestBuilder.setConfig(requestConfig);
 
