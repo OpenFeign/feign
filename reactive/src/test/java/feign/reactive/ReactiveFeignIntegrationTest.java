@@ -84,7 +84,7 @@ public class ReactiveFeignIntegrationTest {
   @Test
   public void testReactorTargetFull() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
-    this.webServer.enqueue(new MockResponse().setBody("{ \"username\": \"test\" }"));
+    this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
 
     TestReactorService service = ReactorFeign.builder()
         .encoder(new JacksonEncoder())

@@ -20,7 +20,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 public class ReactiveDelegatingContract implements Contract {
 
@@ -36,7 +38,7 @@ public class ReactiveDelegatingContract implements Contract {
 
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
-      if (!isReactive(type)) {
+      if (!isReactiveOf(type, Publisher.class)) {
         throw new IllegalArgumentException(String.format(
             "Method %s of contract %s doesn't returns a org.reactivestreams.Publisher",
             metadata.configKey(), targetType.getSimpleName()));
@@ -55,7 +57,12 @@ public class ReactiveDelegatingContract implements Contract {
           throw new IllegalArgumentException(
               "Streams are not supported when using Reactive Wrappers");
         }
-        metadata.returnType(actualTypes[0]);
+        if (isReactiveOf(type, Flux.class)) {
+          ParameterizedType wrappedType = TypeUtils.parameterize(List.class, actual);
+          metadata.returnType(wrappedType);
+        } else {
+          metadata.returnType(actualTypes[0]);
+        }
       }
     }
 
@@ -66,14 +73,15 @@ public class ReactiveDelegatingContract implements Contract {
    * Ensure that the type provided implements a Reactive Streams Publisher.
    *
    * @param type to inspect.
+   * @param reactiveType to check against
    * @return true if the type implements the Reactive Streams Publisher specification.
    */
-  private boolean isReactive(Type type) {
+  private boolean isReactiveOf(Type type, Class<? extends Publisher> reactiveType) {
     if (!ParameterizedType.class.isAssignableFrom(type.getClass())) {
       return false;
     }
     ParameterizedType parameterizedType = (ParameterizedType) type;
     Class<?> raw = (Class<?>) parameterizedType.getRawType();
-    return Publisher.class.isAssignableFrom(raw);
+    return reactiveType.isAssignableFrom(raw);
   }
 }

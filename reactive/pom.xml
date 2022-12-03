@@ -31,6 +31,7 @@
     <reactor.version>3.4.24</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
+    <commons-lang.version>3.12.0</commons-lang.version>
   </properties>
 
   <dependencies>
@@ -93,6 +94,12 @@
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang.version}</version>
+    </dependency>
+
   </dependencies>
 
 </project>
