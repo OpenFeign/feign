@@ -38,8 +38,8 @@ public class ReactorInvocationHandler extends ReactiveInvocationHandler {
     Publisher<?> invocation = this.invokeMethod(methodHandler, arguments);
     if (Flux.class.isAssignableFrom(method.getReturnType())) {
       return Mono.from(invocation)
-              .flatMapIterable(result -> (List<?>) result)
-              .subscribeOn(scheduler);
+          .flatMapIterable(result -> (List<?>) result)
+          .subscribeOn(scheduler);
     } else if (Mono.class.isAssignableFrom(method.getReturnType())) {
       return Mono.from(invocation).subscribeOn(scheduler);
     }
