@@ -16,6 +16,7 @@ package feign.reactive;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -36,7 +37,9 @@ public class ReactorInvocationHandler extends ReactiveInvocationHandler {
   protected Publisher invoke(Method method, MethodHandler methodHandler, Object[] arguments) {
     Publisher<?> invocation = this.invokeMethod(methodHandler, arguments);
     if (Flux.class.isAssignableFrom(method.getReturnType())) {
-      return Flux.from(invocation).subscribeOn(scheduler);
+      return Mono.from(invocation)
+          .flatMapIterable(result -> (List<?>) result)
+          .subscribeOn(scheduler);
     } else if (Mono.class.isAssignableFrom(method.getReturnType())) {
       return Mono.from(invocation).subscribeOn(scheduler);
     }
