@@ -419,6 +419,7 @@ public class Util {
 
   public static String getThreadIdentifier() {
     Thread currentThread = Thread.currentThread();
-    return currentThread.getThreadGroup() + "_" + currentThread.getName() + "_" + currentThread.getId();
+    return currentThread.getThreadGroup() + "_" + currentThread.getName() + "_"
+        + currentThread.getId();
   }
 }

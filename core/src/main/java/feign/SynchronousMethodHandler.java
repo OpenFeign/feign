@@ -131,10 +131,10 @@ final class SynchronousMethodHandler implements MethodHandler {
       return this.options.getMethodOptions(metadata.method().getName());
     }
     return Stream.of(argv)
-            .filter(Options.class::isInstance)
-            .map(Options.class::cast)
-            .findFirst()
-            .orElse(this.options.getMethodOptions(metadata.method().getName()));
+        .filter(Options.class::isInstance)
+        .map(Options.class::cast)
+        .findFirst()
+        .orElse(this.options.getMethodOptions(metadata.method().getName()));
   }
 
   static class Factory implements MethodHandler.Factory<Object> {

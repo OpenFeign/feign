@@ -21,7 +21,6 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,8 +96,8 @@ public class OptionsTest {
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 3000);
     final OptionsInterface api = Feign.builder()
-            .options(options)
-            .target(OptionsInterface.class, server.url("/").toString());
+        .options(options)
+        .target(OptionsInterface.class, server.url("/").toString());
 
     AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
     Thread thread = new Thread(() -> {
@@ -122,8 +121,8 @@ public class OptionsTest {
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 1000);
     final OptionsInterface api = Feign.builder()
-            .options(options)
-            .target(OptionsInterface.class, server.url("/").toString());
+        .options(options)
+        .target(OptionsInterface.class, server.url("/").toString());
 
     CountDownLatch countDownLatch = new CountDownLatch(1);
     Thread thread = new Thread(() -> {

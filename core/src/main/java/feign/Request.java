@@ -306,22 +306,26 @@ public final class Request implements Serializable {
 
     /**
      * Get an Options by methodName
+     * 
      * @param methodName it's your FeignInterface method name.
      * @return method Options
-     * */
+     */
     public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions = threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
+      Map<String, Options> methodOptions =
+          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
       return methodOptions.getOrDefault(methodName, this);
     }
 
     /**
      * Set methodOptions by methodKey and options
+     * 
      * @param methodName it's your FeignInterface method name.
      * @param options it's the Options for this method.
-     * */
+     */
     public void setMethodOptions(String methodName, Options options) {
       String threadIdentifier = getThreadIdentifier();
-      Map<String, Request.Options> methodOptions = threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
+      Map<String, Request.Options> methodOptions =
+          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
       threadToMethodOptions.put(threadIdentifier, methodOptions);
       methodOptions.put(methodName, options);
     }
