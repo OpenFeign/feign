@@ -20,7 +20,8 @@ public class ExceptionUtils {
   /**
    * Introspects the {@link Throwable} to obtain the root cause.
    *
-   * <p>This method walks through the exception chain to the last element, "root" of the tree, using
+   * <p>
+   * This method walks through the exception chain to the last element, "root" of the tree, using
    * {@link Throwable#getCause()}, and returns that exception.
    *
    * @param throwable the throwable to get the root cause for, may be null
