@@ -18,6 +18,7 @@ import com.codahale.metrics.Timer;
 import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.utils.ExceptionUtils;
 
 class BaseMeteredClient {
 
@@ -64,7 +65,7 @@ class BaseMeteredClient {
             MetricRegistry.name(
                 httpResponseCode(template),
                 "exception_name",
-                e.getClass().getSimpleName(),
+                ExceptionUtils.getRootCause(e).getClass().getSimpleName(),
                 "status_group",
                 e.status() / 100 + "xx",
                 "http_status",
@@ -81,7 +82,7 @@ class BaseMeteredClient {
             MetricRegistry.name(
                 httpResponseCode(template),
                 "exception_name",
-                e.getClass().getSimpleName(),
+                ExceptionUtils.getRootCause(e).getClass().getSimpleName(),
                 "uri",
                 template.methodMetadata().template().path()),
             metricSuppliers.meters())

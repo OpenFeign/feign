@@ -15,6 +15,7 @@ package feign.micrometer;
 
 import feign.MethodMetadata;
 import feign.Target;
+import feign.utils.ExceptionUtils;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
@@ -23,9 +24,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class FeignMetricTagResolver implements MetricTagResolver {
 
@@ -51,7 +50,7 @@ public class FeignMetricTagResolver implements MetricTagResolver {
     tags.add(Tag.of("method", method.getName()));
     tags.add(Tag.of("host", extractHost(url)));
     if (e != null) {
-      tags.add(Tag.of("exception_name", this.getRootCause(e).getClass().getSimpleName()));
+      tags.add(Tag.of("exception_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName()));
     }
     tags.addAll(Arrays.asList(extraTags));
     return Tags.of(tags);
@@ -75,15 +74,4 @@ public class FeignMetricTagResolver implements MetricTagResolver {
         : targetUrl.substring(0, 20);
   }
 
-  private Throwable getRootCause(Throwable throwable) {
-    Throwable rootCause = throwable;
-    // this is to avoid infinite loops for recursive cases
-    final Set<Throwable> seenThrowables = new HashSet<>();
-    seenThrowables.add(rootCause);
-    while ((rootCause.getCause() != null && !seenThrowables.contains(rootCause.getCause()))) {
-      seenThrowables.add(rootCause.getCause());
-      rootCause = rootCause.getCause();
-    }
-    return rootCause;
-  }
 }
