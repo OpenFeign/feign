@@ -1,12 +1,3 @@
-package feign.utils;
-
-import feign.template.BodyTemplate;
-import org.junit.Test;
-
-import java.util.Collections;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /*
  * Copyright 2012-2022 The Feign Authors
  *
@@ -20,6 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+package feign.utils;
+
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ExceptionUtilsTest {
   @Test
   public void rootCauseOfNullIsNull() {
