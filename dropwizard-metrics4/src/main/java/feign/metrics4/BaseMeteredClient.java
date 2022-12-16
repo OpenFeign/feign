@@ -65,6 +65,8 @@ class BaseMeteredClient {
             MetricRegistry.name(
                 httpResponseCode(template),
                 "exception_name",
+                e.getClass().getSimpleName(),
+                "root_cause_name",
                 ExceptionUtils.getRootCause(e).getClass().getSimpleName(),
                 "status_group",
                 e.status() / 100 + "xx",
@@ -82,6 +84,8 @@ class BaseMeteredClient {
             MetricRegistry.name(
                 httpResponseCode(template),
                 "exception_name",
+                e.getClass().getSimpleName(),
+                "root_cause_name",
                 ExceptionUtils.getRootCause(e).getClass().getSimpleName(),
                 "uri",
                 template.methodMetadata().template().path()),

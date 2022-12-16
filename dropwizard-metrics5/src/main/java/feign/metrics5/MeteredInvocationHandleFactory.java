@@ -13,7 +13,6 @@
  */
 package feign.metrics5;
 
-
 import feign.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +86,8 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
         metricRegistry
             .meter(metricName.metricName(clientClass, method, target.url())
                 .resolve("exception")
-                .tagged("exception_name",
+                .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("root_cause_name",
                     ExceptionUtils.getRootCause(e).getClass().getSimpleName()),
                 metricSuppliers.meters())
             .mark();

@@ -60,7 +60,9 @@ public class BaseMeteredClient {
     metricRegistry
         .counter(
             httpResponseCode(template)
-                .tagged("exception_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
+                .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("root_cause_name",
+                    ExceptionUtils.getRootCause(e).getClass().getSimpleName())
                 .tagged("http_status", String.valueOf(e.status()))
                 .tagged("status_group", e.status() / 100 + "xx")
                 .tagged("uri", template.methodMetadata().template().path()))
@@ -71,7 +73,9 @@ public class BaseMeteredClient {
     metricRegistry
         .counter(
             httpResponseCode(template)
-                .tagged("exception_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
+                .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("root_cause_name",
+                    ExceptionUtils.getRootCause(e).getClass().getSimpleName())
                 .tagged("uri", template.methodMetadata().template().path()))
         .inc();
   }

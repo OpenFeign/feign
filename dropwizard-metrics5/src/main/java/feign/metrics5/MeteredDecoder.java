@@ -64,14 +64,16 @@ public class MeteredDecoder implements Decoder {
     } catch (IOException | RuntimeException e) {
       metricRegistry.meter(
           metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
-              .tagged("exception_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
+              .tagged("exception_name", e.getClass().getSimpleName())
+              .tagged("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
               .tagged("uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       throw e;
     } catch (Exception e) {
       metricRegistry.meter(
           metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
-              .tagged("exception_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
+              .tagged("exception_name", e.getClass().getSimpleName())
+              .tagged("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
               .tagged("uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       throw new IOException(e);
