@@ -21,6 +21,7 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.utils.ExceptionUtils;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 
@@ -64,6 +65,7 @@ public class MeteredDecoder implements Decoder {
       metricRegistry.meter(
           metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
               .tagged("exception_name", e.getClass().getSimpleName())
+              .tagged("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
               .tagged("uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       throw e;
@@ -71,6 +73,7 @@ public class MeteredDecoder implements Decoder {
       metricRegistry.meter(
           metricName.metricName(template.methodMetadata(), template.feignTarget(), "error_count")
               .tagged("exception_name", e.getClass().getSimpleName())
+              .tagged("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
               .tagged("uri", template.methodMetadata().template().path()),
           metricSuppliers.meters()).mark();
       throw new IOException(e);
