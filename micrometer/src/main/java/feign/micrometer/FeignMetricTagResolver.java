@@ -15,6 +15,7 @@ package feign.micrometer;
 
 import feign.MethodMetadata;
 import feign.Target;
+import feign.utils.ExceptionUtils;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
@@ -50,6 +51,8 @@ public class FeignMetricTagResolver implements MetricTagResolver {
     tags.add(Tag.of("host", extractHost(url)));
     if (e != null) {
       tags.add(Tag.of("exception_name", e.getClass().getSimpleName()));
+      tags.add(
+          Tag.of("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName()));
     }
     tags.addAll(Arrays.asList(extraTags));
     return Tags.of(tags);

@@ -220,7 +220,14 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     assertThat(thrown.getMessage(), equalTo("Test error"));
 
     assertThat(
-        getMetric("exception", "exception_name", "RuntimeException", "method", "get"),
+        getMetric(
+            "exception",
+            "exception_name",
+            "RuntimeException",
+            "method",
+            "get",
+            "root_cause_name",
+            "RuntimeException"),
         notNullValue());
   }
 

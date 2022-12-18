@@ -14,6 +14,7 @@
 package feign.metrics5;
 
 import feign.*;
+import feign.utils.ExceptionUtils;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 import java.lang.reflect.InvocationHandler;
@@ -91,7 +92,10 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
                 metricName
                     .metricName(clientClass, method, target.url())
                     .resolve("exception")
-                    .tagged("exception_name", e.getClass().getSimpleName()),
+                    .tagged("exception_name", e.getClass().getSimpleName())
+                    .tagged(
+                        "root_cause_name",
+                        ExceptionUtils.getRootCause(e).getClass().getSimpleName()),
                 metricSuppliers.meters())
             .mark();
 

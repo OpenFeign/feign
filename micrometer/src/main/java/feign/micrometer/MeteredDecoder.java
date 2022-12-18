@@ -17,6 +17,7 @@ import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
+import feign.utils.ExceptionUtils;
 import io.micrometer.core.instrument.*;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -95,7 +96,9 @@ public class MeteredDecoder implements Decoder {
                 template.methodMetadata(),
                 template.feignTarget(),
                 Tag.of("uri", template.methodMetadata().template().path()),
-                Tag.of("exception_name", e.getClass().getSimpleName()))
+                Tag.of("exception_name", e.getClass().getSimpleName()),
+                Tag.of(
+                    "root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName()))
             .and(extraTags);
     return meterRegistry.counter(metricName.name("error_count"), allTags);
   }
