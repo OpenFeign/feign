@@ -107,7 +107,7 @@ public abstract class Logger {
         response.reason() != null && logLevel.compareTo(Level.NONE) > 0 ? " " + response.reason()
             : "";
     int status = response.status();
-    log(configKey, "<--- %s %s%s ( %s ms)", protocolVersion, status, reason, elapsedTime);
+    log(configKey, "<--- %s %s%s : %s ms", protocolVersion, status, reason, elapsedTime);
     if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
 
       for (String field : response.headers().keySet()) {
@@ -143,7 +143,7 @@ public abstract class Logger {
                                        Level logLevel,
                                        IOException ioe,
                                        long elapsedTime) {
-    log(configKey, "<--- ERROR %s: %s ( %s ms)", ioe.getClass().getSimpleName(), ioe.getMessage(),
+    log(configKey, "<--- ERROR %s: %s : %s ms", ioe.getClass().getSimpleName(), ioe.getMessage(),
         elapsedTime);
     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
       StringWriter sw = new StringWriter();
