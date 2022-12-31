@@ -24,7 +24,7 @@ executors:
         default: '8'
         type: string
     docker:
-      - image: circleci/openjdk:<<parameters.version>>
+      - image: cimg/openjdk:<<parameters.version>>
   android:
     parameters:
       version:
@@ -32,7 +32,7 @@ executors:
         default: '8'
         type: string
     docker:
-      - image: circleci/openjdk:<<parameters.version>>
+      - image: cimg/openjdk:<<parameters.version>>
 # common commands
 commands:
   resolve-dependencies:
@@ -181,17 +181,17 @@ workflows:
   build:
     jobs:
       - test:
-          jdk: '8'
+          jdk: '8.0'
           name: 'jdk 8'
           filters:
             <<: *all-branches
       - test:
-          jdk: '11'
+          jdk: '11.0'
           name: 'jdk 11'
           filters:
             <<: *all-branches
       - test:
-          jdk: '17-buster'
+          jdk: '17.0'
           name: 'jdk 17'
           filters:
             <<: *all-branches
@@ -202,22 +202,22 @@ workflows:
   snapshot:
     jobs:
       - test:
-          jdk: '8'
+          jdk: '8.0'
           name: 'jdk 8'
           filters:
             <<: *master-only
       - test:
-          jdk: '11'
+          jdk: '11.0'
           name: 'jdk 11'
           filters:
             <<: *master-only
       - test:
-          jdk: '17-buster'
+          jdk: '17.0'
           name: 'jdk 17'
           filters:
             <<: *master-only
       - deploy:
-          jdk: '8'
+          jdk: '8.0'
           name: 'deploy snapshot'
           requires:
             - 'jdk 8'
@@ -227,7 +227,7 @@ workflows:
           filters:
             <<: *master-only
       - deploy-jdk11:
-          jdk: '11'
+          jdk: '11.0'
           name: 'deploy jdk11 snapshot modules'
           requires:
             - 'jdk 11'
@@ -239,13 +239,13 @@ workflows:
   release:
     jobs:
       - deploy:
-          jdk: '8'
+          jdk: '8.0'
           name: 'release to maven central'
           context: Sonatype
           filters:
             <<: *tags-only
       - deploy-jdk11:
-          jdk: '11'
+          jdk: '11.0'
           name: 'release jdk11 artifacts to maven central'
           requires:
             - 'release to maven central'
