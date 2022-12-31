@@ -21,7 +21,7 @@ executors:
     parameters:
       version:
         description: 'jdk version to use'
-        default: '8'
+        default: '8.0'
         type: string
     docker:
       - image: cimg/openjdk:<<parameters.version>>
@@ -29,7 +29,7 @@ executors:
     parameters:
       version:
         description: 'jdk version to use'
-        default: '8'
+        default: '8.0'
         type: string
     docker:
       - image: cimg/openjdk:<<parameters.version>>
@@ -101,7 +101,7 @@ jobs:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8'
+        default: '8.0'
         type: string
     executor:
       name: java
@@ -140,7 +140,7 @@ jobs:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8'
+        default: '8.0'
         type: string
     executor:
       name: java
@@ -160,7 +160,7 @@ jobs:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '11'
+        default: '11.0'
         type: string
     executor:
       name: java
