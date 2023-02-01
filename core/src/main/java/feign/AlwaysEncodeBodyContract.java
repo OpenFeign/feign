@@ -27,5 +27,7 @@ package feign;
  *
  * @author fabiocarvalho777@gmail.com
  */
+
+ //made another comment in interface
 public abstract class AlwaysEncodeBodyContract extends DeclarativeContract {
 }
