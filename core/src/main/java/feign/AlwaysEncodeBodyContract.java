@@ -29,5 +29,7 @@ package feign;
  */
 
  //made another comment in interface
+
+ //made scond dummy comment in interface
 public abstract class AlwaysEncodeBodyContract extends DeclarativeContract {
 }
