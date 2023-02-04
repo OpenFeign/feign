@@ -41,7 +41,7 @@ commands:
       - run:
           name: 'Resolving Dependencies'
           command: |
-            mvn dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true -B
+            ./mvnw -ntp dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true -B
   verify-formatting:
     steps:
       - run:
@@ -59,17 +59,17 @@ commands:
       - run:
           name: 'Deploy Core Modules Sonatype'
           command: |
-            mvn -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+            ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
   nexus-deploy-jdk11:
     steps:
       - run:
           name: 'Build JDK 11 Release modules locally'
           command: |
-            mvn -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11,:feign-jakarta -am -DskipTests=true install
+            ./mvnw -ntp -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11,:feign-jakarta -am -DskipTests=true install
       - run:
           name: 'Deploy JDK 11 Modules to Sonatype'
           command: |
-            mvn -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11,:feign-jakarta -DskipTests=true deploy
+            ./mvnw -ntp -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11,:feign-jakarta -DskipTests=true deploy
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
@@ -121,7 +121,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            mvn -B test
+            ./mvnw -ntp -B test
       - verify-formatting
   android-test:
     # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
