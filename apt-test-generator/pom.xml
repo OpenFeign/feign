@@ -187,7 +187,7 @@
       </activation>
 
       <properties>
-        <jvm.options>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</jvm.options>
+        <jvm.options>--illegal-access=permit</jvm.options>
       </properties>
     </profile>
   </profiles>
