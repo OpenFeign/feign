@@ -89,7 +89,7 @@
         <dependency>
           <groupId>org.glassfish.jaxb</groupId>
           <artifactId>jaxb-core</artifactId>
-          <version>4.0.1</version>
+          <version>4.0.2</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
