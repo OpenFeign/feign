@@ -30,7 +30,7 @@ public class ReactorFeign extends ReactiveFeign {
 
   public static class Builder extends ReactiveFeign.Builder {
 
-    private Scheduler scheduler = Schedulers.elastic();
+    private Scheduler scheduler = Schedulers.boundedElastic();
 
     @Override
     public Feign build() {
