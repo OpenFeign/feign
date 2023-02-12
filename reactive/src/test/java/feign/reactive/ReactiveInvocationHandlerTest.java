@@ -58,7 +58,7 @@ public class ReactiveInvocationHandlerTest {
         new ReactorInvocationHandler(
             this.target,
             Collections.singletonMap(method, this.methodHandler),
-            Schedulers.elastic());
+            Schedulers.boundedElastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -76,7 +76,7 @@ public class ReactiveInvocationHandlerTest {
         new ReactorInvocationHandler(
             this.target,
             Collections.singletonMap(method, this.methodHandler),
-            Schedulers.elastic());
+            Schedulers.boundedElastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -94,7 +94,7 @@ public class ReactiveInvocationHandlerTest {
         new ReactorInvocationHandler(
             this.target,
             Collections.singletonMap(this.method, this.methodHandler),
-            Schedulers.elastic());
+            Schedulers.boundedElastic());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
