@@ -25,12 +25,20 @@ import feign.Target;
 public class ReactorFeign extends ReactiveFeign {
 
   public static Builder builder() {
-    return new Builder();
+    return new Builder(Schedulers.boundedElastic());
+  }
+
+  public static Builder builder(Scheduler scheduler) {
+    return new Builder(scheduler);
   }
 
   public static class Builder extends ReactiveFeign.Builder {
 
-    private Scheduler scheduler = Schedulers.elastic();
+    private final Scheduler scheduler;
+
+    Builder(Scheduler scheduler) {
+      this.scheduler = scheduler;
+    }
 
     @Override
     public Feign build() {
@@ -42,11 +50,6 @@ public class ReactorFeign extends ReactiveFeign {
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       throw new UnsupportedOperationException(
           "Invocation Handler Factory overrides are not supported.");
-    }
-
-    public Builder scheduleOn(Scheduler scheduler) {
-      this.scheduler = scheduler;
-      return this;
     }
   }
 
