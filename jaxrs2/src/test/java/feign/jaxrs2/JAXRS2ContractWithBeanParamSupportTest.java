@@ -18,13 +18,11 @@ import feign.jaxrs.JAXRSContract;
 import feign.jaxrs.JAXRSContractTest;
 import feign.jaxrs2.JAXRS2ContractWithBeanParamSupportTest.Jaxrs2Internals.BeanParamInput;
 import org.junit.Test;
-
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;

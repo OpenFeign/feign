@@ -14,12 +14,10 @@
 package feign.jaxrs2;
 
 import feign.jaxrs.JAXRSContract;
-
 import javax.ws.rs.*;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import java.lang.reflect.Field;
-
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 
@@ -57,8 +55,8 @@ public final class JAXRS2Contract extends JAXRSContract {
     registerParameterAnnotation(BeanParam.class, (param, data, paramIndex) -> {
       final Field[] aggregatedParams = data.method()
           .getParameters()[paramIndex]
-          .getType()
-          .getDeclaredFields();
+              .getType()
+              .getDeclaredFields();
 
       for (Field aggregatedParam : aggregatedParams) {
 
@@ -68,8 +66,7 @@ public final class JAXRS2Contract extends JAXRSContract {
               emptyToNull(name) != null,
               "BeanParam parameter %s contains PathParam with empty .value() on field %s",
               paramIndex,
-              aggregatedParam.getName()
-          );
+              aggregatedParam.getName());
           nameParam(data, name, paramIndex);
         }
 
@@ -79,8 +76,7 @@ public final class JAXRS2Contract extends JAXRSContract {
               emptyToNull(name) != null,
               "BeanParam parameter %s contains QueryParam with empty .value() on field %s",
               paramIndex,
-              aggregatedParam.getName()
-          );
+              aggregatedParam.getName());
           final String query = addTemplatedParam(name);
           data.template().query(name, query);
           nameParam(data, name, paramIndex);
@@ -92,8 +88,7 @@ public final class JAXRS2Contract extends JAXRSContract {
               emptyToNull(name) != null,
               "BeanParam parameter %s contains HeaderParam with empty .value() on field %s",
               paramIndex,
-              aggregatedParam.getName()
-          );
+              aggregatedParam.getName());
           final String header = addTemplatedParam(name);
           data.template().header(name, header);
           nameParam(data, name, paramIndex);
@@ -105,8 +100,7 @@ public final class JAXRS2Contract extends JAXRSContract {
               emptyToNull(name) != null,
               "BeanParam parameter %s contains FormParam with empty .value() on field %s",
               paramIndex,
-              aggregatedParam.getName()
-          );
+              aggregatedParam.getName());
           data.formParams().add(name);
           nameParam(data, name, paramIndex);
         }

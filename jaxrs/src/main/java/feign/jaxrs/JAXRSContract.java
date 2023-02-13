@@ -119,13 +119,15 @@ public class JAXRSContract extends DeclarativeContract {
   protected void registerParamAnnotations() {
     registerParameterAnnotation(PathParam.class, (param, data, paramIndex) -> {
       final String name = param.value();
-      checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s", paramIndex);
+      checkState(emptyToNull(name) != null, "PathParam.value() was empty on parameter %s",
+          paramIndex);
       nameParam(data, name, paramIndex);
     });
 
     registerParameterAnnotation(QueryParam.class, (param, data, paramIndex) -> {
       final String name = param.value();
-      checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s", paramIndex);
+      checkState(emptyToNull(name) != null, "QueryParam.value() was empty on parameter %s",
+          paramIndex);
       final String query = addTemplatedParam(name);
       data.template().query(name, query);
       nameParam(data, name, paramIndex);
@@ -133,7 +135,8 @@ public class JAXRSContract extends DeclarativeContract {
 
     registerParameterAnnotation(HeaderParam.class, (param, data, paramIndex) -> {
       final String name = param.value();
-      checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s", paramIndex);
+      checkState(emptyToNull(name) != null, "HeaderParam.value() was empty on parameter %s",
+          paramIndex);
       final String header = addTemplatedParam(name);
       data.template().header(name, header);
       nameParam(data, name, paramIndex);
@@ -141,7 +144,8 @@ public class JAXRSContract extends DeclarativeContract {
 
     registerParameterAnnotation(FormParam.class, (param, data, paramIndex) -> {
       final String name = param.value();
-      checkState(emptyToNull(name) != null, "FormParam.value() was empty on parameter %s", paramIndex);
+      checkState(emptyToNull(name) != null, "FormParam.value() was empty on parameter %s",
+          paramIndex);
       data.formParams().add(name);
       nameParam(data, name, paramIndex);
     });
