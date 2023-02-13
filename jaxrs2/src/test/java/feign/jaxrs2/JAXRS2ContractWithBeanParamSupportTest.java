@@ -13,27 +13,21 @@
  */
 package feign.jaxrs2;
 
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
-
 import feign.MethodMetadata;
 import feign.jaxrs.JAXRSContract;
 import feign.jaxrs.JAXRSContractTest;
 import feign.jaxrs2.JAXRS2ContractWithBeanParamSupportTest.Jaxrs2Internals.BeanParamInput;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import org.junit.Test;
+
+import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-import org.junit.Test;
+
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 /**
  * Tests interfaces defined per {@link JAXRS2Contract} are interpreted into expected
@@ -63,12 +57,12 @@ public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
         .noRequestBody();
 
     assertThat(methodMetadata.template())
-            .hasHeaders(entry("X-Custom-Header", asList("{X-Custom-Header}")));
+        .hasHeaders(entry("X-Custom-Header", asList("{X-Custom-Header}")));
     assertThat(methodMetadata.template())
-            .hasQueries(entry("query", asList("{query}")));
+        .hasQueries(entry("query", asList("{query}")));
     assertThat(methodMetadata.formParams())
-            .isNotEmpty()
-            .containsExactly("form");
+        .isNotEmpty()
+        .containsExactly("form");
 
   }
 
