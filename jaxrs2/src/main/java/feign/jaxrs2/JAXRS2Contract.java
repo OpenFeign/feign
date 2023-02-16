@@ -27,24 +27,13 @@ import static feign.Util.emptyToNull;
  */
 public final class JAXRS2Contract extends JAXRSContract {
 
-  private final boolean enableBeanParamSupport;
-
   public JAXRS2Contract() {
-    this(false);
-  }
-
-  public JAXRS2Contract(boolean enableBeanParamSupport) {
-    this.enableBeanParamSupport = enableBeanParamSupport;
     // parameter with unsupported jax-rs annotations should not be passed as body params.
     // this will prevent interfaces from becoming unusable entirely due to single (unsupported)
     // endpoints.
     // https://github.com/OpenFeign/feign/issues/669
     super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
     super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
-
-    if (!enableBeanParamSupport) {
-      super.registerParameterAnnotation(BeanParam.class, (ann, data, i) -> data.ignoreParamater(i));
-    }
 
   }
 
