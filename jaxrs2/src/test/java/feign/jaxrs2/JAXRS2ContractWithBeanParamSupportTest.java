@@ -64,10 +64,9 @@ public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
 
   }
 
-
-  @Path("/")
   public interface Jaxrs2Internals {
     @GET
+    @Path("/")
     void inject(@Suspended AsyncResponse ar, @Context UriInfo info);
 
     @Path("/{path}")
@@ -87,7 +86,6 @@ public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
 
       @HeaderParam("X-Custom-Header")
       String header;
-
     }
   }
 
