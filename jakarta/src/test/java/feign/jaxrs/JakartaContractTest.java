@@ -15,31 +15,80 @@ package feign.jaxrs;
 
 import feign.MethodMetadata;
 import feign.Response;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.FormParam;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.HttpMethod;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import feign.jaxrs.JakartaContractTest.JakartaInternals.BeanParamInput;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
+import org.junit.Test;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.data.MapEntry.entry;
 
 /**
  * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
 public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
+
+  @Test
+  public void injectJaxrsInternals() throws Exception {
+    final MethodMetadata methodMetadata =
+        parseAndValidateMetadata(JakartaInternals.class, "inject", AsyncResponse.class,
+            UriInfo.class);
+    assertThat(methodMetadata.template())
+        .noRequestBody();
+  }
+
+  @Test
+  public void injectBeanParam() throws Exception {
+    final MethodMetadata methodMetadata =
+        parseAndValidateMetadata(JakartaInternals.class, "beanParameters", BeanParamInput.class);
+    assertThat(methodMetadata.template())
+        .noRequestBody();
+
+    assertThat(methodMetadata.template())
+        .hasHeaders(entry("X-Custom-Header", asList("{X-Custom-Header}")));
+    assertThat(methodMetadata.template())
+        .hasQueries(entry("query", asList("{query}")));
+    assertThat(methodMetadata.formParams())
+        .isNotEmpty()
+        .containsExactly("form");
+
+  }
+
+  public interface JakartaInternals {
+    @GET
+    @Path("/")
+    void inject(@Suspended AsyncResponse ar, @Context UriInfo info);
+
+    @Path("/{path}")
+    @POST
+    void beanParameters(@BeanParam BeanParamInput beanParam);
+
+    public class BeanParamInput {
+
+      @PathParam("path")
+      String path;
+
+      @QueryParam("query")
+      String query;
+
+      @FormParam("form")
+      String form;
+
+      @HeaderParam("X-Custom-Header")
+      String header;
+    }
+  }
 
   interface Methods {
 
