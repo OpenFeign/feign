@@ -21,7 +21,10 @@ import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
 
@@ -104,6 +107,12 @@ public class JakartaContract extends DeclarativeContract {
     super.registerMethodAnnotation(Consumes.class, this::handleConsumesAnnotation);
     super.registerMethodAnnotation(Produces.class, this::handleProducesAnnotation);
 
+    // parameter with unsupported jax-rs annotations should not be passed as body params.
+    // this will prevent interfaces from becoming unusable entirely due to single (unsupported)
+    // endpoints.
+    // https://github.com/OpenFeign/feign/issues/669
+    super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
+    super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
     // trying to minimize the diff
     registerParamAnnotations();
   }
@@ -124,53 +133,104 @@ public class JakartaContract extends DeclarativeContract {
   }
 
   protected void registerParamAnnotations() {
-    {
-      registerParameterAnnotation(
-          PathParam.class,
-          (param, data, paramIndex) -> {
-            final String name = param.value();
-            checkState(
-                emptyToNull(name) != null,
-                "PathParam.value() was empty on parameter %s",
-                paramIndex);
-            nameParam(data, name, paramIndex);
-          });
-      registerParameterAnnotation(
-          QueryParam.class,
-          (param, data, paramIndex) -> {
-            final String name = param.value();
-            checkState(
-                emptyToNull(name) != null,
-                "QueryParam.value() was empty on parameter %s",
-                paramIndex);
-            final String query = addTemplatedParam(name);
-            data.template().query(name, query);
-            nameParam(data, name, paramIndex);
-          });
-      registerParameterAnnotation(
-          HeaderParam.class,
-          (param, data, paramIndex) -> {
-            final String name = param.value();
-            checkState(
-                emptyToNull(name) != null,
-                "HeaderParam.value() was empty on parameter %s",
-                paramIndex);
-            final String header = addTemplatedParam(name);
-            data.template().header(name, header);
-            nameParam(data, name, paramIndex);
-          });
-      registerParameterAnnotation(
-          FormParam.class,
-          (param, data, paramIndex) -> {
-            final String name = param.value();
-            checkState(
-                emptyToNull(name) != null,
-                "FormParam.value() was empty on parameter %s",
-                paramIndex);
-            data.formParams().add(name);
-            nameParam(data, name, paramIndex);
-          });
-    }
+
+    registerParameterAnnotation(
+        PathParam.class,
+        (param, data, paramIndex) -> {
+          final String name = param.value();
+          checkState(
+              emptyToNull(name) != null, "PathParam.value() was empty on parameter %s", paramIndex);
+          nameParam(data, name, paramIndex);
+        });
+    registerParameterAnnotation(
+        QueryParam.class,
+        (param, data, paramIndex) -> {
+          final String name = param.value();
+          checkState(
+              emptyToNull(name) != null,
+              "QueryParam.value() was empty on parameter %s",
+              paramIndex);
+          final String query = addTemplatedParam(name);
+          data.template().query(name, query);
+          nameParam(data, name, paramIndex);
+        });
+    registerParameterAnnotation(
+        HeaderParam.class,
+        (param, data, paramIndex) -> {
+          final String name = param.value();
+          checkState(
+              emptyToNull(name) != null,
+              "HeaderParam.value() was empty on parameter %s",
+              paramIndex);
+          final String header = addTemplatedParam(name);
+          data.template().header(name, header);
+          nameParam(data, name, paramIndex);
+        });
+    registerParameterAnnotation(
+        FormParam.class,
+        (param, data, paramIndex) -> {
+          final String name = param.value();
+          checkState(
+              emptyToNull(name) != null, "FormParam.value() was empty on parameter %s", paramIndex);
+          data.formParams().add(name);
+          nameParam(data, name, paramIndex);
+        });
+
+    // Reflect over the Bean Param looking for supported parameter annotations
+    registerParameterAnnotation(
+        BeanParam.class,
+        (param, data, paramIndex) -> {
+          final Field[] aggregatedParams =
+              data.method().getParameters()[paramIndex].getType().getDeclaredFields();
+
+          for (Field aggregatedParam : aggregatedParams) {
+
+            if (aggregatedParam.isAnnotationPresent(PathParam.class)) {
+              final String name = aggregatedParam.getAnnotation(PathParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains PathParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(QueryParam.class)) {
+              final String name = aggregatedParam.getAnnotation(QueryParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains QueryParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              final String query = addTemplatedParam(name);
+              data.template().query(name, query);
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(HeaderParam.class)) {
+              final String name = aggregatedParam.getAnnotation(HeaderParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains HeaderParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              final String header = addTemplatedParam(name);
+              data.template().header(name, header);
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(FormParam.class)) {
+              final String name = aggregatedParam.getAnnotation(FormParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains FormParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              data.formParams().add(name);
+              nameParam(data, name, paramIndex);
+            }
+          }
+        });
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.
