@@ -13,8 +13,12 @@
  */
 package feign.jaxrs2;
 
+import static feign.Util.checkState;
+import static feign.Util.emptyToNull;
+
 import feign.jaxrs.JAXRSContract;
-import javax.ws.rs.BeanParam;
+import java.lang.reflect.Field;
+import javax.ws.rs.*;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 
@@ -31,6 +35,65 @@ public final class JAXRS2Contract extends JAXRSContract {
     // https://github.com/OpenFeign/feign/issues/669
     super.registerParameterAnnotation(Suspended.class, (ann, data, i) -> data.ignoreParamater(i));
     super.registerParameterAnnotation(Context.class, (ann, data, i) -> data.ignoreParamater(i));
-    super.registerParameterAnnotation(BeanParam.class, (ann, data, i) -> data.ignoreParamater(i));
+  }
+
+  @Override
+  protected void registerParamAnnotations() {
+    super.registerParamAnnotations();
+
+    registerParameterAnnotation(
+        BeanParam.class,
+        (param, data, paramIndex) -> {
+          final Field[] aggregatedParams =
+              data.method().getParameters()[paramIndex].getType().getDeclaredFields();
+
+          for (Field aggregatedParam : aggregatedParams) {
+
+            if (aggregatedParam.isAnnotationPresent(PathParam.class)) {
+              final String name = aggregatedParam.getAnnotation(PathParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains PathParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(QueryParam.class)) {
+              final String name = aggregatedParam.getAnnotation(QueryParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains QueryParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              final String query = addTemplatedParam(name);
+              data.template().query(name, query);
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(HeaderParam.class)) {
+              final String name = aggregatedParam.getAnnotation(HeaderParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains HeaderParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              final String header = addTemplatedParam(name);
+              data.template().header(name, header);
+              nameParam(data, name, paramIndex);
+            }
+
+            if (aggregatedParam.isAnnotationPresent(FormParam.class)) {
+              final String name = aggregatedParam.getAnnotation(FormParam.class).value();
+              checkState(
+                  emptyToNull(name) != null,
+                  "BeanParam parameter %s contains FormParam with empty .value() on field %s",
+                  paramIndex,
+                  aggregatedParam.getName());
+              data.formParams().add(name);
+              nameParam(data, name, paramIndex);
+            }
+          }
+        });
   }
 }

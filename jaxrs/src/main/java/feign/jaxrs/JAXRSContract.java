@@ -178,7 +178,8 @@ public class JAXRSContract extends DeclarativeContract {
   }
 
   // Not using override as the super-type's method is deprecated and will be removed.
-  private String addTemplatedParam(String name) {
+  // Protected so JAXRS2Contract can make use of this
+  protected String addTemplatedParam(String name) {
     return String.format("{%s}", name);
   }
 }
