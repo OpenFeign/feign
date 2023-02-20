@@ -111,6 +111,7 @@
     <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.0</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
+    <moditect-maven-plugin.version>1.0.0.RC2</moditect-maven-plugin.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
@@ -454,6 +455,36 @@
               <version>9.4</version>
             </dependency>
           </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.moditect</groupId>
+          <artifactId>moditect-maven-plugin</artifactId>
+          <version>${moditect-maven-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>add-module-infos</id>
+              <phase>package</phase>
+              <goals>
+                <goal>add-module-info</goal>
+              </goals>
+              <configuration>
+                <overwriteExistingFiles>true</overwriteExistingFiles>
+                <module>
+                  <moduleInfo>
+                    <!-- module name will be derived from filename -->
+                    <!-- export everything -->
+                    <exports>*;</exports>
+                    <!-- declare services consumed by the artifact -->
+                    <addServiceUses>true</addServiceUses>
+                  </moduleInfo>
+                </module>
+                <jdepsExtraArgs>
+                  <arg>--multi-release=9</arg>
+                </jdepsExtraArgs>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
