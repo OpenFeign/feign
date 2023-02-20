@@ -21,7 +21,7 @@ executors:
     parameters:
       version:
         description: 'jdk version to use'
-        default: '8.0'
+        default: '11.0'
         type: string
     docker:
       - image: cimg/openjdk:<<parameters.version>>
@@ -101,7 +101,7 @@ jobs:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8.0'
+        default: '11.0'
         type: string
     executor:
       name: java
@@ -120,8 +120,11 @@ jobs:
           key: feign-dependencies-{{ checksum "pom.xml" }}
       - run:
           name: 'Test'
+          # Do not generale module-info when running tests
+          # because one of the current JDK targets is 8
+          # Moditect requires 11 as a minimum
           command: |
-            ./mvnw -ntp -B test
+            ./mvnw -ntp -B test -Dmoditect.skip=true
       - verify-formatting
   android-test:
     # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
@@ -140,7 +143,7 @@ jobs:
     parameters:
       jdk:
         description: 'jdk version to use'
-        default: '8.0'
+        default: '11.0'
         type: string
     executor:
       name: java
@@ -217,10 +220,9 @@ workflows:
           filters:
             <<: *master-only
       - deploy:
-          jdk: '8.0'
+          jdk: '11.0'
           name: 'deploy snapshot'
           requires:
-            - 'jdk 8'
             - 'jdk 11'
             - 'jdk 17'
           context: Sonatype
@@ -239,7 +241,7 @@ workflows:
   release:
     jobs:
       - deploy:
-          jdk: '8.0'
+          jdk: '11.0'
           name: 'release to maven central'
           context: Sonatype
           filters:

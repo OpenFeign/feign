@@ -816,6 +816,9 @@
         <module>java11</module>
         <module>jakarta</module>
       </modules>
+      <properties>
+        <maven.compiler.release>8</maven.compiler.release>
+      </properties>
     </profile>
 
     <profile>
