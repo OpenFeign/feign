@@ -45,15 +45,6 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.moditect</groupId>
-        <artifactId>moditect-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
     <profile>
       <id>java11</id>
