@@ -37,6 +37,8 @@
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
+    <module>java11</module>
+    <module>jakarta</module>
     <module>json</module>
     <module>okhttp</module>
     <module>googlehttpclient</module>
@@ -50,14 +52,14 @@
     <module>dropwizard-metrics5</module>
     <module>kotlin</module>
     <module>micrometer</module>
+    <module>mock</module>
+    <module>apt-test-generator</module>
+    <module>annotation-error-decoder</module>
     <module>example-github</module>
     <module>example-github-with-coroutine</module>
     <module>example-wikipedia</module>
     <module>example-wikipedia-with-springboot</module>
-    <module>mock</module>
-    <module>apt-test-generator</module>
     <module>benchmark</module>
-    <module>annotation-error-decoder</module>
   </modules>
 
   <properties>
@@ -103,7 +105,7 @@
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-bundle-plugin.version>5.1.8</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
     <bom-generator.version>0.94.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>1.13.0</maven-scm-plugin.version>
@@ -420,6 +422,7 @@
   </dependencies>
 
   <build>
+    <defaultGoal>clean install</defaultGoal>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -445,6 +448,9 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
+            <jdkToolchain>
+              <version>17</version>
+            </jdkToolchain>
           </configuration>
           <dependencies>
             <dependency>
@@ -455,10 +461,58 @@
             </dependency>
           </dependencies>
         </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <trimStackTrace>false</trimStackTrace>
+            <jdkToolchain>
+              <version>17</version>
+            </jdkToolchain>
+          </configuration>
+        </plugin>
+
       </plugins>
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>${main.java.version}</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>17</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
@@ -490,38 +544,11 @@
               <compilerArgs>
                 <arg>-parameters</arg>
               </compilerArgs>
-              <source>${main.java.version}</source>
-              <target>${main.java.version}</target>
+              <source>17</source>
+              <target>17</target>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>${animal-sniffer-maven-plugin.version}</version>
-        <configuration>
-          <signature>
-            <groupId>org.codehaus.mojo.signature</groupId>
-            <artifactId>${main.signature.artifact}</artifactId>
-            <version>1.0</version>
-          </signature>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>9.4</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>
@@ -775,16 +802,6 @@
       <properties>
         <bom.template.file.path>file:///${project.basedir}/src/config/bom.xml</bom.template.file.path>
       </properties>
-    </profile>
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>[11,)</jdk>
-      </activation>
-      <modules>
-        <module>java11</module>
-        <module>jakarta</module>
-      </modules>
     </profile>
 
     <profile>
