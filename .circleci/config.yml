@@ -94,7 +94,7 @@ jobs:
           # because one of the current JDK targets is 8
           # Moditect requires 11 as a minimum
           command: |
-            ./mvnw -ntp -B test -Dmoditect.skip=true
+            ./mvnw -ntp -B test
       - verify-formatting
 
   deploy:
