@@ -71,7 +71,7 @@
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
+    <latest.java.version>17</latest.java.version>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
@@ -95,7 +95,6 @@
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.11.0</mockito.version>
 
-    <animal-sniffer-maven-plugin.version>1.22</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
@@ -313,12 +312,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.jvnet</groupId>
-        <artifactId>animal-sniffer-annotation</artifactId>
-        <version>1.0</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
@@ -449,17 +442,9 @@
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
             <jdkToolchain>
-              <version>17</version>
+              <version>${latest.java.version}</version>
             </jdkToolchain>
           </configuration>
-          <dependencies>
-            <dependency>
-              <!-- surefire uses ASM to do some bytecode magic... need to bump version to be java 11 compatible -->
-              <groupId>org.ow2.asm</groupId>
-              <artifactId>asm</artifactId>
-              <version>9.4</version>
-            </dependency>
-          </dependencies>
         </plugin>
 
         <plugin>
@@ -470,7 +455,7 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
             <jdkToolchain>
-              <version>17</version>
+              <version>${latest.java.version}</version>
             </jdkToolchain>
           </configuration>
         </plugin>
@@ -505,7 +490,7 @@
             <configuration>
               <toolchains>
                 <jdk>
-                  <version>17</version>
+                  <version>${latest.java.version}</version>
                 </jdk>
               </toolchains>
             </configuration>
@@ -544,8 +529,8 @@
               <compilerArgs>
                 <arg>-parameters</arg>
               </compilerArgs>
-              <source>17</source>
-              <target>17</target>
+              <source>${latest.java.version}</source>
+              <target>${latest.java.version}</target>
             </configuration>
           </execution>
         </executions>
