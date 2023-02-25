@@ -29,6 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <moditect.skip>false</moditect.skip>
     <kotlin.version>1.8.10</kotlin.version>
     <kotlinx.coroutines.version>1.6.4</kotlinx.coroutines.version>
   </properties>
@@ -79,10 +80,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.moditect</groupId>
-        <artifactId>moditect-maven-plugin</artifactId>
-      </plugin>
       <plugin>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-maven-plugin</artifactId>

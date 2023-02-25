@@ -66,6 +66,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
 
+    <moditect.skip>true</moditect.skip>
     <!-- specifying jvm arguments -->
     <jvm.options>-Duser.language=en</jvm.options>
 
@@ -473,6 +474,7 @@
                 <goal>add-module-info</goal>
               </goals>
               <configuration>
+                <skip>${moditect.skip}</skip>
                 <overwriteExistingFiles>true</overwriteExistingFiles>
                 <module>
                   <moduleInfo>
@@ -526,6 +528,11 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
       </plugin>
 
       <plugin>

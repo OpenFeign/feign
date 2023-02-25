@@ -30,6 +30,7 @@
   <properties>
     <main.java.version>11</main.java.version>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <moditect.skip>false</moditect.skip>
   </properties>
 
   <dependencies>
@@ -64,13 +65,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.moditect</groupId>
-        <artifactId>moditect-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 </project>

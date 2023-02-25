@@ -27,6 +27,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <moditect.skip>false</moditect.skip>
     <micrometer.version>1.10.4</micrometer.version>
   </properties>
 
@@ -72,10 +73,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.moditect</groupId>
-        <artifactId>moditect-maven-plugin</artifactId>
-      </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
