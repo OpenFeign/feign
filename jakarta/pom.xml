@@ -28,6 +28,7 @@
   <description>Feign Jakarta</description>
 
   <properties>
+    <main.java.version>11</main.java.version>
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 

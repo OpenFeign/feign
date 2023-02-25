@@ -12,27 +12,12 @@
 # the License.
 #
 
-orbs:
-  android: circleci/android@1.0.3
-
 # common executors
 executors:
   java:
-    parameters:
-      version:
-        description: 'jdk version to use'
-        default: '11.0'
-        type: string
     docker:
-      - image: cimg/openjdk:<<parameters.version>>
-  android:
-    parameters:
-      version:
-        description: 'jdk version to use'
-        default: '8.0'
-        type: string
-    docker:
-      - image: cimg/openjdk:<<parameters.version>>
+      - image: velo/toolchains-4-ci-builds
+
 # common commands
 commands:
   resolve-dependencies:
@@ -60,16 +45,7 @@ commands:
           name: 'Deploy Core Modules Sonatype'
           command: |
             ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
-  nexus-deploy-jdk11:
-    steps:
-      - run:
-          name: 'Build JDK 11 Release modules locally'
-          command: |
-            ./mvnw -ntp -B -nsu -s .circleci/settings.xml -P java11 -pl :feign-java11,:feign-jakarta -am -DskipTests=true install
-      - run:
-          name: 'Deploy JDK 11 Modules to Sonatype'
-          command: |
-            ./mvnw -ntp -B -nsu -s .circleci/settings.xml -P release,java11 -pl :feign-java11,:feign-jakarta -DskipTests=true deploy
+
 # our job defaults
 defaults: &defaults
   working_directory: ~/feign
@@ -98,14 +74,8 @@ version: 2.1
 
 jobs:
   test:
-    parameters:
-      jdk:
-        description: 'jdk version to use'
-        default: '11.0'
-        type: string
     executor:
       name: java
-      version: <<parameters.jdk>>
     <<: *defaults
     steps:
       - checkout
@@ -126,28 +96,10 @@ jobs:
           command: |
             ./mvnw -ntp -B test -Dmoditect.skip=true
       - verify-formatting
-  android-test:
-    # These next lines define the Android machine image executor:  https://circleci.com/docs/2.0/executor-types/
-    executor:
-      name: android/android-machine
-
-    steps:
-      # Checkout the code as the first step.
-      - checkout
-
-      # The next step will run the unit tests
-      - android/run-tests:
-          test-command: ./gradlew lint testDebug --continue
 
   deploy:
-    parameters:
-      jdk:
-        description: 'jdk version to use'
-        default: '11.0'
-        type: string
     executor:
       name: java
-      version: <<parameters.jdk>>
     <<: *defaults
     steps:
       - checkout
@@ -159,81 +111,25 @@ jobs:
       - configure-gpg
       - nexus-deploy
 
-  deploy-jdk11:
-    parameters:
-      jdk:
-        description: 'jdk version to use'
-        default: '11.0'
-        type: string
-    executor:
-      name: java
-      version: <<parameters.jdk>>
-    <<: *defaults
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - feign-dependencies-{{ checksum "pom.xml" }}
-            - feign-dependencies-
-      - resolve-dependencies
-      - configure-gpg
-      - nexus-deploy-jdk11
-
 workflows:
   version: 2
   build:
     jobs:
       - test:
-          jdk: '8.0'
-          name: 'jdk 8'
+          name: 'pr-build'
           filters:
             <<: *all-branches
-      - test:
-          jdk: '11.0'
-          name: 'jdk 11'
-          filters:
-            <<: *all-branches
-      - test:
-          jdk: '17.0'
-          name: 'jdk 17'
-          filters:
-            <<: *all-branches
-      - test:
-          name: 'android test'
-
 
   snapshot:
     jobs:
       - test:
-          jdk: '8.0'
-          name: 'jdk 8'
-          filters:
-            <<: *master-only
-      - test:
-          jdk: '11.0'
-          name: 'jdk 11'
-          filters:
-            <<: *master-only
-      - test:
-          jdk: '17.0'
-          name: 'jdk 17'
+          name: 'snapshot'
           filters:
             <<: *master-only
       - deploy:
-          jdk: '11.0'
           name: 'deploy snapshot'
           requires:
-            - 'jdk 11'
-            - 'jdk 17'
-          context: Sonatype
-          filters:
-            <<: *master-only
-      - deploy-jdk11:
-          jdk: '11.0'
-          name: 'deploy jdk11 snapshot modules'
-          requires:
-            - 'jdk 11'
-            - 'deploy snapshot'
+            - 'snapshot'
           context: Sonatype
           filters:
             <<: *master-only
@@ -241,17 +137,7 @@ workflows:
   release:
     jobs:
       - deploy:
-          jdk: '11.0'
           name: 'release to maven central'
           context: Sonatype
           filters:
             <<: *tags-only
-      - deploy-jdk11:
-          jdk: '11.0'
-          name: 'release jdk11 artifacts to maven central'
-          requires:
-            - 'release to maven central'
-          context: Sonatype
-          filters:
-            <<: *tags-only
-
