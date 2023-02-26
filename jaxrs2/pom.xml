@@ -28,12 +28,9 @@
   <description>Feign JAX-RS 2</description>
 
   <properties>
-    <!-- override default bytecode version for src/main from parent pom -->
-    <main.java.version>1.8</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
