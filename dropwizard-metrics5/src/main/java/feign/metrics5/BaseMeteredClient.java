@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import feign.AsyncClient;
 import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.utils.ExceptionUtils;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer;
@@ -60,6 +61,8 @@ public class BaseMeteredClient {
         .counter(
             httpResponseCode(template)
                 .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("root_cause_name",
+                    ExceptionUtils.getRootCause(e).getClass().getSimpleName())
                 .tagged("http_status", String.valueOf(e.status()))
                 .tagged("status_group", e.status() / 100 + "xx")
                 .tagged("uri", template.methodMetadata().template().path()))
@@ -71,6 +74,8 @@ public class BaseMeteredClient {
         .counter(
             httpResponseCode(template)
                 .tagged("exception_name", e.getClass().getSimpleName())
+                .tagged("root_cause_name",
+                    ExceptionUtils.getRootCause(e).getClass().getSimpleName())
                 .tagged("uri", template.methodMetadata().template().path()))
         .inc();
   }

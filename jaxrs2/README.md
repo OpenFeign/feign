@@ -35,3 +35,5 @@ Links the value of the corresponding parameter to a query parameter.  When invok
 Links the value of the corresponding parameter to a header.
 #### `@FormParam`
 Links the value of the corresponding parameter to a key passed to `Encoder.Text<Map<String, Object>>.encode()`.
+#### `@BeanParm`
+Aggregates the above supported parameter annotations under a single value object.

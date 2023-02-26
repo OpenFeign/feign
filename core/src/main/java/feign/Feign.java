@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,7 +13,6 @@
  */
 package feign;
 
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -200,14 +199,16 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      MethodHandler.Factory<Object> synchronousMethodHandlerFactory =
+      final ResponseHandler responseHandler =
+          new ResponseHandler(logLevel, logger, decoder, errorDecoder,
+              dismiss404, closeAfterDecode, responseInterceptor);
+      MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy, options, decoder, errorDecoder);
-      ParseHandlersByName<Object> handlersByName =
-          new ParseHandlersByName<>(contract, encoder, queryMapEncoder,
-              synchronousMethodHandlerFactory);
-      return new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, () -> null);
+              responseHandler, logger, logLevel, propagationPolicy,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              options);
+      return new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+          () -> null);
     }
   }
 
