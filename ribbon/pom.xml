@@ -30,6 +30,8 @@
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
     <ribbon-version>2.7.18</ribbon-version>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencyManagement>
