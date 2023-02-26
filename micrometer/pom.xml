@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2022 The Feign Authors
+    Copyright 2012-2023 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.0-SNAPSHOT</version>
+    <version>12.2-SNAPSHOT</version>
   </parent>
   <artifactId>feign-micrometer</artifactId>
   <name>Feign Micrometer</name>
@@ -27,6 +27,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <micrometer.version>1.10.4</micrometer.version>
   </properties>
 
   <dependencies>
@@ -42,7 +43,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-core</artifactId>
-      <version>1.9.2</version>
+      <version>${micrometer.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -51,8 +52,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-test</artifactId>
+      <version>${micrometer.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-okhttp</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -71,5 +84,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

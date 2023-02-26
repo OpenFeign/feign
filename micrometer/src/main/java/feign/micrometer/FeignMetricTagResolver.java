@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign.micrometer;
 
 import feign.MethodMetadata;
 import feign.Target;
+import feign.utils.ExceptionUtils;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import java.lang.reflect.Method;
@@ -34,7 +35,7 @@ public class FeignMetricTagResolver implements MetricTagResolver {
 
   @Override
   public Tags tag(MethodMetadata methodMetadata, Target<?> target, Throwable e, Tag... tags) {
-    return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), tags);
+    return tag(methodMetadata.targetType(), methodMetadata.method(), target.url(), e, tags);
   }
 
   @Override
@@ -50,6 +51,8 @@ public class FeignMetricTagResolver implements MetricTagResolver {
     tags.add(Tag.of("host", extractHost(url)));
     if (e != null) {
       tags.add(Tag.of("exception_name", e.getClass().getSimpleName()));
+      tags.add(
+          Tag.of("root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName()));
     }
     tags.addAll(Arrays.asList(extraTags));
     return Tags.of(tags);
@@ -72,4 +75,5 @@ public class FeignMetricTagResolver implements MetricTagResolver {
         ? targetUrl
         : targetUrl.substring(0, 20);
   }
+
 }

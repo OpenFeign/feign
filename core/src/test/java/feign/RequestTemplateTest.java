@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,10 +15,13 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import feign.Request.HttpMethod;
+import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,8 +30,6 @@ import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
 
 public class RequestTemplateTest {
 
@@ -204,6 +205,42 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasHeaders(entry("Encoded", Collections.singletonList("{{{{dont_expand_me}}")));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderContainingJsonLiteral() {
+    String json = "{\"A\":{\"B\":\"C\"}}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", json);
+
+    template.resolve(new LinkedHashMap<>());
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithJson() {
+    String json = "{ \"string\": \"val\", \"string2\": \"this should not be truncated\"}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", "{aHeader}");
+
+    template = template.resolve(mapOf("aHeader", json));
+
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  public void resolveTemplateWithHeaderWithNestedJson() {
+    String json =
+        "{ \"string\": \"val\", \"string2\": \"this should not be truncated\", \"property\": {\"nested\": true}}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .header("A-Header", "{aHeader}");
+
+    template = template.resolve(mapOf("aHeader", json));
+
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList(json)));
   }
 
   /**
@@ -436,16 +473,25 @@ public class RequestTemplateTest {
 
   }
 
-  @SuppressWarnings("ConstantConditions")
-  @Test(expected = UnsupportedOperationException.class)
-  public void shouldNotInsertHeadersImmutableMap() {
+  public void shouldNotMutateInternalHeadersMap() {
     RequestTemplate template = new RequestTemplate()
         .header("key1", "valid");
 
     assertThat(template.headers()).hasSize(1);
     assertThat(template.headers().keySet()).containsExactly("key1");
+    assertThat(template.headers().get("key1")).containsExactly("valid");
 
     template.headers().put("key2", Collections.singletonList("other value"));
+    // nothing should change
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().keySet()).containsExactly("key1");
+    assertThat(template.headers().get("key1")).containsExactly("valid");
+
+    template.headers().get("key1").add("value2");
+    // nothing should change either
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().keySet()).containsExactly("key1");
+    assertThat(template.headers().get("key1")).containsExactly("valid");
   }
 
   @Test

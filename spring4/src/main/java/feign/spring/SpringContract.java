@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -44,6 +44,9 @@ public class SpringContract extends DeclarativeContract {
 
       if (requestMapping.method().length == 1)
         data.template().method(Request.HttpMethod.valueOf(requestMapping.method()[0].name()));
+
+      handleProducesAnnotation(data, requestMapping.produces());
+      handleConsumesAnnotation(data, requestMapping.consumes());
     });
 
 
@@ -83,7 +86,7 @@ public class SpringContract extends DeclarativeContract {
     });
 
     registerMethodAnnotation(ResponseBody.class, (body, data) -> {
-      handleConsumesAnnotation(data, "application/json");
+      handleProducesAnnotation(data, "application/json");
     });
     registerMethodAnnotation(ExceptionHandler.class, (ann, data) -> {
       data.ignoreMethod();
@@ -91,7 +94,7 @@ public class SpringContract extends DeclarativeContract {
     registerParameterAnnotation(PathVariable.class, pathVariableParameterAnnotationProcessor());
 
     registerParameterAnnotation(RequestBody.class, (body, data, paramIndex) -> {
-      handleProducesAnnotation(data, "application/json");
+      handleConsumesAnnotation(data, "application/json");
     });
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());
     registerParameterAnnotation(RequestPart.class, requestPartParameterAnnotationProcessor());

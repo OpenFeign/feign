@@ -1,4 +1,4 @@
-# Feign makes writing java http clients easier
+# Feign makes writing Java http clients easier
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CircleCI](https://circleci.com/gh/OpenFeign/feign/tree/master.svg?style=svg)](https://circleci.com/gh/OpenFeign/feign/tree/master)
@@ -9,7 +9,7 @@ Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/
 ---
 ### Why Feign and not X?
 
-Feign uses tools like Jersey and CXF to write java clients for ReST or SOAP services. Furthermore, Feign allows you to write your own code on top of http libraries such as Apache HC. Feign connects your code to http APIs with minimal overhead and code via customizable decoders and error handling, which can be written to any text-based http API.
+Feign uses tools like Jersey and CXF to write Java clients for ReST or SOAP services. Furthermore, Feign allows you to write your own code on top of http libraries such as Apache HC. Feign connects your code to http APIs with minimal overhead and code via customizable decoders and error handling, which can be written to any text-based http API.
 
 ### How does Feign work?
 
@@ -897,16 +897,19 @@ public interface Api {
 }
 ```
 
-When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. The following POJO will generate query params of "/find?name={name}&number={number}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
+When used in this manner, without specifying a custom `QueryMapEncoder`, the query map will be generated using member variable names as query parameter names. You can annotate a specific field of `CustomPojo` with the `@Param` annotation to specify a different name to the query parameter. The following POJO will generate query params of "/find?name={name}&number={number}&region_id={regionId}" (order of included query parameters not guaranteed, and as usual, if any value is null, it will be left out).
 
 ```java
 public class CustomPojo {
   private final String name;
   private final int number;
+  @Param("region_id")
+  private final String regionId;
 
-  public CustomPojo (String name, int number) {
+  public CustomPojo (String name, int number, String regionId) {
     this.name = name;
     this.number = number;
+    this.regionId = regionId;
   }
 }
 ```
@@ -1077,7 +1080,7 @@ interface GitHub {
 
 public class MyApp {
   public static void main(String... args) {
-    GitHub github = AsyncFeign.asyncBuilder()
+    GitHub github = AsyncFeign.builder()
                          .decoder(new GsonDecoder())
                          .target(GitHub.class, "https://api.github.com");
 

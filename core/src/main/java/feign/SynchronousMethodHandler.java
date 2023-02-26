@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,39 +22,29 @@ import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 final class SynchronousMethodHandler implements MethodHandler {
-
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
   private final MethodMetadata metadata;
   private final Target<?> target;
   private final Client client;
   private final Retryer retryer;
   private final List<RequestInterceptor> requestInterceptors;
-  private final ResponseInterceptor responseInterceptor;
   private final Logger logger;
   private final Logger.Level logLevel;
   private final RequestTemplate.Factory buildTemplateFromArgs;
   private final Options options;
   private final ExceptionPropagationPolicy propagationPolicy;
-
-  // only one of decoder and asyncResponseHandler will be non-null
-  private final Decoder decoder;
-  private final AsyncResponseHandler asyncResponseHandler;
+  private final ResponseHandler responseHandler;
 
 
   private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors, ResponseInterceptor responseInterceptor,
+      List<RequestInterceptor> requestInterceptors,
       Logger logger, Logger.Level logLevel, MethodMetadata metadata,
       RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      Decoder decoder, ErrorDecoder errorDecoder, boolean dismiss404,
-      boolean closeAfterDecode, ExceptionPropagationPolicy propagationPolicy,
-      boolean forceDecoding) {
+      ResponseHandler responseHandler, ExceptionPropagationPolicy propagationPolicy) {
 
     this.target = checkNotNull(target, "target");
     this.client = checkNotNull(client, "client for %s", target);
@@ -67,18 +57,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
     this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
-    this.responseInterceptor = responseInterceptor;
-
-    if (forceDecoding) {
-      // internal only: usual handling will be short-circuited, and all responses will be passed to
-      // decoder directly!
-      this.decoder = decoder;
-      this.asyncResponseHandler = null;
-    } else {
-      this.decoder = null;
-      this.asyncResponseHandler = new AsyncResponseHandler(logLevel, logger, decoder, errorDecoder,
-          dismiss404, closeAfterDecode, responseInterceptor);
-    }
+    this.responseHandler = responseHandler;
   }
 
   @Override
@@ -130,27 +109,10 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       throw errorExecuting(request, e);
     }
+
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-    if (decoder != null) {
-      return responseInterceptor
-          .aroundDecode(new InvocationContext(decoder, metadata.returnType(), response));
-    }
-
-    CompletableFuture<Object> resultFuture = new CompletableFuture<>();
-    asyncResponseHandler.handleResponse(resultFuture, metadata.configKey(), response,
-        metadata.returnType(), elapsedTime);
-
-    try {
-      if (!resultFuture.isDone())
-        throw new IllegalStateException("Response handling not done");
-      return resultFuture.join();
-    } catch (CompletionException e) {
-      Throwable cause = e.getCause();
-      if (cause != null)
-        throw cause;
-      throw e;
-    }
+    return responseHandler.handleResponse(
+        metadata.configKey(), response, metadata.returnType(), elapsedTime);
   }
 
   long elapsedTime(long start) {
@@ -175,44 +137,44 @@ final class SynchronousMethodHandler implements MethodHandler {
         .orElse(this.options);
   }
 
-  static class Factory {
+  static class Factory implements MethodHandler.Factory<Object> {
 
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
-    private final ResponseInterceptor responseInterceptor;
+    private final ResponseHandler responseHandler;
     private final Logger logger;
     private final Logger.Level logLevel;
-    private final boolean dismiss404;
-    private final boolean closeAfterDecode;
     private final ExceptionPropagationPolicy propagationPolicy;
-    private final boolean forceDecoding;
+    private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
+    private final Options options;
 
     Factory(Client client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
-        ResponseInterceptor responseInterceptor,
-        Logger logger, Logger.Level logLevel, boolean dismiss404, boolean closeAfterDecode,
-        ExceptionPropagationPolicy propagationPolicy, boolean forceDecoding) {
+        ResponseHandler responseHandler,
+        Logger logger, Logger.Level logLevel,
+        ExceptionPropagationPolicy propagationPolicy,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
+        Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.responseInterceptor = responseInterceptor;
+      this.responseHandler = checkNotNull(responseHandler, "responseHandler");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
-      this.dismiss404 = dismiss404;
-      this.closeAfterDecode = closeAfterDecode;
       this.propagationPolicy = propagationPolicy;
-      this.forceDecoding = forceDecoding;
+      this.requestTemplateFactoryResolver =
+          checkNotNull(requestTemplateFactoryResolver, "requestTemplateFactoryResolver");
+      this.options = checkNotNull(options, "options");
     }
 
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
-                                RequestTemplate.Factory buildTemplateFromArgs,
-                                Options options,
-                                Decoder decoder,
-                                ErrorDecoder errorDecoder) {
+                                Object requestContext) {
+      final RequestTemplate.Factory buildTemplateFromArgs =
+          requestTemplateFactoryResolver.resolve(target, md);
       return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
-          responseInterceptor, logger, logLevel, md, buildTemplateFromArgs, options, decoder,
-          errorDecoder, dismiss404, closeAfterDecode, propagationPolicy, forceDecoding);
+          logger, logLevel, md, buildTemplateFromArgs, options,
+          responseHandler, propagationPolicy);
     }
   }
 }

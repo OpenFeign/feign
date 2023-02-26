@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -199,7 +199,7 @@ public final class Types {
         getGenericSupertype(context, contextRawType, supertype));
   }
 
-  static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
+  public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
@@ -350,14 +350,17 @@ public final class Types {
       }
     }
 
+    @Override
     public Type[] getActualTypeArguments() {
       return typeArguments.clone();
     }
 
+    @Override
     public Type getRawType() {
       return rawType;
     }
 
+    @Override
     public Type getOwnerType() {
       return ownerType;
     }
@@ -395,6 +398,7 @@ public final class Types {
       this.componentType = componentType;
     }
 
+    @Override
     public Type getGenericComponentType() {
       return componentType;
     }
@@ -454,10 +458,12 @@ public final class Types {
       }
     }
 
+    @Override
     public Type[] getUpperBounds() {
       return new Type[] {upperBound};
     }
 
+    @Override
     public Type[] getLowerBounds() {
       return lowerBound != null ? new Type[] {lowerBound} : EMPTY_TYPE_ARRAY;
     }

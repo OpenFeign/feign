@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -77,10 +77,7 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
     }
 
     byte[] inputBody = input.body();
-    boolean isMethodWithBody =
-        HttpMethod.POST == input.httpMethod() || HttpMethod.PUT == input.httpMethod()
-            || HttpMethod.PATCH == input.httpMethod();
-    if (isMethodWithBody) {
+    if (input.httpMethod().isWithBody()) {
       requestBuilder.removeHeader("Content-Type");
       if (inputBody == null) {
         // write an empty BODY to conform with okhttp 2.4.0+

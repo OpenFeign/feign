@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -459,7 +458,7 @@ public class AsyncApacheHttp5ClientTest {
   public void throwsFeignExceptionIncludingBody() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    final TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
+    final TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
     }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -480,7 +479,7 @@ public class AsyncApacheHttp5ClientTest {
   public void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    final TestInterfaceAsync api = AsyncFeign.asyncBuilder().decoder((response, type) -> {
+    final TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
     }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -505,7 +504,7 @@ public class AsyncApacheHttp5ClientTest {
     final ExecutorService execs = Executors.newSingleThreadExecutor();
 
     // fake client as Client.Default follows redirects.
-    final TestInterfaceAsync api = AsyncFeign.<Void>asyncBuilder()
+    final TestInterfaceAsync api = AsyncFeign.<Void>builder()
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -581,10 +580,10 @@ public class AsyncApacheHttp5ClientTest {
     final Target<OtherTestInterfaceAsync> t3 =
         new HardCodedTarget<OtherTestInterfaceAsync>(OtherTestInterfaceAsync.class,
             "http://localhost:8080");
-    final TestInterfaceAsync i1 = AsyncFeign.asyncBuilder().target(t1);
-    final TestInterfaceAsync i2 = AsyncFeign.asyncBuilder().target(t1);
-    final TestInterfaceAsync i3 = AsyncFeign.asyncBuilder().target(t2);
-    final OtherTestInterfaceAsync i4 = AsyncFeign.asyncBuilder().target(t3);
+    final TestInterfaceAsync i1 = AsyncFeign.builder().target(t1);
+    final TestInterfaceAsync i2 = AsyncFeign.builder().target(t1);
+    final TestInterfaceAsync i3 = AsyncFeign.builder().target(t2);
+    final OtherTestInterfaceAsync i4 = AsyncFeign.builder().target(t3);
 
     assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
@@ -608,7 +607,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     final OtherTestInterfaceAsync api =
-        AsyncFeign.asyncBuilder().target(OtherTestInterfaceAsync.class,
+        AsyncFeign.builder().target(OtherTestInterfaceAsync.class,
             "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
@@ -620,7 +619,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse());
 
     final OtherTestInterfaceAsync api =
-        AsyncFeign.asyncBuilder().target(OtherTestInterfaceAsync.class,
+        AsyncFeign.builder().target(OtherTestInterfaceAsync.class,
             "http://localhost:" + server.getPort());
 
     final CompletableFuture<?> cf = api.binaryRequestBody(expectedRequest);
@@ -691,7 +690,7 @@ public class AsyncApacheHttp5ClientTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+        AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertEquals("RESPONSE!", unwrap(api.post()));
@@ -921,7 +920,7 @@ public class AsyncApacheHttp5ClientTest {
   static final class TestInterfaceAsyncBuilder {
 
     private final AsyncFeign.AsyncBuilder<HttpClientContext> delegate =
-        AsyncFeign.<HttpClientContext>asyncBuilder()
+        AsyncFeign.<HttpClientContext>builder()
             .client(new AsyncApacheHttp5Client())
             .decoder(new Decoder.Default()).encoder(new Encoder() {
 

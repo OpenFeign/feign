@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -87,7 +87,12 @@ public class GoogleHttpClient implements Client {
     // Setup headers
     final HttpHeaders headers = new HttpHeaders();
     for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
-      headers.set(header.getKey(), header.getValue());
+      // We already set the Content-Type header via ByteArrayContent
+      // Content-Type is defined as a singleton field
+      // https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3-7
+      if (!header.getKey().equals("Content-Type")) {
+        headers.set(header.getKey(), header.getValue());
+      }
     }
     // Some servers don't do well with no Accept header
     if (inputRequest.headers().get("Accept") == null) {

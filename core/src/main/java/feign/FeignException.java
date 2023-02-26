@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -38,10 +38,10 @@ public class FeignException extends RuntimeException {
   private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST =
       "request should not be null";
   private static final long serialVersionUID = 0;
-  private int status;
+  private final int status;
   private byte[] responseBody;
   private Map<String, Collection<String>> responseHeaders;
-  private Request request;
+  private final Request request;
 
   protected FeignException(int status, String message, Throwable cause) {
     super(message, cause);
@@ -168,6 +168,13 @@ public class FeignException extends RuntimeException {
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
+    return errorStatus(methodKey, response, null, null);
+  }
+
+  public static FeignException errorStatus(String methodKey,
+                                           Response response,
+                                           Integer maxBodyBytesLength,
+                                           Integer maxBodyCharsLength) {
 
     byte[] body = {};
     try {
@@ -180,6 +187,8 @@ public class FeignException extends RuntimeException {
     String message = new FeignExceptionMessageBuilder()
         .withResponse(response)
         .withMethodKey(methodKey)
+        .withMaxBodyBytesLength(maxBodyBytesLength)
+        .withMaxBodyCharsLength(maxBodyCharsLength)
         .withBody(body).build();
 
     return errorStatus(response.status(), message, response.request(), body, response.headers());
@@ -423,6 +432,8 @@ public class FeignException extends RuntimeException {
 
     private byte[] body;
     private String methodKey;
+    private Integer maxBodyBytesLength;
+    private Integer maxBodyCharsLength;
 
     public FeignExceptionMessageBuilder withResponse(Response response) {
       this.response = response;
@@ -439,9 +450,25 @@ public class FeignException extends RuntimeException {
       return this;
     }
 
+    public FeignExceptionMessageBuilder withMaxBodyBytesLength(Integer length) {
+      this.maxBodyBytesLength = length;
+      return this;
+    }
+
+    public FeignExceptionMessageBuilder withMaxBodyCharsLength(Integer length) {
+      this.maxBodyCharsLength = length;
+      return this;
+    }
+
     public String build() {
       StringBuilder result = new StringBuilder();
 
+      if (maxBodyBytesLength == null) {
+        maxBodyBytesLength = MAX_BODY_BYTES_LENGTH;
+      }
+      if (maxBodyCharsLength == null) {
+        maxBodyCharsLength = MAX_BODY_CHARS_LENGTH;
+      }
       if (response.reason() != null) {
         result.append(format("[%d %s]", response.status(), response.reason()));
       } else {
@@ -455,7 +482,7 @@ public class FeignException extends RuntimeException {
       return result.toString();
     }
 
-    private static String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
+    private String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
       Charset charset = getResponseCharset(headers);
       if (charset == null) {
         charset = Util.UTF_8;
@@ -463,24 +490,24 @@ public class FeignException extends RuntimeException {
       return getResponseBody(body, charset);
     }
 
-    private static String getResponseBody(byte[] body, Charset charset) {
-      if (body.length < MAX_BODY_BYTES_LENGTH) {
+    private String getResponseBody(byte[] body, Charset charset) {
+      if (body.length < maxBodyBytesLength) {
         return new String(body, charset);
       }
       return getResponseBodyPreview(body, charset);
     }
 
-    private static String getResponseBodyPreview(byte[] body, Charset charset) {
+    private String getResponseBodyPreview(byte[] body, Charset charset) {
       try {
         Reader reader = new InputStreamReader(new ByteArrayInputStream(body), charset);
-        CharBuffer result = CharBuffer.allocate(MAX_BODY_CHARS_LENGTH);
+        CharBuffer result = CharBuffer.allocate(maxBodyCharsLength);
 
         reader.read(result);
         reader.close();
         ((Buffer) result).flip();
-        return result.toString() + "... (" + body.length + " bytes)";
+        return result + "... (" + body.length + " bytes)";
       } catch (IOException e) {
-        return e.toString() + ", failed to parse response";
+        return e + ", failed to parse response";
       }
     }
 
@@ -502,7 +529,6 @@ public class FeignException extends RuntimeException {
         return null;
       }
       return Charset.forName(group);
-
     }
   }
 }

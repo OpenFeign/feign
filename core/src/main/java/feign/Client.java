@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -65,7 +65,7 @@ public interface Client {
 
     /**
      * Disable the request body internal buffering for {@code HttpURLConnection}.
-     * 
+     *
      * @see HttpURLConnection#setFixedLengthStreamingMode(int)
      * @see HttpURLConnection#setFixedLengthStreamingMode(long)
      * @see HttpURLConnection#setChunkedStreamingMode(int)
@@ -74,7 +74,7 @@ public interface Client {
 
     /**
      * Create a new client, which disable request buffering by default.
-     * 
+     *
      * @param sslContextFactory SSLSocketFactory for secure https URL connections.
      * @param hostnameVerifier the host name verifier.
      */
@@ -86,7 +86,7 @@ public interface Client {
 
     /**
      * Create a new client.
-     * 
+     *
      * @param sslContextFactory SSLSocketFactory for secure https URL connections.
      * @param hostnameVerifier the host name verifier.
      * @param disableRequestBuffering Disable the request body internal buffering for
@@ -196,8 +196,19 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      if (request.body() != null) {
-        if (disableRequestBuffering) {
+      boolean hasEmptyBody = false;
+      byte[] body = request.body();
+      if (body == null && request.httpMethod().isWithBody()) {
+        body = new byte[0];
+        hasEmptyBody = true;
+      }
+
+      if (body != null) {
+        /*
+         * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
+         * retry logic applies to such requests.
+         */
+        if (disableRequestBuffering && !hasEmptyBody) {
           if (contentLength != null) {
             connection.setFixedLengthStreamingMode(contentLength);
           } else {
@@ -212,7 +223,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          out.write(request.body());
+          out.write(body);
         } finally {
           try {
             out.close();

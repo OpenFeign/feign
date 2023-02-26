@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,12 +13,12 @@
  */
 package feign;
 
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -95,7 +95,6 @@ public abstract class Feign {
   public static class Builder extends BaseBuilder<Builder> {
 
     private Client client = new Client.Default(null, null);
-    private boolean forceDecoding = false;
 
     @Override
     public Builder logLevel(Logger.Level logLevel) {
@@ -189,14 +188,6 @@ public abstract class Feign {
       return super.addCapability(capability);
     }
 
-    /**
-     * Internal - used to indicate that the decoder should be immediately called
-     */
-    Builder forceDecoding() {
-      this.forceDecoding = true;
-      return this;
-    }
-
     public <T> T target(Class<T> apiType, String url) {
       return target(new HardCodedTarget<>(apiType, url));
     }
@@ -208,14 +199,16 @@ public abstract class Feign {
     public Feign build() {
       super.enrich();
 
-      SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
+      final ResponseHandler responseHandler =
+          new ResponseHandler(logLevel, logger, decoder, errorDecoder,
+              dismiss404, closeAfterDecode, responseInterceptor);
+      MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-              responseInterceptor, logger, logLevel, dismiss404, closeAfterDecode,
-              propagationPolicy, forceDecoding);
-      ParseHandlersByName handlersByName =
-          new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
-              errorDecoder, synchronousMethodHandlerFactory);
-      return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
+              responseHandler, logger, logLevel, propagationPolicy,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              options);
+      return new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+          () -> null);
     }
   }
 

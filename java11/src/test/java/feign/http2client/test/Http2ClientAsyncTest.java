@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -554,7 +554,7 @@ public class Http2ClientAsyncTest {
     final ExecutorService execs = Executors.newSingleThreadExecutor();
 
     // fake client as Client.Default follows redirects.
-    final TestInterfaceAsync api = AsyncFeign.<Void>asyncBuilder()
+    final TestInterfaceAsync api = AsyncFeign.<Void>builder()
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -745,7 +745,7 @@ public class Http2ClientAsyncTest {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
-        AsyncFeign.asyncBuilder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+        AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertEquals("RESPONSE!", unwrap(api.post()));
@@ -975,7 +975,7 @@ public class Http2ClientAsyncTest {
   static final class TestInterfaceAsyncBuilder {
 
     private final AsyncFeign.AsyncBuilder<Object> delegate =
-        AsyncFeign.asyncBuilder()
+        AsyncFeign.builder()
             .client(new Http2Client())
             .decoder(new Decoder.Default()).encoder(new Encoder() {
 

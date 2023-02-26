@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,16 +13,17 @@
  */
 package feign;
 
+import static feign.Util.checkNotNull;
+import static feign.Util.valuesOrEmpty;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import static feign.Util.checkNotNull;
-import static feign.Util.valuesOrEmpty;
 
 /**
  * An immutable request to an http server.
@@ -30,7 +31,21 @@ import static feign.Util.valuesOrEmpty;
 public final class Request implements Serializable {
 
   public enum HttpMethod {
-    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+    GET, HEAD, POST(true), PUT(true), DELETE, CONNECT, OPTIONS, TRACE, PATCH(true);
+
+    private final boolean withBody;
+
+    HttpMethod() {
+      this(false);
+    }
+
+    HttpMethod(boolean withBody) {
+      this.withBody = withBody;
+    }
+
+    public boolean isWithBody() {
+      return this.withBody;
+    }
   }
 
   public enum ProtocolVersion {
@@ -190,6 +205,26 @@ public final class Request implements Serializable {
    */
   public Map<String, Collection<String>> headers() {
     return Collections.unmodifiableMap(headers);
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param value
+   */
+  public void header(String key, String value) {
+    header(key, Arrays.asList(value));
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param values
+   */
+  public void header(String key, Collection<String> values) {
+    headers.put(key, values);
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -137,6 +137,51 @@ public class FeignExceptionTest {
         }).hasEntrySatisfying("Cookie", value -> {
           assertThat(value).contains("cookie1", "cookie2");
         });
+  }
+
+  @Test
+  public void lengthOfBodyExceptionTest() {
+    String bigResponse = "I love a storm in early May\n" +
+        "When springtime’s boisterous, firstborn thunder\n" +
+        "Over the sky will gaily wander\n" +
+        "And growl and roar as though in play.\n" +
+        "\n" +
+        "A peal, another — gleeful, cheering…\n" +
+        "Rain, raindust… On the trees, behold!-\n" +
+        "The drops hang, each a long pearl earring;\n" +
+        "Bright sunshine paints the thin threads gold.\n" +
+        "\n" +
+        "A stream downhill goes rushing reckless,\n" +
+        "And in the woods the birds rejoice.\n" +
+        "Din. Clamour. Noise. All nature echoes\n" +
+        "The thunder’s youthful, merry voice.\n" +
+        "\n" +
+        "You’ll say: ‘Tis laughing, carefree Hebe —\n" +
+        "She fed her father’s eagle, and\n" +
+        "The Storm Cup brimming with a seething\n" +
+        "And bubbling wine dropped from her hand";
+
+    Request request = Request.create(
+        Request.HttpMethod.GET,
+        "/home",
+        Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8),
+        StandardCharsets.UTF_8,
+        null);
+
+    Response response = Response.builder()
+        .status(400)
+        .request(request)
+        .body(bigResponse, StandardCharsets.UTF_8)
+        .build();
+
+    FeignException defaultException = FeignException.errorStatus("methodKey", response);
+    assertThat(defaultException.getMessage().length()).isLessThan(bigResponse.length());
+
+    FeignException customLengthBodyException =
+        FeignException.errorStatus("methodKey", response, 4000, 2000);
+    assertThat(customLengthBodyException.getMessage().length())
+        .isGreaterThanOrEqualTo(bigResponse.length());
   }
 
   @Test(expected = NullPointerException.class)

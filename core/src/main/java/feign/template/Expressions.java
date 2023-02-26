@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package feign.template;
 
 import feign.Param.Expander;
 import feign.Util;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -23,8 +22,43 @@ import java.util.regex.Pattern;
 
 public final class Expressions {
 
-  private static final String PATH_STYLE_MODIFIER = ";";
-  private static final Pattern EXPRESSION_PATTERN = Pattern.compile("^([+#./;?&]?)(.*)$");
+  private static final String PATH_STYLE_OPERATOR = ";";
+  /**
+   * Literals may be present and preceded the expression.
+   *
+   * The expression part must start with a '{' and end with a '}'. The contents of the expression
+   * may start with an RFC Operator or the operators reserved by the rfc: Level 2 Operators: '+' and
+   * '#' Level 3 Operators: '.' and '/' and ';' and '?' and '&' Reserved Operators: '=' and ',' and
+   * '!' and '@' and '|'
+   *
+   * The RFC specifies that '{' or '}' or '(' or ')' or'$' is are illegal characters. Feign does not
+   * honor this portion of the RFC Expressions allow '$' characters for Collection expansions, and
+   * all other characters are legal as a regular expression may be passed as a Value Modifier in
+   * Feign
+   *
+   * This is not a complete implementation of the rfc
+   *
+   * <a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2>RFC 6570 Expressions</a>
+   */
+  private static final Pattern EXPRESSION_PATTERN =
+      Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)})$");
+
+  // Partially From:
+  // https://stackoverflow.com/questions/29494608/regex-for-uri-templates-rfc-6570-wanted -- I
+  // suspect much of the codebase could be refactored around the example regex there
+  /**
+   * A pattern for matching possible variable names.
+   *
+   * This pattern accepts characters allowed in RFC 6570 Section 2.3 It also allows the characters
+   * feign has allowed in the past "[]-$"
+   *
+   * The RFC specifies that a variable name followed by a ':' should be a max-length specification.
+   * Feign deviates from the rfc in that the ':' value modifier is used to mark a regular
+   * expression.
+   *
+   */
+  private static final Pattern VARIABLE_LIST_PATTERN = Pattern.compile(
+      "(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?)(,(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?))*");
 
   public static Expression create(final String value) {
 
@@ -37,14 +71,14 @@ public final class Expressions {
     /* create a new regular expression matcher for the expression */
     String variableName = null;
     String variablePattern = null;
-    String modifier = null;
-    Matcher matcher = EXPRESSION_PATTERN.matcher(expression);
+    String operator = null;
+    Matcher matcher = EXPRESSION_PATTERN.matcher(value);
     if (matcher.matches()) {
-      /* grab the modifier */
-      modifier = matcher.group(1).trim();
+      /* grab the operator */
+      operator = matcher.group(2).trim();
 
       /* we have a valid variable expression, extract the name from the first group */
-      variableName = matcher.group(2).trim();
+      variableName = matcher.group(3).trim();
       if (variableName.contains(":")) {
         /* split on the colon */
         String[] parts = variableName.split(":");
@@ -59,13 +93,15 @@ public final class Expressions {
       }
     }
 
-    /* check for a modifier */
-    if (PATH_STYLE_MODIFIER.equalsIgnoreCase(modifier)) {
+    /* check for an operator */
+    if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
       return new PathStyleExpression(variableName, variablePattern);
     }
 
     /* default to simple */
-    return new SimpleExpression(variableName, variablePattern);
+    return SimpleExpression.isSimpleExpression(value)
+        ? new SimpleExpression(variableName, variablePattern)
+        : null; // Return null if it can't be validated as a Simple Expression -- Probably a Literal
   }
 
   private static String stripBraces(String expression) {
@@ -179,6 +215,13 @@ public final class Expressions {
         result.append(expanded);
       }
       return result.toString();
+    }
+
+    protected static boolean isSimpleExpression(String expressionCandidate) {
+      final Matcher matcher = EXPRESSION_PATTERN.matcher(expressionCandidate);
+      return matcher.matches()
+          && matcher.group(2).isEmpty() // Simple Expressions do not support any special operators
+          && VARIABLE_LIST_PATTERN.matcher(matcher.group(3)).matches();
     }
   }
 

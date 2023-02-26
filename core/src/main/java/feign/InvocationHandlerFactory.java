@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,8 @@
  */
 package feign;
 
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -31,6 +33,12 @@ public interface InvocationHandlerFactory {
   interface MethodHandler {
 
     Object invoke(Object[] argv) throws Throwable;
+
+    interface Factory<C> {
+      MethodHandler create(Target<?> target,
+                           MethodMetadata md,
+                           C requestContext);
+    }
   }
 
   static final class Default implements InvocationHandlerFactory {

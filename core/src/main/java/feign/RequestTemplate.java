@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,18 +13,32 @@
  */
 package feign;
 
+import static feign.Util.CONTENT_LENGTH;
+import static feign.Util.checkNotNull;
 import feign.Request.HttpMethod;
-import feign.template.*;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import static feign.Util.*;
 
 /**
  * Request Builder for an HTTP Target.
@@ -232,7 +246,8 @@ public final class RequestTemplate implements Serializable {
         String header = headerTemplate.expand(variables);
         if (!header.isEmpty()) {
           /* append the header as a new literal as the value has already been expanded. */
-          resolved.header(headerTemplate.getName(), header);
+          resolved.appendHeader(
+              headerTemplate.getName(), Collections.singletonList(header), true);
         }
       }
     }
@@ -723,13 +738,26 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Create a Header Template.
+   * Append the Header. Will create a new Header if it doesn't already exist. Treats all values as
+   * potentially expressions.
    *
    * @param name of the header
    * @param values for the header, may be expressions.
    * @return a RequestTemplate for chaining.
    */
   private RequestTemplate appendHeader(String name, Iterable<String> values) {
+    return this.appendHeader(name, values, false);
+  }
+
+  /**
+   * Append the Header. Will create a new Header if it doesn't already exist.
+   *
+   * @param name of the header
+   * @param values for the header, may be expressions.
+   * @param literal indicator, to treat the values as literals and not expressions
+   * @return a RequestTemplate for chaining.
+   */
+  private RequestTemplate appendHeader(String name, Iterable<String> values, boolean literal) {
     if (!values.iterator().hasNext()) {
       /* empty value, clear the existing values */
       this.headers.remove(name);
@@ -745,7 +773,13 @@ public final class RequestTemplate implements Serializable {
     }
     this.headers.compute(name, (headerName, headerTemplate) -> {
       if (headerTemplate == null) {
-        return HeaderTemplate.create(headerName, values);
+        if (literal) {
+          return HeaderTemplate.literal(headerName, values);
+        } else {
+          return HeaderTemplate.create(headerName, values);
+        }
+      } else if (literal) {
+        return HeaderTemplate.appendLiteral(headerTemplate, values);
       } else {
         return HeaderTemplate.append(headerTemplate, values);
       }
@@ -769,7 +803,7 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Returns an immutable copy of the Headers for this request.
+   * Returns an copy of the Headers for this request.
    *
    * @return the currently applied headers.
    */
@@ -780,10 +814,10 @@ public final class RequestTemplate implements Serializable {
 
       /* add the expanded collection, but only if it has values */
       if (!values.isEmpty()) {
-        headerMap.put(key, Collections.unmodifiableList(values));
+        headerMap.put(key, values);
       }
     });
-    return Collections.unmodifiableMap(headerMap);
+    return headerMap;
   }
 
   /**

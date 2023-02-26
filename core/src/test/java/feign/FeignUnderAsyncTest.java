@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -487,7 +487,7 @@ public class FeignUnderAsyncTest {
   public void throwsFeignExceptionIncludingBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterface api = AsyncFeign.asyncBuilder()
+    TestInterface api = AsyncFeign.builder()
         .decoder((response, type) -> {
           throw new IOException("timeout");
         })
@@ -506,7 +506,7 @@ public class FeignUnderAsyncTest {
   public void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterface api = AsyncFeign.asyncBuilder()
+    TestInterface api = AsyncFeign.builder()
         .decoder((response, type) -> {
           throw new IOException("timeout");
         })
@@ -536,7 +536,7 @@ public class FeignUnderAsyncTest {
     ExecutorService execs = Executors.newSingleThreadExecutor();
 
     // fake client as Client.Default follows redirects.
-    TestInterface api = AsyncFeign.<Void>asyncBuilder()
+    TestInterface api = AsyncFeign.<Void>builder()
         .client(new AsyncClient.Default<>((request, options) -> response, execs))
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -635,10 +635,10 @@ public class FeignUnderAsyncTest {
         new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
     Target<OtherTestInterface> t3 =
         new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
-    TestInterface i1 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterface i2 = AsyncFeign.asyncBuilder().target(t1);
-    TestInterface i3 = AsyncFeign.asyncBuilder().target(t2);
-    OtherTestInterface i4 = AsyncFeign.asyncBuilder().target(t3);
+    TestInterface i1 = AsyncFeign.builder().target(t1);
+    TestInterface i2 = AsyncFeign.builder().target(t1);
+    TestInterface i3 = AsyncFeign.builder().target(t2);
+    OtherTestInterface i4 = AsyncFeign.builder().target(t3);
 
     assertThat(i1)
         .isEqualTo(i2)
@@ -671,7 +671,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
     OtherTestInterface api =
-        AsyncFeign.asyncBuilder().target(OtherTestInterface.class,
+        AsyncFeign.builder().target(OtherTestInterface.class,
             "http://localhost:" + server.getPort());
 
     assertThat(api.binaryResponseBody())
@@ -684,7 +684,7 @@ public class FeignUnderAsyncTest {
     server.enqueue(new MockResponse());
 
     OtherTestInterface api =
-        AsyncFeign.asyncBuilder().target(OtherTestInterface.class,
+        AsyncFeign.builder().target(OtherTestInterface.class,
             "http://localhost:" + server.getPort());
 
     api.binaryRequestBody(expectedRequest);
@@ -743,7 +743,7 @@ public class FeignUnderAsyncTest {
   public void mapAndDecodeExecutesMapFunction() throws Exception {
     server.enqueue(new MockResponse().setBody("response!"));
 
-    TestInterface api = AsyncFeign.asyncBuilder()
+    TestInterface api = AsyncFeign.builder()
         .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -967,7 +967,7 @@ public class FeignUnderAsyncTest {
 
   static final class TestInterfaceBuilder {
 
-    private final AsyncFeign.AsyncBuilder<Void> delegate = AsyncFeign.<Void>asyncBuilder()
+    private final AsyncFeign.AsyncBuilder<Void> delegate = AsyncFeign.<Void>builder()
         .decoder(new Decoder.Default())
         .encoder(new Encoder() {
           @Override

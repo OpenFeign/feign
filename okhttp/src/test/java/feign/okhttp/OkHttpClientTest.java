@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest extends AbstractClientTest {
@@ -103,6 +104,26 @@ public class OkHttpClientTest extends AbstractClientTest {
 
   }
 
+  /*
+   * OkHTTP does not support gzip and deflate compression out-of-the-box. But you can add an
+   * interceptor that implies it, see
+   * https://stackoverflow.com/questions/51901333/okhttp-3-how-to-decompress-gzip-deflate-response-
+   * manually-using-java-android
+   */
+  @Override
+  public void canSupportGzip() throws Exception {
+    assumeFalse("OkHTTP client do not support gzip compression", false);
+  }
+
+  @Override
+  public void canSupportDeflate() throws Exception {
+    assumeFalse("OkHTTP client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canExceptCaseInsensitiveHeader() throws Exception {
+    assumeFalse("OkHTTP client do not support gzip compression", false);
+  }
 
   public interface OkHttpClientTestInterface {
 

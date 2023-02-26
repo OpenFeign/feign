@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -44,6 +44,14 @@ public class Http2ClientTest extends AbstractClientTest {
     @RequestLine("POST /timeout")
     @Headers({"Accept: text/plain"})
     String timeout();
+
+    @RequestLine("GET /anything")
+    @Body("some request body")
+    String getWithBody();
+
+    @RequestLine("DELETE /anything")
+    @Body("some request body")
+    String deleteWithBody();
   }
 
   @Override
@@ -113,6 +121,24 @@ public class Http2ClientTest extends AbstractClientTest {
     thrown.expectCause(CoreMatchers.isA(HttpTimeoutException.class));
 
     api.timeout();
+  }
+
+  @Test
+  public void testGetWithRequestBody() {
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.getWithBody();
+    Assertions.assertThat(result)
+        .contains("\"data\": \"some request body\"");
+  }
+
+  @Test
+  public void testDeleteWithRequestBody() {
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.deleteWithBody();
+    Assertions.assertThat(result)
+        .contains("\"data\": \"some request body\"");
   }
 
   @Override

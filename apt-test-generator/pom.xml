@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2012-2022 The Feign Authors
+    Copyright 2012-2023 The Feign Authors
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.0-SNAPSHOT</version>
+    <version>12.2-SNAPSHOT</version>
   </parent>
 
   <groupId>io.github.openfeign.experimental</groupId>
@@ -30,13 +30,15 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.github.jknack</groupId>
       <artifactId>handlebars</artifactId>
-      <version>4.3.0</version>
+      <version>4.3.1</version>
     </dependency>
 
     <dependency>
@@ -48,13 +50,13 @@
     <dependency>
       <groupId>com.google.testing.compile</groupId>
       <artifactId>compile-testing</artifactId>
-      <version>0.19</version>
+      <version>0.21.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk14</artifactId>
-      <version>1.7.36</version>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -95,7 +97,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.1</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -116,7 +118,7 @@
       <plugin>
         <groupId>org.skife.maven</groupId>
         <artifactId>really-executable-jar-maven-plugin</artifactId>
-        <version>1.5.0</version>
+        <version>2.0.0</version>
         <configuration>
           <programFile>github</programFile>
         </configuration>
@@ -132,7 +134,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -176,19 +177,14 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>active-on-jdk-16</id>
-      <activation>
-        <jdk>[16,)</jdk>
-      </activation>
-
-      <properties>
-        <jvm.options>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</jvm.options>
-      </properties>
-    </profile>
-  </profiles>
 </project>

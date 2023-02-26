@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,11 +22,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import javax.xml.soap.SOAPElement;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPFactory;
+import javax.xml.soap.SOAPMessage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -383,6 +389,62 @@ public class SOAPCodecTest {
         .decode(response, byte[].class)).isEmpty();
   }
 
+  @Test
+  public void changeSoapProtocolAndSetHeader() {
+    Encoder encoder =
+        new ChangedProtocolAndHeaderSOAPEncoder(new JAXBContextFactory.Builder().build());
+
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, GetPrice.class, template);
+
+    String soapEnvelop = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+        "<env:Envelope xmlns:env=\"http://www.w3.org/2003/05/soap-envelope\">" +
+        "<env:Header>" +
+        (System.getProperty("java.version").startsWith("1.8")
+            ? "<wss:Security xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">"
+            : "<wss:Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">")
+        +
+        "<wss:UsernameToken>" +
+        "<wss:Username>test</wss:Username>" +
+        "<wss:Password>test</wss:Password>" +
+        "</wss:UsernameToken>" +
+        "</wss:Security>" +
+        "</env:Header>" +
+        "<env:Body>" +
+        "<GetPrice>" +
+        "<Item>Apples</Item>" +
+        "</GetPrice>" +
+        "</env:Body>" +
+        "</env:Envelope>";
+    assertThat(template).hasBody(soapEnvelop);
+  }
+
+  static class ChangedProtocolAndHeaderSOAPEncoder extends SOAPEncoder {
+
+    public ChangedProtocolAndHeaderSOAPEncoder(JAXBContextFactory jaxbContextFactory) {
+      super(new SOAPEncoder.Builder()
+          .withSOAPProtocol("SOAP 1.2 Protocol")
+          .withJAXBContextFactory(jaxbContextFactory));
+    }
+
+    @Override
+    protected SOAPMessage modifySOAPMessage(SOAPMessage soapMessage) throws SOAPException {
+      SOAPFactory soapFactory = SOAPFactory.newInstance();
+      String uri = "http://schemas.xmlsoap.org/ws/2002/12/secext";
+      String prefix = "wss";
+      SOAPElement security = soapFactory.createElement("Security", prefix, uri);
+      SOAPElement usernameToken = soapFactory.createElement("UsernameToken", prefix, uri);
+      usernameToken.addChildElement("Username", prefix, uri).setValue("test");
+      usernameToken.addChildElement("Password", prefix, uri).setValue("test");
+      security.addChildElement(usernameToken);
+      soapMessage.getSOAPHeader().addChildElement(security);
+      return soapMessage;
+    }
+  }
 
   @XmlRootElement(name = "GetPrice")
   @XmlAccessorType(XmlAccessType.FIELD)

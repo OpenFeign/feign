@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -112,5 +112,18 @@ public class HeaderTemplateTest {
     assertEquals("Wed, 4 Jul 2001 12:08:56 -0700",
         headerTemplate.expand(
             Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
+  }
+
+  @Test
+  public void it_should_support_json_literal_values() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("CustomHeader", Collections.singletonList("{jsonParam}"));
+
+    assertEquals("{\"string\": \"val\", \"string2\": \"this should not be truncated\"}",
+        headerTemplate.expand(
+            Collections.singletonMap(
+                "jsonParam",
+                "{\"string\": \"val\", \"string2\": \"this should not be truncated\"}")));
+
   }
 }

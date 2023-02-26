@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.slf4j.impl;
+package org.slf4j.simple;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import static org.junit.Assert.assertEquals;
-import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
-import static org.slf4j.impl.SimpleLogger.SHOW_THREAD_NAME_KEY;
+import static org.slf4j.simple.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
+import static org.slf4j.simple.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
 /**
  * A testing utility to allow control over {@link org.slf4j.impl.SimpleLogger}. In some cases,

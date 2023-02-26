@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -190,20 +190,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       requestBuilder.headers(asString(headers));
     }
 
-    switch (request.httpMethod()) {
-      case GET:
-        return requestBuilder.GET();
-      case POST:
-        return requestBuilder.POST(body);
-      case PUT:
-        return requestBuilder.PUT(body);
-      case DELETE:
-        return requestBuilder.DELETE();
-      default:
-        // fall back scenario, http implementations may restrict some methods
-        return requestBuilder.method(request.httpMethod().toString(), body);
-    }
-
+    return requestBuilder.method(request.httpMethod().toString(), body);
   }
 
   /**
