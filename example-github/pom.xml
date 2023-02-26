@@ -91,7 +91,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <!--
               Travis does not inject GITHUB_TOKEN when building PRs, which will make module fail

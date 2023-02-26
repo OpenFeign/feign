@@ -56,7 +56,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeOnSubscribeReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-        Collections.singletonMap(method, this.methodHandler), Schedulers.elastic());
+        Collections.singletonMap(method, this.methodHandler), Schedulers.boundedElastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -74,7 +74,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeOnSubscribeEmptyReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn(null);
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-        Collections.singletonMap(method, this.methodHandler), Schedulers.elastic());
+        Collections.singletonMap(method, this.methodHandler), Schedulers.boundedElastic());
 
     Object result = handler.invoke(method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
@@ -91,7 +91,7 @@ public class ReactiveInvocationHandlerTest {
   public void invokeFailureReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
-        Collections.singletonMap(this.method, this.methodHandler), Schedulers.elastic());
+        Collections.singletonMap(this.method, this.methodHandler), Schedulers.boundedElastic());
 
     Object result = handler.invoke(this.method, this.methodHandler, new Object[] {});
     assertThat(result).isInstanceOf(Mono.class);
