@@ -48,42 +48,28 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>1.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.4</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
-  <profiles>
-    <profile>
-      <activation>
-        <jdk>[11,]</jdk>
-      </activation>
-
-      <!--
-        JAX-WS was removed from java SDK on JEP 320
-        http://openjdk.java.net/jeps/320
-       -->
-      <dependencies>
-        <dependency>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jaxb-api</artifactId>
-          <version>2.3.1</version>
-        </dependency>
-        <dependency>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-runtime</artifactId>
-          <version>2.4.0-b180830.0438</version>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>javax.xml.ws</groupId>
-          <artifactId>jaxws-api</artifactId>
-          <version>2.3.1</version>
-        </dependency>
-        <dependency>
-          <groupId>com.sun.xml.messaging.saaj</groupId>
-          <artifactId>saaj-impl</artifactId>
-          <version>1.5.1</version>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
 
 </project>
