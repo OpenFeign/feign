@@ -27,7 +27,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
     <micrometer.version>1.10.4</micrometer.version>
   </properties>
 

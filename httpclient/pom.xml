@@ -29,7 +29,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
   </properties>
   <dependencyManagement>
     <dependencies>

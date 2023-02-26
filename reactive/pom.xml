@@ -28,7 +28,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
     <reactor.version>3.5.2</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
@@ -95,4 +94,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>

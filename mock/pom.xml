@@ -29,7 +29,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
   </properties>
 
   <dependencies>
@@ -49,4 +48,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>

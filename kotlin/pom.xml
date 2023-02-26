@@ -29,7 +29,6 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
     <kotlin.version>1.8.10</kotlin.version>
     <kotlinx.coroutines.version>1.6.4</kotlinx.coroutines.version>
   </properties>

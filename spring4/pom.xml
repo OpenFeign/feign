@@ -29,7 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
+
     <spring.version>4.3.30.RELEASE</spring.version>
   </properties>
 
@@ -61,4 +61,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>

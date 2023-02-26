@@ -31,7 +31,6 @@
     <main.java.version>11</main.java.version>
     <main.signature.artifact>java18</main.signature.artifact>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <moditect.skip>false</moditect.skip>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
   </properties>

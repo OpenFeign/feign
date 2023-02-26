@@ -90,9 +90,6 @@ jobs:
           key: feign-dependencies-{{ checksum "pom.xml" }}
       - run:
           name: 'Test'
-          # Do not generale module-info when running tests
-          # because one of the current JDK targets is 8
-          # Moditect requires 11 as a minimum
           command: |
             ./mvnw -ntp -B test
       - verify-formatting
