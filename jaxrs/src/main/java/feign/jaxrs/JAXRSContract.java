@@ -25,7 +25,7 @@ import javax.ws.rs.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Request;
-
+import feign.Param.Expander;
 /**
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
  * JAX-RS README</a>.
