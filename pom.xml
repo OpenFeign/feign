@@ -37,6 +37,8 @@
     <module>jaxb</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
+    <module>java11</module>
+    <module>jakarta</module>
     <module>json</module>
     <module>okhttp</module>
     <module>googlehttpclient</module>
@@ -50,26 +52,27 @@
     <module>dropwizard-metrics5</module>
     <module>kotlin</module>
     <module>micrometer</module>
+    <module>mock</module>
+    <module>apt-test-generator</module>
+    <module>annotation-error-decoder</module>
     <module>example-github</module>
     <module>example-github-with-coroutine</module>
     <module>example-wikipedia</module>
     <module>example-wikipedia-with-springboot</module>
-    <module>mock</module>
-    <module>apt-test-generator</module>
     <module>benchmark</module>
-    <module>annotation-error-decoder</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
 
+    <moditect.skip>false</moditect.skip>
     <!-- specifying jvm arguments -->
     <jvm.options>-Duser.language=en</jvm.options>
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
+    <latest.java.version>17</latest.java.version>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
@@ -87,30 +90,30 @@
 
     <junit.version>4.13.2</junit.version>
     <junit5.version>5.9.2</junit5.version>
-    <jackson.version>2.14.1</jackson.version>
+    <jackson.version>2.14.2</jackson.version>
     <jackson-databind.version>2.14.2</jackson-databind.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>4.11.0</mockito.version>
 
-    <animal-sniffer-maven-plugin.version>1.22</animal-sniffer-maven-plugin.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-    <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
     <license-maven-plugin.version>4.1</license-maven-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-bundle-plugin.version>5.1.8</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-    <bom-generator.version>0.93.2</bom-generator.version>
+    <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
+    <bom-generator.version>0.94.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>1.13.0</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.14.2</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.15.0</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.0</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
+    <moditect-maven-plugin.version>1.0.0.RC2</moditect-maven-plugin.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
@@ -311,12 +314,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.jvnet</groupId>
-        <artifactId>animal-sniffer-annotation</artifactId>
-        <version>1.0</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
@@ -420,6 +417,7 @@
   </dependencies>
 
   <build>
+    <defaultGoal>clean install</defaultGoal>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -445,20 +443,93 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
+            <jdkToolchain>
+              <version>${latest.java.version}</version>
+            </jdkToolchain>
           </configuration>
-          <dependencies>
-            <dependency>
-              <!-- surefire uses ASM to do some bytecode magic... need to bump version to be java 11 compatible -->
-              <groupId>org.ow2.asm</groupId>
-              <artifactId>asm</artifactId>
-              <version>9.4</version>
-            </dependency>
-          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <trimStackTrace>false</trimStackTrace>
+            <jdkToolchain>
+              <version>${latest.java.version}</version>
+            </jdkToolchain>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>${main.java.version}</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>${latest.java.version}</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>${moditect-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>add-module-infos</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <skip>${moditect.skip}</skip>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
+              <module>
+                <moduleInfo>
+                  <!-- module name will be derived from filename -->
+                  <!-- export everything -->
+                  <exports>*;</exports>
+                  <!-- declare services consumed by the artifact -->
+                  <addServiceUses>true</addServiceUses>
+                </moduleInfo>
+              </module>
+              <jdepsExtraArgs>
+                <arg>--multi-release=9</arg>
+              </jdepsExtraArgs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
@@ -490,38 +561,11 @@
               <compilerArgs>
                 <arg>-parameters</arg>
               </compilerArgs>
-              <source>${main.java.version}</source>
-              <target>${main.java.version}</target>
+              <source>${latest.java.version}</source>
+              <target>${latest.java.version}</target>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>${animal-sniffer-maven-plugin.version}</version>
-        <configuration>
-          <signature>
-            <groupId>org.codehaus.mojo.signature</groupId>
-            <artifactId>${main.signature.artifact}</artifactId>
-            <version>1.0</version>
-          </signature>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>9.4</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>
@@ -775,16 +819,6 @@
       <properties>
         <bom.template.file.path>file:///${project.basedir}/src/config/bom.xml</bom.template.file.path>
       </properties>
-    </profile>
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>[11,)</jdk>
-      </activation>
-      <modules>
-        <module>java11</module>
-        <module>jakarta</module>
-      </modules>
     </profile>
 
     <profile>
