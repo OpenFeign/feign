@@ -19,6 +19,8 @@ import static feign.Util.removeValues;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.*;
 import feign.DeclarativeContract;
 import feign.MethodMetadata;
@@ -147,6 +149,12 @@ public class JAXRSContract extends DeclarativeContract {
         data.formParams().add(name);
         nameParam(data, name, paramIndex);
       });
+      registerParameterAnnotation(DefaultValue.class, (param, data, paramIndex) -> {
+    	  final String defaultValue = param.value();
+    	  Map<Integer, Expander> indexToExpander= new HashMap<>();
+    	  indexToExpander.put(paramIndex, new DefaultValueExpander(defaultValue));
+    	  data.indexToExpander(indexToExpander);
+      });      
     }
   }
 
