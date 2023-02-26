@@ -48,21 +48,12 @@
       <artifactId>jaxb-api</artifactId>
       <version>2.3.1</version>
     </dependency>
+
+    <!-- JAXB RI -->
     <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>4.0.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-core</artifactId>
-      <version>4.0.2</version>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.4</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
