@@ -30,7 +30,7 @@
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
 
-    <spring.version>4.3.30.RELEASE</spring.version>
+    <spring.version>6.0.0</spring.version>
   </properties>
 
   <dependencies>
