@@ -32,6 +32,8 @@
     <rx.java.version>1.3.8</rx.java.version>
     <netty.version>4.1.89.Final</netty.version>
     <main.basedir>${project.basedir}/..</main.basedir>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencyManagement>
