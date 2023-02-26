@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.2-SNAPSHOT</version>
+    <version>12.2</version>
   </parent>
   <artifactId>feign-reactive-wrappers</artifactId>
 
