@@ -449,4 +449,24 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
   protected Class<?> mixedAnnotationsClass() {
     return MixedAnnotations.class;
   }
+  
+  @Override
+  protected Class<?> withPathAndDefaultQueryParamsClass(){
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  protected Class<?> withDefaultPathParamClass(){
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  protected Class<?> withDefaultFormParamClass(){
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  protected Class<?> withDefaultHeaderParamClass(){
+    throw new UnsupportedOperationException();
+  }
 }
