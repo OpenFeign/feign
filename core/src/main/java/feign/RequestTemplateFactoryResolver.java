@@ -93,13 +93,11 @@ final class RequestTemplateFactoryResolver {
       for (Map.Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
         int i = entry.getKey();
         Object value = argv[entry.getKey()];
-        if (value != null) { // Null values are skipped.
-          if (indexToExpander.containsKey(i)) {
-            value = expandElements(indexToExpander.get(i), value);
-          }
-          for (String name : entry.getValue()) {
-            varBuilder.put(name, value);
-          }
+        if (indexToExpander.containsKey(i)) {
+          value = expandElements(indexToExpander.get(i), value);
+        }
+        for (String name : entry.getValue()) {
+          varBuilder.put(name, value);
         }
       }
 
