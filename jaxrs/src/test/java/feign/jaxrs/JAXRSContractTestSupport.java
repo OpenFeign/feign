@@ -57,6 +57,10 @@ public abstract class JAXRSContractTestSupport<E extends DeclarativeContract> {
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public final MockWebServer server = new MockWebServer();
+	
   protected E contract = createContract();
 
   @Test
