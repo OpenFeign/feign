@@ -14,20 +14,36 @@
 package feign.jaxrs;
 
 import static feign.assertj.FeignAssertions.assertThat;
+import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import feign.MethodMetadata;
+
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import com.google.gson.Gson;
+import feign.DeclarativeContract;
+import feign.Feign;
+import feign.Logger;
+import feign.MethodMetadata;
+import feign.RequestTemplate;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.jaxrs.JAXRSContractTest.WithDefaultFormParam;
+import feign.jaxrs.JAXRSContractTest.WithDefaultHeaderParam;
+import feign.jaxrs.JAXRSContractTest.WithDefaultPathParam;
+import feign.jaxrs.JAXRSContractTest.WithPathAndDefaultQueryParams;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
-public abstract class JAXRSContractTestSupport<E> {
+public abstract class JAXRSContractTestSupport<E extends DeclarativeContract> {
 
   private static final List<String> STRING_LIST = null;
 
@@ -400,7 +416,57 @@ public abstract class JAXRSContractTestSupport<E> {
                         entry("multiple", Arrays.asList("stuff", "{multiple}")),
                         entry("another", Collections.singletonList("{another}")));
   }
+  
+  @Test
+	public void defaultPathParam() throws Exception {
+		server.enqueue(new MockResponse());
 
+		WithDefaultPathParam api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort(),
+				WithDefaultPathParam.class);
+
+		api.recordsByName(null);
+
+		assertThat(server.takeRequest())
+				.hasPath("/domains/defaultDomainName/records");
+	}
+  
+  @Test
+	public void pathAndDefaultQueryParams() throws Exception {
+		server.enqueue(new MockResponse());
+
+		WithPathAndDefaultQueryParams api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort(),
+				WithPathAndDefaultQueryParams.class);
+
+		api.recordsByNameAndType(1, null, null);
+
+		assertThat(server.takeRequest())
+				.hasPath("/domains/1/records?name=defaultName&type=defaultType");
+	}
+  
+  @Test
+	public void defaultFormParam() throws Exception {
+		server.enqueue(new MockResponse());
+
+		WithDefaultFormParam api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort(),
+				WithDefaultFormParam.class);
+
+		api.login(null, null, null);
+
+		assertThat(server.takeRequest())
+				.hasBody("{\"customer_name\":\"netflix\",\"user_name\":\"denominator\",\"password\":\"password\"}");
+	}
+  @Test
+	public void defaultHeaderParam() throws Exception {
+		server.enqueue(new MockResponse());
+		
+		WithDefaultHeaderParam api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort(),
+				WithDefaultHeaderParam.class);
+		
+		api.logout(null);
+		
+		assertThat(server.takeRequest()).hasHeaders(entry("Auth-Token", Arrays.asList("defaultToken")));
+	}
+  
   protected abstract Class<?> methodsClass();
 
   protected abstract Class<?> customMethodClass();
@@ -438,4 +504,31 @@ public abstract class JAXRSContractTestSupport<E> {
   protected abstract Class<?> methodWithFirstPathThenGetWithoutLeadingSlashClass();
 
   protected abstract Class<?> mixedAnnotationsClass();
+  
+  protected abstract Class<?> withPathAndDefaultQueryParamsClass();
+
+	protected abstract Class<?> withDefaultPathParamClass();
+
+	protected abstract Class<?> withDefaultFormParamClass();
+
+	protected abstract Class<?> withDefaultHeaderParamClass();
+  
+  private final class TestInterfaceBuilder {
+		private final Feign.Builder delegate = new Feign.Builder().contract(contract).decoder(new Decoder.Default())
+				.encoder(new Encoder() {
+					@Override
+					public void encode(Object object, Type bodyType, RequestTemplate template) {
+						if (object instanceof Map) {
+							template.body(new Gson().toJson(object));
+						} else {
+							template.body(object.toString());
+						}
+					}
+				}).logger(new Logger.JavaLogger("GitHub.Logger").appendToFile("D:\\feign\\junit.log"))
+				.logLevel(Logger.Level.FULL);
+		
+		<T> T target(String url, Class<T> clazz) {
+			return delegate.target(clazz, url);
+		}
+	}
 }
