@@ -13,6 +13,8 @@
  */
 package feign.jaxrs;
 
+import java.util.List;
+import java.util.Set;
 import feign.Param.Expander;
 
 final class DefaultValueExpander implements Expander {
@@ -24,8 +26,8 @@ final class DefaultValueExpander implements Expander {
 
 	@Override
 	public String expand(Object value) {
-		return value == null ? defaultValue : value.toString();
-
+		return value == null || (value instanceof List && ((List) value).isEmpty())
+				|| (value instanceof Set && ((Set) value).isEmpty()) ? defaultValue : value.toString();
 	}
 
 }
