@@ -150,11 +150,15 @@ public class JAXRSContract extends DeclarativeContract {
         nameParam(data, name, paramIndex);
       });
       registerParameterAnnotation(DefaultValue.class, (param, data, paramIndex) -> {
-    	  final String defaultValue = param.value();
-    	  Map<Integer, Expander> indexToExpander= new HashMap<>();
-    	  indexToExpander.put(paramIndex, new DefaultValueExpander(defaultValue));
-    	  data.indexToExpander(indexToExpander);
-      });      
+				final String defaultValue = param.value();
+				Map<Integer, Expander> indexToExpander = new HashMap<>();
+				indexToExpander.put(paramIndex, new DefaultValueExpander(defaultValue));
+				if (data.indexToExpander() == null) {
+          data.indexToExpander(indexToExpander);
+				} else {
+          data.indexToExpander().putAll(indexToExpander);
+        }
+			});  
     }
   }
 
