@@ -30,6 +30,9 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <main.java.version>17</main.java.version>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencyManagement>
@@ -37,7 +40,7 @@
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
-        <version>2021.0.5</version>
+        <version>2022.0.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
