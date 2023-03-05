@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -93,7 +93,7 @@ public class SOAPEncoder implements Encoder {
   private final JAXBContextFactory jaxbContextFactory;
   private final String soapProtocol;
 
-  private SOAPEncoder(Builder builder) {
+  public SOAPEncoder(Builder builder) {
     this.jaxbContextFactory = builder.jaxbContextFactory;
     this.writeXmlDeclaration = builder.writeXmlDeclaration;
     this.charsetEncoding = builder.charsetEncoding;

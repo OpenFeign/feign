@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 The Feign Authors
+ * Copyright 2012-2023 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Logger.Level;
-import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -206,11 +205,11 @@ public final class AsyncFeign<C> {
               client, retryer, requestInterceptors,
               responseHandler, logger, logLevel,
               propagationPolicy, methodInfoResolver,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
               options, decoder, errorDecoder);
-      final ParseHandlersByName<C> handlersByName =
-          new ParseHandlersByName<>(contract, encoder, queryMapEncoder, methodHandlerFactory);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(handlersByName, invocationHandlerFactory, defaultContextSupplier);
+          new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+              defaultContextSupplier);
       return new AsyncFeign<>(feign);
     }
   }
