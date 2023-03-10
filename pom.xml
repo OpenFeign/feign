@@ -94,7 +94,7 @@
     <jackson-databind.version>2.14.2</jackson-databind.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <mockito.version>5.1.1</mockito.version>
+    <mockito.version>5.2.0</mockito.version>
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
