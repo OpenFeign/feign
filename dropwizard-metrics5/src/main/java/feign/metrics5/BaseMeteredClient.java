@@ -52,6 +52,7 @@ public class BaseMeteredClient {
             httpResponseCode(template)
                 .tagged("http_status", String.valueOf(response.status()))
                 .tagged("status_group", response.status() / 100 + "xx")
+                .tagged("http_method", template.methodMetadata().template().method())
                 .tagged("uri", template.methodMetadata().template().path()))
         .inc();
   }
@@ -65,6 +66,7 @@ public class BaseMeteredClient {
                     ExceptionUtils.getRootCause(e).getClass().getSimpleName())
                 .tagged("http_status", String.valueOf(e.status()))
                 .tagged("status_group", e.status() / 100 + "xx")
+                .tagged("http_method", template.methodMetadata().template().method())
                 .tagged("uri", template.methodMetadata().template().path()))
         .inc();
   }
