@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
-
 import feign.AsyncFeign;
 import feign.Capability;
 import feign.Feign;
@@ -31,12 +30,10 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,7 +68,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(SimpleSource.class));
+                .target(new MockTarget<>(SimpleSource.class));
 
     source.get("0x3456789");
 
@@ -84,7 +81,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(AsyncFeign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(CompletableSource.class));
+                .target(new MockTarget<>(CompletableSource.class));
 
     source.get("0x3456789").join();
 
@@ -164,7 +161,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                   throw notFound.get();
                 })
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+                .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
     try {
       source.get("0x3456789");
@@ -194,7 +191,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                   throw notFound.get();
                 })
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+                .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
     FeignException.NotFound thrown =
         assertThrows(FeignException.NotFound.class, () -> source.get("0x3456789"));
@@ -210,7 +207,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                   throw new RuntimeException("Test error");
                 })
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
+                .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
     RuntimeException thrown = assertThrows(RuntimeException.class, () -> source.get("0x3456789"));
     assertThat(thrown.getMessage(), equalTo("Test error"));
@@ -227,7 +224,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(SimpleSource.class));
+                .target(new MockTarget<>(SimpleSource.class));
 
     source.get("0x3456789");
 
@@ -256,7 +253,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(SourceWithPathExpressions.class));
+                .target(new MockTarget<>(SourceWithPathExpressions.class));
 
     source.get("123", "0x3456789");
 
@@ -287,7 +284,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                   throw notFound.get();
                 })
             .addCapability(createMetricCapability()))
-            .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
+                .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
 
     FeignException.NotFound thrown =
         assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
