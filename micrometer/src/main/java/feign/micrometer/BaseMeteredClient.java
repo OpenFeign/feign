@@ -50,6 +50,7 @@ abstract class BaseMeteredClient {
                 e,
                 Tag.of("http_status", String.valueOf(responseStatus)),
                 Tag.of("status_group", responseStatus / 100 + "xx"),
+                Tag.of("http_method", template.methodMetadata().template().method()),
                 Tag.of("uri", template.methodMetadata().template().path()))
             .and(extraTags);
     meterRegistry.counter(metricName.name("http_response_code"), allTags).increment();

@@ -53,6 +53,8 @@ class BaseMeteredClient {
                 response.status() / 100 + "xx",
                 "http_status",
                 String.valueOf(response.status()),
+                "http_method",
+                template.methodMetadata().template().method(),
                 "uri",
                 template.methodMetadata().template().path()),
             metricSuppliers.meters())
@@ -72,6 +74,8 @@ class BaseMeteredClient {
                 e.status() / 100 + "xx",
                 "http_status",
                 String.valueOf(e.status()),
+                "http_method",
+                template.methodMetadata().template().method(),
                 "uri",
                 template.methodMetadata().template().path()),
             metricSuppliers.meters())

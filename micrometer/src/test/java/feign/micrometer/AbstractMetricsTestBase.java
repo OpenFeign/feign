@@ -176,7 +176,14 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     }
 
     assertThat(
-        getMetric("http_response_code", "http_status", "404", "status_group", "4xx"),
+        getMetric(
+            "http_response_code",
+            "http_status",
+            "404",
+            "status_group",
+            "4xx",
+            "http_method",
+            "GET"),
         notNullValue());
   }
 
