@@ -15,6 +15,7 @@ package feign.json;
 
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -87,6 +88,20 @@ public class JsonDecoderTest {
   }
 
   @Test
+  public void decodesString() throws IOException {
+    String json = "qwerty";
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.emptyMap())
+            .body(json, UTF_8)
+            .request(request)
+            .build();
+    assertEquals("qwerty", new JsonDecoder().decode(response, String.class));
+  }
+
+  @Test
   public void notFoundDecodesToEmpty() throws IOException {
     Response response =
         Response.builder()
@@ -108,6 +123,18 @@ public class JsonDecoderTest {
             .request(request)
             .build();
     assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+  }
+
+  @Test
+  public void nullBodyDecodesToNullString() throws IOException {
+    Response response =
+        Response.builder()
+            .status(204)
+            .reason("OK")
+            .headers(Collections.emptyMap())
+            .request(request)
+            .build();
+    assertNull(new JsonDecoder().decode(response, String.class));
   }
 
   @Test
