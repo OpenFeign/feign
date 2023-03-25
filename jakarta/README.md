@@ -33,7 +33,7 @@ Links the value of the corresponding parameter to a header.
 #### `@FormParam`
 Links the value of the corresponding parameter to a key passed to `Encoder.Text<Map<String, Object>>.encode()`.
 #### `@BeanParm`
-Aggregates the above supported parameter annotations under a single value object(record is supported).
+Aggregates the above supported parameter annotations under a single value object(`record` is supported).
 #### `@DefaultValue`
 Set the default value for corresponding parameter if parameter value is null.
 #### `@CookieParam`
