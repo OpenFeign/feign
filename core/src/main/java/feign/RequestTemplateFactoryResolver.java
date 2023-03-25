@@ -15,28 +15,37 @@ package feign;
 
 import static feign.Util.checkArgument;
 import static feign.Util.checkNotNull;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.template.UriUtils;
+import feign.utils.BeanEvaluator;
+import feign.utils.RecComponent;
+import feign.utils.RecordEvaluator;
+import feign.utils.RecordInvokeUtils;
 
 final class RequestTemplateFactoryResolver {
   private final Encoder encoder;
   private final QueryMapEncoder queryMapEncoder;
 
-  RequestTemplateFactoryResolver(
-      Encoder encoder,
-      QueryMapEncoder queryMapEncoder) {
+  RequestTemplateFactoryResolver(Encoder encoder, QueryMapEncoder queryMapEncoder) {
     this.encoder = checkNotNull(encoder, "encoder");
     this.queryMapEncoder = checkNotNull(queryMapEncoder, "queryMapEncoder");
   }
 
   public RequestTemplate.Factory resolve(Target<?> target, MethodMetadata md) {
+
+
     if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
       return new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
     } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
@@ -55,8 +64,10 @@ final class RequestTemplateFactoryResolver {
     private final Map<Integer, Param.Expander> indexToExpander =
         new LinkedHashMap<Integer, Param.Expander>();
 
+    @SuppressWarnings("deprecation")
     private BuildTemplateByResolvingArgs(MethodMetadata metadata, QueryMapEncoder queryMapEncoder,
-        Target target) {
+        Target<?> target) {
+
       this.metadata = metadata;
       this.target = target;
       this.queryMapEncoder = queryMapEncoder;
@@ -70,14 +81,53 @@ final class RequestTemplateFactoryResolver {
       for (Map.Entry<Integer, Class<? extends Param.Expander>> indexToExpanderClass : metadata
           .indexToExpanderClass().entrySet()) {
         try {
-          indexToExpander
-              .put(indexToExpanderClass.getKey(), indexToExpanderClass.getValue().newInstance());
+          indexToExpander.put(indexToExpanderClass.getKey(),
+              indexToExpanderClass.getValue().newInstance());
         } catch (InstantiationException e) {
           throw new IllegalStateException(e);
         } catch (IllegalAccessException e) {
           throw new IllegalStateException(e);
         }
       }
+    }
+
+    @Experimental
+    private Object[] expand(Object[] argv) {
+      List<Object> list = new ArrayList<>();
+      boolean isSupportRecord = RecordEvaluator.isSupport();
+      Set<Integer> indexToExpand = metadata.indexToExpand();
+      int index = 0;
+      for (Object i : argv) {
+        boolean expand = indexToExpand.contains(index);
+
+        if (i == null) {
+          list.add(i);
+        } else if (expand && isSupportRecord && RecordInvokeUtils.isRecord(i.getClass())) {
+
+          RecComponent[] arr = RecordInvokeUtils.recordComponents(i.getClass(), null);
+          for (RecComponent r : arr) {
+            Object value = RecordInvokeUtils.componentValue(i, r);
+            list.add(value);
+          }
+        } else if (expand && BeanEvaluator.isBean(i.getClass())) {
+          Field[] aggregatedParams = Arrays.stream(i.getClass().getDeclaredFields())
+              .filter(v -> !"this$0".equals(v.getName()))
+              .toArray(Field[]::new);
+          for (Field aggregatedParam : aggregatedParams) {
+            try {
+              aggregatedParam.setAccessible(true);
+              Object value = aggregatedParam.get(i);
+              list.add(value);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+              e.printStackTrace();
+            }
+          }
+        } else {
+          list.add(i);
+        }
+        index++;
+      }
+      return list.toArray();
     }
 
     @Override
@@ -90,16 +140,17 @@ final class RequestTemplateFactoryResolver {
         mutable.target(String.valueOf(argv[urlIndex]));
       }
       Map<String, Object> varBuilder = new LinkedHashMap<String, Object>();
+      if (argv != null && !metadata.indexToExpand().isEmpty()) {
+        argv = expand(argv);
+      }
       for (Map.Entry<Integer, Collection<String>> entry : metadata.indexToName().entrySet()) {
         int i = entry.getKey();
         Object value = argv[entry.getKey()];
-        if (value != null) { // Null values are skipped.
-          if (indexToExpander.containsKey(i)) {
-            value = expandElements(indexToExpander.get(i), value);
-          }
-          for (String name : entry.getValue()) {
-            varBuilder.put(name, value);
-          }
+        if (indexToExpander.containsKey(i)) {
+          value = expandElements(indexToExpander.get(i), value);
+        }
+        for (String name : entry.getValue()) {
+          varBuilder.put(name, value);
         }
       }
 
@@ -108,6 +159,7 @@ final class RequestTemplateFactoryResolver {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
         Object value = argv[metadata.queryMapIndex()];
+
         Map<String, Object> queryMap = toQueryMap(value);
         template = addQueryMapQueryParameters(queryMap, template);
       }
@@ -118,10 +170,10 @@ final class RequestTemplateFactoryResolver {
         Map<String, Object> headerMap = toQueryMap(value);
         template = addHeaderMapHeaders(headerMap, template);
       }
-
       return template;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> toQueryMap(Object value) {
       if (value instanceof Map) {
         return (Map<String, Object>) value;
@@ -135,12 +187,12 @@ final class RequestTemplateFactoryResolver {
 
     private Object expandElements(Param.Expander expander, Object value) {
       if (value instanceof Iterable) {
-        return expandIterable(expander, (Iterable) value);
+        return expandIterable(expander, (Iterable<?>) value);
       }
       return expander.expand(value);
     }
 
-    private List<String> expandIterable(Param.Expander expander, Iterable value) {
+    private List<String> expandIterable(Param.Expander expander, Iterable<?> value) {
       List<String> values = new ArrayList<String>();
       for (Object element : value) {
         if (element != null) {
@@ -150,7 +202,6 @@ final class RequestTemplateFactoryResolver {
       return values;
     }
 
-    @SuppressWarnings("unchecked")
     private RequestTemplate addHeaderMapHeaders(Map<String, Object> headerMap,
                                                 RequestTemplate mutable) {
       for (Map.Entry<String, Object> currEntry : headerMap.entrySet()) {
@@ -172,7 +223,6 @@ final class RequestTemplateFactoryResolver {
       return mutable;
     }
 
-    @SuppressWarnings("unchecked")
     private RequestTemplate addQueryMapQueryParameters(Map<String, Object> queryMap,
                                                        RequestTemplate mutable) {
       for (Map.Entry<String, Object> currEntry : queryMap.entrySet()) {
@@ -180,6 +230,7 @@ final class RequestTemplateFactoryResolver {
 
         Object currValue = currEntry.getValue();
         if (currValue instanceof Iterable<?>) {
+
           Iterator<?> iter = ((Iterable<?>) currValue).iterator();
           while (iter.hasNext()) {
             Object nextObject = iter.next();
@@ -202,10 +253,17 @@ final class RequestTemplateFactoryResolver {
       return mutable;
     }
 
+    @SuppressWarnings("deprecation")
     protected RequestTemplate resolve(Object[] argv,
                                       RequestTemplate mutable,
                                       Map<String, Object> variables) {
-      return mutable.resolve(variables);
+      Set<String> variableToEncoded = new HashSet<>();
+      for (Map.Entry<Integer, Boolean> entry : metadata.indexToEncoded().entrySet()) {
+        Collection<String> names = metadata.indexToName().get(entry.getKey());
+        for (String name : names)
+          variableToEncoded.add(name);
+      }
+      return mutable.resolve(variables, variableToEncoded);
     }
   }
 
@@ -214,7 +272,7 @@ final class RequestTemplateFactoryResolver {
     private final Encoder encoder;
 
     private BuildFormEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-        QueryMapEncoder queryMapEncoder, Target target) {
+        QueryMapEncoder queryMapEncoder, Target<?> target) {
       super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
     }
@@ -230,6 +288,12 @@ final class RequestTemplateFactoryResolver {
         }
       }
       try {
+        if (!metadata.indexToEncoded().isEmpty()) {
+          Set<String> set = metadata.indexToEncoded().keySet().stream().map(
+              v -> metadata.indexToName().get(v)).flatMap(Collection::stream)
+              .collect(Collectors.toSet());
+          mutable.setAlreadyEncoded(set);
+        }
         encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable);
       } catch (EncodeException e) {
         throw e;
@@ -245,7 +309,8 @@ final class RequestTemplateFactoryResolver {
     private final Encoder encoder;
 
     private BuildEncodedTemplateFromArgs(MethodMetadata metadata, Encoder encoder,
-        QueryMapEncoder queryMapEncoder, Target target) {
+        QueryMapEncoder queryMapEncoder,
+        Target<?> target) {
       super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
     }
@@ -258,7 +323,7 @@ final class RequestTemplateFactoryResolver {
       boolean alwaysEncodeBody = mutable.methodMetadata().alwaysEncodeBody();
 
       Object body = null;
-      if (!alwaysEncodeBody) {
+      if (!alwaysEncodeBody && metadata.indexToExpand().isEmpty()) {
         body = argv[metadata.bodyIndex()];
         checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
       }
@@ -275,6 +340,7 @@ final class RequestTemplateFactoryResolver {
       } catch (RuntimeException e) {
         throw new EncodeException(e.getMessage(), e);
       }
+
       return super.resolve(argv, mutable, variables);
     }
   }

@@ -16,7 +16,14 @@ package feign;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import feign.Param.Expander;
 
@@ -44,6 +51,7 @@ public final class MethodMetadata implements Serializable {
   private transient Class<?> targetType;
   private transient Method method;
   private transient final List<String> warnings = new ArrayList<>();
+  private final Set<Integer> indexToExpand = new HashSet<>();
 
   MethodMetadata() {
     template.methodMetadata(this);
@@ -197,6 +205,7 @@ public final class MethodMetadata implements Serializable {
     return parameterToIgnore.get(i);
   }
 
+
   /**
    * @param index
    * @return true if the parameter {@code index} was already consumed by a any
@@ -253,4 +262,8 @@ public final class MethodMetadata implements Serializable {
         .collect(Collectors.joining("\n- ", "\nWarnings:\n- ", ""));
   }
 
+  @Experimental
+  public Set<Integer> indexToExpand() {
+    return indexToExpand;
+  }
 }

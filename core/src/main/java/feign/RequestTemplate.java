@@ -15,12 +15,6 @@ package feign;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.checkNotNull;
-import feign.Request.HttpMethod;
-import feign.template.BodyTemplate;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -35,10 +29,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import feign.Request.HttpMethod;
+import feign.template.AbstractTemplate;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 
 /**
  * Request Builder for an HTTP Target.
@@ -47,8 +49,8 @@ import java.util.stream.Collectors;
  * information also support template expressions.
  * </p>
  */
-@SuppressWarnings("UnusedReturnValue")
-public final class RequestTemplate implements Serializable {
+@SuppressWarnings("serial")
+public final class RequestTemplate extends AbstractTemplate implements Serializable {
 
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)\\?");
   private final Map<String, QueryTemplate> queries = new LinkedHashMap<>();
@@ -65,6 +67,16 @@ public final class RequestTemplate implements Serializable {
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
   private MethodMetadata methodMetadata;
   private Target<?> feignTarget;
+  private boolean disableDecodingForAll;
+
+
+  public boolean isDisableDecodingForAll() {
+    return disableDecodingForAll;
+  }
+
+  public void setDisableDecodingForAll(boolean disableDecodingForAll) {
+    this.disableDecodingForAll = disableDecodingForAll;
+  }
 
   /**
    * Create a new Request Template.
@@ -98,7 +110,9 @@ public final class RequestTemplate implements Serializable {
       boolean decodeSlash,
       CollectionFormat collectionFormat,
       MethodMetadata methodMetadata,
-      Target<?> feignTarget) {
+      Target<?> feignTarget,
+      Set<String> alreadyEncoded,
+      boolean disableDecodingForAll) {
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
@@ -111,6 +125,9 @@ public final class RequestTemplate implements Serializable {
         (collectionFormat != null) ? collectionFormat : CollectionFormat.EXPLODED;
     this.methodMetadata = methodMetadata;
     this.feignTarget = feignTarget;
+    this.setAlreadyEncoded(alreadyEncoded);
+    this.disableDecodingForAll = disableDecodingForAll;
+
   }
 
   /**
@@ -132,7 +149,9 @@ public final class RequestTemplate implements Serializable {
             requestTemplate.decodeSlash,
             requestTemplate.collectionFormat,
             requestTemplate.methodMetadata,
-            requestTemplate.feignTarget);
+            requestTemplate.feignTarget,
+            requestTemplate.getAlreadyEncoded(),
+            requestTemplate.disableDecodingForAll);
 
     if (!requestTemplate.queries().isEmpty()) {
       template.queries.putAll(requestTemplate.queries);
@@ -169,6 +188,7 @@ public final class RequestTemplate implements Serializable {
     this.methodMetadata = toCopy.methodMetadata;
     this.target = toCopy.target;
     this.feignTarget = toCopy.feignTarget;
+    this.setAlreadyEncoded(toCopy.getAlreadyEncoded());
   }
 
   /**
@@ -179,16 +199,18 @@ public final class RequestTemplate implements Serializable {
    * @return a new Request Template with all of the variables resolved.
    */
   public RequestTemplate resolve(Map<String, ?> variables) {
-
     StringBuilder uri = new StringBuilder();
 
     /* create a new template form this one, but explicitly */
     RequestTemplate resolved = RequestTemplate.from(this);
-
+    if (disableDecodingForAll && getAlreadyEncoded() != null) {
+      getAlreadyEncoded().addAll(variables.keySet());
+    }
     if (this.uriTemplate == null) {
       /* create a new uri template using the default root */
       this.uriTemplate = UriTemplate.create("", !this.decodeSlash, this.charset);
     }
+    this.uriTemplate.setAlreadyEncoded(getAlreadyEncoded());
 
     String expanded = this.uriTemplate.expand(variables);
     if (expanded != null) {
@@ -206,14 +228,15 @@ public final class RequestTemplate implements Serializable {
       resolved.queries(Collections.emptyMap());
       StringBuilder query = new StringBuilder();
       Iterator<QueryTemplate> queryTemplates = this.queries.values().iterator();
-
       while (queryTemplates.hasNext()) {
         QueryTemplate queryTemplate = queryTemplates.next();
+        queryTemplate.setAlreadyEncoded(getAlreadyEncoded());
+
         String queryExpanded = queryTemplate.expand(variables);
         if (Util.isNotBlank(queryExpanded)) {
           query.append(queryExpanded);
           if (queryTemplates.hasNext()) {
-            query.append("&");
+            query.append('&');
           }
         }
       }
@@ -223,9 +246,9 @@ public final class RequestTemplate implements Serializable {
         Matcher queryMatcher = QUERY_STRING_PATTERN.matcher(uri);
         if (queryMatcher.find()) {
           /* the uri already has a query, so any additional queries should be appended */
-          uri.append("&");
+          uri.append('&');
         } else {
-          uri.append("?");
+          uri.append('?');
         }
         uri.append(queryString);
       }
@@ -253,6 +276,7 @@ public final class RequestTemplate implements Serializable {
     }
 
     if (this.bodyTemplate != null) {
+      bodyTemplate.setAlreadyEncoded(getAlreadyEncoded());
       resolved.body(this.bodyTemplate.expand(variables));
     }
 
@@ -271,11 +295,12 @@ public final class RequestTemplate implements Serializable {
    * @deprecated use {@link RequestTemplate#resolve(Map)}. Values already encoded are recognized as
    *             such and skipped.
    */
-  @SuppressWarnings("unused")
   @Deprecated
-  RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
+  RequestTemplate resolve(Map<String, ?> unencoded, Set<String> alreadyEncoded) {
+    setAlreadyEncoded(alreadyEncoded);
     return this.resolve(unencoded);
   }
+
 
   /**
    * Creates a {@link Request} from this template. The template must be resolved before calling this
@@ -670,7 +695,6 @@ public final class RequestTemplate implements Serializable {
    * @param queries to use for this request.
    * @return a RequestTemplate for chaining.
    */
-  @SuppressWarnings("unused")
   public RequestTemplate queries(Map<String, Collection<String>> queries) {
     if (queries == null || queries.isEmpty()) {
       this.queries.clear();
