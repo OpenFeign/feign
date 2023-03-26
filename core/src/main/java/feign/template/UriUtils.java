@@ -213,6 +213,7 @@ public class UriUtils {
     return isGenericDelimiter(c) || isSubDelimiter(c);
   }
 
+  @SuppressWarnings("unused")
   private boolean isPchar(int c) {
     return isUnreserved(c) || isSubDelimiter(c) || c == ':' || c == '@';
   }
