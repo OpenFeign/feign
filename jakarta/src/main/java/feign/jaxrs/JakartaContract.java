@@ -155,8 +155,11 @@ public final class JakartaContract extends AlwaysEncodeBodyContract {
   private void indexToExpander(MethodMetadata data, int paramIndex, Expander expander) {
     Map<Integer, Expander> indexToExpander = new HashMap<>();
     indexToExpander.put(paramIndex, expander);
-    Optional.ofNullable(data.indexToExpander()).ifPresentOrElse(v -> v.putAll(indexToExpander),
-        () -> data.indexToExpander(indexToExpander));
+    if (data.indexToExpander() != null) {
+      data.indexToExpander().putAll(indexToExpander);
+    } else {
+      data.indexToExpander(indexToExpander);
+    }
   }
 
   private static String getAnnotation(Object obj, Class<? extends Annotation> annotationClazz) {
