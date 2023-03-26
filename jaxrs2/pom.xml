@@ -147,9 +147,8 @@
 								<compileSourceRoot>${project.basedir}/src/main/java16</compileSourceRoot>
 							</compileSourceRoots>
 							<outputDirectory>${project.build.outputDirectory}/META-INF/versions/16</outputDirectory>
-							<jdkToolchain>
-								<version>16</version>
-							</jdkToolchain>
+							<!--<jdkToolchain><version>16</version></jdkToolchain>-->
+							<executable>/usr/lib/jvm/java-16-openjdk-amd64</executable>
 						</configuration>
 					</execution>
 					<execution>
