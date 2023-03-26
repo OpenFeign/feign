@@ -149,8 +149,11 @@ public class JAXRSContract extends AlwaysEncodeBodyContract {
 	protected void indexToExpander(MethodMetadata data, int paramIndex, Expander expander) {
 		Map<Integer, Expander> indexToExpander = new HashMap<>();
 		indexToExpander.put(paramIndex, expander);
-		Optional.ofNullable(data.indexToExpander()).ifPresentOrElse(v -> v.putAll(indexToExpander),
-				() -> data.indexToExpander(indexToExpander));
+		if (data.indexToExpander() != null) {
+			data.indexToExpander().putAll(indexToExpander);
+		} else {
+			data.indexToExpander(indexToExpander);
+		}
 	}
 
 	// @DefaultValue annotation must be in end of other parameter annotation
