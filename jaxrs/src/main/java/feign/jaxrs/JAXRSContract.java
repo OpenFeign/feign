@@ -37,7 +37,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-import feign.AlwaysEncodeBodyContract;
+import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Param.Expander;
 import feign.Request;
@@ -48,7 +48,7 @@ import feign.jaxrs.AbstractParameterValidator.DefaultParameterExpander;
  * <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs">Feign
  * JAX-RS README</a>.
  */
-public class JAXRSContract extends AlwaysEncodeBodyContract {
+public class JAXRSContract extends DeclarativeContract {
 
 	static final String ACCEPT = "Accept";
 	static final String CONTENT_TYPE = "Content-Type";
