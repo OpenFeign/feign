@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import feign.AlwaysEncodeBodyContract;
+import feign.DeclarativeContract;
 import feign.MethodMetadata;
 import feign.Param.Expander;
 import feign.Request;
@@ -50,7 +50,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 
-public final class JakartaContract extends AlwaysEncodeBodyContract {
+public final class JakartaContract extends DeclarativeContract {
 
   static final String ACCEPT = "Accept";
   static final String CONTENT_TYPE = "Content-Type";
