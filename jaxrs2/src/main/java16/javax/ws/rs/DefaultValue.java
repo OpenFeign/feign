@@ -1,16 +1,19 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright (c) 2010, 2017 Oracle and/or its affiliates. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0, which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the
+ * Eclipse Public License v. 2.0 are satisfied: GNU General Public License,
+ * version 2 with the GNU Classpath Exception, which is available at
+ * https://www.gnu.org/software/classpath/license.html.
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  */
+
 package javax.ws.rs;
 
 import java.lang.annotation.Documented;
@@ -20,20 +23,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines the default value of request meta-data that is bound using one of the following
- * annotations: {@link javax.ws.rs.PathParam}, {@link javax.ws.rs.QueryParam},
- * {@link javax.ws.rs.MatrixParam}, {@link javax.ws.rs.CookieParam}, {@link javax.ws.rs.FormParam},
- * or {@link javax.ws.rs.HeaderParam}. The default value is used if the corresponding meta-data is
- * not present in the request.
+ * Defines the default value of request meta-data that is bound using one of the
+ * following annotations:
+ * {@link javax.ws.rs.PathParam},
+ * {@link javax.ws.rs.QueryParam},
+ * {@link javax.ws.rs.MatrixParam},
+ * {@link javax.ws.rs.CookieParam},
+ * {@link javax.ws.rs.FormParam},
+ * or {@link javax.ws.rs.HeaderParam}.
+ * The default value is used if the corresponding meta-data is not present in the
+ * request.
  * <p>
- * If the type of the annotated parameter is {@link java.util.List}, {@link java.util.Set} or
- * {@link java.util.SortedSet} then the resulting collection will have a single entry mapped from
- * the supplied default value.
+ * If the type of the annotated parameter is {@link java.util.List},
+ * {@link java.util.Set} or {@link java.util.SortedSet} then the resulting collection
+ * will have a single entry mapped from the supplied default value.
  * </p>
  * <p>
- * If this annotation is not used and the corresponding meta-data is not present in the request, the
- * value will be an empty collection for {@code List}, {@code Set} or {@code SortedSet},
- * {@code null} for other object types, and the Java-defined default for primitive types.
+ * If this annotation is not used and the corresponding meta-data is not
+ * present in the request, the value will be an empty collection for
+ * {@code List}, {@code Set} or {@code SortedSet}, {@code null} for
+ * other object types, and the Java-defined default for primitive types.
  * </p>
  *
  * @author Paul Sandoz
@@ -46,14 +55,13 @@ import java.lang.annotation.Target;
  * @see CookieParam
  * @since 1.0
  */
-@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD,
-    ElementType.RECORD_COMPONENT})
+@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD,ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface DefaultValue {
 
-  /**
-   * The specified default value.
-   */
-  String value();
+    /**
+     * The specified default value.
+     */
+    String value();
 }
