@@ -635,6 +635,8 @@
             <exclude>src/test/resources/**</exclude>
             <exclude>src/main/resources/**</exclude>
             <exclude>.circleci/**</exclude>
+            <exclude>src/main/java16/javax/ws/rs/*.java</exclude>
+            <exclude>src/main/java16/jakarta/ws/rs/*.java</exclude>
           </excludes>
           <strictCheck>true</strictCheck>
           <mapping>
