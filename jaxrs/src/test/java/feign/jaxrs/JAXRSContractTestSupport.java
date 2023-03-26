@@ -88,9 +88,8 @@ public abstract class JAXRSContractTestSupport<E extends DeclarativeContract> {
 
 	public final class JAXRSTestBuilder {
 		private final Feign.Builder delegate = new Feign.Builder().contract(contract).decoder(new Decoder.Default())
-				.encoder(new UrlEncoder()).requestInterceptor(new JAXRSRequestInterceptor())
-//				.logger(new Logger.JavaLogger("feign-jaxrs").appendToFile("feign-jaxrs.log")).logLevel(feign.Logger.Level.FULL)
-				;
+				.encoder(new UrlEncoder()).requestInterceptor(new JAXRSRequestInterceptor());
+
 		public <T> T target(String url, Class<T> clazz) {
 			return delegate.target(clazz, url);
 		}
@@ -216,12 +215,16 @@ public abstract class JAXRSContractTestSupport<E extends DeclarativeContract> {
 	public void bodyParamIsGeneric() throws Exception {
 		final MethodMetadata md = parseAndValidateMetadata(bodyParamsClass(), "post", List.class);
 
-		assertThat(md.bodyIndex()).isNull();
-		assertThat(md.bodyType()).isNull();
+		assertThat(md.bodyIndex()).isEqualTo(0);
+		assertThat(md.bodyType())
+				.isEqualTo(JAXRSContractTestSupport.class.getDeclaredField("STRING_LIST").getGenericType());
 	}
 
 	@Test
 	public void tooManyBodies() throws Exception {
+		thrown.expect(IllegalStateException.class);
+		thrown.expectMessage("Method has too many Body");
+
 		parseAndValidateMetadata(bodyParamsClass(), "tooMany", List.class, List.class);
 	}
 
