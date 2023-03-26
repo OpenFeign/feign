@@ -148,7 +148,7 @@
 							</compileSourceRoots>
 							<outputDirectory>${project.build.outputDirectory}/META-INF/versions/16</outputDirectory>
 							<!--<jdkToolchain><version>16</version></jdkToolchain>-->
-							<executable>/usr/lib/jvm/java-16-openjdk-amd64</executable>
+							<executable>/usr/lib/jvm/java-16-openjdk-amd64/bin/javac</executable>
 						</configuration>
 					</execution>
 					<execution>
