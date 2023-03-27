@@ -40,7 +40,7 @@ public class Slf4jLogger extends feign.Logger {
     this(LoggerFactory.getLogger(name));
   }
 
-  Slf4jLogger(Logger logger) {
+  public Slf4jLogger(Logger logger) {
     this.logger = logger;
   }
 
