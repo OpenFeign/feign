@@ -65,6 +65,7 @@ public final class RequestTemplate implements Serializable {
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
   private MethodMetadata methodMetadata;
   private Target<?> feignTarget;
+  private Object extraParam;
 
   /**
    * Create a new Request Template.
@@ -98,7 +99,8 @@ public final class RequestTemplate implements Serializable {
       boolean decodeSlash,
       CollectionFormat collectionFormat,
       MethodMetadata methodMetadata,
-      Target<?> feignTarget) {
+      Target<?> feignTarget,
+      Object extraParam) {
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
@@ -111,6 +113,7 @@ public final class RequestTemplate implements Serializable {
         (collectionFormat != null) ? collectionFormat : CollectionFormat.EXPLODED;
     this.methodMetadata = methodMetadata;
     this.feignTarget = feignTarget;
+    this.extraParam = extraParam;
   }
 
   /**
@@ -132,7 +135,8 @@ public final class RequestTemplate implements Serializable {
             requestTemplate.decodeSlash,
             requestTemplate.collectionFormat,
             requestTemplate.methodMetadata,
-            requestTemplate.feignTarget);
+            requestTemplate.feignTarget,
+            requestTemplate.extraParam);
 
     if (!requestTemplate.queries().isEmpty()) {
       template.queries.putAll(requestTemplate.queries);
@@ -169,6 +173,7 @@ public final class RequestTemplate implements Serializable {
     this.methodMetadata = toCopy.methodMetadata;
     this.target = toCopy.target;
     this.feignTarget = toCopy.feignTarget;
+    this.extraParam = toCopy.extraParam;
   }
 
   /**
@@ -1044,6 +1049,12 @@ public final class RequestTemplate implements Serializable {
   }
 
   @Experimental
+  public RequestTemplate extraParam(Object extraParam) {
+    this.extraParam = extraParam;
+    return this;
+  }
+
+  @Experimental
   public MethodMetadata methodMetadata() {
     return methodMetadata;
   }
@@ -1051,6 +1062,11 @@ public final class RequestTemplate implements Serializable {
   @Experimental
   public Target<?> feignTarget() {
     return feignTarget;
+  }
+
+  @Experimental
+  public Object extraParam() {
+    return extraParam;
   }
 
   /**
