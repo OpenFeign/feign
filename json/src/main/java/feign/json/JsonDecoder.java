@@ -14,6 +14,7 @@
 package feign.json;
 
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import org.json.JSONArray;
@@ -57,6 +58,8 @@ public class JsonDecoder implements Decoder {
         return new JSONObject();
       else if (JSONArray.class.isAssignableFrom((Class<?>) type))
         return new JSONArray();
+      else if (String.class.equals(type))
+        return null;
       else
         throw new DecodeException(response.status(),
             format("%s is not a type supported by this decoder.", type), response.request());
@@ -69,7 +72,7 @@ public class JsonDecoder implements Decoder {
         return null; // Empty body
       }
       bodyReader.reset();
-      return decodeJSON(response, type, bodyReader);
+      return decodeBody(response, type, bodyReader);
     } catch (JSONException jsonException) {
       if (jsonException.getCause() != null && jsonException.getCause() instanceof IOException) {
         throw (IOException) jsonException.getCause();
@@ -79,7 +82,9 @@ public class JsonDecoder implements Decoder {
     }
   }
 
-  private Object decodeJSON(Response response, Type type, Reader reader) {
+  private Object decodeBody(Response response, Type type, Reader reader) throws IOException {
+    if (String.class.equals(type))
+      return Util.toString(reader);
     JSONTokener tokenizer = new JSONTokener(reader);
     if (JSONObject.class.isAssignableFrom((Class<?>) type))
       return new JSONObject(tokenizer);
