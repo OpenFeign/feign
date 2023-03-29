@@ -45,11 +45,13 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     String get(String body);
   }
 
+
   public interface CompletableSource {
 
     @RequestLine("GET /get")
     CompletableFuture<String> get(String body);
   }
+
 
   protected MR metricsRegistry;
 
@@ -169,7 +171,8 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     }
 
     assertThat(
-        getMetric("http_response_code", "http_status", "404", "status_group", "4xx"),
+        getMetric("http_response_code", "http_status", "404", "status_group", "4xx",
+            "http_method", "GET"),
         notNullValue());
   }
 
