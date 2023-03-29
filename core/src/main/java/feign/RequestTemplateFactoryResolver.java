@@ -119,6 +119,11 @@ final class RequestTemplateFactoryResolver {
         template = addHeaderMapHeaders(headerMap, template);
       }
 
+      if (metadata.extraParamIndex() != null) {
+        Object value = argv[metadata.extraParamIndex()];
+        template = template.extraParam(value);
+      }
+
       return template;
     }
 

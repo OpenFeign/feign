@@ -45,7 +45,7 @@ import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -689,6 +689,24 @@ public class FeignTest {
     });
   }
 
+  @Test
+  public void extraParam() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    Object originExtraParam = new Object();
+    Map<String, Object> extraParamHolder = new HashMap<>();
+    extraParamHolder.put("originExtraParam", originExtraParam);
+    TestInterface api = new TestInterfaceBuilder()
+        .requestInterceptor(
+            template -> extraParamHolder.put("interceptorExtraParam", template.extraParam()))
+        .target("http://localhost:" + server.getPort());
+
+    api.extraParam(originExtraParam);
+
+    assertSame(extraParamHolder.get("originExtraParam"),
+        extraParamHolder.get("interceptorExtraParam"));
+  }
+
   private static class MockRetryer implements Retryer {
 
     boolean tripped;
@@ -1096,6 +1114,9 @@ public class FeignTest {
     @RequestLine("GET /settings")
     @Headers("Custom: {complex}")
     void supportComplexHttpHeaders(@Param("complex") String complex);
+
+    @RequestLine("POST /")
+    void extraParam(@ExtraParam Object extraParam) throws TestInterfaceException;
 
     class DateToMillis implements Param.Expander {
 

@@ -321,6 +321,11 @@ public interface Contract {
             "HeaderMap annotation was present on multiple parameters.");
         data.headerMapIndex(paramIndex);
       });
+      super.registerParameterAnnotation(ExtraParam.class, (queryMap, data, paramIndex) -> {
+        checkState(data.extraParamIndex() == null,
+            "HeaderMap annotation was present on multiple parameters.");
+        data.extraParamIndex(paramIndex);
+      });
     }
 
     private static Map<String, Collection<String>> toMap(String[] input) {
