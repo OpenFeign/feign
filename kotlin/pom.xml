@@ -29,7 +29,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <kotlin.version>1.8.10</kotlin.version>
+    <kotlin.version>1.8.20</kotlin.version>
     <kotlinx.coroutines.version>1.6.4</kotlinx.coroutines.version>
   </properties>
 
