@@ -31,12 +31,15 @@ import javax.xml.bind.Unmarshaller;
  */
 public final class JAXBContextFactory {
 
-  private final ConcurrentHashMap<Class<?>, JAXBContext> jaxbContexts =
+  private final ConcurrentHashMap<JAXBContextCacheKey, JAXBContext> jaxbContexts =
       new ConcurrentHashMap<>(64);
   private final Map<String, Object> properties;
+  private final JAXBContextInstantationMode jaxbContextInstantationMode;
 
-  private JAXBContextFactory(Map<String, Object> properties) {
+  private JAXBContextFactory(Map<String, Object> properties,
+      JAXBContextInstantationMode jaxbContextInstantationMode) {
     this.properties = properties;
+    this.jaxbContextInstantationMode = jaxbContextInstantationMode;
   }
 
   /**
@@ -62,10 +65,12 @@ public final class JAXBContextFactory {
   }
 
   private JAXBContext getContext(Class<?> clazz) throws JAXBException {
-    JAXBContext jaxbContext = this.jaxbContexts.get(clazz);
+    JAXBContextCacheKey cacheKey = jaxbContextInstantationMode.getJAXBContextCacheKey(clazz);
+    JAXBContext jaxbContext = this.jaxbContexts.get(cacheKey);
+
     if (jaxbContext == null) {
-      jaxbContext = JAXBContext.newInstance(clazz);
-      this.jaxbContexts.putIfAbsent(clazz, jaxbContext);
+      jaxbContext = jaxbContextInstantationMode.getJAXBContext(clazz);
+      this.jaxbContexts.putIfAbsent(cacheKey, jaxbContext);
     }
     return jaxbContext;
   }
@@ -90,6 +95,9 @@ public final class JAXBContextFactory {
   public static class Builder {
 
     private final Map<String, Object> properties = new HashMap<>(10);
+
+    private JAXBContextInstantationMode jaxbContextInstantationMode =
+        JAXBContextInstantationMode.CLASS;
 
     /**
      * Sets the jaxb.encoding property of any Marshaller created by this factory.
@@ -150,11 +158,30 @@ public final class JAXBContextFactory {
     }
 
     /**
+     * Provide an instantiation mode for JAXB Contexts, can be class or package, default is class if
+     * this method is not called.
+     *
+     * <p>
+     * Example : <br>
+     * <br>
+     * <code>
+     *    new JAXBContextFactory.Builder()
+     *      .withJAXBContextInstantiationMode(JAXBContextInstantationMode.PACKAGE)
+     *      .build();
+     * </code>
+     * </p>
+     */
+    public Builder withJAXBContextInstantiationMode(JAXBContextInstantationMode jaxbContextInstantiationMode) {
+      this.jaxbContextInstantationMode = jaxbContextInstantiationMode;
+      return this;
+    }
+
+    /**
      * Creates a new {@link feign.jaxb.JAXBContextFactory} instance with a lazy loading cached
      * context
      */
     public JAXBContextFactory build() {
-      return new JAXBContextFactory(properties);
+      return new JAXBContextFactory(properties, jaxbContextInstantationMode);
     }
 
     /**
@@ -167,7 +194,7 @@ public final class JAXBContextFactory {
      *         likely due to missing JAXB annotations
      */
     public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
-      JAXBContextFactory factory = new JAXBContextFactory(properties);
+      JAXBContextFactory factory = new JAXBContextFactory(properties, jaxbContextInstantationMode);
       factory.preloadContextCache(classes);
       return factory;
     }
