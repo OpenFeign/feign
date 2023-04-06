@@ -31,6 +31,8 @@
     <main.basedir>${project.basedir}/..</main.basedir>
 
     <moditect.skip>true</moditect.skip>
+    <jersey-client.version>2.39.1</jersey-client.version>
+    <jersey-hk2.version>2.39.1</jersey-hk2.version>
   </properties>
 
   <dependencies>
@@ -85,13 +87,13 @@
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-client</artifactId>
-      <version>2.39.1</version>
+      <version>${jersey-client.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.inject</groupId>
       <artifactId>jersey-hk2</artifactId>
-      <version>2.39.1</version>
+      <version>${jersey-hk2.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -105,4 +107,18 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

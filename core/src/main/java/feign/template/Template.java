@@ -28,9 +28,10 @@ import java.util.stream.Collectors;
  * <a href="https://tools.ietf.org/html/rfc6570">RFC 6570</a>, with some relaxed rules, allowing the
  * concept to be used in areas outside of the uri.
  */
-public class Template {
+public class Template extends AbstractTemplate {
 
   private static final Logger logger = Logger.getLogger(Template.class.getName());
+  @SuppressWarnings("unused")
   private static final Pattern QUERY_STRING_PATTERN = Pattern.compile("(?<!\\{)(\\?)");
   private final String template;
   private final boolean allowUnresolved;
@@ -38,6 +39,7 @@ public class Template {
   private final boolean encodeSlash;
   private final Charset charset;
   private final List<TemplateChunk> templateChunks = new ArrayList<>();
+
 
   /**
    * Create a new Template.
@@ -94,9 +96,12 @@ public class Template {
     /* resolve all expressions within the template */
     StringBuilder resolved = null;
     for (TemplateChunk chunk : this.templateChunks) {
+
       String expanded;
       if (chunk instanceof Expression) {
+
         expanded = this.resolveExpression((Expression) chunk, variables);
+
       } else {
         /* chunk is a literal value */
         expanded = chunk.getValue();
@@ -126,8 +131,13 @@ public class Template {
     String resolved = null;
     Object value = variables.get(expression.getName());
     if (value != null) {
+      boolean isEncodingRequired = this.encode.isEncodingRequired();
+      if (getAlreadyEncoded() != null && getAlreadyEncoded().contains(expression.getName())) {
+        isEncodingRequired = false;
+      }
+
       String expanded = expression.expand(
-          value, this.encode.isEncodingRequired());
+          value, isEncodingRequired);
       if (expanded != null) {
         if (!this.encodeSlash) {
           logger.fine("Explicit slash decoding specified, decoding all slashes in uri");

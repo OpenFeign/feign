@@ -13,23 +13,32 @@
  */
 package feign.jaxrs2;
 
-import feign.*;
-import feign.Feign.Builder;
-import feign.assertj.MockWebServerAssertions;
-import feign.client.AbstractClientTest;
-import feign.jaxrs.JAXRSContract;
-import okhttp3.mockwebserver.MockResponse;
-import org.assertj.core.data.MapEntry;
-import org.junit.Assume;
-import org.junit.Test;
-import javax.ws.rs.*;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Collections;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Collections;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
+import org.assertj.core.data.MapEntry;
+import org.junit.Assume;
+import org.junit.Test;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.Headers;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import feign.assertj.MockWebServerAssertions;
+import feign.client.AbstractClientTest;
+import feign.jaxrs.JAXRSContract;
+import feign.jaxrs.UrlEncoder;
+import okhttp3.mockwebserver.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -38,7 +47,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new JAXRSClient());
+    return Feign.builder().client(new JAXRSClient()).encoder(new UrlEncoder());
   }
 
   @Override

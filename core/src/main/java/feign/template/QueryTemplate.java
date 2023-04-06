@@ -13,10 +13,6 @@
  */
 package feign.template;
 
-import feign.CollectionFormat;
-import feign.Util;
-import feign.template.Template.EncodingOptions;
-import feign.template.Template.ExpansionOptions;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,12 +24,17 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import feign.CollectionFormat;
+import feign.Util;
+import feign.template.Template.EncodingOptions;
+import feign.template.Template.ExpansionOptions;
 
 /**
  * Template for a Query String parameter.
  */
-public final class QueryTemplate {
+public final class QueryTemplate extends AbstractTemplate {
 
+  @SuppressWarnings("unused")
   private static final String UNDEF = "undef";
   private List<Template> values;
   private final Template name;
@@ -189,6 +190,7 @@ public final class QueryTemplate {
 
     List<String> expanded = new ArrayList<>();
     for (Template template : this.values) {
+      template.setAlreadyEncoded(getAlreadyEncoded());
       String result = template.expand(variables);
       if (result == null) {
         continue;

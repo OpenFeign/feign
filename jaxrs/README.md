@@ -33,3 +33,11 @@ Links the value of the corresponding parameter to a query parameter.  When invok
 Links the value of the corresponding parameter to a header.
 #### `@FormParam`
 Links the value of the corresponding parameter to a key passed to `Encoder.Text<Map<String, Object>>.encode()`.
+#### `@DefaultValue`
+Set the default value for corresponding parameter if parameter value is null.
+#### `@CookieParam`
+Links the value of the corresponding cookie parameter to a header.
+#### `@MatrixParam`
+Links the value of the corresponding parameter to a template variable declared in the path.
+#### `@Encoded`
+Skip url encode for corresponding parameter. 

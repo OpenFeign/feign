@@ -30,6 +30,8 @@
   <properties>
     <main.java.version>11</main.java.version>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <jakarta-ws-rs-api.version>3.1.0</jakarta-ws-rs-api.version>
+    <jersey-client.version>3.1.1</jersey-client.version>
   </properties>
 
   <dependencies>
@@ -41,7 +43,7 @@
     <dependency>
       <groupId>jakarta.ws.rs</groupId>
       <artifactId>jakarta.ws.rs-api</artifactId>
-      <version>3.1.0</version>
+      <version>${jakarta-ws-rs-api.version}</version>
     </dependency>
 
     <!-- for example -->
@@ -61,6 +63,24 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-jaxrs</artifactId>
       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-jaxrs2</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>${jersey-client.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
