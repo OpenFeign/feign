@@ -27,7 +27,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <micrometer.version>1.10.5</micrometer.version>
+    <micrometer.version>1.10.6</micrometer.version>
   </properties>
 
   <dependencies>
