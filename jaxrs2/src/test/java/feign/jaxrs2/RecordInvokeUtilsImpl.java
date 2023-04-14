@@ -21,7 +21,7 @@ import java.util.Arrays;
 import feign.utils.RecComponent;
 import feign.utils.RecordInvokeUtils;
 
-public final class RecordInvokeUtilsImpl extends RecordInvokeUtils {
+final class RecordInvokeUtilsImpl extends RecordInvokeUtils {
   @SuppressWarnings("unchecked")
   public static <T> T invokeCanonicalConstructor(Class<T> recordType, Object[] args) {
     try {
