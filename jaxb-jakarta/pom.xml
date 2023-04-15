@@ -30,6 +30,9 @@
     <description>Feign JAXB Jakarta</description>
 
     <properties>
+        <main.java.version>11</main.java.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <main.basedir>${project.basedir}/..</main.basedir>
     </properties>
 
