@@ -35,6 +35,7 @@
     <module>jackson-jaxb</module>
     <module>jackson-jr</module>
     <module>jaxb</module>
+    <module>jaxb-jakarta</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
     <module>java11</module>
