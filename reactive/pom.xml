@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.3-SNAPSHOT</version>
+    <version>12.4-SNAPSHOT</version>
   </parent>
   <artifactId>feign-reactive-wrappers</artifactId>
 
@@ -28,7 +28,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <reactor.version>3.5.4</reactor.version>
+    <reactor.version>3.5.5</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
   </properties>
