@@ -15,12 +15,6 @@ package feign;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.checkNotNull;
-import feign.Request.HttpMethod;
-import feign.template.BodyTemplate;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -39,6 +33,12 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import feign.Request.HttpMethod;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 
 /**
  * Request Builder for an HTTP Target.
@@ -706,6 +706,13 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * @see RequestTemplate#headerLiteral(String, Iterable)
+   */
+  public RequestTemplate headerLiteral(String name, String... values) {
+    return headerLiteral(name, Arrays.asList(values));
+  }
+
+  /**
    * Specify a Header, with the specified values. Values can be literals or template expressions.
    *
    * @param name of the header.
@@ -713,15 +720,24 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate header(String name, Iterable<String> values) {
-    if (name == null || name.isEmpty()) {
-      throw new IllegalArgumentException("name is required.");
-    }
-    if (values == null) {
-      values = Collections.emptyList();
-    }
+    values = validateHeaderValues(name, values);
 
     return appendHeader(name, values);
   }
+
+  /**
+   * Specify a Header, with the specified values. Values will be evaluated as literal.
+   *
+   * @param name of the header.
+   * @param values for this header.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate headerLiteral(String name, Iterable<String> values) {
+    values = validateHeaderValues(name, values);
+
+    return appendHeader(name, values, true);
+  }
+
 
   /**
    * Clear on reader from {@link RequestTemplate}
@@ -788,6 +804,21 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * Validates that both the name and values are valid
+   * 
+   * @param name of the header.
+   * @param values for this header.
+   * @return an Iterable of strings
+   */
+  private Iterable<String> validateHeaderValues(String name, Iterable<String> values) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+
+    return values == null ? Collections.emptyList() : values;
+  }
+
+  /**
    * Headers for this Request.
    *
    * @param headers to use.
@@ -796,6 +827,21 @@ public final class RequestTemplate implements Serializable {
   public RequestTemplate headers(Map<String, Collection<String>> headers) {
     if (headers != null && !headers.isEmpty()) {
       headers.forEach(this::header);
+    } else {
+      this.headers.clear();
+    }
+    return this;
+  }
+
+  /**
+   * Header Literals for this Request.
+   *
+   * @param headers to use.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate headerLiterals(Map<String, Collection<String>> headers) {
+    if (headers != null && !headers.isEmpty()) {
+      headers.forEach(this::headerLiteral);
     } else {
       this.headers.clear();
     }

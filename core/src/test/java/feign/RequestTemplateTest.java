@@ -15,13 +15,10 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import feign.Request.HttpMethod;
-import feign.template.UriUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +27,8 @@ import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import feign.Request.HttpMethod;
+import feign.template.UriUtils;
 
 public class RequestTemplateTest {
 
@@ -241,6 +240,18 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasHeaders(entry("A-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  public void shouldNotResolveTemplateWithHeaderWithJsonLiteral() {
+    String json = "{ \"foo\": \"bar\", \"hello\": \"world\"}";
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
+        .headerLiteral("A-Header", "{aHeader}");
+
+    template = template.resolve(mapOf("aHeader", json));
+
+    assertThat(template)
+        .hasHeaders(entry("A-Header", Collections.singletonList("{aHeader}")));
   }
 
   /**
