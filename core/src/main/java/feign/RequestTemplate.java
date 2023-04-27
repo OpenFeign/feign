@@ -15,6 +15,12 @@ package feign;
 
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.checkNotNull;
+import feign.Request.HttpMethod;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -33,12 +39,6 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import feign.Request.HttpMethod;
-import feign.template.BodyTemplate;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
 
 /**
  * Request Builder for an HTTP Target.
