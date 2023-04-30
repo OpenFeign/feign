@@ -962,13 +962,78 @@ Feign, by default, will automatically retry `IOException`s, regardless of HTTP m
 related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`.  To customize this
 behavior, register a custom `Retryer` instance via the builder.
 
+The following example shows how to refresh token and retry with `ErrorDecoder` and `Retryer` when received a 401 response.
+
 ```java
 public class Example {
-  public static void main(String[] args) {
-    MyApi myApi = Feign.builder()
-                 .retryer(new MyRetryer())
-                 .target(MyApi.class, "https://api.hostname.com");
-  }
+    public static void main(String[] args) {
+        var github = Feign.builder()
+                .decoder(new GsonDecoder())
+                .retryer(new MyRetryer(100, 3))
+                .errorDecoder(new MyErrorDecoder())
+                .target(Github.class, "https://api.github.com");
+
+        var contributors = github.contributors("foo", "bar", "invalid_token");
+        for (var contributor : contributors) {
+            System.out.println(contributor.login + " " + contributor.contributions);
+        }
+    }
+
+    static class MyErrorDecoder implements ErrorDecoder {
+
+        private final ErrorDecoder defaultErrorDecoder = new Default();
+
+        @Override
+        public Exception decode(String methodKey, Response response) {
+            // wrapper 401 to RetryableException in order to retry
+            if (response.status() == 401) {
+                return new RetryableException(response.status(), response.reason(), response.request().httpMethod(), null, response.request());
+            }
+            return defaultErrorDecoder.decode(methodKey, response);
+        }
+    }
+
+    static class MyRetryer implements Retryer {
+
+        private final long period;
+        private final int maxAttempts;
+        private int attempt = 1;
+
+        public MyRetryer(long period, int maxAttempts) {
+            this.period = period;
+            this.maxAttempts = maxAttempts;
+        }
+
+        @Override
+        public void continueOrPropagate(RetryableException e) {
+            if (++attempt > maxAttempts) {
+                throw e;
+            }
+            if (e.status() == 401) {
+                // remove Authorization first, otherwise Feign will add a new Authorization header
+                // cause github responses a 400 bad request
+                e.request().requestTemplate().removeHeader("Authorization");
+                e.request().requestTemplate().header("Authorization", "Bearer " + getNewToken());
+                try {
+                    Thread.sleep(period);
+                } catch (InterruptedException ex) {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
+        }
+
+        // Access an external api to obtain new token
+        // In this example, we can simply return a fixed token to demonstrate how Retryer works
+        private String getNewToken() {
+            return "newToken";
+        }
+
+        @Override
+        public Retryer clone() {
+            return new MyRetryer(period, maxAttempts);
+        }
 }
 ```
 
