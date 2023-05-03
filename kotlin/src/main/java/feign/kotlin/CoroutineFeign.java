@@ -164,6 +164,7 @@ public class CoroutineFeign<C> {
           .logLevel(logLevel)
           .client((AsyncClient<Object>) client)
           .decoder(decoder)
+          .errorDecoder(errorDecoder)
           .contract(contract)
           .retryer(retryer)
           .logger(logger)
