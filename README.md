@@ -57,6 +57,18 @@ Long Term - The future ☁️
 
 ---
 
+# Usage
+
+The feign library is available from [Maven Central](https://central.sonatype.com/search?q=g:io.github.openfeign%20%20a:feign-core).
+
+```xml
+<dependency>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-core</artifactId>
+    <version>??feign.version??</version>
+</dependency>
+```
+
 ### Basics
 
 Usage typically looks like this, an adaptation of the [canonical Retrofit sample](https://github.com/square/retrofit/blob/master/samples/src/main/java/com/example/retrofit/SimpleService.java).
@@ -359,7 +371,9 @@ Feign includes example [GitHub](./example-github) and [Wikipedia](./example-wiki
 ### Integrations
 Feign intends to work well with other Open Source tools.  Modules are welcome to integrate with your favorite projects!
 
-### Gson
+### Encoder/Decoder
+
+#### Gson
 [Gson](./gson) includes an encoder and decoder you can use with a JSON API.
 
 Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
@@ -376,7 +390,7 @@ public class Example {
 }
 ```
 
-### Jackson
+#### Jackson
 [Jackson](./jackson) includes an encoder and decoder you can use with a JSON API.
 
 Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
@@ -395,7 +409,7 @@ public class Example {
 For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
 the [Jackson Jr Module](./jackson-jr).
 
-### Sax
+#### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 
 Here's an example of how to configure Sax response parsing:
@@ -411,7 +425,7 @@ public class Example {
 }
 ```
 
-### JAXB
+#### JAXB
 [JAXB](./jaxb) includes an encoder and decoder you can use with an XML API.
 
 Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
@@ -427,79 +441,7 @@ public class Example {
 }
 ```
 
-### JAX-RS
-[JAXRSContract](./jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
-
-Here's the example above re-written to use JAX-RS:
-```java
-interface GitHub {
-  @GET @Path("/repos/{owner}/{repo}/contributors")
-  List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
-}
-
-public class Example {
-  public static void main(String[] args) {
-    GitHub github = Feign.builder()
-                       .contract(new JAXRSContract())
-                       .target(GitHub.class, "https://api.github.com");
-  }
-}
-```
-
-### OkHttp
-[OkHttpClient](./okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
-
-To use OkHttp with Feign, add the OkHttp module to your classpath. Then, configure Feign to use the OkHttpClient:
-
-```java
-public class Example {
-  public static void main(String[] args) {
-    GitHub github = Feign.builder()
-                     .client(new OkHttpClient())
-                     .target(GitHub.class, "https://api.github.com");
-  }
-}
-```
-
-### Ribbon
-[RibbonClient](./ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
-
-Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
-```java
-public class Example {
-  public static void main(String[] args) {
-    MyService api = Feign.builder()
-          .client(RibbonClient.create())
-          .target(MyService.class, "https://myAppProd");
-  }
-}
-```
-
-### Java 11 Http2
-[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](https://openjdk.java.net/jeps/321) that implements HTTP/2.
-
-To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
-
-```java
-GitHub github = Feign.builder()
-                     .client(new Http2Client())
-                     .target(GitHub.class, "https://api.github.com");
-```
-
-### Hystrix
-[HystrixFeign](./hystrix) configures circuit breaker support provided by [Hystrix](https://github.com/Netflix/Hystrix).
-
-To use Hystrix with Feign, add the Hystrix module to your classpath. Then use the `HystrixFeign` builder:
-
-```java
-public class Example {
-  public static void main(String[] args) {
-    MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd");
-  }
-}
-```
-
-### SOAP
+#### SOAP
 [SOAP](./soap) includes an encoder and decoder you can use with an XML API.
 
 
@@ -521,7 +463,87 @@ public class Example {
 
 NB: you may also need to add `SOAPErrorDecoder` if SOAP Faults are returned in response with error http codes (4xx, 5xx, ...)
 
-### SLF4J
+### Contract
+
+#### JAX-RS
+[JAXRSContract](./jaxrs) overrides annotation processing to instead use standard ones supplied by the JAX-RS specification.  This is currently targeted at the 1.1 spec.
+
+Here's the example above re-written to use JAX-RS:
+```java
+interface GitHub {
+  @GET @Path("/repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@PathParam("owner") String owner, @PathParam("repo") String repo);
+}
+
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                       .contract(new JAXRSContract())
+                       .target(GitHub.class, "https://api.github.com");
+  }
+}
+```
+
+### Client
+
+#### OkHttp
+[OkHttpClient](./okhttp) directs Feign's http requests to [OkHttp](http://square.github.io/okhttp/), which enables SPDY and better network control.
+
+To use OkHttp with Feign, add the OkHttp module to your classpath. Then, configure Feign to use the OkHttpClient:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    GitHub github = Feign.builder()
+                     .client(new OkHttpClient())
+                     .target(GitHub.class, "https://api.github.com");
+  }
+}
+```
+
+#### Ribbon
+[RibbonClient](./ribbon) overrides URL resolution of Feign's client, adding smart routing and resiliency capabilities provided by [Ribbon](https://github.com/Netflix/ribbon).
+
+Integration requires you to pass your ribbon client name as the host part of the url, for example `myAppProd`.
+```java
+public class Example {
+  public static void main(String[] args) {
+    MyService api = Feign.builder()
+          .client(RibbonClient.create())
+          .target(MyService.class, "https://myAppProd");
+  }
+}
+```
+
+#### Java 11 Http2
+[Http2Client](./java11) directs Feign's http requests to Java11 [New HTTP/2 Client](https://openjdk.java.net/jeps/321) that implements HTTP/2.
+
+To use New HTTP/2 Client with Feign, use Java SDK 11. Then, configure Feign to use the Http2Client:
+
+```java
+GitHub github = Feign.builder()
+                     .client(new Http2Client())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+### Breaker
+
+#### Hystrix
+[HystrixFeign](./hystrix) configures circuit breaker support provided by [Hystrix](https://github.com/Netflix/Hystrix).
+
+To use Hystrix with Feign, add the Hystrix module to your classpath. Then use the `HystrixFeign` builder:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+    MyService api = HystrixFeign.builder().target(MyService.class, "https://myAppProd");
+  }
+}
+```
+
+### Logger
+
+#### SLF4J
 [SLF4JModule](./slf4j) allows directing Feign's logging to [SLF4J](http://www.slf4j.org/), allowing you to easily use a logging backend of your choice (Logback, Log4J, etc.)
 
 To use SLF4J with Feign, add both the SLF4J module and an SLF4J binding of your choice to your classpath.  Then, configure Feign to use the Slf4jLogger:
