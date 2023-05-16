@@ -799,7 +799,7 @@
             <configuration>
               <rules>
                 <requireNoRepositories>
-                  <message>Feign should only depend on artifacts readly available on maven central</message>
+                  <message>Feign should only depend on artifacts readily available on maven central</message>
                 </requireNoRepositories>
               </rules>
             </configuration>
