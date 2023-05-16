@@ -29,6 +29,8 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
+    <!-- see https://github.com/square/okhttp/issues/4184 -->
+    <!-- <moditect.skip>true</moditect.skip> -->
   </properties>
 
   <dependencies>
@@ -61,4 +63,29 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-module-infos</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <exclusions>
+                <exclusion>
+                  <groupId>com.squareup.okio</groupId>
+                  <artifactId>okio</artifactId>
+                </exclusion>
+              </exclusions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
