@@ -13,16 +13,15 @@
  */
 package feign.jaxb;
 
+import feign.jaxb.mock.onepackage.AnotherMockedJAXBObject;
+import feign.jaxb.mock.onepackage.MockedJAXBObject;
+import org.junit.Test;
+import javax.xml.bind.Marshaller;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import javax.xml.bind.Marshaller;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class JAXBContextFactoryTest {
 
@@ -88,9 +87,65 @@ public class JAXBContextFactoryTest {
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
     assertFalse(internalCache.isEmpty());
     assertTrue(internalCache.size() == classes.size());
-    assertNotNull(internalCache.get(String.class));
-    assertNotNull(internalCache.get(Integer.class));
+    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(String.class)));
+    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(Integer.class)));
 
   }
 
+  @Test
+  public void testClassModeInstantiation() throws Exception {
+
+    List<Class<?>> classes = Arrays.asList(String.class, Integer.class);
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder()
+            .withJAXBContextInstantiationMode(JAXBContextInstantationMode.CLASS)
+            .build(classes);
+
+    Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
+    f.setAccessible(true);
+    Map internalCache = (Map) f.get(factory); // IllegalAccessException
+    assertFalse(internalCache.isEmpty());
+    assertEquals(internalCache.size(), classes.size());
+    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(String.class)));
+    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(Integer.class)));
+
+  }
+
+  @Test
+  public void testPackageModeInstantiationUsingSamePackage() throws Exception {
+
+    JAXBContextFactory factory = new JAXBContextFactory.Builder()
+        .withJAXBContextInstantiationMode(JAXBContextInstantationMode.PACKAGE)
+        .build(Arrays.asList(MockedJAXBObject.class, AnotherMockedJAXBObject.class));
+
+    Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
+    f.setAccessible(true);
+    Map internalCache = (Map) f.get(factory); // IllegalAccessException
+    assertFalse(internalCache.isEmpty());
+    assertEquals(1, internalCache.size());
+    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
+        AnotherMockedJAXBObject.class.getClassLoader())));
+
+  }
+
+  @Test
+  public void testPackageModeInstantiationUsingMultiplePackages() throws Exception {
+
+    JAXBContextFactory factory = new JAXBContextFactory.Builder()
+        .withJAXBContextInstantiationMode(JAXBContextInstantationMode.PACKAGE)
+        .build(Arrays.asList(MockedJAXBObject.class,
+            feign.jaxb.mock.anotherpackage.MockedJAXBObject.class));
+
+    Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
+    f.setAccessible(true);
+    Map internalCache = (Map) f.get(factory); // IllegalAccessException
+    assertFalse(internalCache.isEmpty());
+    assertEquals(2, internalCache.size());
+    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
+        MockedJAXBObject.class.getClassLoader())));
+    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.anotherpackage",
+        feign.jaxb.mock.anotherpackage.MockedJAXBObject.class.getClassLoader())));
+
+
+  }
 }

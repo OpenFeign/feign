@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.3-SNAPSHOT</version>
+    <version>12.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-kotlin</artifactId>
@@ -29,8 +29,8 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <kotlin.version>1.8.10</kotlin.version>
-    <kotlinx.coroutines.version>1.6.4</kotlinx.coroutines.version>
+    <kotlin.version>1.8.21</kotlin.version>
+    <kotlinx.coroutines.version>1.7.1</kotlinx.coroutines.version>
   </properties>
 
   <dependencies>
