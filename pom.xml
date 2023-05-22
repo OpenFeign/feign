@@ -98,7 +98,7 @@
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
-    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
     <license-maven-plugin.version>4.2</license-maven-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
