@@ -13,10 +13,14 @@
  */
 package feign.micrometer;
 
-import feign.Request;
-import feign.Response;
+import io.micrometer.common.util.StringUtils;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import io.micrometer.observation.transport.SenderContext;
+
+import java.net.URL;
+
+import feign.Request;
+import feign.Response;
 
 /**
  * A {@link SenderContext} for Feign.
@@ -29,6 +33,15 @@ public class FeignContext extends RequestReplySenderContext<Request, Response> {
   public FeignContext(Request request) {
     super(Request::header);
     setCarrier(request);
+    setRemoteServiceName(request.requestTemplate().feignTarget().name());
+    try {
+      URL url = new URL(request.requestTemplate().feignTarget().url());
+      if (StringUtils.isNotBlank(url.getProtocol()) && StringUtils.isNotBlank(url.getHost())) {
+        setRemoteServiceAddress(url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
+      }
+    } catch (Exception ignored) {
+
+    }
   }
 
 }
