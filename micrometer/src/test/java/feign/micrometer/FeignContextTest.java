@@ -13,35 +13,34 @@
  */
 package feign.micrometer;
 
-import java.util.HashMap;
-
-import org.junit.jupiter.api.Test;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Target;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.HashMap;
+import org.junit.jupiter.api.Test;
 
 public class FeignContextTest {
 
-    @Test
-    public void testRemoteServiceNotNull() {
-        Request request = Request.create(Request.HttpMethod.GET, "http://example.com",
-            new HashMap<>(), Request.Body.empty(), new RequestTemplate().feignTarget(
-                new Target.HardCodedTarget<>(FeignContextTest.class, "RemoteServiceName", "http://example.com")));
-        FeignContext feignContext = new FeignContext(request);
-        assertThat(feignContext.getRemoteServiceName()).isEqualTo("RemoteServiceName");
-        assertThat(feignContext.getRemoteServiceAddress()).isEqualTo("http://example.com:-1");
-    }
+  @Test
+  public void testRemoteServiceNotNull() {
+    Request request = Request.create(Request.HttpMethod.GET, "http://example.com",
+        new HashMap<>(), Request.Body.empty(), new RequestTemplate().feignTarget(
+            new Target.HardCodedTarget<>(FeignContextTest.class, "RemoteServiceName",
+                "http://example.com")));
+    FeignContext feignContext = new FeignContext(request);
+    assertThat(feignContext.getRemoteServiceName()).isEqualTo("RemoteServiceName");
+    assertThat(feignContext.getRemoteServiceAddress()).isEqualTo("http://example.com:-1");
+  }
 
-    @Test
-    public void testMalformedRemoteServiceURL() {
-        Request request = Request.create(Request.HttpMethod.GET, "http://example.com",
-            new HashMap<>(), Request.Body.empty(), new RequestTemplate().feignTarget(
-                new Target.HardCodedTarget<>(FeignContextTest.class, "RemoteServiceName", "example.com")));
-        FeignContext feignContext = new FeignContext(request);
-        assertThat(feignContext.getRemoteServiceAddress()).isNull();
-    }
+  @Test
+  public void testMalformedRemoteServiceURL() {
+    Request request = Request.create(Request.HttpMethod.GET, "http://example.com",
+        new HashMap<>(), Request.Body.empty(), new RequestTemplate().feignTarget(
+            new Target.HardCodedTarget<>(FeignContextTest.class, "RemoteServiceName",
+                "example.com")));
+    FeignContext feignContext = new FeignContext(request);
+    assertThat(feignContext.getRemoteServiceAddress()).isNull();
+  }
 
 }

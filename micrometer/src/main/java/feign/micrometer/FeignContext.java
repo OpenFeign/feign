@@ -13,14 +13,12 @@
  */
 package feign.micrometer;
 
+import feign.Request;
+import feign.Response;
+import java.net.URL;
 import io.micrometer.common.util.StringUtils;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import io.micrometer.observation.transport.SenderContext;
-
-import java.net.URL;
-
-import feign.Request;
-import feign.Response;
 
 /**
  * A {@link SenderContext} for Feign.
