@@ -59,7 +59,7 @@ Long Term - The future ☁️
 
 # Usage
 
-The feign library is available from [Maven Central](https://central.sonatype.com/search?q=g:io.github.openfeign%20%20a:feign-core).
+The feign library is available from [Maven Central](https://central.sonatype.com/artifact/io.github.openfeign/feign-core).
 
 ```xml
 <dependency>
