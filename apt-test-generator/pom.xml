@@ -68,7 +68,7 @@
     <dependency>
       <groupId>com.google.auto.service</groupId>
       <artifactId>auto-service-annotations</artifactId>
-      <version>1.0.1</version>
+      <version>1.1.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
