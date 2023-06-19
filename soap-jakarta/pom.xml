@@ -28,6 +28,9 @@
   <description>Feign SOAP CoDec</description>
 
   <properties>
+    <main.java.version>11</main.java.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <main.basedir>${project.basedir}/..</main.basedir>
 
     <moditect.skip>true</moditect.skip>
@@ -42,7 +45,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-jaxb-jakarta</artifactId>
-      <version>12.4-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
