@@ -267,23 +267,23 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")},
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
-              "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: robofu.abc.*",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)",
+              "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: non-exist.invalid.*",
               "\\[SendsStuff#login\\] <--- END ERROR")}
       });
     }
@@ -304,7 +304,7 @@ public class LoggerTest {
               return this;
             }
           })
-          .target(SendsStuff.class, "http://robofu.abc");
+          .target(SendsStuff.class, "http://non-exist.invalid");
 
       thrown.expect(FeignException.class);
 
@@ -329,23 +329,23 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)")},
           {Level.HEADERS, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)")},
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)")},
           {Level.FULL, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://sna%fu.abc/ HTTP/1.1",
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
               "\\[SendsStuff#login\\] Content-Length: 80",
               "\\[SendsStuff#login\\] Content-Type: application/json",
               "\\[SendsStuff#login\\] ",
               "\\[SendsStuff#login\\] \\{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"\\}",
               "\\[SendsStuff#login\\] ---> END HTTP \\(80-byte body\\)",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: sna%fu.abc \\([0-9]+ms\\)",
-              "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: sna%fu.abc.*",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)",
+              "(?s)\\[SendsStuff#login\\] java.net.UnknownHostException: non-exist.invalid.*",
               "\\[SendsStuff#login\\] <--- END ERROR")}
       });
     }
@@ -366,7 +366,7 @@ public class LoggerTest {
               return this;
             }
           })
-          .target(SendsStuff.class, "http://sna%25fu.abc");
+          .target(SendsStuff.class, "http://non-exist.invalid");
 
       thrown.expect(FeignException.class);
 
@@ -390,11 +390,11 @@ public class LoggerTest {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
           {Level.BASIC, Arrays.asList(
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)",
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)",
               "\\[SendsStuff#login\\] ---> RETRYING",
-              "\\[SendsStuff#login\\] ---> POST http://robofu.abc/ HTTP/1.1",
-              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: robofu.abc \\([0-9]+ms\\)")}
+              "\\[SendsStuff#login\\] ---> POST http://non-exist.invalid/ HTTP/1.1",
+              "\\[SendsStuff#login\\] <--- ERROR UnknownHostException: non-exist.invalid \\([0-9]+ms\\)")}
       });
     }
 
@@ -422,7 +422,7 @@ public class LoggerTest {
               return this;
             }
           })
-          .target(SendsStuff.class, "http://robofu.abc");
+          .target(SendsStuff.class, "http://non-exist.invalid");
 
       api.login("netflix", "denominator", "password");
     }
