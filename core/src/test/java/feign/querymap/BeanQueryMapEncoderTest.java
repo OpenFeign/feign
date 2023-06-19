@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 import feign.Param;
 import feign.QueryMapEncoder;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,6 +32,11 @@ public class BeanQueryMapEncoderTest {
   @Rule public final ExpectedException thrown = ExpectedException.none();
 
   private final QueryMapEncoder encoder = new BeanQueryMapEncoder();
+
+  @Test
+  public void testDefaultEncoder_acceptNullValue() {
+    assertEquals("Empty map should be returned", Collections.EMPTY_MAP, encoder.encode(null));
+  }
 
   @Test
   public void testDefaultEncoder_normalClassWithValues() {
