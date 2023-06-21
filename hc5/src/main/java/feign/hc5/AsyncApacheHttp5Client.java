@@ -13,6 +13,8 @@
  */
 package feign.hc5;
 
+import static feign.Util.enumForName;
+
 import feign.*;
 import feign.Request.Options;
 import java.util.*;
@@ -179,6 +181,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     }
 
     return Response.builder()
+        .protocolVersion(
+            enumForName(Request.ProtocolVersion.class, httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)

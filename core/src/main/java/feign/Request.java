@@ -290,7 +290,13 @@ public final class Request implements Serializable {
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder();
-    builder.append(httpMethod).append(' ').append(url).append(" HTTP/1.1\n");
+    builder
+        .append(httpMethod)
+        .append(' ')
+        .append(url)
+        .append(' ')
+        .append(protocolVersion)
+        .append('\n');
     for (final String field : headers.keySet()) {
       for (final String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
