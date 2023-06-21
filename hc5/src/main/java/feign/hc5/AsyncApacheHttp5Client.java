@@ -28,7 +28,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import feign.*;
 import feign.Request.Options;
-
 import static feign.Util.enumForName;
 
 /**
