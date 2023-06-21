@@ -16,6 +16,8 @@ package feign;
 import java.lang.annotation.Retention;
 import java.util.List;
 import java.util.Map;
+import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -70,4 +72,26 @@ public @interface QueryMap {
    * @deprecated
    */
   boolean encoded() default false;
+
+  /**
+   * Specifies the QueryMapEncoder implementation to use to transform DTO into query map.
+   * 
+   * @return the enum containing the instance of QueryMapEncoder
+   */
+  MapEncoder mapEncoder() default MapEncoder.DEFAULT;
+
+  public enum MapEncoder {
+    // the latter DEFAULT will use BaseBuilder instance
+    BEAN(new BeanQueryMapEncoder()), FIELD(new FieldQueryMapEncoder()), DEFAULT(null);
+
+    private QueryMapEncoder mapEncoder;
+
+    private MapEncoder(QueryMapEncoder mapEncoder) {
+      this.mapEncoder = mapEncoder;
+    }
+
+    public QueryMapEncoder instance() {
+      return mapEncoder;
+    }
+  }
 }
