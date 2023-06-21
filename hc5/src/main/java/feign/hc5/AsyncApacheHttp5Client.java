@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import feign.*;
 import feign.Request.Options;
+import static feign.Util.enumForName;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -179,6 +180,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     }
 
     return Response.builder()
+        .protocolVersion(
+            enumForName(Request.ProtocolVersion.class, httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)
