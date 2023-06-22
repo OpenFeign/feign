@@ -1,0 +1,13 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<SOAP-ENV:Envelope
+   xmlns:SOAP-ENV = "http://schemas.xmlsoap.org/soap/envelope/"
+   xmlns:xsi = "http://www.w3.org/1999/XMLSchema-instance"
+   xmlns:xsd = "http://www.w3.org/1999/XMLSchema">
+
+   <SOAP-ENV:Body>
+      <SOAP-ENV:Fault>
+         <faultcode xsi:type = "xsd:string">SOAP-ENV:Client</faultcode>
+         <faultstring xsi:type = "xsd:string">Message was not SOAP 1.1 compliant</faultstring>
+      </SOAP-ENV:Fault>
+   </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
