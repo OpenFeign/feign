@@ -13,12 +13,18 @@
  */
 package feign.hc5;
 
+import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
-import org.apache.hc.client5.http.classic.HttpClient;
+import feign.Request;
+import feign.Response;
+import feign.Util;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.junit.Test;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -41,10 +47,9 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
   @Test
   public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
-    final HttpClient httpClient = HttpClientBuilder.create().build();
     final JaxRsTestInterface testInterface = Feign.builder()
         .contract(new JAXRSContract())
-        .client(new ApacheHttp5Client(httpClient))
+        .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
         .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse().setBody("foo"));
@@ -59,6 +64,48 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     final RecordedRequest request2 = server.takeRequest();
     assertEquals("/withoutBody?foo=foo", request2.getPath());
     assertEquals("", request2.getBody().readString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  public void followRedirectIsRespected() throws InterruptedException, IOException {
+    Request.Options options = new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true);
+
+    String wasRedirected = server.url("was-redirected").url().toString();
+
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", wasRedirected));
+    server.enqueue(new MockResponse().setBody("redirect"));
+
+    final JaxRsTestInterface testInterface = Feign.builder()
+        .contract(new JAXRSContract())
+        .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
+        .options(options).target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+
+    Response response = testInterface.response();
+
+    assertEquals("/", server.takeRequest().getPath());
+    assertEquals("/was-redirected", server.takeRequest().getPath());
+    assertEquals(200, response.status());
+    assertEquals("redirect", Util.toString(response.body().asReader(Util.UTF_8)));
+  }
+
+  @Test
+  public void notFollowRedirectIsRespected() throws InterruptedException {
+    Request.Options options =
+        new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, false);
+
+    String wasRedirected = server.url("was-redirected").url().toString();
+
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", wasRedirected));
+    server.enqueue(new MockResponse().setBody("redirect"));
+
+    final JaxRsTestInterface testInterface = Feign.builder()
+        .contract(new JAXRSContract())
+        .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
+        .options(options).target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(testInterface.response().headers()).hasEntrySatisfying("location", (value) -> {
+      assertThat(value).contains(wasRedirected);
+    });
   }
 
   @Override
@@ -80,5 +127,8 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     @PUT
     @Path("/withoutBody")
     String withoutBody(@QueryParam("foo") String foo);
+
+    @POST
+    Response response();
   }
 }

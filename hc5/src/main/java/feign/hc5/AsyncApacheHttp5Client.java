@@ -99,6 +99,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         (client instanceof Configurable
             ? RequestConfig.copy(((Configurable) client).getConfig())
             : RequestConfig.custom())
+                .setRedirectsEnabled(options.isFollowRedirects())
                 .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
                 .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
                 .build();

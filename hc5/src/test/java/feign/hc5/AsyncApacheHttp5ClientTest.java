@@ -14,11 +14,9 @@
 package feign.hc5;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -765,6 +763,47 @@ public class AsyncApacheHttp5ClientTest {
     checkCFCompletedSoon(cf);
   }
 
+  // The default value of followRedirects is true, it's just explicit test.
+  @Test
+  public void followRedirectsIsEnabled() throws Throwable {
+    Request.Options options = new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true);
+
+    String wasRedirected = server.url("was-redirected").url().toString();
+
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", wasRedirected));
+    server.enqueue(new MockResponse().setBody("redirect"));
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().options(options)
+            .target("http://localhost:" + server.getPort());
+
+    Response response = unwrap(api.response());
+
+    assertEquals("/", server.takeRequest().getPath());
+    assertEquals("/was-redirected", server.takeRequest().getPath());
+    assertEquals(200, response.status());
+    assertEquals("redirect", Util.toString(response.body().asReader(Util.UTF_8)));
+  }
+
+  @Test
+  public void followRedirectsIsDisabled() throws Throwable {
+    Request.Options options =
+        new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, false);
+
+    String wasRedirected = server.url("was-redirected").url().toString();
+
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", wasRedirected));
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().options(options)
+            .target("http://localhost:" + server.getPort());
+
+    assertThat(unwrap(api.response()).headers()).hasEntrySatisfying("location", (value) -> {
+      assertThat(value).contains(wasRedirected);
+    });
+  }
+
   public interface TestInterfaceAsync {
 
     @RequestLine("POST /")
@@ -962,6 +1001,11 @@ public class AsyncApacheHttp5ClientTest {
 
     TestInterfaceAsyncBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
+      return this;
+    }
+
+    TestInterfaceAsyncBuilder options(Request.Options options) {
+      delegate.options(options);
       return this;
     }
 
