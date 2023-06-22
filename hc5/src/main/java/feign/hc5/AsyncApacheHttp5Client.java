@@ -86,13 +86,13 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     };
 
     client.execute(httpUriRequest,
-        configureTimeouts(options, requestContext.orElseGet(HttpClientContext::new)),
+        configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
 
     return result;
   }
 
-  protected HttpClientContext configureTimeouts(Request.Options options,
+  protected HttpClientContext configureTimeoutsAndRedirection(Request.Options options,
                                                 HttpClientContext context) {
     // per request timeouts
     final RequestConfig requestConfig =
@@ -101,6 +101,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
             : RequestConfig.custom())
                 .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
                 .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
+                .setRedirectsEnabled(options.isFollowRedirects())
                 .build();
     context.setRequestConfig(requestConfig);
     return context;
