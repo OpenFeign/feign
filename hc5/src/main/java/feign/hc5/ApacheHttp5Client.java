@@ -82,14 +82,14 @@ public final class ApacheHttp5Client implements Client {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
     final HttpHost target = HttpHost.create(URI.create(request.url()));
-    final HttpClientContext context = configureTimeouts(options);
+    final HttpClientContext context = configureTimeoutsAndRedirection(options);
 
     final ClassicHttpResponse httpResponse =
         (ClassicHttpResponse) client.execute(target, httpUriRequest, context);
     return toFeignResponse(httpResponse, request);
   }
 
-  protected HttpClientContext configureTimeouts(Request.Options options) {
+  protected HttpClientContext configureTimeoutsAndRedirection(Request.Options options) {
     final HttpClientContext context = new HttpClientContext();
     // per request timeouts
     final RequestConfig requestConfig =
@@ -98,6 +98,7 @@ public final class ApacheHttp5Client implements Client {
             : RequestConfig.custom())
                 .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
                 .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
+                .setRedirectsEnabled(options.isFollowRedirects())
                 .build();
     context.setRequestConfig(requestConfig);
     return context;
