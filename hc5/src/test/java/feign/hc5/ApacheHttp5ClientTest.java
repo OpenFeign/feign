@@ -86,7 +86,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     Request.Options options = buildRequestOptions(false);
 
     FeignException feignException =
-            assertThrows(FeignException.class, () -> testInterface.withOptions(options));
+        assertThrows(FeignException.class, () -> testInterface.withOptions(options));
     assertEquals(302, feignException.status());
     assertEquals(redirectPath,feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
     assertEquals("/withRequestOptions", server.takeRequest().getPath());
@@ -94,9 +94,9 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
   private JaxRsTestInterface buildTestInterface() {
     return Feign.builder()
-            .contract(new JAXRSContract())
-            .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
-            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+        .contract(new JAXRSContract())
+        .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
+        .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
   }
 
   private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {
