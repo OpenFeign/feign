@@ -13,17 +13,22 @@
  */
 package feign.hc5;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.junit.Test;
 import java.nio.charset.StandardCharsets;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.FeignException;
+import feign.Request;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
 import okhttp3.mockwebserver.MockResponse;
@@ -41,11 +46,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
   @Test
   public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
-    final HttpClient httpClient = HttpClientBuilder.create().build();
-    final JaxRsTestInterface testInterface = Feign.builder()
-        .contract(new JAXRSContract())
-        .client(new ApacheHttp5Client(httpClient))
-        .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+    final JaxRsTestInterface testInterface = buildTestInterface();
 
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse().setBody("foo"));
@@ -59,6 +60,55 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     final RecordedRequest request2 = server.takeRequest();
     assertEquals("/withoutBody?foo=foo", request2.getPath());
     assertEquals("", request2.getBody().readString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  public void followRedirectsIsTrue() throws InterruptedException {
+    final JaxRsTestInterface testInterface = buildTestInterface();
+
+    String redirectPath = getRedirectionUrl();
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
+    server.enqueue(new MockResponse().setBody("redirected"));
+    Request.Options options = buildRequestOptions(true);
+
+    Object response =  testInterface.withOptions(options);
+    assertNotNull(response);
+    assertEquals("redirected", response);
+    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+  }
+
+  @Test
+  public void followRedirectsIsFalse() throws InterruptedException {
+    final JaxRsTestInterface testInterface = buildTestInterface();
+
+    String redirectPath = getRedirectionUrl();
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
+    Request.Options options = buildRequestOptions(false);
+
+    FeignException feignException =
+            assertThrows(FeignException.class, () -> testInterface.withOptions(options));
+    assertEquals(302, feignException.status());
+    assertEquals(redirectPath,feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
+    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+  }
+
+  private JaxRsTestInterface buildTestInterface() {
+    return Feign.builder()
+            .contract(new JAXRSContract())
+            .client(new ApacheHttp5Client(HttpClientBuilder.create().build()))
+            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+  }
+
+  private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {
+    return new MockResponse().setResponseCode(302).addHeader("location", redirectPath);
+  }
+
+  private String getRedirectionUrl(){
+    return "http://localhost:" + server.getPort() + "/redirected";
+  }
+
+  private static Request.Options buildRequestOptions(boolean followRedirects) {
+    return new Request.Options(1, SECONDS, 1, SECONDS, followRedirects);
   }
 
   @Override
@@ -80,5 +130,9 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     @PUT
     @Path("/withoutBody")
     String withoutBody(@QueryParam("foo") String foo);
+
+    @GET
+    @Path("/withRequestOptions")
+    String withOptions(Request.Options options);
   }
 }
