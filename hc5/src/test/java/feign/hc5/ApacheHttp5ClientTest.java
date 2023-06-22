@@ -88,7 +88,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     FeignException feignException =
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
     assertEquals(302, feignException.status());
-    assertEquals(redirectPath,feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
+    assertEquals(redirectPath, feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
     assertEquals("/withRequestOptions", server.takeRequest().getPath());
   }
 
