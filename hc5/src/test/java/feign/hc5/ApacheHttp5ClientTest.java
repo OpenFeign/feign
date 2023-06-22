@@ -88,7 +88,8 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     FeignException feignException =
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
     assertEquals(302, feignException.status());
-    assertEquals(redirectPath, feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
+    assertEquals(redirectPath,
+        feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
     assertEquals("/withRequestOptions", server.takeRequest().getPath());
   }
 
@@ -107,7 +108,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     return "http://localhost:" + server.getPort() + "/redirected";
   }
 
-  private static Request.Options buildRequestOptions(boolean followRedirects) {
+  private Request.Options buildRequestOptions(boolean followRedirects) {
     return new Request.Options(1, SECONDS, 1, SECONDS, followRedirects);
   }
 

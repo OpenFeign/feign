@@ -781,10 +781,10 @@ public class AsyncApacheHttp5ClientTest {
     Request.Options options = buildRequestOptions(true);
 
     final TestInterfaceAsync api =
-            new TestInterfaceAsyncBuilder().options(options)
-                    .target("http://localhost:" + server.getPort());
+        new TestInterfaceAsyncBuilder().options(options)
+            .target("http://localhost:" + server.getPort());
 
-    Response response =  unwrap(api.response());
+    Response response = unwrap(api.response());
     assertNotNull(response);
     assertEquals(200, response.status());
     assertEquals("redirectedBody", Util.toString(response.body().asReader(Util.UTF_8)));
@@ -800,10 +800,10 @@ public class AsyncApacheHttp5ClientTest {
     Request.Options options = buildRequestOptions(false);
 
     final TestInterfaceAsync api =
-            new TestInterfaceAsyncBuilder().options(options)
-                    .target("http://localhost:" + server.getPort());
+        new TestInterfaceAsyncBuilder().options(options)
+            .target("http://localhost:" + server.getPort());
 
-    Response response =  unwrap(api.response());
+    Response response = unwrap(api.response());
     final String path = response.headers().get("location").stream().findFirst().orElse(null);
     assertNotNull(response);
     assertNotNull(path);
@@ -813,10 +813,11 @@ public class AsyncApacheHttp5ClientTest {
   }
 
   private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {
-    return new MockResponse().setResponseCode(302).addHeader("location", "http://localhost:" + server.getPort() + redirectPath);
+    return new MockResponse().setResponseCode(302).addHeader("location",
+        "http://localhost:" + server.getPort() + redirectPath);
   }
 
-  private static Request.Options buildRequestOptions(boolean followRedirects) {
+  private Request.Options buildRequestOptions(boolean followRedirects) {
     return new Request.Options(1, SECONDS, 1, SECONDS, followRedirects);
   }
 
