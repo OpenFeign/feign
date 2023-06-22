@@ -23,26 +23,18 @@
     <version>12.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-httpclient</artifactId>
-  <name>Feign Apache HttpClient</name>
-  <description>Feign Apache HttpClient</description>
+  <artifactId>feign-soap-jakarta</artifactId>
+  <name>Feign SOAP Jakarta</name>
+  <description>Feign SOAP CoDec</description>
 
   <properties>
+    <main.java.version>11</main.java.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <main.basedir>${project.basedir}/..</main.basedir>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <!--
-        fix vulnerability introduced by transient dependency
-        https://app.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
-        -->
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.16.0</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -51,9 +43,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.14</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-jaxb-jakarta</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -64,15 +56,31 @@
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs</artifactId>
-      <scope>test</scope>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>4.0.0</version>
     </dependency>
-
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
-      <scope>test</scope>
+      <groupId>jakarta.xml.soap</groupId>
+      <artifactId>jakarta.xml.soap-api</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId>
+      <artifactId>saaj-impl</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>4.0.3</version>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
+
 </project>
