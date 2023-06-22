@@ -71,7 +71,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     server.enqueue(new MockResponse().setBody("redirected"));
     Request.Options options = buildRequestOptions(true);
 
-    Object response =  testInterface.withOptions(options);
+    Object response = testInterface.withOptions(options);
     assertNotNull(response);
     assertEquals("redirected", response);
     assertEquals("/withRequestOptions", server.takeRequest().getPath());
@@ -103,7 +103,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     return new MockResponse().setResponseCode(302).addHeader("location", redirectPath);
   }
 
-  private String getRedirectionUrl(){
+  private String getRedirectionUrl() {
     return "http://localhost:" + server.getPort() + "/redirected";
   }
 
