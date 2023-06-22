@@ -14,10 +14,13 @@
 package feign.hc5;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.gson.Gson;
@@ -830,6 +833,59 @@ public class AsyncApacheHttp5ClientTest {
     checkCFCompletedSoon(cf);
   }
 
+  @Test
+  public void followRedirectsIsTrue() throws Throwable {
+
+    String redirectPath = "/redirected";
+
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
+    server.enqueue(new MockResponse().setBody("redirectedBody"));
+    Request.Options options = buildRequestOptions(true);
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder()
+            .options(options)
+            .target("http://localhost:" + server.getPort());
+
+    Response response = unwrap(api.response());
+    assertNotNull(response);
+    assertEquals(200, response.status());
+    assertEquals("redirectedBody", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertEquals("/", server.takeRequest().getPath());
+    assertEquals("/redirected", server.takeRequest().getPath());
+  }
+
+  @Test
+  public void followRedirectsIsFalse() throws Throwable {
+    String redirectPath = "/redirected";
+
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
+    Request.Options options = buildRequestOptions(false);
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder()
+            .options(options)
+            .target("http://localhost:" + server.getPort());
+
+    Response response = unwrap(api.response());
+    final String path = response.headers().get("location").stream().findFirst().orElse(null);
+    assertNotNull(response);
+    assertNotNull(path);
+    assertEquals(302, response.status());
+    assertEquals("/", server.takeRequest().getPath());
+    assertTrue(path.contains("/redirected"));
+  }
+
+  private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {
+    return new MockResponse()
+        .setResponseCode(302)
+        .addHeader("location", "http://localhost:" + server.getPort() + redirectPath);
+  }
+
+  private Request.Options buildRequestOptions(boolean followRedirects) {
+    return new Request.Options(1, SECONDS, 1, SECONDS, followRedirects);
+  }
+
   public interface TestInterfaceAsync {
 
     @RequestLine("POST /")
@@ -1033,6 +1089,11 @@ public class AsyncApacheHttp5ClientTest {
 
     TestInterfaceAsyncBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
+      return this;
+    }
+
+    TestInterfaceAsyncBuilder options(Request.Options options) {
+      delegate.options(options);
       return this;
     }
 
