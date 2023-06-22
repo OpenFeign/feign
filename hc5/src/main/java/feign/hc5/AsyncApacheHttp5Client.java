@@ -50,14 +50,14 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     this(createStartedClient());
   }
 
+  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
+    this.client = client;
+  }
+
   private static CloseableHttpAsyncClient createStartedClient() {
     final CloseableHttpAsyncClient client = HttpAsyncClients.custom().build();
     client.start();
     return client;
-  }
-
-  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
-    this.client = client;
   }
 
   @Override
