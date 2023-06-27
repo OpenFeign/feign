@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import feign.*;
 import feign.Request.Options;
+import static feign.Util.enumForName;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -49,14 +50,14 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     this(createStartedClient());
   }
 
+  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
+    this.client = client;
+  }
+
   private static CloseableHttpAsyncClient createStartedClient() {
     final CloseableHttpAsyncClient client = HttpAsyncClients.custom().build();
     client.start();
     return client;
-  }
-
-  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
-    this.client = client;
   }
 
   @Override
@@ -85,14 +86,14 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     };
 
     client.execute(httpUriRequest,
-        configureTimeouts(options, requestContext.orElseGet(HttpClientContext::new)),
+        configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
 
     return result;
   }
 
-  protected HttpClientContext configureTimeouts(Request.Options options,
-                                                HttpClientContext context) {
+  protected HttpClientContext configureTimeoutsAndRedirection(Request.Options options,
+                                                              HttpClientContext context) {
     // per request timeouts
     final RequestConfig requestConfig =
         (client instanceof Configurable
@@ -100,6 +101,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
             : RequestConfig.custom())
                 .setConnectTimeout(options.connectTimeout(), options.connectTimeoutUnit())
                 .setResponseTimeout(options.readTimeout(), options.readTimeoutUnit())
+                .setRedirectsEnabled(options.isFollowRedirects())
                 .build();
     context.setRequestConfig(requestConfig);
     return context;
@@ -179,6 +181,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     }
 
     return Response.builder()
+        .protocolVersion(
+            enumForName(Request.ProtocolVersion.class, httpResponse.getVersion().format()))
         .status(statusCode)
         .reason(reason)
         .headers(headers)
