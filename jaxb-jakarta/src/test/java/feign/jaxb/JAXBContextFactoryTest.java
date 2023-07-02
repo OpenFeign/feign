@@ -18,10 +18,15 @@ import static org.junit.Assert.*;
 import feign.jaxb.mock.onepackage.AnotherMockedJAXBObject;
 import feign.jaxb.mock.onepackage.MockedJAXBObject;
 import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.ValidationEventHandler;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import org.junit.Test;
 
 public class JAXBContextFactoryTest {
@@ -77,6 +82,62 @@ public class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertTrue((Boolean) marshaller.getProperty(Marshaller.JAXB_FRAGMENT));
+  }
+
+  @Test
+  public void buildsMarshallerWithSchema() throws Exception {
+    Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema();
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withMarshallerSchema(schema).build();
+
+    Marshaller marshaller = factory.createMarshaller(Object.class);
+    assertSame(schema, marshaller.getSchema());
+  }
+
+  @Test
+  public void buildsUnmarshallerWithSchema() throws Exception {
+    Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema();
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withUnmarshallerSchema(schema).build();
+
+    Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
+    assertSame(schema, unmarshaller.getSchema());
+  }
+
+  @Test
+  public void buildsMarshallerWithCustomEventHandler() throws Exception {
+    ValidationEventHandler handler = event -> false;
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withMarshallerEventHandler(handler).build();
+
+    Marshaller marshaller = factory.createMarshaller(Object.class);
+    assertSame(handler, marshaller.getEventHandler());
+  }
+
+  @Test
+  public void buildsMarshallerWithDefaultEventHandler() throws Exception {
+    JAXBContextFactory factory = new JAXBContextFactory.Builder().build();
+
+    Marshaller marshaller = factory.createMarshaller(Object.class);
+    assertNotNull(marshaller.getEventHandler());
+  }
+
+  @Test
+  public void buildsUnmarshallerWithCustomEventHandler() throws Exception {
+    ValidationEventHandler handler = event -> false;
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withUnmarshallerEventHandler(handler).build();
+
+    Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
+    assertSame(handler, unmarshaller.getEventHandler());
+  }
+
+  @Test
+  public void buildsUnmarshallerWithDefaultEventHandler() throws Exception {
+    JAXBContextFactory factory = new JAXBContextFactory.Builder().build();
+
+    Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
+    assertNotNull(unmarshaller.getEventHandler());
   }
 
   @Test

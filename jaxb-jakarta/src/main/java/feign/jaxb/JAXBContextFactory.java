@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.xml.validation.Schema;
 
 /**
  * Creates and caches JAXB contexts as well as creates Marshallers and Unmarshallers for each
@@ -31,22 +32,53 @@ public final class JAXBContextFactory {
       new ConcurrentHashMap<>(64);
   private final Map<String, Object> properties;
   private final JAXBContextInstantationMode jaxbContextInstantationMode;
+  private final ValidationEventHandler marshallerEventHandler;
+  private final ValidationEventHandler unmarshallerEventHandler;
+  private final Schema marshallerSchema;
+  private final Schema unmashallerSchema;
 
   private JAXBContextFactory(
-      Map<String, Object> properties, JAXBContextInstantationMode jaxbContextInstantationMode) {
+      Map<String, Object> properties,
+      JAXBContextInstantationMode jaxbContextInstantationMode,
+      ValidationEventHandler marshallerEventHandler,
+      ValidationEventHandler unmarshallerEventHandler,
+      Schema marshallerSchema,
+      Schema unmashallerSchema) {
     this.properties = properties;
     this.jaxbContextInstantationMode = jaxbContextInstantationMode;
+    this.marshallerEventHandler = marshallerEventHandler;
+    this.unmarshallerEventHandler = unmarshallerEventHandler;
+    this.marshallerSchema = marshallerSchema;
+    this.unmashallerSchema = unmashallerSchema;
+  }
+
+  /**
+   * @deprecated please use the constructor with all parameters.
+   */
+  @Deprecated
+  private JAXBContextFactory(
+      Map<String, Object> properties, JAXBContextInstantationMode jaxbContextInstantationMode) {
+    this(properties, jaxbContextInstantationMode, null, null, null, null);
   }
 
   /** Creates a new {@link jakarta.xml.bind.Unmarshaller} that handles the supplied class. */
   public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
-    return getContext(clazz).createUnmarshaller();
+    Unmarshaller unmarshaller = getContext(clazz).createUnmarshaller();
+    if (unmarshallerEventHandler != null) {
+      unmarshaller.setEventHandler(unmarshallerEventHandler);
+    }
+    unmarshaller.setSchema(unmashallerSchema);
+    return unmarshaller;
   }
 
   /** Creates a new {@link jakarta.xml.bind.Marshaller} that handles the supplied class. */
   public Marshaller createMarshaller(Class<?> clazz) throws JAXBException {
     Marshaller marshaller = getContext(clazz).createMarshaller();
     setMarshallerProperties(marshaller);
+    if (marshallerEventHandler != null) {
+      marshaller.setEventHandler(marshallerEventHandler);
+    }
+    marshaller.setSchema(marshallerSchema);
     return marshaller;
   }
 
@@ -88,6 +120,14 @@ public final class JAXBContextFactory {
 
     private JAXBContextInstantationMode jaxbContextInstantationMode =
         JAXBContextInstantationMode.CLASS;
+
+    private ValidationEventHandler marshallerEventHandler;
+
+    private ValidationEventHandler unmarshallerEventHandler;
+
+    private Schema marshallerSchema;
+
+    private Schema unmarshallerSchema;
 
     /** Sets the jaxb.encoding property of any Marshaller created by this factory. */
     public Builder withMarshallerJAXBEncoding(String value) {
@@ -137,6 +177,30 @@ public final class JAXBContextFactory {
       return this;
     }
 
+    /** Sets the validation event handler of any Marshaller created by this factory. */
+    public Builder withMarshallerEventHandler(ValidationEventHandler handler) {
+      this.marshallerEventHandler = handler;
+      return this;
+    }
+
+    /** Sets the validation event handler of any Unmarshaller created by this factory. */
+    public Builder withUnmarshallerEventHandler(ValidationEventHandler handler) {
+      this.unmarshallerEventHandler = handler;
+      return this;
+    }
+
+    /** Sets the schema of any Marshaller created by this factory. */
+    public Builder withMarshallerSchema(Schema schema) {
+      this.marshallerSchema = schema;
+      return this;
+    }
+
+    /** Sets the schema of any Unmarshaller created by this factory. */
+    public Builder withUnmarshallerSchema(Schema schema) {
+      this.unmarshallerSchema = schema;
+      return this;
+    }
+
     /**
      * Provide an instantiation mode for JAXB Contexts, can be class or package, default is class if
      * this method is not called.
@@ -157,7 +221,13 @@ public final class JAXBContextFactory {
 
     /** Creates a new {@link JAXBContextFactory} instance with a lazy loading cached context */
     public JAXBContextFactory build() {
-      return new JAXBContextFactory(properties, jaxbContextInstantationMode);
+      return new JAXBContextFactory(
+          properties,
+          jaxbContextInstantationMode,
+          marshallerEventHandler,
+          unmarshallerEventHandler,
+          marshallerSchema,
+          unmarshallerSchema);
     }
 
     /**
@@ -169,7 +239,7 @@ public final class JAXBContextFactory {
      *     generation most likely due to missing JAXB annotations
      */
     public JAXBContextFactory build(List<Class<?>> classes) throws JAXBException {
-      JAXBContextFactory factory = new JAXBContextFactory(properties, jaxbContextInstantationMode);
+      JAXBContextFactory factory = build();
       factory.preloadContextCache(classes);
       return factory;
     }

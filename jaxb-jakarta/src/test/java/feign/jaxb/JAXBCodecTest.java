@@ -22,15 +22,26 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
+import feign.codec.DecodeException;
+import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import jakarta.xml.bind.MarshalException;
+import jakarta.xml.bind.UnmarshalException;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -269,6 +280,120 @@ public class JAXBCodecTest {
                 new JAXBDecoder(new JAXBContextFactory.Builder().build())
                     .decode(response, byte[].class))
         .isEmpty();
+  }
+
+  @Test
+  public void decodeThrowsExceptionWhenUnmarshallingFailsWithSetSchema() throws Exception {
+    thrown.expect(DecodeException.class);
+    thrown.expectCause(CoreMatchers.instanceOf(UnmarshalException.class));
+    thrown.expectMessage("'Test' is not a valid value for 'integer'.");
+
+    String mockXml =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
+            + "<value>Test</value></mockIntObject>";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .body(mockXml, UTF_8)
+            .build();
+
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withUnmarshallerSchema(getMockIntObjSchema()).build();
+    new JAXBDecoder(factory).decode(response, MockIntObject.class);
+  }
+
+  @Test
+  public void decodesIgnoringErrorsWithEventHandler() throws Exception {
+    String mockXml =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
+            + "<value>Test</value></mockIntObject>";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .body(mockXml, UTF_8)
+            .build();
+
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder()
+            .withUnmarshallerSchema(getMockIntObjSchema())
+            .withUnmarshallerEventHandler(event -> true)
+            .build();
+    assertEquals(
+        new MockIntObject(), new JAXBDecoder(factory).decode(response, MockIntObject.class));
+  }
+
+  @Test
+  public void encodeThrowsExceptionWhenMarshallingFailsWithSetSchema() throws Exception {
+    thrown.expect(EncodeException.class);
+    thrown.expectCause(CoreMatchers.instanceOf(MarshalException.class));
+    thrown.expectMessage("The content of element 'mockIntObject' is not complete.");
+
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerSchema(getMockIntObjSchema()).build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(new MockIntObject(), MockIntObject.class, template);
+  }
+
+  @Test
+  public void encodesIgnoringErrorsWithEventHandler() throws Exception {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder()
+            .withMarshallerSchema(getMockIntObjSchema())
+            .withMarshallerEventHandler(event -> true)
+            .build();
+
+    Encoder encoder = new JAXBEncoder(jaxbContextFactory);
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(new MockIntObject(), MockIntObject.class, template);
+    assertThat(template)
+        .hasBody(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"" + " standalone=\"yes\"?><mockIntObject/>");
+  }
+
+  @XmlRootElement
+  @XmlAccessorType(XmlAccessType.FIELD)
+  static class MockIntObject {
+
+    @XmlElement(required = true)
+    private Integer value;
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      MockIntObject that = (MockIntObject) o;
+      return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
+  }
+
+  private static Schema getMockIntObjSchema() throws Exception {
+    String schema =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+            + "<xs:schema version=\"1.0\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><xs:element"
+            + " name=\"mockIntObject\" type=\"mockIntObject\"/><xs:complexType"
+            + " name=\"mockIntObject\"><xs:sequence><xs:element name=\"value\""
+            + " type=\"xs:int\"/></xs:sequence></xs:complexType></xs:schema>";
+    SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    return schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
   }
 
   @XmlRootElement
