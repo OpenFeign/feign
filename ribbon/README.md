@@ -14,7 +14,7 @@ MyService api = Feign.builder().target(MyService.class, "https://myAppProd-12345
 ```
 do
 ```java
-MyService api = Feign.builder().client(new RibbonClient()).target(MyService.class, "https://myAppProd");
+MyService api = Feign.builder().client(RibbonClient.create()).target(MyService.class, "https://myAppProd");
 ```
 ### LoadBalancingTarget
 Using or extending `LoadBalancingTarget` will enable dynamic url discovery via ribbon including incrementing server request counts.
