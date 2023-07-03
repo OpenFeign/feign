@@ -197,17 +197,23 @@ public abstract class Feign {
     }
 
     public Feign build() {
-      super.enrich();
+      Builder enrichedBuilder = super.enrich();
 
       final ResponseHandler responseHandler =
-          new ResponseHandler(logLevel, logger, decoder, errorDecoder,
-              dismiss404, closeAfterDecode, responseInterceptor);
+          new ResponseHandler(enrichedBuilder.logLevel, enrichedBuilder.logger,
+              enrichedBuilder.decoder, enrichedBuilder.errorDecoder,
+              enrichedBuilder.dismiss404, enrichedBuilder.closeAfterDecode,
+              enrichedBuilder.responseInterceptor);
       MethodHandler.Factory<Object> methodHandlerFactory =
-          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
-              responseHandler, logger, logLevel, propagationPolicy,
-              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
-              options);
-      return new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+          new SynchronousMethodHandler.Factory(enrichedBuilder.client, enrichedBuilder.retryer,
+              enrichedBuilder.requestInterceptors,
+              responseHandler, enrichedBuilder.logger, enrichedBuilder.logLevel,
+              enrichedBuilder.propagationPolicy,
+              new RequestTemplateFactoryResolver(enrichedBuilder.encoder,
+                  enrichedBuilder.queryMapEncoder),
+              enrichedBuilder.options);
+      return new ReflectiveFeign<>(enrichedBuilder.contract, methodHandlerFactory,
+          enrichedBuilder.invocationHandlerFactory,
           () -> null);
     }
   }

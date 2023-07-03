@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class BaseBuilder<B extends BaseBuilder<B>> {
+public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable {
 
   private final B thisB;
 
@@ -224,33 +224,41 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     return thisB;
   }
 
+  @SuppressWarnings("unchecked")
   protected B enrich() {
     if (capabilities.isEmpty()) {
       return thisB;
     }
 
-    getFieldsToEnrich().forEach(field -> {
-      field.setAccessible(true);
-      try {
-        final Object originalValue = field.get(thisB);
-        final Object enriched;
-        if (originalValue instanceof List) {
-          Type ownerType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-          enriched = ((List) originalValue).stream()
-              .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
-              .collect(Collectors.toList());
-        } else {
-          enriched = Capability.enrich(originalValue, field.getType(), capabilities);
-        }
-        field.set(thisB, enriched);
-      } catch (IllegalArgumentException | IllegalAccessException e) {
-        throw new RuntimeException("Unable to enrich field " + field, e);
-      } finally {
-        field.setAccessible(false);
-      }
-    });
+    try {
+      B clone = (B) thisB.clone();
 
-    return thisB;
+      getFieldsToEnrich().forEach(field -> {
+        field.setAccessible(true);
+        try {
+          final Object originalValue = field.get(clone);
+          final Object enriched;
+          if (originalValue instanceof List) {
+            Type ownerType =
+                ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            enriched = ((List) originalValue).stream()
+                .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
+                .collect(Collectors.toList());
+          } else {
+            enriched = Capability.enrich(originalValue, field.getType(), capabilities);
+          }
+          field.set(clone, enriched);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+          throw new RuntimeException("Unable to enrich field " + field, e);
+        } finally {
+          field.setAccessible(false);
+        }
+      });
+
+      return clone;
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
   }
 
   List<Field> getFieldsToEnrich() {

@@ -186,30 +186,32 @@ public final class AsyncFeign<C> {
     }
 
     public AsyncFeign<C> build() {
-      super.enrich();
+      AsyncBuilder<C> enrichedBuilder = super.enrich();
 
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler) Capability.enrich(
               new AsyncResponseHandler(
-                  logLevel,
-                  logger,
-                  decoder,
-                  errorDecoder,
-                  dismiss404,
-                  closeAfterDecode, responseInterceptor),
+                  enrichedBuilder.logLevel,
+                  enrichedBuilder.logger,
+                  enrichedBuilder.decoder,
+                  enrichedBuilder.errorDecoder,
+                  enrichedBuilder.dismiss404,
+                  enrichedBuilder.closeAfterDecode, enrichedBuilder.responseInterceptor),
               AsyncResponseHandler.class,
-              capabilities);
+              enrichedBuilder.capabilities);
 
       final MethodHandler.Factory<C> methodHandlerFactory =
           new AsynchronousMethodHandler.Factory<>(
-              client, retryer, requestInterceptors,
-              responseHandler, logger, logLevel,
-              propagationPolicy, methodInfoResolver,
-              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
-              options, decoder, errorDecoder);
+              enrichedBuilder.client, enrichedBuilder.retryer, enrichedBuilder.requestInterceptors,
+              responseHandler, enrichedBuilder.logger, enrichedBuilder.logLevel,
+              enrichedBuilder.propagationPolicy, enrichedBuilder.methodInfoResolver,
+              new RequestTemplateFactoryResolver(enrichedBuilder.encoder,
+                  enrichedBuilder.queryMapEncoder),
+              enrichedBuilder.options, enrichedBuilder.decoder, enrichedBuilder.errorDecoder);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
-              defaultContextSupplier);
+          new ReflectiveFeign<>(enrichedBuilder.contract, methodHandlerFactory,
+              enrichedBuilder.invocationHandlerFactory,
+              enrichedBuilder.defaultContextSupplier);
       return new AsyncFeign<>(feign);
     }
   }

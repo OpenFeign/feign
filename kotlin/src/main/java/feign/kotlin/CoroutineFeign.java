@@ -158,24 +158,25 @@ public class CoroutineFeign<C> {
 
     @SuppressWarnings("unchecked")
     public CoroutineFeign<C> build() {
-      super.enrich();
+      CoroutineBuilder<C> enrichedBuilder = super.enrich();
 
       AsyncFeign<C> asyncFeign = (AsyncFeign<C>) AsyncFeign.builder()
-          .logLevel(logLevel)
-          .client((AsyncClient<Object>) client)
-          .decoder(decoder)
-          .errorDecoder(errorDecoder)
-          .contract(contract)
-          .retryer(retryer)
-          .logger(logger)
-          .encoder(encoder)
-          .queryMapEncoder(queryMapEncoder)
-          .options(options)
-          .requestInterceptors(requestInterceptors)
-          .responseInterceptor(responseInterceptor)
-          .invocationHandlerFactory(invocationHandlerFactory)
-          .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
-          .methodInfoResolver(methodInfoResolver)
+          .logLevel(enrichedBuilder.logLevel)
+          .client((AsyncClient<Object>) enrichedBuilder.client)
+          .decoder(enrichedBuilder.decoder)
+          .errorDecoder(enrichedBuilder.errorDecoder)
+          .contract(enrichedBuilder.contract)
+          .retryer(enrichedBuilder.retryer)
+          .logger(enrichedBuilder.logger)
+          .encoder(enrichedBuilder.encoder)
+          .queryMapEncoder(enrichedBuilder.queryMapEncoder)
+          .options(enrichedBuilder.options)
+          .requestInterceptors(enrichedBuilder.requestInterceptors)
+          .responseInterceptor(enrichedBuilder.responseInterceptor)
+          .invocationHandlerFactory(enrichedBuilder.invocationHandlerFactory)
+          .defaultContextSupplier(
+              (AsyncContextSupplier<Object>) enrichedBuilder.defaultContextSupplier)
+          .methodInfoResolver(enrichedBuilder.methodInfoResolver)
           .build();
       return new CoroutineFeign<>(asyncFeign);
     }
