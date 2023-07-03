@@ -21,8 +21,11 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
 import feign.Util;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Rule;
@@ -134,5 +137,53 @@ public class DefaultErrorDecoderTest {
         .build();
 
     throw errorDecoder.decode("Service#foo()", response);
+  }
+
+  @Test
+  public void lengthOfBodyExceptionTest() {
+    Response response = bigBodyResponse();
+    Exception defaultException = errorDecoder.decode("Service#foo()", response);
+    assertThat(defaultException.getMessage().length()).isLessThan(response.body().length());
+
+    Exception customizedException = errorDecoder.decode("Service#foo()", response, 4000, 2000);
+    assertThat(customizedException.getMessage().length())
+        .isGreaterThanOrEqualTo(response.body().length());
+  }
+
+  private Response bigBodyResponse() {
+    String content = "I love a storm in early May\n" +
+        "When springtime’s boisterous, firstborn thunder\n" +
+        "Over the sky will gaily wander\n" +
+        "And growl and roar as though in play.\n" +
+        "\n" +
+        "A peal, another — gleeful, cheering…\n" +
+        "Rain, raindust… On the trees, behold!-\n" +
+        "The drops hang, each a long pearl earring;\n" +
+        "Bright sunshine paints the thin threads gold.\n" +
+        "\n" +
+        "A stream downhill goes rushing reckless,\n" +
+        "And in the woods the birds rejoice.\n" +
+        "Din. Clamour. Noise. All nature echoes\n" +
+        "The thunder’s youthful, merry voice.\n" +
+        "\n" +
+        "You’ll say: ‘Tis laughing, carefree Hebe —\n" +
+        "She fed her father’s eagle, and\n" +
+        "The Storm Cup brimming with a seething\n" +
+        "And bubbling wine dropped from her hand";
+
+    InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
+    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    headers.put("Content-Type", Collections.singleton("text/plain"));
+    return Response.builder()
+        .status(400)
+        .request(Request.create(
+            Request.HttpMethod.GET,
+            "/home",
+            Collections.emptyMap(),
+            "data".getBytes(Util.UTF_8),
+            Util.UTF_8,
+            null))
+        .body(content, Util.UTF_8)
+        .build();
   }
 }
