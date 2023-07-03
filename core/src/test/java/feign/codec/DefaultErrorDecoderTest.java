@@ -145,7 +145,8 @@ public class DefaultErrorDecoderTest {
     Exception defaultException = errorDecoder.decode("Service#foo()", response);
     assertThat(defaultException.getMessage().length()).isLessThan(response.body().length());
 
-    Exception customizedException = errorDecoder.decode("Service#foo()", response, 4000, 2000);
+    ErrorDecoder customizedErrorDecoder = new ErrorDecoder.Default(4000, 2000);
+    Exception customizedException = customizedErrorDecoder.decode("Service#foo()", response);
     assertThat(customizedException.getMessage().length())
         .isGreaterThanOrEqualTo(response.body().length());
   }
