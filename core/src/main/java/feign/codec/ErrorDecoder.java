@@ -100,8 +100,7 @@ public interface ErrorDecoder {
     }
 
     @Override
-    public Exception decode(String methodKey,
-                            Response response) {
+    public Exception decode(String methodKey, Response response) {
       FeignException exception = errorStatus(methodKey, response, maxBodyBytesLength,
           maxBodyCharsLength);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
