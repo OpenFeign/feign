@@ -82,8 +82,11 @@ public interface ErrorDecoder {
    *         retryable, it should be wrapped, or a subtype of {@link RetryableException}
    */
   public Exception decode(String methodKey, Response response);
-  default Exception decode(String methodKey, Response response, Integer maxBodyBytesLength,
-      Integer maxBodyCharsLength) {
+
+  default Exception decode(String methodKey,
+                           Response response,
+                           Integer maxBodyBytesLength,
+                           Integer maxBodyCharsLength) {
     return decode(methodKey, response);
   }
 
@@ -97,8 +100,10 @@ public interface ErrorDecoder {
     }
 
     @Override
-    public Exception decode(String methodKey, Response response, Integer maxBodyBytesLength,
-        Integer maxBodyCharsLength) {
+    public Exception decode(String methodKey,
+                            Response response,
+                            Integer maxBodyBytesLength,
+                            Integer maxBodyCharsLength) {
       FeignException exception = errorStatus(methodKey, response, maxBodyBytesLength,
           maxBodyCharsLength);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
