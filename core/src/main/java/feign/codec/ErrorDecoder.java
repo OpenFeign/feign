@@ -83,13 +83,26 @@ public interface ErrorDecoder {
    */
   public Exception decode(String methodKey, Response response);
 
-  public static class Default implements ErrorDecoder {
+  public class Default implements ErrorDecoder {
 
     private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
+    private Integer maxBodyBytesLength;
+    private Integer maxBodyCharsLength;
+
+    public Default() {
+      this.maxBodyBytesLength = null;
+      this.maxBodyCharsLength = null;
+    }
+
+    public Default(Integer maxBodyBytesLength, Integer maxBodyCharsLength) {
+      this.maxBodyBytesLength = maxBodyBytesLength;
+      this.maxBodyCharsLength = maxBodyCharsLength;
+    }
 
     @Override
     public Exception decode(String methodKey, Response response) {
-      FeignException exception = errorStatus(methodKey, response);
+      FeignException exception = errorStatus(methodKey, response, maxBodyBytesLength,
+          maxBodyCharsLength);
       Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
       if (retryAfter != null) {
         return new RetryableException(
