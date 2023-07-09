@@ -24,7 +24,8 @@ public class RetryableExceptionTest {
   @Test
   public void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
-    Request request = Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+    Request request =
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
     byte[] response = "response".getBytes(StandardCharsets.UTF_8);
     Map<String, Collection<String>> responseHeader = new HashMap<>();
     responseHeader.put("TEST_HEADER", Arrays.asList("TEST_CONTENT"));
