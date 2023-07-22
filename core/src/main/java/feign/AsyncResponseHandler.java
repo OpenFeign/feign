@@ -28,11 +28,11 @@ class AsyncResponseHandler {
   private final ResponseHandler responseHandler;
 
   AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder,
-      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
+      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
       ResponseInterceptor responseInterceptor) {
     this.responseHandler = new ResponseHandler(
         logLevel, logger, decoder,
-        errorDecoder, dismiss404, closeAfterDecode,
+        errorDecoder, dismiss404, closeAfterDecode, decodeVoid,
         responseInterceptor);
   }
 
