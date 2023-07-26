@@ -14,9 +14,7 @@
 package feign.template;
 
 import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ExpressionsTest {
@@ -35,5 +33,4 @@ public class ExpressionsTest {
     String pattern = Expressions.EXPRESSION_PATTERN.pattern();
     assertThat(pattern.contains("}")).isEqualTo(pattern.contains("\\}"));
   }
-
 }
