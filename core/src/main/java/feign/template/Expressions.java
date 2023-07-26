@@ -38,9 +38,9 @@ public final class Expressions {
    *
    * This is not a complete implementation of the rfc
    *
-   * <a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2>RFC 6570 Expressions</a>
+   * <a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2">RFC 6570 Expressions</a>
    */
-  private static final Pattern EXPRESSION_PATTERN =
+  static final Pattern EXPRESSION_PATTERN =
       Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)\\})$");
 
   // Partially From:
