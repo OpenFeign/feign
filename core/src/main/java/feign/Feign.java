@@ -179,6 +179,11 @@ public abstract class Feign {
     }
 
     @Override
+    public Builder decodeVoid() {
+      return super.decodeVoid();
+    }
+
+    @Override
     public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
       return super.exceptionPropagationPolicy(propagationPolicy);
     }
@@ -201,7 +206,7 @@ public abstract class Feign {
 
       final ResponseHandler responseHandler =
           new ResponseHandler(logLevel, logger, decoder, errorDecoder,
-              dismiss404, closeAfterDecode, responseInterceptor);
+              dismiss404, closeAfterDecode, decodeVoid, responseInterceptor);
       MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseHandler, logger, logLevel, propagationPolicy,

@@ -43,6 +43,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   protected Encoder encoder = new Encoder.Default();
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
+  protected boolean decodeVoid = false;
   protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
@@ -103,6 +104,11 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
    */
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
+    return thisB;
+  }
+
+  public B decodeVoid() {
+    this.decodeVoid = true;
     return thisB;
   }
 
