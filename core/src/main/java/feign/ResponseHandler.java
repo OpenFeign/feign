@@ -38,6 +38,8 @@ public class ResponseHandler {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
+  private final boolean decodeVoid;
+
   private final ResponseInterceptor responseInterceptor;
 
   public ResponseHandler(
@@ -47,6 +49,7 @@ public class ResponseHandler {
       ErrorDecoder errorDecoder,
       boolean dismiss404,
       boolean closeAfterDecode,
+      boolean decodeVoid,
       ResponseInterceptor responseInterceptor) {
     super();
     this.logLevel = logLevel;
@@ -56,6 +59,7 @@ public class ResponseHandler {
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
     this.responseInterceptor = responseInterceptor;
+    this.decodeVoid = decodeVoid;
   }
 
   public Object handleResponse(
@@ -116,7 +120,7 @@ public class ResponseHandler {
   }
 
   private Object decode(Response response, Type type) throws IOException {
-    if (isVoidType(type)) {
+    if (isVoidType(type) && !decodeVoid) {
       ensureClosed(response.body());
       return null;
     }

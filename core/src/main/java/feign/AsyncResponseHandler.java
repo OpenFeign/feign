@@ -34,6 +34,7 @@ class AsyncResponseHandler {
       ErrorDecoder errorDecoder,
       boolean dismiss404,
       boolean closeAfterDecode,
+      boolean decodeVoid,
       ResponseInterceptor responseInterceptor) {
     this.responseHandler =
         new ResponseHandler(
@@ -43,6 +44,7 @@ class AsyncResponseHandler {
             errorDecoder,
             dismiss404,
             closeAfterDecode,
+            decodeVoid,
             responseInterceptor);
   }
 

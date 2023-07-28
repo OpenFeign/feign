@@ -119,6 +119,11 @@ public final class AsyncFeign<C> {
       return super.doNotCloseAfterDecode();
     }
 
+    @Override
+    public AsyncBuilder<C> decodeVoid() {
+      return super.decodeVoid();
+    }
+
     public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
       this.defaultContextSupplier = supplier;
       return this;
@@ -199,6 +204,7 @@ public final class AsyncFeign<C> {
                       errorDecoder,
                       dismiss404,
                       closeAfterDecode,
+                      decodeVoid,
                       responseInterceptor),
                   AsyncResponseHandler.class,
                   capabilities);
