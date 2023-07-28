@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static feign.Util.ACCEPT_ENCODING;
 import static feign.Util.CONTENT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_DEFLATE;
@@ -189,6 +190,11 @@ public interface Client {
               contentLength = Integer.valueOf(value);
               connection.addRequestProperty(field, value);
             }
+          }
+          // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
+          if (field.equals(ACCEPT_ENCODING)) {
+            connection.addRequestProperty(field, String.join(", ", request.headers().get(field)));
+            break;
           } else {
             connection.addRequestProperty(field, value);
           }
