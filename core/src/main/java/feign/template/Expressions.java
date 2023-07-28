@@ -39,10 +39,9 @@ public final class Expressions {
    *
    * <p>This is not a complete implementation of the rfc
    *
-   * <p><a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2>RFC 6570 Expressions</a>
+   * <p><a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2">RFC 6570 Expressions</a>
    */
-  private static final Pattern EXPRESSION_PATTERN =
-      Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)})$");
+  static final Pattern EXPRESSION_PATTERN = Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)\\})$");
 
   // Partially From:
   // https://stackoverflow.com/questions/29494608/regex-for-uri-templates-rfc-6570-wanted -- I
