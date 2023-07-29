@@ -91,7 +91,7 @@
     <json.version>20230618</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <junit5.version>5.9.3</junit5.version>
+    <junit5.version>5.10.0</junit5.version>
     <jackson.version>2.15.2</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
@@ -301,11 +301,12 @@
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
       </dependency>
-
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-params</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
         <version>${junit5.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <dependency>
