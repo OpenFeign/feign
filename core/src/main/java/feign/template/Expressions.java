@@ -80,8 +80,8 @@ public final class Expressions {
       /* we have a valid variable expression, extract the name from the first group */
       variableName = matcher.group(3).trim();
       if (variableName.contains(":")) {
-        /* split on the colon */
-        String[] parts = variableName.split(":");
+        /* split on the colon and ensure the size of parts array must be 2 */
+        String[] parts = variableName.split(":", 2);
         variableName = parts[0];
         variablePattern = parts[1];
       }
