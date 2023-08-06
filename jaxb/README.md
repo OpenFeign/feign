@@ -25,3 +25,17 @@ JAXBDecoder jaxbDecoder = new JAXBDecoder.Builder()
     .withNamespaceAware(false) // true by default
     .build();
 ```
+
+Usage
+===================
+
+The feign library is available from [Maven Central](https://mvnrepository.com/artifact/io.github.openfeign/feign-jaxb).
+
+```xml
+<dependency>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-jaxb</artifactId>
+    <version>??feing-jaxb-version??</version>
+</dependency>
+
+```
