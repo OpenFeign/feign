@@ -28,16 +28,18 @@ public class InvocationContext {
   private final ErrorDecoder errorDecoder;
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
-  private final Type returnType;
+  private final boolean decodeVoid;
   private final Response response;
+  private final Type returnType;
 
   InvocationContext(String configKey, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean dismiss404, boolean closeAfterDecode, Response response, Type returnType) {
+      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid, Response response, Type returnType) {
     this.configKey = configKey;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
+    this.decodeVoid = decodeVoid;
     this.response = response;
     this.returnType = returnType;
   }
@@ -68,7 +70,7 @@ public class InvocationContext {
         throw decodeError(configKey, response);
       }
 
-      if (isVoidType(returnType)) {
+      if (isVoidType(returnType) && !decodeVoid) {
         ensureClosed(response.body());
         return null;
       }

@@ -27,8 +27,6 @@ import static feign.Util.ensureClosed;
  */
 public class ResponseHandler {
 
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
-
   private final Level logLevel;
   private final Logger logger;
 
@@ -37,10 +35,12 @@ public class ResponseHandler {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
+  private final boolean decodeVoid;
+
   private final ResponseInterceptor responseInterceptor;
 
   public ResponseHandler(Level logLevel, Logger logger, Decoder decoder,
-      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode,
+      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
       ResponseInterceptor responseInterceptor) {
     super();
     this.logLevel = logLevel;
@@ -49,6 +49,7 @@ public class ResponseHandler {
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
+    this.decodeVoid = decodeVoid;
     this.responseInterceptor = responseInterceptor;
   }
 
@@ -60,8 +61,8 @@ public class ResponseHandler {
     try {
       response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
       return responseInterceptor.apply(
-          new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode, response,
-              returnType));
+        new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode, decodeVoid,
+          response, returnType));
     } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
