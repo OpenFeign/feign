@@ -13,13 +13,10 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.util.function.Function;
-
 /**
  * Zero or One {@code ResponseInterceptor} may be configured for purposes such as verify or modify
- * headers of response, verify the business status of decoded object. Once interceptors are applied,
- * {@link ResponseInterceptor#aroundDecode(Response, Function)} is called around decode method
+ * headers of response, verify the business status of decoded object. Once the interceptor is applied,
+ * {@link ResponseInterceptor#aroundDecode(InvocationContext)} is called around decode method
  * called
  */
 public interface ResponseInterceptor {
@@ -33,5 +30,5 @@ public interface ResponseInterceptor {
    * @param invocationContext information surrounding the response being decoded
    * @return decoded response
    */
-  Object apply(InvocationContext invocationContext) throws Exception;
+  Object aroundDecode(InvocationContext invocationContext) throws Exception;
 }

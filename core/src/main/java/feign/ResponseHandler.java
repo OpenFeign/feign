@@ -60,7 +60,7 @@ public class ResponseHandler {
       throws Exception {
     try {
       response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
-      return responseInterceptor.apply(
+      return responseInterceptor.aroundDecode(
         new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode, decodeVoid,
           response, returnType));
     } catch (final IOException e) {
