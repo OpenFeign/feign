@@ -16,6 +16,7 @@ package feign.template;
 import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatObject;
 
 public class ExpressionsTest {
 
@@ -25,6 +26,19 @@ public class ExpressionsTest {
     assertThat(expression).isNotNull();
     String expanded = expression.expand(Collections.singletonMap("foo", "bar"), false);
     assertThat(expanded).isEqualToIgnoringCase("foo=bar");
+  }
+
+  @Test
+  public void malformedExpression() {
+    String[] malformedStrings = {"{:}", "{str1:}", "{str1:{:}", "{str1:{str2:}"};
+
+    for (String malformed : malformedStrings) {
+      try {
+        Expressions.create(malformed);
+      } catch (Exception e) {
+        assertThatObject(e).isNotInstanceOf(ArrayIndexOutOfBoundsException.class);
+      }
+    }
   }
 
   @Test
