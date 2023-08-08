@@ -40,6 +40,17 @@ public class ExpressionsTest {
       }
     }
   }
+  
+  @Test
+  public void malformedBodyTemplate() {
+    String bodyTemplate = "{" + "a".repeat(65536) + "}";
+
+    try {
+      BodyTemplate template = BodyTemplate.create(bodyTemplate);
+    } catch (Throwable e) {
+      assertThatObject(e).isNotInstanceOf(StackOverflowError.class);
+    }
+  }
 
   @Test
   public void androidCompatibility() {
