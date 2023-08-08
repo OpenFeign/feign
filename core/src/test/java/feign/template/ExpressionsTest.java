@@ -29,6 +29,19 @@ public class ExpressionsTest {
   }
 
   @Test
+  public void malformedExpression() {
+    String[] malformedStrings = {"{:}", "{str1:}", "{str1:{:}", "{str1:{str2:}"};
+
+    for (String malformed : malformedStrings) {
+      try {
+        Expressions.create(malformed);
+      } catch (Exception e) {
+        assertThatObject(e).isNotInstanceOf(ArrayIndexOutOfBoundsException.class);
+      }
+    }
+  }
+
+  @Test
   public void malformedBodyTemplate() {
     String bodyTemplate = "{" + "a".repeat(65536) + "}";
 
