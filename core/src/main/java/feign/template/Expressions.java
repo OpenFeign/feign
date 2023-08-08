@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
 
 public final class Expressions {
 
+  private static final int MAX_EXPRESSION_LENGTH = 10000;
+
   private static final String PATH_STYLE_OPERATOR = ";";
 
   /**
@@ -66,6 +68,12 @@ public final class Expressions {
     final String expression = stripBraces(value);
     if (expression == null || expression.isEmpty()) {
       throw new IllegalArgumentException("an expression is required.");
+    }
+
+    /* Check if the expression is too long */
+    if (expression.length() > MAX_EXPRESSION_LENGTH) {
+      throw new IllegalArgumentException(
+          "expression is too long. Max length: " + MAX_EXPRESSION_LENGTH);
     }
 
     /* create a new regular expression matcher for the expression */

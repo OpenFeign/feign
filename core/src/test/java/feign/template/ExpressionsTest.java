@@ -14,6 +14,7 @@
 package feign.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatObject;
 
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,17 @@ public class ExpressionsTest {
     assertThat(expression).isNotNull();
     String expanded = expression.expand(Collections.singletonMap("foo", "bar"), false);
     assertThat(expanded).isEqualToIgnoringCase("foo=bar");
+  }
+
+  @Test
+  public void malformedBodyTemplate() {
+    String bodyTemplate = "{" + "a".repeat(65536) + "}";
+
+    try {
+      BodyTemplate template = BodyTemplate.create(bodyTemplate);
+    } catch (Throwable e) {
+      assertThatObject(e).isNotInstanceOf(StackOverflowError.class);
+    }
   }
 
   @Test
