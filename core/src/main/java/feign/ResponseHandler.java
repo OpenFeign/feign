@@ -61,8 +61,8 @@ public class ResponseHandler {
     try {
       response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
       return responseInterceptor.aroundDecode(
-        new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode, decodeVoid,
-          response, returnType));
+          new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode,
+              decodeVoid, response, returnType));
     } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);

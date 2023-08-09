@@ -31,13 +31,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentMatchers;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
@@ -1010,7 +1008,7 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(200).setBody("OK"));
 
     TestInterface api = new TestInterfaceBuilder().decodeVoid().decoder(mockDecoder)
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
 
     api.body(emptyList());
     verify(mockDecoder, times(1)).decode(ArgumentMatchers.any(), eq(void.class));
@@ -1026,9 +1024,10 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location, api.post());
+    assertEquals("RedirectionInterceptor did not extract the location header", location,
+        api.post());
   }
 
   @Test
@@ -1039,11 +1038,13 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
 
     Collection<String> response = api.collection();
-    assertEquals("RedirectionInterceptor did not extract the location header", locations.size(), response.size());
-    assertTrue("RedirectionInterceptor did not extract the location header", response.contains(location));
+    assertEquals("RedirectionInterceptor did not extract the location header", locations.size(),
+        response.size());
+    assertTrue("RedirectionInterceptor did not extract the location header",
+        response.contains(location));
   }
 
   @Test
@@ -1052,7 +1053,7 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(429).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 
@@ -1062,7 +1063,7 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 

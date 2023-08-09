@@ -15,17 +15,18 @@ package feign;
 
 /**
  * Zero or One {@code ResponseInterceptor} may be configured for purposes such as verify or modify
- * headers of response, verify the business status of decoded object. Once the interceptor is applied,
- * {@link ResponseInterceptor#aroundDecode(InvocationContext)} is called around decode method
- * called
+ * headers of response, verify the business status of decoded object. Once the interceptor is
+ * applied, {@link ResponseInterceptor#aroundDecode(InvocationContext)} is called around decode
+ * method called
  */
 public interface ResponseInterceptor {
 
   ResponseInterceptor DEFAULT = InvocationContext::proceed;
 
   /**
-   * Called by {@link ResponseHandler} after refreshing the response and wrapped around the whole decode process,
-   * must either manually invoke {@link InvocationContext#proceed} or manually create a new response object
+   * Called by {@link ResponseHandler} after refreshing the response and wrapped around the whole
+   * decode process, must either manually invoke {@link InvocationContext#proceed} or manually
+   * create a new response object
    *
    * @param invocationContext information surrounding the response being decoded
    * @return decoded response

@@ -33,7 +33,8 @@ public class InvocationContext {
   private final Type returnType;
 
   InvocationContext(String configKey, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid, Response response, Type returnType) {
+      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid, Response response,
+      Type returnType) {
     this.configKey = configKey;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
@@ -63,8 +64,9 @@ public class InvocationContext {
 
     try {
       final boolean shouldDecodeResponseBody =
-              (response.status() >= 200 && response.status() < 300) || (response.status() == 404 && dismiss404
-                      && !isVoidType(returnType));
+          (response.status() >= 200 && response.status() < 300)
+              || (response.status() == 404 && dismiss404
+                  && !isVoidType(returnType));
 
       if (!shouldDecodeResponseBody) {
         throw decodeError(configKey, response);
@@ -77,18 +79,14 @@ public class InvocationContext {
 
       try {
         return decoder.decode(response, returnType);
-      }
-      catch (final FeignException e) {
+      } catch (final FeignException e) {
         throw e;
-      }
-      catch (final RuntimeException e) {
+      } catch (final RuntimeException e) {
         throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         throw errorReading(response.request(), response, e);
       }
-    }
-    finally {
+    } finally {
       if (closeAfterDecode) {
         ensureClosed(response.body());
       }
