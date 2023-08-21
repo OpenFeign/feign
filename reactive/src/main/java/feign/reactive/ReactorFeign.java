@@ -14,13 +14,13 @@
 package feign.reactive;
 
 import feign.Feign;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
+import feign.InvocationHandlerFactory;
+import feign.Target;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
-import feign.InvocationHandlerFactory;
-import feign.Target;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 public class ReactorFeign extends ReactiveFeign {
 
@@ -41,9 +41,9 @@ public class ReactorFeign extends ReactiveFeign {
     }
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       super.invocationHandlerFactory(new ReactorInvocationHandlerFactory(scheduler));
-      return super.build();
+      return super.internalBuild();
     }
 
     @Override

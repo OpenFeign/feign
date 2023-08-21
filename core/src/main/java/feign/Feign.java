@@ -13,12 +13,12 @@
  */
 package feign;
 
+import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -92,7 +92,7 @@ public abstract class Feign {
    */
   public abstract <T> T newInstance(Target<T> target);
 
-  public static class Builder extends BaseBuilder<Builder> {
+  public static class Builder extends BaseBuilder<Builder, Feign> {
 
     private Client client = new Client.Default(null, null);
 
@@ -201,9 +201,8 @@ public abstract class Feign {
       return build().newInstance(target);
     }
 
-    public Feign build() {
-      super.enrich();
-
+    @Override
+    public Feign internalBuild() {
       final ResponseHandler responseHandler =
           new ResponseHandler(logLevel, logger, decoder, errorDecoder,
               dismiss404, closeAfterDecode, decodeVoid, responseInterceptor);
