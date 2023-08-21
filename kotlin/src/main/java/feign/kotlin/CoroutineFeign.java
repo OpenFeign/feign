@@ -112,7 +112,8 @@ public class CoroutineFeign<C> {
     }
   }
 
-  public static class CoroutineBuilder<C> extends BaseBuilder<CoroutineBuilder<C>> {
+  public static class CoroutineBuilder<C>
+      extends BaseBuilder<CoroutineBuilder<C>, CoroutineFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
@@ -156,27 +157,25 @@ public class CoroutineFeign<C> {
       return build().newInstance(target, context);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public CoroutineFeign<C> build() {
-      CoroutineBuilder<C> enrichedBuilder = super.enrich();
-
+    public CoroutineFeign<C> internalBuild() {
       AsyncFeign<C> asyncFeign = (AsyncFeign<C>) AsyncFeign.builder()
-          .logLevel(enrichedBuilder.logLevel)
-          .client((AsyncClient<Object>) enrichedBuilder.client)
-          .decoder(enrichedBuilder.decoder)
-          .errorDecoder(enrichedBuilder.errorDecoder)
-          .contract(enrichedBuilder.contract)
-          .retryer(enrichedBuilder.retryer)
-          .logger(enrichedBuilder.logger)
-          .encoder(enrichedBuilder.encoder)
-          .queryMapEncoder(enrichedBuilder.queryMapEncoder)
-          .options(enrichedBuilder.options)
-          .requestInterceptors(enrichedBuilder.requestInterceptors)
-          .responseInterceptor(enrichedBuilder.responseInterceptor)
-          .invocationHandlerFactory(enrichedBuilder.invocationHandlerFactory)
-          .defaultContextSupplier(
-              (AsyncContextSupplier<Object>) enrichedBuilder.defaultContextSupplier)
-          .methodInfoResolver(enrichedBuilder.methodInfoResolver)
+          .logLevel(logLevel)
+          .client((AsyncClient<Object>) client)
+          .decoder(decoder)
+          .errorDecoder(errorDecoder)
+          .contract(contract)
+          .retryer(retryer)
+          .logger(logger)
+          .encoder(encoder)
+          .queryMapEncoder(queryMapEncoder)
+          .options(options)
+          .requestInterceptors(requestInterceptors)
+          .responseInterceptor(responseInterceptor)
+          .invocationHandlerFactory(invocationHandlerFactory)
+          .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
+          .methodInfoResolver(methodInfoResolver)
           .build();
       return new CoroutineFeign<>(asyncFeign);
     }

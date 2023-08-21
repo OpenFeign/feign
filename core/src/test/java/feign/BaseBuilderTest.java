@@ -31,10 +31,10 @@ public class BaseBuilderTest {
     }), 14);
   }
 
-  private void test(BaseBuilder<?> builder, int expectedFieldsCount)
+  private void test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
       throws IllegalArgumentException, IllegalAccessException {
     Capability mockingCapability = Mockito.mock(Capability.class, RETURNS_MOCKS);
-    BaseBuilder<?> enriched = builder.addCapability(mockingCapability).enrich();
+    BaseBuilder<?, ?> enriched = builder.addCapability(mockingCapability).enrich();
 
     List<Field> fields = enriched.getFieldsToEnrich();
     assertThat(fields).hasSize(expectedFieldsCount);

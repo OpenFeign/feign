@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable {
+public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
 
   private final B thisB;
 
@@ -43,6 +43,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable
   protected Encoder encoder = new Encoder.Default();
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
+  protected boolean decodeVoid = false;
   protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
@@ -103,6 +104,11 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable
    */
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
+    return thisB;
+  }
+
+  public B decodeVoid() {
+    this.decodeVoid = true;
     return thisB;
   }
 
@@ -225,7 +231,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable
   }
 
   @SuppressWarnings("unchecked")
-  protected B enrich() {
+  B enrich() {
     if (capabilities.isEmpty()) {
       return thisB;
     }
@@ -277,5 +283,9 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> implements Cloneable
         .collect(Collectors.toList());
   }
 
+  public final T build() {
+    return enrich().internalBuild();
+  }
 
+  protected abstract T internalBuild();
 }

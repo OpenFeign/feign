@@ -13,12 +13,12 @@
  */
 package feign;
 
+import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.InvocationHandlerFactory.MethodHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -92,7 +92,7 @@ public abstract class Feign {
    */
   public abstract <T> T newInstance(Target<T> target);
 
-  public static class Builder extends BaseBuilder<Builder> {
+  public static class Builder extends BaseBuilder<Builder, Feign> {
 
     private Client client = new Client.Default(null, null);
 
@@ -179,6 +179,11 @@ public abstract class Feign {
     }
 
     @Override
+    public Builder decodeVoid() {
+      return super.decodeVoid();
+    }
+
+    @Override
     public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
       return super.exceptionPropagationPolicy(propagationPolicy);
     }
@@ -196,24 +201,17 @@ public abstract class Feign {
       return build().newInstance(target);
     }
 
-    public Feign build() {
-      Builder enrichedBuilder = super.enrich();
-
+    @Override
+    public Feign internalBuild() {
       final ResponseHandler responseHandler =
-          new ResponseHandler(enrichedBuilder.logLevel, enrichedBuilder.logger,
-              enrichedBuilder.decoder, enrichedBuilder.errorDecoder,
-              enrichedBuilder.dismiss404, enrichedBuilder.closeAfterDecode,
-              enrichedBuilder.responseInterceptor);
+          new ResponseHandler(logLevel, logger, decoder, errorDecoder,
+              dismiss404, closeAfterDecode, decodeVoid, responseInterceptor);
       MethodHandler.Factory<Object> methodHandlerFactory =
-          new SynchronousMethodHandler.Factory(enrichedBuilder.client, enrichedBuilder.retryer,
-              enrichedBuilder.requestInterceptors,
-              responseHandler, enrichedBuilder.logger, enrichedBuilder.logLevel,
-              enrichedBuilder.propagationPolicy,
-              new RequestTemplateFactoryResolver(enrichedBuilder.encoder,
-                  enrichedBuilder.queryMapEncoder),
-              enrichedBuilder.options);
-      return new ReflectiveFeign<>(enrichedBuilder.contract, methodHandlerFactory,
-          enrichedBuilder.invocationHandlerFactory,
+          new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
+              responseHandler, logger, logLevel, propagationPolicy,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              options);
+      return new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
           () -> null);
     }
   }

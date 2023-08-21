@@ -65,7 +65,7 @@ public final class AsyncFeign<C> {
             });
   }
 
-  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>> {
+  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>, AsyncFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
@@ -117,6 +117,11 @@ public final class AsyncFeign<C> {
     @Override
     public AsyncBuilder<C> doNotCloseAfterDecode() {
       return super.doNotCloseAfterDecode();
+    }
+
+    @Override
+    public AsyncBuilder<C> decodeVoid() {
+      return super.decodeVoid();
     }
 
     public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
@@ -185,33 +190,30 @@ public final class AsyncFeign<C> {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
-    public AsyncFeign<C> build() {
-      AsyncBuilder<C> enrichedBuilder = super.enrich();
-
+    @Override
+    public AsyncFeign<C> internalBuild() {
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler) Capability.enrich(
               new AsyncResponseHandler(
-                  enrichedBuilder.logLevel,
-                  enrichedBuilder.logger,
-                  enrichedBuilder.decoder,
-                  enrichedBuilder.errorDecoder,
-                  enrichedBuilder.dismiss404,
-                  enrichedBuilder.closeAfterDecode, enrichedBuilder.responseInterceptor),
+                  logLevel,
+                  logger,
+                  decoder,
+                  errorDecoder,
+                  dismiss404,
+                  closeAfterDecode, decodeVoid, responseInterceptor),
               AsyncResponseHandler.class,
-              enrichedBuilder.capabilities);
+              capabilities);
 
       final MethodHandler.Factory<C> methodHandlerFactory =
           new AsynchronousMethodHandler.Factory<>(
-              enrichedBuilder.client, enrichedBuilder.retryer, enrichedBuilder.requestInterceptors,
-              responseHandler, enrichedBuilder.logger, enrichedBuilder.logLevel,
-              enrichedBuilder.propagationPolicy, enrichedBuilder.methodInfoResolver,
-              new RequestTemplateFactoryResolver(enrichedBuilder.encoder,
-                  enrichedBuilder.queryMapEncoder),
-              enrichedBuilder.options, enrichedBuilder.decoder, enrichedBuilder.errorDecoder);
+              client, retryer, requestInterceptors,
+              responseHandler, logger, logLevel,
+              propagationPolicy, methodInfoResolver,
+              new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
+              options, decoder, errorDecoder);
       final ReflectiveFeign<C> feign =
-          new ReflectiveFeign<>(enrichedBuilder.contract, methodHandlerFactory,
-              enrichedBuilder.invocationHandlerFactory,
-              enrichedBuilder.defaultContextSupplier);
+          new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
+              defaultContextSupplier);
       return new AsyncFeign<>(feign);
     }
   }
