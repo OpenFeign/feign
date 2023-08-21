@@ -14,6 +14,7 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
@@ -30,10 +31,10 @@ public class BaseBuilderTest {
     test(AsyncFeign.builder().requestInterceptor(template -> {}), 14);
   }
 
-  private void test(BaseBuilder<?> builder, int expectedFieldsCount)
+  private void test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
       throws IllegalArgumentException, IllegalAccessException {
     Capability mockingCapability = Mockito.mock(Capability.class, RETURNS_MOCKS);
-    BaseBuilder<?> enriched = builder.addCapability(mockingCapability).enrich();
+    BaseBuilder<?, ?> enriched = builder.addCapability(mockingCapability).enrich();
 
     List<Field> fields = enriched.getFieldsToEnrich();
     assertThat(fields).hasSize(expectedFieldsCount);
@@ -45,6 +46,7 @@ public class BaseBuilderTest {
         mockedValue = ((List<Object>) mockedValue).get(0);
       }
       assertTrue("Field was not enriched " + field, Mockito.mockingDetails(mockedValue).isMock());
+      assertNotSame(builder, enriched);
     }
   }
 

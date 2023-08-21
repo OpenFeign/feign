@@ -111,7 +111,8 @@ public class CoroutineFeign<C> {
     }
   }
 
-  public static class CoroutineBuilder<C> extends BaseBuilder<CoroutineBuilder<C>> {
+  public static class CoroutineBuilder<C>
+      extends BaseBuilder<CoroutineBuilder<C>, CoroutineFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
@@ -156,10 +157,9 @@ public class CoroutineFeign<C> {
       return build().newInstance(target, context);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public CoroutineFeign<C> build() {
-      super.enrich();
-
+    public CoroutineFeign<C> internalBuild() {
       AsyncFeign<C> asyncFeign =
           (AsyncFeign<C>)
               AsyncFeign.builder()

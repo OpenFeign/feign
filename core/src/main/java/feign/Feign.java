@@ -91,7 +91,7 @@ public abstract class Feign {
    */
   public abstract <T> T newInstance(Target<T> target);
 
-  public static class Builder extends BaseBuilder<Builder> {
+  public static class Builder extends BaseBuilder<Builder, Feign> {
 
     private Client client = new Client.Default(null, null);
 
@@ -200,9 +200,8 @@ public abstract class Feign {
       return build().newInstance(target);
     }
 
-    public Feign build() {
-      super.enrich();
-
+    @Override
+    public Feign internalBuild() {
       final ResponseHandler responseHandler =
           new ResponseHandler(
               logLevel,

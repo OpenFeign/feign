@@ -128,7 +128,7 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       return build(null);
     }
 
@@ -143,7 +143,7 @@ public final class HystrixFeign {
             }
           });
       super.contract(new HystrixDelegatingContract(contract));
-      return super.build();
+      return super.internalBuild();
     }
 
     // Covariant overrides to support chaining to new fallback method.

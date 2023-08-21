@@ -33,9 +33,9 @@ public class RxJavaFeign extends ReactiveFeign {
     private Scheduler scheduler = Schedulers.trampoline();
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       super.invocationHandlerFactory(new RxJavaInvocationHandlerFactory(scheduler));
-      return super.build();
+      return super.internalBuild();
     }
 
     @Override

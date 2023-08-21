@@ -40,13 +40,13 @@ abstract class ReactiveFeign {
      * @return a new Feign Instance.
      */
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       if (!(this.contract instanceof ReactiveDelegatingContract)) {
         super.contract(new ReactiveDelegatingContract(this.contract));
       } else {
         super.contract(this.contract);
       }
-      return super.build();
+      return super.internalBuild();
     }
 
     @Override

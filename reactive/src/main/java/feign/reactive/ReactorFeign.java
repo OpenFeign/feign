@@ -41,9 +41,9 @@ public class ReactorFeign extends ReactiveFeign {
     }
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       super.invocationHandlerFactory(new ReactorInvocationHandlerFactory(scheduler));
-      return super.build();
+      return super.internalBuild();
     }
 
     @Override

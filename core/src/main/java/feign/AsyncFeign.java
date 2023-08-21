@@ -64,7 +64,7 @@ public final class AsyncFeign<C> {
             });
   }
 
-  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>> {
+  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>, AsyncFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
@@ -191,9 +191,8 @@ public final class AsyncFeign<C> {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
-    public AsyncFeign<C> build() {
-      super.enrich();
-
+    @Override
+    public AsyncFeign<C> internalBuild() {
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler)
               Capability.enrich(
