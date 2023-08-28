@@ -30,10 +30,9 @@ public class RedirectionInterceptor implements ResponseInterceptor {
     Response response = invocationContext.response();
     int status = response.status();
     Object returnValue = null;
-    if (300 <= status && status < 400) {
+    if (300 <= status && status < 400 && response.headers().containsKey("Location")) {
       Type returnType = rawType(invocationContext.returnType());
-      Collection<String> locations =
-          response.headers().getOrDefault("Location", Collections.emptyList());
+      Collection<String> locations = response.headers().get("Location");
       if (Collection.class.equals(returnType)) {
         returnValue = locations;
       } else if (String.class.equals(returnType)) {
