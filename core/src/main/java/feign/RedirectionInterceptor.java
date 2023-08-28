@@ -39,7 +39,7 @@ public class RedirectionInterceptor implements ResponseInterceptor {
         if (locations.isEmpty()) {
           returnValue = "";
         } else {
-          returnValue = locations.stream().findFirst().get();
+          returnValue = locations.stream().findFirst().orElse("");
         }
       }
     }

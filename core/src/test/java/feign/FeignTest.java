@@ -23,7 +23,8 @@ import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;import feign.querymap.BeanQueryMapEncoder;
+import feign.codec.StringDecoder;
+import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -898,7 +899,7 @@ public class FeignTest {
 
   @Test
   public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -914,7 +915,7 @@ public class FeignTest {
 
   @Test
   public void queryMap_with_child_pojo() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new FieldQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     ChildPojo childPojo = new ChildPojo();
@@ -933,7 +934,7 @@ public class FeignTest {
 
   @Test
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -948,7 +949,7 @@ public class FeignTest {
 
   @Test
   public void beanQueryMapEncoderWithEmptyParams() throws Exception {
-    TestInterface api = new TestInterfaceBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -1313,7 +1314,7 @@ public class FeignTest {
       return this;
     }
 
-    TestInterfaceBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
+    TestInterfaceBuilder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
       return this;
     }
