@@ -28,7 +28,7 @@
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <reactor.version>3.5.8</reactor.version>
+    <reactor.version>3.5.9</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
   </properties>

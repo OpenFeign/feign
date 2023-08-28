@@ -95,7 +95,7 @@
     <jackson.version>2.15.2</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <mockito.version>5.4.0</mockito.version>
+    <mockito.version>5.5.0</mockito.version>
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
@@ -795,7 +795,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>

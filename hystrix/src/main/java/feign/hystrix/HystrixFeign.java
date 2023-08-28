@@ -14,9 +14,6 @@
 package feign.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
 import feign.Client;
 import feign.Contract;
 import feign.Feign;
@@ -30,6 +27,9 @@ import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Allows Feign interfaces to return HystrixCommand or rx.Observable or rx.Single objects. Also
@@ -133,7 +133,7 @@ public final class HystrixFeign {
     }
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       return build(null);
     }
 
@@ -148,7 +148,7 @@ public final class HystrixFeign {
         }
       });
       super.contract(new HystrixDelegatingContract(contract));
-      return super.build();
+      return super.internalBuild();
     }
 
     // Covariant overrides to support chaining to new fallback method.

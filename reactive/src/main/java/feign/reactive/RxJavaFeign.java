@@ -13,14 +13,14 @@
  */
 package feign.reactive;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.Target;
 import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 public class RxJavaFeign extends ReactiveFeign {
 
@@ -33,9 +33,9 @@ public class RxJavaFeign extends ReactiveFeign {
     private Scheduler scheduler = Schedulers.trampoline();
 
     @Override
-    public Feign build() {
+    public Feign internalBuild() {
       super.invocationHandlerFactory(new RxJavaInvocationHandlerFactory(scheduler));
-      return super.build();
+      return super.internalBuild();
     }
 
     @Override
