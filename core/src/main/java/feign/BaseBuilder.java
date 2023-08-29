@@ -35,7 +35,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   protected final List<RequestInterceptor> requestInterceptors =
       new ArrayList<>();
-  protected ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
+  protected final List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new Contract.Default();
   protected Retryer retryer = new Retryer.Default();
@@ -204,10 +204,22 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   }
 
   /**
+   * Sets the full set of request interceptors for the builder, overwriting any previous
+   * interceptors.
+   */
+  public B responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
+    this.responseInterceptors.clear();
+    for (ResponseInterceptor responseInterceptor : responseInterceptors) {
+      this.responseInterceptors.add(responseInterceptor);
+    }
+    return thisB;
+  }
+
+  /**
    * Adds a single response interceptor to the builder.
    */
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
-    this.responseInterceptor = responseInterceptor;
+    this.responseInterceptors.add(responseInterceptor);
     return thisB;
   }
 
@@ -288,4 +300,18 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   }
 
   protected abstract T internalBuild();
+
+  protected ResponseInterceptor.Chain responseInterceptorChain() {
+    ResponseInterceptor.Chain endOfChain =
+        ResponseInterceptor.Chain.DEFAULT;
+    ResponseInterceptor.Chain executionChain = this.responseInterceptors.stream()
+        .reduce(ResponseInterceptor::andThen)
+        .map(interceptor -> interceptor.apply(endOfChain))
+        .orElse(endOfChain);
+
+    return (ResponseInterceptor.Chain) Capability.enrich(executionChain,
+        ResponseInterceptor.Chain.class, capabilities);
+  }
+
+
 }

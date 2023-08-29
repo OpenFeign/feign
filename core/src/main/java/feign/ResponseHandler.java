@@ -13,13 +13,13 @@
  */
 package feign;
 
+import static feign.FeignException.errorReading;
+import static feign.Util.ensureClosed;
 import feign.Logger.Level;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import static feign.FeignException.errorReading;
-import static feign.Util.ensureClosed;
 
 /**
  * The response handler that is used to provide synchronous support on top of standard response
@@ -37,11 +37,11 @@ public class ResponseHandler {
 
   private final boolean decodeVoid;
 
-  private final ResponseInterceptor responseInterceptor;
+  private final ResponseInterceptor.Chain executionChain;
 
-  public ResponseHandler(Level logLevel, Logger logger, Decoder decoder,
-      ErrorDecoder errorDecoder, boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
-      ResponseInterceptor responseInterceptor) {
+  public ResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
+      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
+      ResponseInterceptor.Chain executionChain) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
@@ -50,7 +50,7 @@ public class ResponseHandler {
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
     this.decodeVoid = decodeVoid;
-    this.responseInterceptor = responseInterceptor;
+    this.executionChain = executionChain;
   }
 
   public Object handleResponse(String configKey,
@@ -60,7 +60,7 @@ public class ResponseHandler {
       throws Exception {
     try {
       response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
-      return responseInterceptor.aroundDecode(
+      return executionChain.next(
           new InvocationContext(configKey, decoder, errorDecoder, dismiss404, closeAfterDecode,
               decodeVoid, response, returnType));
     } catch (final IOException e) {

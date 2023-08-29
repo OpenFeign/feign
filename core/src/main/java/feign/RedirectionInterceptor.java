@@ -13,6 +13,7 @@
  */
 package feign;
 
+import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -26,7 +27,7 @@ import java.util.Collections;
  */
 public class RedirectionInterceptor implements ResponseInterceptor {
   @Override
-  public Object aroundDecode(InvocationContext invocationContext) throws Exception {
+  public Object intercept(InvocationContext invocationContext, Chain chain) throws Exception {
     Response response = invocationContext.response();
     int status = response.status();
     Object returnValue = null;
@@ -44,7 +45,7 @@ public class RedirectionInterceptor implements ResponseInterceptor {
       }
     }
     if (returnValue == null) {
-      return invocationContext.proceed();
+      return chain.next(invocationContext);
     } else {
       response.close();
       return returnValue;

@@ -21,18 +21,18 @@ import java.lang.reflect.Type;
  * <pre>
  * {@code
  * new ResponseMapper() {
- *      &#64;Override
- *      public Response map(Response response, Type type) {
- *          try {
- *            return response
- *              .toBuilder()
- *              .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
- *              .build();
- *          } catch (IOException e) {
- *              throw new RuntimeException(e);
- *          }
- *      }
- *  };
+ *   &#64;Override
+ *   public Response map(Response response, Type type) {
+ *     try {
+ *       return response
+ *           .toBuilder()
+ *           .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+ *           .build();
+ *     } catch (IOException e) {
+ *       throw new RuntimeException(e);
+ *     }
+ *   }
+ * };
  * }
  * </pre>
  */

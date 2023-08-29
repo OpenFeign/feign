@@ -13,23 +13,63 @@
  */
 package feign;
 
+import java.io.IOException;
+
 /**
  * Zero or One {@code ResponseInterceptor} may be configured for purposes such as verify or modify
  * headers of response, verify the business status of decoded object. Once the interceptor is
- * applied, {@link ResponseInterceptor#aroundDecode(InvocationContext)} is called around decode
- * method called
+ * applied, {@link ResponseInterceptor#intercept(InvocationContext, Chain)} is called around decode
+ * method called import static feign.FeignException.errorReading; import
+ * feign.codec.DecodeException; import feign.codec.Decoder; import java.io.IOException; import
+ * java.lang.reflect.Type; import java.util.function.Function;
+ * 
  */
 public interface ResponseInterceptor {
 
-  ResponseInterceptor DEFAULT = InvocationContext::proceed;
-
   /**
    * Called by {@link ResponseHandler} after refreshing the response and wrapped around the whole
-   * decode process, must either manually invoke {@link InvocationContext#proceed} or manually
+   * decode process, must either manually invoke {@link Chain#next(InvocationContext)} or manually
    * create a new response object
    *
    * @param invocationContext information surrounding the response being decoded
    * @return decoded response
    */
-  Object aroundDecode(InvocationContext invocationContext) throws Exception;
+  Object intercept(InvocationContext invocationContext, Chain chain) throws Exception;
+
+  /**
+   * Return a new {@link ResponseInterceptor} that invokes the current interceptor first and then
+   * the one that is passed in.
+   * 
+   * @param nextInterceptor the interceptor to delegate to after the current
+   * @return a new interceptor that chains the two
+   */
+  default ResponseInterceptor andThen(ResponseInterceptor nextInterceptor) {
+    return (ic, chain) -> intercept(ic,
+        nextContext -> nextInterceptor.intercept(nextContext, chain));
+  }
+
+  /**
+   * Contract for delegation to the rest of the chain.
+   */
+  public interface Chain {
+    Chain DEFAULT = InvocationContext::proceed;
+
+    /**
+     * Delegate to the rest of the chain to execute the request.
+     * 
+     * @param context the request to execute the {@link Chain} .
+     * @return the response
+     */
+    Object next(InvocationContext context) throws Exception;
+  }
+
+  /**
+   * Apply this interceptor to the given {@code Chain} resulting in an intercepted chain.
+   * 
+   * @param chain the chain to add interception around
+   * @return a new chain instance
+   */
+  default Chain apply(Chain chain) {
+    return request -> intercept(request, chain);
+  }
 }

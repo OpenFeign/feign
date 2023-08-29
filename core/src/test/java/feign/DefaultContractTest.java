@@ -26,8 +26,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
 /**
- * Tests interfaces defined per {@link Contract.Default} are interpreted into expected
- * {@link feign .RequestTemplate template} instances.
+ * Tests interfaces defined per {@link Contract.Default} are interpreted into expected {@link feign
+ * .RequestTemplate template} instances.
  */
 public class DefaultContractTest {
 

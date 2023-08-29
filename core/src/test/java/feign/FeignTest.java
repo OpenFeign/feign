@@ -1326,7 +1326,7 @@ public class FeignTest {
 
   class ErrorInterceptor implements ResponseInterceptor {
     @Override
-    public Object aroundDecode(InvocationContext invocationContext) throws Exception {
+    public Object intercept(InvocationContext invocationContext, Chain chain) throws Exception {
       Response response = invocationContext.response();
       if (300 <= response.status()) {
         if (String.class.equals(invocationContext.returnType())) {
@@ -1335,7 +1335,7 @@ public class FeignTest {
           return body;
         }
       }
-      return invocationContext.proceed();
+      return chain.next(invocationContext);
     }
   }
 }

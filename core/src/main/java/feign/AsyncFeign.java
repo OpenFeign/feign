@@ -200,7 +200,7 @@ public final class AsyncFeign<C> {
                   decoder,
                   errorDecoder,
                   dismiss404,
-                  closeAfterDecode, decodeVoid, responseInterceptor),
+                  closeAfterDecode, decodeVoid, responseInterceptorChain()),
               AsyncResponseHandler.class,
               capabilities);
 
