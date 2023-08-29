@@ -301,7 +301,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   protected abstract T internalBuild();
 
-  protected ResponseInterceptor.Chain executionChain() {
+  protected ResponseInterceptor.Chain responseInterceptorChain() {
     ResponseInterceptor.Chain endOfChain =
         ResponseInterceptor.Chain.DEFAULT;
     ResponseInterceptor.Chain executionChain = this.responseInterceptors.stream()

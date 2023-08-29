@@ -205,7 +205,7 @@ public abstract class Feign {
     public Feign internalBuild() {
       final ResponseHandler responseHandler =
           new ResponseHandler(logLevel, logger, decoder, errorDecoder,
-              dismiss404, closeAfterDecode, decodeVoid, executionChain());
+              dismiss404, closeAfterDecode, decodeVoid, responseInterceptorChain());
       MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseHandler, logger, logLevel, propagationPolicy,
