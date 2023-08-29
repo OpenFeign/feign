@@ -164,7 +164,8 @@ public abstract class Logger {
   /**
    * Controls the level of logging.
    */
-  public enum Level {
+  public enum Level
+  {
     /**
      * No logging.
      */

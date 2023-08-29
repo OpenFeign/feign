@@ -1064,7 +1064,7 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 
@@ -1077,10 +1077,10 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
-            .responseInterceptor(new ErrorInterceptor()).target("http://localhost:" + server.getPort());
+        .responseInterceptor(new ErrorInterceptor()).target("http://localhost:" + server.getPort());
 
     assertEquals("RedirectionInterceptor did not extract the location header", location,
-            api.post());
+        api.post());
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 

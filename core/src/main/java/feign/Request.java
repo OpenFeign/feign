@@ -31,39 +31,39 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Request implements Serializable {
 
-  public enum HttpMethod {
+  public enum HttpMethod
+  {
     GET, HEAD, POST(true), PUT(true), DELETE, CONNECT, OPTIONS, TRACE, PATCH(true);
 
-    private final boolean withBody;
+  private final boolean withBody;
 
-    HttpMethod() {
+  HttpMethod() {
       this(false);
     }
 
-    HttpMethod(boolean withBody) {
+  HttpMethod(boolean withBody) {
       this.withBody = withBody;
     }
 
-    public boolean isWithBody() {
-      return this.withBody;
-    }
-  }
+  public boolean isWithBody() {
+    return this.withBody;
+  }}
 
-  public enum ProtocolVersion {
+  public enum ProtocolVersion{
 
-    HTTP_1_0("HTTP/1.0"), HTTP_1_1("HTTP/1.1"), HTTP_2("HTTP/2.0"), MOCK;
+  HTTP_1_0("HTTP/1.0"), HTTP_1_1("HTTP/1.1"), HTTP_2("HTTP/2.0"), MOCK;
 
     final String protocolVersion;
 
-    ProtocolVersion() {
+  ProtocolVersion() {
       protocolVersion = name();
     }
 
-    ProtocolVersion(String protocolVersion) {
+  ProtocolVersion(String protocolVersion) {
       this.protocolVersion = protocolVersion;
     }
 
-    @Override
+  @Override
     public String toString() {
       return protocolVersion;
     }

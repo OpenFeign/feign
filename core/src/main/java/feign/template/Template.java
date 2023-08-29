@@ -326,22 +326,21 @@ public class Template {
     }
   }
 
-  public enum EncodingOptions {
+  public enum EncodingOptions
+  {
     REQUIRED(true), NOT_REQUIRED(false);
 
-    private final boolean shouldEncode;
+  private final boolean shouldEncode;
 
-    EncodingOptions(boolean shouldEncode) {
+  EncodingOptions(boolean shouldEncode) {
       this.shouldEncode = shouldEncode;
     }
 
-    public boolean isEncodingRequired() {
-      return this.shouldEncode;
-    }
-  }
+  public boolean isEncodingRequired() {
+    return this.shouldEncode;
+  }}
 
-  public enum ExpansionOptions {
-    ALLOW_UNRESOLVED, REQUIRED
-  }
+  public enum ExpansionOptions{ALLOW_UNRESOLVED,REQUIRED
+}
 
 }
