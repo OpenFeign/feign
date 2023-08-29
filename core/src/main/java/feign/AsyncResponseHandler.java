@@ -35,7 +35,7 @@ class AsyncResponseHandler {
       boolean dismiss404,
       boolean closeAfterDecode,
       boolean decodeVoid,
-      ResponseInterceptor responseInterceptor) {
+      ResponseInterceptor.Chain executionChain) {
     this.responseHandler =
         new ResponseHandler(
             logLevel,
@@ -45,7 +45,7 @@ class AsyncResponseHandler {
             dismiss404,
             closeAfterDecode,
             decodeVoid,
-            responseInterceptor);
+            executionChain);
   }
 
   public CompletableFuture<Object> handleResponse(

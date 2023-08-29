@@ -28,7 +28,11 @@ public class BaseBuilderTest {
   @Test
   public void checkEnrichTouchesAllAsyncBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    test(AsyncFeign.builder().requestInterceptor(template -> {}), 14);
+    test(
+        AsyncFeign.builder()
+            .requestInterceptor(template -> {})
+            .responseInterceptor((ic, c) -> c.next(ic)),
+        14);
   }
 
   private void test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
@@ -43,6 +47,9 @@ public class BaseBuilderTest {
       field.setAccessible(true);
       Object mockedValue = field.get(enriched);
       if (mockedValue instanceof List) {
+        assertThat((List) mockedValue)
+            .withFailMessage("Enriched list missing contents %s", field)
+            .isNotEmpty();
         mockedValue = ((List<Object>) mockedValue).get(0);
       }
       assertTrue("Field was not enriched " + field, Mockito.mockingDetails(mockedValue).isMock());
@@ -53,6 +60,10 @@ public class BaseBuilderTest {
   @Test
   public void checkEnrichTouchesAllBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    test(Feign.builder().requestInterceptor(template -> {}), 12);
+    test(
+        Feign.builder()
+            .requestInterceptor(template -> {})
+            .responseInterceptor((ic, c) -> c.next(ic)),
+        12);
   }
 }

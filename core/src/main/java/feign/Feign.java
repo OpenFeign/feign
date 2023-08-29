@@ -211,7 +211,7 @@ public abstract class Feign {
               dismiss404,
               closeAfterDecode,
               decodeVoid,
-              responseInterceptor);
+              responseInterceptorChain());
       MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(
               client,
