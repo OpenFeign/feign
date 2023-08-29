@@ -38,6 +38,9 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
 
   @Override
   public Map<String, Object> encode(Object object) throws EncodeException {
+    if (object == null) {
+      return Collections.emptyMap();
+    }
     try {
       ObjectParamMetadata metadata = getMetadata(object.getClass());
       Map<String, Object> propertyNameToValue = new HashMap<String, Object>();

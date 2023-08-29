@@ -20,18 +20,16 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>12.4-SNAPSHOT</version>
+    <version>13.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>io.github.openfeign</groupId>
   <artifactId>feign-example-wikipedia-with-springboot</artifactId>
   <packaging>jar</packaging>
-  <name>Wikipedia Example</name>
+  <name>Wikipedia Example with Spring Boot</name>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
     <main.java.version>17</main.java.version>
-
     <moditect.skip>true</moditect.skip>
   </properties>
 
@@ -40,7 +38,7 @@
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
-        <version>2022.0.2</version>
+        <version>2022.0.4</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -68,53 +66,63 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <defaultGoal>package</defaultGoal>
-    <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <mainClass>example.wikipedia.WikipediaApplication</mainClass>
-          <layout>ZIP</layout>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+  <profiles>
+    <profile>
+      <id>active-on-jdk17</id>
+      <activation>
+        <jdk>17</jdk>
+      </activation>
 
-      <plugin>
-        <groupId>org.skife.maven</groupId>
-        <artifactId>really-executable-jar-maven-plugin</artifactId>
-        <version>2.1.1</version>
-        <configuration>
-          <programFile>wikipedia</programFile>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>really-executable-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+      <build>
+        <defaultGoal>package</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+              <mainClass>example.wikipedia.WikipediaApplication</mainClass>
+              <layout>ZIP</layout>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.skife.maven</groupId>
+            <artifactId>really-executable-jar-maven-plugin</artifactId>
+            <version>2.1.1</version>
+            <configuration>
+              <programFile>wikipedia</programFile>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>really-executable-jar</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>

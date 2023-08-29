@@ -37,10 +37,13 @@ public class ResponseHandler {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
 
+  private final boolean decodeVoid;
+
   private final ResponseInterceptor.Chain executionChain;
 
   public ResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean dismiss404, boolean closeAfterDecode, ResponseInterceptor.Chain executionChain) {
+      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
+      ResponseInterceptor.Chain executionChain) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
@@ -48,6 +51,7 @@ public class ResponseHandler {
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
+    this.decodeVoid = decodeVoid;
     this.executionChain = executionChain;
   }
 
@@ -112,7 +116,7 @@ public class ResponseHandler {
   }
 
   private Object decode(Response response, Type type) throws IOException {
-    if (isVoidType(type)) {
+    if (isVoidType(type) && !decodeVoid) {
       ensureClosed(response.body());
       return null;
     }

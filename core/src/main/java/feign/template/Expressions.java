@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
 
 public final class Expressions {
 
+  private static final int MAX_EXPRESSION_LENGTH = 10000;
+
   private static final String PATH_STYLE_OPERATOR = ";";
   /**
    * Literals may be present and preceded the expression.
@@ -38,10 +40,10 @@ public final class Expressions {
    *
    * This is not a complete implementation of the rfc
    *
-   * <a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2>RFC 6570 Expressions</a>
+   * <a href="https://www.rfc-editor.org/rfc/rfc6570#section-2.2">RFC 6570 Expressions</a>
    */
-  private static final Pattern EXPRESSION_PATTERN =
-      Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)})$");
+  static final Pattern EXPRESSION_PATTERN =
+      Pattern.compile("^(\\{([+#./;?&=,!@|]?)(.+)\\})$");
 
   // Partially From:
   // https://stackoverflow.com/questions/29494608/regex-for-uri-templates-rfc-6570-wanted -- I
@@ -68,6 +70,12 @@ public final class Expressions {
       throw new IllegalArgumentException("an expression is required.");
     }
 
+    /* Check if the expression is too long */
+    if (expression.length() > MAX_EXPRESSION_LENGTH) {
+      throw new IllegalArgumentException(
+          "expression is too long. Max length: " + MAX_EXPRESSION_LENGTH);
+    }
+
     /* create a new regular expression matcher for the expression */
     String variableName = null;
     String variablePattern = null;
@@ -80,8 +88,8 @@ public final class Expressions {
       /* we have a valid variable expression, extract the name from the first group */
       variableName = matcher.group(3).trim();
       if (variableName.contains(":")) {
-        /* split on the colon */
-        String[] parts = variableName.split(":");
+        /* split on the colon and ensure the size of parts array must be 2 */
+        String[] parts = variableName.split(":", 2);
         variableName = parts[0];
         variablePattern = parts[1];
       }

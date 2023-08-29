@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>12.4-SNAPSHOT</version>
+  <version>13.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -48,6 +48,7 @@
     <module>slf4j</module>
     <module>spring4</module>
     <module>soap</module>
+    <module>soap-jakarta</module>
     <module>reactive</module>
     <module>dropwizard-metrics4</module>
     <module>dropwizard-metrics5</module>
@@ -82,39 +83,38 @@
     <main.basedir>${project.basedir}</main.basedir>
 
     <okhttp3.version>4.11.0</okhttp3.version>
-    <guava.version>31.1-jre</guava.version>
-    <googlehttpclient.version>1.43.1</googlehttpclient.version>
+    <guava.version>32.1.2-jre</guava.version>
+    <googlehttpclient.version>1.43.3</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
     <slf4j.version>2.0.7</slf4j.version>
     <bouncy.version>1.70</bouncy.version>
-    <json.version>20230227</json.version>
+    <json.version>20230618</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <junit5.version>5.9.2</junit5.version>
-    <jackson.version>2.15.0</jackson.version>
-    <jackson-databind.version>2.15.0</jackson-databind.version>
+    <junit5.version>5.10.0</junit5.version>
+    <jackson.version>2.15.2</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <mockito.version>5.3.1</mockito.version>
+    <mockito.version>5.5.0</mockito.version>
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
-    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
     <license-maven-plugin.version>4.2</license-maven-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-    <maven-release-plugin.version>3.0.0</maven-release-plugin.version>
-    <maven-bundle-plugin.version>5.1.8</maven-bundle-plugin.version>
+    <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
+    <maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
-    <bom-generator.version>0.94.0</bom-generator.version>
+    <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+    <bom-generator.version>0.100.3</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
-    <maven-scm-plugin.version>2.0.0</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.15.0</maven-versions-plugin.version>
-    <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
+    <maven-scm-plugin.version>2.0.1</maven-scm-plugin.version>
+    <maven-versions-plugin.version>2.16.0</maven-versions-plugin.version>
+    <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
-    <moditect-maven-plugin.version>1.0.0.RC3</moditect-maven-plugin.version>
+    <moditect-maven-plugin.version>1.0.0.Final</moditect-maven-plugin.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
@@ -301,11 +301,12 @@
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
       </dependency>
-
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-params</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
         <version>${junit5.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -355,7 +356,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson-databind.version}</version>
+        <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
@@ -422,11 +423,13 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
         </plugin>
 
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>${maven-jar-plugin.version}</version>
           <configuration>
@@ -532,6 +535,7 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
         <configuration>
@@ -570,11 +574,13 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
         <version>${maven-install-plugin.version}</version>
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>${maven-release-plugin.version}</version>
         <configuration>
@@ -703,7 +709,7 @@
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.3.0</version>
         <configuration>
           <keepBlankLines>true</keepBlankLines>
           <lineSeparator>\n</lineSeparator>
@@ -789,7 +795,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>
@@ -799,7 +805,7 @@
             <configuration>
               <rules>
                 <requireNoRepositories>
-                  <message>Feign should only depend on artifacts readly available on maven central</message>
+                  <message>Feign should only depend on artifacts readily available on maven central</message>
                 </requireNoRepositories>
               </rules>
             </configuration>

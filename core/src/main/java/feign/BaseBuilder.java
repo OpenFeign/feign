@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class BaseBuilder<B extends BaseBuilder<B>> {
+public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
 
   private final B thisB;
 
@@ -43,6 +43,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   protected Encoder encoder = new Encoder.Default();
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
+  protected boolean decodeVoid = false;
   protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
@@ -103,6 +104,11 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
    */
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
+    return thisB;
+  }
+
+  public B decodeVoid() {
+    this.decodeVoid = true;
     return thisB;
   }
 
@@ -236,33 +242,41 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     return thisB;
   }
 
-  protected B enrich() {
+  @SuppressWarnings("unchecked")
+  B enrich() {
     if (capabilities.isEmpty()) {
       return thisB;
     }
 
-    getFieldsToEnrich().forEach(field -> {
-      field.setAccessible(true);
-      try {
-        final Object originalValue = field.get(thisB);
-        final Object enriched;
-        if (originalValue instanceof List) {
-          Type ownerType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-          enriched = ((List) originalValue).stream()
-              .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
-              .collect(Collectors.toList());
-        } else {
-          enriched = Capability.enrich(originalValue, field.getType(), capabilities);
-        }
-        field.set(thisB, enriched);
-      } catch (IllegalArgumentException | IllegalAccessException e) {
-        throw new RuntimeException("Unable to enrich field " + field, e);
-      } finally {
-        field.setAccessible(false);
-      }
-    });
+    try {
+      B clone = (B) thisB.clone();
 
-    return thisB;
+      getFieldsToEnrich().forEach(field -> {
+        field.setAccessible(true);
+        try {
+          final Object originalValue = field.get(clone);
+          final Object enriched;
+          if (originalValue instanceof List) {
+            Type ownerType =
+                ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            enriched = ((List) originalValue).stream()
+                .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
+                .collect(Collectors.toList());
+          } else {
+            enriched = Capability.enrich(originalValue, field.getType(), capabilities);
+          }
+          field.set(clone, enriched);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+          throw new RuntimeException("Unable to enrich field " + field, e);
+        } finally {
+          field.setAccessible(false);
+        }
+      });
+
+      return clone;
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
   }
 
   List<Field> getFieldsToEnrich() {
@@ -281,10 +295,15 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
         .collect(Collectors.toList());
   }
 
+  public final T build() {
+    return enrich().internalBuild();
+  }
+
+  protected abstract T internalBuild();
+
   protected ResponseInterceptor.Chain executionChain() {
     ResponseInterceptor.Chain endOfChain =
         ResponseInterceptor.Chain.DEFAULT;
-
     ResponseInterceptor.Chain executionChain = this.responseInterceptors.stream()
         .reduce(ResponseInterceptor::andThen)
         .map(interceptor -> interceptor.apply(endOfChain))
@@ -292,7 +311,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
 
     return (ResponseInterceptor.Chain) Capability.enrich(executionChain,
         ResponseInterceptor.Chain.class, capabilities);
-
   }
 
 

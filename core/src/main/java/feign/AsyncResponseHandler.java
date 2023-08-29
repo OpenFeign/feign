@@ -28,9 +28,10 @@ class AsyncResponseHandler {
   private final ResponseHandler responseHandler;
 
   AsyncResponseHandler(Level logLevel, Logger logger, Decoder decoder, ErrorDecoder errorDecoder,
-      boolean dismiss404, boolean closeAfterDecode, ResponseInterceptor.Chain executionChain) {
+      boolean dismiss404, boolean closeAfterDecode, boolean decodeVoid,
+      ResponseInterceptor.Chain executionChain) {
     this.responseHandler = new ResponseHandler(logLevel, logger, decoder, errorDecoder, dismiss404,
-        closeAfterDecode, executionChain);
+        closeAfterDecode, decodeVoid, executionChain);
   }
 
   public CompletableFuture<Object> handleResponse(String configKey,

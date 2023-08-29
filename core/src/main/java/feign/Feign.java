@@ -92,7 +92,7 @@ public abstract class Feign {
    */
   public abstract <T> T newInstance(Target<T> target);
 
-  public static class Builder extends BaseBuilder<Builder> {
+  public static class Builder extends BaseBuilder<Builder, Feign> {
 
     private Client client = new Client.Default(null, null);
 
@@ -179,6 +179,11 @@ public abstract class Feign {
     }
 
     @Override
+    public Builder decodeVoid() {
+      return super.decodeVoid();
+    }
+
+    @Override
     public Builder exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
       return super.exceptionPropagationPolicy(propagationPolicy);
     }
@@ -196,12 +201,11 @@ public abstract class Feign {
       return build().newInstance(target);
     }
 
-    public Feign build() {
-      super.enrich();
-
+    @Override
+    public Feign internalBuild() {
       final ResponseHandler responseHandler =
           new ResponseHandler(logLevel, logger, decoder, errorDecoder,
-              dismiss404, closeAfterDecode, executionChain());
+              dismiss404, closeAfterDecode, decodeVoid, executionChain());
       MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors,
               responseHandler, logger, logLevel, propagationPolicy,
