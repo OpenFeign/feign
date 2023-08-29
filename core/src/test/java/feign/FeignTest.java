@@ -1022,10 +1022,6 @@ public class FeignTest {
   @Test
   public void redirectionInterceptorString() throws Exception {
     String location = "https://redirect.example.com";
-    Collection<String> locations = new ArrayList<>();
-    locations.add(location);
-    locations = Collections.unmodifiableCollection(locations);
-
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
@@ -1068,7 +1064,61 @@ public class FeignTest {
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
+            .target("http://localhost:" + server.getPort());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChain() throws Exception {
+    String location = "https://redirect.example.com";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
+            .responseInterceptor(new ErrorInterceptor()).target("http://localhost:" + server.getPort());
+
+    assertEquals("RedirectionInterceptor did not extract the location header", location,
+            api.post());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChainList() throws Exception {
+    String location = "https://redirect.example.com";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    TestInterface api = new TestInterfaceBuilder()
+        .responseInterceptors(List.of(new RedirectionInterceptor(), new ErrorInterceptor()))
         .target("http://localhost:" + server.getPort());
+
+    assertEquals("RedirectionInterceptor did not extract the location header", location,
+        api.post());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChainOrder() throws Exception {
+    String location = "https://redirect.example.com";
+    String redirectBody = "Not the location";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location)
+        .setBody(redirectBody));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    // ErrorInterceptor WILL extract the body of redirects, so we re-order our interceptors to
+    // verify that chain ordering is maintained
+    TestInterface api = new TestInterfaceBuilder()
+        .responseInterceptors(List.of(new ErrorInterceptor(), new RedirectionInterceptor()))
+        .target("http://localhost:" + server.getPort());
+
+    assertEquals("RedirectionInterceptor did not extract the redirect response body", redirectBody,
+        api.post());
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 
@@ -1286,6 +1336,11 @@ public class FeignTest {
 
     TestInterfaceBuilder responseInterceptor(ResponseInterceptor responseInterceptor) {
       delegate.responseInterceptor(responseInterceptor);
+      return this;
+    }
+
+    TestInterfaceBuilder responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
+      delegate.responseInterceptors(responseInterceptors);
       return this;
     }
 
