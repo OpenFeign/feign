@@ -90,6 +90,10 @@ public interface Capability {
     return responseInterceptor;
   }
 
+  default ResponseInterceptor.Chain enrich(ResponseInterceptor.Chain chain) {
+    return chain;
+  }
+
   default Logger enrich(Logger logger) {
     return logger;
   }
