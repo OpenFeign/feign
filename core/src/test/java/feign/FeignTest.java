@@ -59,8 +59,6 @@ public class FeignTest {
   @Rule
   public final MockWebServer server = new MockWebServer();
 
-  private Decoder mockDecoder = mock(Decoder.class);
-
   @Test
   public void iterableQueryParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
@@ -1010,6 +1008,7 @@ public class FeignTest {
 
   @Test
   public void decodeVoid() throws Exception {
+    Decoder mockDecoder = mock(Decoder.class);
     server.enqueue(new MockResponse().setResponseCode(200).setBody("OK"));
 
     TestInterface api = new TestInterfaceBuilder().decodeVoid().decoder(mockDecoder)

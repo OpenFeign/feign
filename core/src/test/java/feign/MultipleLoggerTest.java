@@ -37,7 +37,7 @@ public class MultipleLoggerTest {
         .appendToFile(tmp.newFile("1.log").getAbsolutePath())
         .appendToFile(tmp.newFile("2.log").getAbsolutePath());
     java.util.logging.Logger inner = getInnerLogger(logger);
-    assert(inner.getHandlers().length == 2);
+    assert (inner.getHandlers().length == 2);
   }
 
   @Test
@@ -47,9 +47,9 @@ public class MultipleLoggerTest {
     Logger.JavaLogger l2 = new Logger.JavaLogger("Second client")
         .appendToFile(tmp.newFile("2.log").getAbsolutePath());
     java.util.logging.Logger logger1 = getInnerLogger(l1);
-    assert(logger1.getHandlers().length == 1);
+    assert (logger1.getHandlers().length == 1);
     java.util.logging.Logger logger2 = getInnerLogger(l2);
-    assert(logger2.getHandlers().length == 1);
+    assert (logger2.getHandlers().length == 1);
   }
 
   @Test
@@ -59,9 +59,9 @@ public class MultipleLoggerTest {
     Logger.JavaLogger l2 = new Logger.JavaLogger(Integer.class)
         .appendToFile(tmp.newFile("2.log").getAbsolutePath());
     java.util.logging.Logger logger1 = getInnerLogger(l1);
-    assert(logger1.getHandlers().length == 1);
+    assert (logger1.getHandlers().length == 1);
     java.util.logging.Logger logger2 = getInnerLogger(l2);
-    assert(logger2.getHandlers().length == 1);
+    assert (logger2.getHandlers().length == 1);
   }
 
 }
