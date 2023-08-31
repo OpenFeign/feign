@@ -13,16 +13,12 @@
  */
 package feign;
 
-import java.io.IOException;
-
 /**
- * Zero or One {@code ResponseInterceptor} may be configured for purposes such as verify or modify
- * headers of response, verify the business status of decoded object. Once the interceptor is
- * applied, {@link ResponseInterceptor#intercept(InvocationContext, Chain)} is called around decode
- * method called import static feign.FeignException.errorReading; import
- * feign.codec.DecodeException; import feign.codec.Decoder; import java.io.IOException; import
- * java.lang.reflect.Type; import java.util.function.Function;
- * 
+ * {@code ResponseInterceptor}s may be configured for purposes such as verifying or modifying
+ * headers of response, verifying the business status of decoded object, or processing responses to
+ * unsuccessful requests. Once the interceptors are applied,
+ * {@link ResponseInterceptor#intercept(InvocationContext, Chain)} is called, then the response is
+ * decoded.
  */
 public interface ResponseInterceptor {
 
@@ -51,7 +47,7 @@ public interface ResponseInterceptor {
   /**
    * Contract for delegation to the rest of the chain.
    */
-  public interface Chain {
+  interface Chain {
     Chain DEFAULT = InvocationContext::proceed;
 
     /**

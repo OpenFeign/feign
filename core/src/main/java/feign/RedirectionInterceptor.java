@@ -13,17 +13,13 @@
  */
 package feign;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * An implementation of {@link ResponseInterceptor} the returns the value of the location header
  * when appropriate.
- *
- * This implementation will return Collections, Strings, types that can be constructed from those
  */
 public class RedirectionInterceptor implements ResponseInterceptor {
   @Override
