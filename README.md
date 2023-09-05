@@ -1066,6 +1066,28 @@ created for each `Client` execution, allowing you to maintain state bewteen each
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
 cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
 
+#### Response Interceptor
+If you need to treat what would otherwise be an error as a success and return a result rather than throw an exception then you may use a `ResponseInterceptor`.
+
+As an example Feign includes a simple `RedirectionInterceptor` that can be used to extract the location header from redirection responses.
+```java
+public interface Api {
+  // returns a 302 response
+  @RequestLine("GET /location")
+  String location();
+}
+
+public class MyApp {
+  public static void main(String[] args) {
+    // Configure the HTTP client to ignore redirection
+    Api api = Feign.builder()
+                   .options(new Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, false))
+                   .responseInterceptor(new RedirectionInterceptor())
+                   .target(Api.class, "https://redirect.example.com");
+  }
+}
+```
+
 ### Metrics
 By default, feign won't collect any metrics.
 
