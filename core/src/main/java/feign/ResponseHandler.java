@@ -28,8 +28,6 @@ import java.lang.reflect.Type;
  */
 public class ResponseHandler {
 
-  private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
-
   private final Level logLevel;
   private final Logger logger;
 
@@ -66,31 +64,25 @@ public class ResponseHandler {
       String configKey, Response response, Type returnType, long elapsedTime) throws Exception {
     try {
       response = logAndRebufferResponseIfNeeded(configKey, response, elapsedTime);
-      if (returnType == Response.class) {
-        return disconnectResponseBodyIfNeeded(response);
-      }
-
-      final boolean shouldDecodeResponseBody =
-          (response.status() >= 200 && response.status() < 300)
-              || (response.status() == 404 && dismiss404 && !isVoidType(returnType));
-
-      if (!shouldDecodeResponseBody) {
-        throw decodeError(configKey, response);
-      }
-
-      return decode(response, returnType);
+      return executionChain.next(
+          new InvocationContext(
+              configKey,
+              decoder,
+              errorDecoder,
+              dismiss404,
+              closeAfterDecode,
+              decodeVoid,
+              response,
+              returnType));
     } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
       }
       throw errorReading(response.request(), response, e);
+    } catch (Exception e) {
+      ensureClosed(response.body());
+      throw e;
     }
-  }
-
-  private boolean isVoidType(Type returnType) {
-    return returnType == Void.class
-        || returnType == void.class
-        || returnType.getTypeName().equals("kotlin.Unit");
   }
 
   private Response logAndRebufferResponseIfNeeded(
@@ -100,49 +92,5 @@ public class ResponseHandler {
     }
 
     return logger.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
-  }
-
-  private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
-    final boolean shouldDisconnectResponseBody =
-        response.body() != null
-            && response.body().length() != null
-            && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
-    if (!shouldDisconnectResponseBody) {
-      return response;
-    }
-
-    try {
-      final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-      return response.toBuilder().body(bodyData).build();
-    } finally {
-      ensureClosed(response.body());
-    }
-  }
-
-  private Object decode(Response response, Type type) throws IOException {
-    if (isVoidType(type) && !decodeVoid) {
-      ensureClosed(response.body());
-      return null;
-    }
-
-    try {
-      final Object result =
-          executionChain.next(new ResponseInterceptor.Context(decoder, type, response));
-      if (closeAfterDecode) {
-        ensureClosed(response.body());
-      }
-      return result;
-    } catch (Exception e) {
-      ensureClosed(response.body());
-      throw e;
-    }
-  }
-
-  private Exception decodeError(String methodKey, Response response) {
-    try {
-      return errorDecoder.decode(methodKey, response);
-    } finally {
-      ensureClosed(response.body());
-    }
   }
 }

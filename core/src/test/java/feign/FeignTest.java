@@ -16,9 +16,12 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -47,6 +50,7 @@ import org.assertj.core.util.Maps;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentMatchers;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -922,7 +926,7 @@ public class FeignTest {
   public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     TestInterface api =
         new TestInterfaceBuilder()
-            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -939,7 +943,7 @@ public class FeignTest {
   public void queryMap_with_child_pojo() throws Exception {
     TestInterface api =
         new TestInterfaceBuilder()
-            .queryMapEndcoder(new FieldQueryMapEncoder())
+            .queryMapEncoder(new FieldQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     ChildPojo childPojo = new ChildPojo();
@@ -960,7 +964,7 @@ public class FeignTest {
   public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api =
         new TestInterfaceBuilder()
-            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -976,7 +980,7 @@ public class FeignTest {
   public void beanQueryMapEncoderWithEmptyParams() throws Exception {
     TestInterface api =
         new TestInterfaceBuilder()
-            .queryMapEndcoder(new BeanQueryMapEncoder())
+            .queryMapEncoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
 
     PropertyPojo.ChildPojoClass propertyPojo = new PropertyPojo.ChildPojoClass();
@@ -1027,7 +1031,148 @@ public class FeignTest {
         .hasPath("/settings");
   }
 
+  @Test
+  public void decodeVoid() throws Exception {
+    Decoder mockDecoder = mock(Decoder.class);
+    server.enqueue(new MockResponse().setResponseCode(200).setBody("OK"));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decodeVoid()
+            .decoder(mockDecoder)
+            .target("http://localhost:" + server.getPort());
+
+    api.body(emptyList());
+    verify(mockDecoder, times(1)).decode(ArgumentMatchers.any(), eq(void.class));
+  }
+
+  @Test
+  public void redirectionInterceptorString() throws Exception {
+    String location = "https://redirect.example.com";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(new RedirectionInterceptor())
+            .target("http://localhost:" + server.getPort());
+
+    assertEquals(
+        "RedirectionInterceptor did not extract the location header", location, api.post());
+  }
+
+  @Test
+  public void redirectionInterceptorCollection() throws Exception {
+    String location = "https://redirect.example.com";
+    Collection<String> locations = Collections.singleton("https://redirect.example.com");
+
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(new RedirectionInterceptor())
+            .target("http://localhost:" + server.getPort());
+
+    Collection<String> response = api.collection();
+    assertEquals(
+        "RedirectionInterceptor did not extract the location header",
+        locations.size(),
+        response.size());
+    assertTrue(
+        "RedirectionInterceptor did not extract the location header", response.contains(location));
+  }
+
+  @Test
+  public void responseInterceptor400Error() throws Exception {
+    String body = "BACK OFF!!";
+    server.enqueue(new MockResponse().setResponseCode(429).setBody(body));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(new ErrorInterceptor())
+            .target("http://localhost:" + server.getPort());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptor500Error() throws Exception {
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(new ErrorInterceptor())
+            .target("http://localhost:" + server.getPort());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChain() throws Exception {
+    String location = "https://redirect.example.com";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(new RedirectionInterceptor())
+            .responseInterceptor(new ErrorInterceptor())
+            .target("http://localhost:" + server.getPort());
+
+    assertEquals(
+        "RedirectionInterceptor did not extract the location header", location, api.post());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChainList() throws Exception {
+    String location = "https://redirect.example.com";
+    server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptors(List.of(new RedirectionInterceptor(), new ErrorInterceptor()))
+            .target("http://localhost:" + server.getPort());
+
+    assertEquals(
+        "RedirectionInterceptor did not extract the location header", location, api.post());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
+  @Test
+  public void responseInterceptorChainOrder() throws Exception {
+    String location = "https://redirect.example.com";
+    String redirectBody = "Not the location";
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(302)
+            .setHeader("Location", location)
+            .setBody(redirectBody));
+
+    String body = "One moment, please.";
+    server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
+
+    // ErrorInterceptor WILL extract the body of redirects, so we re-order our interceptors to
+    // verify that chain ordering is maintained
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptors(List.of(new ErrorInterceptor(), new RedirectionInterceptor()))
+            .target("http://localhost:" + server.getPort());
+
+    assertEquals(
+        "RedirectionInterceptor did not extract the redirect response body",
+        redirectBody,
+        api.post());
+    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+  }
+
   interface TestInterface {
+
+    @RequestLine("POST /")
+    Collection<String> collection();
 
     @RequestLine("POST /")
     Response response();
@@ -1236,6 +1381,16 @@ public class FeignTest {
       return this;
     }
 
+    TestInterfaceBuilder responseInterceptor(ResponseInterceptor responseInterceptor) {
+      delegate.responseInterceptor(responseInterceptor);
+      return this;
+    }
+
+    TestInterfaceBuilder responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
+      delegate.responseInterceptors(responseInterceptors);
+      return this;
+    }
+
     TestInterfaceBuilder encoder(Encoder encoder) {
       delegate.encoder(encoder);
       return this;
@@ -1256,13 +1411,33 @@ public class FeignTest {
       return this;
     }
 
-    TestInterfaceBuilder queryMapEndcoder(QueryMapEncoder queryMapEncoder) {
+    TestInterfaceBuilder decodeVoid() {
+      delegate.decodeVoid();
+      return this;
+    }
+
+    TestInterfaceBuilder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
       return this;
     }
 
     TestInterface target(String url) {
       return delegate.target(TestInterface.class, url);
+    }
+  }
+
+  class ErrorInterceptor implements ResponseInterceptor {
+    @Override
+    public Object intercept(InvocationContext invocationContext, Chain chain) throws Exception {
+      Response response = invocationContext.response();
+      if (300 <= response.status()) {
+        if (String.class.equals(invocationContext.returnType())) {
+          String body = Util.toString(response.body().asReader(Util.UTF_8));
+          response.close();
+          return body;
+        }
+      }
+      return chain.next(invocationContext);
     }
   }
 }

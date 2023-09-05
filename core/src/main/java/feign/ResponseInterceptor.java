@@ -13,29 +13,23 @@
  */
 package feign;
 
-import static feign.FeignException.errorReading;
-
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.function.Function;
-
 /**
- * Interceptor for purposes such as verify or modify headers of response, verify the business status
- * of decoded object. Once interceptors are applied, {@link ResponseInterceptor#intercept(Response,
- * Function)} is called around decode method called
+ * {@code ResponseInterceptor}s may be configured for purposes such as verifying or modifying
+ * headers of response, verifying the business status of decoded object, or processing responses to
+ * unsuccessful requests. Once the interceptors are applied, {@link
+ * ResponseInterceptor#intercept(InvocationContext, Chain)} is called, then the response is decoded.
  */
 public interface ResponseInterceptor {
 
   /**
-   * Called for response around decode, must either manually invoke {@link Chain#next(Context)} or
-   * manually create a new response object
+   * Called by {@link ResponseHandler} after refreshing the response and wrapped around the whole
+   * decode process, must either manually invoke {@link Chain#next(InvocationContext)} or manually
+   * create a new response object
    *
-   * @param invocationContext information surrounding the response been decoded
+   * @param invocationContext information surrounding the response being decoded
    * @return decoded response
    */
-  Object intercept(Context context, Chain chain) throws IOException;
+  Object intercept(InvocationContext invocationContext, Chain chain) throws Exception;
 
   /**
    * Return a new {@link ResponseInterceptor} that invokes the current interceptor first and then
@@ -50,20 +44,8 @@ public interface ResponseInterceptor {
   }
 
   /** Contract for delegation to the rest of the chain. */
-  public interface Chain {
-    Chain DEFAULT =
-        ic -> {
-          try {
-            return ic.decoder().decode(ic.response(), ic.returnType());
-          } catch (final FeignException e) {
-            throw e;
-          } catch (final RuntimeException e) {
-            throw new DecodeException(
-                ic.response().status(), e.getMessage(), ic.response().request(), e);
-          } catch (IOException e) {
-            throw errorReading(ic.response().request(), ic.response(), e);
-          }
-        };
+  interface Chain {
+    Chain DEFAULT = InvocationContext::proceed;
 
     /**
      * Delegate to the rest of the chain to execute the request.
@@ -71,7 +53,7 @@ public interface ResponseInterceptor {
      * @param context the request to execute the {@link Chain} .
      * @return the response
      */
-    Object next(Context context) throws IOException;
+    Object next(InvocationContext context) throws Exception;
   }
 
   /**
@@ -82,30 +64,5 @@ public interface ResponseInterceptor {
    */
   default Chain apply(Chain chain) {
     return request -> intercept(request, chain);
-  }
-
-  public class Context {
-
-    private final Decoder decoder;
-    private final Type returnType;
-    private final Response response;
-
-    Context(Decoder decoder, Type returnType, Response response) {
-      this.decoder = decoder;
-      this.returnType = returnType;
-      this.response = response;
-    }
-
-    public Decoder decoder() {
-      return decoder;
-    }
-
-    public Type returnType() {
-      return returnType;
-    }
-
-    public Response response() {
-      return response;
-    }
   }
 }
