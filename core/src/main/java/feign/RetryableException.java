@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class RetryableException extends FeignException {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 2L;
 
   private final Long retryAfter;
   private final HttpMethod httpMethod;
