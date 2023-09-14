@@ -276,7 +276,7 @@ public class FeignException extends RuntimeException {
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,
-        null, request);
+        (Long) null, request);
   }
 
   public static class FeignClientException extends FeignException {

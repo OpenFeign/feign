@@ -32,7 +32,7 @@ public class RetryableExceptionTest {
 
     // when
     RetryableException retryableException =
-        new RetryableException(-1, null, null, new Date(5000), request, response, responseHeader);
+        new RetryableException(-1, null, null, 5000L, request, response, responseHeader);
 
     // then
     assertNotNull(retryableException);

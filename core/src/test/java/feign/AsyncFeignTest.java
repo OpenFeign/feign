@@ -16,7 +16,6 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -62,7 +61,6 @@ import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.rules.ExpectedException;
 
@@ -505,7 +503,7 @@ public class AsyncFeignTest {
           public Object decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST, null,
+              throw new RetryableException(response.status(), string, HttpMethod.POST, (Long) null,
                   response.request());
             }
             return string;
@@ -584,7 +582,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                null, response.request());
+                (Long) null, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -609,7 +607,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), null, response.request());
+                new TestInterfaceException(message), (Long) null, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -631,7 +629,7 @@ public class AsyncFeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST, null,
+            return new RetryableException(response.status(), message, HttpMethod.POST, (Long) null,
                 response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
