@@ -890,7 +890,7 @@ public class DefaultContractTest {
 
     @Override
     public ZoneId getZone() {
-      return null;
+      throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override

@@ -1074,7 +1074,7 @@ public class AsyncApacheHttp5ClientTest {
 
     @Override
     public ZoneId getZone() {
-      return null;
+      throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override

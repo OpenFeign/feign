@@ -1075,12 +1075,12 @@ public class Http2ClientAsyncTest {
 
     @Override
     public ZoneId getZone() {
-      return null;
+      throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override
     public Clock withZone(ZoneId zone) {
-      return this;
+      throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override
