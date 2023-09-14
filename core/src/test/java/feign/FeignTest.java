@@ -39,6 +39,9 @@ import org.mockito.ArgumentMatchers;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
@@ -210,10 +213,10 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expand(new Date(1234L));
+    api.expand(new TestClock(1234L));
 
     assertThat(server.takeRequest())
-        .hasPath("/?date=1234");
+        .hasPath("/?clock=1234");
   }
 
   @Test
@@ -222,10 +225,10 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expandList(Arrays.asList(new Date(1234L), new Date(12345L)));
+    api.expandList(Arrays.asList(new TestClock(1234L), new TestClock(12345L)));
 
     assertThat(server.takeRequest())
-        .hasPath("/?date=1234&date=12345");
+        .hasPath("/?clock=1234&clock=12345");
   }
 
   @Test
@@ -234,10 +237,10 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    api.expandList(Arrays.asList(new Date(1234l), null));
+    api.expandList(Arrays.asList(new TestClock(1234l), null));
 
     assertThat(server.takeRequest())
-        .hasPath("/?date=1234");
+        .hasPath("/?clock=1234");
   }
 
   @Test
@@ -1172,14 +1175,14 @@ public class FeignTest {
     @RequestLine("GET /")
     Response queryMapWithArrayValues(@QueryMap Map<String, String[]> twos);
 
-    @RequestLine("POST /?date={date}")
-    void expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+    @RequestLine("POST /?clock={clock}")
+    void expand(@Param(value = "clock", expander = ClockToMillis.class) Clock clock);
 
-    @RequestLine("GET /?date={date}")
-    void expandList(@Param(value = "date", expander = DateToMillis.class) List<Date> dates);
+    @RequestLine("GET /?clock={clock}")
+    void expandList(@Param(value = "clock", expander = ClockToMillis.class) List<Clock> clocks);
 
-    @RequestLine("GET /?date={date}")
-    void expandArray(@Param(value = "date", expander = DateToMillis.class) Date[] dates);
+    @RequestLine("GET /?clock={clock}")
+    void expandArray(@Param(value = "clock", expander = ClockToMillis.class) Clock[] clocks);
 
     @RequestLine("GET /")
     void headerMap(@HeaderMap Map<String, Object> headerMap);
@@ -1220,11 +1223,11 @@ public class FeignTest {
     @Headers("Custom: {complex}")
     void supportComplexHttpHeaders(@Param("complex") String complex);
 
-    class DateToMillis implements Param.Expander {
+    class ClockToMillis implements Param.Expander {
 
       @Override
       public String expand(Object value) {
-        return String.valueOf(((Date) value).getTime());
+        return String.valueOf(((Clock) value).millis());
       }
     }
   }
@@ -1393,4 +1396,29 @@ public class FeignTest {
       return chain.next(invocationContext);
     }
   }
+
+  class TestClock extends Clock {
+
+    private long millis;
+
+    public TestClock(long millis) {
+      this.millis = millis;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      return null;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
+
+    @Override
+    public Instant instant() {
+      return Instant.ofEpochMilli(millis);
+    }
+  }
+
 }
