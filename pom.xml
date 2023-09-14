@@ -637,6 +637,8 @@
             <exclude>NOTICE</exclude>
             <exclude>OSSMETADATA</exclude>
             <exclude>**/*.md</exclude>
+            <exclude>**/*.asciidoc</exclude>
+            <exclude>**/*.iuml</exclude>
             <exclude>bnd.bnd</exclude>
             <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
