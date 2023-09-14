@@ -66,6 +66,7 @@ import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
 
+  private static final Long NON_RETRYABLE = null;
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
@@ -503,8 +504,8 @@ public class AsyncFeignTest {
           public Object decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST, (Long) null,
-                  response.request());
+              throw new RetryableException(response.status(), string, HttpMethod.POST,
+                  NON_RETRYABLE, response.request());
             }
             return string;
           }
@@ -582,7 +583,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                (Long) null, response.request());
+                NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -607,7 +608,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), (Long) null, response.request());
+                new TestInterfaceException(message), NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -629,8 +630,8 @@ public class AsyncFeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST, (Long) null,
-                response.request());
+            return new RetryableException(response.status(), message, HttpMethod.POST,
+                NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 

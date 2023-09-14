@@ -271,12 +271,13 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorExecuting(Request request, IOException cause) {
+    final Long nonRetryable = null;
     return new RetryableException(
         -1,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
         cause,
-        (Long) null, request);
+        nonRetryable, request);
   }
 
   public static class FeignClientException extends FeignException {

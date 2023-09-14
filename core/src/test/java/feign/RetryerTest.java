@@ -32,7 +32,8 @@ public class RetryerTest {
 
   @Test
   public void only5TriesAllowedAndExponentialBackoff() {
-    RetryableException e = new RetryableException(-1, null, null, (Long) null, REQUEST);
+    final Long nonRetryable = null;
+    RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
     Default retryer = new Retryer.Default();
     assertEquals(1, retryer.attempt);
     assertEquals(0, retryer.sleptForMillis);
