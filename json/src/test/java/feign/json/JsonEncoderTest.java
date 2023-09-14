@@ -20,7 +20,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
-import java.util.Date;
+import java.time.Clock;
 import static feign.Util.UTF_8;
 import static org.junit.Assert.*;
 
@@ -64,8 +64,8 @@ public class JsonEncoderTest {
   @Test
   public void unknownTypeThrowsEncodeException() {
     Exception exception = assertThrows(EncodeException.class,
-        () -> new JsonEncoder().encode("qwerty", Date.class, new RequestTemplate()));
-    assertEquals("class java.util.Date is not a type supported by this encoder.",
+        () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()));
+    assertEquals("class java.time.Clock is not a type supported by this encoder.",
         exception.getMessage());
   }
 
