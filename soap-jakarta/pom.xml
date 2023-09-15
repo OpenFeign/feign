@@ -68,7 +68,7 @@
     <dependency>
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.messaging.saaj</groupId>
