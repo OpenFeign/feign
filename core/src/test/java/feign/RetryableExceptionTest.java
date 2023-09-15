@@ -24,6 +24,7 @@ public class RetryableExceptionTest {
   @Test
   public void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
+    Long retryAfter = 5000L;
     Request request =
         Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
     byte[] response = "response".getBytes(StandardCharsets.UTF_8);
@@ -32,10 +33,11 @@ public class RetryableExceptionTest {
 
     // when
     RetryableException retryableException =
-        new RetryableException(-1, null, null, new Date(5000), request, response, responseHeader);
+        new RetryableException(-1, null, null, retryAfter, request, response, responseHeader);
 
     // then
     assertNotNull(retryableException);
+    assertEquals(retryAfter, retryableException.retryAfter());
     assertEquals(new String(response, UTF_8), retryableException.contentUTF8());
     assertTrue(retryableException.responseHeaders().containsKey("TEST_HEADER"));
     assertTrue(retryableException.responseHeaders().get("TEST_HEADER").contains("TEST_CONTENT"));

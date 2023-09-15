@@ -86,7 +86,7 @@ public class JAXRSClient implements Client {
     }
 
     try {
-      return new Integer(headers.getFirst(header));
+      return Integer.valueOf(headers.getFirst(header));
     } catch (final NumberFormatException e) {
       // not a number or too big to fit Integer
       return null;
