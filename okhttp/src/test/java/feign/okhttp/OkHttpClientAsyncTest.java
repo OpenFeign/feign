@@ -57,11 +57,13 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -223,9 +225,9 @@ public class OkHttpClientAsyncTest {
 
     final TestInterfaceAsync api = newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final CompletableFuture<?> cf = api.expand(new Date(1234l));
+    final CompletableFuture<?> cf = api.expand(new TestClock(1234l));
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
 
     checkCFCompletedSoon(cf);
   }
@@ -237,9 +239,9 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api = newAsyncBuilder().target("http://localhost:" + server.getPort());
 
     final CompletableFuture<?> cf =
-        api.expandList(Arrays.asList(new Date(1234l), new Date(12345l)));
+        api.expandList(Arrays.asList(new TestClock(1234l), new TestClock(12345l)));
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234&date=12345");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234&clock=12345");
 
     checkCFCompletedSoon(cf);
   }
@@ -250,9 +252,9 @@ public class OkHttpClientAsyncTest {
 
     final TestInterfaceAsync api = newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final CompletableFuture<?> cf = api.expandList(Arrays.asList(new Date(1234l), null));
+    final CompletableFuture<?> cf = api.expandList(Arrays.asList(new TestClock(1234l), null));
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
 
     checkCFCompletedSoon(cf);
   }
@@ -913,16 +915,17 @@ public class OkHttpClientAsyncTest {
     CompletableFuture<Response> queryParams(
         @Param("1") String one, @Param("2") Iterable<String> twos);
 
-    @RequestLine("POST /?date={date}")
-    CompletableFuture<Void> expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+    @RequestLine("POST /?clock={clock}")
+    CompletableFuture<Void> expand(
+        @Param(value = "clock", expander = ClockToMillis.class) Clock clock);
 
-    @RequestLine("GET /?date={date}")
+    @RequestLine("GET /?clock={clock}")
     CompletableFuture<Void> expandList(
-        @Param(value = "date", expander = DateToMillis.class) List<Date> dates);
+        @Param(value = "clock", expander = ClockToMillis.class) List<Clock> clocks);
 
-    @RequestLine("GET /?date={date}")
+    @RequestLine("GET /?clock={clock}")
     CompletableFuture<Void> expandArray(
-        @Param(value = "date", expander = DateToMillis.class) Date[] dates);
+        @Param(value = "clock", expander = ClockToMillis.class) Clock[] clocks);
 
     @RequestLine("GET /")
     CompletableFuture<Void> headerMap(@HeaderMap Map<String, Object> headerMap);
@@ -954,11 +957,11 @@ public class OkHttpClientAsyncTest {
     @RequestLine("GET /")
     CompletableFuture<Void> queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
-    class DateToMillis implements Param.Expander {
+    class ClockToMillis implements Param.Expander {
 
       @Override
       public String expand(Object value) {
-        return String.valueOf(((Date) value).getTime());
+        return String.valueOf(((Clock) value).millis());
       }
     }
   }
@@ -1076,4 +1079,28 @@ public class OkHttpClientAsyncTest {
   }
 
   static final class ExtendedCF<T> extends CompletableFuture<T> {}
+
+  class TestClock extends Clock {
+
+    private long millis;
+
+    public TestClock(long millis) {
+      this.millis = millis;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      throw new UnsupportedOperationException("This operation is not supported.");
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
+
+    @Override
+    public Instant instant() {
+      return Instant.ofEpochMilli(millis);
+    }
+  }
 }

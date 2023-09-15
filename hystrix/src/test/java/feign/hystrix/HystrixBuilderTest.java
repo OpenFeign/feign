@@ -85,7 +85,7 @@ public class HystrixBuilderTest {
     final HystrixCommand<Integer> command = api.intCommand();
 
     assertThat(command).isNotNull();
-    assertThat(command.execute()).isEqualTo(new Integer(1));
+    assertThat(command.execute()).isEqualTo(Integer.valueOf(1));
   }
 
   @Test
@@ -97,7 +97,7 @@ public class HystrixBuilderTest {
     final HystrixCommand<Integer> command = api.intCommand();
 
     assertThat(command).isNotNull();
-    assertThat(command.execute()).isEqualTo(new Integer(0));
+    assertThat(command.execute()).isEqualTo(Integer.valueOf(0));
   }
 
   @Test
@@ -248,7 +248,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(1));
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
   }
 
   @Test
@@ -265,7 +265,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(0));
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
   }
 
   @Test
@@ -371,7 +371,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(1));
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
   }
 
   @Test
@@ -388,7 +388,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(new Integer(0));
+    Assertions.assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
   }
 
   @Test

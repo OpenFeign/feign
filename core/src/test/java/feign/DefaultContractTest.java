@@ -19,6 +19,9 @@ import static org.assertj.core.data.MapEntry.entry;
 
 import com.google.gson.reflect.TypeToken;
 import java.net.URI;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.*;
 import org.assertj.core.api.Fail;
 import org.junit.Rule;
@@ -300,9 +303,9 @@ public class DefaultContractTest {
 
   @Test
   public void customExpander() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "date", Date.class);
+    final MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "clock", Clock.class);
 
-    assertThat(md.indexToExpanderClass()).containsExactly(entry(0, DateToMillis.class));
+    assertThat(md.indexToExpanderClass()).containsExactly(entry(0, ClockToMillis.class));
   }
 
   @Test
@@ -569,15 +572,15 @@ public class DefaultContractTest {
 
   interface CustomExpander {
 
-    @RequestLine("POST /?date={date}")
-    void date(@Param(value = "date", expander = DateToMillis.class) Date date);
+    @RequestLine("POST /?clock={clock}")
+    void clock(@Param(value = "clock", expander = ClockToMillis.class) Clock clock);
   }
 
-  class DateToMillis implements Param.Expander {
+  class ClockToMillis implements Param.Expander {
 
     @Override
     public String expand(Object value) {
-      return String.valueOf(((Date) value).getTime());
+      return String.valueOf(((Clock) value).millis());
     }
   }
 
@@ -846,5 +849,29 @@ public class DefaultContractTest {
         @Category(value = String.class) String uid,
         Integer limit,
         @SuppressWarnings({"a"}) Integer offset);
+  }
+
+  class TestClock extends Clock {
+
+    private long millis;
+
+    public TestClock(long millis) {
+      this.millis = millis;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      throw new UnsupportedOperationException("This operation is not supported.");
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
+
+    @Override
+    public Instant instant() {
+      return Instant.ofEpochMilli(millis);
+    }
   }
 }

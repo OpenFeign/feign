@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import java.util.Date;
+import java.time.Clock;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -67,8 +67,8 @@ public class JsonEncoderTest {
     Exception exception =
         assertThrows(
             EncodeException.class,
-            () -> new JsonEncoder().encode("qwerty", Date.class, new RequestTemplate()));
+            () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()));
     assertEquals(
-        "class java.util.Date is not a type supported by this encoder.", exception.getMessage());
+        "class java.time.Clock is not a type supported by this encoder.", exception.getMessage());
   }
 }
