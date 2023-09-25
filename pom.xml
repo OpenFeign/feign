@@ -62,6 +62,7 @@
     <module>example-wikipedia</module>
     <module>example-wikipedia-with-springboot</module>
     <module>benchmark</module>
+    <module>moshi</module>
   </modules>
 
   <properties>
@@ -86,6 +87,7 @@
     <guava.version>32.1.2-jre</guava.version>
     <googlehttpclient.version>1.43.3</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
+    <moshi.version>1.15.0</moshi.version>
     <slf4j.version>2.0.9</slf4j.version>
     <json.version>20230618</json.version>
 
@@ -318,6 +320,12 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.squareup.moshi</groupId>
+        <artifactId>moshi</artifactId>
+        <version>${moshi.version}</version>
       </dependency>
 
       <dependency>
