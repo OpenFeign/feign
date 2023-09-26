@@ -21,7 +21,6 @@ import feign.Util;
 import feign.codec.Decoder;
 import okio.BufferedSource;
 import okio.Okio;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -50,6 +49,9 @@ public class MoshiDecoder implements Decoder {
       return null;
 
     try (BufferedSource source = Okio.buffer(Okio.source(response.body().asInputStream()))) {
+      if (source.exhausted()) {
+        return null; // empty body
+      }
       return jsonAdapter.fromJson(source);
     } catch (JsonDataException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
