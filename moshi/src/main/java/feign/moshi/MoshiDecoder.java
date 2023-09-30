@@ -13,19 +13,16 @@
  */
 package feign.moshi;
 
-import com.google.common.io.CharStreams;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonEncodingException;
 import com.squareup.moshi.Moshi;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import okio.BufferedSource;
+import okio.Okio;
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
-import static feign.Util.UTF_8;
-import static feign.Util.ensureClosed;
 
 public class MoshiDecoder implements Decoder {
   private final Moshi moshi;
@@ -42,7 +39,6 @@ public class MoshiDecoder implements Decoder {
     this(MoshiFactory.create(adapters));
   }
 
-
   @Override
   public Object decode(Response response, Type type) throws IOException {
     JsonAdapter<Object> jsonAdapter = moshi.adapter(type);
@@ -52,23 +48,17 @@ public class MoshiDecoder implements Decoder {
     if (response.body() == null)
       return null;
 
-    Reader reader = response.body().asReader(UTF_8);
-
-    try {
-      return parseJson(jsonAdapter, reader);
+    try (BufferedSource source = Okio.buffer(Okio.source(response.body().asInputStream()))) {
+      if (source.exhausted()) {
+        return null; // empty body
+      }
+      return jsonAdapter.fromJson(source);
     } catch (JsonDataException e) {
       if (e.getCause() != null && e.getCause() instanceof IOException) {
         throw (IOException) e.getCause();
       }
       throw e;
-    } finally {
-      ensureClosed(reader);
     }
   }
 
-  private Object parseJson(JsonAdapter<Object> jsonAdapter, Reader reader) throws IOException {
-    String targetString = CharStreams.toString(reader);
-    return jsonAdapter.fromJson(targetString);
-  }
 }
-
