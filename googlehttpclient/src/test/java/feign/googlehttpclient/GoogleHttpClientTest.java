@@ -80,11 +80,4 @@ public class GoogleHttpClientTest extends AbstractClientTest {
             entry("Content-Length", Collections.singletonList("3")))
         .hasMethod("POST");
   }
-
-
-  @Override
-  public void testVeryLongResponseNullLength() {
-    assumeFalse("JaxRS client hang if the response doesn't have a payload", false);
-  }
-
 }
