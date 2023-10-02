@@ -14,16 +14,18 @@
     the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
     <version>13.0-SNAPSHOT</version>
   </parent>
-  <artifactId>feign-dropwizard-metrics4</artifactId>
-  <name>Feign Dropwizard Metrics4</name>
-  <description>Feign Dropwizard Metrics 4</description>
+
+  <artifactId>feign-moshi</artifactId>
+  <name>Feign Moshi</name>
+  <description>Feign Moshi</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -34,24 +36,15 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.squareup.moshi</groupId>
+      <artifactId>moshi</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-mock</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>4.2.20</version>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-micrometer</artifactId>
+      <artifactId>feign-core</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

@@ -22,7 +22,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public interface Retryer extends Cloneable {
 
   /**
-   * if retry is permitted, return (possibly after sleeping). Otherwise propagate the exception.
+   * if retry is permitted, return (possibly after sleeping). Otherwise, propagate the exception.
    */
   void continueOrPropagate(RetryableException e);
 
@@ -59,7 +59,7 @@ public interface Retryer extends Cloneable {
 
       long interval;
       if (e.retryAfter() != null) {
-        interval = e.retryAfter().getTime() - currentTimeMillis();
+        interval = e.retryAfter() - currentTimeMillis();
         if (interval > maxPeriod) {
           interval = maxPeriod;
         }
@@ -79,7 +79,7 @@ public interface Retryer extends Cloneable {
     }
 
     /**
-     * Calculates the time interval to a retry attempt. <br>
+     * Calculates the time interval to a retry attempt.<br>
      * The interval increases exponentially with each attempt, at a rate of nextInterval *= 1.5
      * (where 1.5 is the backoff factor), to the maximum interval.
      *
@@ -87,7 +87,7 @@ public interface Retryer extends Cloneable {
      */
     long nextMaxInterval() {
       long interval = (long) (period * Math.pow(1.5, attempt - 1));
-      return interval > maxPeriod ? maxPeriod : interval;
+      return Math.min(interval, maxPeriod);
     }
 
     @Override

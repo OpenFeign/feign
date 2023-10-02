@@ -62,6 +62,7 @@
     <module>example-wikipedia</module>
     <module>example-wikipedia-with-springboot</module>
     <module>benchmark</module>
+    <module>moshi</module>
   </modules>
 
   <properties>
@@ -74,7 +75,7 @@
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
-    <latest.java.version>17</latest.java.version>
+    <latest.java.version>21</latest.java.version>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
@@ -86,8 +87,8 @@
     <guava.version>32.1.2-jre</guava.version>
     <googlehttpclient.version>1.43.3</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
+    <moshi.version>1.15.0</moshi.version>
     <slf4j.version>2.0.9</slf4j.version>
-    <bouncy.version>1.70</bouncy.version>
     <json.version>20230618</json.version>
 
     <junit.version>4.13.2</junit.version>
@@ -100,17 +101,17 @@
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
     <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
-    <license-maven-plugin.version>4.2</license-maven-plugin.version>
+    <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+    <license-maven-plugin.version>4.3</license-maven-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
     <maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
-    <bom-generator.version>0.100.3</bom-generator.version>
+    <bom-generator.version>0.101.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.0.1</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.16.0</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.16.1</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
@@ -322,6 +323,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.squareup.moshi</groupId>
+        <artifactId>moshi</artifactId>
+        <version>${moshi.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
@@ -339,12 +346,6 @@
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
         <version>${googlehttpclient.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15on</artifactId>
-        <version>${bouncy.version}</version>
       </dependency>
 
       <dependency>
@@ -637,6 +638,8 @@
             <exclude>NOTICE</exclude>
             <exclude>OSSMETADATA</exclude>
             <exclude>**/*.md</exclude>
+            <exclude>**/*.asciidoc</exclude>
+            <exclude>**/*.iuml</exclude>
             <exclude>bnd.bnd</exclude>
             <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
@@ -795,7 +798,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.4.1</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>

@@ -19,9 +19,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URI;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.time.Clock;
 import static feign.Util.UTF_8;
 
 // http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
@@ -29,10 +27,6 @@ public class AWSSignatureVersion4 {
 
   private static final String EMPTY_STRING_HASH =
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-  private static final SimpleDateFormat iso8601 = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-  static {
-    iso8601.setTimeZone(TimeZone.getTimeZone("GMT"));
-  }
   String region = "us-east-1";
   String service = "iam";
   String accessKey;
@@ -125,10 +119,7 @@ public class AWSSignatureVersion4 {
 
     String host = URI.create(input.url()).getHost();
 
-    String timestamp;
-    synchronized (iso8601) {
-      timestamp = iso8601.format(new Date());
-    }
+    String timestamp = Clock.systemUTC().instant().toString();
 
     String credentialScope =
         String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");

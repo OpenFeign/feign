@@ -409,6 +409,17 @@ public class Example {
 For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
 the [Jackson Jr Module](./jackson-jr).
 
+#### Moshi
+[Moshi](./moshi) includes an encoder and decoder you can use with a JSON API.
+Add `MoshiEncoder` and/or `MoshiDecoder` to your `Feign.Builder` like so:
+
+```java
+GitHub github = Feign.builder()
+                     .encoder(new MoshiEncoder())
+                     .decoder(new MoshiDecoder())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
 #### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
 
