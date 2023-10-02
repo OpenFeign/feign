@@ -98,7 +98,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
     } catch (final InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new IOException("Invalid uri " + request.url(), e);
+      throw new IOException(e);
     }
 
     return toFeignResponse(request, httpResponse);
