@@ -16,6 +16,7 @@ package feign;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
+import feign.QueryMap.MapEncoder;
 import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
@@ -924,6 +925,7 @@ public class FeignTest {
     childPojo.setChildPrivateProperty("first");
     childPojo.setParentProtectedProperty("second");
     childPojo.setParentPublicProperty("third");
+    childPojo.setParentPrivatePropertyAlteredByGetter("fourth");
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyInheritence(childPojo);
@@ -931,7 +933,31 @@ public class FeignTest {
         .hasQueryParams(
             "parentPublicProperty=third",
             "parentProtectedProperty=second",
-            "childPrivateProperty=first");
+            "childPrivateProperty=first",
+            "parentPrivatePropertyAlteredByGetter=fourth");
+  }
+
+  @Test
+  public void queryMap_with_child_pojo_altered_by_getter_while_using_overriding_encoder()
+      throws Exception {
+    TestInterface api = new TestInterfaceBuilder()
+        .queryMapEncoder(new FieldQueryMapEncoder())
+        .target("http://localhost:" + server.getPort());
+
+    ChildPojo childPojo = new ChildPojo();
+    childPojo.setChildPrivateProperty("first");
+    childPojo.setParentProtectedProperty("second");
+    childPojo.setParentPublicProperty("third");
+    childPojo.setParentPrivatePropertyAlteredByGetter("fourth");
+
+    server.enqueue(new MockResponse());
+    api.queryMapPropertyInheritenceWithBeanMapEncoder(childPojo);
+    assertThat(server.takeRequest())
+        .hasQueryParams(
+            "parentPublicProperty=third",
+            "parentProtectedProperty=second",
+            "childPrivateProperty=first",
+            "parentPrivatePropertyAlteredByGetter=fourthFromGetter");
   }
 
   @Test
@@ -1209,6 +1235,10 @@ public class FeignTest {
 
     @RequestLine("GET /")
     void queryMapPropertyPojo(@QueryMap PropertyPojo object);
+
+    @RequestLine("GET /")
+    void queryMapPropertyInheritenceWithBeanMapEncoder(@QueryMap(
+        mapEncoder = MapEncoder.BEAN) ChildPojo object);
 
     @RequestLine("GET /")
     void queryMapPropertyInheritence(@QueryMap ChildPojo object);

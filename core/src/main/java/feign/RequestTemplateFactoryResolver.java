@@ -108,26 +108,28 @@ final class RequestTemplateFactoryResolver {
         // add query map parameters after initial resolve so that they take
         // precedence over any predefined values
         Object value = argv[metadata.queryMapIndex()];
-        Map<String, Object> queryMap = toQueryMap(value);
+        Map<String, Object> queryMap = toQueryMap(value, metadata.queryMapEncoder());
         template = addQueryMapQueryParameters(queryMap, template);
       }
 
       if (metadata.headerMapIndex() != null) {
         // add header map parameters for a resolution of the user pojo object
         Object value = argv[metadata.headerMapIndex()];
-        Map<String, Object> headerMap = toQueryMap(value);
+        Map<String, Object> headerMap = toQueryMap(value, metadata.queryMapEncoder());
         template = addHeaderMapHeaders(headerMap, template);
       }
 
       return template;
     }
 
-    private Map<String, Object> toQueryMap(Object value) {
+    private Map<String, Object> toQueryMap(Object value, QueryMapEncoder queryMapEncoder) {
       if (value instanceof Map) {
         return (Map<String, Object>) value;
       }
       try {
-        return queryMapEncoder.encode(value);
+        // encode with @QueryMap annotation if exists otherwise with the one from this resolver
+        return queryMapEncoder != null ? queryMapEncoder.encode(value)
+            : this.queryMapEncoder.encode(value);
       } catch (EncodeException e) {
         throw new IllegalStateException(e);
       }

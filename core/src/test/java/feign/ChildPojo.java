@@ -16,6 +16,15 @@ package feign;
 class ParentPojo {
   public String parentPublicProperty;
   protected String parentProtectedProperty;
+  private String parentPrivatePropertyAlteredByGetter;
+
+  public String getParentPrivatePropertyAlteredByGetter() {
+    return parentPrivatePropertyAlteredByGetter + "FromGetter";
+  }
+
+  public void setParentPrivatePropertyAlteredByGetter(String parentPrivatePropertyAlteredByGetter) {
+    this.parentPrivatePropertyAlteredByGetter = parentPrivatePropertyAlteredByGetter;
+  }
 
   public String getParentPublicProperty() {
     return parentPublicProperty;
