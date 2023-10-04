@@ -21,7 +21,6 @@ import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.querymap.FieldQueryMapEncoder;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -44,7 +43,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
   protected boolean decodeVoid = false;
-  protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+  protected QueryMapEncoder queryMapEncoder = QueryMap.MapEncoder.FIELD.instance();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
   protected InvocationHandlerFactory invocationHandlerFactory =
