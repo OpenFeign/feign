@@ -357,6 +357,10 @@ public final class Types {
     return types[types.length - 1];
   }
 
+  public static ParameterizedType parameterize(Class<?> rawClass, Type... typeArguments) {
+    return new ParameterizedTypeImpl(rawClass.getEnclosingClass(), rawClass, typeArguments);
+  }
+
   static final class ParameterizedTypeImpl implements ParameterizedType {
 
     private final Type ownerType;

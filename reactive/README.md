@@ -14,24 +14,34 @@ implementation to your classpath.  Then configure Feign to use the reactive stre
 public interface GitHubReactor {
       
   @RequestLine("GET /repos/{owner}/{repo}/contributors")
-  Flux<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+  Flux<Contributor> contributorsFlux(@Param("owner") String owner, @Param("repo") String repo);
+      
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  Mono<List<Contributor>> contributorsMono(@Param("owner") String owner, @Param("repo") String repo);
   
   class Contributor {
-    String login;
-    
-    public Contributor(String login) {
-      this.login = login;
-    }
+      String login;
+
+      public String getLogin() {
+          return login;
+      }
+
+      public void setLogin(String login) {
+          this.login = login;
+      }
   }
 }
 
 public class ExampleReactor {
   public static void main(String args[]) {
-    GitHubReactor gitHub = ReactorFeign.builder()      
+    GitHubReactor gitHub = ReactorFeign.builder() 
+      .decoder(new ReactiveDecoder(new JacksonDecoder()))     
       .target(GitHubReactor.class, "https://api.github.com");
     
-    List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
-      .collect(Collectors.toList())
+    List<GitHubReactor.Contributor> contributorsFromFlux = gitHub.contributorsFlux("OpenFeign", "feign")
+      .collectList()
+      .block();
+    List<GitHubReactor.Contributor> contributorsFromMono = gitHub.contributorsMono("OpenFeign", "feign")
       .block();
   }
 }
@@ -79,33 +89,5 @@ the wrapped in the appropriate reactive wrappers.
 ### Iterable and Collections responses
 
 Due to the Synchronous nature of Feign requests, methods that return `Iterable` types must specify the collection 
-in the `Publisher`.  For `Reactor` types, this limits the use of `Flux` as a response type.  If you
-want to use `Flux`, you will need to manually convert the `Mono` or `Iterable` response types into
-`Flux` using the `fromIterable` method.
- 
+in the `Publisher`.  For `Reactor` types, this limits the use of `Flux` as a response type.
 
-```java
-public interface GitHub {
-      
-  @RequestLine("GET /repos/{owner}/{repo}/contributors")
-  Mono<List<Contributor>> contributors(@Param("owner") String owner, @Param("repo") String repo);
-  
-  class Contributor {
-    String login;
-    
-    public Contributor(String login) {
-      this.login = login;
-    }
-  }
-}
-
-public class ExampleApplication {
-  public static void main(String[] args) {
-    GitHub gitHub = ReactorFeign.builder()
-      .target(GitHub.class, "https://api.github.com");
-    
-    Mono<List<Contributor>> contributors = gitHub.contributors("OpenFeign", "feign");
-    Flux<Contributor> contributorFlux = Flux.fromIterable(contributors.block());
-  }
-}
-```
