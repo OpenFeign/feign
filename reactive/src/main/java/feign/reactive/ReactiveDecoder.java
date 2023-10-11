@@ -44,11 +44,11 @@ public class ReactiveDecoder implements Decoder {
             Type lastType = Types.resolveLastTypeParameter(type, Flux.class);
             Type listType = Types.parameterize(List.class, lastType);
             Object decoded = delegate.decode(response, listType);
-            if (decoded instanceof Iterable) {
+            try {
                 return Flux.fromIterable((Iterable) decoded);
-            } else {
-                String errorMessage = "Expected type Iterable, but was: " + decoded.getClass();
-                throw new DecodeException(response.status(), errorMessage, response.request());
+            } catch (ClassCastException e) {
+                String errorMessage = "Unable to cast decoded object to Iterable: " + e.getMessage();
+                throw new DecodeException(response.status(), errorMessage, response.request(), e);
             }
         }
 
