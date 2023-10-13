@@ -47,6 +47,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import okhttp3.mockwebserver.MockResponse;
@@ -84,6 +85,8 @@ public class ReactiveFeignIntegrationTest {
   @Test
   public void testReactorTargetFull() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
+    this.webServer.enqueue(new MockResponse().setBody("{ \"username\": \"test\" }"));
+    this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
     this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
 
     TestReactorService service = ReactorFeign.builder()
@@ -102,7 +105,6 @@ public class ReactiveFeignIntegrationTest {
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/version");
 
-
     /* test encoding and decoding */
     StepVerifier.create(service.user("test"))
         .assertNext(user -> assertThat(user).hasFieldOrPropertyWithValue("username", "test"))
@@ -110,12 +112,24 @@ public class ReactiveFeignIntegrationTest {
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
 
+    StepVerifier.create(service.usersFlux())
+        .assertNext(user -> assertThat(user).hasFieldOrPropertyWithValue("username", "test"))
+        .expectComplete()
+        .verify();
+    assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
+
+    StepVerifier.create(service.usersMono())
+        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .expectComplete()
+        .verify();
+    assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
   }
 
   @Test
   public void testRxJavaTarget() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
     this.webServer.enqueue(new MockResponse().setBody("{ \"username\": \"test\" }"));
+    this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
 
     TestReactiveXService service = RxJavaFeign.builder()
         .encoder(new JacksonEncoder())
@@ -137,6 +151,12 @@ public class ReactiveFeignIntegrationTest {
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
+
+    StepVerifier.create(service.users())
+        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .expectComplete()
+        .verify();
+    assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
   }
 
   @Test
@@ -309,7 +329,13 @@ public class ReactiveFeignIntegrationTest {
     Mono<String> version();
 
     @RequestLine("GET /users/{username}")
-    Flux<User> user(@Param("username") String username);
+    Mono<User> user(@Param("username") String username);
+
+    @RequestLine("GET /users")
+    Flux<User> usersFlux();
+
+    @RequestLine("GET /users")
+    Mono<List<User>> usersMono();
   }
 
 
@@ -319,6 +345,9 @@ public class ReactiveFeignIntegrationTest {
 
     @RequestLine("GET /users/{username}")
     Flowable<User> user(@Param("username") String username);
+
+    @RequestLine("GET /users")
+    Flowable<List<User>> users();
 
     @RequestLine("GET /users/search")
     Flowable<String> search(@QueryMap SearchQuery query);
