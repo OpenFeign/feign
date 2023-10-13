@@ -16,40 +16,26 @@ package feign.reactive;
 import feign.FeignException;
 import feign.Response;
 import feign.Types;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import io.reactivex.Flowable;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.List;
 
-public class ReactiveDecoder implements Decoder {
+public class RxJavaDecoder implements Decoder {
 
     private final Decoder delegate;
 
-    public ReactiveDecoder(Decoder decoder) {
+    public RxJavaDecoder(Decoder decoder) {
         this.delegate = decoder;
     }
 
     @Override
     public Object decode(Response response, Type type) throws IOException, FeignException {
         Class<?> rawType = Types.getRawType(type);
-        if (rawType.isAssignableFrom(Mono.class)) {
-            Type lastType = Types.resolveLastTypeParameter(type, Mono.class);
-            return Mono.fromCallable(() -> delegate.decode(response, lastType));
-        }
-        if (rawType.isAssignableFrom(Flux.class)) {
-            Type lastType = Types.resolveLastTypeParameter(type, Flux.class);
-            Type listType = Types.parameterize(List.class, lastType);
-            Object decoded = delegate.decode(response, listType);
-            try {
-                return Flux.fromIterable((Iterable) decoded);
-            } catch (ClassCastException e) {
-                String errorMessage = "Unable to cast decoded object to Iterable: " + e.getMessage();
-                throw new DecodeException(response.status(), errorMessage, response.request(), e);
-            }
+        if (rawType.isAssignableFrom(Flowable.class)) {
+            Type lastType = Types.resolveLastTypeParameter(type, Flowable.class);
+            return delegate.decode(response, lastType);
         }
 
         return delegate.decode(response, type);

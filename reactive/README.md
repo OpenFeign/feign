@@ -35,7 +35,7 @@ public interface GitHubReactor {
 public class ExampleReactor {
   public static void main(String args[]) {
     GitHubReactor gitHub = ReactorFeign.builder() 
-      .decoder(new ReactiveDecoder(new JacksonDecoder()))     
+      .decoder(new ReactorDecoder(new JacksonDecoder()))     
       .target(GitHubReactor.class, "https://api.github.com");
     
     List<GitHubReactor.Contributor> contributorsFromFlux = gitHub.contributorsFlux("OpenFeign", "feign")
@@ -62,7 +62,8 @@ public interface GitHubReactiveX {
 
 public class ExampleRxJava2 {
   public static void main(String args[]) {
-    GitHubReactiveX gitHub = RxJavaFeign.builder()      
+    GitHubReactiveX gitHub = RxJavaFeign.builder() 
+      .decoder(new RxJavaDecoder(new JacksonDecoder()))     
       .target(GitHub.class, "https://api.github.com");
     
     List<Contributor> contributors = gitHub.contributors("OpenFeign", "feign")
