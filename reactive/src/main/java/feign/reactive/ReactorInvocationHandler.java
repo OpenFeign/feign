@@ -36,7 +36,7 @@ public class ReactorInvocationHandler extends ReactiveInvocationHandler {
   protected Publisher invoke(Method method, MethodHandler methodHandler, Object[] arguments) {
     Publisher<?> invocation = this.invokeMethod(methodHandler, arguments);
     if (Flux.class.isAssignableFrom(method.getReturnType())) {
-      return Flux.from(invocation).subscribeOn(scheduler);
+      return Flux.from(invocation).flatMapIterable(e -> (Iterable) e).subscribeOn(scheduler);
     } else if (Mono.class.isAssignableFrom(method.getReturnType())) {
       return Mono.from(invocation).subscribeOn(scheduler);
     }

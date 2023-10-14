@@ -55,7 +55,7 @@ public class ReactiveDelegatingContract implements Contract {
           throw new IllegalArgumentException(
               "Streams are not supported when using Reactive Wrappers");
         }
-        metadata.returnType(actualTypes[0]);
+        metadata.returnType(type);
       }
     }
 
