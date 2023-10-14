@@ -13,6 +13,8 @@
  */
 package feign;
 
+import static feign.Util.checkState;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
@@ -323,6 +325,41 @@ public final class Types {
       return overridingType;
     }
     return baseType;
+  }
+
+  /**
+   * Resolves the last type parameter of the parameterized {@code supertype}, based on the {@code
+   * genericContext}, into its upper bounds.
+   *
+   * <p>Implementation copied from {@code retrofit.RestMethodInfo}.
+   *
+   * @param genericContext Ex. {@link java.lang.reflect.Field#getGenericType()}
+   * @param supertype Ex. {@code Decoder.class}
+   * @return in the example above, the type parameter of {@code Decoder}.
+   * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type
+   *     using {@code context}.
+   */
+  public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
+      throws IllegalStateException {
+    Type resolvedSuperType =
+        Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
+    checkState(
+        resolvedSuperType instanceof ParameterizedType,
+        "could not resolve %s into a parameterized type %s",
+        genericContext,
+        supertype);
+    Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
+    for (int i = 0; i < types.length; i++) {
+      Type type = types[i];
+      if (type instanceof WildcardType) {
+        types[i] = ((WildcardType) type).getUpperBounds()[0];
+      }
+    }
+    return types[types.length - 1];
+  }
+
+  public static ParameterizedType parameterize(Class<?> rawClass, Type... typeArguments) {
+    return new ParameterizedTypeImpl(rawClass.getEnclosingClass(), rawClass, typeArguments);
   }
 
   static final class ParameterizedTypeImpl implements ParameterizedType {
