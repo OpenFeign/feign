@@ -89,6 +89,18 @@ public class FeignTest {
   }
 
   @Test
+  public void typedResponse() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    TypedResponse response = api.getWithTypedResponse();
+
+    assertEquals(200, response.status());
+    assertEquals("foo", response.body());
+  }
+
+  @Test
   public void postTemplateParamsResolve() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -1200,6 +1212,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     Response queryMapWithArrayValues(@QueryMap Map<String, String[]> twos);
+
+    @RequestLine("GET /")
+    TypedResponse<String> getWithTypedResponse();
 
     @RequestLine("POST /?clock={clock}")
     void expand(@Param(value = "clock", expander = ClockToMillis.class) Clock clock);
