@@ -160,7 +160,17 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
+  public void canSupportGzipOnError() throws Exception {
+    assumeFalse("JaxRS client do not support gzip compression", false);
+  }
+
+  @Override
   public void canSupportDeflate() throws Exception {
+    assumeFalse("JaxRS client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canSupportDeflateOnError() throws Exception {
     assumeFalse("JaxRS client do not support deflate compression", false);
   }
 

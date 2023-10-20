@@ -116,7 +116,17 @@ public class OkHttpClientTest extends AbstractClientTest {
   }
 
   @Override
+  public void canSupportGzipOnError() throws Exception {
+    assumeFalse("OkHTTP client do not support gzip compression", false);
+  }
+
+  @Override
   public void canSupportDeflate() throws Exception {
+    assumeFalse("OkHTTP client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canSupportDeflateOnError() throws Exception {
     assumeFalse("OkHTTP client do not support deflate compression", false);
   }
 

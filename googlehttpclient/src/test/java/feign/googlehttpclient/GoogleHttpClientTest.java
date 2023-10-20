@@ -55,7 +55,17 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   }
 
   @Override
+  public void canSupportGzipOnError() throws Exception {
+    assumeFalse("Google HTTP client client do not support gzip compression", false);
+  }
+
+  @Override
   public void canSupportDeflate() throws Exception {
+    assumeFalse("Google HTTP client client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canSupportDeflateOnError() throws Exception {
     assumeFalse("Google HTTP client client do not support deflate compression", false);
   }
 
