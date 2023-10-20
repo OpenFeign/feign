@@ -152,7 +152,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * {@link #client(Client) client}.
    *
    * @since 8.12
-   * @deprecated
+   * @deprecated use {@link #dismiss404()} instead.
    */
   @Deprecated
   public B decode404() {
