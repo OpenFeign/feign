@@ -49,6 +49,7 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Collections.emptyList;
+import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -98,6 +99,9 @@ public class FeignTest {
 
     assertEquals(200, response.status());
     assertEquals("foo", response.body());
+    assertEquals("HTTP/1.1", response.protocolVersion().toString());
+    assertNotNull(response.headers());
+    assertNotNull(response.request());
   }
 
   @Test

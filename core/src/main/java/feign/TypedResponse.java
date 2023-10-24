@@ -161,7 +161,7 @@ public final class TypedResponse<T> {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder("HTTP/1.1 ").append(status);
+    StringBuilder builder = new StringBuilder(protocolVersion.toString()).append(" ").append(status);
     if (reason != null)
       builder.append(' ').append(reason);
     builder.append('\n');
