@@ -54,6 +54,9 @@ public class SpringContractTest {
     mockClient = new MockClient()
         .noContent(HttpMethod.GET, "/health")
         .noContent(HttpMethod.GET, "/health/1")
+        .noContent(HttpMethod.GET, "/health/optional")
+        .noContent(HttpMethod.GET, "/health/optional?param=value")
+        .noContent(HttpMethod.GET, "/health/optional?param")
         .noContent(HttpMethod.GET, "/health/1?deep=true")
         .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
         .noContent(HttpMethod.GET, "/health/name?deep=true&dryRun=true")
@@ -113,6 +116,34 @@ public class SpringContractTest {
     resource.checkWithName("name", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/name?deep=true&dryRun=true");
+  }
+
+  @Test
+  public void testOptionalPresent() {
+    resource.checkWithOptional(Optional.of("value"));
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/optional?param=value");
+  }
+
+  @Test
+  public void testOptionalNotPresent() {
+    resource.checkWithOptional(Optional.empty());
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/optional");
+  }
+
+  @Test
+  public void testOptionalEmptyValue() {
+    resource.checkWithOptional(Optional.of(""));
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/optional?param");
+  }
+
+  @Test
+  public void testOptionalNullable() {
+    resource.checkWithOptional(Optional.ofNullable(null));
+
+    mockClient.verifyOne(HttpMethod.GET, "/health/optional");
   }
 
   @Test
@@ -252,6 +283,9 @@ public class SpringContractTest {
                        @PathVariable(name = "id") String campaignId,
                        @RequestParam(name = "deep", defaultValue = "false") boolean deepCheck,
                        @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun);
+
+    @RequestMapping(value = "/optional", method = RequestMethod.GET)
+    void checkWithOptional(@RequestParam(name = "param") Optional<String> param);
 
     @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
     void checkRequestPart(@PathVariable(name = "id") String campaignId,
