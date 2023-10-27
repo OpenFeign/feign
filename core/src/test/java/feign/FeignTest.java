@@ -1272,6 +1272,9 @@ public class FeignTest {
     @Headers("Custom: {complex}")
     void supportComplexHttpHeaders(@Param("complex") String complex);
 
+    @FeignIgnore
+    String ignore();
+
     class ClockToMillis implements Param.Expander {
 
       @Override
