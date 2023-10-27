@@ -83,15 +83,13 @@ public class InvocationContext {
         return null;
       }
 
-      try {
-        return decoder.decode(response, returnType);
-      } catch (final FeignException e) {
-        throw e;
-      } catch (final RuntimeException e) {
-        throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
-      } catch (IOException e) {
-        throw errorReading(response.request(), response, e);
+      Class<?> rawType = Types.getRawType(returnType);
+      if (TypedResponse.class.isAssignableFrom(rawType)) {
+        Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+        return TypedResponse.builder(response).body(decode(response, bodyType)).build();
       }
+
+      return decode(response, returnType);
     } finally {
       if (closeAfterDecode) {
         ensureClosed(response.body());
@@ -113,6 +111,18 @@ public class InvocationContext {
       return response.toBuilder().body(bodyData).build();
     } finally {
       ensureClosed(response.body());
+    }
+  }
+
+  private Object decode(Response response, Type returnType) {
+    try {
+      return decoder.decode(response, returnType);
+    } catch (final FeignException e) {
+      throw e;
+    } catch (final RuntimeException e) {
+      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
+    } catch (IOException e) {
+      throw errorReading(response.request(), response, e);
     }
   }
 

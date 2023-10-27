@@ -17,6 +17,7 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Collections.emptyList;
+import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -83,6 +84,21 @@ public class FeignTest {
     api.queryMapWithArrayValues(Maps.newHashMap("1", new String[] {"apple", "pear"}));
 
     assertThat(server.takeRequest()).hasPath("/?1=apple&1=pear");
+  }
+
+  @Test
+  public void typedResponse() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    TypedResponse response = api.getWithTypedResponse();
+
+    assertEquals(200, response.status());
+    assertEquals("foo", response.body());
+    assertEquals("HTTP/1.1", response.protocolVersion().toString());
+    assertNotNull(response.headers());
+    assertNotNull(response.request());
   }
 
   @Test
@@ -1259,6 +1275,9 @@ public class FeignTest {
 
     @RequestLine("GET /")
     Response queryMapWithArrayValues(@QueryMap Map<String, String[]> twos);
+
+    @RequestLine("GET /")
+    TypedResponse<String> getWithTypedResponse();
 
     @RequestLine("POST /?clock={clock}")
     void expand(@Param(value = "clock", expander = ClockToMillis.class) Clock clock);
