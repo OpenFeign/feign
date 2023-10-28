@@ -22,21 +22,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import feign.Client;
-import feign.Logger;
+
+import feign.*;
 import feign.Logger.Level;
-import feign.Param;
-import feign.QueryMap;
-import feign.QueryMapEncoder;
-import feign.Request;
 import feign.Request.Options;
-import feign.RequestInterceptor;
-import feign.RequestLine;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.ResponseMapper;
-import feign.RetryableException;
-import feign.Retryer;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import feign.jackson.JacksonDecoder;
@@ -52,6 +41,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,6 +61,20 @@ public class ReactiveFeignIntegrationTest {
 
   private String getServerUrl() {
     return "http://localhost:" + this.webServer.getPort();
+  }
+
+  @Test
+  public void testCallIgnoredMethod() throws Exception {
+    TestReactorService service = ReactorFeign.builder()
+            .target(TestReactorService.class, this.getServerUrl());
+
+    try {
+      service.ignore().subscribe();
+      Assert.fail("No exception thrown");
+    } catch (Exception e) {
+      assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
+      assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
+    }
   }
 
   @Test
@@ -336,6 +340,9 @@ public class ReactiveFeignIntegrationTest {
 
     @RequestLine("GET /users")
     Mono<List<User>> usersMono();
+
+    @FeignIgnore
+    Mono<String> ignore();
   }
 
 

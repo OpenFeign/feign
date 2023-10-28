@@ -91,6 +91,8 @@ public class ReflectiveFeign<C> extends Feign {
         return hashCode();
       } else if ("toString".equals(method.getName())) {
         return toString();
+      } else if (!dispatch.containsKey(method)) {
+        throw new UnsupportedOperationException(String.format("Method \"%s\" should not be called", method.getName()));
       }
 
       return dispatch.get(method).invoke(args);

@@ -33,6 +33,7 @@ import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -1167,6 +1168,20 @@ public class FeignTest {
     assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
   }
 
+  @Test
+  public void testCallIgnoredMethod() throws Exception {
+    TestInterface api = new TestInterfaceBuilder()
+            .target("http://localhost:" + server.getPort());
+
+    try {
+      api.ignore();
+      Assert.fail("No exception thrown");
+    } catch (Exception e) {
+      assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
+      assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
+    }
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -1271,6 +1286,9 @@ public class FeignTest {
     @RequestLine("GET /settings")
     @Headers("Custom: {complex}")
     void supportComplexHttpHeaders(@Param("complex") String complex);
+
+    @FeignIgnore
+    String ignore();
 
     class ClockToMillis implements Param.Expander {
 
