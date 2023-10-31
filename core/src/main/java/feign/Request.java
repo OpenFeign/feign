@@ -326,6 +326,7 @@ public final class Request implements Serializable {
      * @param methodName it's your FeignInterface method name.
      * @param options it's the Options for this method.
      */
+    @Experimental
     public void setMethodOptions(String methodName, Options options) {
       String threadIdentifier = getThreadIdentifier();
       Map<String, Request.Options> methodOptions =
