@@ -19,6 +19,7 @@ import static feign.Util.valuesOrEmpty;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,6 +53,7 @@ public final class Request implements Serializable {
   }
 
   public enum ProtocolVersion {
+
     HTTP_1_0("HTTP/1.0"), HTTP_1_1("HTTP/1.1"), HTTP_2("HTTP/2.0"), MOCK;
 
     final String protocolVersion;
@@ -68,6 +70,7 @@ public final class Request implements Serializable {
     public String toString() {
       return protocolVersion;
     }
+
   }
 
   /**
@@ -279,7 +282,8 @@ public final class Request implements Serializable {
   @Override
   public String toString() {
     final StringBuilder builder = new StringBuilder();
-    builder.append(httpMethod).append(' ').append(url).append(" HTTP/1.1\n");
+    builder.append(httpMethod).append(' ').append(url).append(' ').append(protocolVersion)
+        .append('\n');
     for (final String field : headers.keySet()) {
       for (final String value : valuesOrEmpty(headers, field)) {
         builder.append(field).append(": ").append(value).append('\n');
@@ -378,6 +382,18 @@ public final class Request implements Serializable {
     @Deprecated
     public Options(int connectTimeoutMillis, int readTimeoutMillis) {
       this(connectTimeoutMillis, readTimeoutMillis, true);
+    }
+
+    /**
+     * Creates a new Options Instance.
+     *
+     * @param connectTimeout value.
+     * @param readTimeout value.
+     * @param followRedirects if the request should follow 3xx redirections.
+     */
+    public Options(Duration connectTimeout, Duration readTimeout, boolean followRedirects) {
+      this(connectTimeout.toMillis(), TimeUnit.MILLISECONDS, readTimeout.toMillis(),
+          TimeUnit.MILLISECONDS, followRedirects);
     }
 
     /**

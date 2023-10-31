@@ -16,16 +16,15 @@ package feign.codec;
 import static feign.FeignException.errorStatus;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
-import static java.util.Locale.US;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -83,14 +82,27 @@ public interface ErrorDecoder {
    */
   public Exception decode(String methodKey, Response response);
 
-  public static class Default implements ErrorDecoder {
+  public class Default implements ErrorDecoder {
 
     private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
+    private Integer maxBodyBytesLength;
+    private Integer maxBodyCharsLength;
+
+    public Default() {
+      this.maxBodyBytesLength = null;
+      this.maxBodyCharsLength = null;
+    }
+
+    public Default(Integer maxBodyBytesLength, Integer maxBodyCharsLength) {
+      this.maxBodyBytesLength = maxBodyBytesLength;
+      this.maxBodyCharsLength = maxBodyCharsLength;
+    }
 
     @Override
     public Exception decode(String methodKey, Response response) {
-      FeignException exception = errorStatus(methodKey, response);
-      Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
+      FeignException exception = errorStatus(methodKey, response, maxBodyBytesLength,
+          maxBodyCharsLength);
+      Long retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
       if (retryAfter != null) {
         return new RetryableException(
             response.status(),
@@ -112,21 +124,19 @@ public interface ErrorDecoder {
   }
 
   /**
-   * Decodes a {@link feign.Util#RETRY_AFTER} header into an absolute date, if possible. <br>
+   * Decodes a {@link feign.Util#RETRY_AFTER} header into an epoch millisecond, if possible.<br>
    * See <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */
   static class RetryAfterDecoder {
 
-    static final DateFormat RFC822_FORMAT =
-        new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", US);
-    private final DateFormat rfc822Format;
+    private final DateTimeFormatter dateTimeFormatter;
 
     RetryAfterDecoder() {
-      this(RFC822_FORMAT);
+      this(RFC_1123_DATE_TIME);
     }
 
-    RetryAfterDecoder(DateFormat rfc822Format) {
-      this.rfc822Format = checkNotNull(rfc822Format, "rfc822Format");
+    RetryAfterDecoder(DateTimeFormatter dateTimeFormatter) {
+      this.dateTimeFormatter = checkNotNull(dateTimeFormatter, "dateTimeFormatter");
     }
 
     protected long currentTimeMillis() {
@@ -134,26 +144,24 @@ public interface ErrorDecoder {
     }
 
     /**
-     * returns a date that corresponds to the first time a request can be retried.
+     * returns an epoch millisecond that corresponds to the first time a request can be retried.
      *
      * @param retryAfter String in
      *        <a href="https://tools.ietf.org/html/rfc2616#section-14.37" >Retry-After format</a>
      */
-    public Date apply(String retryAfter) {
+    public Long apply(String retryAfter) {
       if (retryAfter == null) {
         return null;
       }
       if (retryAfter.matches("^[0-9]+\\.?0*$")) {
         retryAfter = retryAfter.replaceAll("\\.0*$", "");
         long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
-        return new Date(currentTimeMillis() + deltaMillis);
+        return currentTimeMillis() + deltaMillis;
       }
-      synchronized (rfc822Format) {
-        try {
-          return rfc822Format.parse(retryAfter);
-        } catch (ParseException ignored) {
-          return null;
-        }
+      try {
+        return ZonedDateTime.parse(retryAfter, dateTimeFormatter).toInstant().toEpochMilli();
+      } catch (NullPointerException | DateTimeParseException ignored) {
+        return null;
       }
     }
   }

@@ -19,10 +19,15 @@
 *** JAX-RS 3 / Jakarta
 *** Spring 4
 *** SOAP
+*** SOAP Jakarta
 *** Spring boot (3rd party)
+
+left side
+
 ** encoders/decoders
 *** GSON
 *** JAXB
+*** JAXB Jakarta
 *** Jackson 1
 *** Jackson 2
 *** Jackson JAXB

@@ -51,7 +51,7 @@ public class UtilTest {
 
   @Test
   public void removesEvenNumbers() {
-    Integer[] values = new Integer[] {22, 23};
+    Integer[] values = {22, 23};
     assertThat(removeValues(values, number -> number % 2 == 0, Integer.class))
         .containsExactly(23);
   }
@@ -167,7 +167,7 @@ public class UtilTest {
     // Act
     final Object retval = Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
     // Assert result
-    assertEquals(new Integer(0), retval);
+    assertEquals(0, retval);
   }
 
   @Test

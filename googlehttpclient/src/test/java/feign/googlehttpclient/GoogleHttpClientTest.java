@@ -55,7 +55,17 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   }
 
   @Override
+  public void canSupportGzipOnError() throws Exception {
+    assumeFalse("Google HTTP client client do not support gzip compression", false);
+  }
+
+  @Override
   public void canSupportDeflate() throws Exception {
+    assumeFalse("Google HTTP client client do not support deflate compression", false);
+  }
+
+  @Override
+  public void canSupportDeflateOnError() throws Exception {
     assumeFalse("Google HTTP client client do not support deflate compression", false);
   }
 
@@ -80,4 +90,11 @@ public class GoogleHttpClientTest extends AbstractClientTest {
             entry("Content-Length", Collections.singletonList("3")))
         .hasMethod("POST");
   }
+
+
+  @Override
+  public void testVeryLongResponseNullLength() {
+    assumeFalse("JaxRS client hang if the response doesn't have a payload", false);
+  }
+
 }

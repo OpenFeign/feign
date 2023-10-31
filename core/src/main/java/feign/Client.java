@@ -14,6 +14,7 @@
 package feign;
 
 import static feign.Util.CONTENT_ENCODING;
+import static feign.Util.ACCEPT_ENCODING;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.ENCODING_DEFLATE;
 import static feign.Util.ENCODING_GZIP;
@@ -131,13 +132,12 @@ public interface Client {
       if (status >= 400) {
         stream = connection.getErrorStream();
       } else {
-        if (this.isGzip(headers.get(CONTENT_ENCODING))) {
-          stream = new GZIPInputStream(connection.getInputStream());
-        } else if (this.isDeflate(headers.get(CONTENT_ENCODING))) {
-          stream = new InflaterInputStream(connection.getInputStream());
-        } else {
-          stream = connection.getInputStream();
-        }
+        stream = connection.getInputStream();
+      }
+      if (this.isGzip(headers.get(CONTENT_ENCODING))) {
+        stream = new GZIPInputStream(stream);
+      } else if (this.isDeflate(headers.get(CONTENT_ENCODING))) {
+        stream = new InflaterInputStream(stream);
       }
       return Response.builder()
           .status(status)
@@ -186,6 +186,11 @@ public interface Client {
               contentLength = Integer.valueOf(value);
               connection.addRequestProperty(field, value);
             }
+          }
+          // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
+          if (field.equals(ACCEPT_ENCODING)) {
+            connection.addRequestProperty(field, String.join(", ", request.headers().get(field)));
+            break;
           } else {
             connection.addRequestProperty(field, value);
           }

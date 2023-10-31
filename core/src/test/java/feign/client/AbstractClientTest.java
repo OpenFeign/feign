@@ -17,6 +17,7 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
@@ -31,6 +32,7 @@ import feign.assertj.MockWebServerAssertions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -411,6 +413,32 @@ public abstract class AbstractClientTest {
   }
 
   @Test
+  public void canSupportGzipOnError() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .setResponseCode(400)
+        .addHeader("Content-Encoding", "gzip")
+        .setBody(new Buffer().write(compress(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+      fail("Expect FeignException");
+    } catch (FeignException e) {
+      /* verify that the response is unzipped */
+      assertThat(e.responseBody())
+          .isNotEmpty()
+          .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+          .get()
+          .isEqualTo(responseData);
+    }
+
+  }
+
+  @Test
   public void canSupportDeflate() throws Exception {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
@@ -426,6 +454,31 @@ public abstract class AbstractClientTest {
     /* verify that the response is unzipped */
     assertThat(result).isNotNull()
         .isEqualToIgnoringCase(responseData);
+  }
+
+  @Test
+  public void canSupportDeflateOnError() throws Exception {
+    /* enqueue a zipped response */
+    final String responseData = "Compressed Data";
+    server.enqueue(new MockResponse()
+        .setResponseCode(400)
+        .addHeader("Content-Encoding", "deflate")
+        .setBody(new Buffer().write(deflate(responseData))));
+
+    TestInterface api = newBuilder()
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+      fail("Expect FeignException");
+    } catch (FeignException e) {
+      /* verify that the response is unzipped */
+      assertThat(e.responseBody())
+          .isNotEmpty()
+          .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+          .get()
+          .isEqualTo(responseData);
+    }
   }
 
   @Test

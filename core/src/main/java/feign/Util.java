@@ -65,6 +65,10 @@ public class Util {
    */
   public static final String CONTENT_ENCODING = "Content-Encoding";
   /**
+   * The HTTP Accept-Encoding header field name.
+   */
+  public static final String ACCEPT_ENCODING = "Accept-Encoding";
+  /**
    * The HTTP Retry-After header field name.
    */
   public static final String RETRY_AFTER = "Retry-After";
@@ -211,33 +215,12 @@ public class Util {
   }
 
   /**
-   * Resolves the last type parameter of the parameterized {@code supertype}, based on the {@code
-   * genericContext}, into its upper bounds.
-   * <p/>
-   * Implementation copied from {@code
-   * retrofit.RestMethodInfo}.
-   *
-   * @param genericContext Ex. {@link java.lang.reflect.Field#getGenericType()}
-   * @param supertype Ex. {@code Decoder.class}
-   * @return in the example above, the type parameter of {@code Decoder}.
-   * @throws IllegalStateException if {@code supertype} cannot be resolved into a parameterized type
-   *         using {@code context}.
+   * Moved to {@code feign.Types.resolveLastTypeParameter}
    */
+  @Deprecated
   public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
       throws IllegalStateException {
-    Type resolvedSuperType =
-        Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
-    checkState(resolvedSuperType instanceof ParameterizedType,
-        "could not resolve %s into a parameterized type %s",
-        genericContext, supertype);
-    Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
-    for (int i = 0; i < types.length; i++) {
-      Type type = types[i];
-      if (type instanceof WildcardType) {
-        types[i] = ((WildcardType) type).getUpperBounds()[0];
-      }
-    }
-    return types[types.length - 1];
+    return Types.resolveLastTypeParameter(genericContext, supertype);
   }
 
   /**

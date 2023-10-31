@@ -65,7 +65,7 @@ public final class AsyncFeign<C> {
             });
   }
 
-  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>> {
+  public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>, AsyncFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client = new AsyncClient.Default<>(
@@ -117,6 +117,11 @@ public final class AsyncFeign<C> {
     @Override
     public AsyncBuilder<C> doNotCloseAfterDecode() {
       return super.doNotCloseAfterDecode();
+    }
+
+    @Override
+    public AsyncBuilder<C> decodeVoid() {
+      return super.decodeVoid();
     }
 
     public AsyncBuilder<C> defaultContextSupplier(AsyncContextSupplier<C> supplier) {
@@ -185,9 +190,8 @@ public final class AsyncFeign<C> {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
 
-    public AsyncFeign<C> build() {
-      super.enrich();
-
+    @Override
+    public AsyncFeign<C> internalBuild() {
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler) Capability.enrich(
               new AsyncResponseHandler(
@@ -196,7 +200,7 @@ public final class AsyncFeign<C> {
                   decoder,
                   errorDecoder,
                   dismiss404,
-                  closeAfterDecode, responseInterceptor),
+                  closeAfterDecode, decodeVoid, responseInterceptorChain()),
               AsyncResponseHandler.class,
               capabilities);
 

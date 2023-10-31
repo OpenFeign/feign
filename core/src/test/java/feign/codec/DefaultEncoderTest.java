@@ -16,8 +16,8 @@ package feign.codec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.time.Clock;
 import java.util.Arrays;
-import java.util.Date;
 import feign.RequestTemplate;
 import static feign.Util.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -51,6 +51,6 @@ public class DefaultEncoderTest {
     thrown.expect(EncodeException.class);
     thrown.expectMessage("is not a type supported by this encoder.");
 
-    encoder.encode(new Date(), Date.class, new RequestTemplate());
+    encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate());
   }
 }

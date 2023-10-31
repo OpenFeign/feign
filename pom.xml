@@ -19,7 +19,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>12.4-SNAPSHOT</version>
+  <version>13.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -48,6 +48,7 @@
     <module>slf4j</module>
     <module>spring4</module>
     <module>soap</module>
+    <module>soap-jakarta</module>
     <module>reactive</module>
     <module>dropwizard-metrics4</module>
     <module>dropwizard-metrics5</module>
@@ -61,6 +62,7 @@
     <module>example-wikipedia</module>
     <module>example-wikipedia-with-springboot</module>
     <module>benchmark</module>
+    <module>moshi</module>
   </modules>
 
   <properties>
@@ -73,7 +75,7 @@
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
-    <latest.java.version>17</latest.java.version>
+    <latest.java.version>21</latest.java.version>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
@@ -81,35 +83,35 @@
 
     <main.basedir>${project.basedir}</main.basedir>
 
-    <okhttp3.version>4.11.0</okhttp3.version>
-    <guava.version>31.1-jre</guava.version>
-    <googlehttpclient.version>1.43.2</googlehttpclient.version>
+    <okhttp3.version>4.12.0</okhttp3.version>
+    <guava.version>32.1.3-jre</guava.version>
+    <googlehttpclient.version>1.43.3</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
-    <slf4j.version>2.0.7</slf4j.version>
-    <bouncy.version>1.70</bouncy.version>
-    <json.version>20230227</json.version>
+    <moshi.version>1.15.0</moshi.version>
+    <slf4j.version>2.0.9</slf4j.version>
+    <json.version>20231013</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <junit5.version>5.9.3</junit5.version>
-    <jackson.version>2.15.0</jackson.version>
+    <junit5.version>5.10.0</junit5.version>
+    <jackson.version>2.15.3</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <mockito.version>5.3.1</mockito.version>
+    <mockito.version>5.6.0</mockito.version>
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
-    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
-    <license-maven-plugin.version>4.2</license-maven-plugin.version>
+    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+    <license-maven-plugin.version>4.3</license-maven-plugin.version>
     <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-    <maven-release-plugin.version>3.0.0</maven-release-plugin.version>
+    <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
     <maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
-    <bom-generator.version>0.94.0</bom-generator.version>
+    <maven-surefire-plugin.version>3.2.1</maven-surefire-plugin.version>
+    <bom-generator.version>0.101.2</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
-    <maven-scm-plugin.version>2.0.0</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.15.0</maven-versions-plugin.version>
+    <maven-scm-plugin.version>2.0.1</maven-scm-plugin.version>
+    <maven-versions-plugin.version>2.16.1</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
@@ -300,11 +302,12 @@
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
       </dependency>
-
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-params</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
         <version>${junit5.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -317,6 +320,12 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${gson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.squareup.moshi</groupId>
+        <artifactId>moshi</artifactId>
+        <version>${moshi.version}</version>
       </dependency>
 
       <dependency>
@@ -337,12 +346,6 @@
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
         <version>${googlehttpclient.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15on</artifactId>
-        <version>${bouncy.version}</version>
       </dependency>
 
       <dependency>
@@ -421,11 +424,13 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
         </plugin>
 
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>${maven-jar-plugin.version}</version>
           <configuration>
@@ -531,6 +536,7 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <inherited>true</inherited>
         <configuration>
@@ -569,11 +575,13 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
         <version>${maven-install-plugin.version}</version>
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>${maven-release-plugin.version}</version>
         <configuration>
@@ -630,6 +638,8 @@
             <exclude>NOTICE</exclude>
             <exclude>OSSMETADATA</exclude>
             <exclude>**/*.md</exclude>
+            <exclude>**/*.asciidoc</exclude>
+            <exclude>**/*.iuml</exclude>
             <exclude>bnd.bnd</exclude>
             <exclude>travis/**</exclude>
             <exclude>src/test/resources/**</exclude>
@@ -702,7 +712,7 @@
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.3.0</version>
         <configuration>
           <keepBlankLines>true</keepBlankLines>
           <lineSeparator>\n</lineSeparator>
@@ -788,7 +798,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.1</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>

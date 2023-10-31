@@ -16,7 +16,6 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -37,11 +36,13 @@ import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,12 +63,12 @@ import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
 
+  private static final Long NON_RETRYABLE = null;
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
   @Rule
@@ -226,9 +227,9 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    CompletableFuture<?> cf = api.expand(new Date(1234l));
+    CompletableFuture<?> cf = api.expand(new TestClock(1234l) {});
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
 
     checkCFCompletedSoon(cf);
   }
@@ -240,9 +241,10 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    CompletableFuture<?> cf = api.expandList(Arrays.asList(new Date(1234l), new Date(12345l)));
+    CompletableFuture<?> cf =
+        api.expandList(Arrays.asList(new TestClock(1234l), new TestClock(12345l)));
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234&date=12345");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234&clock=12345");
 
     checkCFCompletedSoon(cf);
   }
@@ -254,9 +256,9 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    CompletableFuture<?> cf = api.expandList(Arrays.asList(new Date(1234l), null));
+    CompletableFuture<?> cf = api.expandList(Arrays.asList(new TestClock(1234l), null));
 
-    assertThat(server.takeRequest()).hasPath("/?date=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
 
     checkCFCompletedSoon(cf);
   }
@@ -505,8 +507,8 @@ public class AsyncFeignTest {
           public Object decode(Response response, Type type) throws IOException {
             String string = super.decode(response, type).toString();
             if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST, null,
-                  response.request());
+              throw new RetryableException(response.status(), string, HttpMethod.POST,
+                  NON_RETRYABLE, response.request());
             }
             return string;
           }
@@ -584,7 +586,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                null, response.request());
+                NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -609,7 +611,7 @@ public class AsyncFeignTest {
           @Override
           public Exception decode(String methodKey, Response response) {
             return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), null, response.request());
+                new TestInterfaceException(message), NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -631,8 +633,8 @@ public class AsyncFeignTest {
         .errorDecoder(new ErrorDecoder() {
           @Override
           public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST, null,
-                response.request());
+            return new RetryableException(response.status(), message, HttpMethod.POST,
+                NON_RETRYABLE, response.request());
           }
         }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -1022,16 +1024,17 @@ public class AsyncFeignTest {
     CompletableFuture<Response> queryParams(@Param("1") String one,
                                             @Param("2") Iterable<String> twos);
 
-    @RequestLine("POST /?date={date}")
-    CompletableFuture<Void> expand(@Param(value = "date", expander = DateToMillis.class) Date date);
+    @RequestLine("POST /?clock={clock}")
+    CompletableFuture<Void> expand(@Param(value = "clock",
+        expander = ClockToMillis.class) Clock clock);
 
-    @RequestLine("GET /?date={date}")
-    CompletableFuture<Void> expandList(@Param(value = "date",
-        expander = DateToMillis.class) List<Date> dates);
+    @RequestLine("GET /?clock={clock}")
+    CompletableFuture<Void> expandList(@Param(value = "clock",
+        expander = ClockToMillis.class) List<Clock> clocks);
 
-    @RequestLine("GET /?date={date}")
-    CompletableFuture<Void> expandArray(@Param(value = "date",
-        expander = DateToMillis.class) Date[] dates);
+    @RequestLine("GET /?clock={clock}")
+    CompletableFuture<Void> expandArray(@Param(value = "clock",
+        expander = ClockToMillis.class) Clock[] clocks);
 
     @RequestLine("GET /")
     CompletableFuture<Void> headerMap(@HeaderMap Map<String, Object> headerMap);
@@ -1062,11 +1065,11 @@ public class AsyncFeignTest {
     @RequestLine("GET /")
     CompletableFuture<Void> queryMapPropertyInheritence(@QueryMap ChildPojo object);
 
-    class DateToMillis implements Param.Expander {
+    class ClockToMillis implements Param.Expander {
 
       @Override
       public String expand(Object value) {
-        return String.valueOf(((Date) value).getTime());
+        return String.valueOf(((Clock) value).millis());
       }
     }
   }
@@ -1249,5 +1252,28 @@ public class AsyncFeignTest {
     CompletableFuture<?> x();
   }
 
+  class TestClock extends Clock {
+
+    private long millis;
+
+    public TestClock(long millis) {
+      this.millis = millis;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      throw new UnsupportedOperationException("This operation is not supported.");
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
+
+    @Override
+    public Instant instant() {
+      return Instant.ofEpochMilli(millis);
+    }
+  }
 
 }

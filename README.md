@@ -59,7 +59,7 @@ Long Term - The future ☁️
 
 # Usage
 
-The feign library is available from [Maven Central](https://central.sonatype.com/search?q=g:io.github.openfeign%20%20a:feign-core).
+The feign library is available from [Maven Central](https://central.sonatype.com/artifact/io.github.openfeign/feign-core).
 
 ```xml
 <dependency>
@@ -408,6 +408,17 @@ public class Example {
 
 For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
 the [Jackson Jr Module](./jackson-jr).
+
+#### Moshi
+[Moshi](./moshi) includes an encoder and decoder you can use with a JSON API.
+Add `MoshiEncoder` and/or `MoshiDecoder` to your `Feign.Builder` like so:
+
+```java
+GitHub github = Feign.builder()
+                     .encoder(new MoshiEncoder())
+                     .decoder(new MoshiDecoder())
+                     .target(GitHub.class, "https://api.github.com");
+```
 
 #### Sax
 [SaxDecoder](./sax) allows you to decode XML in a way that is compatible with normal JVM and also Android environments.
@@ -1065,6 +1076,28 @@ created for each `Client` execution, allowing you to maintain state bewteen each
 
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
 cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
+
+#### Response Interceptor
+If you need to treat what would otherwise be an error as a success and return a result rather than throw an exception then you may use a `ResponseInterceptor`.
+
+As an example Feign includes a simple `RedirectionInterceptor` that can be used to extract the location header from redirection responses.
+```java
+public interface Api {
+  // returns a 302 response
+  @RequestLine("GET /location")
+  String location();
+}
+
+public class MyApp {
+  public static void main(String[] args) {
+    // Configure the HTTP client to ignore redirection
+    Api api = Feign.builder()
+                   .options(new Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, false))
+                   .responseInterceptor(new RedirectionInterceptor())
+                   .target(Api.class, "https://redirect.example.com");
+  }
+}
+```
 
 ### Metrics
 By default, feign won't collect any metrics.

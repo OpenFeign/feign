@@ -16,7 +16,7 @@
 executors:
   java:
     docker:
-      - image: velo/toolchains-4-ci-builds
+      - image: velo/toolchains-4-ci-builds:with-21
 
 # common commands
 commands:
@@ -81,13 +81,13 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - feign-dependencies-{{ checksum "pom.xml" }}
-            - feign-dependencies-
+            - feign-dependencies-v2-{{ checksum "pom.xml" }}
+            - feign-dependencies-v2-
       - resolve-dependencies
       - save_cache:
           paths:
-            - ~/.m2
-          key: feign-dependencies-{{ checksum "pom.xml" }}
+            - ~/.m2/repository
+          key: feign-dependencies-v2-{{ checksum "pom.xml" }}
       - run:
           name: 'Test'
           command: |
@@ -102,8 +102,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - feign-dependencies-{{ checksum "pom.xml" }}
-            - feign-dependencies-
+            - feign-dependencies-v2-{{ checksum "pom.xml" }}
+            - feign-dependencies-v2-
       - resolve-dependencies
       - configure-gpg
       - nexus-deploy

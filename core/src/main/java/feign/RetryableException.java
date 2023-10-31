@@ -14,7 +14,9 @@
 package feign;
 
 import feign.Request.HttpMethod;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * This exception is raised when the {@link Response} is deemed to be retryable, typically via an
@@ -22,7 +24,7 @@ import java.util.Date;
  */
 public class RetryableException extends FeignException {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 2L;
 
   private final Long retryAfter;
   private final HttpMethod httpMethod;
@@ -30,6 +32,14 @@ public class RetryableException extends FeignException {
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
+  public RetryableException(int status, String message, HttpMethod httpMethod, Throwable cause,
+      Long retryAfter, Request request) {
+    super(status, message, request, cause);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+  }
+
+  @Deprecated
   public RetryableException(int status, String message, HttpMethod httpMethod, Throwable cause,
       Date retryAfter, Request request) {
     super(status, message, request, cause);
@@ -40,6 +50,14 @@ public class RetryableException extends FeignException {
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
    */
+  public RetryableException(int status, String message, HttpMethod httpMethod, Long retryAfter,
+      Request request) {
+    super(status, message, request);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+  }
+
+  @Deprecated
   public RetryableException(int status, String message, HttpMethod httpMethod, Date retryAfter,
       Request request) {
     super(status, message, request);
@@ -48,11 +66,30 @@ public class RetryableException extends FeignException {
   }
 
   /**
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   */
+  public RetryableException(int status, String message, HttpMethod httpMethod, Long retryAfter,
+      Request request, byte[] responseBody,
+      Map<String, Collection<String>> responseHeaders) {
+    super(status, message, request, responseBody, responseHeaders);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+  }
+
+  @Deprecated
+  public RetryableException(int status, String message, HttpMethod httpMethod, Date retryAfter,
+      Request request, byte[] responseBody, Map<String, Collection<String>> responseHeaders) {
+    super(status, message, request, responseBody, responseHeaders);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
+  }
+
+  /**
    * Sometimes corresponds to the {@link feign.Util#RETRY_AFTER} header present in {@code 503}
    * status. Other times parsed from an application-specific response. Null if unknown.
    */
-  public Date retryAfter() {
-    return retryAfter != null ? new Date(retryAfter) : null;
+  public Long retryAfter() {
+    return retryAfter;
   }
 
   public HttpMethod method() {

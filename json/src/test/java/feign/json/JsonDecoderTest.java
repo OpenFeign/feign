@@ -26,8 +26,8 @@ import feign.Response;
 import feign.codec.DecodeException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.Collections;
-import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -147,8 +147,8 @@ public class JsonDecoderTest {
         .request(request)
         .build();
     Exception exception = assertThrows(DecodeException.class,
-        () -> new JsonDecoder().decode(response, Date.class));
-    assertEquals("class java.util.Date is not a type supported by this decoder.",
+        () -> new JsonDecoder().decode(response, Clock.class));
+    assertEquals("class java.time.Clock is not a type supported by this decoder.",
         exception.getMessage());
   }
 

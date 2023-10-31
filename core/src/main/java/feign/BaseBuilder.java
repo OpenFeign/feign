@@ -29,13 +29,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class BaseBuilder<B extends BaseBuilder<B>> {
+public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
 
   private final B thisB;
 
   protected final List<RequestInterceptor> requestInterceptors =
       new ArrayList<>();
-  protected ResponseInterceptor responseInterceptor = ResponseInterceptor.DEFAULT;
+  protected final List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new Contract.Default();
   protected Retryer retryer = new Retryer.Default();
@@ -43,7 +43,8 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   protected Encoder encoder = new Encoder.Default();
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
-  protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+  protected boolean decodeVoid = false;
+  protected QueryMapEncoder queryMapEncoder = QueryMap.MapEncoder.FIELD.instance();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
   protected InvocationHandlerFactory invocationHandlerFactory =
@@ -106,6 +107,11 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     return thisB;
   }
 
+  public B decodeVoid() {
+    this.decodeVoid = true;
+    return thisB;
+  }
+
   public B queryMapEncoder(QueryMapEncoder queryMapEncoder) {
     this.queryMapEncoder = queryMapEncoder;
     return thisB;
@@ -158,7 +164,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
    * {@link #client(Client) client}.
    *
    * @since 8.12
-   * @deprecated
+   * @deprecated use {@link #dismiss404()} instead.
    */
   @Deprecated
   public B decode404() {
@@ -198,10 +204,22 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
   }
 
   /**
+   * Sets the full set of request interceptors for the builder, overwriting any previous
+   * interceptors.
+   */
+  public B responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
+    this.responseInterceptors.clear();
+    for (ResponseInterceptor responseInterceptor : responseInterceptors) {
+      this.responseInterceptors.add(responseInterceptor);
+    }
+    return thisB;
+  }
+
+  /**
    * Adds a single response interceptor to the builder.
    */
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
-    this.responseInterceptor = responseInterceptor;
+    this.responseInterceptors.add(responseInterceptor);
     return thisB;
   }
 
@@ -224,33 +242,41 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
     return thisB;
   }
 
-  protected B enrich() {
+  @SuppressWarnings("unchecked")
+  B enrich() {
     if (capabilities.isEmpty()) {
       return thisB;
     }
 
-    getFieldsToEnrich().forEach(field -> {
-      field.setAccessible(true);
-      try {
-        final Object originalValue = field.get(thisB);
-        final Object enriched;
-        if (originalValue instanceof List) {
-          Type ownerType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-          enriched = ((List) originalValue).stream()
-              .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
-              .collect(Collectors.toList());
-        } else {
-          enriched = Capability.enrich(originalValue, field.getType(), capabilities);
-        }
-        field.set(thisB, enriched);
-      } catch (IllegalArgumentException | IllegalAccessException e) {
-        throw new RuntimeException("Unable to enrich field " + field, e);
-      } finally {
-        field.setAccessible(false);
-      }
-    });
+    try {
+      B clone = (B) thisB.clone();
 
-    return thisB;
+      getFieldsToEnrich().forEach(field -> {
+        field.setAccessible(true);
+        try {
+          final Object originalValue = field.get(clone);
+          final Object enriched;
+          if (originalValue instanceof List) {
+            Type ownerType =
+                ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            enriched = ((List) originalValue).stream()
+                .map(value -> Capability.enrich(value, (Class<?>) ownerType, capabilities))
+                .collect(Collectors.toList());
+          } else {
+            enriched = Capability.enrich(originalValue, field.getType(), capabilities);
+          }
+          field.set(clone, enriched);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+          throw new RuntimeException("Unable to enrich field " + field, e);
+        } finally {
+          field.setAccessible(false);
+        }
+      });
+
+      return clone;
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
   }
 
   List<Field> getFieldsToEnrich() {
@@ -267,6 +293,24 @@ public abstract class BaseBuilder<B extends BaseBuilder<B>> {
         // skip enumerations
         .filter(field -> !field.getType().isEnum())
         .collect(Collectors.toList());
+  }
+
+  public final T build() {
+    return enrich().internalBuild();
+  }
+
+  protected abstract T internalBuild();
+
+  protected ResponseInterceptor.Chain responseInterceptorChain() {
+    ResponseInterceptor.Chain endOfChain =
+        ResponseInterceptor.Chain.DEFAULT;
+    ResponseInterceptor.Chain executionChain = this.responseInterceptors.stream()
+        .reduce(ResponseInterceptor::andThen)
+        .map(interceptor -> interceptor.apply(endOfChain))
+        .orElse(endOfChain);
+
+    return (ResponseInterceptor.Chain) Capability.enrich(executionChain,
+        ResponseInterceptor.Chain.class, capabilities);
   }
 
 
