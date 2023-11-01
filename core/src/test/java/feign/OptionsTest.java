@@ -16,7 +16,9 @@ package feign;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.SocketTimeoutException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.hamcrest.CoreMatchers;
@@ -89,5 +91,51 @@ public class OptionsTest {
             .target(OptionsInterface.class, server.url("/").toString());
 
     assertThat(api.getChildOptions(new ChildOptions(1000, 4 * 1000))).isEqualTo("foo");
+  }
+
+  @Test
+  public void socketTimeoutWithMethodOptionsTest() throws Exception {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
+    Request.Options options = new Request.Options(1000, 3000);
+    final OptionsInterface api =
+        Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());
+
+    AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
+    Thread thread =
+        new Thread(
+            () -> {
+              try {
+                options.setMethodOptions("get", new Request.Options(1000, 1000));
+                api.get();
+              } catch (Exception exception) {
+                exceptionAtomicReference.set(exception);
+              }
+            });
+    thread.start();
+    thread.join();
+    thrown.expect(FeignException.class);
+    thrown.expectCause(CoreMatchers.isA(SocketTimeoutException.class));
+    throw exceptionAtomicReference.get();
+  }
+
+  @Test
+  public void normalResponseWithMethodOptionsTest() throws Exception {
+    final MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
+    Request.Options options = new Request.Options(1000, 1000);
+    final OptionsInterface api =
+        Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());
+
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    Thread thread =
+        new Thread(
+            () -> {
+              options.setMethodOptions("get", new Request.Options(1000, 3000));
+              api.get();
+              countDownLatch.countDown();
+            });
+    thread.start();
+    thread.join();
   }
 }

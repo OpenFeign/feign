@@ -14,6 +14,7 @@
 package feign;
 
 import static feign.Util.checkNotNull;
+import static feign.Util.getThreadIdentifier;
 import static feign.Util.valuesOrEmpty;
 
 import java.io.Serializable;
@@ -23,8 +24,10 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
@@ -320,6 +323,35 @@ public final class Request implements Serializable {
     private final long readTimeout;
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
+    private final Map<String, Map<String, Options>> threadToMethodOptions;
+
+    /**
+     * Get an Options by methodName
+     *
+     * @param methodName it's your FeignInterface method name.
+     * @return method Options
+     */
+    @Experimental
+    public Options getMethodOptions(String methodName) {
+      Map<String, Options> methodOptions =
+          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
+      return methodOptions.getOrDefault(methodName, this);
+    }
+
+    /**
+     * Set methodOptions by methodKey and options
+     *
+     * @param methodName it's your FeignInterface method name.
+     * @param options it's the Options for this method.
+     */
+    @Experimental
+    public void setMethodOptions(String methodName, Options options) {
+      String threadIdentifier = getThreadIdentifier();
+      Map<String, Request.Options> methodOptions =
+          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
+      threadToMethodOptions.put(threadIdentifier, methodOptions);
+      methodOptions.put(methodName, options);
+    }
 
     /**
      * Creates a new Options instance.
@@ -360,6 +392,7 @@ public final class Request implements Serializable {
       this.readTimeout = readTimeout;
       this.readTimeoutUnit = readTimeoutUnit;
       this.followRedirects = followRedirects;
+      this.threadToMethodOptions = new ConcurrentHashMap<>();
     }
 
     /**

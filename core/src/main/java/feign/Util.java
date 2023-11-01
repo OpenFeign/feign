@@ -359,4 +359,13 @@ public class Util {
     fields.addAll(allFields(clazz.getSuperclass()));
     return fields;
   }
+
+  public static String getThreadIdentifier() {
+    Thread currentThread = Thread.currentThread();
+    return currentThread.getThreadGroup()
+        + "_"
+        + currentThread.getName()
+        + "_"
+        + currentThread.getId();
+  }
 }
