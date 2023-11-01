@@ -314,6 +314,7 @@ public final class Request implements Serializable {
      * @param methodName it's your FeignInterface method name.
      * @return method Options
      */
+    @Experimental
     public Options getMethodOptions(String methodName) {
       Map<String, Options> methodOptions =
           threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
