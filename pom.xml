@@ -92,7 +92,7 @@
     <json.version>20231013</json.version>
 
     <junit.version>4.13.2</junit.version>
-    <junit5.version>5.10.0</junit5.version>
+    <junit5.version>5.10.1</junit5.version>
     <jackson.version>2.15.3</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
