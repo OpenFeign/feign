@@ -518,7 +518,7 @@ public final class RequestTemplate implements Serializable {
       }
 
       /* strip the query string */
-      this.target = targetUri.getScheme() + "://" + targetUri.getAuthority() + targetUri.getPath();
+      this.target = targetUri.getScheme() + "://" + targetUri.getRawAuthority() + targetUri.getRawPath();
       if (targetUri.getFragment() != null) {
         this.fragment = "#" + targetUri.getFragment();
       }
