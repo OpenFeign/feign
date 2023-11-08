@@ -525,6 +525,14 @@ public class RequestTemplateTest {
   }
 
   @Test
+  public void urlEncodingRemainsInPlace() {
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).target("https://exa%23mple.com/path%7Cpath");
+
+    assertThat(template.url()).isEqualTo("https://exa%23mple.com/path%7Cpath");
+  }
+
+  @Test
   public void slashShouldNotBeAppendedForMatrixParams() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).uri("/path;key1=value1;key2=value2", true);
