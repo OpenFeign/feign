@@ -142,16 +142,6 @@
 
   <developers>
     <developer>
-      <id>adriancole</id>
-      <name>Adrian Cole</name>
-      <email>acole@pivotal.io</email>
-    </developer>
-    <developer>
-      <id>spencergibb</id>
-      <name>Spencer Gibb</name>
-      <email>spencer@gibb.us</email>
-    </developer>
-    <developer>
       <id>velo</id>
       <name>Marvin Herman Froeder</name>
       <email>velo br at gmail dot com</email>
@@ -696,7 +686,7 @@
             <DynamicDependency>
               <groupId>org.apache.maven.surefire</groupId>
               <artifactId>surefire-junit4</artifactId>
-              <version>2.22.0</version>
+              <version>${maven-surefire-plugin.version}</version>
               <repositoryType>PLUGIN</repositoryType>
             </DynamicDependency>
             <DynamicDependency>
@@ -918,4 +908,15 @@
       </build>
     </profile>
   </profiles>
+
+  <contributors>
+    <contributor>
+      <name>Adrian Cole</name>
+      <email>acole@pivotal.io</email>
+    </contributor>
+    <contributor>
+      <name>Spencer Gibb</name>
+      <email>spencer@gibb.us</email>
+    </contributor>
+  </contributors>
 </project>
