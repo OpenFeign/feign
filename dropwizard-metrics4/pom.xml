@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.1-SNAPSHOT</version>
+    <version>13.1</version>
   </parent>
   <artifactId>feign-dropwizard-metrics4</artifactId>
   <name>Feign Dropwizard Metrics4</name>
