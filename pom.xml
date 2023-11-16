@@ -93,7 +93,7 @@
 
     <junit.version>4.13.2</junit.version>
     <junit5.version>5.10.1</junit5.version>
-    <jackson.version>2.15.3</jackson.version>
+    <jackson.version>2.16.0</jackson.version>
     <assertj.version>3.24.2</assertj.version>
     <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>5.7.0</mockito.version>
