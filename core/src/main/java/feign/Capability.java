@@ -57,7 +57,7 @@ public interface Capability {
   static Object invoke(Object target, Capability capability, Class<?> capabilityToEnrich) {
     return Arrays.stream(capability.getClass().getMethods())
         .filter(method -> method.getName().equals("enrich"))
-        .filter(method -> method.getReturnType().isAssignableFrom(capabilityToEnrich))
+        .filter(method -> method.getReturnType() == capabilityToEnrich)
         .findFirst()
         .map(method -> {
           try {
