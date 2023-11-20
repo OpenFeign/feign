@@ -18,6 +18,7 @@ import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
 import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class CapabilityTest {
@@ -71,5 +72,35 @@ public class CapabilityTest {
 
     assertThat(enriched, CoreMatchers.instanceOf(BClient.class));
   }
+
+  private static class FamilyCapability implements Capability {
+    public Father enrich(Father father) {
+        father.balance = 10;
+        return father;
+    }
+    public Son enrich(Son son) {
+        son.balance = 5;
+        return son;
+    }
+  }
+
+  private static class Father {
+      int balance;
+  }
+
+  private static class Son extends Father {}
+
+  @Test
+  public void enrichTest() {
+    Son son = new Son();
+    Father father = new Father();
+    // enrich Son
+    Capability.invoke(son, new FamilyCapability(), Son.class);
+    Assert.assertEquals(son.balance, 5);
+    // enrich Father
+    Capability.invoke(father, new FamilyCapability(), Father.class);
+    Assert.assertEquals(father.balance, 10);
+  }
+
 
 }
