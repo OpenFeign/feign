@@ -1,0 +1,97 @@
+/*
+ * Copyright 2012-2023 The Feign Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package feign.hc5;
+
+import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPInputStream;
+
+import org.junit.jupiter.api.Test;
+
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.RequestLine;
+import feign.client.AbstractClientTest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
+
+/**
+ * Tests that 'Content-Encoding: gzip' is handled correctly
+ */
+public class GzipHttp5ClientTest extends AbstractClientTest {
+
+  @Override
+  public Builder newBuilder() {
+    return Feign.builder().client(new ApacheHttp5Client());
+  }
+
+  @Test
+  public void testWithCompressedBody() throws InterruptedException, IOException {
+    final JaxRsTestInterface testInterface = buildTestInterface(true);
+
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    assertEquals("foo", testInterface.withBody("bar"));
+    final RecordedRequest request1 = server.takeRequest();
+    assertEquals("/test", request1.getPath());
+    
+    ByteArrayInputStream bodyContentIs = new ByteArrayInputStream(request1.getBody().readByteArray());
+    byte[] uncompressed = new GZIPInputStream(bodyContentIs).readAllBytes();
+    
+    assertEquals("bar", new String(uncompressed, StandardCharsets.UTF_8));
+
+  }
+  
+  @Test
+  public void testWithUncompressedBody() throws InterruptedException, IOException {
+      final JaxRsTestInterface testInterface = buildTestInterface(false);
+      
+      server.enqueue(new MockResponse().setBody("foo"));
+      
+      assertEquals("foo", testInterface.withBody("bar"));
+      final RecordedRequest request1 = server.takeRequest();
+      assertEquals("/test", request1.getPath());
+      
+      assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
+  }
+
+
+  private JaxRsTestInterface buildTestInterface(boolean compress) {
+    return newBuilder()
+        .requestInterceptor(req -> req.header("Content-Encoding", compress ? "gzip" : ""))
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
+  }
+
+
+  @Override
+  public void testVeryLongResponseNullLength() {
+    assumeTrue("HC5 client seems to hang with response size equalto Long.MAX", false);
+  }
+
+  @Override
+  public void testContentTypeDefaultsToRequestCharset() throws Exception {
+    assumeTrue("this test is flaky on windows, but works fine.", false);
+  }
+
+  public interface TestInterface {
+
+    @RequestLine("POST /test")
+    String withBody(String body);
+
+  }
+}

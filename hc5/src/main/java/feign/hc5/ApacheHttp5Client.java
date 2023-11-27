@@ -121,6 +121,7 @@ public final class ApacheHttp5Client implements Client {
 
     // request headers
     boolean hasAcceptHeader = false;
+    boolean isGzip = false;
     for (final Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       final String headerName = headerEntry.getKey();
       if (headerName.equalsIgnoreCase(ACCEPT_HEADER_NAME)) {
@@ -132,7 +133,14 @@ public final class ApacheHttp5Client implements Client {
         // doesn't like us to set it as well.
         continue;
       }
-
+      if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
+        isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
+        isDeflate = headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
+        if (isDeflate) {
+          // DeflateCompressingEntity not available in hc5 yet
+          throw new IllegalArgumentException("Deflate Content-Encoding is not supported by feign-hc5");
+        }
+      }
       for (final String headerValue : headerEntry.getValue()) {
         requestBuilder.addHeader(headerName, headerValue);
       }
@@ -159,7 +167,9 @@ public final class ApacheHttp5Client implements Client {
         }
         entity = new StringEntity(content, contentType);
       }
-
+      if(isGzip) {
+        entity = new GzipCompressingEntity(entity);  
+      }
       requestBuilder.setEntity(entity);
     } else {
       requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
