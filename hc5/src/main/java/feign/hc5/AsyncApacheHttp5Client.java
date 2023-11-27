@@ -147,8 +147,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
     // request body
     // final Body requestBody = request.requestBody();
-    final byte[] data = request.body();
-    if(isGzip) {
+    byte[] data = request.body();
+    if(isGzip && data != null && data.length > 0) {
       // compress if needed
       try(ByteArrayOutputStream baos = new ByteArrayOutputStream();
           GZIPOutputStream gzipOs = new GZIPOutputStream(baos, true)) {
