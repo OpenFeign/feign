@@ -243,7 +243,7 @@ public class AsyncApacheHttp5ClientTest {
     api.headerMapWithHeaderAnnotations(headerMap);
 
     // header map should be additive for headers provided by annotations
-    assertThat(server.takeRequest()).hasHeaders(entry("Content-Encoding", Arrays.asList("deflate")),
+    assertThat(server.takeRequest()).hasHeaders(entry("Content-Encoding", Arrays.asList("gzip")),
         entry("Custom-Header", Arrays.asList("fooValue")));
 
     server.enqueue(new MockResponse());
@@ -256,7 +256,7 @@ public class AsyncApacheHttp5ClientTest {
      * valid to have more than one value for a header.
      */
     assertThat(server.takeRequest()).hasHeaders(
-        entry("Content-Encoding", Arrays.asList("deflate", "overrideFromMap")),
+        entry("Content-Encoding", Arrays.asList("gzip", "overrideFromMap")),
         entry("Custom-Header", Arrays.asList("fooValue")));
 
     checkCFCompletedSoon(cf);
@@ -880,7 +880,7 @@ public class AsyncApacheHttp5ClientTest {
     CompletableFuture<Void> headerMap(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
-    @Headers("Content-Encoding: deflate")
+    @Headers("Content-Encoding: gzip")
     CompletableFuture<Void> headerMapWithHeaderAnnotations(@HeaderMap Map<String, Object> headerMap);
 
     @RequestLine("GET /")
