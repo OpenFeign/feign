@@ -17,8 +17,11 @@ import static feign.Util.enumForName;
 
 import feign.*;
 import feign.Request.Options;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.GZIPOutputStream;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.config.Configurable;
@@ -115,6 +118,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
     // request headers
     boolean hasAcceptHeader = false;
+    boolean isGzip = false;
     for (final Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       final String headerName = headerEntry.getKey();
       if (headerName.equalsIgnoreCase(ACCEPT_HEADER_NAME)) {
@@ -125,6 +129,16 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         // The 'Content-Length' header is always set by the Apache client and it
         // doesn't like us to set it as well.
         continue;
+      }
+      if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
+        isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
+        boolean isDeflate =
+            headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
+        if (isDeflate) {
+          // DeflateCompressingEntity not available in hc5 yet
+          throw new IllegalArgumentException(
+              "Deflate Content-Encoding is not supported by feign-hc5");
+        }
       }
 
       for (final String headerValue : headerEntry.getValue()) {
@@ -138,7 +152,17 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
     // request body
     // final Body requestBody = request.requestBody();
-    final byte[] data = request.body();
+    byte[] data = request.body();
+    if (isGzip && data != null && data.length > 0) {
+      // compress if needed
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          GZIPOutputStream gzipOs = new GZIPOutputStream(baos, true)) {
+        gzipOs.write(data);
+        gzipOs.flush();
+        data = baos.toByteArray();
+      } catch (IOException suppressed) { // NOPMD
+      }
+    }
     if (data != null) {
       httpRequest.setBody(data, getContentType(request));
     }
