@@ -15,6 +15,7 @@ package feign.reactive;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -43,7 +44,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.AdditionalAnswers;
 import org.mockito.stubbing.Answer;
 import reactor.core.publisher.Flux;
@@ -51,9 +51,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 public class ReactiveFeignIntegrationTest {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Rule
   public final MockWebServer webServer = new MockWebServer();
@@ -166,19 +163,21 @@ public class ReactiveFeignIntegrationTest {
 
   @Test
   public void invocationFactoryIsNotSupported() {
-    this.thrown.expect(UnsupportedOperationException.class);
-    ReactorFeign.builder()
-        .invocationHandlerFactory(
-            (target, dispatch) -> null)
-        .target(TestReactiveXService.class, "http://localhost");
+    assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> {
+      ReactorFeign.builder()
+          .invocationHandlerFactory(
+              (target, dispatch) -> null)
+          .target(TestReactiveXService.class, "http://localhost");
+    });
   }
 
   @Test
   public void doNotCloseUnsupported() {
-    this.thrown.expect(UnsupportedOperationException.class);
-    ReactorFeign.builder()
-        .doNotCloseAfterDecode()
-        .target(TestReactiveXService.class, "http://localhost");
+    assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> {
+      ReactorFeign.builder()
+          .doNotCloseAfterDecode()
+          .target(TestReactiveXService.class, "http://localhost");
+    });
   }
 
   @Test

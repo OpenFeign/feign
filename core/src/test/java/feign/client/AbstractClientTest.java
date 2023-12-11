@@ -15,6 +15,7 @@ package feign.client;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
@@ -42,16 +43,12 @@ import okhttp3.mockwebserver.RecordedRequest;
 import okio.Buffer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * {@link AbstractClientTest} can be extended to run a set of tests against any {@link Client}
  * implementation.
  */
 public abstract class AbstractClientTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
 
@@ -125,17 +122,18 @@ public abstract class AbstractClientTest {
 
   @Test
   public void parsesErrorResponse() {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage(
-        "[500 Server Error] during [GET] to [http://localhost:" + server.getPort()
-            + "/] [TestInterface#get()]: [ARGHH]");
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.get();
+    Throwable exception = assertThrows(FeignException.class, () -> {
+      api.get();
+    });
+    assertThat(exception.getMessage())
+        .contains("[500 Server Error] during [GET] to [http://localhost:" + server.getPort()
+            + "/] [TestInterface#get()]: [ARGHH]");
   }
 
   @Test

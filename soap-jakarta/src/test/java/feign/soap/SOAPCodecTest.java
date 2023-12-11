@@ -16,6 +16,7 @@ package feign.soap;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -28,9 +29,7 @@ import jakarta.xml.soap.SOAPElement;
 import jakarta.xml.soap.SOAPException;
 import jakarta.xml.soap.SOAPFactory;
 import jakarta.xml.soap.SOAPMessage;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -38,9 +37,6 @@ import java.util.Map;
 
 @SuppressWarnings("deprecation")
 public class SOAPCodecTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void encodesSoap() {
@@ -69,20 +65,21 @@ public class SOAPCodecTest {
 
   @Test
   public void doesntEncodeParameterizedTypes() throws Exception {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage(
+    Throwable exception = assertThrows(UnsupportedOperationException.class, () -> {
+
+      class ParameterizedHolder {
+
+        @SuppressWarnings("unused")
+        Map<String, ?> field;
+      }
+      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+      RequestTemplate template = new RequestTemplate();
+      new SOAPEncoder(new JAXBContextFactory.Builder().build())
+          .encode(Collections.emptyMap(), parameterized, template);
+    });
+    assertThat(exception.getMessage()).contains(
         "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
-
-    class ParameterizedHolder {
-
-      @SuppressWarnings("unused")
-      Map<String, ?> field;
-    }
-    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
-
-    RequestTemplate template = new RequestTemplate();
-    new SOAPEncoder(new JAXBContextFactory.Builder().build())
-        .encode(Collections.emptyMap(), parameterized, template);
   }
 
 
@@ -296,36 +293,37 @@ public class SOAPCodecTest {
 
   @Test
   public void doesntDecodeParameterizedTypes() throws Exception {
-    thrown.expect(feign.codec.DecodeException.class);
-    thrown.expectMessage(
-        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"
+    Throwable exception = assertThrows(feign.codec.DecodeException.class, () -> {
+
+      class ParameterizedHolder {
+
+        @SuppressWarnings("unused")
+        Map<String, ?> field;
+      }
+      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+      Response response = Response.builder()
+          .status(200)
+          .reason("OK")
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .headers(Collections.emptyMap())
+          .body("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+              + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+              + "<Header/>"
+              + "<Body>"
+              + "<GetPrice>"
+              + "<Item>Apples</Item>"
+              + "</GetPrice>"
+              + "</Body>"
+              + "</Envelope>", UTF_8)
+          .build();
+
+      new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+    });
+    assertThat(exception.getMessage())
+        .contains("java.util.Map is an interface, and JAXB can't handle interfaces.\n"
             + "\tthis problem is related to the following location:\n"
             + "\t\tat java.util.Map");
-
-    class ParameterizedHolder {
-
-      @SuppressWarnings("unused")
-      Map<String, ?> field;
-    }
-    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
-
-    Response response = Response.builder()
-        .status(200)
-        .reason("OK")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.emptyMap())
-        .body("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
-            + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-            + "<Header/>"
-            + "<Body>"
-            + "<GetPrice>"
-            + "<Item>Apples</Item>"
-            + "</GetPrice>"
-            + "</Body>"
-            + "</Envelope>", UTF_8)
-        .build();
-
-    new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
 
   @Test

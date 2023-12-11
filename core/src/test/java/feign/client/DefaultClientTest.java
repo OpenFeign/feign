@@ -19,6 +19,7 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
+import feign.codec.DecodeException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.Test;
@@ -33,9 +34,11 @@ import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.core.Is.isA;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -88,9 +91,10 @@ public class DefaultClientTest extends AbstractClientTest {
   @Test
   @Override
   public void testPatch() throws Exception {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.testPatch();
+    RetryableException exception = assertThrows(RetryableException.class, () -> {
+      super.testPatch();
+    });
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Override
@@ -112,9 +116,10 @@ public class DefaultClientTest extends AbstractClientTest {
   @Test
   @Override
   public void noResponseBodyForPatch() {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.noResponseBodyForPatch();
+    RetryableException exception = assertThrows(RetryableException.class, () -> {
+      super.noResponseBodyForPatch();
+    });
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test

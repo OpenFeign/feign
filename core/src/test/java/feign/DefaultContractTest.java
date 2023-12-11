@@ -15,10 +15,8 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 import org.assertj.core.api.Fail;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -26,16 +24,15 @@ import java.time.ZoneId;
 import java.util.*;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
 public class DefaultContractTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   Contract.Default contract = new Contract.Default();
 
@@ -77,9 +74,10 @@ public class DefaultContractTest {
 
   @Test
   public void tooManyBodies() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Method has too many Body");
-    parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
+      parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
+    });
+    assertThat(exception.getMessage()).contains("Method has too many Body");
   }
 
   @Test
@@ -243,22 +241,26 @@ public class DefaultContractTest {
 
   @Test
   public void formParamAndBodyParams() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Body parameters cannot be used with form parameters.");
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
-    parseAndValidateMetadata(FormParams.class,
-        "formParamAndBodyParams", String.class, String.class);
-    Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+      parseAndValidateMetadata(FormParams.class,
+          "formParamAndBodyParams", String.class, String.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    });
+    assertThat(exception.getMessage())
+        .contains("Body parameters cannot be used with form parameters.");
   }
 
   @Test
   public void bodyParamsAndformParam() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Body parameters cannot be used with form parameters.");
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
-    parseAndValidateMetadata(FormParams.class,
-        "bodyParamsAndformParam", String.class, String.class);
-    Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+      parseAndValidateMetadata(FormParams.class,
+          "bodyParamsAndformParam", String.class, String.class);
+      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    });
+    assertThat(exception.getMessage())
+        .contains("Body parameters cannot be used with form parameters.");
   }
 
   @Test
@@ -807,11 +809,12 @@ public class DefaultContractTest {
   /** Let's help folks not lose time when they mistake request line for a URI! */
   @Test
   public void missingMethod() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage(
-        "RequestLine annotation didn't start with an HTTP verb on method MissingMethod#updateSharing");
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
-    contract.parseAndValidateMetadata(MissingMethod.class);
+      contract.parseAndValidateMetadata(MissingMethod.class);
+    });
+    assertThat(exception.getMessage()).contains(
+        "RequestLine annotation didn't start with an HTTP verb on method MissingMethod#updateSharing");
   }
 
   interface StaticMethodOnInterface {
@@ -866,10 +869,11 @@ public class DefaultContractTest {
 
   @Test
   public void errorMessageOnMixedContracts() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("are not used by contract Default");
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
-    contract.parseAndValidateMetadata(MixedAnnotations.class);
+      contract.parseAndValidateMetadata(MixedAnnotations.class);
+    });
+    assertThat(exception.getMessage()).contains("are not used by contract Default");
   }
 
   interface MixedAnnotations {

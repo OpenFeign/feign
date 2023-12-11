@@ -16,9 +16,7 @@ package feign.sax;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Util;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.IOException;
 import java.text.ParseException;
@@ -28,6 +26,7 @@ import feign.Response;
 import feign.codec.Decoder;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("deprecation")
 public class SAXDecoderTest {
@@ -43,8 +42,6 @@ public class SAXDecoderTest {
       + "    </ns1:getNeustarNetworkStatusResponse>\n"//
       + "  </soap:Body>\n"//
       + "</soap:Envelope>";
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   Decoder decoder = SAXDecoder.builder() //
       .registerContentHandler(NetworkStatus.class,
           new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
@@ -65,10 +62,11 @@ public class SAXDecoderTest {
 
   @Test
   public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("type int not in configured handlers");
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
-    decoder.decode(statusFailedResponse(), int.class);
+      decoder.decode(statusFailedResponse(), int.class);
+    });
+    assertThat(exception.getMessage()).contains("type int not in configured handlers");
   }
 
   private Response statusFailedResponse() {

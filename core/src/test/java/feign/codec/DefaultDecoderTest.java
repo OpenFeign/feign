@@ -15,6 +15,7 @@ package feign.codec;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request.HttpMethod;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -22,9 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 import feign.Request;
 import feign.Response;
@@ -32,9 +31,6 @@ import feign.Util;
 
 @SuppressWarnings("deprecation")
 public class DefaultDecoderTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   private final Decoder decoder = new Decoder.Default();
 
@@ -61,10 +57,11 @@ public class DefaultDecoderTest {
 
   @Test
   public void testRefusesToDecodeOtherTypes() throws Exception {
-    thrown.expect(DecodeException.class);
-    thrown.expectMessage(" is not a type supported by this decoder.");
+    Throwable exception = assertThrows(DecodeException.class, () -> {
 
-    decoder.decode(knownResponse(), Document.class);
+      decoder.decode(knownResponse(), Document.class);
+    });
+    assertThat(exception.getMessage()).contains(" is not a type supported by this decoder.");
   }
 
   private Response knownResponse() {

@@ -19,6 +19,7 @@ import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -31,14 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class UtilTest {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void removesEmptyStrings() {
@@ -134,25 +130,27 @@ public class UtilTest {
 
   @Test
   public void checkArgumentInputFalseNotNullNullOutputIllegalArgumentException() {
-    // Arrange
-    final boolean expression = false;
-    final String errorMessageTemplate = "";
-    final Object[] errorMessageArgs = null;
-    // Act
-    thrown.expect(IllegalArgumentException.class);
-    Util.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      // Arrange
+      final boolean expression = false;
+      final String errorMessageTemplate = "";
+      final Object[] errorMessageArgs = null;
+      Util.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
+      // Method is not expected to return due to exception thrown
+    });
     // Method is not expected to return due to exception thrown
   }
 
   @Test
   public void checkNotNullInputNullNotNullNullOutputNullPointerException() {
-    // Arrange
-    final Object reference = null;
-    final String errorMessageTemplate = "";
-    final Object[] errorMessageArgs = null;
-    // Act
-    thrown.expect(NullPointerException.class);
-    Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> {
+      // Arrange
+      final Object reference = null;
+      final String errorMessageTemplate = "";
+      final Object[] errorMessageArgs = null;
+      Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
+      // Method is not expected to return due to exception thrown
+    });
     // Method is not expected to return due to exception thrown
   }
 
@@ -170,13 +168,14 @@ public class UtilTest {
 
   @Test
   public void checkStateInputFalseNotNullNullOutputIllegalStateException() {
-    // Arrange
-    final boolean expression = false;
-    final String errorMessageTemplate = "";
-    final Object[] errorMessageArgs = null;
-    // Act
-    thrown.expect(IllegalStateException.class);
-    Util.checkState(expression, errorMessageTemplate, errorMessageArgs);
+    assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
+      // Arrange
+      final boolean expression = false;
+      final String errorMessageTemplate = "";
+      final Object[] errorMessageArgs = null;
+      Util.checkState(expression, errorMessageTemplate, errorMessageArgs);
+      // Method is not expected to return due to exception thrown
+    });
     // Method is not expected to return due to exception thrown
   }
 

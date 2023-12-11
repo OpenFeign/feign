@@ -54,15 +54,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import static feign.Util.*;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("deprecation")
 public class FeignUnderAsyncTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
 
@@ -431,14 +430,15 @@ public class FeignUnderAsyncTest {
   @Test
   public void canOverrideErrorDecoder() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("bad zone name");
 
     TestInterface api = new TestInterfaceBuilder()
         .errorDecoder(new IllegalArgumentExceptionOn400())
         .target("http://localhost:" + server.getPort());
 
-    api.post();
+    Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
+      api.post();
+    });
+    assertThat(exception.getMessage()).contains("bad zone name");
   }
 
   @Test
@@ -471,8 +471,6 @@ public class FeignUnderAsyncTest {
   @Test
   public void doesntRetryAfterResponseIsSent() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("timeout reading POST http://");
 
     TestInterface api = new TestInterfaceBuilder()
         .decoder(new Decoder() {
@@ -482,7 +480,10 @@ public class FeignUnderAsyncTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    api.post();
+    Throwable exception = assertThrows(FeignException.class, () -> {
+      api.post();
+    });
+    assertThat(exception.getMessage()).contains("timeout reading POST http://");
   }
 
   @Test
@@ -570,7 +571,6 @@ public class FeignUnderAsyncTest {
   @Test
   public void okIfDecodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(DecodeException.class);
 
     TestInterface api = new TestInterfaceBuilder()
         .decoder(new Decoder() {
@@ -580,14 +580,14 @@ public class FeignUnderAsyncTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    api.post();
+    assertThrows(DecodeException.class, () -> {
+      api.post();
+    });
   }
 
   @Test
   public void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(DecodeException.class);
-    thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterface api = new TestInterfaceBuilder()
         .dismiss404()
@@ -598,25 +598,28 @@ public class FeignUnderAsyncTest {
             throw new NoSuchElementException();
           }
         }).target("http://localhost:" + server.getPort());
-    api.post();
+    DecodeException exception = assertThrows(DecodeException.class, () -> {
+      api.post();
+    });
+    assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
   }
 
   @Test
   public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(IllegalArgumentException.class);
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      server.enqueue(new MockResponse().setResponseCode(404));
 
-    TestInterface api = new TestInterfaceBuilder()
-        .dismiss404()
-        .errorDecoder(new IllegalArgumentExceptionOn404())
-        .target("http://localhost:" + server.getPort());
-    api.queryMap(Collections.<String, Object>emptyMap());
+      TestInterface api = new TestInterfaceBuilder()
+          .dismiss404()
+          .errorDecoder(new IllegalArgumentExceptionOn404())
+          .target("http://localhost:" + server.getPort());
+      api.queryMap(Collections.<String, Object>emptyMap());
+    });
   }
 
   @Test
   public void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(EncodeException.class);
 
     TestInterface api = new TestInterfaceBuilder()
         .encoder(new Encoder() {
@@ -626,7 +629,9 @@ public class FeignUnderAsyncTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    api.body(Arrays.asList("foo"));
+    assertThrows(EncodeException.class, () -> {
+      api.body(Arrays.asList("foo"));
+    });
   }
 
   @Test

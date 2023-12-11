@@ -13,22 +13,19 @@
  */
 package feign;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import java.util.List;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests interface inheritance defined per {@link Contract.Default} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
 public class DefaultContractInheritanceTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   Contract.Default contract = new Contract.Default();
 
@@ -59,9 +56,11 @@ public class DefaultContractInheritanceTest {
 
   @Test
   public void parameterizedApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
-    contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
+      contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
+    });
+    assertThat(exception.getMessage())
+        .contains("Parameterized types unsupported: SimpleParameterizedBaseApi");
   }
 
   interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
@@ -159,9 +158,11 @@ public class DefaultContractInheritanceTest {
 
   @Test
   public void multipleInheritanceDoneWrong() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Only single inheritance supported: MultipleInheritanceDoneWrong");
-    contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class);
+    Throwable exception = assertThrows(IllegalStateException.class, () -> {
+      contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class);
+    });
+    assertThat(exception.getMessage())
+        .contains("Only single inheritance supported: MultipleInheritanceDoneWrong");
   }
 
   @Test

@@ -15,6 +15,7 @@ package feign.hystrix;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.isA;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
@@ -34,9 +35,6 @@ import rx.Single;
 import rx.observers.TestSubscriber;
 
 public class HystrixBuilderTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
 
@@ -157,11 +155,6 @@ public class HystrixBuilderTest {
 
   @Test
   public void errorInFallbackHasExpectedBehavior() {
-    thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("GitHub#contributors(String,String) failed and fallback failed.");
-    thrown.expectCause(
-        isA(FeignException.class)); // as opposed to RuntimeException (from the fallback)
-
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final GitHub fallback = (owner, repo) -> {
@@ -170,7 +163,11 @@ public class HystrixBuilderTest {
 
     final GitHub api = target(GitHub.class, "http://localhost:" + server.getPort(), fallback);
 
-    api.contributors("Netflix", "feign");
+    HystrixRuntimeException exception = assertThrows(HystrixRuntimeException.class, () -> {
+      api.contributors("Netflix", "feign");
+    });
+    assertThat(exception).hasCauseInstanceOf(FeignException.class)
+        .hasMessage("GitHub#contributors(String,String) failed and fallback failed.");
   }
 
   protected <E> E target(Class<E> api, String url) {
@@ -190,15 +187,16 @@ public class HystrixBuilderTest {
 
   @Test
   public void hystrixRuntimeExceptionPropagatesOnException() {
-    thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("GitHub#contributors(String,String) failed and no fallback available.");
-    thrown.expectCause(isA(FeignException.class));
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final GitHub api = target(GitHub.class, "http://localhost:" + server.getPort());
 
-    api.contributors("Netflix", "feign");
+    HystrixRuntimeException exception = assertThrows(HystrixRuntimeException.class, () -> {
+      api.contributors("Netflix", "feign");
+    });
+    assertThat(exception).hasCauseInstanceOf(FeignException.class)
+        .hasMessage("GitHub#contributors(String,String) failed and no fallback available.");
   }
 
   @Test

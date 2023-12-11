@@ -14,16 +14,18 @@
 package feign;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import feign.codec.DecodeException;
 import java.net.SocketTimeoutException;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author pengfei.zhao
@@ -48,9 +50,6 @@ public class OptionsTest {
     String get();
   }
 
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-
   @Test
   public void socketTimeoutTest() {
     final MockWebServer server = new MockWebServer();
@@ -60,10 +59,10 @@ public class OptionsTest {
         .options(new Request.Options(1000, 1000))
         .target(OptionsInterface.class, server.url("/").toString());
 
-    thrown.expect(FeignException.class);
-    thrown.expectCause(CoreMatchers.isA(SocketTimeoutException.class));
-
-    api.get();
+    FeignException exception = assertThrows(FeignException.class, () -> {
+      api.get();
+    });
+    assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test
@@ -110,9 +109,13 @@ public class OptionsTest {
     });
     thread.start();
     thread.join();
-    thrown.expect(FeignException.class);
-    thrown.expectCause(CoreMatchers.isA(SocketTimeoutException.class));
-    throw exceptionAtomicReference.get();
+
+
+
+    FeignException exception = assertThrows(FeignException.class, () -> {
+      throw exceptionAtomicReference.get();
+    });
+    assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test

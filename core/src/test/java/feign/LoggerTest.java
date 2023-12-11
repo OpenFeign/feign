@@ -34,19 +34,13 @@ import java.util.concurrent.TimeUnit;
 import feign.Logger.Level;
 import feign.Request.ProtocolVersion;
 import static java.util.Objects.nonNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static feign.Util.enumForName;
 
 @RunWith(Enclosed.class)
 public class LoggerTest {
-
-  public final ExpectedException thrown = ExpectedException.none();
   public final MockWebServer server = new MockWebServer();
   public final RecordingLogger logger = new RecordingLogger();
-
-  /** Ensure expected exception handling is done before logger rule. */
-  @Rule
-  public final RuleChain chain = RuleChain.outerRule(server).around(logger).around(thrown);
-
 
   interface SendsStuff {
 
@@ -228,13 +222,13 @@ public class LoggerTest {
     @Test
     public void levelEmitsOnReadTimeout() {
       server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
-      thrown.expect(FeignException.class);
 
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
-          .options(new Request.Options(10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS,
-              true))
+          .options(
+              new Request.Options(10 * 1000, TimeUnit.MILLISECONDS, 50, TimeUnit.MILLISECONDS,
+                  true))
           .retryer(new Retryer() {
             @Override
             public void continueOrPropagate(RetryableException e) {
@@ -248,7 +242,9 @@ public class LoggerTest {
           })
           .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
-      api.login("netflix", "denominator", "password");
+      assertThrows(FeignException.class, () -> {
+        api.login("netflix", "denominator", "password");
+      });
     }
   }
 
@@ -306,9 +302,9 @@ public class LoggerTest {
           })
           .target(SendsStuff.class, "http://non-exist.invalid");
 
-      thrown.expect(FeignException.class);
-
-      api.login("netflix", "denominator", "password");
+      assertThrows(FeignException.class, () -> {
+        api.login("netflix", "denominator", "password");
+      });
     }
   }
 
@@ -368,9 +364,9 @@ public class LoggerTest {
           })
           .target(SendsStuff.class, "http://non-exist.invalid");
 
-      thrown.expect(FeignException.class);
-
-      api.login("netflix", "denominator", "password");
+      assertThrows(FeignException.class, () -> {
+        api.login("netflix", "denominator", "password");
+      });
     }
   }
 
@@ -400,7 +396,6 @@ public class LoggerTest {
 
     @Test
     public void retryEmits() {
-      thrown.expect(FeignException.class);
 
       SendsStuff api = Feign.builder()
           .logger(logger)
@@ -424,7 +419,9 @@ public class LoggerTest {
           })
           .target(SendsStuff.class, "http://non-exist.invalid");
 
-      api.login("netflix", "denominator", "password");
+      assertThrows(FeignException.class, () -> {
+        api.login("netflix", "denominator", "password");
+      });
     }
   }
 

@@ -14,31 +14,33 @@
 package feign.ribbon;
 
 import com.netflix.client.ClientException;
+import feign.codec.DecodeException;
 import java.io.IOException;
 import java.net.ConnectException;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.hamcrest.CoreMatchers.isA;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PropagateFirstIOExceptionTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
   @Test
   public void propagatesNestedIOE() throws IOException {
-    thrown.expect(IOException.class);
+    assertThatExceptionOfType(IOException.class).isThrownBy(() -> {
 
-    RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
+      RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
+    });
   }
 
   @Test
   public void propagatesFirstNestedIOE() throws IOException {
-    thrown.expect(IOException.class);
-    thrown.expectCause(isA(IOException.class));
-
-    RibbonClient.propagateFirstIOException(new ClientException(new IOException(new IOException())));
+    IOException exception = assertThrows(IOException.class, () -> {
+      RibbonClient
+          .propagateFirstIOException(new ClientException(new IOException(new IOException())));
+    });
+    assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
   /**
@@ -47,10 +49,11 @@ public class PropagateFirstIOExceptionTest {
    */
   @Test
   public void propagatesDoubleNestedIOE() throws IOException {
-    thrown.expect(ConnectException.class);
+    assertThatExceptionOfType(ConnectException.class).isThrownBy(() -> {
 
-    RibbonClient.propagateFirstIOException(
-        new ClientException(new RuntimeException(new ConnectException())));
+      RibbonClient.propagateFirstIOException(
+          new ClientException(new RuntimeException(new ConnectException())));
+    });
   }
 
   @Test

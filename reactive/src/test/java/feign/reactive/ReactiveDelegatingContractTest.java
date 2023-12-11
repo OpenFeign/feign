@@ -19,22 +19,19 @@ import feign.RequestLine;
 import feign.reactive.ReactiveDelegatingContract;
 import io.reactivex.Flowable;
 import java.util.stream.Stream;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class ReactiveDelegatingContractTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
   @Test
   public void onlyReactiveReturnTypesSupported() {
-    this.thrown.expect(IllegalArgumentException.class);
-    Contract contract = new ReactiveDelegatingContract(new Contract.Default());
-    contract.parseAndValidateMetadata(TestSynchronousService.class);
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+      contract.parseAndValidateMetadata(TestSynchronousService.class);
+    });
   }
 
   @Test
@@ -51,9 +48,10 @@ public class ReactiveDelegatingContractTest {
 
   @Test
   public void streamsAreNotSupported() {
-    this.thrown.expect(IllegalArgumentException.class);
-    Contract contract = new ReactiveDelegatingContract(new Contract.Default());
-    contract.parseAndValidateMetadata(StreamsService.class);
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+      contract.parseAndValidateMetadata(StreamsService.class);
+    });
   }
 
   public interface TestSynchronousService {

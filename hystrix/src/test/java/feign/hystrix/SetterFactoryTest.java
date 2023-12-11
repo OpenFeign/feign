@@ -17,10 +17,11 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import feign.RequestLine;
+import static org.assertj.core.api.Assertions.assertThat;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -32,14 +33,10 @@ public class SetterFactoryTest {
   }
 
   @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
   public void customSetter() {
-    thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("POST / failed and no fallback available.");
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
@@ -55,6 +52,9 @@ public class SetterFactoryTest {
         .setterFactory(commandKeyIsRequestLine)
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.invoke();
+    Throwable exception = assertThrows(HystrixRuntimeException.class, () -> {
+      api.invoke();
+    });
+    assertThat(exception.getMessage()).contains("POST / failed and no fallback available.");
   }
 }

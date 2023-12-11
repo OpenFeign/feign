@@ -16,6 +16,7 @@ package feign.codec;
 import static feign.Util.RETRY_AFTER;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -28,15 +29,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("deprecation")
 public class DefaultErrorDecoderTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
@@ -44,8 +40,6 @@ public class DefaultErrorDecoderTest {
 
   @Test
   public void throwsFeignException() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("[500 Internal server error] during [GET] to [/api] [Service#foo()]: []");
 
     Response response = Response.builder()
         .status(500)
@@ -54,7 +48,11 @@ public class DefaultErrorDecoderTest {
         .headers(headers)
         .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    Throwable exception = assertThrows(FeignException.class, () -> {
+      throw errorDecoder.decode("Service#foo()", response);
+    });
+    assertThat(exception.getMessage())
+        .contains("[500 Internal server error] during [GET] to [/api] [Service#foo()]: []");
   }
 
   @Test
@@ -125,8 +123,6 @@ public class DefaultErrorDecoderTest {
 
   @Test
   public void retryAfterHeaderThrowsRetryableException() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: []");
 
     headers.put(RETRY_AFTER, Collections.singletonList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response = Response.builder()
@@ -136,7 +132,11 @@ public class DefaultErrorDecoderTest {
         .headers(headers)
         .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    Throwable exception = assertThrows(FeignException.class, () -> {
+      throw errorDecoder.decode("Service#foo()", response);
+    });
+    assertThat(exception.getMessage())
+        .contains("[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: []");
   }
 
   @Test

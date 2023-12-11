@@ -17,6 +17,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
 import java.util.Arrays;
@@ -24,14 +25,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class RequestTemplateTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   /**
    * Avoid depending on guava solely for map literals.
@@ -418,9 +414,11 @@ public class RequestTemplateTest {
   @SuppressWarnings("deprecation")
   @Test
   public void uriStuffedIntoMethod() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
-    new RequestTemplate().method("/path?queryParam={queryParam}");
+    Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
+      new RequestTemplate().method("/path?queryParam={queryParam}");
+    });
+    assertThat(exception.getMessage())
+        .contains("Invalid HTTP Method: /path?queryParam={queryParam}");
   }
 
   @Test

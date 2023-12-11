@@ -15,15 +15,14 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.ws.soap.SOAPFaultException;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -34,14 +33,8 @@ import feign.jaxb.JAXBContextFactory;
 @SuppressWarnings("deprecation")
 public class SOAPFaultDecoderTest {
 
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-
   @Test
   public void soapDecoderThrowsSOAPFaultException() throws IOException {
-
-    thrown.expect(SOAPFaultException.class);
-    thrown.expectMessage("Processing error");
 
     Response response = Response.builder()
         .status(200)
@@ -51,9 +44,14 @@ public class SOAPFaultDecoderTest {
         .body(getResourceBytes("/samples/SOAP_1_2_FAULT.xml"))
         .build();
 
-    new SOAPDecoder.Builder().withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
-        .withJAXBContextFactory(new JAXBContextFactory.Builder().build()).build()
-        .decode(response, Object.class);
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder().withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build()).build();
+    Throwable exception = assertThrows(SOAPFaultException.class, () -> {
+      decoder
+          .decode(response, Object.class);
+    });
+    assertThat(exception.getMessage()).contains("Processing error");
   }
 
   @Test

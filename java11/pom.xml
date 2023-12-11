@@ -29,10 +29,7 @@
   <properties>
     <!-- override default bytecode version for src/main from parent pom -->
     <main.java.version>11</main.java.version>
-    <main.signature.artifact>java18</main.signature.artifact>
     <main.basedir>${project.basedir}/..</main.basedir>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -66,17 +63,4 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <configuration>
-          <!-- skipping execution, as plugin is not able to handle java 11 -->
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-
-    </plugins>
-  </build>
 </project>

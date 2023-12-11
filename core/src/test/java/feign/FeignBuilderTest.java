@@ -14,7 +14,8 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;

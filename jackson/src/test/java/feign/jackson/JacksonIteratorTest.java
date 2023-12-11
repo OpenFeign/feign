@@ -16,7 +16,9 @@ package feign.jackson;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.hamcrest.core.Is.isA;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -31,15 +33,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("deprecation")
 public class JacksonIteratorTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void shouldDecodePrimitiveArrays() throws IOException {
@@ -79,11 +77,11 @@ public class JacksonIteratorTest {
 
   @Test
   public void malformedObjectThrowsDecodeException() throws IOException {
-    thrown.expect(DecodeException.class);
-    thrown.expectCause(isA(IOException.class));
-
-    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).toIterable()
-        .containsOnly(new User("bob"));
+    DecodeException exception = assertThrows(DecodeException.class, () -> {
+      assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).toIterable()
+          .containsOnly(new User("bob"));
+    });
+    assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
   @Test
@@ -93,12 +91,13 @@ public class JacksonIteratorTest {
 
   @Test
   public void unmodifiable() throws IOException {
-    thrown.expect(UnsupportedOperationException.class);
+    assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> {
 
-    JacksonIterator<String> it = iterator(String.class, "[\"test\"]");
+      JacksonIterator<String> it = iterator(String.class, "[\"test\"]");
 
-    assertThat(it).toIterable().containsExactly("test");
-    it.remove();
+      assertThat(it).toIterable().containsExactly("test");
+      it.remove();
+    });
   }
 
   @Test
@@ -145,12 +144,11 @@ public class JacksonIteratorTest {
         .body(inputStream, jsonBytes.length)
         .build();
 
-    try {
-      thrown.expect(DecodeException.class);
+    assertThrows(DecodeException.class, () -> {
       assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1);
-    } finally {
-      assertThat(closed.get()).isTrue();
-    }
+    });
+
+    assertThat(closed.get()).isTrue();
   }
 
   static class User extends LinkedHashMap<String, Object> {

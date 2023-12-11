@@ -22,7 +22,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class FallbackFactoryTest {
@@ -32,8 +31,6 @@ public class FallbackFactoryTest {
     String invoke();
   }
 
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   @Rule
   public final MockWebServer server = new MockWebServer();
 

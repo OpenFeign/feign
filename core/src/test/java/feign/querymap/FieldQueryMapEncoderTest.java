@@ -14,9 +14,7 @@
 package feign.querymap;
 
 import feign.Param;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,9 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test for {@link FieldQueryMapEncoder}
  */
 public class FieldQueryMapEncoderTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
 

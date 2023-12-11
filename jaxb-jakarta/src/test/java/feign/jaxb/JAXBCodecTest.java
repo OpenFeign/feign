@@ -13,6 +13,7 @@
  */
 package feign.jaxb;
 
+import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -28,7 +29,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import org.hamcrest.CoreMatchers;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import javax.xml.XMLConstants;
@@ -37,6 +37,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.net.http.HttpTimeoutException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -44,12 +45,10 @@ import java.util.Objects;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("deprecation")
 public class JAXBCodecTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void encodesXml() throws Exception {
@@ -67,19 +66,20 @@ public class JAXBCodecTest {
 
   @Test
   public void doesntEncodeParameterizedTypes() throws Exception {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage(
+    Throwable exception = assertThrows(UnsupportedOperationException.class, () -> {
+
+      class ParameterizedHolder {
+
+        Map<String, ?> field;
+      }
+      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+      RequestTemplate template = new RequestTemplate();
+      new JAXBEncoder(new JAXBContextFactory.Builder().build())
+          .encode(Collections.emptyMap(), parameterized, template);
+    });
+    assertThat(exception.getMessage()).contains(
         "JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
-
-    class ParameterizedHolder {
-
-      Map<String, ?> field;
-    }
-    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
-
-    RequestTemplate template = new RequestTemplate();
-    new JAXBEncoder(new JAXBContextFactory.Builder().build())
-        .encode(Collections.emptyMap(), parameterized, template);
   }
 
   @Test
@@ -191,27 +191,28 @@ public class JAXBCodecTest {
 
   @Test
   public void doesntDecodeParameterizedTypes() throws Exception {
-    thrown.expect(feign.codec.DecodeException.class);
-    thrown.expectMessage(
-        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"
+    Throwable exception = assertThrows(feign.codec.DecodeException.class, () -> {
+
+      class ParameterizedHolder {
+
+        Map<String, ?> field;
+      }
+      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+
+      Response response = Response.builder()
+          .status(200)
+          .reason("OK")
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .headers(Collections.<String, Collection<String>>emptyMap())
+          .body("<foo/>", UTF_8)
+          .build();
+
+      new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+    });
+    assertThat(exception.getMessage())
+        .contains("java.util.Map is an interface, and JAXB can't handle interfaces.\n"
             + "\tthis problem is related to the following location:\n"
             + "\t\tat java.util.Map");
-
-    class ParameterizedHolder {
-
-      Map<String, ?> field;
-    }
-    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
-
-    Response response = Response.builder()
-        .status(200)
-        .reason("OK")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(Collections.<String, Collection<String>>emptyMap())
-        .body("<foo/>", UTF_8)
-        .build();
-
-    new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
   }
 
   @XmlRootElement
@@ -269,9 +270,6 @@ public class JAXBCodecTest {
 
   @Test
   public void decodeThrowsExceptionWhenUnmarshallingFailsWithSetSchema() throws Exception {
-    thrown.expect(DecodeException.class);
-    thrown.expectCause(CoreMatchers.instanceOf(UnmarshalException.class));
-    thrown.expectMessage("'Test' is not a valid value for 'integer'.");
 
     String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
         + "<value>Test</value></mockIntObject>";
@@ -286,7 +284,11 @@ public class JAXBCodecTest {
 
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerSchema(getMockIntObjSchema()).build();
-    new JAXBDecoder(factory).decode(response, MockIntObject.class);
+    DecodeException exception = assertThrows(DecodeException.class, () -> {
+      new JAXBDecoder(factory).decode(response, MockIntObject.class);
+    });
+    assertThat(exception).hasCauseInstanceOf(UnmarshalException.class)
+        .hasMessageContaining("'Test' is not a valid value for 'integer'.");
   }
 
   @Test
@@ -313,10 +315,6 @@ public class JAXBCodecTest {
 
   @Test
   public void encodeThrowsExceptionWhenMarshallingFailsWithSetSchema() throws Exception {
-    thrown.expect(EncodeException.class);
-    thrown.expectCause(CoreMatchers.instanceOf(MarshalException.class));
-    thrown.expectMessage("The content of element 'mockIntObject' is not complete.");
-
     JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
         .withMarshallerSchema(getMockIntObjSchema())
         .build();
@@ -324,7 +322,11 @@ public class JAXBCodecTest {
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
     RequestTemplate template = new RequestTemplate();
-    encoder.encode(new MockIntObject(), MockIntObject.class, template);
+    EncodeException exception = assertThrows(EncodeException.class, () -> {
+      encoder.encode(new MockIntObject(), MockIntObject.class, template);
+    });
+    assertThat(exception).hasCauseInstanceOf(MarshalException.class)
+        .hasMessageContaining("The content of element 'mockIntObject' is not complete.");
   }
 
   @Test

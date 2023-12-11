@@ -13,19 +13,15 @@
  */
 package feign;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Retryer.Default;
 
 @SuppressWarnings("deprecation")
 public class RetryerTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   private final static Request REQUEST = Request
       .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
@@ -53,9 +49,9 @@ public class RetryerTest {
     retryer.continueOrPropagate(e);
     assertThat(retryer.attempt).isEqualTo(5);
     assertThat(retryer.sleptForMillis).isEqualTo(1218);
-
-    thrown.expect(RetryableException.class);
-    retryer.continueOrPropagate(e);
+    assertThrows(RetryableException.class, () -> {
+      retryer.continueOrPropagate(e);
+    });
   }
 
   @Test

@@ -14,11 +14,10 @@
 package feign.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.*;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +33,6 @@ import feign.mock.MockClient;
 import feign.mock.MockTarget;
 
 public class SpringContractTest {
-
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   private MockClient mockClient;
   private HealthResource resource;
@@ -218,9 +213,11 @@ public class SpringContractTest {
 
   @Test
   public void notAHttpMethod() {
-    thrown.expectMessage("is not a method handled by feign");
+    Throwable exception = assertThrows(Exception.class, () -> {
 
-    resource.missingResourceExceptionHandler();
+      resource.missingResourceExceptionHandler();
+    });
+    assertThat(exception.getMessage()).contains("is not a method handled by feign");
   }
 
   @Test
