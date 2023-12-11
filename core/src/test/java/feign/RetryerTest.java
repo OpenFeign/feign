@@ -15,7 +15,6 @@ package feign;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.rules.ExpectedException;
 import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,7 +89,7 @@ public class RetryerTest {
       Thread.interrupted(); // reset interrupted flag in case it wasn't
       fail("Retryer continued despite interruption");
     } catch (RetryableException e) {
-      Assertions.assertTrue(Thread.interrupted(), "Interrupted status not reset");
+      assertThat(Thread.interrupted()).as("Interrupted status not reset").isTrue();
       assertThat(retryer.attempt).as("Retry attempt not registered as expected").isEqualTo(2);
       assertThat(e).as("Unexpected exception found").isEqualTo(expected);
     }

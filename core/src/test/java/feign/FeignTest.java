@@ -55,7 +55,6 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("deprecation")
@@ -1090,8 +1089,8 @@ public class FeignTest {
     Collection<String> response = api.collection();
     assertThat(response.size()).as("RedirectionInterceptor did not extract the location header")
         .isEqualTo(locations.size());
-    assertTrue(response.contains(location),
-        "RedirectionInterceptor did not extract the location header");
+    assertThat(response.contains(location))
+        .as("RedirectionInterceptor did not extract the location header").isTrue();
   }
 
   @Test

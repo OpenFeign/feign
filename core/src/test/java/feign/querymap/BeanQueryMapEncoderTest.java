@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for {@link BeanQueryMapEncoder}
@@ -60,7 +59,8 @@ public class BeanQueryMapEncoderTest {
 
     Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null getter: " + encodedMap);
+    assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null getter: " + encodedMap)
+        .isTrue();
   }
 
   @Test

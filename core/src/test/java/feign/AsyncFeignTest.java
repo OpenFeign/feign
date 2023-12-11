@@ -16,7 +16,6 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;

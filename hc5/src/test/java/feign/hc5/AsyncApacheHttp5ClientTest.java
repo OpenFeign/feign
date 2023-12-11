@@ -15,7 +15,6 @@ package feign.hc5;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;

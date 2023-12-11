@@ -20,7 +20,6 @@ import org.junit.rules.ExpectedException;
 import java.util.HashMap;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DefaultQueryMapEncoderTest {
 
@@ -48,7 +47,8 @@ public class DefaultQueryMapEncoderTest {
   public void testEncodesObject_visibleFields_emptyObject() {
     VisibleFieldsObject object = new VisibleFieldsObject();
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null fields: " + encodedMap);
+    assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null fields: " + encodedMap)
+        .isTrue();
   }
 
   @Test
@@ -66,7 +66,7 @@ public class DefaultQueryMapEncoderTest {
   public void testEncodesObject_nonVisibleFields_emptyObject() {
     QueryMapEncoderObject object = new QueryMapEncoderObject(null, null);
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null fields");
+    assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null fields").isTrue();
   }
 
   static class VisibleFieldsObject {

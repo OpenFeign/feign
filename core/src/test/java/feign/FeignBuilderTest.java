@@ -15,7 +15,6 @@ package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;
@@ -447,7 +446,7 @@ public class FeignBuilderTest {
       fail("Expected an exception");
     } catch (FeignException expected) {
     }
-    assertTrue(closed.get(), "Responses must be closed when the decoder fails");
+    assertThat(closed.get()).as("Responses must be closed when the decoder fails").isTrue();
   }
 
   interface TestInterface {

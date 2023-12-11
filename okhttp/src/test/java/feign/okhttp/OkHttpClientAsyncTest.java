@@ -14,7 +14,6 @@
 package feign.okhttp;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
