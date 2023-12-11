@@ -67,7 +67,6 @@ import okio.Buffer;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
@@ -671,7 +670,7 @@ public class AsyncFeignTest {
 
   @Ignore("FIXME random test failures when building on ubuntu, need to investigate further")
   // @ParameterizedTest
-  @ValueSource(ints = {1, 5, 10, 100, 1000})
+  // @ValueSource(ints = {1, 5, 10, 100, 1000})
   public void cancelRetry(final int expectedTryCount) throws Throwable {
     // Arrange
     final CompletableFuture<Boolean> maximumTryCompleted = new CompletableFuture<>();

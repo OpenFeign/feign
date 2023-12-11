@@ -14,9 +14,6 @@
 package feign.mock;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,8 +143,7 @@ public class RequestKeyTest {
   @Test
   public void testToString() throws Exception {
     assertThat(requestKey.toString()).startsWith("Request [GET a: ");
-    assertThat(requestKey.toString(),
-        both(containsString(" with my-header=[val] ")).and(containsString(" UTF-16]")));
+    assertThat(requestKey.toString()).contains(" with my-header=[val] ", " UTF-16]");
   }
 
   @Test
@@ -155,8 +151,7 @@ public class RequestKeyTest {
     requestKey = RequestKey.builder(HttpMethod.GET, "a").build();
 
     assertThat(requestKey.toString()).startsWith("Request [GET a: ");
-    assertThat(requestKey.toString(),
-        both(containsString(" without ")).and(containsString(" no charset")));
+    assertThat(requestKey.toString()).contains(" without ", " no charset");
   }
 
 }

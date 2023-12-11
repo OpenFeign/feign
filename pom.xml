@@ -91,11 +91,9 @@
     <slf4j.version>2.0.9</slf4j.version>
     <json.version>20231013</json.version>
 
-    <junit.version>4.13.2</junit.version>
     <junit5.version>5.10.1</junit5.version>
     <jackson.version>2.16.0</jackson.version>
     <assertj.version>3.24.2</assertj.version>
-    <hamcrest.version>2.2</hamcrest.version>
     <mockito.version>5.7.0</mockito.version>
 
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
@@ -288,22 +286,11 @@
       </dependency>
 
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>${junit5.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest</artifactId>
-        <version>${hamcrest.version}</version>
       </dependency>
 
       <dependency>
@@ -391,14 +378,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
       <scope>test</scope>
     </dependency>
 
