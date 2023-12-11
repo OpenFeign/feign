@@ -19,7 +19,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.simple.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.simple.SimpleLogger.SHOW_THREAD_NAME_KEY;
 
@@ -64,7 +64,7 @@ public final class RecordingSimpleLogger implements TestRule {
         try {
           System.setErr(new PrintStream(buff));
           base.evaluate();
-          assertEquals(expectedMessages, buff.toString());
+          assertThat(buff.toString()).isEqualTo(expectedMessages);
         } finally {
           System.setErr(stderr);
         }

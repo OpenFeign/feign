@@ -164,7 +164,7 @@ public final class Expressions {
             return null;
           }
           expanded.append(this.encode(this.getName()))
-                  .append("=");
+              .append("=");
         }
       } else {
         if (this.nameRequired) {

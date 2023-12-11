@@ -23,8 +23,8 @@ import okhttp3.mockwebserver.MockResponse;
 import org.junit.Test;
 import java.util.Collections;
 import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
@@ -83,7 +83,7 @@ public class GoogleHttpClientTest extends AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(entry("Content-Type", Collections.singletonList("text/plain")),

@@ -22,7 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import feign.QueryMapEncoder;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for {@link FieldQueryMapEncoder}
@@ -36,7 +37,8 @@ public class FieldQueryMapEncoderTest {
 
   @Test
   public void testDefaultEncoder_acceptNullValue() {
-    assertEquals("Empty map should be returned", Collections.EMPTY_MAP, encoder.encode(null));
+    assertThat(encoder.encode(null)).as("Empty map should be returned")
+        .isEqualTo(Collections.EMPTY_MAP);
   }
 
   @Test
@@ -48,7 +50,7 @@ public class FieldQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertEquals("Unexpected encoded query map", expected, encodedMap);
+    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
   }
 
   @Test
@@ -57,7 +59,7 @@ public class FieldQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertTrue("Non-empty map generated from null getter: " + encodedMap, encodedMap.isEmpty());
+    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null getter: " + encodedMap);
   }
 
   @Test
@@ -70,7 +72,7 @@ public class FieldQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertEquals("@Param ignored", expectedNames, encodedMap.keySet());
+    assertThat(encodedMap.keySet()).as("@Param ignored").isEqualTo(expectedNames);
   }
 
   class NormalObject {

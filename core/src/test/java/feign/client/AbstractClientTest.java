@@ -14,10 +14,7 @@
 package feign.client;
 
 import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.*;
 import feign.Client;
 import feign.CollectionFormat;
 import feign.Feign.Builder;
@@ -75,7 +72,7 @@ public abstract class AbstractClientTest {
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals("foo", api.patch(""));
+    assertThat(api.patch("")).isEqualTo("foo");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(entry("Accept", Collections.singletonList("text/plain")),
@@ -289,7 +286,7 @@ public abstract class AbstractClientTest {
     Integer expected = 4;
     Response response = api.post("");
     Integer actual = response.body().length();
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -301,7 +298,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
   }
 
   @Test
@@ -313,7 +310,7 @@ public abstract class AbstractClientTest {
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
   }
 
   @Test

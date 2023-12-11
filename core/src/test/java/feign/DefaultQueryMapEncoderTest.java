@@ -19,8 +19,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import java.util.HashMap;
 import java.util.Map;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DefaultQueryMapEncoderTest {
 
@@ -41,14 +41,14 @@ public class DefaultQueryMapEncoderTest {
     object.baz = "bazz";
 
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertEquals("Unexpected encoded query map", expected, encodedMap);
+    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
   }
 
   @Test
   public void testEncodesObject_visibleFields_emptyObject() {
     VisibleFieldsObject object = new VisibleFieldsObject();
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertTrue("Non-empty map generated from null fields: " + encodedMap, encodedMap.isEmpty());
+    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null fields: " + encodedMap);
   }
 
   @Test
@@ -59,14 +59,14 @@ public class DefaultQueryMapEncoderTest {
     QueryMapEncoderObject object = new QueryMapEncoderObject("fooz", "barz");
 
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertEquals("Unexpected encoded query map", expected, encodedMap);
+    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
   }
 
   @Test
   public void testEncodesObject_nonVisibleFields_emptyObject() {
     QueryMapEncoderObject object = new QueryMapEncoderObject(null, null);
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertTrue("Non-empty map generated from null fields", encodedMap.isEmpty());
+    assertTrue(encodedMap.isEmpty(), "Non-empty map generated from null fields");
   }
 
   static class VisibleFieldsObject {

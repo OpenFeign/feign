@@ -19,32 +19,31 @@ import feign.Types;
 import feign.codec.Decoder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
 public class ReactorDecoder implements Decoder {
 
-    private final Decoder delegate;
+  private final Decoder delegate;
 
-    public ReactorDecoder(Decoder decoder) {
-        this.delegate = decoder;
+  public ReactorDecoder(Decoder decoder) {
+    this.delegate = decoder;
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException, FeignException {
+    Class<?> rawType = Types.getRawType(type);
+    if (rawType.isAssignableFrom(Mono.class)) {
+      Type lastType = Types.resolveLastTypeParameter(type, Mono.class);
+      return delegate.decode(response, lastType);
+    }
+    if (rawType.isAssignableFrom(Flux.class)) {
+      Type lastType = Types.resolveLastTypeParameter(type, Flux.class);
+      Type listType = Types.parameterize(List.class, lastType);
+      return delegate.decode(response, listType);
     }
 
-    @Override
-    public Object decode(Response response, Type type) throws IOException, FeignException {
-        Class<?> rawType = Types.getRawType(type);
-        if (rawType.isAssignableFrom(Mono.class)) {
-            Type lastType = Types.resolveLastTypeParameter(type, Mono.class);
-            return delegate.decode(response, lastType);
-        }
-        if (rawType.isAssignableFrom(Flux.class)) {
-            Type lastType = Types.resolveLastTypeParameter(type, Flux.class);
-            Type listType = Types.parameterize(List.class, lastType);
-            return delegate.decode(response, listType);
-        }
-
-        return delegate.decode(response, type);
-    }
+    return delegate.decode(response, type);
+  }
 }

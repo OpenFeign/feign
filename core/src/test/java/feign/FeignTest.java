@@ -33,7 +33,6 @@ import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -51,10 +50,12 @@ import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("deprecation")
@@ -98,9 +99,9 @@ public class FeignTest {
 
     TypedResponse response = api.getWithTypedResponse();
 
-    assertEquals(200, response.status());
-    assertEquals("foo", response.body());
-    assertEquals("HTTP/1.1", response.protocolVersion().toString());
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.body()).isEqualTo("foo");
+    assertThat(response.protocolVersion().toString()).isEqualTo("HTTP/1.1");
     assertNotNull(response.headers());
     assertNotNull(response.request());
   }
@@ -489,18 +490,17 @@ public class FeignTest {
 
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterface#post()",
-        Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")));
-    assertEquals("TestInterface#uriParam(String,URI,String)",
-        Feign.configKey(TestInterface.class, TestInterface.class
-            .getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+    assertThat(Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")))
+        .isEqualTo("TestInterface#post()");
+    assertThat(Feign.configKey(TestInterface.class, TestInterface.class
+        .getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class))).isEqualTo("TestInterface#uriParam(String,URI,String)");
   }
 
   @Test
   public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   @Test
@@ -525,7 +525,7 @@ public class FeignTest {
 
     api.post();
 
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
@@ -540,7 +540,7 @@ public class FeignTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "fail");
+    assertThat("fail").isEqualTo(api.post());
   }
 
   /**
@@ -564,8 +564,8 @@ public class FeignTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "success!");
-    assertEquals(2, server.getRequestCount());
+    assertThat("success!").isEqualTo(api.post());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
@@ -644,7 +644,7 @@ public class FeignTest {
 
     api.post();
     api.post(); // if retryer instance was reused, this statement will throw an exception
-    assertEquals(4, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(4);
   }
 
   @Test
@@ -914,7 +914,7 @@ public class FeignTest {
         .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "RESPONSE!");
+    assertThat("RESPONSE!").isEqualTo(api.post());
   }
 
   @Test
@@ -1073,8 +1073,8 @@ public class FeignTest {
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
   }
 
   @Test
@@ -1088,10 +1088,10 @@ public class FeignTest {
         .target("http://localhost:" + server.getPort());
 
     Collection<String> response = api.collection();
-    assertEquals("RedirectionInterceptor did not extract the location header", locations.size(),
-        response.size());
-    assertTrue("RedirectionInterceptor did not extract the location header",
-        response.contains(location));
+    assertThat(response.size()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(locations.size());
+    assertTrue(response.contains(location),
+        "RedirectionInterceptor did not extract the location header");
   }
 
   @Test
@@ -1101,7 +1101,8 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
         .target("http://localhost:" + server.getPort());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
@@ -1111,7 +1112,8 @@ public class FeignTest {
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
         .target("http://localhost:" + server.getPort());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
@@ -1125,9 +1127,10 @@ public class FeignTest {
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
         .responseInterceptor(new ErrorInterceptor()).target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
@@ -1142,9 +1145,10 @@ public class FeignTest {
         .responseInterceptors(List.of(new RedirectionInterceptor(), new ErrorInterceptor()))
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
@@ -1163,19 +1167,20 @@ public class FeignTest {
         .responseInterceptors(List.of(new ErrorInterceptor(), new RedirectionInterceptor()))
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the redirect response body", redirectBody,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the redirect response body")
+        .isEqualTo(redirectBody);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
   public void testCallIgnoredMethod() throws Exception {
     TestInterface api = new TestInterfaceBuilder()
-            .target("http://localhost:" + server.getPort());
+        .target("http://localhost:" + server.getPort());
 
     try {
       api.ignore();
-      Assert.fail("No exception thrown");
+      fail("No exception thrown");
     } catch (Exception e) {
       assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
       assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");

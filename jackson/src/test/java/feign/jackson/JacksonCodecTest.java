@@ -43,9 +43,7 @@ import feign.RequestTemplate;
 import feign.Response;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
 public class JacksonCodecTest {
@@ -104,8 +102,8 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(zonesJson, UTF_8)
         .build();
-    assertEquals(zones,
-        new JacksonDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(new JacksonDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
@@ -116,7 +114,7 @@ public class JacksonCodecTest {
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(Collections.emptyMap())
         .build();
-    assertNull(new JacksonDecoder().decode(response, String.class));
+    assertThat(new JacksonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
@@ -128,7 +126,7 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(new byte[0])
         .build();
-    assertNull(new JacksonDecoder().decode(response, String.class));
+    assertThat(new JacksonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
@@ -148,7 +146,8 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(zonesJson, UTF_8)
         .build();
-    assertEquals(zones, decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
@@ -190,9 +189,9 @@ public class JacksonCodecTest {
             + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\"" + System.lineSeparator()
             + "}").getBytes(StandardCharsets.ISO_8859_1))
         .build();
-    assertEquals(zone.get("id"),
-        ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType()))
-            .get("id"));
+    assertThat(
+        ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType())))
+            .containsEntry("id", zone.get("id"));
   }
 
   @Test
@@ -210,9 +209,9 @@ public class JacksonCodecTest {
         .build();
     Object decoded = JacksonIteratorDecoder.create().decode(response,
         new TypeReference<Iterator<Zone>>() {}.getType());
-    assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
-    assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
-    assertEquals(zones, asList((Iterator<?>) decoded));
+    assertThat(Iterator.class.isAssignableFrom(decoded.getClass())).isTrue();
+    assertThat(Closeable.class.isAssignableFrom(decoded.getClass())).isTrue();
+    assertThat(asList((Iterator<?>) decoded)).isEqualTo(zones);
   }
 
   private <T> List<T> asList(Iterator<T> iter) {

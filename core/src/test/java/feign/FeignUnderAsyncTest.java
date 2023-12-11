@@ -53,9 +53,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import static feign.Util.*;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("deprecation")
 public class FeignUnderAsyncTest {
@@ -414,18 +415,17 @@ public class FeignUnderAsyncTest {
 
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterface#post()",
-        Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")));
-    assertEquals("TestInterface#uriParam(String,URI,String)",
-        Feign.configKey(TestInterface.class, TestInterface.class
-            .getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+    assertThat(Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")))
+        .isEqualTo("TestInterface#post()");
+    assertThat(Feign.configKey(TestInterface.class, TestInterface.class
+        .getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class))).isEqualTo("TestInterface#uriParam(String,URI,String)");
   }
 
   @Test
   public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   @Test
@@ -450,7 +450,7 @@ public class FeignUnderAsyncTest {
 
     api.post();
 
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
@@ -465,7 +465,7 @@ public class FeignUnderAsyncTest {
           }
         }).target("http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "fail");
+    assertThat("fail").isEqualTo(api.post());
   }
 
   @Test
@@ -749,7 +749,7 @@ public class FeignUnderAsyncTest {
         .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "RESPONSE!");
+    assertThat("RESPONSE!").isEqualTo(api.post());
   }
 
   @Test

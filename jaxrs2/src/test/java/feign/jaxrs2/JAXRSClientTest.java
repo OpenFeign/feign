@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.Collections;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 /**
@@ -117,7 +116,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     final Response response = api.getWithContentType();
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
@@ -136,7 +135,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     final Response response =
         api.consumesMultipleWithContentTypeHeaderAndBody("application/json;charset=utf-8", "body");
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(MapEntry.entry("Content-Type",

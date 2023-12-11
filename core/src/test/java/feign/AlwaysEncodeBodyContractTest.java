@@ -15,7 +15,6 @@ package feign;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import org.junit.Assert;
 import org.junit.Test;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
@@ -25,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AlwaysEncodeBodyContractTest {
 
@@ -97,21 +97,21 @@ public class AlwaysEncodeBodyContractTest {
         .encoder(new AllParametersSampleEncoder())
         .client(new SampleClient())
         .target(SampleTargetMultipleNonAnnotatedParameters.class, "http://localhost");
-    Assert.assertEquals("foobarchar", sampleClient1.concatenate("foo", "bar", "char"));
+    assertThat(sampleClient1.concatenate("foo", "bar", "char")).isEqualTo("foobarchar");
 
     SampleTargetNoParameters sampleClient2 = Feign.builder()
         .contract(new SampleContract())
         .encoder(new AllParametersSampleEncoder())
         .client(new SampleClient())
         .target(SampleTargetNoParameters.class, "http://localhost");
-    Assert.assertEquals("", sampleClient2.concatenate());
+    assertThat(sampleClient2.concatenate()).isEqualTo("");
 
     SampleTargetOneParameter sampleClient3 = Feign.builder()
         .contract(new SampleContract())
         .encoder(new AllParametersSampleEncoder())
         .client(new SampleClient())
         .target(SampleTargetOneParameter.class, "http://localhost");
-    Assert.assertEquals("moo", sampleClient3.concatenate("moo"));
+    assertThat(sampleClient3.concatenate("moo")).isEqualTo("moo");
   }
 
 }

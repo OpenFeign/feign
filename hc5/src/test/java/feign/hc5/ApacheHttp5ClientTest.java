@@ -14,10 +14,9 @@
 package feign.hc5;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.junit.Test;
 import java.nio.charset.StandardCharsets;
@@ -51,15 +50,15 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse().setBody("foo"));
 
-    assertEquals("foo", testInterface.withBody("foo", "bar"));
+    assertThat(testInterface.withBody("foo", "bar")).isEqualTo("foo");
     final RecordedRequest request1 = server.takeRequest();
-    assertEquals("/withBody?foo=foo", request1.getPath());
-    assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request1.getPath()).isEqualTo("/withBody?foo=foo");
+    assertThat(request1.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("bar");
 
-    assertEquals("foo", testInterface.withoutBody("foo"));
+    assertThat(testInterface.withoutBody("foo")).isEqualTo("foo");
     final RecordedRequest request2 = server.takeRequest();
-    assertEquals("/withoutBody?foo=foo", request2.getPath());
-    assertEquals("", request2.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request2.getPath()).isEqualTo("/withoutBody?foo=foo");
+    assertThat(request2.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("");
   }
 
   @Test
@@ -72,9 +71,9 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     Request.Options options = buildRequestOptions(true);
 
     Object response = testInterface.withOptions(options);
-    assertNotNull(response);
-    assertEquals("redirected", response);
-    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo("redirected");
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
   }
 
   @Test
@@ -87,10 +86,10 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
     FeignException feignException =
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
-    assertEquals(302, feignException.status());
-    assertEquals(redirectPath,
-        feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
-    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+    assertThat(feignException.status()).isEqualTo(302);
+    assertThat(feignException.responseHeaders().get("location").stream().findFirst().orElse(null))
+        .isEqualTo(redirectPath);
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
   }
 
   private JaxRsTestInterface buildTestInterface() {

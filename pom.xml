@@ -154,17 +154,6 @@
     </developer>
   </developers>
 
-  <contributors>
-    <contributor>
-      <name>Adrian Cole</name>
-      <email>acole@pivotal.io</email>
-    </contributor>
-    <contributor>
-      <name>Spencer Gibb</name>
-      <email>spencer@gibb.us</email>
-    </contributor>
-  </contributors>
-
   <distributionManagement>
     <repository>
       <id>ossrh</id>
@@ -919,4 +908,15 @@
       </build>
     </profile>
   </profiles>
+
+  <contributors>
+    <contributor>
+      <name>Adrian Cole</name>
+      <email>acole@pivotal.io</email>
+    </contributor>
+    <contributor>
+      <name>Spencer Gibb</name>
+      <email>spencer@gibb.us</email>
+    </contributor>
+  </contributors>
 </project>

@@ -17,7 +17,7 @@ import feign.Feign;
 import feign.RequestLine;
 import feign.Response;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class HttpProtocolVersionTest {
 
@@ -36,8 +36,8 @@ public class HttpProtocolVersionTest {
 
     Response response = remote.test();
 
-    assertNotNull(response.protocolVersion());
-    assertEquals("MOCK", response.protocolVersion().toString());
+    assertThat(response.protocolVersion()).isNotNull();
+    assertThat(response.protocolVersion().toString()).isEqualTo("MOCK");
   }
 
 }

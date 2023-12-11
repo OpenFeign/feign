@@ -81,8 +81,8 @@ public class InvocationContext {
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
         return TypedResponse.builder(response)
-                .body(decode(response, bodyType))
-                .build();
+            .body(decode(response, bodyType))
+            .build();
       }
 
       return decode(response, returnType);

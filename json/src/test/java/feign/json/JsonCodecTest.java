@@ -27,11 +27,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import static feign.Util.toByteArray;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 interface GitHub {
@@ -68,7 +64,7 @@ public class JsonCodecTest {
       byte[] response = toByteArray(input);
       mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign/contributors", response);
       JSONArray contributors = github.contributors("openfeign", "feign");
-      assertThat(contributors.toList(), hasSize(30));
+      assertThat(contributors.toList()).hasSize(30);
       contributors.forEach(contributor -> ((JSONObject) contributor).getString("login"));
     }
   }
@@ -82,12 +78,12 @@ public class JsonCodecTest {
         "{\"login\":\"radio-rogal\",\"contributions\":0}");
     JSONObject response = github.create("openfeign", "feign", contributor);
     Request request = mockClient.verifyOne(HttpMethod.POST, "/repos/openfeign/feign/contributors");
-    assertNotNull(request.body());
+    assertThat(request.body()).isNotNull();
     String json = new String(request.body());
-    assertThat(json, containsString("\"login\":\"radio-rogal\""));
-    assertThat(json, containsString("\"contributions\":0"));
-    assertEquals("radio-rogal", response.getString("login"));
-    assertEquals(0, response.getInt("contributions"));
+    assertThat(json).contains("\"login\":\"radio-rogal\"");
+    assertThat(json).contains("\"contributions\":0");
+    assertThat(response.getString("login")).isEqualTo("radio-rogal");
+    assertThat(response.getInt("contributions")).isEqualTo(0);
   }
 
 }

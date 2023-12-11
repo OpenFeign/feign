@@ -14,8 +14,8 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.Rule;
 import org.junit.Test;
 import feign.FeignBuilderTest.TestInterface;
@@ -44,7 +44,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -65,7 +65,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -87,7 +87,7 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");

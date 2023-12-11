@@ -15,7 +15,7 @@ package feign.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -186,7 +186,7 @@ public class JAXBCodecTest {
 
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
-    assertEquals(mock, decoder.decode(response, MockObject.class));
+    assertThat(decoder.decode(response, MockObject.class)).isEqualTo(mock);
   }
 
   @Test
@@ -307,8 +307,8 @@ public class JAXBCodecTest {
             .withUnmarshallerSchema(getMockIntObjSchema())
             .withUnmarshallerEventHandler(event -> true)
             .build();
-    assertEquals(new MockIntObject(),
-        new JAXBDecoder(factory).decode(response, MockIntObject.class));
+    assertThat(new JAXBDecoder(factory).decode(response, MockIntObject.class))
+        .isEqualTo(new MockIntObject());
   }
 
   @Test

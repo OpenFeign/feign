@@ -14,12 +14,8 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import java.io.IOException;
@@ -58,7 +54,7 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().target(TestInterface.class, url);
 
     Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -226,9 +222,9 @@ public class FeignBuilderTest {
     Decoder decoder = (response, type) -> "fail";
 
     TestInterface api = Feign.builder().decoder(decoder).target(TestInterface.class, url);
-    assertEquals("fail", api.decodedPost());
+    assertThat(api.decodedPost()).isEqualTo("fail");
 
-    assertEquals(1, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
   @Test
@@ -248,7 +244,7 @@ public class FeignBuilderTest {
     api.queryMapEncoded("ignored");
 
     assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("key1=value1", "key2=value2"));
-    assertEquals(1, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
   @Test
@@ -262,7 +258,7 @@ public class FeignBuilderTest {
     TestInterface api =
         Feign.builder().requestInterceptor(requestInterceptor).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
-    assertEquals(Util.toString(response.body().asReader(Util.UTF_8)), "response data");
+    assertThat("response data").isEqualTo(Util.toString(response.body().asReader(Util.UTF_8)));
 
     assertThat(server.takeRequest())
         .hasHeaders(MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
@@ -290,8 +286,8 @@ public class FeignBuilderTest {
     TestInterface api =
         Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
-    assertEquals(1, callCount.get());
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
+    assertThat(callCount.get()).isEqualTo(1);
 
     assertThat(server.takeRequest())
         .hasBody("request data");
@@ -328,7 +324,7 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().target(TestInterface.class, url);
 
     Response response = api.defaultMethodPassthrough();
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
     assertThat(server.takeRequest()).hasPath("/");
   }
 
@@ -359,7 +355,7 @@ public class FeignBuilderTest {
         try {
           return Util.toString(response.body().asReader(Util.UTF_8));
         } catch (IOException e) {
-          fail(e.getMessage());
+          fail("", e.getMessage());
           return null;
         } finally {
           Util.ensureClosed(response);
@@ -374,11 +370,11 @@ public class FeignBuilderTest {
         .target(TestInterface.class, url);
     Iterator<String> iterator = api.decodedLazyPost();
 
-    assertTrue(iterator.hasNext());
-    assertEquals("success!", iterator.next());
-    assertFalse(iterator.hasNext());
+    assertThat(iterator.hasNext()).isTrue();
+    assertThat(iterator.next()).isEqualTo("success!");
+    assertThat(iterator.hasNext()).isFalse();
 
-    assertEquals(1, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(1);
   }
 
   /**
@@ -451,7 +447,7 @@ public class FeignBuilderTest {
       fail("Expected an exception");
     } catch (FeignException expected) {
     }
-    assertTrue("Responses must be closed when the decoder fails", closed.get());
+    assertTrue(closed.get(), "Responses must be closed when the decoder fails");
   }
 
   interface TestInterface {

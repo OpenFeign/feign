@@ -18,26 +18,25 @@ import feign.Response;
 import feign.Types;
 import feign.codec.Decoder;
 import io.reactivex.Flowable;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 
 public class RxJavaDecoder implements Decoder {
 
-    private final Decoder delegate;
+  private final Decoder delegate;
 
-    public RxJavaDecoder(Decoder decoder) {
-        this.delegate = decoder;
+  public RxJavaDecoder(Decoder decoder) {
+    this.delegate = decoder;
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException, FeignException {
+    Class<?> rawType = Types.getRawType(type);
+    if (rawType.isAssignableFrom(Flowable.class)) {
+      Type lastType = Types.resolveLastTypeParameter(type, Flowable.class);
+      return delegate.decode(response, lastType);
     }
 
-    @Override
-    public Object decode(Response response, Type type) throws IOException, FeignException {
-        Class<?> rawType = Types.getRawType(type);
-        if (rawType.isAssignableFrom(Flowable.class)) {
-            Type lastType = Types.resolveLastTypeParameter(type, Flowable.class);
-            return delegate.decode(response, lastType);
-        }
-
-        return delegate.decode(response, type);
-    }
+    return delegate.decode(response, type);
+  }
 }

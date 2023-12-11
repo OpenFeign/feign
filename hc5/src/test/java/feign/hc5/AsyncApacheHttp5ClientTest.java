@@ -15,12 +15,10 @@ package feign.hc5;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
@@ -397,19 +395,17 @@ public class AsyncApacheHttp5ClientTest {
 
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterfaceAsync#post()",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("post")));
-    assertEquals("TestInterfaceAsync#uriParam(String,URI,String)",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("post"))).isEqualTo("TestInterfaceAsync#post()");
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class))).isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
   }
 
   @Test
   public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   private <T> T unwrap(CompletableFuture<T> cf) throws Throwable {
@@ -440,7 +436,7 @@ public class AsyncApacheHttp5ClientTest {
     final TestInterfaceAsync api = new TestInterfaceAsyncBuilder()
         .decoder((response, type) -> "fail").target("http://localhost:" + server.getPort());
 
-    assertEquals("fail", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("fail");
   }
 
   @Test
@@ -476,7 +472,7 @@ public class AsyncApacheHttp5ClientTest {
       assertThat(e.contentUTF8()).isEqualTo("Request body");
       return;
     }
-    fail();
+    fail("");
   }
 
   @Test
@@ -539,7 +535,7 @@ public class AsyncApacheHttp5ClientTest {
 
     final TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().dismiss404().decoder((response, type) -> {
-          assertEquals(404, response.status());
+          assertThat(response.status()).isEqualTo(404);
           throw new NoSuchElementException();
         }).target("http://localhost:" + server.getPort());
 
@@ -697,7 +693,7 @@ public class AsyncApacheHttp5ClientTest {
         AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals("RESPONSE!", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("RESPONSE!");
   }
 
   @Test
@@ -783,11 +779,11 @@ public class AsyncApacheHttp5ClientTest {
             .target("http://localhost:" + server.getPort());
 
     Response response = unwrap(api.response());
-    assertNotNull(response);
-    assertEquals(200, response.status());
-    assertEquals("redirectedBody", Util.toString(response.body().asReader(Util.UTF_8)));
-    assertEquals("/", server.takeRequest().getPath());
-    assertEquals("/redirected", server.takeRequest().getPath());
+    assertThat(response).isNotNull();
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("redirectedBody");
+    assertThat(server.takeRequest().getPath()).isEqualTo("/");
+    assertThat(server.takeRequest().getPath()).isEqualTo("/redirected");
   }
 
   @Test
@@ -803,11 +799,11 @@ public class AsyncApacheHttp5ClientTest {
 
     Response response = unwrap(api.response());
     final String path = response.headers().get("location").stream().findFirst().orElse(null);
-    assertNotNull(response);
-    assertNotNull(path);
-    assertEquals(302, response.status());
-    assertEquals("/", server.takeRequest().getPath());
-    assertTrue(path.contains("/redirected"));
+    assertThat(response).isNotNull();
+    assertThat(path).isNotNull();
+    assertThat(response.status()).isEqualTo(302);
+    assertThat(server.takeRequest().getPath()).isEqualTo("/");
+    assertThat(path).contains("/redirected");
   }
 
   private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {

@@ -13,9 +13,7 @@
  */
 package feign.spring;
 
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -151,8 +149,8 @@ public class SpringContractTest {
     resource.checkRequestPart("1", "hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.POST, "/health/part/1");
-    assertThat(request.requestTemplate().methodMetadata().formParams(),
-        contains("name1", "grade1"));
+    assertThat(request.requestTemplate().methodMetadata().formParams()).containsExactly("name1",
+        "grade1");
   }
 
   @Test
@@ -160,10 +158,8 @@ public class SpringContractTest {
     resource.checkRequestHeader("hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
@@ -174,10 +170,8 @@ public class SpringContractTest {
     resource.checkRequestHeaderMap(map);
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/map");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
@@ -188,10 +182,8 @@ public class SpringContractTest {
     resource.checkRequestHeaderPojo(object);
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/pojo");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
@@ -211,12 +203,10 @@ public class SpringContractTest {
   @Test
   public void inheritance() {
     final Data data = resource.getData(new Data());
-    assertThat(data, notNullValue());
+    assertThat(data).isNotNull();
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/generic");
-    assertThat(request.headers(), hasEntry(
-        "Content-Type",
-        Arrays.asList("application/json")));
+    assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
   }
 
   @Test
@@ -237,8 +227,8 @@ public class SpringContractTest {
   public void testConsumeAndProduce() {
     resource.produceText(new HashMap<>());
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
-    assertThat(request.headers(), hasEntry("Content-Type", Arrays.asList("application/json")));
-    assertThat(request.headers(), hasEntry("Accept", Arrays.asList("text/plain")));
+    assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
+    assertThat(request.headers()).containsEntry("Accept", Arrays.asList("text/plain"));
   }
 
   interface GenericResource<DTO> {

@@ -28,8 +28,7 @@ import java.util.*;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JacksonCodecTest {
 
@@ -85,8 +84,9 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(zonesJson, UTF_8)
         .build();
-    assertEquals(zones,
-        new JacksonJrDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(
+        new JacksonJrDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()))
+            .isEqualTo(zones);
   }
 
   @Test
@@ -128,8 +128,8 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(DATES_JSON, UTF_8)
         .build();
-    assertEquals(dates,
-        decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()))
+        .isEqualTo(dates);
   }
 
   @Test
@@ -150,8 +150,8 @@ public class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .body(DATES_JSON, UTF_8)
         .build();
-    assertEquals(dates,
-        decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()))
+        .isEqualTo(dates);
   }
 
   @Test
@@ -187,9 +187,8 @@ public class JacksonCodecTest {
             + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\"" + System.lineSeparator()
             + "}").getBytes(StandardCharsets.ISO_8859_1))
         .build();
-    assertEquals(zone.getId(),
-        ((Zone) new JacksonJrDecoder().decode(response, Zone.class))
-            .getId());
+    assertThat(((Zone) new JacksonJrDecoder().decode(response, Zone.class))
+        .getId()).isEqualTo(zone.getId());
   }
 
   @Test
@@ -207,8 +206,8 @@ public class JacksonCodecTest {
     Map<String, Object> map = (Map<String, Object>) new JacksonJrDecoder()
         .decode(response, new TypeReference<Map<String, Object>>() {}.getType());
 
-    assertEquals(12, map.get("id"));
-    assertEquals("jim", map.get("name"));
+    assertThat(map).containsEntry("id", 12);
+    assertThat(map).containsEntry("name", "jim");
   }
 
   public static class Zone {

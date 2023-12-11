@@ -14,7 +14,6 @@
 package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.assertj.core.api.Assertions;
 import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +58,7 @@ public class Http2ClientTest extends AbstractClientTest {
   public void testPatch() throws Exception {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    Assertions.assertThat(api.patch(""))
+    assertThat(api.patch(""))
         .contains("https://nghttp2.org/httpbin/patch");
   }
 
@@ -68,7 +67,7 @@ public class Http2ClientTest extends AbstractClientTest {
   public void noResponseBodyForPatch() {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    Assertions.assertThat(api.patch())
+    assertThat(api.patch())
         .contains("https://nghttp2.org/httpbin/patch");
   }
 
@@ -128,7 +127,7 @@ public class Http2ClientTest extends AbstractClientTest {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.getWithBody();
-    Assertions.assertThat(result)
+    assertThat(result)
         .contains("\"data\": \"some request body\"");
   }
 
@@ -137,7 +136,7 @@ public class Http2ClientTest extends AbstractClientTest {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.deleteWithBody();
-    Assertions.assertThat(result)
+    assertThat(result)
         .contains("\"data\": \"some request body\"");
   }
 

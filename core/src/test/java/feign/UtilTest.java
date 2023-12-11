@@ -19,8 +19,6 @@ import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -58,15 +56,15 @@ public class UtilTest {
 
   @Test
   public void emptyValueOf() throws Exception {
-    assertEquals(false, Util.emptyValueOf(boolean.class));
-    assertEquals(false, Util.emptyValueOf(Boolean.class));
+    assertThat(Util.emptyValueOf(boolean.class)).isEqualTo(false);
+    assertThat(Util.emptyValueOf(Boolean.class)).isEqualTo(false);
     assertThat((byte[]) Util.emptyValueOf(byte[].class)).isEmpty();
-    assertEquals(Collections.emptyList(), Util.emptyValueOf(Collection.class));
+    assertThat(Util.emptyValueOf(Collection.class)).isEqualTo(Collections.emptyList());
     assertThat(((Iterator<?>) Util.emptyValueOf(Iterator.class)).hasNext()).isFalse();
-    assertEquals(Collections.emptyList(), Util.emptyValueOf(List.class));
-    assertEquals(Collections.emptyMap(), Util.emptyValueOf(Map.class));
-    assertEquals(Collections.emptySet(), Util.emptyValueOf(Set.class));
-    assertEquals(Optional.empty(), Util.emptyValueOf(Optional.class));
+    assertThat(Util.emptyValueOf(List.class)).isEqualTo(Collections.emptyList());
+    assertThat(Util.emptyValueOf(Map.class)).isEqualTo(Collections.emptyMap());
+    assertThat(Util.emptyValueOf(Set.class)).isEqualTo(Collections.emptySet());
+    assertThat(Util.emptyValueOf(Optional.class)).isEqualTo(Optional.empty());
   }
 
   /** In other words, {@code List<String>} is as empty as {@code List<?>}. */
@@ -89,21 +87,21 @@ public class UtilTest {
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(listStringType, last);
+    assertThat(last).isEqualTo(listStringType);
   }
 
   @Test
   public void lastTypeFromInstance() throws Exception {
     Parameterized<?> instance = new ParameterizedSubtype();
     Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(String.class, last);
+    assertThat(last).isEqualTo(String.class);
   }
 
   @Test
   public void lastTypeFromAnonymous() throws Exception {
     Parameterized<?> instance = new Parameterized<Reader>() {};
     Type last = resolveLastTypeParameter(instance.getClass(), Parameterized.class);
-    assertEquals(Reader.class, last);
+    assertThat(last).isEqualTo(Reader.class);
   }
 
   @Test
@@ -113,7 +111,7 @@ public class UtilTest {
             .getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(listStringType, last);
+    assertThat(last).isEqualTo(listStringType);
   }
 
   @Test
@@ -123,7 +121,7 @@ public class UtilTest {
             .getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(listStringType, last);
+    assertThat(last).isEqualTo(listStringType);
   }
 
   @Test
@@ -131,7 +129,7 @@ public class UtilTest {
     Type context =
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_DECODER_UNBOUND").getGenericType();
     Type last = resolveLastTypeParameter(context, ParameterizedDecoder.class);
-    assertEquals(Object.class, last);
+    assertThat(last).isEqualTo(Object.class);
   }
 
   @Test
@@ -167,7 +165,7 @@ public class UtilTest {
     // Act
     final Object retval = Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
     // Assert result
-    assertEquals(0, retval);
+    assertThat(retval).isEqualTo(0);
   }
 
   @Test
@@ -189,7 +187,7 @@ public class UtilTest {
     // Act
     final String retval = Util.emptyToNull(string);
     // Assert result
-    assertEquals("AAAAAAAA", retval);
+    assertThat(retval).isEqualTo("AAAAAAAA");
   }
 
   @Test
@@ -199,7 +197,7 @@ public class UtilTest {
     // Act
     final String retval = Util.emptyToNull(string);
     // Assert result
-    assertNull(retval);
+    assertThat(retval).isNull();
   }
 
   @Test
@@ -209,7 +207,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    assertEquals(false, retval);
+    assertThat(retval).isEqualTo(false);
   }
 
   @Test
@@ -219,7 +217,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    assertEquals(true, retval);
+    assertThat(retval).isEqualTo(true);
   }
 
   @Test
@@ -229,7 +227,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    assertEquals(false, retval);
+    assertThat(retval).isEqualTo(false);
   }
 
   @Test
@@ -239,7 +237,7 @@ public class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    assertEquals(true, retval);
+    assertThat(retval).isEqualTo(true);
   }
 
   @Test

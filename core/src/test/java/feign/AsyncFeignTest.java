@@ -16,10 +16,11 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
@@ -447,19 +448,17 @@ public class AsyncFeignTest {
 
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterfaceAsync#post()",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("post")));
-    assertEquals("TestInterfaceAsync#uriParam(String,URI,String)",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("post"))).isEqualTo("TestInterfaceAsync#post()");
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class))).isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
   }
 
   @Test
   public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   private <T> T unwrap(CompletableFuture<T> cf) throws Throwable {
@@ -490,7 +489,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decoder((response, type) -> "fail")
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("fail", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("fail");
   }
 
   /**
@@ -551,7 +550,7 @@ public class AsyncFeignTest {
       assertThat(e.contentUTF8()).isEqualTo("Request body");
       return;
     }
-    fail();
+    fail("");
   }
 
   @Test
@@ -592,7 +591,7 @@ public class AsyncFeignTest {
 
     unwrap(api.post());
     unwrap(api.post()); // if retryer instance was reused, this statement will throw an exception
-    assertEquals(4, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(4);
   }
 
   @Test
@@ -907,7 +906,7 @@ public class AsyncFeignTest {
         AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals("RESPONSE!", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("RESPONSE!");
   }
 
   @Test

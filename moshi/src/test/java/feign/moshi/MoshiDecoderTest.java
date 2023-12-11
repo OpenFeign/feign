@@ -25,8 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MoshiDecoderTest {
 
@@ -62,8 +61,7 @@ public class MoshiDecoderTest {
         .body(zonesJson, UTF_8)
         .build();
 
-    assertEquals(zones,
-        new MoshiDecoder().decode(response, List.class));
+    assertThat(new MoshiDecoder().decode(response, List.class)).isEqualTo(zones);
   }
 
   private String zonesJson = ""//
@@ -94,7 +92,7 @@ public class MoshiDecoderTest {
         .request(Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null,
             Util.UTF_8))
         .build();
-    assertNull(new MoshiDecoder().decode(response, String.class));
+    assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
@@ -107,7 +105,7 @@ public class MoshiDecoderTest {
             Util.UTF_8))
         .body(new byte[0])
         .build();
-    assertNull(new MoshiDecoder().decode(response, String.class));
+    assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
   }
 
 
@@ -145,7 +143,7 @@ public class MoshiDecoderTest {
             .body(zonesJson, UTF_8)
             .build();
 
-    assertEquals(zones, decoder.decode(response, UpperZoneJSONAdapter.class));
+    assertThat(decoder.decode(response, UpperZoneJSONAdapter.class)).isEqualTo(zones);
   }
 
   @Test

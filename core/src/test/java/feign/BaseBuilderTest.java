@@ -14,8 +14,8 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -47,8 +47,8 @@ public class BaseBuilderTest {
             .isNotEmpty();
         mockedValue = ((List<Object>) mockedValue).get(0);
       }
-      assertTrue("Field was not enriched " + field, Mockito.mockingDetails(mockedValue)
-          .isMock());
+      assertTrue(Mockito.mockingDetails(mockedValue)
+          .isMock(), "Field was not enriched " + field);
       assertNotSame(builder, enriched);
     }
 

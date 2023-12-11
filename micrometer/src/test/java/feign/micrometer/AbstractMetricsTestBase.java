@@ -13,14 +13,9 @@
  */
 package feign.micrometer;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import feign.AsyncFeign;
 import feign.Capability;
 import feign.Feign;
@@ -90,25 +85,22 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
   private void assertMetricsCapability(boolean asyncClient) {
     Map<METRIC_ID, METRIC> metrics = getFeignMetrics();
-    assertThat(metrics, aMapWithSize(7));
+    assertThat(metrics).hasSize(7);
     metrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all metric names to include client name:" + metricId,
-                doesMetricIdIncludeClient(metricId)));
+            metricId -> assertThat(doesMetricIdIncludeClient(metricId))
+                .as("Expect all metric names to include client name:" + metricId).isTrue());
     metrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all metric names to include method name:" + metricId,
-                doesMetricIncludeVerb(metricId, "get")));
+            metricId -> assertThat(doesMetricIncludeVerb(metricId, "get"))
+                .as("Expect all metric names to include method name:" + metricId).isTrue());
     metrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all metric names to include host name:" + metricId,
-                doesMetricIncludeHost(metricId)));
+            metricId -> assertThat(doesMetricIncludeHost(metricId))
+                .as("Expect all metric names to include host name:" + metricId).isTrue());
 
     final Map<METRIC_ID, METRIC> clientMetrics;
     if (asyncClient) {
@@ -123,7 +115,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
               .filter(entry -> isClientMetric(entry.getKey()))
               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-    assertThat(clientMetrics, aMapWithSize(2));
+    assertThat(clientMetrics).hasSize(2);
     clientMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
@@ -133,7 +125,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
             .filter(entry -> isDecoderMetric(entry.getKey()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-    assertThat(decoderMetrics, aMapWithSize(2));
+    assertThat(decoderMetrics).hasSize(2);
     decoderMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
         .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
@@ -167,13 +159,11 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
       source.get("0x3456789");
       fail("Should throw NotFound exception");
     } catch (FeignException.NotFound e) {
-      assertSame(notFound.get(), e);
+      assertThat(e).isSameAs(notFound.get());
     }
 
-    assertThat(
-        getMetric("http_response_code", "http_status", "404", "status_group", "4xx",
-            "http_method", "GET"),
-        notNullValue());
+    assertThat(getMetric("http_response_code", "http_status", "404", "status_group", "4xx",
+        "http_method", "GET")).isNotNull();
   }
 
   protected abstract METRIC getMetric(String suffix, String... tags);
@@ -195,7 +185,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     FeignException.NotFound thrown =
         assertThrows(FeignException.NotFound.class, () -> source.get("0x3456789"));
-    assertSame(notFound.get(), thrown);
+    assertThat(thrown).isSameAs(notFound.get());
   }
 
   @Test
@@ -210,12 +200,10 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                 .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
     RuntimeException thrown = assertThrows(RuntimeException.class, () -> source.get("0x3456789"));
-    assertThat(thrown.getMessage(), equalTo("Test error"));
+    assertThat(thrown.getMessage()).isEqualTo("Test error");
 
-    assertThat(
-        getMetric("exception", "exception_name", "RuntimeException", "method", "get",
-            "root_cause_name", "RuntimeException"),
-        notNullValue());
+    assertThat(getMetric("exception", "exception_name", "RuntimeException", "method", "get",
+        "root_cause_name", "RuntimeException")).isNotNull();
   }
 
   @Test
@@ -236,9 +224,8 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     clientMetrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all Client metric names to include uri:" + metricId,
-                doesMetricIncludeUri(metricId, "/get")));
+            metricId -> assertThat(doesMetricIncludeUri(metricId, "/get"))
+                .as("Expect all Client metric names to include uri:" + metricId).isTrue());
   }
 
   public interface SourceWithPathExpressions {
@@ -265,10 +252,10 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     clientMetrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all Client metric names to include uri as aggregated path expression:"
-                    + metricId,
-                doesMetricIncludeUri(metricId, "/get/{id}")));
+            metricId -> assertThat(doesMetricIncludeUri(metricId, "/get/{id}"))
+                .as("Expect all Client metric names to include uri as aggregated path expression:"
+                    + metricId)
+                .isTrue());
   }
 
   @Test
@@ -288,7 +275,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
     FeignException.NotFound thrown =
         assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
-    assertSame(notFound.get(), thrown);
+    assertThat(thrown).isSameAs(notFound.get());
 
     final Map<METRIC_ID, METRIC> decoderMetrics =
         getFeignMetrics().entrySet().stream()
@@ -298,10 +285,10 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     decoderMetrics
         .keySet()
         .forEach(
-            metricId -> assertThat(
-                "Expect all Decoder metric names to include uri as aggregated path expression:"
-                    + metricId,
-                doesMetricIncludeUri(metricId, "/get/{id}")));
+            metricId -> assertThat(doesMetricIncludeUri(metricId, "/get/{id}"))
+                .as("Expect all Decoder metric names to include uri as aggregated path expression:"
+                    + metricId)
+                .isTrue());
   }
 
   protected abstract boolean isClientMetric(METRIC_ID metricId);

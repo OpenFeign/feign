@@ -15,7 +15,7 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -235,7 +235,7 @@ public class SOAPCodecTest {
 
     SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
   @Test
@@ -269,7 +269,7 @@ public class SOAPCodecTest {
         .useFirstChild()
         .build();
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
   @Test
@@ -298,7 +298,7 @@ public class SOAPCodecTest {
 
     SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
 

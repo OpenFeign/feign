@@ -14,6 +14,7 @@
 package feign.reactive;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -22,7 +23,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import feign.*;
 import feign.Logger.Level;
 import feign.Request.Options;
@@ -41,7 +41,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -66,11 +65,11 @@ public class ReactiveFeignIntegrationTest {
   @Test
   public void testCallIgnoredMethod() throws Exception {
     TestReactorService service = ReactorFeign.builder()
-            .target(TestReactorService.class, this.getServerUrl());
+        .target(TestReactorService.class, this.getServerUrl());
 
     try {
       service.ignore().subscribe();
-      Assert.fail("No exception thrown");
+      fail("No exception thrown");
     } catch (Exception e) {
       assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
       assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
@@ -123,7 +122,8 @@ public class ReactiveFeignIntegrationTest {
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
 
     StepVerifier.create(service.usersMono())
-        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .assertNext(
+            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
@@ -157,7 +157,8 @@ public class ReactiveFeignIntegrationTest {
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
 
     StepVerifier.create(service.users())
-        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .assertNext(
+            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");

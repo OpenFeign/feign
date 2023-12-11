@@ -14,8 +14,7 @@
 package feign.codec;
 
 import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request.HttpMethod;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -43,21 +42,21 @@ public class DefaultDecoderTest {
   public void testDecodesToString() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
-    assertEquals(String.class, decodedObject.getClass());
-    assertEquals("response body", decodedObject.toString());
+    assertThat(decodedObject.getClass()).isEqualTo(String.class);
+    assertThat(decodedObject.toString()).isEqualTo("response body");
   }
 
   @Test
   public void testDecodesToByteArray() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, byte[].class);
-    assertEquals(byte[].class, decodedObject.getClass());
-    assertEquals("response body", new String((byte[]) decodedObject, UTF_8));
+    assertThat(decodedObject.getClass()).isEqualTo(byte[].class);
+    assertThat(new String((byte[]) decodedObject, UTF_8)).isEqualTo("response body");
   }
 
   @Test
   public void testDecodesNullBodyToNull() throws Exception {
-    assertNull(decoder.decode(nullBodyResponse(), Document.class));
+    assertThat(decoder.decode(nullBodyResponse(), Document.class)).isNull();
   }
 
   @Test

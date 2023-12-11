@@ -13,6 +13,7 @@
  */
 package feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,7 +22,6 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import feign.Request.ProtocolVersion;
 import static feign.Util.enumForName;
-import static org.junit.Assert.*;
 
 public class EnumForNameTest {
 
@@ -47,8 +47,8 @@ public class EnumForNameTest {
 
     @Test
     public void getKnownEnumValue() {
-      assertEquals("known enum value: " + name, expectedProtocolVersion,
-          enumForName(ProtocolVersion.class, name));
+      assertThat(enumForName(ProtocolVersion.class, name)).as("known enum value: " + name)
+          .isEqualTo(expectedProtocolVersion);
     }
 
   }
@@ -71,7 +71,8 @@ public class EnumForNameTest {
 
     @Test
     public void getKnownEnumValue() {
-      assertNull("unknown enum value: " + name, enumForName(ProtocolVersion.class, name));
+      assertThat(enumForName(ProtocolVersion.class, name)).as("unknown enum value: " + name)
+          .isNull();
     }
 
   }

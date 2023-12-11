@@ -22,7 +22,7 @@ import java.net.URL;
 import feign.Feign;
 import feign.RequestLine;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class LoadBalancingTargetTest {
 
@@ -56,8 +56,8 @@ public class LoadBalancingTargetTest {
       api.post();
       api.post();
 
-      assertEquals(1, server1.getRequestCount());
-      assertEquals(1, server2.getRequestCount());
+      assertThat(server1.getRequestCount()).isEqualTo(1);
+      assertThat(server2.getRequestCount()).isEqualTo(1);
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
@@ -82,8 +82,8 @@ public class LoadBalancingTargetTest {
 
       api.get();
 
-      assertEquals("http:///context-path", target.url());
-      assertEquals("/context-path/servers", server1.takeRequest().getPath());
+      assertThat(target.url()).isEqualTo("http:///context-path");
+      assertThat(server1.takeRequest().getPath()).isEqualTo("/context-path/servers");
     } finally {
       getConfigInstance().clearProperty(serverListKey);
     }

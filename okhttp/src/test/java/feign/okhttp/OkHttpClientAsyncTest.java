@@ -14,11 +14,11 @@
 package feign.okhttp;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -121,8 +120,8 @@ public class OkHttpClientAsyncTest {
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
     final Response response = unwrap(api.response());
-    assertTrue(response.body().isRepeatable());
-    assertEquals("foo", Util.toString(response.body().asReader(StandardCharsets.UTF_8)));
+    assertThat(response.body().isRepeatable()).isTrue();
+    assertThat(Util.toString(response.body().asReader(StandardCharsets.UTF_8))).isEqualTo("foo");
   }
 
   @Test
@@ -177,7 +176,7 @@ public class OkHttpClientAsyncTest {
 
     server.takeRequest();
 
-    Assertions.assertThat(encodedType.get()).isEqualTo(new TypeToken<List<String>>() {}.getType());
+    assertThat(encodedType.get()).isEqualTo(new TypeToken<List<String>>() {}.getType());
 
     checkCFCompletedSoon(cf);
   }
@@ -443,19 +442,17 @@ public class OkHttpClientAsyncTest {
 
   @Test
   public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterfaceAsync#post()",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("post")));
-    assertEquals("TestInterfaceAsync#uriParam(String,URI,String)",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("post"))).isEqualTo("TestInterfaceAsync#post()");
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class))).isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
   }
 
   @Test
   public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   private <T> T unwrap(CompletableFuture<T> cf) throws Throwable {
@@ -486,7 +483,7 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api = newAsyncBuilder()
         .decoder((response, type) -> "fail").target("http://localhost:" + server.getPort());
 
-    assertEquals("fail", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("fail");
   }
 
   @Test
@@ -517,12 +514,12 @@ public class OkHttpClientAsyncTest {
     try {
       unwrap(cf);
     } catch (final FeignException e) {
-      Assertions.assertThat(e.getMessage())
+      assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      Assertions.assertThat(e.contentUTF8()).isEqualTo("Request body");
+      assertThat(e.contentUTF8()).isEqualTo("Request body");
       return;
     }
-    fail();
+    fail("");
   }
 
   @Test
@@ -536,9 +533,9 @@ public class OkHttpClientAsyncTest {
     try {
       api.noContent();
     } catch (final FeignException e) {
-      Assertions.assertThat(e.getMessage())
+      assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      Assertions.assertThat(e.contentUTF8()).isEqualTo("");
+      assertThat(e.contentUTF8()).isEqualTo("");
     }
   }
 
@@ -634,19 +631,19 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync i3 = newAsyncBuilder().target(t2);
     final OtherTestInterfaceAsync i4 = newAsyncBuilder().target(t3);
 
-    Assertions.assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
+    assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
-    Assertions.assertThat(i1.hashCode()).isEqualTo(i2.hashCode()).isNotEqualTo(i3.hashCode())
+    assertThat(i1.hashCode()).isEqualTo(i2.hashCode()).isNotEqualTo(i3.hashCode())
         .isNotEqualTo(i4.hashCode());
 
-    Assertions.assertThat(i1.toString()).isEqualTo(i2.toString()).isNotEqualTo(i3.toString())
+    assertThat(i1.toString()).isEqualTo(i2.toString()).isNotEqualTo(i3.toString())
         .isNotEqualTo(i4.toString());
 
-    Assertions.assertThat(t1).isNotEqualTo(i1);
+    assertThat(t1).isNotEqualTo(i1);
 
-    Assertions.assertThat(t1.hashCode()).isEqualTo(i1.hashCode());
+    assertThat(t1.hashCode()).isEqualTo(i1.hashCode());
 
-    Assertions.assertThat(t1.toString()).isEqualTo(i1.toString());
+    assertThat(t1.toString()).isEqualTo(i1.toString());
   }
 
   @SuppressWarnings("resource")
@@ -660,7 +657,7 @@ public class OkHttpClientAsyncTest {
             OtherTestInterfaceAsync.class,
             "http://localhost:" + server.getPort()));
 
-    Assertions.assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
+    assertThat(unwrap(api.binaryResponseBody())).containsExactly(expectedResponse);
   }
 
   @Test
@@ -710,7 +707,7 @@ public class OkHttpClientAsyncTest {
         new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
     final String output = (String) decoder.decode(responseWithText("response"), String.class);
 
-    Assertions.assertThat(output).isEqualTo("RESPONSE");
+    assertThat(output).isEqualTo("RESPONSE");
   }
 
   private static TestInterfaceAsyncBuilder newAsyncBuilder() {
@@ -748,7 +745,7 @@ public class OkHttpClientAsyncTest {
         AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals("RESPONSE!", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("RESPONSE!");
   }
 
   @Test

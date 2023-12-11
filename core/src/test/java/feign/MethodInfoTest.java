@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Enclosed.class)
 public class MethodInfoTest {
@@ -33,8 +33,8 @@ public class MethodInfoTest {
     @Test
     public void testCompletableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertTrue(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isTrue();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
@@ -49,8 +49,8 @@ public class MethodInfoTest {
     @Test
     public void testGenericCompletableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertTrue(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isTrue();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
@@ -62,8 +62,8 @@ public class MethodInfoTest {
     @Test
     public void testString() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertFalse(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isFalse();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
@@ -95,8 +95,8 @@ public class MethodInfoTest {
     @Test
     public void testListOfStrings() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertFalse(mi.isAsyncReturnType());
-      assertTrue(Types.equals(new ListOfStrings(), mi.underlyingReturnType()));
+      assertThat(mi.isAsyncReturnType()).isFalse();
+      assertThat(Types.equals(new ListOfStrings(), mi.underlyingReturnType())).isTrue();
     }
   }
 }

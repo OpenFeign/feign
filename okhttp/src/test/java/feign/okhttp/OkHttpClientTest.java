@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeFalse;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
@@ -49,7 +49,7 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.getWithContentType();
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
@@ -75,9 +75,9 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.get();
     // Response length should not be null
-    assertEquals(302, response.status());
-    assertEquals(server.url("redirect").toString(),
-        response.headers().get("Location").iterator().next());
+    assertThat(response.status()).isEqualTo(302);
+    assertThat(response.headers().get("Location").iterator().next())
+        .isEqualTo(server.url("redirect").toString());
 
   }
 
@@ -98,9 +98,9 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.get();
     // Response length should not be null
-    assertEquals(200, response.status());
+    assertThat(response.status()).isEqualTo(200);
     String payload = Util.toString(response.body().asReader(StandardCharsets.UTF_8));
-    assertEquals(expectedBody, payload);
+    assertThat(payload).isEqualTo(expectedBody);
 
   }
 

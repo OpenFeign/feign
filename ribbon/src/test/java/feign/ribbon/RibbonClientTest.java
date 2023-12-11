@@ -15,13 +15,9 @@ package feign.ribbon;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -100,8 +96,8 @@ public class RibbonClientTest {
     api.post();
     api.post();
 
-    assertEquals(1, server1.getRequestCount());
-    assertEquals(1, server2.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
+    assertThat(server2.getRequestCount()).isEqualTo(1);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
@@ -118,7 +114,7 @@ public class RibbonClientTest {
 
     api.post();
 
-    assertEquals(2, server1.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
@@ -165,7 +161,7 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    assertTrue(server1.getRequestCount() >= 2 || server2.getRequestCount() >= 2);
+    assertThat(server1.getRequestCount() >= 2 || server2.getRequestCount() >= 2).isTrue();
     assertThat(server1.getRequestCount() + server2.getRequestCount()).isGreaterThanOrEqualTo(2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
@@ -222,7 +218,7 @@ public class RibbonClientTest {
 
     final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
-    assertEquals(recordedRequestLine, expectedRequestLine);
+    assertThat(expectedRequestLine).isEqualTo(recordedRequestLine);
   }
 
 
@@ -240,7 +236,7 @@ public class RibbonClientTest {
         Feign.builder().client(RibbonClient.builder().delegate(trustSSLSockets).build())
             .target(TestInterface.class, "https://" + client());
     api.post();
-    assertEquals(1, server1.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
 
   }
 
@@ -257,7 +253,7 @@ public class RibbonClientTest {
 
     api.post();
 
-    assertEquals(server1.getRequestCount(), 2);
+    assertThat(2).isEqualTo(server1.getRequestCount());
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
@@ -282,8 +278,8 @@ public class RibbonClientTest {
     } catch (Exception ignored) {
 
     }
-    assertEquals(1, server1.getRequestCount());
-    assertEquals(1, server2.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
+    assertThat(server2.getRequestCount()).isEqualTo(1);
   }
 
 
@@ -305,11 +301,11 @@ public class RibbonClientTest {
 
     try {
       Response response = api.get();
-      assertEquals(302, response.status());
+      assertThat(response.status()).isEqualTo(302);
       Collection<String> location = response.headers().get("Location");
-      assertNotNull(location);
-      assertFalse(location.isEmpty());
-      assertEquals(expectedLocation, location.iterator().next());
+      assertThat(location).isNotNull();
+      assertThat(location).isNotEmpty();
+      assertThat(location.iterator().next()).isEqualTo(expectedLocation);
     } catch (Exception ignored) {
       ignored.printStackTrace();
       fail("Shouldn't throw ");
@@ -338,8 +334,8 @@ public class RibbonClientTest {
 
     try {
       Response response = api.get();
-      assertEquals(200, response.status());
-      assertEquals("Hello", response.body().toString());
+      assertThat(response.status()).isEqualTo(200);
+      assertThat(response.body().toString()).isEqualTo("Hello");
     } catch (Exception ignored) {
       ignored.printStackTrace();
       fail("Shouldn't throw ");
@@ -357,19 +353,19 @@ public class RibbonClientTest {
     assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
     assertThat(config.get(CommonClientConfigKey.FollowRedirects),
         equalTo(options.isFollowRedirects()));
-    assertEquals(3, config.getProperties().size());
+    assertThat(config.getProperties()).hasSize(3);
   }
 
   @Test
   public void testCleanUrlWithMatchingHostAndPart() throws IOException {
     URI uri = RibbonClient.cleanUrl("http://questions/questions/answer/123", "questions");
-    assertEquals("http:///questions/answer/123", uri.toString());
+    assertThat(uri.toString()).isEqualTo("http:///questions/answer/123");
   }
 
   @Test
   public void testCleanUrl() throws IOException {
     URI uri = RibbonClient.cleanUrl("http://myservice/questions/answer/123", "myservice");
-    assertEquals("http:///questions/answer/123", uri.toString());
+    assertThat(uri.toString()).isEqualTo("http:///questions/answer/123");
   }
 
   private String client() {

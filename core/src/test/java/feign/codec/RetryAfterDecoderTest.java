@@ -14,7 +14,7 @@
 package feign.codec;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import java.text.ParseException;
 import java.time.ZonedDateTime;
@@ -31,25 +31,23 @@ public class RetryAfterDecoderTest {
 
   @Test
   public void malformedDateFailsGracefully() {
-    assertNull(decoder.apply("Fri, 31 Dec 1999 23:59:59 ZBW"));
+    assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 ZBW")).isNull();
   }
 
   @Test
   public void rfc822Parses() throws ParseException {
-    assertEquals(parseDateTime("Fri, 31 Dec 1999 23:59:59 GMT"),
-        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
+    assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"))
+        .isEqualTo(parseDateTime("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test
   public void relativeSecondsParses() throws ParseException {
-    assertEquals(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"),
-        decoder.apply("86400"));
+    assertThat(decoder.apply("86400")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
   @Test
   public void relativeSecondsParseDecimalIntegers() throws ParseException {
-    assertEquals(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"),
-        decoder.apply("86400.0"));
+    assertThat(decoder.apply("86400.0")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
   private Long parseDateTime(String text) {

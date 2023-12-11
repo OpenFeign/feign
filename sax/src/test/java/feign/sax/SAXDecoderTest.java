@@ -28,8 +28,6 @@ import feign.Response;
 import feign.codec.Decoder;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("deprecation")
 public class SAXDecoderTest {
@@ -60,8 +58,9 @@ public class SAXDecoderTest {
 
   @Test
   public void parsesConfiguredTypes() throws ParseException, IOException {
-    assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
-    assertEquals("Failed", decoder.decode(statusFailedResponse(), String.class));
+    assertThat(decoder.decode(statusFailedResponse(), NetworkStatus.class))
+        .isEqualTo(NetworkStatus.FAILED);
+    assertThat(decoder.decode(statusFailedResponse(), String.class)).isEqualTo("Failed");
   }
 
   @Test

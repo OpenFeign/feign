@@ -13,7 +13,7 @@
  */
 package feign.example.github;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.hamcrest.CoreMatchers;
@@ -39,7 +39,7 @@ public class GitHubExampleIT {
     final CommandLine cmdLine = CommandLine.parse(line);
     final int exitValue = new DefaultExecutor().execute(cmdLine);
 
-    assertThat(exitValue, CoreMatchers.equalTo(0));
+    assertThat(exitValue).isEqualTo(0);
   }
 
 }

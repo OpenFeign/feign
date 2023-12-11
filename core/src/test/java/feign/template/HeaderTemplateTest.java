@@ -17,10 +17,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HeaderTemplateTest {
 
@@ -28,45 +26,45 @@ public class HeaderTemplateTest {
   public void it_should_throw_exception_when_name_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create(null, Collections.singletonList("test")));
-    assertEquals("name is required.", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
   public void it_should_throw_exception_when_name_is_empty() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create("", Collections.singletonList("test")));
-    assertEquals("name is required.", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
   public void it_should_throw_exception_when_value_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create("test", null));
-    assertEquals("values are required", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("values are required");
   }
 
   @Test
   public void it_should_return_name() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("test", Arrays.asList("test 1", "test 2"));
-    assertEquals("test", headerTemplate.getName());
+    assertThat(headerTemplate.getName()).isEqualTo("test");
   }
 
   @Test
   public void it_should_return_expanded() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{name}", "{missing}"));
-    assertEquals("emre, savci", headerTemplate.expand(Collections.emptyMap()));
-    assertEquals("emre, savci, firsts",
-        headerTemplate.expand(Collections.singletonMap("name", "firsts")));
+    assertThat(headerTemplate.expand(Collections.emptyMap())).isEqualTo("emre, savci");
+    assertThat(headerTemplate.expand(Collections.singletonMap("name", "firsts")))
+        .isEqualTo("emre, savci, firsts");
   }
 
   @Test
   public void it_should_return_expanded_literals() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{replace_me}"));
-    assertEquals("emre, savci, {}",
-        headerTemplate.expand(Collections.singletonMap("replace_me", "{}")));
+    assertThat(headerTemplate.expand(Collections.singletonMap("replace_me", "{}")))
+        .isEqualTo("emre, savci, {}");
   }
 
   @Test
@@ -77,13 +75,13 @@ public class HeaderTemplateTest {
      */
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 1", "test 2"));
-    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
-        equalTo(Arrays.asList("test 1", "test 2")));
+    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()))
+        .isEqualTo(Arrays.asList("test 1", "test 2"));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 2", "test 1"));
-    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
-        equalTo(Arrays.asList("test 2", "test 1")));
+    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()))
+        .isEqualTo(Arrays.asList("test 2", "test 1"));
   }
 
   @Test
@@ -95,23 +93,23 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 1", "test 2"));
-    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()),
-        equalTo(Arrays.asList("test 1", "test 2")));
+    assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()))
+        .isEqualTo(Arrays.asList("test 1", "test 2"));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.append(HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 2", "test 1"));
-    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()),
-        equalTo(Arrays.asList("test 2", "test 1")));
+    assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()))
+        .isEqualTo(Arrays.asList("test 2", "test 1"));
   }
 
   @Test
   public void it_should_support_http_date() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
-    assertEquals("Wed, 4 Jul 2001 12:08:56 -0700",
-        headerTemplate.expand(
-            Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")));
+    assertThat(headerTemplate.expand(
+        Collections.singletonMap("expires", "Wed, 4 Jul 2001 12:08:56 -0700")))
+            .isEqualTo("Wed, 4 Jul 2001 12:08:56 -0700");
   }
 
   @Test
@@ -119,11 +117,11 @@ public class HeaderTemplateTest {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("CustomHeader", Collections.singletonList("{jsonParam}"));
 
-    assertEquals("{\"string\": \"val\", \"string2\": \"this should not be truncated\"}",
-        headerTemplate.expand(
-            Collections.singletonMap(
-                "jsonParam",
-                "{\"string\": \"val\", \"string2\": \"this should not be truncated\"}")));
+    assertThat(headerTemplate.expand(
+        Collections.singletonMap(
+            "jsonParam",
+            "{\"string\": \"val\", \"string2\": \"this should not be truncated\"}")))
+                .isEqualTo("{\"string\": \"val\", \"string2\": \"this should not be truncated\"}");
 
   }
 }

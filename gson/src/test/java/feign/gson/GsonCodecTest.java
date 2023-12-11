@@ -32,8 +32,7 @@ import feign.RequestTemplate;
 import feign.Response;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
 public class GsonCodecTest {
@@ -64,8 +63,8 @@ public class GsonCodecTest {
         .headers(Collections.emptyMap())
         .body("{\"foo\": 1}", UTF_8)
         .build();
-    assertEquals(
-        new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()), map);
+    assertThat(map).isEqualTo(
+        new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()));
   }
 
   @Test
@@ -122,8 +121,8 @@ public class GsonCodecTest {
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(zonesJson, UTF_8)
         .build();
-    assertEquals(zones,
-        new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()));
+    assertThat(new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
@@ -134,7 +133,7 @@ public class GsonCodecTest {
         .headers(Collections.emptyMap())
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .build();
-    assertNull(new GsonDecoder().decode(response, String.class));
+    assertThat(new GsonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
@@ -146,7 +145,7 @@ public class GsonCodecTest {
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .body(new byte[0])
         .build();
-    assertNull(new GsonDecoder().decode(response, String.class));
+    assertThat(new GsonDecoder().decode(response, String.class)).isNull();
   }
 
   private String zonesJson = ""//
@@ -200,7 +199,7 @@ public class GsonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeToken<List<Zone>>() {}.getType())).isEqualTo(zones);
   }
 
   @Test

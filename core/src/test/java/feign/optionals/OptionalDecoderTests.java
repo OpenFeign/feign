@@ -45,7 +45,7 @@ public class OptionalDecoderTests {
         .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.getAsOptional().isPresent()).isFalse();
-    assertThat(api.getAsOptional().get()).isEqualTo("foo");
+    assertThat(api.getAsOptional()).contains("foo");
   }
 
   @Test
@@ -71,7 +71,7 @@ public class OptionalDecoderTests {
 
     Optional<String> response = api.getAsOptional();
 
-    assertThat(response.isPresent()).isTrue();
+    assertThat(response).isPresent();
     assertThat(response).isEqualTo(Optional.of("foo"));
   }
 

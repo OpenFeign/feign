@@ -13,7 +13,7 @@
  */
 package feign;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
@@ -69,7 +69,7 @@ public class CapabilityTest {
               }
             }));
 
-    assertThat(enriched, CoreMatchers.instanceOf(BClient.class));
+    assertThat(enriched).isInstanceOf(BClient.class);
   }
 
 }

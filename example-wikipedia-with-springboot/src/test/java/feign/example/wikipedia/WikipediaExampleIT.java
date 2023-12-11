@@ -13,7 +13,7 @@
  */
 package feign.example.wikipedia;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.util.Arrays;
 import org.apache.commons.exec.CommandLine;
@@ -39,7 +39,7 @@ public class WikipediaExampleIT {
     final CommandLine cmdLine = CommandLine.parse(line);
     final int exitValue = new DefaultExecutor().execute(cmdLine);
 
-    assertThat(exitValue, CoreMatchers.equalTo(0));
+    assertThat(exitValue).isEqualTo(0);
   }
 
 }

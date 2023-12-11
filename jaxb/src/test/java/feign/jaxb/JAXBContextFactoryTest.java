@@ -26,7 +26,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JAXBContextFactoryTest {
 
@@ -36,7 +36,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertEquals("UTF-16", marshaller.getProperty(Marshaller.JAXB_ENCODING));
+    assertThat(marshaller.getProperty(Marshaller.JAXB_ENCODING)).isEqualTo("UTF-16");
   }
 
   @Test
@@ -47,8 +47,8 @@ public class JAXBContextFactoryTest {
             .build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertEquals("http://apihost http://apihost/schema.xsd",
-        marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION));
+    assertThat(marshaller.getProperty(Marshaller.JAXB_SCHEMA_LOCATION))
+        .isEqualTo("http://apihost http://apihost/schema.xsd");
   }
 
   @Test
@@ -58,8 +58,8 @@ public class JAXBContextFactoryTest {
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd").build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertEquals("http://apihost/schema.xsd",
-        marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION));
+    assertThat(marshaller.getProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION))
+        .isEqualTo("http://apihost/schema.xsd");
   }
 
   @Test
@@ -68,7 +68,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertTrue((Boolean) marshaller.getProperty(Marshaller.JAXB_FORMATTED_OUTPUT));
+    assertThat((Boolean) marshaller.getProperty(Marshaller.JAXB_FORMATTED_OUTPUT)).isTrue();
   }
 
   @Test
@@ -77,7 +77,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withMarshallerFragment(true).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertTrue((Boolean) marshaller.getProperty(Marshaller.JAXB_FRAGMENT));
+    assertThat((Boolean) marshaller.getProperty(Marshaller.JAXB_FRAGMENT)).isTrue();
   }
 
   @Test
@@ -87,7 +87,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withMarshallerSchema(schema).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertSame(schema, marshaller.getSchema());
+    assertThat(marshaller.getSchema()).isSameAs(schema);
   }
 
   @Test
@@ -97,7 +97,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withUnmarshallerSchema(schema).build();
 
     Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
-    assertSame(schema, unmarshaller.getSchema());
+    assertThat(unmarshaller.getSchema()).isSameAs(schema);
   }
 
   @Test
@@ -107,7 +107,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withMarshallerEventHandler(handler).build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertSame(handler, marshaller.getEventHandler());
+    assertThat(marshaller.getEventHandler()).isSameAs(handler);
   }
 
   @Test
@@ -116,7 +116,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().build();
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
-    assertNotNull(marshaller.getEventHandler());
+    assertThat(marshaller.getEventHandler()).isNotNull();
   }
 
   @Test
@@ -126,7 +126,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().withUnmarshallerEventHandler(handler).build();
 
     Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
-    assertSame(handler, unmarshaller.getEventHandler());
+    assertThat(unmarshaller.getEventHandler()).isSameAs(handler);
   }
 
   @Test
@@ -135,7 +135,7 @@ public class JAXBContextFactoryTest {
         new JAXBContextFactory.Builder().build();
 
     Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
-    assertNotNull(unmarshaller.getEventHandler());
+    assertThat(unmarshaller.getEventHandler()).isNotNull();
   }
 
   @Test
@@ -148,10 +148,10 @@ public class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertFalse(internalCache.isEmpty());
-    assertTrue(internalCache.size() == classes.size());
-    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(String.class)));
-    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(Integer.class)));
+    assertThat(internalCache.isEmpty()).isFalse();
+    assertThat(internalCache.size() == classes.size()).isTrue();
+    assertThat(internalCache.get(new JAXBContextClassCacheKey(String.class))).isNotNull();
+    assertThat(internalCache.get(new JAXBContextClassCacheKey(Integer.class))).isNotNull();
 
   }
 
@@ -167,10 +167,10 @@ public class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertFalse(internalCache.isEmpty());
-    assertEquals(internalCache.size(), classes.size());
-    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(String.class)));
-    assertNotNull(internalCache.get(new JAXBContextClassCacheKey(Integer.class)));
+    assertThat(internalCache.isEmpty()).isFalse();
+    assertThat(classes).hasSize(internalCache.size());
+    assertThat(internalCache.get(new JAXBContextClassCacheKey(String.class))).isNotNull();
+    assertThat(internalCache.get(new JAXBContextClassCacheKey(Integer.class))).isNotNull();
 
   }
 
@@ -184,10 +184,10 @@ public class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertFalse(internalCache.isEmpty());
-    assertEquals(1, internalCache.size());
-    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
-        AnotherMockedJAXBObject.class.getClassLoader())));
+    assertThat(internalCache.isEmpty()).isFalse();
+    assertThat(internalCache).hasSize(1);
+    assertThat(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
+        AnotherMockedJAXBObject.class.getClassLoader()))).isNotNull();
 
   }
 
@@ -202,12 +202,12 @@ public class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertFalse(internalCache.isEmpty());
-    assertEquals(2, internalCache.size());
-    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
-        MockedJAXBObject.class.getClassLoader())));
-    assertNotNull(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.anotherpackage",
-        feign.jaxb.mock.anotherpackage.MockedJAXBObject.class.getClassLoader())));
+    assertThat(internalCache.isEmpty()).isFalse();
+    assertThat(internalCache).hasSize(2);
+    assertThat(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.onepackage",
+        MockedJAXBObject.class.getClassLoader()))).isNotNull();
+    assertThat(internalCache.get(new JAXBContextPackageCacheKey("feign.jaxb.mock.anotherpackage",
+        feign.jaxb.mock.anotherpackage.MockedJAXBObject.class.getClassLoader()))).isNotNull();
 
 
   }

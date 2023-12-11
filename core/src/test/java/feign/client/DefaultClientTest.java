@@ -36,7 +36,6 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.core.Is.isA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -66,7 +65,7 @@ public class DefaultClientTest extends AbstractClientTest {
         .target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test

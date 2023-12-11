@@ -14,6 +14,7 @@
 package feign.soap;
 
 import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -22,7 +23,6 @@ import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.soap.SOAPConstants;
 import jakarta.xml.ws.soap.SOAPFaultException;
-import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,7 +75,7 @@ public class SOAPFaultDecoderTest {
 
     Exception error =
         new SOAPErrorDecoder().decode("Service#foo()", response);
-    Assertions.assertThat(error).isInstanceOf(SOAPFaultException.class)
+    assertThat(error).isInstanceOf(SOAPFaultException.class)
         .hasMessage("Message was not SOAP 1.1 compliant");
   }
 
@@ -92,7 +92,7 @@ public class SOAPFaultDecoderTest {
     Exception error =
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
-    Assertions.assertThat(error).isInstanceOf(FeignException.class)
+    assertThat(error).isInstanceOf(FeignException.class)
         .hasMessage(
             "[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: [Service Unavailable]");
   }
@@ -118,7 +118,7 @@ public class SOAPFaultDecoderTest {
     Exception error =
         new SOAPErrorDecoder().decode("Service#foo()", response);
 
-    Assertions.assertThat(error).isInstanceOf(FeignException.class)
+    assertThat(error).isInstanceOf(FeignException.class)
         .hasMessage("[500 Internal Server Error] during [GET] to [/api] [Service#foo()]: ["
             + responseBody + "]");
   }

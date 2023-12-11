@@ -20,8 +20,7 @@ import java.time.Clock;
 import java.util.Arrays;
 import feign.RequestTemplate;
 import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DefaultEncoderTest {
 
@@ -35,7 +34,7 @@ public class DefaultEncoderTest {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, String.class, template);
-    assertEquals(content, new String(template.body(), UTF_8));
+    assertThat(new String(template.body(), UTF_8)).isEqualTo(content);
   }
 
   @Test
@@ -43,7 +42,7 @@ public class DefaultEncoderTest {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, byte[].class, template);
-    assertTrue(Arrays.equals(content, template.body()));
+    assertThat(Arrays.equals(content, template.body())).isTrue();
   }
 
   @Test

@@ -22,7 +22,8 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import java.time.Clock;
 import static feign.Util.UTF_8;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JsonEncoderTest {
 
@@ -58,15 +59,15 @@ public class JsonEncoderTest {
   @Test
   public void encodesNull() {
     new JsonEncoder().encode(null, JSONObject.class, new RequestTemplate());
-    assertNull(requestTemplate.body());
+    assertThat(requestTemplate.body()).isNull();
   }
 
   @Test
   public void unknownTypeThrowsEncodeException() {
     Exception exception = assertThrows(EncodeException.class,
         () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()));
-    assertEquals("class java.time.Clock is not a type supported by this encoder.",
-        exception.getMessage());
+    assertThat(exception.getMessage())
+        .isEqualTo("class java.time.Clock is not a type supported by this encoder.");
   }
 
 }

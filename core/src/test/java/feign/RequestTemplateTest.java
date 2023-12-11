@@ -17,9 +17,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
 import java.util.Arrays;
@@ -396,11 +394,11 @@ public class RequestTemplateTest {
 
     final String assertionMessage = "Header field names should be case insensitive";
 
-    assertNotNull(assertionMessage, test);
-    assertTrue(assertionMessage, test.contains(value));
-    assertTrue(assertionMessage, test.contains(value2));
-    assertEquals(1, template.headers().size());
-    assertEquals(2, template.headers().get("tesT").size());
+    assertThat(test).as(assertionMessage).isNotNull();
+    assertTrue(test.contains(value), assertionMessage);
+    assertTrue(test.contains(value2), assertionMessage);
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().get("tesT")).hasSize(2);
   }
 
   @Test

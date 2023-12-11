@@ -14,10 +14,8 @@
 package feign;
 
 import feign.Request.ProtocolVersion;
-
 import java.util.Collection;
 import java.util.Map;
-
 import static feign.Util.*;
 
 public final class TypedResponse<T> {
@@ -161,7 +159,8 @@ public final class TypedResponse<T> {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder(protocolVersion.toString()).append(" ").append(status);
+    StringBuilder builder =
+        new StringBuilder(protocolVersion.toString()).append(" ").append(status);
     if (reason != null)
       builder.append(' ').append(reason);
     builder.append('\n');

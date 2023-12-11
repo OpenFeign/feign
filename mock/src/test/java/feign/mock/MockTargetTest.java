@@ -13,8 +13,7 @@
  */
 package feign.mock;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,7 +28,7 @@ public class MockTargetTest {
 
   @Test
   public void test() {
-    assertThat(target.name(), equalTo("MockTargetTest"));
+    assertThat(target.name()).isEqualTo("MockTargetTest");
   }
 
 }

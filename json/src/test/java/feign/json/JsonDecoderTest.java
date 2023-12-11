@@ -14,10 +14,8 @@
 package feign.json;
 
 import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -62,7 +60,7 @@ public class JsonDecoderTest {
         .body(json, UTF_8)
         .request(request)
         .build();
-    assertTrue(jsonArray.similar(new JsonDecoder().decode(response, JSONArray.class)));
+    assertThat(jsonArray.similar(new JsonDecoder().decode(response, JSONArray.class))).isTrue();
   }
 
   @Test
@@ -75,7 +73,7 @@ public class JsonDecoderTest {
         .body(json, UTF_8)
         .request(request)
         .build();
-    assertTrue(jsonObject.similar(new JsonDecoder().decode(response, JSONObject.class)));
+    assertThat(jsonObject.similar(new JsonDecoder().decode(response, JSONObject.class))).isTrue();
   }
 
   @Test
@@ -88,7 +86,7 @@ public class JsonDecoderTest {
         .body(json, UTF_8)
         .request(request)
         .build();
-    assertEquals("qwerty", new JsonDecoder().decode(response, String.class));
+    assertThat(new JsonDecoder().decode(response, String.class)).isEqualTo("qwerty");
   }
 
   @Test
@@ -99,7 +97,8 @@ public class JsonDecoderTest {
         .headers(Collections.emptyMap())
         .request(request)
         .build();
-    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+    assertThat(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty())
+        .isTrue();
   }
 
   @Test
@@ -110,7 +109,8 @@ public class JsonDecoderTest {
         .headers(Collections.emptyMap())
         .request(request)
         .build();
-    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+    assertThat(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty())
+        .isTrue();
   }
 
   @Test
@@ -121,7 +121,7 @@ public class JsonDecoderTest {
         .headers(Collections.emptyMap())
         .request(request)
         .build();
-    assertNull(new JsonDecoder().decode(response, String.class));
+    assertThat(new JsonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
@@ -133,7 +133,8 @@ public class JsonDecoderTest {
         .body("", UTF_8)
         .request(request)
         .build();
-    assertTrue(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty());
+    assertThat(((JSONObject) new JsonDecoder().decode(response, JSONObject.class)).isEmpty())
+        .isTrue();
   }
 
   @Test
@@ -148,8 +149,8 @@ public class JsonDecoderTest {
         .build();
     Exception exception = assertThrows(DecodeException.class,
         () -> new JsonDecoder().decode(response, Clock.class));
-    assertEquals("class java.time.Clock is not a type supported by this decoder.",
-        exception.getMessage());
+    assertThat(exception.getMessage())
+        .isEqualTo("class java.time.Clock is not a type supported by this decoder.");
   }
 
   @Test
@@ -164,9 +165,9 @@ public class JsonDecoderTest {
         .build();
     Exception exception = assertThrows(DecodeException.class,
         () -> new JsonDecoder().decode(response, JSONArray.class));
-    assertEquals("A JSONArray text must start with '[' at 1 [character 2 line 1]",
-        exception.getMessage());
-    assertTrue(exception.getCause() instanceof JSONException);
+    assertThat(exception.getMessage())
+        .isEqualTo("A JSONArray text must start with '[' at 1 [character 2 line 1]");
+    assertThat(exception.getCause() instanceof JSONException).isTrue();
   }
 
   @Test
@@ -183,7 +184,7 @@ public class JsonDecoderTest {
         .build();
     Exception exception = assertThrows(DecodeException.class,
         () -> new JsonDecoder().decode(response, JSONArray.class));
-    assertEquals("test exception", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("test exception");
   }
 
   @Test
@@ -200,7 +201,7 @@ public class JsonDecoderTest {
         .build();
     Exception exception = assertThrows(IOException.class,
         () -> new JsonDecoder().decode(response, JSONArray.class));
-    assertEquals("test cause exception", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("test cause exception");
   }
 
   @Test
@@ -216,7 +217,7 @@ public class JsonDecoderTest {
         .build();
     Exception exception = assertThrows(IOException.class,
         () -> new JsonDecoder().decode(response, JSONArray.class));
-    assertEquals("test exception", exception.getMessage());
+    assertThat(exception.getMessage()).isEqualTo("test exception");
   }
 
   @Test
@@ -229,7 +230,8 @@ public class JsonDecoderTest {
         .body(json, UTF_8)
         .request(request)
         .build();
-    assertTrue(jsonArray.similar(new JsonDecoder().decode(response, ExtendedJSONArray.class)));
+    assertThat(jsonArray.similar(new JsonDecoder().decode(response, ExtendedJSONArray.class)))
+        .isTrue();
   }
 
   @Test
@@ -242,7 +244,8 @@ public class JsonDecoderTest {
         .body(json, UTF_8)
         .request(request)
         .build();
-    assertTrue(jsonObject.similar(new JsonDecoder().decode(response, ExtendedJSONObject.class)));
+    assertThat(jsonObject.similar(new JsonDecoder().decode(response, ExtendedJSONObject.class)))
+        .isTrue();
   }
 
   static class ExtendedJSONArray extends JSONArray {
