@@ -13,6 +13,14 @@
  */
 package feign.json;
 
+import static feign.Util.toByteArray;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.io.InputStream;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
@@ -20,18 +28,6 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
-import java.io.IOException;
-import java.io.InputStream;
-import static feign.Util.toByteArray;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 
 interface GitHub {
@@ -47,13 +43,13 @@ interface GitHub {
 }
 
 
-public class JsonCodecTest {
+class JsonCodecTest {
 
   private GitHub github;
   private MockClient mockClient;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     mockClient = new MockClient();
     github = Feign.builder()
         .decoder(new JsonDecoder())
@@ -63,18 +59,18 @@ public class JsonCodecTest {
   }
 
   @Test
-  public void decodes() throws IOException {
+  void decodes() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] response = toByteArray(input);
       mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign/contributors", response);
       JSONArray contributors = github.contributors("openfeign", "feign");
-      assertThat(contributors.toList(), hasSize(30));
+      assertThat(contributors.toList()).hasSize(30);
       contributors.forEach(contributor -> ((JSONObject) contributor).getString("login"));
     }
   }
 
   @Test
-  public void encodes() {
+  void encodes() {
     JSONObject contributor = new JSONObject();
     contributor.put("login", "radio-rogal");
     contributor.put("contributions", 0);
@@ -82,12 +78,12 @@ public class JsonCodecTest {
         "{\"login\":\"radio-rogal\",\"contributions\":0}");
     JSONObject response = github.create("openfeign", "feign", contributor);
     Request request = mockClient.verifyOne(HttpMethod.POST, "/repos/openfeign/feign/contributors");
-    assertNotNull(request.body());
+    assertThat(request.body()).isNotNull();
     String json = new String(request.body());
-    assertThat(json, containsString("\"login\":\"radio-rogal\""));
-    assertThat(json, containsString("\"contributions\":0"));
-    assertEquals("radio-rogal", response.getString("login"));
-    assertEquals(0, response.getInt("contributions"));
+    assertThat(json).contains("\"login\":\"radio-rogal\"");
+    assertThat(json).contains("\"contributions\":0");
+    assertThat(response.getString("login")).isEqualTo("radio-rogal");
+    assertThat(response.getInt("contributions")).isEqualTo(0);
   }
 
 }

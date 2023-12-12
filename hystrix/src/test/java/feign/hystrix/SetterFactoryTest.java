@@ -13,16 +13,18 @@
  */
 package feign.hystrix;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.IOException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import feign.RequestLine;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class SetterFactoryTest {
 
@@ -31,15 +33,10 @@ public class SetterFactoryTest {
     String invoke();
   }
 
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void customSetter() {
-    thrown.expect(HystrixRuntimeException.class);
-    thrown.expectMessage("POST / failed and no fallback available.");
+  void customSetter() {
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
@@ -55,6 +52,12 @@ public class SetterFactoryTest {
         .setterFactory(commandKeyIsRequestLine)
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.invoke();
+    Throwable exception = assertThrows(HystrixRuntimeException.class, () -> api.invoke());
+    assertThat(exception.getMessage()).contains("POST / failed and no fallback available.");
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

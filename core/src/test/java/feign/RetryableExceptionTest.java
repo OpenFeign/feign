@@ -13,16 +13,20 @@
  */
 package feign;
 
-import org.junit.Test;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 import static feign.Util.UTF_8;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-public class RetryableExceptionTest {
+class RetryableExceptionTest {
 
   @Test
-  public void createRetryableExceptionWithResponseAndResponseHeader() {
+  void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
     Long retryAfter = 5000L;
     Request request =
@@ -36,10 +40,10 @@ public class RetryableExceptionTest {
         new RetryableException(-1, null, null, retryAfter, request, response, responseHeader);
 
     // then
-    assertNotNull(retryableException);
-    assertEquals(retryAfter, retryableException.retryAfter());
-    assertEquals(new String(response, UTF_8), retryableException.contentUTF8());
-    assertTrue(retryableException.responseHeaders().containsKey("TEST_HEADER"));
-    assertTrue(retryableException.responseHeaders().get("TEST_HEADER").contains("TEST_CONTENT"));
+    assertThat(retryableException).isNotNull();
+    assertThat(retryableException.retryAfter()).isEqualTo(retryAfter);
+    assertThat(retryableException.contentUTF8()).isEqualTo(new String(response, UTF_8));
+    assertThat(retryableException.responseHeaders()).containsKey("TEST_HEADER");
+    assertThat(retryableException.responseHeaders().get("TEST_HEADER")).contains("TEST_CONTENT");
   }
 }

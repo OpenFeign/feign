@@ -45,11 +45,6 @@
       <version>4.2.23</version>
     </dependency>
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-micrometer</artifactId>
       <type>test-jar</type>

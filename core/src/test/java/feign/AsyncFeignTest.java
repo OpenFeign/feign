@@ -16,23 +16,12 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import feign.Feign.ResponseMappingDecoder;
-import feign.Request.HttpMethod;
-import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
-import feign.querymap.BeanQueryMapEncoder;
-import feign.querymap.FieldQueryMapEncoder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -57,25 +46,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import feign.Feign.ResponseMappingDecoder;
+import feign.Request.HttpMethod;
+import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.codec.StringDecoder;
+import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import okio.Buffer;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.rules.ExpectedException;
 
 public class AsyncFeignTest {
 
   private static final Long NON_RETRYABLE = null;
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void iterableQueryParams() throws Exception {
+  void iterableQueryParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -87,7 +84,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void postTemplateParamsResolve() throws Exception {
+  void postTemplateParamsResolve() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -100,7 +97,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void postFormParams() throws Exception {
+  void postFormParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -116,7 +113,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void postBodyParam() throws Exception {
+  void postBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -136,7 +133,7 @@ public class AsyncFeignTest {
    * type.
    */
   @Test
-  public void bodyTypeCorrespondsWithParameterType() throws Exception {
+  void bodyTypeCorrespondsWithParameterType() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final AtomicReference<Type> encodedType = new AtomicReference<>();
@@ -157,7 +154,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void postGZIPEncodedBodyParam() throws Exception {
+  void postGZIPEncodedBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -172,7 +169,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void postDeflateEncodedBodyParam() throws Exception {
+  void postDeflateEncodedBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -187,7 +184,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void singleInterceptor() throws Exception {
+  void singleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -203,7 +200,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void multipleInterceptor() throws Exception {
+  void multipleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterfaceAsync api =
@@ -221,7 +218,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void customExpander() throws Exception {
+  void customExpander() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -235,7 +232,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void customExpanderListParam() throws Exception {
+  void customExpanderListParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -250,7 +247,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void customExpanderNullParam() throws Exception {
+  void customExpanderNullParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -264,7 +261,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void headerMap() throws Exception {
+  void headerMap() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -282,7 +279,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void headerMapWithHeaderAnnotations() throws Exception {
+  void headerMapWithHeaderAnnotations() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -313,7 +310,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMap() throws Exception {
+  void queryMap() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -330,7 +327,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapIterableValuesExpanded() throws Exception {
+  void queryMapIterableValuesExpanded() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -339,7 +336,7 @@ public class AsyncFeignTest {
     Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
-    queryMap.put("emptyListKey", new ArrayList<String>());
+    queryMap.put("emptyListKey", new ArrayList<>());
     queryMap.put("emptyStringKey", ""); // empty values are ignored.
     CompletableFuture<?> cf = api.queryMap(queryMap);
 
@@ -350,7 +347,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapWithQueryParams() throws Exception {
+  void queryMapWithQueryParams() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -377,7 +374,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapValueStartingWithBrace() throws Exception {
+  void queryMapValueStartingWithBrace() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -407,7 +404,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapPojoWithFullParams() throws Exception {
+  void queryMapPojoWithFullParams() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -420,7 +417,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapPojoWithPartialParams() throws Exception {
+  void queryMapPojoWithPartialParams() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -434,7 +431,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMapPojoWithEmptyParams() throws Exception {
+  void queryMapPojoWithEmptyParams() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -446,20 +443,20 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterfaceAsync#post()",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("post")));
-    assertEquals("TestInterfaceAsync#uriParam(String,URI,String)",
-        Feign.configKey(TestInterfaceAsync.class,
-            TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+  void configKeyFormatsAsExpected() throws Exception {
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("post")))
+            .isEqualTo("TestInterfaceAsync#post()");
+    assertThat(Feign.configKey(TestInterfaceAsync.class,
+        TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
+            String.class)))
+                .isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
   }
 
   @Test
-  public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+  void configKeyUsesChildType() throws Exception {
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   private <T> T unwrap(CompletableFuture<T> cf) throws Throwable {
@@ -471,58 +468,54 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void canOverrideErrorDecoder() throws Throwable {
+  void canOverrideErrorDecoder() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("bad zone name");
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().errorDecoder(new IllegalArgumentExceptionOn400())
             .target("http://localhost:" + server.getPort());
 
-    unwrap(api.post());
+    Throwable exception = assertThrows(IllegalArgumentException.class, () -> unwrap(api.post()));
+    assertThat(exception.getMessage()).contains("bad zone name");
   }
 
   @Test
-  public void overrideTypeSpecificDecoder() throws Throwable {
+  void overrideTypeSpecificDecoder() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
     TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decoder((response, type) -> "fail")
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("fail", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("fail");
   }
 
   /**
    * when you must parse a 2xx status to determine if the operation succeeded or not.
    */
   @Test
-  public void retryableExceptionInDecoder() throws Exception {
+  void retryableExceptionInDecoder() throws Exception {
     server.enqueue(new MockResponse().setBody("retry!"));
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterfaceAsync api = new TestInterfaceAsyncBuilder()
-        .decoder(new StringDecoder() {
-          @Override
-          public Object decode(Response response, Type type) throws IOException {
-            String string = super.decode(response, type).toString();
-            if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST,
-                  NON_RETRYABLE, response.request());
-            }
-            return string;
-          }
-        }).target("http://localhost:" + server.getPort());
+    TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decoder(new StringDecoder() {
+      @Override
+      public Object decode(Response response, Type type) throws IOException {
+        String string = super.decode(response, type).toString();
+        if ("retry!".equals(string)) {
+          throw new RetryableException(response.status(), string, HttpMethod.POST, NON_RETRYABLE,
+              response.request());
+        }
+        return string;
+      }
+    }).target("http://localhost:" + server.getPort());
 
     assertThat(api.post().get()).isEqualTo("success!");
     assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
-  public void doesntRetryAfterResponseIsSent() throws Throwable {
+  void doesntRetryAfterResponseIsSent() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("timeout reading POST http://");
 
     TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decoder((response, type) -> {
       throw new IOException("timeout");
@@ -530,16 +523,18 @@ public class AsyncFeignTest {
 
     CompletableFuture<?> cf = api.post();
     server.takeRequest();
-    unwrap(cf);
+    Throwable exception = assertThrows(FeignException.class, () -> unwrap(cf));
+    assertThat(exception.getMessage()).contains("timeout reading POST http://");
   }
 
   @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
+  void throwsFeignExceptionIncludingBody() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
     TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
-    }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+    })
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     CompletableFuture<?> cf = api.body("Request body");
     server.takeRequest();
@@ -551,16 +546,17 @@ public class AsyncFeignTest {
       assertThat(e.contentUTF8()).isEqualTo("Request body");
       return;
     }
-    fail();
+    fail("");
   }
 
   @Test
-  public void throwsFeignExceptionWithoutBody() {
+  void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
     TestInterfaceAsync api = AsyncFeign.builder().decoder((response, type) -> {
       throw new IOException("timeout");
-    }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+    })
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     try {
       api.noContent();
@@ -572,7 +568,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void ensureRetryerClonesItself() throws Throwable {
+  void ensureRetryerClonesItself() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
@@ -580,70 +576,56 @@ public class AsyncFeignTest {
 
     MockRetryer retryer = new MockRetryer();
 
-    TestInterfaceAsync api = AsyncFeign.builder()
-        .retryer(retryer)
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+    TestInterfaceAsync api = AsyncFeign.builder().retryer(retryer)
+        .errorDecoder(
+            (methodKey, response) -> new RetryableException(response.status(), "play it again sam!",
+                HttpMethod.POST, NON_RETRYABLE, response.request()))
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     unwrap(api.post());
     unwrap(api.post()); // if retryer instance was reused, this statement will throw an exception
-    assertEquals(4, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(4);
   }
 
   @Test
-  public void throwsOriginalExceptionAfterFailedRetries() throws Throwable {
+  void throwsOriginalExceptionAfterFailedRetries() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
     final String message = "the innerest";
-    thrown.expect(TestInterfaceException.class);
-    thrown.expectMessage(message);
 
-    TestInterfaceAsync api = AsyncFeign.builder()
-        .exceptionPropagationPolicy(UNWRAP)
+    TestInterfaceAsync api = AsyncFeign.builder().exceptionPropagationPolicy(UNWRAP)
         .retryer(new Retryer.Default(1, 1, 2))
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+        .errorDecoder(
+            (methodKey, response) -> new RetryableException(response.status(), "play it again sam!",
+                HttpMethod.POST, new TestInterfaceException(message), NON_RETRYABLE,
+                response.request()))
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    unwrap(api.post());
+    Throwable exception = assertThrows(TestInterfaceException.class, () -> unwrap(api.post()));
+    assertThat(exception.getMessage()).contains(message);
   }
 
   @Test
-  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Throwable {
+  void throwsRetryableExceptionIfNoUnderlyingCause() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
     String message = "play it again sam!";
-    thrown.expect(RetryableException.class);
-    thrown.expectMessage(message);
 
-    TestInterfaceAsync api = AsyncFeign.builder()
-        .exceptionPropagationPolicy(UNWRAP)
+    TestInterfaceAsync api = AsyncFeign.builder().exceptionPropagationPolicy(UNWRAP)
         .retryer(new Retryer.Default(1, 1, 2))
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST,
-                NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+        .errorDecoder((methodKey, response) -> new RetryableException(response.status(), message,
+            HttpMethod.POST, NON_RETRYABLE, response.request()))
+        .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    unwrap(api.post());
+    Throwable exception = assertThrows(RetryableException.class, () -> unwrap(api.post()));
+    assertThat(exception.getMessage()).contains(message);
   }
 
   @SuppressWarnings("deprecation")
   @Test
-  public void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
+  void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     headers.put("Location", Arrays.asList("http://bar.com"));
     final Response response = Response.builder().status(302).reason("Found").headers(headers)
@@ -664,9 +646,9 @@ public class AsyncFeignTest {
     execs.shutdown();
   }
 
-  @Ignore("FIXME random test failures when building on ubuntu, need to investigate further")
+  @Disabled("FIXME random test failures when building on ubuntu, need to investigate further")
   // @ParameterizedTest
-  @ValueSource(ints = {1, 5, 10, 100, 1000})
+  // @ValueSource(ints = {1, 5, 10, 100, 1000})
   public void cancelRetry(final int expectedTryCount) throws Throwable {
     // Arrange
     final CompletableFuture<Boolean> maximumTryCompleted = new CompletableFuture<>();
@@ -695,8 +677,7 @@ public class AsyncFeignTest {
             throw new CompletionException(e);
           }
         }, execs);
-    final TestInterfaceAsync sut = AsyncFeign.<Void>builder()
-        .client(clientMock)
+    final TestInterfaceAsync sut = AsyncFeign.<Void>builder().client(clientMock)
         .retryer(new Retryer.Default(0, Long.MAX_VALUE, expectedTryCount * 2))
         .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
@@ -732,22 +713,21 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void okIfDecodeRootCauseHasNoMessage() throws Throwable {
+  void okIfDecodeRootCauseHasNoMessage() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(DecodeException.class);
 
-    TestInterfaceAsync api = new TestInterfaceAsyncBuilder().decoder((response, type) -> {
-      throw new RuntimeException();
-    }).target("http://localhost:" + server.getPort());
+    TestInterfaceAsync api = new TestInterfaceAsyncBuilder()
+        .decoder((response, type) -> {
+          throw new RuntimeException();
+        })
+        .target("http://localhost:" + server.getPort());
 
-    unwrap(api.post());
+    assertThrows(DecodeException.class, () -> unwrap(api.post()));
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
+  void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(DecodeException.class);
-    thrown.expectCause(isA(NoSuchElementException.class));;
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().dismiss404().decoder((response, type) -> {
@@ -755,47 +735,45 @@ public class AsyncFeignTest {
           throw new NoSuchElementException();
         }).target("http://localhost:" + server.getPort());
 
-    unwrap(api.post());
+    DecodeException exception = assertThrows(DecodeException.class, () -> unwrap(api.post()));
+    assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
-    server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(IllegalArgumentException.class);
+  void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      server.enqueue(new MockResponse().setResponseCode(404));
 
-    TestInterfaceAsync api = new TestInterfaceAsyncBuilder().dismiss404()
-        .errorDecoder(new IllegalArgumentExceptionOn404())
-        .target("http://localhost:" + server.getPort());
+      TestInterfaceAsync api = new TestInterfaceAsyncBuilder().dismiss404()
+          .errorDecoder(new IllegalArgumentExceptionOn404())
+          .target("http://localhost:" + server.getPort());
 
-    CompletableFuture<Void> cf = api.queryMap(Collections.<String, Object>emptyMap());
-    server.takeRequest();
-    unwrap(cf);
+      CompletableFuture<Void> cf = api.queryMap(Collections.<String, Object>emptyMap());
+      server.takeRequest();
+      unwrap(cf);
+    });
   }
 
   @Test
-  public void okIfEncodeRootCauseHasNoMessage() throws Throwable {
+  void okIfEncodeRootCauseHasNoMessage() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(EncodeException.class);
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().encoder((object, bodyType, template) -> {
           throw new RuntimeException();
         }).target("http://localhost:" + server.getPort());
 
-    unwrap(api.body(Arrays.asList("foo")));
+    assertThrows(EncodeException.class, () -> unwrap(api.body(Arrays.asList("foo"))));
   }
 
   @Test
-  public void equalsHashCodeAndToStringWork() {
+  void equalsHashCodeAndToStringWork() {
     Target<TestInterfaceAsync> t1 =
-        new HardCodedTarget<>(TestInterfaceAsync.class,
-            "http://localhost:8080");
+        new HardCodedTarget<>(TestInterfaceAsync.class, "http://localhost:8080");
     Target<TestInterfaceAsync> t2 =
-        new HardCodedTarget<>(TestInterfaceAsync.class,
-            "http://localhost:8888");
-    Target<OtherTestInterfaceAsync> t3 =
-        new HardCodedTarget<>(OtherTestInterfaceAsync.class,
-            "http://localhost:8080");
+        new HardCodedTarget<>(TestInterfaceAsync.class, "http://localhost:8888");
+    Target<OtherTestInterfaceAsync> t3 = new HardCodedTarget<>(OtherTestInterfaceAsync.class,
+        "http://localhost:8080");
     TestInterfaceAsync i1 = AsyncFeign.builder().target(t1);
     TestInterfaceAsync i2 = AsyncFeign.builder().target(t1);
     TestInterfaceAsync i3 = AsyncFeign.builder().target(t2);
@@ -818,7 +796,7 @@ public class AsyncFeignTest {
 
   @SuppressWarnings("resource")
   @Test
-  public void decodeLogicSupportsByteArray() throws Throwable {
+  void decodeLogicSupportsByteArray() throws Throwable {
     byte[] expectedResponse = {12, 34, 56};
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
@@ -829,7 +807,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void encodeLogicSupportsByteArray() throws Exception {
+  void encodeLogicSupportsByteArray() throws Exception {
     byte[] expectedRequest = {12, 34, 56};
     server.enqueue(new MockResponse());
 
@@ -844,7 +822,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void encodedQueryParam() throws Exception {
+  void encodedQueryParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterfaceAsync api =
@@ -868,7 +846,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void responseMapperIsAppliedBeforeDelegate() throws IOException {
+  void responseMapperIsAppliedBeforeDelegate() throws IOException {
     ResponseMappingDecoder decoder =
         new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
     String output = (String) decoder.decode(responseWithText("response"), String.class);
@@ -877,17 +855,13 @@ public class AsyncFeignTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return new ResponseMapper() {
-      @SuppressWarnings("deprecation")
-      @Override
-      public Response map(Response response, Type type) {
-        try {
-          return response.toBuilder()
-              .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
-              .build();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+    return (response, type) -> {
+      try {
+        return response.toBuilder()
+            .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+            .build();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     };
   }
@@ -900,18 +874,18 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void mapAndDecodeExecutesMapFunction() throws Throwable {
+  void mapAndDecodeExecutesMapFunction() throws Throwable {
     server.enqueue(new MockResponse().setBody("response!"));
 
     TestInterfaceAsync api =
         AsyncFeign.builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
-    assertEquals("RESPONSE!", unwrap(api.post()));
+    assertThat(unwrap(api.post())).isEqualTo("RESPONSE!");
   }
 
   @Test
-  public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
+  void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -928,7 +902,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void queryMap_with_child_pojo() throws Exception {
+  void queryMap_with_child_pojo() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -947,7 +921,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
+  void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -965,7 +939,7 @@ public class AsyncFeignTest {
   }
 
   @Test
-  public void beanQueryMapEncoderWithEmptyParams() throws Exception {
+  void beanQueryMapEncoderWithEmptyParams() throws Exception {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -1134,19 +1108,15 @@ public class AsyncFeignTest {
 
   static final class TestInterfaceAsyncBuilder {
 
-    private final AsyncFeign.AsyncBuilder<Void> delegate = AsyncFeign.<Void>builder()
-        .decoder(new Decoder.Default()).encoder(new Encoder() {
-
-          @SuppressWarnings("deprecation")
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            if (object instanceof Map) {
-              template.body(new Gson().toJson(object));
-            } else {
-              template.body(object.toString());
-            }
-          }
-        });
+    private final AsyncFeign.AsyncBuilder<Void> delegate =
+        AsyncFeign.<Void>builder().decoder(new Decoder.Default())
+            .encoder((object, bodyType, template) -> {
+              if (object instanceof Map) {
+                template.body(new Gson().toJson(object));
+              } else {
+                template.body(object.toString());
+              }
+            });
 
     TestInterfaceAsyncBuilder requestInterceptor(RequestInterceptor requestInterceptor) {
       delegate.requestInterceptor(requestInterceptor);
@@ -1188,35 +1158,39 @@ public class AsyncFeignTest {
    */
 
   @Test
-  public void testNonInterface() {
-    thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.builder().target(NonInterface.class, "http://localhost");
+  void nonInterface() {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      AsyncFeign.builder().target(NonInterface.class, "http://localhost");
+    });
   }
 
   @Test
-  public void testExtendedCFReturnType() {
-    thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.builder().target(ExtendedCFApi.class, "http://localhost");
+  void extendedCFReturnType() {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      AsyncFeign.builder().target(ExtendedCFApi.class, "http://localhost");
+    });
   }
 
   @Test
-  public void testLowerWildReturnType() {
-    thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.builder().target(LowerWildApi.class, "http://localhost");
+  void lowerWildReturnType() {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      AsyncFeign.builder().target(LowerWildApi.class, "http://localhost");
+    });
   }
 
   @Test
-  public void testUpperWildReturnType() {
-    thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.builder().target(UpperWildApi.class, "http://localhost");
+  void upperWildReturnType() {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      AsyncFeign.builder().target(UpperWildApi.class, "http://localhost");
+    });
   }
 
   @Test
-  public void testrWildReturnType() {
-    thrown.expect(IllegalArgumentException.class);
-    AsyncFeign.builder().target(WildApi.class, "http://localhost");
+  void rWildReturnType() {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      AsyncFeign.builder().target(WildApi.class, "http://localhost");
+    });
   }
-
 
   static final class ExtendedCF<T> extends CompletableFuture<T> {
 
@@ -1274,6 +1248,11 @@ public class AsyncFeignTest {
     public Instant instant() {
       return Instant.ofEpochMilli(millis);
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 
 }

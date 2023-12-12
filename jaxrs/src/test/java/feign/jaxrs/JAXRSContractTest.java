@@ -13,8 +13,6 @@
  */
 package feign.jaxrs;
 
-import feign.MethodMetadata;
-import feign.Response;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,6 +32,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import feign.MethodMetadata;
+import feign.Response;
 
 /**
  * Tests interfaces defined per {@link JAXRSContract} are interpreted into expected

@@ -13,32 +13,29 @@
  */
 package feign.ribbon;
 
-import com.netflix.client.ClientException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.net.ConnectException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import static org.hamcrest.CoreMatchers.isA;
+import org.junit.jupiter.api.Test;
+import com.netflix.client.ClientException;
 
-public class PropagateFirstIOExceptionTest {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+class PropagateFirstIOExceptionTest {
 
   @Test
-  public void propagatesNestedIOE() throws IOException {
-    thrown.expect(IOException.class);
+  void propagatesNestedIOE() throws IOException {
+    assertThatExceptionOfType(IOException.class).isThrownBy(() -> {
 
-    RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
+      RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
+    });
   }
 
   @Test
-  public void propagatesFirstNestedIOE() throws IOException {
-    thrown.expect(IOException.class);
-    thrown.expectCause(isA(IOException.class));
-
-    RibbonClient.propagateFirstIOException(new ClientException(new IOException(new IOException())));
+  void propagatesFirstNestedIOE() throws IOException {
+    IOException exception = assertThrows(IOException.class, () -> RibbonClient
+        .propagateFirstIOException(new ClientException(new IOException(new IOException()))));
+    assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
   /**
@@ -46,15 +43,16 @@ public class PropagateFirstIOExceptionTest {
    * exception
    */
   @Test
-  public void propagatesDoubleNestedIOE() throws IOException {
-    thrown.expect(ConnectException.class);
+  void propagatesDoubleNestedIOE() throws IOException {
+    assertThatExceptionOfType(ConnectException.class).isThrownBy(() -> {
 
-    RibbonClient.propagateFirstIOException(
-        new ClientException(new RuntimeException(new ConnectException())));
+      RibbonClient.propagateFirstIOException(
+          new ClientException(new RuntimeException(new ConnectException())));
+    });
   }
 
   @Test
-  public void doesntPropagateWhenNotIOE() throws IOException {
+  void doesntPropagateWhenNotIOE() throws IOException {
     RibbonClient.propagateFirstIOException(
         new ClientException(new RuntimeException()));
   }

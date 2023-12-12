@@ -131,13 +131,15 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
       }
       if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
         isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
-        boolean isDeflate = headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
-        if(isDeflate) {
+        boolean isDeflate =
+            headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
+        if (isDeflate) {
           // DeflateCompressingEntity not available in hc5 yet
-          throw new IllegalArgumentException("Deflate Content-Encoding is not supported by feign-hc5");
+          throw new IllegalArgumentException(
+              "Deflate Content-Encoding is not supported by feign-hc5");
         }
       }
-      
+
       for (final String headerValue : headerEntry.getValue()) {
         httpRequest.addHeader(headerName, headerValue);
       }
@@ -150,9 +152,9 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     // request body
     // final Body requestBody = request.requestBody();
     byte[] data = request.body();
-    if(isGzip && data != null && data.length > 0) {
+    if (isGzip && data != null && data.length > 0) {
       // compress if needed
-      try(ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
           GZIPOutputStream gzipOs = new GZIPOutputStream(baos, true)) {
         gzipOs.write(data);
         gzipOs.flush();

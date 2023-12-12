@@ -13,22 +13,19 @@
  */
 package feign.hc5;
 
-import static org.junit.Assume.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
-
 import org.junit.jupiter.api.Test;
-
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.RequestLine;
 import feign.client.AbstractClientTest;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 
 /**
  * Tests that 'Content-Encoding: gzip' is handled correctly
@@ -49,25 +46,26 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
     assertEquals("foo", testInterface.withBody("bar"));
     final RecordedRequest request1 = server.takeRequest();
     assertEquals("/test", request1.getPath());
-    
-    ByteArrayInputStream bodyContentIs = new ByteArrayInputStream(request1.getBody().readByteArray());
+
+    ByteArrayInputStream bodyContentIs =
+        new ByteArrayInputStream(request1.getBody().readByteArray());
     byte[] uncompressed = new GZIPInputStream(bodyContentIs).readAllBytes();
-    
+
     assertEquals("bar", new String(uncompressed, StandardCharsets.UTF_8));
 
   }
-  
+
   @Test
   public void testWithUncompressedBody() throws InterruptedException, IOException {
-      final TestInterface testInterface = buildTestInterface(false);
-      
-      server.enqueue(new MockResponse().setBody("foo"));
-      
-      assertEquals("foo", testInterface.withBody("bar"));
-      final RecordedRequest request1 = server.takeRequest();
-      assertEquals("/test", request1.getPath());
-      
-      assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
+    final TestInterface testInterface = buildTestInterface(false);
+
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    assertEquals("foo", testInterface.withBody("bar"));
+    final RecordedRequest request1 = server.takeRequest();
+    assertEquals("/test", request1.getPath());
+
+    assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
   }
 
 
@@ -79,13 +77,13 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
 
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeTrue("HC5 client seems to hang with response size equalto Long.MAX", false);
+  public void veryLongResponseNullLength() {
+    assumeTrue(true, "HC5 client seems to hang with response size equalto Long.MAX");
   }
 
   @Override
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue("this test is flaky on windows, but works fine.", false);
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
+    assumeTrue(true, "this test is flaky on windows, but works fine.");
   }
 
   public interface TestInterface {

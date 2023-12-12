@@ -16,8 +16,8 @@ package feign.reactive.examples;
 import feign.Logger;
 
 public class ConsoleLogger extends Logger {
-    @Override
-    protected void log(String configKey, String format, Object... args) {
-        System.out.println(String.format(methodTag(configKey) + format, args));
-    }
+  @Override
+  protected void log(String configKey, String format, Object... args) {
+    System.out.println(String.format(methodTag(configKey) + format, args));
+  }
 }

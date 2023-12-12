@@ -18,12 +18,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RequestHeadersTest {
+class RequestHeadersTest {
 
   @Test
-  public void shouldCreateEmptyRequestHeaders() {
+  void shouldCreateEmptyRequestHeaders() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .build();
@@ -31,7 +31,7 @@ public class RequestHeadersTest {
   }
 
   @Test
-  public void shouldReturnZeroSizeForUnknownKey() {
+  void shouldReturnZeroSizeForUnknownKey() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .build();
@@ -39,7 +39,7 @@ public class RequestHeadersTest {
   }
 
   @Test
-  public void shouldCreateRequestHeadersFromSingleValue() {
+  void shouldCreateRequestHeadersFromSingleValue() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("header", "val")
@@ -53,7 +53,7 @@ public class RequestHeadersTest {
   }
 
   @Test
-  public void shouldCreateRequestHeadersFromSingleValueAndCollection() {
+  void shouldCreateRequestHeadersFromSingleValueAndCollection() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("header", "val")
@@ -68,15 +68,15 @@ public class RequestHeadersTest {
   }
 
   @Test
-  public void shouldCreateRequestHeadersFromHeadersMap() {
-    Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+  void shouldCreateRequestHeadersFromHeadersMap() {
+    Map<String, Collection<String>> map = new HashMap<>();
     map.put("header", Arrays.asList("val", "val2"));
     RequestHeaders headers = RequestHeaders.of(map);
     assertThat(headers.size()).isEqualTo(1);
   }
 
   @Test
-  public void shouldPrintHeaders() {
+  void shouldPrintHeaders() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("header", "val")

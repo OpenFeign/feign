@@ -15,15 +15,12 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -33,9 +30,7 @@ import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPMessage;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -45,13 +40,10 @@ import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
 
 @SuppressWarnings("deprecation")
-public class SOAPCodecTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
+class SOAPCodecTest {
 
   @Test
-  public void encodesSoap() {
+  void encodesSoap() {
     Encoder encoder = new SOAPEncoder.Builder()
         .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
         .build();
@@ -76,10 +68,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void doesntEncodeParameterizedTypes() throws Exception {
-    thrown.expect(UnsupportedOperationException.class);
-    thrown.expectMessage(
-        "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
+  void doesntEncodeParameterizedTypes() throws Exception {
 
     class ParameterizedHolder {
 
@@ -89,13 +78,16 @@ public class SOAPCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     RequestTemplate template = new RequestTemplate();
-    new SOAPEncoder(new JAXBContextFactory.Builder().build())
-        .encode(Collections.emptyMap(), parameterized, template);
+    Throwable exception = assertThrows(UnsupportedOperationException.class,
+        () -> new SOAPEncoder(new JAXBContextFactory.Builder().build())
+            .encode(Collections.emptyMap(), parameterized, template));
+    assertThat(exception.getMessage()).contains(
+        "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
   }
 
 
   @Test
-  public void encodesSoapWithCustomJAXBMarshallerEncoding() {
+  void encodesSoapWithCustomJAXBMarshallerEncoding() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
@@ -127,7 +119,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBSchemaLocation() {
+  void encodesSoapWithCustomJAXBSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -155,7 +147,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBNoSchemaLocation() {
+  void encodesSoapWithCustomJAXBNoSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
@@ -182,7 +174,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void encodesSoapWithCustomJAXBFormattedOuput() {
+  void encodesSoapWithCustomJAXBFormattedOuput() {
     Encoder encoder = new SOAPEncoder.Builder().withFormattedOutput(true)
         .withJAXBContextFactory(new JAXBContextFactory.Builder()
             .build())
@@ -210,7 +202,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodesSoap() throws Exception {
+  void decodesSoap() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -235,11 +227,11 @@ public class SOAPCodecTest {
 
     SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
   @Test
-  public void decodesSoapWithSchemaOnEnvelope() throws Exception {
+  void decodesSoapWithSchemaOnEnvelope() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -269,11 +261,11 @@ public class SOAPCodecTest {
         .useFirstChild()
         .build();
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
   @Test
-  public void decodesSoap1_2Protocol() throws Exception {
+  void decodesSoap1_2Protocol() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -298,17 +290,12 @@ public class SOAPCodecTest {
 
     SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
 
-    assertEquals(mock, decoder.decode(response, GetPrice.class));
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
   }
 
 
   @Test
-  public void doesntDecodeParameterizedTypes() throws Exception {
-    thrown.expect(feign.codec.DecodeException.class);
-    thrown.expectMessage(
-        "java.util.Map is an interface, and JAXB can't handle interfaces.\n"
-            + "\tthis problem is related to the following location:\n"
-            + "\t\tat java.util.Map");
+  void doesntDecodeParameterizedTypes() throws Exception {
 
     class ParameterizedHolder {
 
@@ -333,7 +320,13 @@ public class SOAPCodecTest {
             + "</Envelope>", UTF_8)
         .build();
 
-    new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
+    Throwable exception = assertThrows(feign.codec.DecodeException.class,
+        () -> new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response,
+            parameterized));
+    assertThat(exception.getMessage())
+        .contains("java.util.Map is an interface, and JAXB can't handle interfaces.\n"
+            + "\tthis problem is related to the following location:\n"
+            + "\t\tat java.util.Map");
   }
 
   @XmlRootElement
@@ -349,7 +342,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodeAnnotatedParameterizedTypes() throws Exception {
+  void decodeAnnotatedParameterizedTypes() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
@@ -378,7 +371,7 @@ public class SOAPCodecTest {
    * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  void notFoundDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -390,7 +383,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void changeSoapProtocolAndSetHeader() {
+  void changeSoapProtocolAndSetHeader() {
     Encoder encoder =
         new ChangedProtocolAndHeaderSOAPEncoder(new JAXBContextFactory.Builder().build());
 

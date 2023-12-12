@@ -136,10 +136,12 @@ public final class ApacheHttp5Client implements Client {
       }
       if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
         isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
-        boolean isDeflate = headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
+        boolean isDeflate =
+            headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
         if (isDeflate) {
           // DeflateCompressingEntity not available in hc5 yet
-          throw new IllegalArgumentException("Deflate Content-Encoding is not supported by feign-hc5");
+          throw new IllegalArgumentException(
+              "Deflate Content-Encoding is not supported by feign-hc5");
         }
       }
       for (final String headerValue : headerEntry.getValue()) {
@@ -168,8 +170,8 @@ public final class ApacheHttp5Client implements Client {
         }
         entity = new StringEntity(content, contentType);
       }
-      if(isGzip) {
-        entity = new GzipCompressingEntity(entity);  
+      if (isGzip) {
+        entity = new GzipCompressingEntity(entity);
       }
       requestBuilder.setEntity(entity);
     } else {

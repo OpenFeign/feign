@@ -13,6 +13,42 @@
  */
 package feign;
 
+import static feign.ExceptionPropagationPolicy.UNWRAP;
+import static feign.Util.UTF_8;
+import static feign.assertj.MockWebServerAssertions.assertThat;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicReference;
+import org.assertj.core.data.MapEntry;
+import org.assertj.core.util.Maps;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import feign.Feign.ResponseMappingDecoder;
@@ -27,99 +63,68 @@ import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
 import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.SocketPolicy;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketPolicy;
 import okio.Buffer;
-import org.assertj.core.data.MapEntry;
-import org.assertj.core.util.Maps;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentMatchers;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import static feign.ExceptionPropagationPolicy.UNWRAP;
-import static feign.Util.UTF_8;
-import static feign.assertj.MockWebServerAssertions.assertThat;
-import static java.util.Collections.emptyList;
-import static junit.framework.TestCase.assertNotNull;
-import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
 
   private static final Long NON_RETRYABLE = null;
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void iterableQueryParams() throws Exception {
+  void iterableQueryParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.queryParams("user", Arrays.asList("apple", "pear"));
 
-    assertThat(server.takeRequest())
-        .hasPath("/?1=user&2=apple&2=pear");
+    assertThat(server.takeRequest()).hasPath("/?1=user&2=apple&2=pear");
   }
 
   @Test
-  public void arrayQueryMapParams() throws Exception {
+  void arrayQueryMapParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.queryMapWithArrayValues(Maps.newHashMap("1", new String[] {"apple", "pear"}));
 
-    assertThat(server.takeRequest())
-        .hasPath("/?1=apple&1=pear");
+    assertThat(server.takeRequest()).hasPath("/?1=apple&1=pear");
   }
 
   @Test
-  public void typedResponse() throws Exception {
+  void typedResponse() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     TypedResponse response = api.getWithTypedResponse();
 
-    assertEquals(200, response.status());
-    assertEquals("foo", response.body());
-    assertEquals("HTTP/1.1", response.protocolVersion().toString());
+    assertThat(response.status()).isEqualTo(200);
+    assertThat(response.body()).isEqualTo("foo");
+    assertThat(response.protocolVersion().toString()).isEqualTo("HTTP/1.1");
     assertNotNull(response.headers());
     assertNotNull(response.request());
   }
 
   @Test
-  public void postTemplateParamsResolve() throws Exception {
+  void postTemplateParamsResolve() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.login("netflix", "denominator", "password");
 
-    assertThat(server.takeRequest())
-        .hasBody(
-            "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
+    assertThat(server.takeRequest()).hasBody(
+        "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\": \"password\"}");
   }
 
   @Test
-  public void postFormParams() throws Exception {
+  void postFormParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -132,7 +137,7 @@ public class FeignTest {
   }
 
   @Test
-  public void postBodyParam() throws Exception {
+  void postBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -149,18 +154,16 @@ public class FeignTest {
    * type.
    */
   @Test
-  public void bodyTypeCorrespondsWithParameterType() throws Exception {
+  void bodyTypeCorrespondsWithParameterType() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final AtomicReference<Type> encodedType = new AtomicReference<>();
-    TestInterface api = new TestInterfaceBuilder()
-        .encoder(new Encoder.Default() {
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            encodedType.set(bodyType);
-          }
-        })
-        .target("http://localhost:" + server.getPort());
+    TestInterface api = new TestInterfaceBuilder().encoder(new Encoder.Default() {
+      @Override
+      public void encode(Object object, Type bodyType, RequestTemplate template) {
+        encodedType.set(bodyType);
+      }
+    }).target("http://localhost:" + server.getPort());
 
     api.body(Arrays.asList("netflix", "denominator", "password"));
 
@@ -170,37 +173,34 @@ public class FeignTest {
   }
 
   @Test
-  public void postGZIPEncodedBodyParam() throws Exception {
+  void postGZIPEncodedBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.gzipBody(Arrays.asList("netflix", "denominator", "password"));
 
-    assertThat(server.takeRequest())
-        .hasNoHeaderNamed("Content-Length")
+    assertThat(server.takeRequest()).hasNoHeaderNamed("Content-Length")
         .hasGzippedBody("[netflix, denominator, password]".getBytes(UTF_8));
   }
 
   @Test
-  public void postDeflateEncodedBodyParam() throws Exception {
+  void postDeflateEncodedBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.deflateBody(Arrays.asList("netflix", "denominator", "password"));
 
-    assertThat(server.takeRequest())
-        .hasNoHeaderNamed("Content-Length")
+    assertThat(server.takeRequest()).hasNoHeaderNamed("Content-Length")
         .hasDeflatedBody("[netflix, denominator, password]".getBytes(UTF_8));
   }
 
   @Test
-  public void singleInterceptor() throws Exception {
+  void singleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = new TestInterfaceBuilder()
-        .requestInterceptor(new ForwardedForInterceptor())
+    TestInterface api = new TestInterfaceBuilder().requestInterceptor(new ForwardedForInterceptor())
         .target("http://localhost:" + server.getPort());
 
     api.post();
@@ -210,76 +210,70 @@ public class FeignTest {
   }
 
   @Test
-  public void multipleInterceptor() throws Exception {
+  void multipleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    TestInterface api = new TestInterfaceBuilder()
-        .requestInterceptor(new ForwardedForInterceptor())
+    TestInterface api = new TestInterfaceBuilder().requestInterceptor(new ForwardedForInterceptor())
         .requestInterceptor(new UserAgentInterceptor())
         .target("http://localhost:" + server.getPort());
 
     api.post();
 
-    assertThat(server.takeRequest())
-        .hasHeaders(entry("X-Forwarded-For", Collections.singletonList("origin.host.com")),
-            entry("User-Agent", Collections.singletonList("Feign")));
+    assertThat(server.takeRequest()).hasHeaders(
+        entry("X-Forwarded-For", Collections.singletonList("origin.host.com")),
+        entry("User-Agent", Collections.singletonList("Feign")));
   }
 
   @Test
-  public void customExpander() throws Exception {
+  void customExpander() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.expand(new TestClock(1234L));
 
-    assertThat(server.takeRequest())
-        .hasPath("/?clock=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
   }
 
   @Test
-  public void customExpanderListParam() throws Exception {
+  void customExpanderListParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.expandList(Arrays.asList(new TestClock(1234L), new TestClock(12345L)));
 
-    assertThat(server.takeRequest())
-        .hasPath("/?clock=1234&clock=12345");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234&clock=12345");
   }
 
   @Test
-  public void customExpanderNullParam() throws Exception {
+  void customExpanderNullParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.expandList(Arrays.asList(new TestClock(1234l), null));
 
-    assertThat(server.takeRequest())
-        .hasPath("/?clock=1234");
+    assertThat(server.takeRequest()).hasPath("/?clock=1234");
   }
 
   @Test
-  public void headerMap() throws Exception {
+  void headerMap() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> headerMap = new LinkedHashMap<>();
     headerMap.put("Content-Type", "myContent");
     headerMap.put("Custom-Header", "fooValue");
     api.headerMap(headerMap);
 
-    assertThat(server.takeRequest())
-        .hasHeaders(
-            entry("Content-Type", Arrays.asList("myContent")),
-            entry("Custom-Header", Arrays.asList("fooValue")));
+    assertThat(server.takeRequest()).hasHeaders(entry("Content-Type", Arrays.asList("myContent")),
+        entry("Custom-Header", Arrays.asList("fooValue")));
   }
 
   @Test
-  public void HeaderMapUserObject() throws Exception {
+  void HeaderMapUserObject() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -289,27 +283,24 @@ public class FeignTest {
     headerMap.setGrade("5");
     api.HeaderMapUserObject(headerMap);
 
-    assertThat(server.takeRequest())
-        .hasHeaders(
-            entry("name1", Collections.singletonList("hello")),
-            entry("grade1", Collections.singletonList("5")));
+    assertThat(server.takeRequest()).hasHeaders(entry("name1", Collections.singletonList("hello")),
+        entry("grade1", Collections.singletonList("5")));
   }
 
   @Test
-  public void headerMapWithHeaderAnnotations() throws Exception {
+  void headerMapWithHeaderAnnotations() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
-    Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> headerMap = new LinkedHashMap<>();
     headerMap.put("Custom-Header", "fooValue");
     api.headerMapWithHeaderAnnotations(headerMap);
 
     // header map should be additive for headers provided by annotations
-    assertThat(server.takeRequest())
-        .hasHeaders(
-            entry("Content-Encoding", Collections.singletonList("deflate")),
-            entry("Custom-Header", Collections.singletonList("fooValue")));
+    assertThat(server.takeRequest()).hasHeaders(
+        entry("Content-Encoding", Collections.singletonList("deflate")),
+        entry("Custom-Header", Collections.singletonList("fooValue")));
 
     server.enqueue(new MockResponse());
     headerMap.put("Content-Encoding", "overrideFromMap");
@@ -320,14 +311,13 @@ public class FeignTest {
      * @HeaderMap map values no longer override @Header parameters. This caused confusion as it is
      * valid to have more than one value for a header.
      */
-    assertThat(server.takeRequest())
-        .hasHeaders(
-            entry("Content-Encoding", Arrays.asList("deflate", "overrideFromMap")),
-            entry("Custom-Header", Collections.singletonList("fooValue")));
+    assertThat(server.takeRequest()).hasHeaders(
+        entry("Content-Encoding", Arrays.asList("deflate", "overrideFromMap")),
+        entry("Custom-Header", Collections.singletonList("fooValue")));
   }
 
   @Test
-  public void queryMap() throws Exception {
+  void queryMap() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -337,12 +327,11 @@ public class FeignTest {
     queryMap.put("fooKey", "fooValue");
     api.queryMap(queryMap);
 
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice&fooKey=fooValue");
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey=fooValue");
   }
 
   @Test
-  public void queryMapWithNull() throws Exception {
+  void queryMapWithNull() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -352,12 +341,11 @@ public class FeignTest {
     queryMap.put("fooKey", null);
     api.queryMap(queryMap);
 
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice");
+    assertThat(server.takeRequest()).hasPath("/?name=alice");
   }
 
   @Test
-  public void queryMapWithEmpty() throws Exception {
+  void queryMapWithEmpty() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -367,12 +355,11 @@ public class FeignTest {
     queryMap.put("fooKey", "");
     api.queryMap(queryMap);
 
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice&fooKey");
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey");
   }
 
   @Test
-  public void queryMapIterableValuesExpanded() throws Exception {
+  void queryMapIterableValuesExpanded() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
@@ -380,7 +367,7 @@ public class FeignTest {
     Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
-    queryMap.put("emptyListKey", new ArrayList<String>());
+    queryMap.put("emptyListKey", new ArrayList<>());
     queryMap.put("emptyStringKey", ""); // empty values are ignored.
     api.queryMap(queryMap);
 
@@ -389,135 +376,121 @@ public class FeignTest {
   }
 
   @Test
-  public void queryMapWithQueryParams() throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-        .target("http://localhost:" + server.getPort());
-
-    server.enqueue(new MockResponse());
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("fooKey", "fooValue");
-    api.queryMapWithQueryParams("alice", queryMap);
-    // query map should be expanded after built-in parameters
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice&fooKey=fooValue");
-
-    server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("name", "bob");
-    api.queryMapWithQueryParams("alice", queryMap);
-    // queries are additive
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice&name=bob");
-
-    server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("name", null);
-    api.queryMapWithQueryParams("alice", queryMap);
-    // null value for a query map key removes query parameter
-    assertThat(server.takeRequest())
-        .hasPath("/?name=alice");
-  }
-
-  @Test
-  public void queryMapValueStartingWithBrace() throws Exception {
+  void queryMapWithQueryParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("name", "{alice");
-    api.queryMap(queryMap);
-    assertThat(server.takeRequest())
-        .hasPath("/?name=%7Balice");
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("fooKey", "fooValue");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // query map should be expanded after built-in parameters
+    assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey=fooValue");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("{name", "alice");
-    api.queryMap(queryMap);
-    assertThat(server.takeRequest())
-        .hasPath("/?%7Bname=alice");
+    queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "bob");
+    api.queryMapWithQueryParams("alice", queryMap);
+    // queries are additive
+    assertThat(server.takeRequest()).hasPath("/?name=alice&name=bob");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("name", "%7Balice");
-    api.queryMap(queryMap);
-    assertThat(server.takeRequest())
-        .hasPath("/?name=%7Balice");
-
-    server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
-    queryMap.put("%7Bname", "%7Balice");
-    api.queryMap(queryMap);
-    assertThat(server.takeRequest())
-        .hasPath("/?%7Bname=%7Balice");
+    queryMap = new LinkedHashMap<>();
+    queryMap.put("name", null);
+    api.queryMapWithQueryParams("alice", queryMap);
+    // null value for a query map key removes query parameter
+    assertThat(server.takeRequest()).hasPath("/?name=alice");
   }
 
   @Test
-  public void queryMapPojoWithFullParams() throws Exception {
+  void queryMapValueStartingWithBrace() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "{alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<>();
+    queryMap.put("{name", "alice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?%7Bname=alice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<>();
+    queryMap.put("name", "%7Balice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
+
+    server.enqueue(new MockResponse());
+    queryMap = new LinkedHashMap<>();
+    queryMap.put("%7Bname", "%7Balice");
+    api.queryMap(queryMap);
+    assertThat(server.takeRequest()).hasPath("/?%7Bname=%7Balice");
+  }
+
+  @Test
+  void queryMapPojoWithFullParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo("Name", 3);
 
     server.enqueue(new MockResponse());
     api.queryMapPojo(customPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams(Arrays.asList("name=Name", "number=3"));
+    assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("name=Name", "number=3"));
   }
 
   @Test
-  public void queryMapPojoWithPartialParams() throws Exception {
+  void queryMapPojoWithPartialParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo("Name", null);
 
     server.enqueue(new MockResponse());
     api.queryMapPojo(customPojo);
-    assertThat(server.takeRequest())
-        .hasPath("/?name=Name");
+    assertThat(server.takeRequest()).hasPath("/?name=Name");
   }
 
   @Test
-  public void queryMapPojoWithEmptyParams() throws Exception {
+  void queryMapPojoWithEmptyParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     CustomPojo customPojo = new CustomPojo(null, null);
 
     server.enqueue(new MockResponse());
     api.queryMapPojo(customPojo);
-    assertThat(server.takeRequest())
-        .hasPath("/");
+    assertThat(server.takeRequest()).hasPath("/");
   }
 
   @Test
-  public void configKeyFormatsAsExpected() throws Exception {
-    assertEquals("TestInterface#post()",
-        Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")));
-    assertEquals("TestInterface#uriParam(String,URI,String)",
-        Feign.configKey(TestInterface.class, TestInterface.class
-            .getDeclaredMethod("uriParam", String.class, URI.class,
-                String.class)));
+  void configKeyFormatsAsExpected() throws Exception {
+    assertThat(Feign.configKey(TestInterface.class, TestInterface.class.getDeclaredMethod("post")))
+        .isEqualTo("TestInterface#post()");
+    assertThat(Feign.configKey(TestInterface.class,
+        TestInterface.class.getDeclaredMethod("uriParam", String.class, URI.class, String.class)))
+            .isEqualTo("TestInterface#uriParam(String,URI,String)");
   }
 
   @Test
-  public void configKeyUsesChildType() throws Exception {
-    assertEquals("List#iterator()",
-        Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")));
+  void configKeyUsesChildType() throws Exception {
+    assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
+        .isEqualTo("List#iterator()");
   }
 
   @Test
-  public void canOverrideErrorDecoder() throws Exception {
+  void canOverrideErrorDecoder() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("bad zone name");
 
-    TestInterface api = new TestInterfaceBuilder()
-        .errorDecoder(new IllegalArgumentExceptionOn400())
+    TestInterface api = new TestInterfaceBuilder().errorDecoder(new IllegalArgumentExceptionOn400())
         .target("http://localhost:" + server.getPort());
 
-    api.post();
+    Throwable exception = assertThrows(IllegalArgumentException.class, () -> api.post());
+    assertThat(exception.getMessage()).contains("bad zone name");
   }
 
   @Test
-  public void retriesLostConnectionBeforeRead() throws Exception {
+  void retriesLostConnectionBeforeRead() throws Exception {
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server.enqueue(new MockResponse().setBody("success!"));
 
@@ -525,74 +498,64 @@ public class FeignTest {
 
     api.post();
 
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
-  public void overrideTypeSpecificDecoder() throws Exception {
+  void overrideTypeSpecificDecoder() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterface api = new TestInterfaceBuilder()
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) {
-            return "fail";
-          }
-        }).target("http://localhost:" + server.getPort());
+    TestInterface api = new TestInterfaceBuilder().decoder((response, type) -> "fail")
+        .target("http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "fail");
+    assertThat("fail").isEqualTo(api.post());
   }
 
   /**
    * when you must parse a 2xx status to determine if the operation succeeded or not.
    */
   @Test
-  public void retryableExceptionInDecoder() throws Exception {
+  void retryableExceptionInDecoder() throws Exception {
     server.enqueue(new MockResponse().setBody("retry!"));
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterface api = new TestInterfaceBuilder()
-        .decoder(new StringDecoder() {
-          @Override
-          public Object decode(Response response, Type type) throws IOException {
-            String string = super.decode(response, type).toString();
-            if ("retry!".equals(string)) {
-              throw new RetryableException(response.status(), string, HttpMethod.POST,
-                  NON_RETRYABLE, response.request());
-            }
-            return string;
-          }
-        }).target("http://localhost:" + server.getPort());
+    TestInterface api = new TestInterfaceBuilder().decoder(new StringDecoder() {
+      @Override
+      public Object decode(Response response, Type type) throws IOException {
+        String string = super.decode(response, type).toString();
+        if ("retry!".equals(string)) {
+          throw new RetryableException(response.status(), string, HttpMethod.POST, NON_RETRYABLE,
+              response.request());
+        }
+        return string;
+      }
+    }).target("http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "success!");
-    assertEquals(2, server.getRequestCount());
+    assertThat("success!").isEqualTo(api.post());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
-  public void doesntRetryAfterResponseIsSent() throws Exception {
+  void doesntRetryAfterResponseIsSent() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("timeout reading POST http://");
 
     TestInterface api = new TestInterfaceBuilder()
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) throws IOException {
-            throw new IOException("timeout");
-          }
-        }).target("http://localhost:" + server.getPort());
-
-    api.post();
-  }
-
-  @Test
-  public void throwsFeignExceptionIncludingBody() {
-    server.enqueue(new MockResponse().setBody("success!"));
-
-    TestInterface api = Feign.builder()
         .decoder((response, type) -> {
           throw new IOException("timeout");
         })
+        .target("http://localhost:" + server.getPort());
+
+    Throwable exception = assertThrows(FeignException.class, () -> api.post());
+    assertThat(exception.getMessage()).contains("timeout reading POST http://");
+  }
+
+  @Test
+  void throwsFeignExceptionIncludingBody() {
+    server.enqueue(new MockResponse().setBody("success!"));
+
+    TestInterface api = Feign.builder().decoder((response, type) -> {
+      throw new IOException("timeout");
+    })
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     try {
@@ -605,13 +568,12 @@ public class FeignTest {
   }
 
   @Test
-  public void throwsFeignExceptionWithoutBody() {
+  void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
-    TestInterface api = Feign.builder()
-        .decoder((response, type) -> {
-          throw new IOException("timeout");
-        })
+    TestInterface api = Feign.builder().decoder((response, type) -> {
+      throw new IOException("timeout");
+    })
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     try {
@@ -624,7 +586,7 @@ public class FeignTest {
   }
 
   @Test
-  public void ensureRetryerClonesItself() throws Exception {
+  void ensureRetryerClonesItself() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo 2"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 3"));
@@ -632,83 +594,64 @@ public class FeignTest {
 
     MockRetryer retryer = new MockRetryer();
 
-    TestInterface api = Feign.builder()
-        .retryer(retryer)
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface api = Feign.builder().retryer(retryer)
+        .errorDecoder(
+            (methodKey, response) -> new RetryableException(response.status(), "play it again sam!",
+                HttpMethod.POST, NON_RETRYABLE, response.request()))
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.post();
     api.post(); // if retryer instance was reused, this statement will throw an exception
-    assertEquals(4, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(4);
   }
 
   @Test
-  public void throwsOriginalExceptionAfterFailedRetries() throws Exception {
+  void throwsOriginalExceptionAfterFailedRetries() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
     final String message = "the innerest";
-    thrown.expect(TestInterfaceException.class);
-    thrown.expectMessage(message);
 
-    TestInterface api = Feign.builder()
-        .exceptionPropagationPolicy(UNWRAP)
-        .retryer(new Retryer.Default(1, 1, 2))
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), "play it again sam!", HttpMethod.POST,
-                new TestInterfaceException(message), NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    api.post();
+    TestInterface api =
+        Feign.builder().exceptionPropagationPolicy(UNWRAP).retryer(new Retryer.Default(1, 1, 2))
+            .errorDecoder((methodKey, response) -> new RetryableException(response.status(),
+                "play it again sam!",
+                HttpMethod.POST, new TestInterfaceException(message), NON_RETRYABLE,
+                response.request()))
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterfaceException exception = assertThrows(TestInterfaceException.class, () -> api.post());
+    assertThat(exception.getMessage()).contains(message);
   }
 
   @Test
-  public void throwsRetryableExceptionIfNoUnderlyingCause() throws Exception {
+  void throwsRetryableExceptionIfNoUnderlyingCause() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 1"));
     server.enqueue(new MockResponse().setResponseCode(503).setBody("foo 2"));
 
     String message = "play it again sam!";
-    thrown.expect(RetryableException.class);
-    thrown.expectMessage(message);
 
-    TestInterface api = Feign.builder()
-        .exceptionPropagationPolicy(UNWRAP)
+    TestInterface api = Feign.builder().exceptionPropagationPolicy(UNWRAP)
         .retryer(new Retryer.Default(1, 1, 2))
-        .errorDecoder(new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new RetryableException(response.status(), message, HttpMethod.POST,
-                NON_RETRYABLE, response.request());
-          }
-        }).target(TestInterface.class, "http://localhost:" + server.getPort());
+        .errorDecoder((methodKey, response) -> new RetryableException(response.status(), message,
+            HttpMethod.POST, NON_RETRYABLE, response.request()))
+        .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.post();
+    RetryableException exception = assertThrows(RetryableException.class, () -> api.post());
+    assertThat(exception.getMessage()).contains(message);
   }
 
   @Test
-  public void whenReturnTypeIsResponseNoErrorHandling() {
+  void whenReturnTypeIsResponseNoErrorHandling() {
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     headers.put("Location", Collections.singletonList("http://bar.com"));
-    final Response response = Response.builder()
-        .status(302)
-        .reason("Found")
-        .headers(headers)
+    final Response response = Response.builder().status(302).reason("Found").headers(headers)
         .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
-        .body(new byte[0])
-        .build();
+        .body(new byte[0]).build();
 
     // fake client as Client.Default follows redirects.
-    TestInterface api = Feign.builder()
-        .client((request, options) -> response)
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface api =
+        Feign.builder().client((request, options) -> response).target(TestInterface.class,
+            "http://localhost:" + server.getPort());
 
     assertThat(api.response().headers()).hasEntrySatisfying("Location", value -> {
       assertThat(value).contains("http://bar.com");
@@ -735,145 +678,117 @@ public class FeignTest {
   }
 
   @Test
-  public void okIfDecodeRootCauseHasNoMessage() throws Exception {
+  void okIfDecodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(DecodeException.class);
 
-    TestInterface api = new TestInterfaceBuilder()
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) throws IOException {
-            throw new RuntimeException();
-          }
-        }).target("http://localhost:" + server.getPort());
-
-    api.post();
-  }
-
-  @Test
-  public void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(DecodeException.class);
-    thrown.expectCause(isA(NoSuchElementException.class));;
-
-    TestInterface api = new TestInterfaceBuilder()
-        .dismiss404()
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) throws IOException {
-            assertEquals(404, response.status());
-            throw new NoSuchElementException();
-          }
-        }).target("http://localhost:" + server.getPort());
-    api.post();
-  }
-
-  @Test
-  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(404));
-    thrown.expect(IllegalArgumentException.class);
-
-    TestInterface api = new TestInterfaceBuilder()
-        .dismiss404()
-        .errorDecoder(new IllegalArgumentExceptionOn404())
+    TestInterface api = new TestInterfaceBuilder().decoder((response, type) -> {
+      throw new RuntimeException();
+    })
         .target("http://localhost:" + server.getPort());
-    api.queryMap(Collections.<String, Object>emptyMap());
+
+    assertThrows(DecodeException.class, () -> api.post());
   }
 
   @Test
-  public void okIfEncodeRootCauseHasNoMessage() throws Exception {
+  void decodingExceptionGetWrappedInDismiss404Mode() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(404));
+
+    TestInterface api = new TestInterfaceBuilder().dismiss404().decoder((response, type) -> {
+      assertEquals(404, response.status());
+      throw new NoSuchElementException();
+    }).target("http://localhost:" + server.getPort());
+    DecodeException exception = assertThrows(DecodeException.class, () -> api.post());
+    assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
+  }
+
+  @Test
+  void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Exception {
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+      server.enqueue(new MockResponse().setResponseCode(404));
+
+      TestInterface api = new TestInterfaceBuilder().dismiss404()
+          .errorDecoder(new IllegalArgumentExceptionOn404())
+          .target("http://localhost:" + server.getPort());
+      api.queryMap(Collections.<String, Object>emptyMap());
+    });
+  }
+
+  @Test
+  void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
-    thrown.expect(EncodeException.class);
 
     TestInterface api = new TestInterfaceBuilder()
-        .encoder(new Encoder() {
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            throw new RuntimeException();
-          }
-        }).target("http://localhost:" + server.getPort());
+        .encoder((object, bodyType, template) -> {
+          throw new RuntimeException();
+        })
+        .target("http://localhost:" + server.getPort());
 
-    api.body(Arrays.asList("foo"));
+    assertThrows(EncodeException.class, () -> api.body(Arrays.asList("foo")));
   }
 
   @Test
-  public void equalsHashCodeAndToStringWork() {
-    Target<TestInterface> t1 =
-        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8080");
-    Target<TestInterface> t2 =
-        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
+  void equalsHashCodeAndToStringWork() {
+    Target<TestInterface> t1 = new HardCodedTarget<>(TestInterface.class, "http://localhost:8080");
+    Target<TestInterface> t2 = new HardCodedTarget<>(TestInterface.class, "http://localhost:8888");
     Target<OtherTestInterface> t3 =
-        new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
+        new HardCodedTarget<>(OtherTestInterface.class, "http://localhost:8080");
     TestInterface i1 = Feign.builder().target(t1);
     TestInterface i2 = Feign.builder().target(t1);
     TestInterface i3 = Feign.builder().target(t2);
     OtherTestInterface i4 = Feign.builder().target(t3);
 
-    assertThat(i1)
-        .isEqualTo(i2)
-        .isNotEqualTo(i3)
-        .isNotEqualTo(i4);
+    assertThat(i1).isEqualTo(i2).isNotEqualTo(i3).isNotEqualTo(i4);
 
-    assertThat(i1.hashCode())
-        .isEqualTo(i2.hashCode())
-        .isNotEqualTo(i3.hashCode())
+    assertThat(i1.hashCode()).isEqualTo(i2.hashCode()).isNotEqualTo(i3.hashCode())
         .isNotEqualTo(i4.hashCode());
 
-    assertThat(i1.toString())
-        .isEqualTo(i2.toString())
-        .isNotEqualTo(i3.toString())
+    assertThat(i1.toString()).isEqualTo(i2.toString()).isNotEqualTo(i3.toString())
         .isNotEqualTo(i4.toString());
 
-    assertThat(t1)
-        .isNotEqualTo(i1);
+    assertThat(t1).isNotEqualTo(i1);
 
-    assertThat(t1.hashCode())
-        .isEqualTo(i1.hashCode());
+    assertThat(t1.hashCode()).isEqualTo(i1.hashCode());
 
-    assertThat(t1.toString())
-        .isEqualTo(i1.toString());
+    assertThat(t1.toString()).isEqualTo(i1.toString());
   }
 
   @Test
-  public void decodeLogicSupportsByteArray() throws Exception {
+  void decodeLogicSupportsByteArray() throws Exception {
     byte[] expectedResponse = {12, 34, 56};
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
-    OtherTestInterface api =
-        Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+    OtherTestInterface api = Feign.builder().target(OtherTestInterface.class,
+        "http://localhost:" + server.getPort());
 
-    assertThat(api.binaryResponseBody())
-        .containsExactly(expectedResponse);
+    assertThat(api.binaryResponseBody()).containsExactly(expectedResponse);
   }
 
   @Test
-  public void encodeLogicSupportsByteArray() throws Exception {
+  void encodeLogicSupportsByteArray() throws Exception {
     byte[] expectedRequest = {12, 34, 56};
     server.enqueue(new MockResponse());
 
-    OtherTestInterface api =
-        Feign.builder().target(OtherTestInterface.class, "http://localhost:" + server.getPort());
+    OtherTestInterface api = Feign.builder().target(OtherTestInterface.class,
+        "http://localhost:" + server.getPort());
 
     api.binaryRequestBody(expectedRequest);
 
-    assertThat(server.takeRequest())
-        .hasBody(expectedRequest);
+    assertThat(server.takeRequest()).hasBody(expectedRequest);
   }
 
   @Test
-  public void encodedQueryParam() throws Exception {
+  void encodedQueryParam() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     api.encodedQueryParam("5.2FSi+");
 
-    assertThat(server.takeRequest())
-        .hasPath("/?trim=5.2FSi%2B");
+    assertThat(server.takeRequest()).hasPath("/?trim=5.2FSi%2B");
   }
 
   @Test
-  public void responseMapperIsAppliedBeforeDelegate() throws IOException {
+  void responseMapperIsAppliedBeforeDelegate() throws IOException {
     ResponseMappingDecoder decoder =
         new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
     String output = (String) decoder.decode(responseWithText("response"), String.class);
@@ -882,43 +797,35 @@ public class FeignTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return new ResponseMapper() {
-      @Override
-      public Response map(Response response, Type type) {
-        try {
-          return response
-              .toBuilder()
-              .body(Util.toString(response.body().asReader(UTF_8)).toUpperCase().getBytes())
-              .build();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+    return (response, type) -> {
+      try {
+        return response.toBuilder()
+            .body(Util.toString(response.body().asReader(UTF_8)).toUpperCase().getBytes()).build();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     };
   }
 
   private Response responseWithText(String text) {
-    return Response.builder()
-        .body(text, Util.UTF_8)
-        .status(200)
+    return Response.builder().body(text, Util.UTF_8).status(200)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .headers(new HashMap<>())
-        .build();
+        .headers(new HashMap<>()).build();
   }
 
   @Test
-  public void mapAndDecodeExecutesMapFunction() throws Exception {
+  void mapAndDecodeExecutesMapFunction() throws Exception {
     server.enqueue(new MockResponse().setBody("response!"));
 
-    TestInterface api = new Feign.Builder()
-        .mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
+    TestInterface api =
+        new Feign.Builder().mapAndDecode(upperCaseResponseMapper(), new StringDecoder())
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals(api.post(), "RESPONSE!");
+    assertThat("RESPONSE!").isEqualTo(api.post());
   }
 
   @Test
-  public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
+  void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
@@ -929,12 +836,11 @@ public class FeignTest {
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyPojo(propertyPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams(Arrays.asList("name=Name", "number=1"));
+    assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("name=Name", "number=1"));
   }
 
   @Test
-  public void queryMap_with_child_pojo() throws Exception {
+  void queryMap_with_child_pojo() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new FieldQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
@@ -946,19 +852,15 @@ public class FeignTest {
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyInheritence(childPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams(
-            "parentPublicProperty=third",
-            "parentProtectedProperty=second",
-            "childPrivateProperty=first",
-            "parentPrivatePropertyAlteredByGetter=fourth");
+    assertThat(server.takeRequest()).hasQueryParams("parentPublicProperty=third",
+        "parentProtectedProperty=second",
+        "childPrivateProperty=first", "parentPrivatePropertyAlteredByGetter=fourth");
   }
 
   @Test
-  public void queryMap_with_child_pojo_altered_by_getter_while_using_overriding_encoder()
+  void queryMap_with_child_pojo_altered_by_getter_while_using_overriding_encoder()
       throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-        .queryMapEncoder(new FieldQueryMapEncoder())
+    TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new FieldQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
     ChildPojo childPojo = new ChildPojo();
@@ -969,16 +871,13 @@ public class FeignTest {
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyInheritenceWithBeanMapEncoder(childPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams(
-            "parentPublicProperty=third",
-            "parentProtectedProperty=second",
-            "childPrivateProperty=first",
-            "parentPrivatePropertyAlteredByGetter=fourthFromGetter");
+    assertThat(server.takeRequest()).hasQueryParams("parentPublicProperty=third",
+        "parentProtectedProperty=second",
+        "childPrivateProperty=first", "parentPrivatePropertyAlteredByGetter=fourthFromGetter");
   }
 
   @Test
-  public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
+  void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
@@ -988,12 +887,11 @@ public class FeignTest {
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyPojo(propertyPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams("number=1");
+    assertThat(server.takeRequest()).hasQueryParams("number=1");
   }
 
   @Test
-  public void beanQueryMapEncoderWithEmptyParams() throws Exception {
+  void beanQueryMapEncoderWithEmptyParams() throws Exception {
     TestInterface api = new TestInterfaceBuilder().queryMapEncoder(new BeanQueryMapEncoder())
         .target("http://localhost:" + server.getPort());
 
@@ -1001,14 +899,12 @@ public class FeignTest {
 
     server.enqueue(new MockResponse());
     api.queryMapPropertyPojo(propertyPojo);
-    assertThat(server.takeRequest())
-        .hasQueryParams("/");
+    assertThat(server.takeRequest()).hasQueryParams("/");
   }
 
   @Test
-  public void matrixParametersAreSupported() throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-        .target("http://localhost:" + server.getPort());
+  void matrixParametersAreSupported() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
 
@@ -1017,15 +913,13 @@ public class FeignTest {
     owners.add("Jeff");
     owners.add("Susan");
     api.matrixParameters(owners);
-    assertThat(server.takeRequest())
-        .hasPath("/owners;owners=Mark;owners=Jeff;owners=Susan");
+    assertThat(server.takeRequest()).hasPath("/owners;owners=Mark;owners=Jeff;owners=Susan");
 
   }
 
   @Test
-  public void matrixParametersAlsoSupportMaps() throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-        .target("http://localhost:" + server.getPort());
+  void matrixParametersAlsoSupportMaps() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
     Map<String, Object> properties = new LinkedHashMap<>();
@@ -1033,15 +927,13 @@ public class FeignTest {
     properties.put("name", "n");
 
     api.matrixParametersWithMap(properties);
-    assertThat(server.takeRequest())
-        .hasPath("/settings;account=a;name=n");
+    assertThat(server.takeRequest()).hasPath("/settings;account=a;name=n");
 
   }
 
   @Test
-  public void supportComplexHeaders() throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-        .target("http://localhost:" + server.getPort());
+  void supportComplexHeaders() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
     /* demonstrate that a complex header, like a JSON document, is supported */
@@ -1054,7 +946,7 @@ public class FeignTest {
   }
 
   @Test
-  public void decodeVoid() throws Exception {
+  void decodeVoid() throws Exception {
     Decoder mockDecoder = mock(Decoder.class);
     server.enqueue(new MockResponse().setResponseCode(200).setBody("OK"));
 
@@ -1066,19 +958,19 @@ public class FeignTest {
   }
 
   @Test
-  public void redirectionInterceptorString() throws Exception {
+  void redirectionInterceptorString() throws Exception {
     String location = "https://redirect.example.com";
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
   }
 
   @Test
-  public void redirectionInterceptorCollection() throws Exception {
+  void redirectionInterceptorCollection() throws Exception {
     String location = "https://redirect.example.com";
     Collection<String> locations = Collections.singleton("https://redirect.example.com");
 
@@ -1088,34 +980,37 @@ public class FeignTest {
         .target("http://localhost:" + server.getPort());
 
     Collection<String> response = api.collection();
-    assertEquals("RedirectionInterceptor did not extract the location header", locations.size(),
-        response.size());
-    assertTrue("RedirectionInterceptor did not extract the location header",
-        response.contains(location));
+    assertThat(response.size()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(locations.size());
+    assertThat(response.contains(location))
+        .as("RedirectionInterceptor did not extract the location header")
+        .isTrue();
   }
 
   @Test
-  public void responseInterceptor400Error() throws Exception {
+  void responseInterceptor400Error() throws Exception {
     String body = "BACK OFF!!";
     server.enqueue(new MockResponse().setResponseCode(429).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
         .target("http://localhost:" + server.getPort());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
-  public void responseInterceptor500Error() throws Exception {
+  void responseInterceptor500Error() throws Exception {
     String body = "One moment, please.";
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new ErrorInterceptor())
         .target("http://localhost:" + server.getPort());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
-  public void responseInterceptorChain() throws Exception {
+  void responseInterceptorChain() throws Exception {
     String location = "https://redirect.example.com";
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
@@ -1125,13 +1020,14 @@ public class FeignTest {
     TestInterface api = new TestInterfaceBuilder().responseInterceptor(new RedirectionInterceptor())
         .responseInterceptor(new ErrorInterceptor()).target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
-  public void responseInterceptorChainList() throws Exception {
+  void responseInterceptorChainList() throws Exception {
     String location = "https://redirect.example.com";
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));
 
@@ -1142,13 +1038,14 @@ public class FeignTest {
         .responseInterceptors(List.of(new RedirectionInterceptor(), new ErrorInterceptor()))
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the location header", location,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the location header")
+        .isEqualTo(location);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
-  public void responseInterceptorChainOrder() throws Exception {
+  void responseInterceptorChainOrder() throws Exception {
     String location = "https://redirect.example.com";
     String redirectBody = "Not the location";
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location)
@@ -1157,25 +1054,26 @@ public class FeignTest {
     String body = "One moment, please.";
     server.enqueue(new MockResponse().setResponseCode(503).setBody(body));
 
-    // ErrorInterceptor WILL extract the body of redirects, so we re-order our interceptors to
+    // ErrorInterceptor WILL extract the body of redirects, so we re-order our
+    // interceptors to
     // verify that chain ordering is maintained
     TestInterface api = new TestInterfaceBuilder()
         .responseInterceptors(List.of(new ErrorInterceptor(), new RedirectionInterceptor()))
         .target("http://localhost:" + server.getPort());
 
-    assertEquals("RedirectionInterceptor did not extract the redirect response body", redirectBody,
-        api.post());
-    assertEquals("ResponseInterceptor did not extract the response body", body, api.post());
+    assertThat(api.post()).as("RedirectionInterceptor did not extract the redirect response body")
+        .isEqualTo(redirectBody);
+    assertThat(api.post()).as("ResponseInterceptor did not extract the response body")
+        .isEqualTo(body);
   }
 
   @Test
-  public void testCallIgnoredMethod() throws Exception {
-    TestInterface api = new TestInterfaceBuilder()
-            .target("http://localhost:" + server.getPort());
+  void callIgnoredMethod() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 
     try {
       api.ignore();
-      Assert.fail("No exception thrown");
+      fail("No exception thrown");
     } catch (Exception e) {
       assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
       assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
@@ -1195,8 +1093,7 @@ public class FeignTest {
 
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
-    void login(
-               @Param("customer_name") String customer,
+    void login(@Param("customer_name") String customer,
                @Param("user_name") String user,
                @Param("password") String password);
 
@@ -1218,8 +1115,7 @@ public class FeignTest {
     void deflateBody(List<String> contents);
 
     @RequestLine("POST /")
-    void form(
-              @Param("customer_name") String customer,
+    void form(@Param("customer_name") String customer,
               @Param("user_name") String user,
               @Param("password") String password);
 
@@ -1341,7 +1237,6 @@ public class FeignTest {
     void binaryRequestBody(byte[] contents);
   }
 
-
   static class ForwardedForInterceptor implements RequestInterceptor {
 
     @Override
@@ -1350,7 +1245,6 @@ public class FeignTest {
     }
   }
 
-
   static class UserAgentInterceptor implements RequestInterceptor {
 
     @Override
@@ -1358,7 +1252,6 @@ public class FeignTest {
       template.header("User-Agent", "Feign");
     }
   }
-
 
   static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
 
@@ -1371,7 +1264,6 @@ public class FeignTest {
     }
   }
 
-
   static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
 
     @Override
@@ -1383,19 +1275,14 @@ public class FeignTest {
     }
   }
 
-
   static final class TestInterfaceBuilder {
 
-    private final Feign.Builder delegate = new Feign.Builder()
-        .decoder(new Decoder.Default())
-        .encoder(new Encoder() {
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            if (object instanceof Map) {
-              template.body(new Gson().toJson(object));
-            } else {
-              template.body(object.toString());
-            }
+    private final Feign.Builder delegate = new Feign.Builder().decoder(new Decoder.Default())
+        .encoder((object, bodyType, template) -> {
+          if (object instanceof Map) {
+            template.body(new Gson().toJson(object));
+          } else {
+            template.body(object.toString());
           }
         });
 
@@ -1486,6 +1373,11 @@ public class FeignTest {
     public Instant instant() {
       return Instant.ofEpochMilli(millis);
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 
 }

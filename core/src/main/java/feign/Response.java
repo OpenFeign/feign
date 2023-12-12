@@ -215,7 +215,8 @@ public final class Response implements Closeable {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder(protocolVersion.toString()).append(" ").append(status);
+    StringBuilder builder =
+        new StringBuilder(protocolVersion.toString()).append(" ").append(status);
     if (reason != null)
       builder.append(' ').append(reason);
     builder.append('\n');

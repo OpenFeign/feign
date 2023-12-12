@@ -14,6 +14,8 @@
 package feign.reactive;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -22,16 +24,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import feign.*;
-import feign.Logger.Level;
-import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
-import feign.jaxrs.JAXRSContract;
-import io.reactivex.Flowable;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -39,24 +32,40 @@ import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalAnswers;
 import org.mockito.stubbing.Answer;
+import feign.Client;
+import feign.FeignIgnore;
+import feign.Logger;
+import feign.Logger.Level;
+import feign.Param;
+import feign.QueryMap;
+import feign.QueryMapEncoder;
+import feign.Request;
+import feign.Request.Options;
+import feign.RequestInterceptor;
+import feign.RequestLine;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.ResponseMapper;
+import feign.RetryableException;
+import feign.Retryer;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.jaxrs.JAXRSContract;
+import io.reactivex.Flowable;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 public class ReactiveFeignIntegrationTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
-  @Rule
   public final MockWebServer webServer = new MockWebServer();
 
   private String getServerUrl() {
@@ -64,13 +73,13 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testCallIgnoredMethod() throws Exception {
+  void callIgnoredMethod() throws Exception {
     TestReactorService service = ReactorFeign.builder()
-            .target(TestReactorService.class, this.getServerUrl());
+        .target(TestReactorService.class, this.getServerUrl());
 
     try {
       service.ignore().subscribe();
-      Assert.fail("No exception thrown");
+      fail("No exception thrown");
     } catch (Exception e) {
       assertThat(e.getClass()).isEqualTo(UnsupportedOperationException.class);
       assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
@@ -78,7 +87,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testDefaultMethodsNotProxied() {
+  void defaultMethodsNotProxied() {
     TestReactorService service = ReactorFeign.builder()
         .target(TestReactorService.class, this.getServerUrl());
     assertThat(service).isEqualTo(service);
@@ -87,7 +96,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testReactorTargetFull() throws Exception {
+  void reactorTargetFull() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
     this.webServer.enqueue(new MockResponse().setBody("{ \"username\": \"test\" }"));
     this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
@@ -123,14 +132,15 @@ public class ReactiveFeignIntegrationTest {
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
 
     StepVerifier.create(service.usersMono())
-        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .assertNext(
+            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
   }
 
   @Test
-  public void testRxJavaTarget() throws Exception {
+  void rxJavaTarget() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
     this.webServer.enqueue(new MockResponse().setBody("{ \"username\": \"test\" }"));
     this.webServer.enqueue(new MockResponse().setBody("[{ \"username\": \"test\" }]"));
@@ -157,31 +167,34 @@ public class ReactiveFeignIntegrationTest {
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users/test");
 
     StepVerifier.create(service.users())
-        .assertNext(users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+        .assertNext(
+            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
   }
 
   @Test
-  public void invocationFactoryIsNotSupported() {
-    this.thrown.expect(UnsupportedOperationException.class);
-    ReactorFeign.builder()
-        .invocationHandlerFactory(
-            (target, dispatch) -> null)
-        .target(TestReactiveXService.class, "http://localhost");
+  void invocationFactoryIsNotSupported() {
+    assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> {
+      ReactorFeign.builder()
+          .invocationHandlerFactory(
+              (target, dispatch) -> null)
+          .target(TestReactiveXService.class, "http://localhost");
+    });
   }
 
   @Test
-  public void doNotCloseUnsupported() {
-    this.thrown.expect(UnsupportedOperationException.class);
-    ReactorFeign.builder()
-        .doNotCloseAfterDecode()
-        .target(TestReactiveXService.class, "http://localhost");
+  void doNotCloseUnsupported() {
+    assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> {
+      ReactorFeign.builder()
+          .doNotCloseAfterDecode()
+          .target(TestReactiveXService.class, "http://localhost");
+    });
   }
 
   @Test
-  public void testRequestInterceptor() {
+  void requestInterceptor() {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
 
     RequestInterceptor mockInterceptor = mock(RequestInterceptor.class);
@@ -197,7 +210,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testRequestInterceptors() {
+  void requestInterceptors() {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
 
     RequestInterceptor mockInterceptor = mock(RequestInterceptor.class);
@@ -213,7 +226,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testResponseMappers() throws Exception {
+  void responseMappers() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
 
     ResponseMapper responseMapper = mock(ResponseMapper.class);
@@ -235,7 +248,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testQueryMapEncoders() {
+  void queryMapEncoders() {
     this.webServer.enqueue(new MockResponse().setBody("No Results Found"));
 
     QueryMapEncoder encoder = mock(QueryMapEncoder.class);
@@ -253,7 +266,7 @@ public class ReactiveFeignIntegrationTest {
 
   @SuppressWarnings({"ThrowableNotThrown"})
   @Test
-  public void testErrorDecoder() {
+  void errorDecoder() {
     this.webServer.enqueue(new MockResponse().setBody("Bad Request").setResponseCode(400));
 
     ErrorDecoder errorDecoder = mock(ErrorDecoder.class);
@@ -272,7 +285,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testRetryer() {
+  void retryer() {
     this.webServer.enqueue(new MockResponse().setBody("Not Available").setResponseCode(-1));
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
 
@@ -291,7 +304,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testClient() throws Exception {
+  void client() throws Exception {
     Client client = mock(Client.class);
     given(client.execute(any(Request.class), any(Options.class)))
         .willAnswer((Answer<Response>) invocation -> Response.builder()
@@ -313,7 +326,7 @@ public class ReactiveFeignIntegrationTest {
   }
 
   @Test
-  public void testDifferentContract() throws Exception {
+  void differentContract() throws Exception {
     this.webServer.enqueue(new MockResponse().setBody("1.0"));
 
     TestJaxRSReactorService service = ReactorFeign.builder()
@@ -399,5 +412,10 @@ public class ReactiveFeignIntegrationTest {
     protected void log(String configKey, String format, Object... args) {
       System.out.println(String.format(methodTag(configKey) + format, args));
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    webServer.close();
   }
 }

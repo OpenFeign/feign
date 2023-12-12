@@ -13,12 +13,12 @@
  */
 package feign.json.examples;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
 import feign.json.JsonDecoder;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 interface GitHub {
 

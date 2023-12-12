@@ -13,6 +13,7 @@
  */
 package feign.reactive.examples;
 
+import java.util.List;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
@@ -20,8 +21,6 @@ import feign.jackson.JacksonDecoder;
 import feign.reactive.RxJavaDecoder;
 import feign.reactive.RxJavaFeign;
 import io.reactivex.Flowable;
-
-import java.util.List;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}
@@ -37,7 +36,7 @@ public class RxJavaGitHubExample {
 
     System.out.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributorsFromFlux = github.contributors("OpenFeign", "feign")
-            .blockingLast();
+        .blockingLast();
     for (Contributor contributor : contributorsFromFlux) {
       System.out.println(contributor.login + " (" + contributor.contributions + ")");
     }
@@ -46,7 +45,8 @@ public class RxJavaGitHubExample {
 
   interface GitHub {
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    Flowable<List<Contributor>> contributors(@Param("owner") String owner, @Param("repo") String repo);
+    Flowable<List<Contributor>> contributors(@Param("owner") String owner,
+                                             @Param("repo") String repo);
   }
 
   static class Contributor {

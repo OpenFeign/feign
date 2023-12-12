@@ -13,24 +13,17 @@
  */
 package feign.error;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.Request;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.runners.Parameterized.Parameter;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import feign.Request;
 
-@RunWith(Parameterized.class)
 public class AnnotationErrorDecoderIllegalInterfacesTest {
 
-  @Parameters(
-      name = "{index}: When building interface ({0}) should return exception type ({1}) with message ({2})")
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
         {IllegalTestClientInterfaceWithTooManyMappingsToSingleCode.class,
@@ -48,19 +41,21 @@ public class AnnotationErrorDecoderIllegalInterfacesTest {
         {IllegalTestClientInterfaceWithExceptionWithTooManyRequestParams.class,
             IllegalStateException.class, "Cannot have two parameters either without"}
     });
-  }
+  } // first data value (0) is default
 
-  @Parameter // first data value (0) is default
   public Class testInterface;
-
-  @Parameter(1)
   public Class<? extends Exception> expectedExceptionClass;
-
-  @Parameter(2)
   public String messageStart;
 
-  @Test
-  public void test() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{index}: When building interface ({0}) should return exception type ({1}) with message ({2})")
+  void test(Class testInterface,
+            Class<? extends Exception> expectedExceptionClass,
+            String messageStart)
+      throws Exception {
+    initAnnotationErrorDecoderIllegalInterfacesTest(testInterface, expectedExceptionClass,
+        messageStart);
     try {
       AnnotationErrorDecoder.builderFor(testInterface).build();
       fail("Should have thrown exception");
@@ -173,6 +168,14 @@ public class AnnotationErrorDecoderIllegalInterfacesTest {
       @FeignExceptionConstructor
       public BadException(@ResponseHeaders TestPojo headers1) {}
     }
+  }
+
+  public void initAnnotationErrorDecoderIllegalInterfacesTest(Class testInterface,
+                                                              Class<? extends Exception> expectedExceptionClass,
+                                                              String messageStart) {
+    this.testInterface = testInterface;
+    this.expectedExceptionClass = expectedExceptionClass;
+    this.messageStart = messageStart;
   }
 
 

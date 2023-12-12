@@ -13,22 +13,20 @@
  */
 package feign.ribbon;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
-import org.junit.Test;
+import static com.netflix.config.ConfigurationManager.getConfigInstance;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.URL;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.RequestLine;
-import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static org.junit.Assert.assertEquals;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class LoadBalancingTargetTest {
 
-  @Rule
   public final MockWebServer server1 = new MockWebServer();
-  @Rule
   public final MockWebServer server2 = new MockWebServer();
 
   static String hostAndPort(URL url) {
@@ -37,7 +35,7 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
@@ -56,8 +54,8 @@ public class LoadBalancingTargetTest {
       api.post();
       api.post();
 
-      assertEquals(1, server1.getRequestCount());
-      assertEquals(1, server2.getRequestCount());
+      assertThat(server1.getRequestCount()).isEqualTo(1);
+      assertThat(server2.getRequestCount()).isEqualTo(1);
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
@@ -66,7 +64,7 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  public void loadBalancingTargetPath() throws InterruptedException {
+  void loadBalancingTargetPath() throws InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
@@ -82,8 +80,8 @@ public class LoadBalancingTargetTest {
 
       api.get();
 
-      assertEquals("http:///context-path", target.url());
-      assertEquals("/context-path/servers", server1.takeRequest().getPath());
+      assertThat(target.url()).isEqualTo("http:///context-path");
+      assertThat(server1.takeRequest().getPath()).isEqualTo("/context-path/servers");
     } finally {
       getConfigInstance().clearProperty(serverListKey);
     }
@@ -96,5 +94,10 @@ public class LoadBalancingTargetTest {
 
     @RequestLine("GET /servers")
     void get();
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server2.close();
   }
 }

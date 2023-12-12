@@ -13,12 +13,8 @@
  */
 package feign.stream;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import feign.*;
-import feign.Request.HttpMethod;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Test;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -27,11 +23,19 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.core.type.TypeReference;
+import feign.Feign;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 @SuppressWarnings("deprecation")
-public class StreamDecoderTest {
+class StreamDecoderTest {
 
   interface StreamInterface {
     @RequestLine("GET /")
@@ -62,7 +66,7 @@ public class StreamDecoderTest {
       + "]\n";
 
   @Test
-  public void simpleStreamTest() {
+  void simpleStreamTest() {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
@@ -79,7 +83,7 @@ public class StreamDecoderTest {
   }
 
   @Test
-  public void simpleDefaultStreamTest() {
+  void simpleDefaultStreamTest() {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
@@ -97,7 +101,7 @@ public class StreamDecoderTest {
   }
 
   @Test
-  public void simpleDeleteDecoderTest() {
+  void simpleDeleteDecoderTest() {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo\nbar"));
 
@@ -114,7 +118,7 @@ public class StreamDecoderTest {
   }
 
   @Test
-  public void shouldCloseIteratorWhenStreamClosed() throws IOException {
+  void shouldCloseIteratorWhenStreamClosed() throws IOException {
     Response response = Response.builder()
         .status(200)
         .reason("OK")

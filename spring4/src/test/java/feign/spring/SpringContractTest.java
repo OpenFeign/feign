@@ -13,39 +13,53 @@
  */
 package feign.spring;
 
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import feign.*;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import feign.Feign;
+import feign.Param;
+import feign.Request;
+import feign.Response;
+import feign.ResponseMapper;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
 
-public class SpringContractTest {
-
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+class SpringContractTest {
 
   private MockClient mockClient;
   private HealthResource resource;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     Response.Builder response = Response.builder()
         .status(200)
         .body("hello world", StandardCharsets.UTF_8)
@@ -105,140 +119,132 @@ public class SpringContractTest {
   }
 
   @Test
-  public void noPath() {
+  void noPath() {
     resource.getStatus();
 
     mockClient.verifyOne(HttpMethod.GET, "/health");
   }
 
   @Test
-  public void testWithName() {
+  void withName() {
     resource.checkWithName("name", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/name?deep=true&dryRun=true");
   }
 
   @Test
-  public void testOptionalPresent() {
+  void optionalPresent() {
     resource.checkWithOptional(Optional.of("value"));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional?param=value");
   }
 
   @Test
-  public void testOptionalNotPresent() {
+  void optionalNotPresent() {
     resource.checkWithOptional(Optional.empty());
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional");
   }
 
   @Test
-  public void testOptionalEmptyValue() {
+  void optionalEmptyValue() {
     resource.checkWithOptional(Optional.of(""));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional?param");
   }
 
   @Test
-  public void testOptionalNullable() {
+  void optionalNullable() {
     resource.checkWithOptional(Optional.ofNullable(null));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional");
   }
 
   @Test
-  public void testRequestPart() {
+  void requestPart() {
     resource.checkRequestPart("1", "hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.POST, "/health/part/1");
-    assertThat(request.requestTemplate().methodMetadata().formParams(),
-        contains("name1", "grade1"));
+    assertThat(request.requestTemplate().methodMetadata().formParams()).containsExactly("name1",
+        "grade1");
   }
 
   @Test
-  public void testRequestHeader() {
+  void requestHeader() {
     resource.checkRequestHeader("hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
-  public void testRequestHeaderMap() {
+  void requestHeaderMap() {
     Map<String, String> map = new HashMap<>();
     map.put("name1", "hello");
     map.put("grade1", "6");
     resource.checkRequestHeaderMap(map);
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/map");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
-  public void testRequestHeaderPojo() {
+  void requestHeaderPojo() {
     HeaderMapUserObject object = new HeaderMapUserObject();
     object.setName("hello");
     object.setGrade("6");
     resource.checkRequestHeaderPojo(object);
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/pojo");
-    assertThat(request.headers(),
-        hasEntry("name1", Arrays.asList("hello")));
-    assertThat(request.headers(),
-        hasEntry("grade1", Arrays.asList("6")));
+    assertThat(request.headers()).containsEntry("name1", Arrays.asList("hello"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
   }
 
   @Test
-  public void requestParam() {
+  void requestParam() {
     resource.check("1", true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true");
   }
 
   @Test
-  public void requestTwoParams() {
+  void requestTwoParams() {
     resource.check("1", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true&dryRun=true");
   }
 
   @Test
-  public void inheritance() {
+  void inheritance() {
     final Data data = resource.getData(new Data());
-    assertThat(data, notNullValue());
+    assertThat(data).isNotNull();
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/generic");
-    assertThat(request.headers(), hasEntry(
-        "Content-Type",
-        Arrays.asList("application/json")));
+    assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
   }
 
   @Test
-  public void composedAnnotation() {
+  void composedAnnotation() {
     resource.check("1");
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1");
   }
 
   @Test
-  public void notAHttpMethod() {
-    thrown.expectMessage("is not a method handled by feign");
-
-    resource.missingResourceExceptionHandler();
+  void notAHttpMethod() {
+    Throwable exception =
+        assertThrows(Exception.class, () -> resource.missingResourceExceptionHandler());
+    assertThat(exception.getMessage()).contains("is not a method handled by feign");
   }
 
   @Test
-  public void testConsumeAndProduce() {
+  void consumeAndProduce() {
     resource.produceText(new HashMap<>());
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
-    assertThat(request.headers(), hasEntry("Content-Type", Arrays.asList("application/json")));
-    assertThat(request.headers(), hasEntry("Accept", Arrays.asList("text/plain")));
+    assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
+    assertThat(request.headers()).containsEntry("Accept", Arrays.asList("text/plain"));
   }
 
   interface GenericResource<DTO> {

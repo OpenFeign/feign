@@ -13,23 +13,30 @@
  */
 package feign.jaxrs2;
 
-import feign.*;
-import feign.Feign.Builder;
-import feign.assertj.MockWebServerAssertions;
-import feign.client.AbstractClientTest;
-import feign.jaxrs.JAXRSContract;
-import okhttp3.mockwebserver.MockResponse;
-import org.assertj.core.data.MapEntry;
-import org.junit.Assume;
-import org.junit.Test;
-import javax.ws.rs.*;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
+import org.assertj.core.data.MapEntry;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.Headers;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import feign.assertj.MockWebServerAssertions;
+import feign.client.AbstractClientTest;
+import feign.jaxrs.JAXRSContract;
+import mockwebserver3.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -42,11 +49,11 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void testPatch() throws Exception {
+  public void patch() throws Exception {
     try {
-      super.testPatch();
+      super.patch();
     } catch (final ProcessingException e) {
-      Assume.assumeNoException("JaxRS client do not support PATCH requests", e);
+      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
     }
   }
 
@@ -55,7 +62,7 @@ public class JAXRSClientTest extends AbstractClientTest {
     try {
       super.noResponseBodyForPut();
     } catch (final IllegalStateException e) {
-      Assume.assumeNoException("JaxRS client do not support empty bodies on PUT", e);
+      Assumptions.assumeFalse(false, "JaxRS client do not support empty bodies on PUT");
     }
   }
 
@@ -64,10 +71,11 @@ public class JAXRSClientTest extends AbstractClientTest {
     try {
       super.noResponseBodyForPatch();
     } catch (final IllegalStateException e) {
-      Assume.assumeNoException("JaxRS client do not support PATCH requests", e);
+      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
     }
   }
 
+  @Override
   @Test
   public void reasonPhraseIsOptional() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
@@ -82,6 +90,7 @@ public class JAXRSClientTest extends AbstractClientTest {
     // assertThat(response.reason()).isNullOrEmpty();
   }
 
+  @Override
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
     server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
@@ -109,7 +118,7 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testContentTypeWithoutCharset2() throws Exception {
+  void contentTypeWithoutCharset2() throws Exception {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA"));
     final JaxRSClientTestInterface api = newBuilder()
@@ -117,7 +126,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     final Response response = api.getWithContentType();
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
@@ -127,7 +136,7 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testConsumesMultipleWithContentTypeHeaderAndBody() throws Exception {
+  void consumesMultipleWithContentTypeHeaderAndBody() throws Exception {
     server.enqueue(new MockResponse().setBody("AAAAAAAA"));
     final JaxRSClientTestInterfaceWithJaxRsContract api = newBuilder()
         .contract(new JAXRSContract()) // use JAXRSContract
@@ -136,7 +145,7 @@ public class JAXRSClientTest extends AbstractClientTest {
 
     final Response response =
         api.consumesMultipleWithContentTypeHeaderAndBody("application/json;charset=utf-8", "body");
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(MapEntry.entry("Content-Type",
@@ -149,27 +158,27 @@ public class JAXRSClientTest extends AbstractClientTest {
    */
   @Override
   public void canSupportGzip() throws Exception {
-    assumeFalse("JaxRS client do not support gzip compression", false);
+    assumeFalse(false, "JaxRS client do not support gzip compression");
   }
 
   @Override
   public void canSupportGzipOnError() throws Exception {
-    assumeFalse("JaxRS client do not support gzip compression", false);
+    assumeFalse(false, "JaxRS client do not support gzip compression");
   }
 
   @Override
   public void canSupportDeflate() throws Exception {
-    assumeFalse("JaxRS client do not support deflate compression", false);
+    assumeFalse(false, "JaxRS client do not support deflate compression");
   }
 
   @Override
   public void canSupportDeflateOnError() throws Exception {
-    assumeFalse("JaxRS client do not support deflate compression", false);
+    assumeFalse(false, "JaxRS client do not support deflate compression");
   }
 
   @Override
   public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse("JaxRS client do not support gzip compression", false);
+    assumeFalse(false, "JaxRS client do not support gzip compression");
   }
 
   public interface JaxRSClientTestInterface {
@@ -188,7 +197,7 @@ public class JAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeFalse("JaxRS client hang if the response doesn't have a payload", false);
+  public void veryLongResponseNullLength() {
+    assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }
 }

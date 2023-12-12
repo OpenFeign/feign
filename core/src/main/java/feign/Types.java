@@ -22,7 +22,6 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
-
 import static feign.Util.checkState;
 
 /**
@@ -341,12 +340,12 @@ public final class Types {
    *         using {@code context}.
    */
   public static Type resolveLastTypeParameter(Type genericContext, Class<?> supertype)
-          throws IllegalStateException {
+      throws IllegalStateException {
     Type resolvedSuperType =
-            Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
+        Types.getSupertype(genericContext, Types.getRawType(genericContext), supertype);
     checkState(resolvedSuperType instanceof ParameterizedType,
-            "could not resolve %s into a parameterized type %s",
-            genericContext, supertype);
+        "could not resolve %s into a parameterized type %s",
+        genericContext, supertype);
     Type[] types = ParameterizedType.class.cast(resolvedSuperType).getActualTypeArguments();
     for (int i = 0; i < types.length; i++) {
       Type type = types[i];

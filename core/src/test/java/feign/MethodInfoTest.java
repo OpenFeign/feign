@@ -13,32 +13,34 @@
  */
 package feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
-@RunWith(Enclosed.class)
+
+
 public class MethodInfoTest {
 
-  public static class AsyncClientTest {
+  @Nested
+  static class AsyncClientTest {
     public interface AsyncClient {
       CompletableFuture<String> log();
     }
 
     @Test
-    public void testCompletableFutureOfString() throws Exception {
+    void completableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertTrue(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isTrue();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
-  public static class GenericAsyncClientTest {
+  @Nested
+  static class GenericAsyncClientTest {
     public interface GenericAsyncClient<T> {
       T log();
     }
@@ -47,27 +49,29 @@ public class MethodInfoTest {
     }
 
     @Test
-    public void testGenericCompletableFutureOfString() throws Exception {
+    void genericCompletableFutureOfString() throws Exception {
       MethodInfo mi = new MethodInfo(AsyncClient.class, AsyncClient.class.getMethod("log"));
-      assertTrue(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isTrue();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
-  public static class SyncClientTest {
+  @Nested
+  static class SyncClientTest {
     public interface SyncClient {
       String log();
     }
 
     @Test
-    public void testString() throws Exception {
+    void string() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertFalse(mi.isAsyncReturnType());
-      assertEquals(String.class, mi.underlyingReturnType());
+      assertThat(mi.isAsyncReturnType()).isFalse();
+      assertThat(mi.underlyingReturnType()).isEqualTo(String.class);
     }
   }
 
-  public static class GenericSyncClientTest {
+  @Nested
+  static class GenericSyncClientTest {
     public interface GenericSyncClient<T> {
       T log();
     }
@@ -93,10 +97,10 @@ public class MethodInfoTest {
     }
 
     @Test
-    public void testListOfStrings() throws Exception {
+    void listOfStrings() throws Exception {
       MethodInfo mi = new MethodInfo(SyncClient.class, SyncClient.class.getMethod("log"));
-      assertFalse(mi.isAsyncReturnType());
-      assertTrue(Types.equals(new ListOfStrings(), mi.underlyingReturnType()));
+      assertThat(mi.isAsyncReturnType()).isFalse();
+      assertThat(Types.equals(new ListOfStrings(), mi.underlyingReturnType())).isTrue();
     }
   }
 }

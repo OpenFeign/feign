@@ -13,23 +13,23 @@
  */
 package feign.okhttp;
 
-import feign.Feign.Builder;
-import feign.Headers;
-import feign.RequestLine;
-import feign.Response;
-import feign.Request;
-import feign.Util;
-import feign.assertj.MockWebServerAssertions;
-import feign.client.AbstractClientTest;
-import feign.Feign;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
+import org.junit.jupiter.api.Test;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.Headers;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import feign.assertj.MockWebServerAssertions;
+import feign.client.AbstractClientTest;
+import mockwebserver3.MockResponse;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest extends AbstractClientTest {
@@ -49,7 +49,7 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.getWithContentType();
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("AAAAAAAA");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
@@ -60,7 +60,7 @@ public class OkHttpClientTest extends AbstractClientTest {
 
 
   @Test
-  public void testNoFollowRedirect() throws Exception {
+  void noFollowRedirect() throws Exception {
     server.enqueue(
         new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
     // Enqueue a response to fail fast if the redirect is followed, instead of waiting for the
@@ -75,15 +75,15 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.get();
     // Response length should not be null
-    assertEquals(302, response.status());
-    assertEquals(server.url("redirect").toString(),
-        response.headers().get("Location").iterator().next());
+    assertThat(response.status()).isEqualTo(302);
+    assertThat(response.headers().get("Location").iterator().next())
+        .isEqualTo(server.url("redirect").toString());
 
   }
 
 
   @Test
-  public void testFollowRedirect() throws Exception {
+  void followRedirect() throws Exception {
     String expectedBody = "Hello";
 
     server.enqueue(
@@ -98,9 +98,9 @@ public class OkHttpClientTest extends AbstractClientTest {
 
     Response response = api.get();
     // Response length should not be null
-    assertEquals(200, response.status());
+    assertThat(response.status()).isEqualTo(200);
     String payload = Util.toString(response.body().asReader(StandardCharsets.UTF_8));
-    assertEquals(expectedBody, payload);
+    assertThat(payload).isEqualTo(expectedBody);
 
   }
 
@@ -112,27 +112,27 @@ public class OkHttpClientTest extends AbstractClientTest {
    */
   @Override
   public void canSupportGzip() throws Exception {
-    assumeFalse("OkHTTP client do not support gzip compression", false);
+    assumeFalse(false, "OkHTTP client do not support gzip compression");
   }
 
   @Override
   public void canSupportGzipOnError() throws Exception {
-    assumeFalse("OkHTTP client do not support gzip compression", false);
+    assumeFalse(false, "OkHTTP client do not support gzip compression");
   }
 
   @Override
   public void canSupportDeflate() throws Exception {
-    assumeFalse("OkHTTP client do not support deflate compression", false);
+    assumeFalse(false, "OkHTTP client do not support deflate compression");
   }
 
   @Override
   public void canSupportDeflateOnError() throws Exception {
-    assumeFalse("OkHTTP client do not support deflate compression", false);
+    assumeFalse(false, "OkHTTP client do not support deflate compression");
   }
 
   @Override
   public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse("OkHTTP client do not support gzip compression", false);
+    assumeFalse(false, "OkHTTP client do not support gzip compression");
   }
 
   public interface OkHttpClientTestInterface {
