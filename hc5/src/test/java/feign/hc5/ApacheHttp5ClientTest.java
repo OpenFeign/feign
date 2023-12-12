@@ -15,10 +15,10 @@ package feign.hc5;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -30,8 +30,8 @@ import feign.FeignException;
 import feign.Request;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -44,7 +44,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     server.enqueue(new MockResponse().setBody("foo"));
@@ -62,7 +62,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void followRedirectsIsTrue() throws InterruptedException {
+  void followRedirectsIsTrue() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
@@ -77,7 +77,7 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void followRedirectsIsFalse() throws InterruptedException {
+  void followRedirectsIsFalse() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
@@ -112,13 +112,13 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeTrue("HC5 client seems to hang with response size equalto Long.MAX", false);
+  public void veryLongResponseNullLength() {
+    assumeTrue(false, "HC5 client seems to hang with response size equalto Long.MAX");
   }
 
   @Override
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue("this test is flaky on windows, but works fine.", false);
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
+    assumeTrue(false, "this test is flaky on windows, but works fine.");
   }
 
   @Path("/")

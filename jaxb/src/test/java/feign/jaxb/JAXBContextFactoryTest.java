@@ -15,23 +15,23 @@ package feign.jaxb;
 
 import feign.jaxb.mock.onepackage.AnotherMockedJAXBObject;
 import feign.jaxb.mock.onepackage.MockedJAXBObject;
-import org.junit.Test;
 import javax.xml.XMLConstants;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JAXBContextFactoryTest {
+class JAXBContextFactoryTest {
 
   @Test
-  public void buildsMarshallerWithJAXBEncodingProperty() throws Exception {
+  void buildsMarshallerWithJAXBEncodingProperty() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
@@ -40,7 +40,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithSchemaLocationProperty() throws Exception {
+  void buildsMarshallerWithSchemaLocationProperty() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -52,7 +52,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithNoNamespaceSchemaLocationProperty() throws Exception {
+  void buildsMarshallerWithNoNamespaceSchemaLocationProperty() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder()
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd").build();
@@ -63,7 +63,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithFormattedOutputProperty() throws Exception {
+  void buildsMarshallerWithFormattedOutputProperty() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
@@ -72,7 +72,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithFragmentProperty() throws Exception {
+  void buildsMarshallerWithFragmentProperty() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerFragment(true).build();
 
@@ -81,7 +81,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithSchema() throws Exception {
+  void buildsMarshallerWithSchema() throws Exception {
     Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema();
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerSchema(schema).build();
@@ -91,7 +91,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsUnmarshallerWithSchema() throws Exception {
+  void buildsUnmarshallerWithSchema() throws Exception {
     Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema();
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerSchema(schema).build();
@@ -101,7 +101,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithCustomEventHandler() throws Exception {
+  void buildsMarshallerWithCustomEventHandler() throws Exception {
     ValidationEventHandler handler = event -> false;
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerEventHandler(handler).build();
@@ -111,7 +111,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsMarshallerWithDefaultEventHandler() throws Exception {
+  void buildsMarshallerWithDefaultEventHandler() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().build();
 
@@ -120,7 +120,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsUnmarshallerWithCustomEventHandler() throws Exception {
+  void buildsUnmarshallerWithCustomEventHandler() throws Exception {
     ValidationEventHandler handler = event -> false;
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerEventHandler(handler).build();
@@ -130,7 +130,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void buildsUnmarshallerWithDefaultEventHandler() throws Exception {
+  void buildsUnmarshallerWithDefaultEventHandler() throws Exception {
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().build();
 
@@ -139,7 +139,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void testPreloadCache() throws Exception {
+  void preloadCache() throws Exception {
 
     List<Class<?>> classes = Arrays.asList(String.class, Integer.class);
     JAXBContextFactory factory =
@@ -156,7 +156,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void testClassModeInstantiation() throws Exception {
+  void classModeInstantiation() throws Exception {
 
     List<Class<?>> classes = Arrays.asList(String.class, Integer.class);
     JAXBContextFactory factory =
@@ -175,7 +175,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void testPackageModeInstantiationUsingSamePackage() throws Exception {
+  void packageModeInstantiationUsingSamePackage() throws Exception {
 
     JAXBContextFactory factory = new JAXBContextFactory.Builder()
         .withJAXBContextInstantiationMode(JAXBContextInstantationMode.PACKAGE)
@@ -192,7 +192,7 @@ public class JAXBContextFactoryTest {
   }
 
   @Test
-  public void testPackageModeInstantiationUsingMultiplePackages() throws Exception {
+  void packageModeInstantiationUsingMultiplePackages() throws Exception {
 
     JAXBContextFactory factory = new JAXBContextFactory.Builder()
         .withJAXBContextInstantiationMode(JAXBContextInstantationMode.PACKAGE)

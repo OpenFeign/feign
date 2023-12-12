@@ -20,22 +20,22 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
-import org.junit.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
+import org.junit.jupiter.api.Test;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JacksonCodecTest {
+class JacksonCodecTest {
 
   private static final String DATES_JSON = "[\"2020-01-02\",\"2021-02-03\"]";
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -46,7 +46,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesMapObjectNumericalValuesToByteArray() {
+  void encodesMapObjectNumericalValuesToByteArray() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -57,7 +57,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
     Map<String, Object> form = new LinkedHashMap<String, Object>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
@@ -69,7 +69,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
     List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
@@ -90,7 +90,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToEmpty() throws Exception {
+  void nullBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -101,7 +101,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToEmpty() throws Exception {
+  void emptyBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -113,7 +113,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     JacksonJrDecoder decoder = new JacksonJrDecoder(
         singletonList(new JavaLocalDateExtension()));
 
@@ -133,7 +133,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customDecoderExpressedAsMapper() throws Exception {
+  void customDecoderExpressedAsMapper() throws Exception {
     JSON mapper = JSON.builder()
         .register(new JavaLocalDateExtension())
         .build();
@@ -155,7 +155,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     JacksonJrEncoder encoder = new JacksonJrEncoder(
         singletonList(new JavaLocalDateExtension()));
 
@@ -170,7 +170,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decoderCharset() throws IOException {
+  void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
@@ -192,7 +192,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodesToMap() throws Exception {
+  void decodesToMap() throws Exception {
     String json = "{\"name\":\"jim\",\"id\":12}";
 
     Response response = Response.builder()
@@ -272,7 +272,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

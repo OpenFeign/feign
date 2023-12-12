@@ -15,28 +15,28 @@ package feign.querymap;
 
 import feign.Param;
 import feign.QueryMapEncoder;
-import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test for {@link BeanQueryMapEncoder}
  */
-public class BeanQueryMapEncoderTest {
+class BeanQueryMapEncoderTest {
 
   private final QueryMapEncoder encoder = new BeanQueryMapEncoder();
 
   @Test
-  public void testDefaultEncoder_acceptNullValue() {
+  void defaultEncoder_acceptNullValue() {
     assertThat(encoder.encode(null)).as("Empty map should be returned")
         .isEqualTo(Collections.EMPTY_MAP);
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithValues() {
+  void defaultEncoder_normalClassWithValues() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
@@ -49,7 +49,7 @@ public class BeanQueryMapEncoderTest {
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithOutValues() {
+  void defaultEncoder_normalClassWithOutValues() {
     NormalObject normalObject = new NormalObject(null, null);
 
     Map<String, Object> encodedMap = encoder.encode(normalObject);
@@ -59,7 +59,7 @@ public class BeanQueryMapEncoderTest {
   }
 
   @Test
-  public void testDefaultEncoder_haveSuperClass() {
+  void defaultEncoder_haveSuperClass() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("page", 1);
     expected.put("size", 10);
@@ -75,7 +75,7 @@ public class BeanQueryMapEncoderTest {
   }
 
   @Test
-  public void testDefaultEncoder_withOverriddenParamName() {
+  void defaultEncoder_withOverriddenParamName() {
     HashSet<Object> expectedNames = new HashSet<>();
     expectedNames.add("fooAlias");
     expectedNames.add("bar");

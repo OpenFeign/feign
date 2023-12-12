@@ -13,20 +13,20 @@
  */
 package feign.codec;
 
-import org.junit.Test;
 import java.time.Clock;
 import java.util.Arrays;
+import org.junit.jupiter.api.Test;
 import feign.RequestTemplate;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class DefaultEncoderTest {
+class DefaultEncoderTest {
 
   private final Encoder encoder = new Encoder.Default();
 
   @Test
-  public void testEncodesStrings() throws Exception {
+  void encodesStrings() throws Exception {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, String.class, template);
@@ -34,7 +34,7 @@ public class DefaultEncoderTest {
   }
 
   @Test
-  public void testEncodesByteArray() throws Exception {
+  void encodesByteArray() throws Exception {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, byte[].class, template);
@@ -42,7 +42,7 @@ public class DefaultEncoderTest {
   }
 
   @Test
-  public void testRefusesToEncodeOtherTypes() throws Exception {
+  void refusesToEncodeOtherTypes() throws Exception {
     Throwable exception = assertThrows(EncodeException.class, () -> {
 
       encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate());

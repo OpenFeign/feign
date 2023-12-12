@@ -19,19 +19,19 @@ import feign.CollectionFormat;
 import feign.Util;
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class QueryTemplateTest {
+class QueryTemplateTest {
 
   @Test
-  public void templateToQueryString() {
+  void templateToQueryString() {
     QueryTemplate template =
         QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"), Util.UTF_8);
     assertThat(template.toString()).isEqualToIgnoringCase("name=Bob&name=James&name=Jason");
   }
 
   @Test
-  public void expandEmptyCollection() {
+  void expandEmptyCollection() {
     QueryTemplate template =
         QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("people", Collections.emptyList()));
@@ -39,7 +39,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandCollection() {
+  void expandCollection() {
     QueryTemplate template =
         QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
     String expanded =
@@ -48,7 +48,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandCollectionWithBlanks() {
+  void expandCollectionWithBlanks() {
     QueryTemplate template =
         QueryTemplate.create("people", Collections.singletonList("{people}"), Util.UTF_8);
     String expanded = template.expand(
@@ -57,7 +57,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValue() {
+  void expandSingleValue() {
     QueryTemplate template =
         QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("value", "Magnum P.I."));
@@ -65,7 +65,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandMultipleValues() {
+  void expandMultipleValues() {
     QueryTemplate template =
         QueryTemplate.create("name", Arrays.asList("Bob", "James", "Jason"), Util.UTF_8);
     String expanded = template.expand(Collections.emptyMap());
@@ -73,7 +73,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void unresolvedQuery() {
+  void unresolvedQuery() {
     QueryTemplate template =
         QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.emptyMap());
@@ -81,7 +81,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void unresolvedMultiValueQueryTemplates() {
+  void unresolvedMultiValueQueryTemplates() {
     QueryTemplate template =
         QueryTemplate.create("name", Arrays.asList("{bob}", "{james}", "{jason}"), Util.UTF_8);
     String expanded = template.expand(Collections.emptyMap());
@@ -89,7 +89,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void explicitNullValuesAreRemoved() {
+  void explicitNullValuesAreRemoved() {
     QueryTemplate template =
         QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("value", null));
@@ -97,7 +97,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void emptyParameterRemains() {
+  void emptyParameterRemains() {
     QueryTemplate template =
         QueryTemplate.create("name", Collections.singletonList("{value}"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("value", ""));
@@ -105,7 +105,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void collectionFormat() {
+  void collectionFormat() {
     QueryTemplate template =
         QueryTemplate
             .create("name", Arrays.asList("James", "Jason"), Util.UTF_8, CollectionFormat.CSV);
@@ -114,7 +114,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandName() {
+  void expandName() {
     QueryTemplate template =
         QueryTemplate.create("{name}", Arrays.asList("James", "Jason"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
@@ -122,7 +122,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandPureParameter() {
+  void expandPureParameter() {
     QueryTemplate template =
         QueryTemplate.create("{name}", Collections.emptyList(), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
@@ -130,7 +130,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandPureParameterWithSlash() {
+  void expandPureParameterWithSlash() {
     QueryTemplate template =
         QueryTemplate.create("/path/{name}", Collections.emptyList(), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
@@ -138,7 +138,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandNameUnresolved() {
+  void expandNameUnresolved() {
     QueryTemplate template =
         QueryTemplate.create("{parameter}", Arrays.asList("James", "Jason"), Util.UTF_8);
     String expanded = template.expand(Collections.singletonMap("name", "firsts"));
@@ -146,7 +146,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValueWithComma() {
+  void expandSingleValueWithComma() {
     QueryTemplate template =
         QueryTemplate.create("collection",
             Collections.singletonList("{collection}"), Util.UTF_8);
@@ -155,7 +155,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValueWithPipe() {
+  void expandSingleValueWithPipe() {
     QueryTemplate template =
         QueryTemplate.create("collection",
             Collections.singletonList("{collection}"), Util.UTF_8);
@@ -164,7 +164,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValueWithSpace() {
+  void expandSingleValueWithSpace() {
     QueryTemplate template =
         QueryTemplate.create("collection",
             Collections.singletonList("{collection}"), Util.UTF_8);
@@ -173,7 +173,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValueWithTab() {
+  void expandSingleValueWithTab() {
     QueryTemplate template =
         QueryTemplate.create("collection",
             Collections.singletonList("{collection}"), Util.UTF_8);
@@ -182,7 +182,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandSingleValueWithJson() {
+  void expandSingleValueWithJson() {
     QueryTemplate template =
         QueryTemplate.create("json", Collections.singletonList("{json}"), Util.UTF_8);
     String expanded = template.expand(
@@ -193,7 +193,7 @@ public class QueryTemplateTest {
 
 
   @Test
-  public void expandCollectionValueWithBrackets() {
+  void expandCollectionValueWithBrackets() {
     QueryTemplate template =
         QueryTemplate.create("collection[]", Collections.singletonList("{collection[]}"),
             Util.UTF_8, CollectionFormat.CSV);
@@ -204,7 +204,7 @@ public class QueryTemplateTest {
   }
 
   @Test
-  public void expandCollectionValueWithDollar() {
+  void expandCollectionValueWithDollar() {
     QueryTemplate template =
         QueryTemplate.create("$collection", Collections.singletonList("{$collection}"),
             Util.UTF_8, CollectionFormat.CSV);

@@ -20,9 +20,9 @@ import feign.Feign.Builder;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
 import feign.codec.DecodeException;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import mockwebserver3.SocketPolicy;
+import org.junit.jupiter.api.Test;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.hamcrest.core.Is.isA;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -59,8 +58,8 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void retriesFailedHandshake() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
@@ -72,8 +71,8 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse());
 
     TestInterface api = newBuilder()
@@ -90,9 +89,9 @@ public class DefaultClientTest extends AbstractClientTest {
    */
   @Test
   @Override
-  public void testPatch() throws Exception {
+  public void patch() throws Exception {
     RetryableException exception = assertThrows(RetryableException.class, () -> {
-      super.testPatch();
+      super.patch();
     });
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
@@ -123,8 +122,8 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+  void canOverrideHostnameVerifier() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
     server.enqueue(new MockResponse());
 
     TestInterface api = Feign.builder()
@@ -143,7 +142,7 @@ public class DefaultClientTest extends AbstractClientTest {
    * we are looking to do here.
    */
   @Test
-  public void canCreateWithImplicitOrNoCredentials() throws Exception {
+  void canCreateWithImplicitOrNoCredentials() throws Exception {
     Proxied proxied = new Proxied(
         TrustingSSLSocketFactory.get(), null,
         new Proxy(Type.HTTP, proxyAddress));
@@ -156,7 +155,7 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void canCreateWithExplicitCredentials() throws Exception {
+  void canCreateWithExplicitCredentials() throws Exception {
     Proxied proxied = new Proxied(
         TrustingSSLSocketFactory.get(), null,
         new Proxy(Type.HTTP, proxyAddress), "user", "password");

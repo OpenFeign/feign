@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
@@ -45,9 +44,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import feign.AsyncClient;
 import feign.AsyncFeign;
 import feign.Body;
@@ -79,16 +77,15 @@ import feign.codec.ErrorDecoder;
 import feign.codec.StringDecoder;
 import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import okio.Buffer;
 
 public class OkHttpClientAsyncTest {
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void iterableQueryParams() throws Exception {
+  void iterableQueryParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -100,7 +97,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void postTemplateParamsResolve() throws Exception {
+  void postTemplateParamsResolve() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -113,7 +110,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void responseCoercesToStringBody() throws Throwable {
+  void responseCoercesToStringBody() throws Throwable {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -125,7 +122,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void postFormParams() throws Exception {
+  void postFormParams() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -141,7 +138,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void postBodyParam() throws Exception {
+  void postBodyParam() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -161,7 +158,7 @@ public class OkHttpClientAsyncTest {
    * type.
    */
   @Test
-  public void bodyTypeCorrespondsWithParameterType() throws Exception {
+  void bodyTypeCorrespondsWithParameterType() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final AtomicReference<Type> encodedType = new AtomicReference<Type>();
@@ -182,7 +179,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void singleInterceptor() throws Exception {
+  void singleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -198,7 +195,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void multipleInterceptor() throws Exception {
+  void multipleInterceptor() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterfaceAsync api =
@@ -216,7 +213,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void customExpander() throws Exception {
+  void customExpander() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -230,7 +227,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void customExpanderListParam() throws Exception {
+  void customExpanderListParam() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -245,7 +242,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void customExpanderNullParam() throws Exception {
+  void customExpanderNullParam() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -259,7 +256,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void headerMap() throws Exception {
+  void headerMap() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -277,7 +274,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void headerMapWithHeaderAnnotations() throws Exception {
+  void headerMapWithHeaderAnnotations() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -308,7 +305,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMap() throws Exception {
+  void queryMap() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -325,7 +322,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapIterableValuesExpanded() throws Exception {
+  void queryMapIterableValuesExpanded() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -345,7 +342,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapWithQueryParams() throws Exception {
+  void queryMapWithQueryParams() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -372,7 +369,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapValueStartingWithBrace() throws Exception {
+  void queryMapValueStartingWithBrace() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -402,7 +399,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapPojoWithFullParams() throws Exception {
+  void queryMapPojoWithFullParams() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -415,7 +412,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapPojoWithPartialParams() throws Exception {
+  void queryMapPojoWithPartialParams() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -429,7 +426,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMapPojoWithEmptyParams() throws Exception {
+  void queryMapPojoWithEmptyParams() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
@@ -441,7 +438,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void configKeyFormatsAsExpected() throws Exception {
+  void configKeyFormatsAsExpected() throws Exception {
     assertThat(Feign.configKey(TestInterfaceAsync.class,
         TestInterfaceAsync.class.getDeclaredMethod("post"))).isEqualTo("TestInterfaceAsync#post()");
     assertThat(Feign.configKey(TestInterfaceAsync.class,
@@ -450,7 +447,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void configKeyUsesChildType() throws Exception {
+  void configKeyUsesChildType() throws Exception {
     assertThat(Feign.configKey(List.class, Iterable.class.getDeclaredMethod("iterator")))
         .isEqualTo("List#iterator()");
   }
@@ -464,7 +461,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void canOverrideErrorDecoder() throws Throwable {
+  void canOverrideErrorDecoder() throws Throwable {
     Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
       server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
 
@@ -478,7 +475,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void overrideTypeSpecificDecoder() throws Throwable {
+  void overrideTypeSpecificDecoder() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api = newAsyncBuilder()
@@ -488,7 +485,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void doesntRetryAfterResponseIsSent() throws Throwable {
+  void doesntRetryAfterResponseIsSent() throws Throwable {
     Throwable exception = assertThrows(FeignException.class, () -> {
       server.enqueue(new MockResponse().setBody("success!"));
 
@@ -504,7 +501,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
+  void throwsFeignExceptionIncludingBody() throws Throwable {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
@@ -525,7 +522,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void throwsFeignExceptionWithoutBody() {
+  void throwsFeignExceptionWithoutBody() {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
@@ -543,7 +540,7 @@ public class OkHttpClientAsyncTest {
 
   @SuppressWarnings("deprecation")
   @Test
-  public void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
+  void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
     final Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
     headers.put("Location", Arrays.asList("http://bar.com"));
     final Response response = Response.builder().status(302).reason("Found").headers(headers)
@@ -564,7 +561,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void okIfDecodeRootCauseHasNoMessage() throws Throwable {
+  void okIfDecodeRootCauseHasNoMessage() throws Throwable {
     assertThrows(DecodeException.class, () -> {
       server.enqueue(new MockResponse().setBody("success!"));
 
@@ -577,7 +574,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
+  void decodingExceptionGetWrappedInDismiss404Mode() throws Throwable {
     server.enqueue(new MockResponse().setResponseCode(404));
 
     final TestInterfaceAsync api =
@@ -593,7 +590,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
+  void decodingDoesNotSwallow404ErrorsInDismiss404Mode() throws Throwable {
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
       server.enqueue(new MockResponse().setResponseCode(404));
 
@@ -608,7 +605,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void okIfEncodeRootCauseHasNoMessage() throws Throwable {
+  void okIfEncodeRootCauseHasNoMessage() throws Throwable {
     assertThrows(EncodeException.class, () -> {
       server.enqueue(new MockResponse().setBody("success!"));
 
@@ -622,7 +619,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void equalsHashCodeAndToStringWork() {
+  void equalsHashCodeAndToStringWork() {
     final Target<TestInterfaceAsync> t1 =
         new HardCodedTarget<TestInterfaceAsync>(TestInterfaceAsync.class,
             "http://localhost:8080");
@@ -654,7 +651,7 @@ public class OkHttpClientAsyncTest {
 
   @SuppressWarnings("resource")
   @Test
-  public void decodeLogicSupportsByteArray() throws Throwable {
+  void decodeLogicSupportsByteArray() throws Throwable {
     final byte[] expectedResponse = {12, 34, 56};
     server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
 
@@ -667,7 +664,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void encodeLogicSupportsByteArray() throws Exception {
+  void encodeLogicSupportsByteArray() throws Exception {
     final byte[] expectedRequest = {12, 34, 56};
     server.enqueue(new MockResponse());
 
@@ -684,7 +681,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void encodedQueryParam() throws Exception {
+  void encodedQueryParam() throws Exception {
     server.enqueue(new MockResponse());
 
     final TestInterfaceAsync api =
@@ -708,7 +705,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void responseMapperIsAppliedBeforeDelegate() throws IOException {
+  void responseMapperIsAppliedBeforeDelegate() throws IOException {
     final ResponseMappingDecoder decoder =
         new ResponseMappingDecoder(upperCaseResponseMapper(), new StringDecoder());
     final String output = (String) decoder.decode(responseWithText("response"), String.class);
@@ -744,7 +741,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void mapAndDecodeExecutesMapFunction() throws Throwable {
+  void mapAndDecodeExecutesMapFunction() throws Throwable {
     server.enqueue(new MockResponse().setBody("response!"));
 
     final TestInterfaceAsync api =
@@ -755,7 +752,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
+  void beanQueryMapEncoderWithPrivateGetterIgnored() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -772,7 +769,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void queryMap_with_child_pojo() throws Exception {
+  void queryMap_with_child_pojo() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().queryMapEndcoder(new FieldQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -791,7 +788,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
+  void beanQueryMapEncoderWithNullValueIgnored() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -809,7 +806,7 @@ public class OkHttpClientAsyncTest {
   }
 
   @Test
-  public void beanQueryMapEncoderWithEmptyParams() throws Exception {
+  void beanQueryMapEncoderWithEmptyParams() throws Exception {
     final TestInterfaceAsync api =
         newAsyncBuilder().queryMapEndcoder(new BeanQueryMapEncoder())
             .target("http://localhost:" + server.getPort());
@@ -1054,6 +1051,11 @@ public class OkHttpClientAsyncTest {
     public Instant instant() {
       return Instant.ofEpochMilli(millis);
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 
 }

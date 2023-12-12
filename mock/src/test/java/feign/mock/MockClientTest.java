@@ -24,13 +24,13 @@ import java.lang.reflect.Type;
 import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 import feign.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
 
-public class MockClientTest {
+class MockClientTest {
 
   interface GitHub {
 
@@ -84,8 +84,8 @@ public class MockClientTest {
   private GitHub github;
   private MockClient mockClient;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
       RequestKey postContributorKey =
@@ -118,14 +118,14 @@ public class MockClientTest {
   }
 
   @Test
-  public void hitMock() {
+  void hitMock() {
     List<Contributor> contributors = github.contributors("netflix", "feign");
     assertThat(contributors).hasSize(30);
     mockClient.verifyStatus();
   }
 
   @Test
-  public void missMock() {
+  void missMock() {
     try {
       github.contributors("velo", "feign-mock");
       fail("");
@@ -135,7 +135,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void missHttpMethod() {
+  void missHttpMethod() {
     try {
       github.patchContributors("netflix", "feign");
       fail("");
@@ -145,14 +145,14 @@ public class MockClientTest {
   }
 
   @Test
-  public void paramsEncoding() {
+  void paramsEncoding() {
     List<Contributor> contributors = github.contributors("7 7", "netflix", "feign");
     assertThat(contributors).hasSize(30);
     mockClient.verifyStatus();
   }
 
   @Test
-  public void verifyInvocation() {
+  void verifyInvocation() {
     RequestKey testRequestKey =
         RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
             .headers(RequestHeaders.builder()
@@ -189,7 +189,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void verifyNone() {
+  void verifyNone() {
     RequestKey testRequestKey;
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
@@ -257,7 +257,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void verifyNotInvoked() {
+  void verifyNotInvoked() {
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
     List<Request> results =
         mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
@@ -274,7 +274,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void verifyNegative() {
+  void verifyNegative() {
     try {
       mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", -1);
       fail("");
@@ -284,7 +284,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void verifyMultipleRequests() {
+  void verifyMultipleRequests() {
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
 
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
@@ -304,7 +304,7 @@ public class MockClientTest {
   }
 
   @Test
-  public void resetRequests() {
+  void resetRequests() {
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
 
     github.create("netflix", "feign", "velo_at_github", "preposterous hacker");

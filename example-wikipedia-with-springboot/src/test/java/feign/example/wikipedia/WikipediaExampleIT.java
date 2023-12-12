@@ -18,16 +18,15 @@ import java.io.File;
 import java.util.Arrays;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Run main for {@link WikipediaExampleIT}
  */
-public class WikipediaExampleIT {
+class WikipediaExampleIT {
 
   @Test
-  public void runMain() throws Exception {
+  void runMain() throws Exception {
     final String jar = Arrays.stream(new File("target").listFiles())
         .filter(file -> file.getName().startsWith("feign-example-wikipedia-with-springboot")
             && file.getName().endsWith(".jar"))

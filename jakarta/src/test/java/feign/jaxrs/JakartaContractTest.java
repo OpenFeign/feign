@@ -22,13 +22,13 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
-import org.junit.Test;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
@@ -37,10 +37,10 @@ import static org.assertj.core.data.MapEntry.entry;
  * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
+class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
 
   @Test
-  public void injectJaxrsInternals() throws Exception {
+  void injectJaxrsInternals() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(JakartaInternals.class, "inject", AsyncResponse.class,
             UriInfo.class);
@@ -49,7 +49,7 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
   }
 
   @Test
-  public void injectBeanParam() throws Exception {
+  void injectBeanParam() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(JakartaInternals.class, "beanParameters", BeanParamInput.class);
     assertThat(methodMetadata.template())

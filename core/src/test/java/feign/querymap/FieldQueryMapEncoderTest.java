@@ -14,29 +14,29 @@
 package feign.querymap;
 
 import feign.Param;
-import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import feign.QueryMapEncoder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test for {@link FieldQueryMapEncoder}
  */
-public class FieldQueryMapEncoderTest {
+class FieldQueryMapEncoderTest {
 
   private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
 
   @Test
-  public void testDefaultEncoder_acceptNullValue() {
+  void defaultEncoder_acceptNullValue() {
     assertThat(encoder.encode(null)).as("Empty map should be returned")
         .isEqualTo(Collections.EMPTY_MAP);
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithValues() {
+  void defaultEncoder_normalClassWithValues() {
     final Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
@@ -48,7 +48,7 @@ public class FieldQueryMapEncoderTest {
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithOutValues() {
+  void defaultEncoder_normalClassWithOutValues() {
     final NormalObject normalObject = new NormalObject(null, null);
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
@@ -58,7 +58,7 @@ public class FieldQueryMapEncoderTest {
   }
 
   @Test
-  public void testDefaultEncoder_withOverriddenParamName() {
+  void defaultEncoder_withOverriddenParamName() {
     HashSet<Object> expectedNames = new HashSet<>();
     expectedNames.add("fooAlias");
     expectedNames.add("bar");

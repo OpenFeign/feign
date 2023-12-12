@@ -20,16 +20,16 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import feign.Request;
 import feign.ribbon.LBClient.RibbonRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
-public class LBClientTest {
+class LBClientTest {
 
   @Test
-  public void testParseCodes() {
+  void parseCodes() {
     assertThat(LBClient.parseStatusCodes("")).isEmpty();
     assertThat(LBClient.parseStatusCodes(null)).isEmpty();
     assertThat(LBClient.parseStatusCodes("504")).contains(504);
@@ -37,7 +37,7 @@ public class LBClientTest {
   }
 
   @Test
-  public void testRibbonRequest() throws URISyntaxException {
+  void ribbonRequest() throws URISyntaxException {
     // test for RibbonRequest.toRequest()
     // the url has a query whose value is an encoded json string
     String urlWithEncodedJson = "http://test.feign.com/p?q=%7b%22a%22%3a1%7d";

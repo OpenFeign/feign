@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 import java.lang.reflect.Field;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class BaseBuilderTest {
+class BaseBuilderTest {
 
   @Test
-  public void checkEnrichTouchesAllAsyncBuilderFields()
+  void checkEnrichTouchesAllAsyncBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
     test(AsyncFeign.builder().requestInterceptor(template -> {
     }).responseInterceptor((ic, c) -> c.next(ic)), 14);
@@ -54,7 +54,7 @@ public class BaseBuilderTest {
   }
 
   @Test
-  public void checkEnrichTouchesAllBuilderFields()
+  void checkEnrichTouchesAllBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
     test(Feign.builder().requestInterceptor(template -> {
     }).responseInterceptor((ic, c) -> c.next(ic)), 12);

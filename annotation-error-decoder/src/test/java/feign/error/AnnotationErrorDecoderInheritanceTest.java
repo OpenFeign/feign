@@ -23,13 +23,9 @@ import static feign.error.AnnotationErrorDecoderInheritanceTest.TestClientInterf
 import static feign.error.AnnotationErrorDecoderInheritanceTest.TestClientInterfaceWithExceptionPriority.UnauthenticatedOrUnauthorizedException;
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Parameterized.class)
 public class AnnotationErrorDecoderInheritanceTest extends
     AbstractAnnotationErrorDecoderTest<AnnotationErrorDecoderInheritanceTest.TestClientInterfaceWithExceptionPriority> {
 
@@ -38,8 +34,6 @@ public class AnnotationErrorDecoderInheritanceTest extends
     return TestClientInterfaceWithExceptionPriority.class;
   }
 
-  @Parameters(
-      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
         {"Test Code Specific At Method", 404, "method1Test", Method1NotFoundException.class},
@@ -59,22 +53,22 @@ public class AnnotationErrorDecoderInheritanceTest extends
         {"Test Default At Method", 504, "method3Test", Method3DefaultException.class},
         {"Test Default At Class", 504, "method2Test", ClassLevelDefaultException.class},
     });
-  }
+  } // first data value (0) is default
 
-  @Parameter // first data value (0) is default
   public String testType;
-
-  @Parameter(1)
   public int errorCode;
-
-  @Parameter(2)
   public String method;
-
-  @Parameter(3)
   public Class<? extends Exception> expectedExceptionClass;
 
-  @Test
-  public void test() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
+  void test(String testType,
+            int errorCode,
+            String method,
+            Class<? extends Exception> expectedExceptionClass)
+      throws Exception {
+    initAnnotationErrorDecoderInheritanceTest(testType, errorCode, method, expectedExceptionClass);
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(TestClientInterfaceWithExceptionPriority.class).build();
 
@@ -131,5 +125,15 @@ public class AnnotationErrorDecoderInheritanceTest extends
     @ErrorHandling(
         defaultException = Method3DefaultException.class)
     void method3Test();
+  }
+
+  public void initAnnotationErrorDecoderInheritanceTest(String testType,
+                                                        int errorCode,
+                                                        String method,
+                                                        Class<? extends Exception> expectedExceptionClass) {
+    this.testType = testType;
+    this.errorCode = errorCode;
+    this.method = method;
+    this.expectedExceptionClass = expectedExceptionClass;
   }
 }

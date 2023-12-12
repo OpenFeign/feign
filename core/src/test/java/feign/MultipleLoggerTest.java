@@ -13,15 +13,15 @@
  */
 package feign;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.io.File;
 import java.lang.reflect.Field;
 
 public class MultipleLoggerTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @TempDir
+  public File tmp;
 
   private static java.util.logging.Logger getInnerLogger(Logger.JavaLogger logger)
       throws Exception {
@@ -32,20 +32,20 @@ public class MultipleLoggerTest {
 
   @SuppressWarnings("deprecation")
   @Test
-  public void testAppendSeveralFilesToOneJavaLogger() throws Exception {
+  void appendSeveralFilesToOneJavaLogger() throws Exception {
     Logger.JavaLogger logger = new Logger.JavaLogger()
-        .appendToFile(tmp.newFile("1.log").getAbsolutePath())
-        .appendToFile(tmp.newFile("2.log").getAbsolutePath());
+        .appendToFile(File.createTempFile("1.log", null, tmp).getAbsolutePath())
+        .appendToFile(File.createTempFile("2.log", null, tmp).getAbsolutePath());
     java.util.logging.Logger inner = getInnerLogger(logger);
     assert (inner.getHandlers().length == 2);
   }
 
   @Test
-  public void testJavaLoggerInstantiationWithLoggerName() throws Exception {
+  void javaLoggerInstantiationWithLoggerName() throws Exception {
     Logger.JavaLogger l1 = new Logger.JavaLogger("First client")
-        .appendToFile(tmp.newFile("1.log").getAbsolutePath());
+        .appendToFile(File.createTempFile("1.log", null, tmp).getAbsolutePath());
     Logger.JavaLogger l2 = new Logger.JavaLogger("Second client")
-        .appendToFile(tmp.newFile("2.log").getAbsolutePath());
+        .appendToFile(File.createTempFile("2.log", null, tmp).getAbsolutePath());
     java.util.logging.Logger logger1 = getInnerLogger(l1);
     assert (logger1.getHandlers().length == 1);
     java.util.logging.Logger logger2 = getInnerLogger(l2);
@@ -53,11 +53,11 @@ public class MultipleLoggerTest {
   }
 
   @Test
-  public void testJavaLoggerInstantationWithClazz() throws Exception {
+  void javaLoggerInstantationWithClazz() throws Exception {
     Logger.JavaLogger l1 = new Logger.JavaLogger(String.class)
-        .appendToFile(tmp.newFile("1.log").getAbsolutePath());
+        .appendToFile(File.createTempFile("1.log", null, tmp).getAbsolutePath());
     Logger.JavaLogger l2 = new Logger.JavaLogger(Integer.class)
-        .appendToFile(tmp.newFile("2.log").getAbsolutePath());
+        .appendToFile(File.createTempFile("2.log", null, tmp).getAbsolutePath());
     java.util.logging.Logger logger1 = getInnerLogger(l1);
     assert (logger1.getHandlers().length == 1);
     java.util.logging.Logger logger2 = getInnerLogger(l2);

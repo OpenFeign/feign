@@ -13,14 +13,14 @@
  */
 package feign.ribbon;
 
-import org.junit.Test;
 import com.netflix.client.ClientFactory;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class LBClientFactoryTest {
+class LBClientFactoryTest {
 
   @Test
-  public void testCreateLBClient() {
+  void createLBClient() {
     LBClientFactory.Default lbClientFactory = new LBClientFactory.Default();
     LBClient client = lbClientFactory.create("clientName");
     assertThat(client.getClientName()).isEqualTo("clientName");

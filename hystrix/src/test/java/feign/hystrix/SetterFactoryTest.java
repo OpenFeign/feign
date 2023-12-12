@@ -18,12 +18,13 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import feign.RequestLine;
+import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class SetterFactoryTest {
 
@@ -32,11 +33,10 @@ public class SetterFactoryTest {
     String invoke();
   }
 
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void customSetter() {
+  void customSetter() {
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
@@ -56,5 +56,10 @@ public class SetterFactoryTest {
       api.invoke();
     });
     assertThat(exception.getMessage()).contains("POST / failed and no fallback available.");
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

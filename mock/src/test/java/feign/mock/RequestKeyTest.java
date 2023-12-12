@@ -19,16 +19,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.Request;
 
-public class RequestKeyTest {
+class RequestKeyTest {
 
   private RequestKey requestKey;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("my-header", "val").build();
@@ -38,7 +38,7 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void builder() throws Exception {
+  void builder() throws Exception {
     assertThat(requestKey.getMethod()).isEqualTo(HttpMethod.GET);
     assertThat(requestKey.getUrl()).isEqualTo("a");
     assertThat(requestKey.getHeaders().size()).isEqualTo(1);
@@ -49,7 +49,7 @@ public class RequestKeyTest {
 
   @SuppressWarnings("deprecation")
   @Test
-  public void create() throws Exception {
+  void create() throws Exception {
     Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
     map.put("my-header", Arrays.asList("val"));
     Request request =
@@ -67,7 +67,7 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void checkHashes() {
+  void checkHashes() {
     RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "b").build();
 
@@ -76,17 +76,17 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void equalObject() {
+  void equalObject() {
     assertThat(requestKey).isNotEqualTo(new Object());
   }
 
   @Test
-  public void equalNull() {
+  void equalNull() {
     assertThat(requestKey).isNotEqualTo(null);
   }
 
   @Test
-  public void equalPost() {
+  void equalPost() {
     RequestKey requestKey1 = RequestKey.builder(HttpMethod.GET, "a").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.POST, "a").build();
 
@@ -95,13 +95,13 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void equalSelf() {
+  void equalSelf() {
     assertThat(requestKey.hashCode()).isEqualTo(requestKey.hashCode());
     assertThat(requestKey).isEqualTo(requestKey);
   }
 
   @Test
-  public void equalMinimum() {
+  void equalMinimum() {
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
     assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
@@ -109,7 +109,7 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void equalExtra() {
+  void equalExtra() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("my-other-header", "other value").build();
@@ -121,7 +121,7 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void equalsExtended() {
+  void equalsExtended() {
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
     assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
@@ -129,7 +129,7 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void equalsExtendedExtra() {
+  void equalsExtendedExtra() {
     RequestHeaders headers = RequestHeaders
         .builder()
         .add("my-other-header", "other value").build();
@@ -141,13 +141,13 @@ public class RequestKeyTest {
   }
 
   @Test
-  public void testToString() throws Exception {
+  void testToString() throws Exception {
     assertThat(requestKey.toString()).startsWith("Request [GET a: ");
     assertThat(requestKey.toString()).contains(" with my-header=[val] ", " UTF-16]");
   }
 
   @Test
-  public void testToStringSimple() throws Exception {
+  void toStringSimple() throws Exception {
     requestKey = RequestKey.builder(HttpMethod.GET, "a").build();
 
     assertThat(requestKey.toString()).startsWith("Request [GET a: ");

@@ -17,10 +17,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CapabilityTest {
+class CapabilityTest {
 
   private class AClient implements Client {
 
@@ -38,6 +37,7 @@ public class CapabilityTest {
     }
 
   }
+
   private class BClient implements Client {
 
     public BClient(Client client) {
@@ -54,7 +54,7 @@ public class CapabilityTest {
   }
 
   @Test
-  public void enrichClient() {
+  void enrichClient() {
     Client enriched =
         (Client) Capability.enrich(new Client.Default(null, null), Client.class, Arrays.asList(
             new Capability() {

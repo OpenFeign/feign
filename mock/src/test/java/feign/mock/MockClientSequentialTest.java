@@ -22,8 +22,8 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.Body;
 import feign.Feign;
 import feign.FeignException;
@@ -35,7 +35,7 @@ import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
 
-public class MockClientSequentialTest {
+class MockClientSequentialTest {
 
   interface GitHub {
 
@@ -89,8 +89,8 @@ public class MockClientSequentialTest {
   private GitHub githubSequential;
   private MockClient mockClientSequential;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
       RequestHeaders headers = RequestHeaders
@@ -115,7 +115,7 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequests() throws Exception {
+  void sequentialRequests() throws Exception {
     githubSequential.contributors("netflix", "feign");
     try {
       githubSequential.contributors("55", "netflix", "feign");
@@ -135,7 +135,7 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequestsCalledTooLess() throws Exception {
+  void sequentialRequestsCalledTooLess() throws Exception {
     githubSequential.contributors("netflix", "feign");
     try {
       mockClientSequential.verifyStatus();
@@ -146,7 +146,7 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequestsCalledTooMany() throws Exception {
+  void sequentialRequestsCalledTooMany() throws Exception {
     sequentialRequests();
 
     try {
@@ -158,7 +158,7 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequestsInWrongOrder() throws Exception {
+  void sequentialRequestsInWrongOrder() throws Exception {
     try {
       githubSequential.contributors("7 7", "netflix", "feign");
       fail("");

@@ -15,7 +15,7 @@ package feign.error;
 
 import feign.Response;
 import feign.codec.ErrorDecoder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import static feign.error.AnnotationErrorDecoderNoAnnotationTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +28,7 @@ public class AnnotationErrorDecoderNoAnnotationTest
   }
 
   @Test
-  public void delegatesToDefaultErrorDecoder() throws Exception {
+  void delegatesToDefaultErrorDecoder() throws Exception {
 
     ErrorDecoder defaultErrorDecoder = new ErrorDecoder() {
       @Override

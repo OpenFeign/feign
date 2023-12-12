@@ -16,8 +16,8 @@ package feign.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -32,13 +32,13 @@ import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
 
-public class SpringContractTest {
+class SpringContractTest {
 
   private MockClient mockClient;
   private HealthResource resource;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     Response.Builder response = Response.builder()
         .status(200)
         .body("hello world", StandardCharsets.UTF_8)
@@ -98,49 +98,49 @@ public class SpringContractTest {
   }
 
   @Test
-  public void noPath() {
+  void noPath() {
     resource.getStatus();
 
     mockClient.verifyOne(HttpMethod.GET, "/health");
   }
 
   @Test
-  public void testWithName() {
+  void withName() {
     resource.checkWithName("name", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/name?deep=true&dryRun=true");
   }
 
   @Test
-  public void testOptionalPresent() {
+  void optionalPresent() {
     resource.checkWithOptional(Optional.of("value"));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional?param=value");
   }
 
   @Test
-  public void testOptionalNotPresent() {
+  void optionalNotPresent() {
     resource.checkWithOptional(Optional.empty());
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional");
   }
 
   @Test
-  public void testOptionalEmptyValue() {
+  void optionalEmptyValue() {
     resource.checkWithOptional(Optional.of(""));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional?param");
   }
 
   @Test
-  public void testOptionalNullable() {
+  void optionalNullable() {
     resource.checkWithOptional(Optional.ofNullable(null));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional");
   }
 
   @Test
-  public void testRequestPart() {
+  void requestPart() {
     resource.checkRequestPart("1", "hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.POST, "/health/part/1");
@@ -149,7 +149,7 @@ public class SpringContractTest {
   }
 
   @Test
-  public void testRequestHeader() {
+  void requestHeader() {
     resource.checkRequestHeader("hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header");
@@ -158,7 +158,7 @@ public class SpringContractTest {
   }
 
   @Test
-  public void testRequestHeaderMap() {
+  void requestHeaderMap() {
     Map<String, String> map = new HashMap<>();
     map.put("name1", "hello");
     map.put("grade1", "6");
@@ -170,7 +170,7 @@ public class SpringContractTest {
   }
 
   @Test
-  public void testRequestHeaderPojo() {
+  void requestHeaderPojo() {
     HeaderMapUserObject object = new HeaderMapUserObject();
     object.setName("hello");
     object.setGrade("6");
@@ -182,21 +182,21 @@ public class SpringContractTest {
   }
 
   @Test
-  public void requestParam() {
+  void requestParam() {
     resource.check("1", true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true");
   }
 
   @Test
-  public void requestTwoParams() {
+  void requestTwoParams() {
     resource.check("1", true, true);
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1?deep=true&dryRun=true");
   }
 
   @Test
-  public void inheritance() {
+  void inheritance() {
     final Data data = resource.getData(new Data());
     assertThat(data).isNotNull();
 
@@ -205,14 +205,14 @@ public class SpringContractTest {
   }
 
   @Test
-  public void composedAnnotation() {
+  void composedAnnotation() {
     resource.check("1");
 
     mockClient.verifyOne(HttpMethod.GET, "/health/1");
   }
 
   @Test
-  public void notAHttpMethod() {
+  void notAHttpMethod() {
     Throwable exception = assertThrows(Exception.class, () -> {
 
       resource.missingResourceExceptionHandler();
@@ -221,7 +221,7 @@ public class SpringContractTest {
   }
 
   @Test
-  public void testConsumeAndProduce() {
+  void consumeAndProduce() {
     resource.produceText(new HashMap<>());
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
     assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));

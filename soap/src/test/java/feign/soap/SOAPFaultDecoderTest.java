@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.ws.soap.SOAPFaultException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -31,10 +31,10 @@ import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 
 @SuppressWarnings("deprecation")
-public class SOAPFaultDecoderTest {
+class SOAPFaultDecoderTest {
 
   @Test
-  public void soapDecoderThrowsSOAPFaultException() throws IOException {
+  void soapDecoderThrowsSOAPFaultException() throws IOException {
 
     Response response = Response.builder()
         .status(200)
@@ -55,7 +55,7 @@ public class SOAPFaultDecoderTest {
   }
 
   @Test
-  public void errorDecoderReturnsSOAPFaultException() throws IOException {
+  void errorDecoderReturnsSOAPFaultException() throws IOException {
     Response response = Response.builder()
         .status(400)
         .reason("BAD REQUEST")
@@ -71,7 +71,7 @@ public class SOAPFaultDecoderTest {
   }
 
   @Test
-  public void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
+  void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
     Response response = Response.builder()
         .status(503)
         .reason("Service Unavailable")
@@ -89,7 +89,7 @@ public class SOAPFaultDecoderTest {
   }
 
   @Test
-  public void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
+  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
     String responseBody = "<?xml version = '1.0' encoding = 'UTF-8'?>\n" +
         "<SOAP-ENV:Envelope\n" +
         "   xmlns:SOAP-ENV = \"http://schemas.xmlsoap.org/soap/envelope/\"\n" +

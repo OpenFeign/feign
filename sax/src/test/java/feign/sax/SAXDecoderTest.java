@@ -16,7 +16,7 @@ package feign.sax;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Util;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.IOException;
 import java.text.ParseException;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("deprecation")
-public class SAXDecoderTest {
+class SAXDecoderTest {
 
   static String statusFailed = ""//
       + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
@@ -54,14 +54,14 @@ public class SAXDecoderTest {
       .build();
 
   @Test
-  public void parsesConfiguredTypes() throws ParseException, IOException {
+  void parsesConfiguredTypes() throws ParseException, IOException {
     assertThat(decoder.decode(statusFailedResponse(), NetworkStatus.class))
         .isEqualTo(NetworkStatus.FAILED);
     assertThat(decoder.decode(statusFailedResponse(), String.class)).isEqualTo("Failed");
   }
 
   @Test
-  public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+  void niceErrorOnUnconfiguredType() throws ParseException, IOException {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       decoder.decode(statusFailedResponse(), int.class);
@@ -80,7 +80,7 @@ public class SAXDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToEmpty() throws Exception {
+  void nullBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -92,7 +92,7 @@ public class SAXDecoderTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

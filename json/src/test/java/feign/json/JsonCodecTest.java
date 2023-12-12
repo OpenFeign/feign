@@ -22,8 +22,8 @@ import feign.mock.MockClient;
 import feign.mock.MockTarget;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import static feign.Util.toByteArray;
@@ -43,13 +43,13 @@ interface GitHub {
 }
 
 
-public class JsonCodecTest {
+class JsonCodecTest {
 
   private GitHub github;
   private MockClient mockClient;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     mockClient = new MockClient();
     github = Feign.builder()
         .decoder(new JsonDecoder())
@@ -59,7 +59,7 @@ public class JsonCodecTest {
   }
 
   @Test
-  public void decodes() throws IOException {
+  void decodes() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] response = toByteArray(input);
       mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign/contributors", response);
@@ -70,7 +70,7 @@ public class JsonCodecTest {
   }
 
   @Test
-  public void encodes() {
+  void encodes() {
     JSONObject contributor = new JSONObject();
     contributor.put("login", "radio-rogal");
     contributor.put("contributions", 0);

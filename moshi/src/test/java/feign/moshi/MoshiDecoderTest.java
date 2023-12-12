@@ -18,19 +18,19 @@ import com.squareup.moshi.Moshi;
 import feign.Request;
 import feign.Response;
 import feign.Util;
-import org.junit.Test;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MoshiDecoderTest {
+class MoshiDecoderTest {
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
 
     class Zone extends LinkedHashMap<String, Object> {
 
@@ -84,7 +84,7 @@ public class MoshiDecoderTest {
       "}";
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -96,7 +96,7 @@ public class MoshiDecoderTest {
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  void emptyBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -111,7 +111,7 @@ public class MoshiDecoderTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -123,7 +123,7 @@ public class MoshiDecoderTest {
   }
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     final UpperZoneJSONAdapter upperZoneAdapter = new UpperZoneJSONAdapter();
 
     MoshiDecoder decoder = new MoshiDecoder(Collections.singleton(upperZoneAdapter));
@@ -147,7 +147,7 @@ public class MoshiDecoderTest {
   }
 
   @Test
-  public void customObjectDecoder() throws Exception {
+  void customObjectDecoder() throws Exception {
     final JsonAdapter<VideoGame> videoGameJsonAdapter =
         new Moshi.Builder().build().adapter(VideoGame.class);
 

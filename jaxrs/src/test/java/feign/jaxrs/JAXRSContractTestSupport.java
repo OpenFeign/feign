@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class JAXRSContractTestSupport<E> {
 
@@ -41,7 +41,7 @@ public abstract class JAXRSContractTestSupport<E> {
   protected E contract = createContract();
 
   @Test
-  public void httpMethods() throws Exception {
+  void httpMethods() throws Exception {
     assertThat(parseAndValidateMetadata(methodsClass(), "post").template()).hasMethod("POST");
 
     assertThat(parseAndValidateMetadata(methodsClass(), "put").template()).hasMethod("PUT");
@@ -52,14 +52,14 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void customMethodWithoutPath() throws Exception {
+  void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(customMethodClass(), "patch").template())
         .hasMethod("PATCH")
         .hasUrl("/");
   }
 
   @Test
-  public void queryParamsInPathExtract() throws Exception {
+  void queryParamsInPathExtract() throws Exception {
     assertThat(parseAndValidateMetadata(withQueryParamsInPathClass(), "none").template())
         .hasPath("/")
         .hasQueries();
@@ -88,7 +88,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesAddsAcceptHeader() throws Exception {
+  void producesAddsAcceptHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(producesAndConsumesClass(), "produces");
 
     /* multiple @Produces annotations should be additive */
@@ -99,7 +99,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesMultipleAddsAcceptHeader() throws Exception {
+  void producesMultipleAddsAcceptHeader() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(producesAndConsumesClass(), "producesMultiple");
 
@@ -110,7 +110,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesNada() throws Exception {
+  void producesNada() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(producesAndConsumesClass(), "producesNada");
@@ -120,7 +120,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesEmpty() throws Exception {
+  void producesEmpty() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(producesAndConsumesClass(), "producesEmpty");
@@ -130,7 +130,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void consumesAddsContentTypeHeader() throws Exception {
+  void consumesAddsContentTypeHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(producesAndConsumesClass(), "consumes");
 
     /* multiple @Consumes annotations are additive */
@@ -140,7 +140,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void consumesMultipleAddsContentTypeHeader() throws Exception {
+  void consumesMultipleAddsContentTypeHeader() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(producesAndConsumesClass(), "consumesMultiple");
 
@@ -151,7 +151,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void consumesNada() throws Exception {
+  void consumesNada() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(producesAndConsumesClass(), "consumesNada");
@@ -161,7 +161,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void consumesEmpty() throws Exception {
+  void consumesEmpty() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(producesAndConsumesClass(), "consumesEmpty");
@@ -171,7 +171,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesAndConsumesOnClassAddsHeader() throws Exception {
+  void producesAndConsumesOnClassAddsHeader() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(producesAndConsumesClass(), "producesAndConsumes");
 
@@ -182,7 +182,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void bodyParamIsGeneric() throws Exception {
+  void bodyParamIsGeneric() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(bodyParamsClass(), "post", List.class);
 
     assertThat(md.bodyIndex()).isEqualTo(0);
@@ -191,7 +191,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void tooManyBodies() throws Exception {
+  void tooManyBodies() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(bodyParamsClass(), "tooMany", List.class, List.class);
@@ -200,18 +200,18 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void emptyPathOnType() throws Exception {
+  void emptyPathOnType() throws Exception {
     assertThat(parseAndValidateMetadata(emptyPathOnTypeClass(), "base").template()).hasUrl("/");
   }
 
   @Test
-  public void emptyPathOnTypeSpecific() throws Exception {
+  void emptyPathOnTypeSpecific() throws Exception {
     assertThat(parseAndValidateMetadata(emptyPathOnTypeClass(), "get").template())
         .hasUrl("/specific");
   }
 
   @Test
-  public void parsePathMethod() throws Exception {
+  void parsePathMethod() throws Exception {
     assertThat(parseAndValidateMetadata(pathOnTypeClass(), "base").template()).hasUrl("/base");
 
     assertThat(parseAndValidateMetadata(pathOnTypeClass(), "get").template())
@@ -219,12 +219,12 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void emptyPathOnMethod() throws Exception {
+  void emptyPathOnMethod() throws Exception {
     assertThat(parseAndValidateMetadata(pathOnTypeClass(), "emptyPath").template()).hasUrl("/base");
   }
 
   @Test
-  public void emptyPathParam() throws Exception {
+  void emptyPathParam() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(pathOnTypeClass(), "emptyPathParam", String.class);
@@ -233,7 +233,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void pathParamWithSpaces() throws Exception {
+  void pathParamWithSpaces() throws Exception {
     assertThat(
         parseAndValidateMetadata(pathOnTypeClass(), "pathParamWithSpaces", String.class)
             .template())
@@ -241,7 +241,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void regexPathOnMethodOrType() throws Exception {
+  void regexPathOnMethodOrType() throws Exception {
     assertThat(
         parseAndValidateMetadata(pathOnTypeClass(), "pathParamWithRegex", String.class)
             .template())
@@ -264,7 +264,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void withPathAndURIParams() throws Exception {
+  void withPathAndURIParams() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(
             withURIParamClass(), "uriParam", String.class, URI.class, String.class);
@@ -279,7 +279,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void pathAndQueryParams() throws Exception {
+  void pathAndQueryParams() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(
             withPathAndQueryParamsClass(),
@@ -297,7 +297,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void emptyQueryParam() throws Exception {
+  void emptyQueryParam() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(withPathAndQueryParamsClass(), "empty", String.class);
@@ -306,7 +306,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void formParamsParseIntoIndexToName() throws Exception {
+  void formParamsParseIntoIndexToName() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(
             formParamsClass(), "login", String.class, String.class, String.class);
@@ -322,7 +322,7 @@ public abstract class JAXRSContractTestSupport<E> {
 
   /** Body type is only for the body param. */
   @Test
-  public void formParamsDoesNotSetBodyType() throws Exception {
+  void formParamsDoesNotSetBodyType() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(
             formParamsClass(), "login", String.class, String.class, String.class);
@@ -331,7 +331,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void emptyFormParam() throws Exception {
+  void emptyFormParam() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(formParamsClass(), "emptyFormParam", String.class);
@@ -340,7 +340,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void headerParamsParseIntoIndexToName() throws Exception {
+  void headerParamsParseIntoIndexToName() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(headerParamsClass(), "logout", String.class);
 
     assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{Auth-Token}")));
@@ -349,7 +349,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void emptyHeaderParam() throws Exception {
+  void emptyHeaderParam() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(headerParamsClass(), "emptyHeaderParam", String.class);
@@ -358,37 +358,37 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void pathsWithoutSlashesParseCorrectly() throws Exception {
+  void pathsWithoutSlashesParseCorrectly() throws Exception {
     assertThat(parseAndValidateMetadata(pathsWithoutAnySlashesClass(), "get").template())
         .hasUrl("/base/specific");
   }
 
   @Test
-  public void pathsWithSomeSlashesParseCorrectly() throws Exception {
+  void pathsWithSomeSlashesParseCorrectly() throws Exception {
     assertThat(parseAndValidateMetadata(pathsWithSomeSlashesClass(), "get").template())
         .hasUrl("/base/specific");
   }
 
   @Test
-  public void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
+  void pathsWithSomeOtherSlashesParseCorrectly() throws Exception {
     assertThat(parseAndValidateMetadata(pathsWithSomeOtherSlashesClass(), "get").template())
         .hasUrl("/base/specific");
   }
 
   @Test
-  public void classWithRootPathParsesCorrectly() throws Exception {
+  void classWithRootPathParsesCorrectly() throws Exception {
     assertThat(parseAndValidateMetadata(classRootPathClass(), "get").template())
         .hasUrl("/specific");
   }
 
   @Test
-  public void classPathWithTrailingSlashParsesCorrectly() throws Exception {
+  void classPathWithTrailingSlashParsesCorrectly() throws Exception {
     assertThat(parseAndValidateMetadata(classPathWithTrailingSlashClass(), "get").template())
         .hasUrl("/base/specific");
   }
 
   @Test
-  public void methodPathWithoutLeadingSlashParsesCorrectly() throws Exception {
+  void methodPathWithoutLeadingSlashParsesCorrectly() throws Exception {
     assertThat(
         parseAndValidateMetadata(methodWithFirstPathThenGetWithoutLeadingSlashClass(), "get")
             .template())
@@ -396,7 +396,7 @@ public abstract class JAXRSContractTestSupport<E> {
   }
 
   @Test
-  public void producesWithHeaderParamContainAllHeaders() throws Exception {
+  void producesWithHeaderParamContainAllHeaders() throws Exception {
     assertThat(
         parseAndValidateMetadata(
             mixedAnnotationsClass(),

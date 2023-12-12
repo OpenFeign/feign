@@ -14,32 +14,30 @@
 package feign.hystrix;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.core.Is.isA;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import feign.*;
 import feign.Target.HardCodedTarget;
 import feign.gson.GsonDecoder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.observers.TestSubscriber;
 
 public class HystrixBuilderTest {
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void defaultMethodReturningHystrixCommand() {
+  void defaultMethodReturningHystrixCommand() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
     final TestInterface api = target();
@@ -51,7 +49,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommand() {
+  void hystrixCommand() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
     final TestInterface api = target();
@@ -63,7 +61,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommandFallback() {
+  void hystrixCommandFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -75,7 +73,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommandInt() {
+  void hystrixCommandInt() {
     server.enqueue(new MockResponse().setBody("1"));
 
     final TestInterface api = target();
@@ -87,7 +85,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommandIntFallback() {
+  void hystrixCommandIntFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -99,7 +97,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommandList() {
+  void hystrixCommandList() {
     server.enqueue(new MockResponse().setBody("[\"foo\",\"bar\"]"));
 
     final TestInterface api = target();
@@ -111,7 +109,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixCommandListFallback() {
+  void hystrixCommandListFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -135,7 +133,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void fallbacksApplyOnError() {
+  void fallbacksApplyOnError() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final GitHub fallback = (owner, repo) -> {
@@ -154,7 +152,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void errorInFallbackHasExpectedBehavior() {
+  void errorInFallbackHasExpectedBehavior() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final GitHub fallback = (owner, repo) -> {
@@ -186,7 +184,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void hystrixRuntimeExceptionPropagatesOnException() {
+  void hystrixRuntimeExceptionPropagatesOnException() {
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
@@ -200,7 +198,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservable() {
+  void rxObservable() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
     final TestInterface api = target();
@@ -217,7 +215,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableFallback() {
+  void rxObservableFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -234,7 +232,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableInt() {
+  void rxObservableInt() {
     server.enqueue(new MockResponse().setBody("1"));
 
     final TestInterface api = target();
@@ -251,7 +249,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableIntFallback() {
+  void rxObservableIntFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -268,7 +266,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableList() {
+  void rxObservableList() {
     server.enqueue(new MockResponse().setBody("[\"foo\",\"bar\"]"));
 
     final TestInterface api = target();
@@ -285,7 +283,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableListFall() {
+  void rxObservableListFall() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -302,7 +300,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxObservableListFall_noFallback() {
+  void rxObservableListFall_noFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = targetWithoutFallback();
@@ -323,7 +321,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingle() {
+  void rxSingle() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
     final TestInterface api = target();
@@ -340,7 +338,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingleFallback() {
+  void rxSingleFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -357,7 +355,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingleInt() {
+  void rxSingleInt() {
     server.enqueue(new MockResponse().setBody("1"));
 
     final TestInterface api = target();
@@ -374,7 +372,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingleIntFallback() {
+  void rxSingleIntFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -391,7 +389,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingleList() {
+  void rxSingleList() {
     server.enqueue(new MockResponse().setBody("[\"foo\",\"bar\"]"));
 
     final TestInterface api = target();
@@ -408,7 +406,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxSingleListFallback() {
+  void rxSingleListFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -425,7 +423,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void completableFutureEmptyBody()
+  void completableFutureEmptyBody()
       throws InterruptedException, ExecutionException, TimeoutException {
     server.enqueue(new MockResponse());
 
@@ -439,7 +437,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void completableFutureWithBody()
+  void completableFutureWithBody()
       throws InterruptedException, ExecutionException, TimeoutException {
     server.enqueue(new MockResponse().setBody("foo"));
 
@@ -453,7 +451,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void completableFutureFailWithoutFallback() throws TimeoutException, InterruptedException {
+  void completableFutureFailWithoutFallback() throws TimeoutException, InterruptedException {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -470,7 +468,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void completableFutureFallback()
+  void completableFutureFallback()
       throws InterruptedException, ExecutionException, TimeoutException {
     server.enqueue(new MockResponse().setResponseCode(500));
 
@@ -484,7 +482,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxCompletableEmptyBody() {
+  void rxCompletableEmptyBody() {
     server.enqueue(new MockResponse());
 
     final TestInterface api = target();
@@ -503,7 +501,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxCompletableWithBody() {
+  void rxCompletableWithBody() {
     server.enqueue(new MockResponse().setBody("foo"));
 
     final TestInterface api = target();
@@ -522,7 +520,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxCompletableFailWithoutFallback() {
+  void rxCompletableFailWithoutFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -540,7 +538,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void rxCompletableFallback() {
+  void rxCompletableFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -558,7 +556,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void plainString() {
+  void plainString() {
     server.enqueue(new MockResponse().setBody("\"foo\""));
 
     final TestInterface api = target();
@@ -569,7 +567,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void plainStringFallback() {
+  void plainStringFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -580,7 +578,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void plainList() {
+  void plainList() {
     server.enqueue(new MockResponse().setBody("[\"foo\",\"bar\"]"));
 
     final TestInterface api = target();
@@ -591,7 +589,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void plainListFallback() {
+  void plainListFallback() {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final TestInterface api = target();
@@ -602,7 +600,7 @@ public class HystrixBuilderTest {
   }
 
   @Test
-  public void equalsHashCodeAndToStringWork() {
+  void equalsHashCodeAndToStringWork() {
     final Target<TestInterface> t1 =
         new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8080");
     final Target<TestInterface> t2 =
@@ -805,5 +803,10 @@ public class HystrixBuilderTest {
     public CompletableFuture<String> completableFuture() {
       return CompletableFuture.completedFuture("fallback");
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

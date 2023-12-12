@@ -37,19 +37,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import okio.Buffer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * {@link AbstractClientTest} can be extended to run a set of tests against any {@link Client}
  * implementation.
  */
 public abstract class AbstractClientTest {
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   /**
@@ -62,7 +61,7 @@ public abstract class AbstractClientTest {
    * unsupported.
    */
   @Test
-  public void testPatch() throws Exception {
+  public void patch() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse());
 
@@ -121,7 +120,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesErrorResponse() {
+  void parsesErrorResponse() {
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -137,7 +136,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesErrorResponseBody() {
+  void parsesErrorResponseBody() {
     String expectedResponseBody = "ARGHH";
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
@@ -169,7 +168,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void safeRebuffering() {
+  void safeRebuffering() {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = newBuilder()
@@ -185,7 +184,7 @@ public abstract class AbstractClientTest {
 
   /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
   @Test
-  public void safeRebuffering_noContent() {
+  void safeRebuffering_noContent() {
     server.enqueue(new MockResponse().setResponseCode(204));
 
     TestInterface api = newBuilder()
@@ -200,7 +199,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void noResponseBodyForPost() throws Exception {
+  void noResponseBodyForPost() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api = newBuilder()
@@ -234,7 +233,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesResponseMissingLength() throws IOException {
+  void parsesResponseMissingLength() throws IOException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
     TestInterface api = newBuilder()
@@ -249,7 +248,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void postWithSpacesInPath() throws InterruptedException {
+  void postWithSpacesInPath() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api = newBuilder()
@@ -262,7 +261,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testVeryLongResponseNullLength() {
+  public void veryLongResponseNullLength() {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA")
         .addHeader("Content-Length", Long.MAX_VALUE));
@@ -275,7 +274,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testResponseLength() {
+  void responseLength() {
     server.enqueue(new MockResponse()
         .setBody("test"));
     TestInterface api = newBuilder()
@@ -288,7 +287,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testContentTypeWithCharset() throws Exception {
+  void contentTypeWithCharset() throws Exception {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA"));
     TestInterface api = newBuilder()
@@ -300,7 +299,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testContentTypeWithoutCharset() throws Exception {
+  void contentTypeWithoutCharset() throws Exception {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA"));
     TestInterface api = newBuilder()
@@ -312,7 +311,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
     TestInterface api = newBuilder()
         .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -325,7 +324,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testDefaultCollectionFormat() throws Exception {
+  void defaultCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api = newBuilder()
@@ -341,7 +340,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testHeadersWithNullParams() throws InterruptedException {
+  void headersWithNullParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api = newBuilder()
@@ -357,7 +356,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testHeadersWithNotEmptyParams() throws InterruptedException {
+  void headersWithNotEmptyParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api = newBuilder()
@@ -373,7 +372,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testAlternativeCollectionFormat() throws Exception {
+  void alternativeCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api = newBuilder()
@@ -559,6 +558,11 @@ public abstract class AbstractClientTest {
       deflaterOutputStream.close();
       return bos.toByteArray();
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 
 }

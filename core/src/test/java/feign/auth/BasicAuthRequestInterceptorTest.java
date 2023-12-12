@@ -13,16 +13,16 @@
  */
 package feign.auth;
 
-import org.junit.Test;
 import feign.RequestTemplate;
+import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
 
-public class BasicAuthRequestInterceptorTest {
+class BasicAuthRequestInterceptorTest {
 
   @Test
-  public void addsAuthorizationHeader() {
+  void addsAuthorizationHeader() {
     RequestTemplate template = new RequestTemplate();
     BasicAuthRequestInterceptor interceptor =
         new BasicAuthRequestInterceptor("Aladdin", "open sesame");
@@ -34,7 +34,7 @@ public class BasicAuthRequestInterceptorTest {
   }
 
   @Test
-  public void addsAuthorizationHeader_longUserAndPassword() {
+  void addsAuthorizationHeader_longUserAndPassword() {
     RequestTemplate template = new RequestTemplate();
     BasicAuthRequestInterceptor interceptor =
         new BasicAuthRequestInterceptor("IOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIOIO",

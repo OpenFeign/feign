@@ -29,17 +29,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class DefaultErrorDecoderTest {
+class DefaultErrorDecoderTest {
 
   private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
   private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 
   @Test
-  public void throwsFeignException() throws Throwable {
+  void throwsFeignException() throws Throwable {
 
     Response response = Response.builder()
         .status(500)
@@ -56,7 +56,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
+  void throwsFeignExceptionIncludingBody() throws Throwable {
     Response response = Response.builder()
         .status(500)
         .reason("Internal server error")
@@ -76,7 +76,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void throwsFeignExceptionIncludingLongBody() throws Throwable {
+  void throwsFeignExceptionIncludingLongBody() throws Throwable {
     String actualBody = repeatString("hello world ", 200);
     Response response = Response.builder()
         .status(500)
@@ -107,7 +107,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void testFeignExceptionIncludesStatus() {
+  void feignExceptionIncludesStatus() {
     Response response = Response.builder()
         .status(400)
         .reason("Bad request")
@@ -122,7 +122,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void retryAfterHeaderThrowsRetryableException() throws Throwable {
+  void retryAfterHeaderThrowsRetryableException() throws Throwable {
 
     headers.put(RETRY_AFTER, Collections.singletonList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response = Response.builder()
@@ -140,7 +140,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void lengthOfBodyExceptionTest() {
+  void lengthOfBodyExceptionTest() {
     Response response = bigBodyResponse();
     Exception defaultException = errorDecoder.decode("Service#foo()", response);
     assertThat(defaultException.getMessage().length()).isLessThan(response.body().length());

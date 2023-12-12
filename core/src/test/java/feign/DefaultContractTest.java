@@ -15,8 +15,15 @@ package feign;
 
 import com.google.gson.reflect.TypeToken;
 import org.assertj.core.api.Fail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.jmx.export.annotation.ManagedOperationParameter;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -32,12 +39,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class DefaultContractTest {
+class DefaultContractTest {
 
   Contract.Default contract = new Contract.Default();
 
   @Test
-  public void httpMethods() throws Exception {
+  void httpMethods() throws Exception {
     assertThat(parseAndValidateMetadata(Methods.class, "post").template())
         .hasMethod("POST");
 
@@ -52,7 +59,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void bodyParamIsGeneric() throws Exception {
+  void bodyParamIsGeneric() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
     assertThat(md.bodyIndex())
@@ -62,7 +69,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void bodyParamWithPathParam() throws Exception {
+  void bodyParamWithPathParam() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
 
@@ -73,7 +80,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void tooManyBodies() throws Exception {
+  void tooManyBodies() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
       parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
     });
@@ -81,14 +88,14 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void customMethodWithoutPath() throws Exception {
+  void customMethodWithoutPath() throws Exception {
     assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
         .hasMethod("PATCH")
         .hasUrl("/");
   }
 
   @Test
-  public void queryParamsInPathExtract() throws Exception {
+  void queryParamsInPathExtract() throws Exception {
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
         .hasUrl("/")
         .hasQueries();
@@ -131,7 +138,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void bodyWithoutParameters() throws Exception {
+  void bodyWithoutParameters() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template())
@@ -139,7 +146,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headersOnMethodAddsContentTypeHeader() throws Exception {
+  void headersOnMethodAddsContentTypeHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
     assertThat(md.template())
@@ -150,7 +157,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headersOnTypeAddsContentTypeHeader() throws Exception {
+  void headersOnTypeAddsContentTypeHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeadersOnType.class, "post");
 
     assertThat(md.template())
@@ -161,7 +168,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headersContainsWhitespaces() throws Exception {
+  void headersContainsWhitespaces() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeadersContainsWhitespaces.class, "post");
 
     assertThat(md.template())
@@ -172,7 +179,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void withPathAndURIParam() throws Exception {
+  void withPathAndURIParam() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(WithURIParam.class,
         "uriParam", String.class, URI.class, String.class);
 
@@ -186,7 +193,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void pathAndQueryParams() throws Exception {
+  void pathAndQueryParams() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(WithPathAndQueryParams.class,
         "recordsByNameAndType", int.class, String.class,
         String.class);
@@ -201,7 +208,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void autoDiscoverParamNames() throws Exception {
+  void autoDiscoverParamNames() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(AutoDiscoverParamNames.class,
         "recordsByNameAndType", int.class, String.class,
         String.class);
@@ -216,7 +223,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void bodyWithTemplate() throws Exception {
+  void bodyWithTemplate() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
         "login", String.class, String.class, String.class);
 
@@ -226,7 +233,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void formParamsParseIntoIndexToName() throws Exception {
+  void formParamsParseIntoIndexToName() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
         "login", String.class, String.class, String.class);
 
@@ -240,7 +247,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void formParamAndBodyParams() throws Exception {
+  void formParamAndBodyParams() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(FormParams.class,
@@ -252,7 +259,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void bodyParamsAndformParam() throws Exception {
+  void bodyParamsAndformParam() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       parseAndValidateMetadata(FormParams.class,
@@ -264,7 +271,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void formParamParseIntoFormParams() throws Exception {
+  void formParamParseIntoFormParams() throws Exception {
 
     MethodMetadata md = parseAndValidateMetadata(FormParams.class,
         "loginNoBodyTemplate", String.class, String.class, String.class);
@@ -283,7 +290,7 @@ public class DefaultContractTest {
    * Body type is only for the body param.
    */
   @Test
-  public void formParamsDoesNotSetBodyType() throws Exception {
+  void formParamsDoesNotSetBodyType() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
         "login", String.class, String.class, String.class);
 
@@ -291,7 +298,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headerParamsParseIntoIndexToName() throws Exception {
+  void headerParamsParseIntoIndexToName() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
 
     assertThat(md.template())
@@ -303,7 +310,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headerParamsParseIntoIndexToNameNotAtStart() throws Exception {
+  void headerParamsParseIntoIndexToNameNotAtStart() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(HeaderParamsNotAtStart.class, "logout", String.class);
 
@@ -316,7 +323,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void customExpander() throws Exception {
+  void customExpander() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "clock", Clock.class);
 
     assertThat(md.indexToExpanderClass())
@@ -324,7 +331,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMap() throws Exception {
+  void queryMap() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
 
@@ -332,7 +339,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapMapSubclass() throws Exception {
+  void queryMapMapSubclass() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMapMapSubclass",
             SortedMap.class);
@@ -341,7 +348,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void onlyOneQueryMapAnnotationPermitted() throws Exception {
+  void onlyOneQueryMapAnnotationPermitted() throws Exception {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "multipleQueryMap", Map.class,
           Map.class);
@@ -352,7 +359,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapKeysMustBeStrings() throws Exception {
+  void queryMapKeysMustBeStrings() throws Exception {
     try {
       parseAndValidateMetadata(QueryMapTestInterface.class, "nonStringKeyQueryMap", Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
@@ -362,7 +369,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void queryMapPojoObject() throws Exception {
+  void queryMapPojoObject() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObject", Object.class);
 
@@ -370,7 +377,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void slashAreEncodedWhenNeeded() throws Exception {
+  void slashAreEncodedWhenNeeded() throws Exception {
     MethodMetadata md = parseAndValidateMetadata(SlashNeedToBeEncoded.class,
         "getQueues", String.class);
 
@@ -382,7 +389,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void onlyOneHeaderMapAnnotationPermitted() throws Exception {
+  void onlyOneHeaderMapAnnotationPermitted() throws Exception {
     try {
       parseAndValidateMetadata(HeaderMapInterface.class, "multipleHeaderMap", Map.class, Map.class);
       Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
@@ -392,7 +399,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headerMapSubclass() throws Exception {
+  void headerMapSubclass() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(HeaderMapInterface.class, "headerMapSubClass",
             SubClassHeaders.class);
@@ -400,7 +407,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void headerMapUserObject() throws Exception {
+  void headerMapUserObject() throws Exception {
     final MethodMetadata md =
         parseAndValidateMetadata(HeaderMapInterface.class,
             "headerMapUserObject", HeaderMapUserObject.class);
@@ -667,7 +674,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void parameterizedBaseApi() throws Exception {
+  void parameterizedBaseApi() throws Exception {
     final List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedApi.class);
 
     final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
@@ -701,7 +708,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void parameterizedHeaderExpandApi() throws Exception {
+  void parameterizedHeaderExpandApi() throws Exception {
     final List<MethodMetadata> md =
         contract.parseAndValidateMetadata(ParameterizedHeaderExpandApi.class);
 
@@ -720,7 +727,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
+  void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
     final List<MethodMetadata> md =
         contract.parseAndValidateMetadata(
             ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
@@ -760,7 +767,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void parameterizedHeaderExpandApiBaseClass() throws Exception {
+  void parameterizedHeaderExpandApiBaseClass() throws Exception {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(ParameterizedHeaderExpandInheritedApi.class);
 
@@ -808,7 +815,7 @@ public class DefaultContractTest {
 
   /** Let's help folks not lose time when they mistake request line for a URI! */
   @Test
-  public void missingMethod() throws Exception {
+  void missingMethod() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       contract.parseAndValidateMetadata(MissingMethod.class);
@@ -827,7 +834,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void staticMethodsOnInterfaceIgnored() throws Exception {
+  void staticMethodsOnInterfaceIgnored() throws Exception {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(StaticMethodOnInterface.class);
     assertThat(mds).hasSize(1);
@@ -845,7 +852,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void defaultMethodsOnInterfaceIgnored() throws Exception {
+  void defaultMethodsOnInterfaceIgnored() throws Exception {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(DefaultMethodOnInterface.class);
     assertThat(mds).hasSize(1);
@@ -859,7 +866,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void paramIsASubstringOfAQuery() throws Exception {
+  void paramIsASubstringOfAQuery() throws Exception {
     final List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
 
     assertThat(mds.get(0).template().queries()).containsExactly(
@@ -868,7 +875,7 @@ public class DefaultContractTest {
   }
 
   @Test
-  public void errorMessageOnMixedContracts() {
+  void errorMessageOnMixedContracts() {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
 
       contract.parseAndValidateMetadata(MixedAnnotations.class);
@@ -879,10 +886,17 @@ public class DefaultContractTest {
   interface MixedAnnotations {
     @Headers("Content-Type: application/json")
     @RequestLine("GET api/v2/clients/{uid}")
-    Response findAllClientsByUid2(@Category(value = String.class) String uid,
+    Response findAllClientsByUid2(@UselessAnnotation("only used to cause problems") String uid,
                                   Integer limit,
                                   @SuppressWarnings({"a"}) Integer offset);
   }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.PARAMETER)
+  public static @interface UselessAnnotation {
+    String value() default "";
+  }
+
 
   class TestClock extends Clock {
 

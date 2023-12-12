@@ -16,14 +16,14 @@ package feign.optionals;
 import feign.Feign;
 import feign.RequestLine;
 import feign.codec.Decoder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class OptionalDecoderTests {
+class OptionalDecoderTests {
 
   interface OptionalInterface {
     @RequestLine("GET /")
@@ -34,7 +34,7 @@ public class OptionalDecoderTests {
   }
 
   @Test
-  public void simple404OptionalTest() throws IOException, InterruptedException {
+  void simple404OptionalTest() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404));
     server.enqueue(new MockResponse().setBody("foo"));
@@ -49,7 +49,7 @@ public class OptionalDecoderTests {
   }
 
   @Test
-  public void simple204OptionalTest() throws IOException, InterruptedException {
+  void simple204OptionalTest() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(204));
 
@@ -61,7 +61,7 @@ public class OptionalDecoderTests {
   }
 
   @Test
-  public void test200WithOptionalString() throws IOException, InterruptedException {
+  void test200WithOptionalString() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
 
@@ -76,7 +76,7 @@ public class OptionalDecoderTests {
   }
 
   @Test
-  public void test200WhenResponseBodyIsNull() throws IOException, InterruptedException {
+  void test200WhenResponseBodyIsNull() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200));
 
@@ -88,7 +88,7 @@ public class OptionalDecoderTests {
   }
 
   @Test
-  public void test200WhenDecodingNoOptional() throws IOException, InterruptedException {
+  void test200WhenDecodingNoOptional() throws IOException, InterruptedException {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
 

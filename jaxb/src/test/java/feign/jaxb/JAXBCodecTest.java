@@ -42,15 +42,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class JAXBCodecTest {
+class JAXBCodecTest {
 
   @Test
-  public void encodesXml() throws Exception {
+  void encodesXml() throws Exception {
     MockObject mock = new MockObject();
     mock.value = "Test";
 
@@ -64,7 +62,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void doesntEncodeParameterizedTypes() throws Exception {
+  void doesntEncodeParameterizedTypes() throws Exception {
     Throwable exception = assertThrows(UnsupportedOperationException.class, () -> {
 
       class ParameterizedHolder {
@@ -82,7 +80,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodesXmlWithCustomJAXBEncoding() throws Exception {
+  void encodesXmlWithCustomJAXBEncoding() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
@@ -99,7 +97,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
+  void encodesXmlWithCustomJAXBSchemaLocation() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -120,7 +118,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
+  void encodesXmlWithCustomJAXBNoNamespaceSchemaLocation() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd").build();
@@ -142,7 +140,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodesXmlWithCustomJAXBFormattedOutput() {
+  void encodesXmlWithCustomJAXBFormattedOutput() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
@@ -168,7 +166,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void decodesXml() throws Exception {
+  void decodesXml() throws Exception {
     MockObject mock = new MockObject();
     mock.value = "Test";
 
@@ -189,7 +187,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void doesntDecodeParameterizedTypes() throws Exception {
+  void doesntDecodeParameterizedTypes() throws Exception {
     Throwable exception = assertThrows(DecodeException.class, () -> {
 
       class ParameterizedHolder {
@@ -227,7 +225,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void decodeAnnotatedParameterizedTypes() throws Exception {
+  void decodeAnnotatedParameterizedTypes() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
@@ -256,7 +254,7 @@ public class JAXBCodecTest {
    * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -268,7 +266,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void decodeThrowsExceptionWhenUnmarshallingFailsWithSetSchema() throws Exception {
+  void decodeThrowsExceptionWhenUnmarshallingFailsWithSetSchema() throws Exception {
 
     String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
         + "<value>Test</value></mockIntObject>";
@@ -291,7 +289,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void decodesIgnoringErrorsWithEventHandler() throws Exception {
+  void decodesIgnoringErrorsWithEventHandler() throws Exception {
     String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
         + "<value>Test</value></mockIntObject>";
 
@@ -313,7 +311,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodeThrowsExceptionWhenMarshallingFailsWithSetSchema() throws Exception {
+  void encodeThrowsExceptionWhenMarshallingFailsWithSetSchema() throws Exception {
 
     JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
         .withMarshallerSchema(getMockIntObjSchema())
@@ -330,7 +328,7 @@ public class JAXBCodecTest {
   }
 
   @Test
-  public void encodesIgnoringErrorsWithEventHandler() throws Exception {
+  void encodesIgnoringErrorsWithEventHandler() throws Exception {
     JAXBContextFactory jaxbContextFactory = new JAXBContextFactory.Builder()
         .withMarshallerSchema(getMockIntObjSchema())
         .withMarshallerEventHandler(event -> true)

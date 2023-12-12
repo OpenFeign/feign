@@ -15,34 +15,34 @@ package feign;
 
 import feign.Request.HttpMethod;
 import feign.Target.EmptyTarget;
-import org.junit.Test;
 import java.net.URI;
+import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class EmptyTargetTest {
+class EmptyTargetTest {
 
   @Test
-  public void whenNameNotSupplied() {
+  void whenNameNotSupplied() {
     assertThat(EmptyTarget.create(UriInterface.class))
         .isEqualTo(EmptyTarget.create(UriInterface.class, "empty:UriInterface"));
   }
 
   @Test
-  public void toString_withoutName() {
+  void toString_withoutName() {
     assertThat(EmptyTarget.create(UriInterface.class).toString())
         .isEqualTo("EmptyTarget(type=UriInterface)");
   }
 
   @Test
-  public void toString_withName() {
+  void toString_withName() {
     assertThat(EmptyTarget.create(UriInterface.class, "manager-access").toString())
         .isEqualTo("EmptyTarget(type=UriInterface, name=manager-access)");
   }
 
   @Test
-  public void mustApplyToAbsoluteUrl() {
+  void mustApplyToAbsoluteUrl() {
     UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class,
         () -> EmptyTarget.create(UriInterface.class)
             .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")));

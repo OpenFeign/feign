@@ -13,17 +13,16 @@
  */
 package feign;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import org.junit.jupiter.api.Test;
 import feign.codec.DecodeException;
 import java.net.SocketTimeoutException;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -31,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author pengfei.zhao
  */
 @SuppressWarnings("deprecation")
-public class OptionsTest {
+class OptionsTest {
 
   static class ChildOptions extends Request.Options {
     public ChildOptions(int connectTimeoutMillis, int readTimeoutMillis) {
@@ -51,7 +50,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void socketTimeoutTest() {
+  void socketTimeoutTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -66,7 +65,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void normalResponseTest() {
+  void normalResponseTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -78,7 +77,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void normalResponseForChildOptionsTest() {
+  void normalResponseForChildOptionsTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -90,7 +89,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void socketTimeoutWithMethodOptionsTest() throws Exception {
+  void socketTimeoutWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 3000);
@@ -119,7 +118,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void normalResponseWithMethodOptionsTest() throws Exception {
+  void normalResponseWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 1000);

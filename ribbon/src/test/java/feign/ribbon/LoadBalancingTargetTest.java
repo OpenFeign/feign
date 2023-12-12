@@ -13,10 +13,10 @@
  */
 package feign.ribbon;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URL;
 import feign.Feign;
@@ -26,9 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class LoadBalancingTargetTest {
 
-  @Rule
   public final MockWebServer server1 = new MockWebServer();
-  @Rule
   public final MockWebServer server2 = new MockWebServer();
 
   static String hostAndPort(URL url) {
@@ -37,7 +35,7 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
@@ -66,7 +64,7 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  public void loadBalancingTargetPath() throws InterruptedException {
+  void loadBalancingTargetPath() throws InterruptedException {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
@@ -96,5 +94,10 @@ public class LoadBalancingTargetTest {
 
     @RequestLine("GET /servers")
     void get();
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server2.close();
   }
 }

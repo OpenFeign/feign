@@ -13,8 +13,8 @@
  */
 package feign;
 
-import org.junit.Test;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Tests interface inheritance defined per {@link Contract.Default} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class DefaultContractInheritanceTest {
+class DefaultContractInheritanceTest {
 
   Contract.Default contract = new Contract.Default();
 
@@ -41,7 +41,7 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void simpleParameterizedBaseApi() throws Exception {
+  void simpleParameterizedBaseApi() throws Exception {
     final List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
 
     assertThat(md).hasSize(1);
@@ -55,7 +55,7 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void parameterizedApiUnsupported() throws Exception {
+  void parameterizedApiUnsupported() throws Exception {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
       contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
     });
@@ -84,12 +84,12 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void overrideParameterizedApiSupported() {
+  void overrideParameterizedApiSupported() {
     contract.parseAndValidateMetadata(OverrideParameterizedApi.class);
   }
 
   @Test
-  public void overrideSimpleApiSupported() {
+  void overrideSimpleApiSupported() {
     contract.parseAndValidateMetadata(OverrideSimpleApi.class);
   }
 
@@ -152,12 +152,12 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void singleInheritance() {
+  void singleInheritance() {
     contract.parseAndValidateMetadata(SingleInheritanceChild.class);
   }
 
   @Test
-  public void multipleInheritanceDoneWrong() {
+  void multipleInheritanceDoneWrong() {
     Throwable exception = assertThrows(IllegalStateException.class, () -> {
       contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class);
     });
@@ -166,17 +166,17 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void multipleInheritanceDoneCorrectly() {
+  void multipleInheritanceDoneCorrectly() {
     contract.parseAndValidateMetadata(MultipleInheritanceDoneCorrectly.class);
   }
 
   @Test
-  public void multipleInheritanceDoneCorrectly2() {
+  void multipleInheritanceDoneCorrectly2() {
     contract.parseAndValidateMetadata(MultipleInheritanceApi.class);
   }
 
   @Test
-  public void multipleInheritanceSupported() {
+  void multipleInheritanceSupported() {
     contract.parseAndValidateMetadata(GrandChild.class);
   }
 }

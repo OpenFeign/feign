@@ -17,22 +17,22 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import java.time.Clock;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class JsonEncoderTest {
+class JsonEncoderTest {
 
   private JSONArray jsonArray;
   private JSONObject jsonObject;
   private RequestTemplate requestTemplate;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     jsonObject = new JSONObject();
     jsonObject.put("a", "b");
     jsonObject.put("c", 1);
@@ -43,27 +43,27 @@ public class JsonEncoderTest {
   }
 
   @Test
-  public void encodesArray() {
+  void encodesArray() {
     new JsonEncoder().encode(jsonArray, JSONArray.class, requestTemplate);
     JSONAssert.assertEquals("[{\"a\":\"b\",\"c\":1},123]",
         new String(requestTemplate.body(), UTF_8), false);
   }
 
   @Test
-  public void encodesObject() {
+  void encodesObject() {
     new JsonEncoder().encode(jsonObject, JSONObject.class, requestTemplate);
     JSONAssert.assertEquals("{\"a\":\"b\",\"c\":1}", new String(requestTemplate.body(), UTF_8),
         false);
   }
 
   @Test
-  public void encodesNull() {
+  void encodesNull() {
     new JsonEncoder().encode(null, JSONObject.class, new RequestTemplate());
     assertThat(requestTemplate.body()).isNull();
   }
 
   @Test
-  public void unknownTypeThrowsEncodeException() {
+  void unknownTypeThrowsEncodeException() {
     Exception exception = assertThrows(EncodeException.class,
         () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()));
     assertThat(exception.getMessage())

@@ -22,15 +22,15 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Request.Options;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -43,7 +43,7 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     server.enqueue(new MockResponse().setBody("foo"));
@@ -61,7 +61,7 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void followRedirectIsRespected() throws InterruptedException {
+  void followRedirectIsRespected() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";
@@ -75,7 +75,7 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void notFollowRedirectIsRespected() throws InterruptedException {
+  void notFollowRedirectIsRespected() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";

@@ -19,9 +19,9 @@ import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import java.text.ParseException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RetryAfterDecoderTest {
+class RetryAfterDecoderTest {
 
   private final RetryAfterDecoder decoder = new RetryAfterDecoder(RFC_1123_DATE_TIME) {
     protected long currentTimeMillis() {
@@ -30,23 +30,23 @@ public class RetryAfterDecoderTest {
   };
 
   @Test
-  public void malformedDateFailsGracefully() {
+  void malformedDateFailsGracefully() {
     assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 ZBW")).isNull();
   }
 
   @Test
-  public void rfc822Parses() throws ParseException {
+  void rfc822Parses() throws ParseException {
     assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"))
         .isEqualTo(parseDateTime("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test
-  public void relativeSecondsParses() throws ParseException {
+  void relativeSecondsParses() throws ParseException {
     assertThat(decoder.apply("86400")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
   @Test
-  public void relativeSecondsParseDecimalIntegers() throws ParseException {
+  void relativeSecondsParseDecimalIntegers() throws ParseException {
     assertThat(decoder.apply("86400.0")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 

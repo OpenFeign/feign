@@ -14,10 +14,11 @@
 package feign;
 
 import com.google.gson.reflect.TypeToken;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import feign.codec.Decoder;
@@ -26,7 +27,6 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class BaseApiTest {
 
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   interface BaseApi<K, M> {
@@ -59,7 +59,7 @@ public class BaseApiTest {
   }
 
   @Test
-  public void resolvesParameterizedResult() throws InterruptedException {
+  void resolvesParameterizedResult() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
     String baseUrl = server.url("/default").toString();
@@ -79,7 +79,7 @@ public class BaseApiTest {
   }
 
   @Test
-  public void resolvesBodyParameter() throws InterruptedException {
+  void resolvesBodyParameter() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
     String baseUrl = server.url("/default").toString();
@@ -101,5 +101,10 @@ public class BaseApiTest {
           }
         })
         .target(MyApi.class, baseUrl).getAll(new Keys<String>());
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

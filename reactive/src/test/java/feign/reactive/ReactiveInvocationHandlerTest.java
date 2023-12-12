@@ -26,17 +26,17 @@ import io.reactivex.Flowable;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReactiveInvocationHandlerTest {
+@ExtendWith(MockitoExtension.class)
+class ReactiveInvocationHandlerTest {
 
   @Mock
   private Target target;
@@ -46,14 +46,14 @@ public class ReactiveInvocationHandlerTest {
 
   private Method method;
 
-  @Before
-  public void setUp() throws NoSuchMethodException {
+  @BeforeEach
+  void setUp() throws NoSuchMethodException {
     method = TestReactorService.class.getMethod("version");
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  public void invokeOnSubscribeReactor() throws Throwable {
+  void invokeOnSubscribeReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
         Collections.singletonMap(method, this.methodHandler), Schedulers.boundedElastic());
@@ -71,7 +71,7 @@ public class ReactiveInvocationHandlerTest {
   }
 
   @Test
-  public void invokeOnSubscribeEmptyReactor() throws Throwable {
+  void invokeOnSubscribeEmptyReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn(null);
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
         Collections.singletonMap(method, this.methodHandler), Schedulers.boundedElastic());
@@ -88,7 +88,7 @@ public class ReactiveInvocationHandlerTest {
   }
 
   @Test
-  public void invokeFailureReactor() throws Throwable {
+  void invokeFailureReactor() throws Throwable {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     ReactorInvocationHandler handler = new ReactorInvocationHandler(this.target,
         Collections.singletonMap(this.method, this.methodHandler), Schedulers.boundedElastic());
@@ -106,7 +106,7 @@ public class ReactiveInvocationHandlerTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void invokeOnSubscribeRxJava() throws Throwable {
+  void invokeOnSubscribeRxJava() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn("Result");
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,
@@ -126,7 +126,7 @@ public class ReactiveInvocationHandlerTest {
   }
 
   @Test
-  public void invokeOnSubscribeEmptyRxJava() throws Throwable {
+  void invokeOnSubscribeEmptyRxJava() throws Throwable {
     given(this.methodHandler.invoke(any())).willReturn(null);
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,
@@ -145,7 +145,7 @@ public class ReactiveInvocationHandlerTest {
   }
 
   @Test
-  public void invokeFailureRxJava() throws Throwable {
+  void invokeFailureRxJava() throws Throwable {
     given(this.methodHandler.invoke(any())).willThrow(new IOException("Could Not Decode"));
     RxJavaInvocationHandler handler =
         new RxJavaInvocationHandler(this.target,

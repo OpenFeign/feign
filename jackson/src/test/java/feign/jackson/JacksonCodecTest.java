@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Util;
-import org.junit.Test;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import feign.RequestTemplate;
 import feign.Response;
 import static feign.Util.UTF_8;
@@ -46,7 +46,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
-public class JacksonCodecTest {
+class JacksonCodecTest {
 
   private String zonesJson = ""//
       + "[" + System.lineSeparator() //
@@ -60,7 +60,7 @@ public class JacksonCodecTest {
       + "]" + System.lineSeparator();
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<String, Object>();
     map.put("foo", 1);
 
@@ -74,7 +74,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
     Map<String, Object> form = new LinkedHashMap<String, Object>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
@@ -90,7 +90,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
     List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
@@ -107,7 +107,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -118,7 +118,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  void emptyBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -130,7 +130,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     JacksonDecoder decoder = new JacksonDecoder(
         Arrays.asList(
             new SimpleModule().addDeserializer(Zone.class, new ZoneDeserializer())));
@@ -151,7 +151,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     JacksonEncoder encoder = new JacksonEncoder(
         Arrays.asList(new SimpleModule().addSerializer(Zone.class, new ZoneSerializer())));
 
@@ -172,7 +172,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decoderCharset() throws IOException {
+  void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
@@ -195,7 +195,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodesIterator() throws Exception {
+  void decodesIterator() throws Exception {
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
@@ -222,7 +222,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToEmptyIterator() throws Exception {
+  void nullBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -233,7 +233,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToEmptyIterator() throws Exception {
+  void emptyBodyDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -305,7 +305,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -317,7 +317,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmptyIterator() throws Exception {
+  void notFoundDecodesToEmptyIterator() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

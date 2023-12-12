@@ -19,15 +19,15 @@ import feign.RequestLine;
 import feign.reactive.ReactiveDelegatingContract;
 import io.reactivex.Flowable;
 import java.util.stream.Stream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
-public class ReactiveDelegatingContractTest {
+class ReactiveDelegatingContractTest {
 
   @Test
-  public void onlyReactiveReturnTypesSupported() {
+  void onlyReactiveReturnTypesSupported() {
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
       Contract contract = new ReactiveDelegatingContract(new Contract.Default());
       contract.parseAndValidateMetadata(TestSynchronousService.class);
@@ -35,19 +35,19 @@ public class ReactiveDelegatingContractTest {
   }
 
   @Test
-  public void reactorTypes() {
+  void reactorTypes() {
     Contract contract = new ReactiveDelegatingContract(new Contract.Default());
     contract.parseAndValidateMetadata(TestReactorService.class);
   }
 
   @Test
-  public void reactivexTypes() {
+  void reactivexTypes() {
     Contract contract = new ReactiveDelegatingContract(new Contract.Default());
     contract.parseAndValidateMetadata(TestReactiveXService.class);
   }
 
   @Test
-  public void streamsAreNotSupported() {
+  void streamsAreNotSupported() {
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
       Contract contract = new ReactiveDelegatingContract(new Contract.Default());
       contract.parseAndValidateMetadata(StreamsService.class);

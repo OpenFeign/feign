@@ -19,13 +19,13 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
-import okhttp3.mockwebserver.MockResponse;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
   @Override
@@ -40,7 +40,7 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   public void noResponseBodyForPatch() {}
 
   @Override
-  public void testPatch() {}
+  public void patch() {}
 
   @Override
   public void parsesUnauthorizedResponseBody() {}
@@ -51,31 +51,31 @@ public class GoogleHttpClientTest extends AbstractClientTest {
    */
   @Override
   public void canSupportGzip() throws Exception {
-    assumeFalse("Google HTTP client client do not support gzip compression", false);
+    assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Override
   public void canSupportGzipOnError() throws Exception {
-    assumeFalse("Google HTTP client client do not support gzip compression", false);
+    assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Override
   public void canSupportDeflate() throws Exception {
-    assumeFalse("Google HTTP client client do not support deflate compression", false);
+    assumeFalse(false, "Google HTTP client client do not support deflate compression");
   }
 
   @Override
   public void canSupportDeflateOnError() throws Exception {
-    assumeFalse("Google HTTP client client do not support deflate compression", false);
+    assumeFalse(false, "Google HTTP client client do not support deflate compression");
   }
 
   @Override
   public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse("Google HTTP client client do not support gzip compression", false);
+    assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Test
-  public void testContentTypeHeaderGetsAddedOnce() throws Exception {
+  void contentTypeHeaderGetsAddedOnce() throws Exception {
     server.enqueue(new MockResponse()
         .setBody("AAAAAAAA"));
     TestInterface api = newBuilder()
@@ -93,8 +93,8 @@ public class GoogleHttpClientTest extends AbstractClientTest {
 
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeFalse("JaxRS client hang if the response doesn't have a payload", false);
+  public void veryLongResponseNullLength() {
+    assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }
 
 }

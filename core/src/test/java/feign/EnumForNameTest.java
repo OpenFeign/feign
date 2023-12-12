@@ -14,26 +14,20 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import java.util.Arrays;
 import feign.Request.ProtocolVersion;
 import static feign.Util.enumForName;
 
 public class EnumForNameTest {
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class KnownEnumValues {
-
-    @Parameter
     public Object name;
-    @Parameter(1)
     public ProtocolVersion expectedProtocolVersion;
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {ProtocolVersion.HTTP_1_0, ProtocolVersion.HTTP_1_0},
@@ -45,21 +39,26 @@ public class EnumForNameTest {
       });
     }
 
-    @Test
-    public void getKnownEnumValue() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void getKnownEnumValue(Object name, ProtocolVersion expectedProtocolVersion) {
+      initKnownEnumValues(name, expectedProtocolVersion);
       assertThat(enumForName(ProtocolVersion.class, name)).as("known enum value: " + name)
           .isEqualTo(expectedProtocolVersion);
     }
 
+    public void initKnownEnumValues(Object name, ProtocolVersion expectedProtocolVersion) {
+      this.name = name;
+      this.expectedProtocolVersion = expectedProtocolVersion;
+    }
+
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class UnknownEnumValues {
 
-    @Parameter
     public Object name;
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Request.HttpMethod.GET},
@@ -69,10 +68,16 @@ public class EnumForNameTest {
       });
     }
 
-    @Test
-    public void getKnownEnumValue() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void getKnownEnumValue(Object name) {
+      initUnknownEnumValues(name);
       assertThat(enumForName(ProtocolVersion.class, name)).as("unknown enum value: " + name)
           .isNull();
+    }
+
+    public void initUnknownEnumValues(Object name) {
+      this.name = name;
     }
 
   }

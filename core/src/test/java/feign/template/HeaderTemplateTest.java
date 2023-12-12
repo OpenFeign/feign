@@ -13,45 +13,45 @@
  */
 package feign.template;
 
-import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HeaderTemplateTest {
+class HeaderTemplateTest {
 
   @Test
-  public void it_should_throw_exception_when_name_is_null() {
+  void it_should_throw_exception_when_name_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create(null, Collections.singletonList("test")));
     assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
-  public void it_should_throw_exception_when_name_is_empty() {
+  void it_should_throw_exception_when_name_is_empty() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create("", Collections.singletonList("test")));
     assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
-  public void it_should_throw_exception_when_value_is_null() {
+  void it_should_throw_exception_when_value_is_null() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> HeaderTemplate.create("test", null));
     assertThat(exception.getMessage()).isEqualTo("values are required");
   }
 
   @Test
-  public void it_should_return_name() {
+  void it_should_return_name() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("test", Arrays.asList("test 1", "test 2"));
     assertThat(headerTemplate.getName()).isEqualTo("test");
   }
 
   @Test
-  public void it_should_return_expanded() {
+  void it_should_return_expanded() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{name}", "{missing}"));
     assertThat(headerTemplate.expand(Collections.emptyMap())).isEqualTo("emre, savci");
@@ -60,7 +60,7 @@ public class HeaderTemplateTest {
   }
 
   @Test
-  public void it_should_return_expanded_literals() {
+  void it_should_return_expanded_literals() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("hello", Arrays.asList("emre", "savci", "{replace_me}"));
     assertThat(headerTemplate.expand(Collections.singletonMap("replace_me", "{}")))
@@ -68,7 +68,7 @@ public class HeaderTemplateTest {
   }
 
   @Test
-  public void create_should_preserve_order() {
+  void create_should_preserve_order() {
     /*
      * Since Java 7, HashSet order is stable within a since JVM process, so one of these assertions
      * should fail if a HashSet is used.
@@ -85,7 +85,7 @@ public class HeaderTemplateTest {
   }
 
   @Test
-  public void append_should_preserve_order() {
+  void append_should_preserve_order() {
     /*
      * Since Java 7, HashSet order is stable within a since JVM process, so one of these assertions
      * should fail if a HashSet is used.
@@ -104,7 +104,7 @@ public class HeaderTemplateTest {
   }
 
   @Test
-  public void it_should_support_http_date() {
+  void it_should_support_http_date() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("Expires", Collections.singletonList("{expires}"));
     assertThat(headerTemplate.expand(
@@ -113,7 +113,7 @@ public class HeaderTemplateTest {
   }
 
   @Test
-  public void it_should_support_json_literal_values() {
+  void it_should_support_json_literal_values() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("CustomHeader", Collections.singletonList("{jsonParam}"));
 

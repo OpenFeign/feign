@@ -13,20 +13,12 @@
  */
 package feign;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.*;
@@ -37,7 +29,8 @@ import static java.util.Objects.nonNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static feign.Util.enumForName;
 
-@RunWith(Enclosed.class)
+
+
 public class LoggerTest {
   public final MockWebServer server = new MockWebServer();
   public final RecordingLogger logger = new RecordingLogger();
@@ -53,17 +46,16 @@ public class LoggerTest {
                  @Param("password") String password);
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class LogLevelEmitsTest extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public LogLevelEmitsTest(Level logLevel, List<String> expectedMessages) {
+    public void initLogLevelEmitsTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
@@ -93,8 +85,10 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void levelEmits() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void levelEmits(Level logLevel, List<String> expectedMessages) {
+      initLogLevelEmitsTest(logLevel, expectedMessages);
       server.enqueue(new MockResponse().setHeader("Y-Powered-By", "Mock").setBody("foo"));
 
       SendsStuff api = Feign.builder()
@@ -106,17 +100,16 @@ public class LoggerTest {
     }
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class ReasonPhraseOptional extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public ReasonPhraseOptional(Level logLevel, List<String> expectedMessages) {
+    public void initReasonPhraseOptional(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.BASIC, Arrays.asList(
@@ -125,8 +118,10 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void reasonPhraseOptional() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void reasonPhraseOptional(Level logLevel, List<String> expectedMessages) {
+      initReasonPhraseOptional(logLevel, expectedMessages);
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
@@ -138,20 +133,20 @@ public class LoggerTest {
     }
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class HttpProtocolVersionTest extends LoggerTest {
 
-    private final Level logLevel;
-    private final String protocolVersionName;
+    private Level logLevel;
+    private String protocolVersionName;
 
-    public HttpProtocolVersionTest(Level logLevel, String protocolVersionName,
-        List<String> expectedMessages) {
+    public void initHttpProtocolVersionTest(Level logLevel,
+                                            String protocolVersionName,
+                                            List<String> expectedMessages) {
       this.logLevel = logLevel;
       this.protocolVersionName = protocolVersionName;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.BASIC, null, Arrays.asList(
@@ -169,8 +164,12 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void testHttpProtocolVersion() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void httpProtocolVersion(Level logLevel,
+                             String protocolVersionName,
+                             List<String> expectedMessages) {
+      initHttpProtocolVersionTest(logLevel, protocolVersionName, expectedMessages);
       server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
 
       SendsStuff api = Feign.builder()
@@ -183,17 +182,16 @@ public class LoggerTest {
     }
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class ReadTimeoutEmitsTest extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public ReadTimeoutEmitsTest(Level logLevel, List<String> expectedMessages) {
+    public void initReadTimeoutEmitsTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
@@ -219,8 +217,10 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void levelEmitsOnReadTimeout() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void levelEmitsOnReadTimeout(Level logLevel, List<String> expectedMessages) {
+      initReadTimeoutEmitsTest(logLevel, expectedMessages);
       server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
 
       SendsStuff api = Feign.builder()
@@ -248,17 +248,16 @@ public class LoggerTest {
     }
   }
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class UnknownHostEmitsTest extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public UnknownHostEmitsTest(Level logLevel, List<String> expectedMessages) {
+    public void initUnknownHostEmitsTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
@@ -284,8 +283,10 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void unknownHostEmits() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void unknownHostEmits(Level logLevel, List<String> expectedMessages) {
+      initUnknownHostEmitsTest(logLevel, expectedMessages);
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
@@ -309,18 +310,17 @@ public class LoggerTest {
   }
 
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class FormatCharacterTest
       extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public FormatCharacterTest(Level logLevel, List<String> expectedMessages) {
+    public void initFormatCharacterTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
@@ -346,8 +346,10 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void formatCharacterEmits() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void formatCharacterEmits(Level logLevel, List<String> expectedMessages) {
+      initFormatCharacterTest(logLevel, expectedMessages);
       SendsStuff api = Feign.builder()
           .logger(logger)
           .logLevel(logLevel)
@@ -371,17 +373,16 @@ public class LoggerTest {
   }
 
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class RetryEmitsTest extends LoggerTest {
 
-    private final Level logLevel;
+    private Level logLevel;
 
-    public RetryEmitsTest(Level logLevel, List<String> expectedMessages) {
+    public void initRetryEmitsTest(Level logLevel, List<String> expectedMessages) {
       this.logLevel = logLevel;
       logger.expectMessages(expectedMessages);
     }
 
-    @Parameters
     public static Iterable<Object[]> data() {
       return Arrays.asList(new Object[][] {
           {Level.NONE, Collections.emptyList()},
@@ -394,8 +395,11 @@ public class LoggerTest {
       });
     }
 
-    @Test
-    public void retryEmits() {
+    @MethodSource("data")
+    @ParameterizedTest
+    void retryEmits(Level logLevel, List<String> expectedMessages) {
+
+      initRetryEmitsTest(logLevel, expectedMessages);
 
       SendsStuff api = Feign.builder()
           .logger(logger)
@@ -425,7 +429,7 @@ public class LoggerTest {
     }
   }
 
-  private static final class RecordingLogger extends Logger implements TestRule {
+  private static final class RecordingLogger extends Logger {
 
     private static final String PREFIX_X = "x-";
     private static final String PREFIX_Y = "y-";
@@ -452,21 +456,21 @@ public class LoggerTest {
       messages.add(methodTag(configKey) + String.format(format, args));
     }
 
-    @Override
-    public Statement apply(final Statement base, Description description) {
-      return new Statement() {
-        @Override
-        public void evaluate() throws Throwable {
-          base.evaluate();
-          SoftAssertions softly = new SoftAssertions();
-          softly.assertThat(messages.size()).isEqualTo(expectedMessages.size());
-          for (int i = 0; i < messages.size() && i < expectedMessages.size(); i++) {
-            softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
-          }
-          softly.assertAll();
-        }
-      };
-    }
+    // @Override
+    // public Statement apply(final Statement base, Description description) {
+    // return new Statement() {
+    // @Override
+    // public void evaluate() throws Throwable {
+    // base.evaluate();
+    // SoftAssertions softly = new SoftAssertions();
+    // softly.assertThat(messages.size()).isEqualTo(expectedMessages.size());
+    // for (int i = 0; i < messages.size() && i < expectedMessages.size(); i++) {
+    // softly.assertThat(messages.get(i)).matches(expectedMessages.get(i));
+    // }
+    // softly.assertAll();
+    // }
+    // };
+    // }
   }
 
   private static final class TestProtocolVersionClient extends Client.Default {

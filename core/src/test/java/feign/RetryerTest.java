@@ -13,21 +13,21 @@
  */
 package feign;
 
-import org.junit.Test;
 import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Retryer.Default;
 
 @SuppressWarnings("deprecation")
-public class RetryerTest {
+class RetryerTest {
 
   private final static Request REQUEST = Request
       .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
 
   @Test
-  public void only5TriesAllowedAndExponentialBackoff() {
+  void only5TriesAllowedAndExponentialBackoff() {
     final Long nonRetryable = null;
     RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
     Default retryer = new Retryer.Default();
@@ -55,7 +55,7 @@ public class RetryerTest {
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() {
+  void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer = new Retryer.Default() {
       protected long currentTimeMillis() {
         return 0;
@@ -67,14 +67,16 @@ public class RetryerTest {
     assertThat(retryer.sleptForMillis).isEqualTo(1000);
   }
 
-  @Test(expected = RetryableException.class)
-  public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY
-        .continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
+  @Test
+  void neverRetryAlwaysPropagates() {
+    assertThrows(RetryableException.class, () -> {
+      Retryer.NEVER_RETRY
+          .continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
+    });
   }
 
   @Test
-  public void defaultRetryerFailsOnInterruptedException() {
+  void defaultRetryerFailsOnInterruptedException() {
     Default retryer = new Retryer.Default();
 
     Thread.currentThread().interrupt();

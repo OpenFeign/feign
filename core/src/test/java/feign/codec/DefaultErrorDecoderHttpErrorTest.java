@@ -18,20 +18,17 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
 import feign.Util;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
-@RunWith(Parameterized.class)
 public class DefaultErrorDecoderHttpErrorTest {
 
-  @Parameterized.Parameters(name = "error: [{0}], exception: [{1}]")
   public static Object[][] errorCodes() {
     return new Object[][] {
         {400, FeignException.BadRequest.class,
@@ -71,21 +68,19 @@ public class DefaultErrorDecoderHttpErrorTest {
     };
   }
 
-  @Parameterized.Parameter
   public int httpStatus;
-
-  @Parameterized.Parameter(1)
   public Class expectedExceptionClass;
-
-  @Parameterized.Parameter(2)
   public String expectedMessage;
 
   private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
   private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 
-  @Test
-  public void testExceptionIsHttpSpecific() throws Throwable {
+  @MethodSource("errorCodes")
+  @ParameterizedTest(name = "error: [{0}], exception: [{1}]")
+  void exceptionIsHttpSpecific(int httpStatus, Class expectedExceptionClass, String expectedMessage)
+      throws Throwable {
+    initDefaultErrorDecoderHttpErrorTest(httpStatus, expectedExceptionClass, expectedMessage);
     Response response = Response.builder()
         .status(httpStatus)
         .reason("anything")
@@ -100,6 +95,14 @@ public class DefaultErrorDecoderHttpErrorTest {
     assertThat(exception).isInstanceOf(expectedExceptionClass);
     assertThat(((FeignException) exception).status()).isEqualTo(httpStatus);
     assertThat(exception.getMessage()).isEqualTo(expectedMessage);
+  }
+
+  public void initDefaultErrorDecoderHttpErrorTest(int httpStatus,
+                                                   Class expectedExceptionClass,
+                                                   String expectedMessage) {
+    this.httpStatus = httpStatus;
+    this.expectedExceptionClass = expectedExceptionClass;
+    this.expectedMessage = expectedMessage;
   }
 
 }

@@ -23,7 +23,7 @@ import io.dropwizard.metrics5.MetricRegistry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.hamcrest.Matcher;
+
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {

@@ -17,17 +17,15 @@ import com.netflix.client.ClientException;
 import feign.codec.DecodeException;
 import java.io.IOException;
 import java.net.ConnectException;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class PropagateFirstIOExceptionTest {
+class PropagateFirstIOExceptionTest {
 
   @Test
-  public void propagatesNestedIOE() throws IOException {
+  void propagatesNestedIOE() throws IOException {
     assertThatExceptionOfType(IOException.class).isThrownBy(() -> {
 
       RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
@@ -35,7 +33,7 @@ public class PropagateFirstIOExceptionTest {
   }
 
   @Test
-  public void propagatesFirstNestedIOE() throws IOException {
+  void propagatesFirstNestedIOE() throws IOException {
     IOException exception = assertThrows(IOException.class, () -> {
       RibbonClient
           .propagateFirstIOException(new ClientException(new IOException(new IOException())));
@@ -48,7 +46,7 @@ public class PropagateFirstIOExceptionTest {
    * exception
    */
   @Test
-  public void propagatesDoubleNestedIOE() throws IOException {
+  void propagatesDoubleNestedIOE() throws IOException {
     assertThatExceptionOfType(ConnectException.class).isThrownBy(() -> {
 
       RibbonClient.propagateFirstIOException(
@@ -57,7 +55,7 @@ public class PropagateFirstIOExceptionTest {
   }
 
   @Test
-  public void doesntPropagateWhenNotIOE() throws IOException {
+  void doesntPropagateWhenNotIOE() throws IOException {
     RibbonClient.propagateFirstIOException(
         new ClientException(new RuntimeException()));
   }

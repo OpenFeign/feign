@@ -13,8 +13,6 @@
  */
 package feign.micrometer;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
 import feign.Capability;
 import feign.Util;
 import io.micrometer.core.instrument.Measurement;
@@ -30,7 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.hamcrest.Matcher;
+
 
 public class MicrometerCapabilityTest
     extends AbstractMetricsTestBase<SimpleMeterRegistry, Id, Meter> {
@@ -56,9 +54,7 @@ public class MicrometerCapabilityTest
   @Override
   protected boolean doesMetricIdIncludeClient(Id metricId) {
     String tag = metricId.getTag("client");
-    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
-    Matcher<String> containsSource = containsString("Source");
-    return allOf(containsBase, containsSource).matches(tag);
+    return tag.contains("feign.micrometer.AbstractMetricsTestBase$") && tag.contains("Source");
   }
 
   @Override

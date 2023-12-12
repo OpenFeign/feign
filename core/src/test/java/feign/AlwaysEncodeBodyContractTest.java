@@ -15,7 +15,6 @@ package feign;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import org.junit.Test;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,10 +22,11 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AlwaysEncodeBodyContractTest {
+class AlwaysEncodeBodyContractTest {
 
   @Retention(RUNTIME)
   @Target(ElementType.METHOD)
@@ -91,7 +91,7 @@ public class AlwaysEncodeBodyContractTest {
    * non-annotated parameters the client method has, as alwaysEncodeBody is set to true.
    */
   @Test
-  public void alwaysEncodeBodyTrueTest() {
+  void alwaysEncodeBodyTrueTest() {
     SampleTargetMultipleNonAnnotatedParameters sampleClient1 = Feign.builder()
         .contract(new SampleContract())
         .encoder(new AllParametersSampleEncoder())

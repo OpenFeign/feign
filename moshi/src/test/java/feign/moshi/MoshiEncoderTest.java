@@ -16,14 +16,14 @@ package feign.moshi;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import feign.RequestTemplate;
-import org.junit.Test;
 import java.util.*;
+import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 
-public class MoshiEncoderTest {
+class MoshiEncoderTest {
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -36,7 +36,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
 
     Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
@@ -56,7 +56,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     final UpperZoneJSONAdapter upperZoneAdapter = new UpperZoneJSONAdapter();
 
     MoshiEncoder encoder = new MoshiEncoder(Collections.singleton(upperZoneAdapter));
@@ -81,7 +81,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void customObjectEncoder() {
+  void customObjectEncoder() {
     final JsonAdapter<VideoGame> videoGameJsonAdapter =
         new Moshi.Builder().build().adapter(VideoGame.class);
     MoshiEncoder encoder = new MoshiEncoder(Collections.singleton(videoGameJsonAdapter));

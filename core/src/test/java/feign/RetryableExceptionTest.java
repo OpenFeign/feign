@@ -13,16 +13,16 @@
  */
 package feign;
 
-import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import org.junit.jupiter.api.Test;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RetryableExceptionTest {
+class RetryableExceptionTest {
 
   @Test
-  public void createRetryableExceptionWithResponseAndResponseHeader() {
+  void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
     Long retryAfter = 5000L;
     Request request =

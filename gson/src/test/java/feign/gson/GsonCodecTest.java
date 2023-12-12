@@ -20,7 +20,6 @@ import com.google.gson.stream.JsonWriter;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Util;
-import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import feign.RequestTemplate;
 import feign.Response;
 import static feign.Util.UTF_8;
@@ -35,10 +35,10 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
-public class GsonCodecTest {
+class GsonCodecTest {
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -52,7 +52,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void decodesMapObjectNumericalValuesAsInteger() throws Exception {
+  void decodesMapObjectNumericalValuesAsInteger() throws Exception {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -68,7 +68,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
 
     Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
@@ -108,7 +108,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
 
     List<Zone> zones = new LinkedList<Zone>();
     zones.add(new Zone("denominator.io."));
@@ -126,7 +126,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  void nullBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -137,7 +137,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  void emptyBodyDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -183,7 +183,7 @@ public class GsonCodecTest {
   };
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     GsonDecoder decoder = new GsonDecoder(Collections.singletonList(upperZone));
 
     List<Zone> zones = new LinkedList<>();
@@ -203,7 +203,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     GsonEncoder encoder = new GsonEncoder(Collections.singletonList(upperZone));
 
     List<Zone> zones = new LinkedList<>();
@@ -227,7 +227,7 @@ public class GsonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

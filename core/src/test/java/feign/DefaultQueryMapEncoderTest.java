@@ -14,17 +14,17 @@
 package feign;
 
 import feign.querymap.FieldQueryMapEncoder;
-import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultQueryMapEncoderTest {
+class DefaultQueryMapEncoderTest {
 
   private final QueryMapEncoder encoder = new FieldQueryMapEncoder();
 
   @Test
-  public void testEncodesObject_visibleFields() {
+  void encodesObject_visibleFields() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
@@ -39,7 +39,7 @@ public class DefaultQueryMapEncoderTest {
   }
 
   @Test
-  public void testEncodesObject_visibleFields_emptyObject() {
+  void encodesObject_visibleFields_emptyObject() {
     VisibleFieldsObject object = new VisibleFieldsObject();
     Map<String, Object> encodedMap = encoder.encode(object);
     assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null fields: " + encodedMap)
@@ -47,7 +47,7 @@ public class DefaultQueryMapEncoderTest {
   }
 
   @Test
-  public void testEncodesObject_nonVisibleFields() {
+  void encodesObject_nonVisibleFields() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
@@ -58,7 +58,7 @@ public class DefaultQueryMapEncoderTest {
   }
 
   @Test
-  public void testEncodesObject_nonVisibleFields_emptyObject() {
+  void encodesObject_nonVisibleFields_emptyObject() {
     QueryMapEncoderObject object = new QueryMapEncoderObject(null, null);
     Map<String, Object> encodedMap = encoder.encode(object);
     assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null fields").isTrue();

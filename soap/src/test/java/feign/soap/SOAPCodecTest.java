@@ -34,7 +34,7 @@ import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPFactory;
 import javax.xml.soap.SOAPMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -44,10 +44,10 @@ import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
 
 @SuppressWarnings("deprecation")
-public class SOAPCodecTest {
+class SOAPCodecTest {
 
   @Test
-  public void encodesSoap() {
+  void encodesSoap() {
     Encoder encoder = new SOAPEncoder.Builder()
         .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
         .build();
@@ -72,7 +72,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void doesntEncodeParameterizedTypes() throws Exception {
+  void doesntEncodeParameterizedTypes() throws Exception {
     Throwable exception = assertThrows(UnsupportedOperationException.class, () -> {
 
       class ParameterizedHolder {
@@ -92,7 +92,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBMarshallerEncoding() {
+  void encodesSoapWithCustomJAXBMarshallerEncoding() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
 
@@ -124,7 +124,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBSchemaLocation() {
+  void encodesSoapWithCustomJAXBSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
@@ -152,7 +152,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void encodesSoapWithCustomJAXBNoSchemaLocation() {
+  void encodesSoapWithCustomJAXBNoSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerNoNamespaceSchemaLocation("http://apihost/schema.xsd")
@@ -179,7 +179,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void encodesSoapWithCustomJAXBFormattedOuput() {
+  void encodesSoapWithCustomJAXBFormattedOuput() {
     Encoder encoder = new SOAPEncoder.Builder().withFormattedOutput(true)
         .withJAXBContextFactory(new JAXBContextFactory.Builder()
             .build())
@@ -207,7 +207,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodesSoap() throws Exception {
+  void decodesSoap() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -236,7 +236,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodesSoapWithSchemaOnEnvelope() throws Exception {
+  void decodesSoapWithSchemaOnEnvelope() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -270,7 +270,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodesSoap1_2Protocol() throws Exception {
+  void decodesSoap1_2Protocol() throws Exception {
     GetPrice mock = new GetPrice();
     mock.item = new Item();
     mock.item.value = "Apples";
@@ -300,7 +300,7 @@ public class SOAPCodecTest {
 
 
   @Test
-  public void doesntDecodeParameterizedTypes() throws Exception {
+  void doesntDecodeParameterizedTypes() throws Exception {
     Throwable exception = assertThrows(feign.codec.DecodeException.class, () -> {
 
       class ParameterizedHolder {
@@ -347,7 +347,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void decodeAnnotatedParameterizedTypes() throws Exception {
+  void decodeAnnotatedParameterizedTypes() throws Exception {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
 
@@ -376,7 +376,7 @@ public class SOAPCodecTest {
    * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
-  public void notFoundDecodesToNull() throws Exception {
+  void notFoundDecodesToNull() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")
@@ -388,7 +388,7 @@ public class SOAPCodecTest {
   }
 
   @Test
-  public void changeSoapProtocolAndSetHeader() {
+  void changeSoapProtocolAndSetHeader() {
     Encoder encoder =
         new ChangedProtocolAndHeaderSOAPEncoder(new JAXBContextFactory.Builder().build());
 

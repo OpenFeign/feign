@@ -15,7 +15,8 @@ package feign.micrometer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.AsyncFeign;
 import feign.Capability;
 import feign.Feign;
@@ -29,8 +30,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
@@ -50,7 +51,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 
   protected MR metricsRegistry;
 
-  @Before
+  @BeforeEach
   public final void initializeMetricRegistry() {
     this.metricsRegistry = createMetricsRegistry();
   }
@@ -58,7 +59,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   protected abstract MR createMetricsRegistry();
 
   @Test
-  public final void addMetricsCapability() {
+  final void addMetricsCapability() {
     final SimpleSource source =
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
@@ -71,7 +72,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   @Test
-  public final void addAsyncMetricsCapability() {
+  final void addAsyncMetricsCapability() {
     final CompletableSource source =
         customizeBuilder(AsyncFeign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
@@ -142,7 +143,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   protected abstract Map<METRIC_ID, METRIC> getFeignMetrics();
 
   @Test
-  public void clientPropagatesUncheckedException() {
+  void clientPropagatesUncheckedException() {
     final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
 
     final SimpleSource source =
@@ -169,7 +170,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   protected abstract METRIC getMetric(String suffix, String... tags);
 
   @Test
-  public void decoderPropagatesUncheckedException() {
+  void decoderPropagatesUncheckedException() {
     final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
 
     final SimpleSource source =
@@ -189,7 +190,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   @Test
-  public void shouldMetricCollectionWithCustomException() {
+  void shouldMetricCollectionWithCustomException() {
     final SimpleSource source =
         customizeBuilder(Feign.builder()
             .client(
@@ -207,7 +208,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   @Test
-  public void clientMetricsHaveUriLabel() {
+  void clientMetricsHaveUriLabel() {
     final SimpleSource source =
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
@@ -235,7 +236,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   @Test
-  public void clientMetricsHaveUriLabelWithPathExpression() {
+  void clientMetricsHaveUriLabelWithPathExpression() {
     final SourceWithPathExpressions source =
         customizeBuilder(Feign.builder()
             .client(new MockClient().ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
@@ -259,7 +260,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
   }
 
   @Test
-  public void decoderExceptionCounterHasUriLabelWithPathExpression() {
+  void decoderExceptionCounterHasUriLabelWithPathExpression() {
     final AtomicReference<FeignException.NotFound> notFound = new AtomicReference<>();
 
     final SourceWithPathExpressions source =

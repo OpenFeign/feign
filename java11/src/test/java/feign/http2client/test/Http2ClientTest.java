@@ -15,9 +15,8 @@ package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.hamcrest.CoreMatchers;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.net.http.HttpTimeoutException;
@@ -25,12 +24,12 @@ import java.util.concurrent.TimeUnit;
 import feign.*;
 import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
-import okhttp3.mockwebserver.MockResponse;
+import mockwebserver3.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-@Ignore
+@Disabled
 public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {
@@ -57,7 +56,7 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Override
   @Test
-  public void testPatch() throws Exception {
+  public void patch() throws Exception {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     assertThat(api.patch(""))
@@ -89,7 +88,7 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void reasonPhraseInHeader() throws IOException, InterruptedException {
+  void reasonPhraseInHeader() throws IOException, InterruptedException {
     server.enqueue(new MockResponse()
         .addHeader("Reason-Phrase", "There is A reason")
         .setStatus("HTTP/1.1 " + 200));
@@ -105,12 +104,12 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Override
   @Test
-  public void testVeryLongResponseNullLength() {
+  public void veryLongResponseNullLength() {
     // client is too smart to fall for a body that is 8 bytes long
   }
 
   @Test
-  public void timeoutTest() {
+  void timeoutTest() {
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(30, TimeUnit.SECONDS));
 
     final TestInterface api = newBuilder()
@@ -125,7 +124,7 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testGetWithRequestBody() {
+  void getWithRequestBody() {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.getWithBody();
@@ -134,7 +133,7 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testDeleteWithRequestBody() {
+  void deleteWithRequestBody() {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.deleteWithBody();

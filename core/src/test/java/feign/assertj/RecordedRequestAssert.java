@@ -16,7 +16,7 @@ package feign.assertj;
 import java.util.Arrays;
 import java.util.Collection;
 import okhttp3.Headers;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.RecordedRequest;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;

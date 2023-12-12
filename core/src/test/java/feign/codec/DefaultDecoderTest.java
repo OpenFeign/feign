@@ -23,19 +23,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import feign.Request;
 import feign.Response;
 import feign.Util;
 
 @SuppressWarnings("deprecation")
-public class DefaultDecoderTest {
+class DefaultDecoderTest {
 
   private final Decoder decoder = new Decoder.Default();
 
   @Test
-  public void testDecodesToString() throws Exception {
+  void decodesToString() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
     assertThat(decodedObject.getClass()).isEqualTo(String.class);
@@ -43,7 +43,7 @@ public class DefaultDecoderTest {
   }
 
   @Test
-  public void testDecodesToByteArray() throws Exception {
+  void decodesToByteArray() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, byte[].class);
     assertThat(decodedObject.getClass()).isEqualTo(byte[].class);
@@ -51,12 +51,12 @@ public class DefaultDecoderTest {
   }
 
   @Test
-  public void testDecodesNullBodyToNull() throws Exception {
+  void decodesNullBodyToNull() throws Exception {
     assertThat(decoder.decode(nullBodyResponse(), Document.class)).isNull();
   }
 
   @Test
-  public void testRefusesToDecodeOtherTypes() throws Exception {
+  void refusesToDecodeOtherTypes() throws Exception {
     Throwable exception = assertThrows(DecodeException.class, () -> {
 
       decoder.decode(knownResponse(), Document.class);

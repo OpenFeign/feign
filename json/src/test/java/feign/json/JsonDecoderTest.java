@@ -29,17 +29,17 @@ import java.util.Collections;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-public class JsonDecoderTest {
+class JsonDecoderTest {
 
   private static JSONArray jsonArray;
   private static JSONObject jsonObject;
   private static Request request;
 
-  @BeforeClass
-  public static void setUpClass() {
+  @BeforeAll
+  static void setUpClass() {
     jsonObject = new JSONObject();
     jsonObject.put("a", "b");
     jsonObject.put("c", 1);
@@ -51,7 +51,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void decodesArray() throws IOException {
+  void decodesArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
         .status(200)
@@ -64,7 +64,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void decodesObject() throws IOException {
+  void decodesObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
         .status(200)
@@ -77,7 +77,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void decodesString() throws IOException {
+  void decodesString() throws IOException {
     String json = "qwerty";
     Response response = Response.builder()
         .status(200)
@@ -90,7 +90,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void notFoundDecodesToEmpty() throws IOException {
+  void notFoundDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(404)
         .reason("Not found")
@@ -102,7 +102,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToEmpty() throws IOException {
+  void nullBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -114,7 +114,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToNullString() throws IOException {
+  void nullBodyDecodesToNullString() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -125,7 +125,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void emptyBodyDecodesToEmpty() throws IOException {
+  void emptyBodyDecodesToEmpty() throws IOException {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -138,7 +138,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void unknownTypeThrowsDecodeException() throws IOException {
+  void unknownTypeThrowsDecodeException() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
         .status(200)
@@ -154,7 +154,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void badJsonThrowsWrappedJSONException() throws IOException {
+  void badJsonThrowsWrappedJSONException() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
         .status(200)
@@ -171,7 +171,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void causedByCommonException() throws IOException {
+  void causedByCommonException() throws IOException {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new Exception("test cause exception")));
@@ -188,7 +188,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void causedByIOException() throws IOException {
+  void causedByIOException() throws IOException {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new JSONException("test exception",
         new IOException("test cause exception")));
@@ -205,7 +205,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void checkedException() throws IOException {
+  void checkedException() throws IOException {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new IOException("test exception"));
     Response response = Response.builder()
@@ -221,7 +221,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void decodesExtendedArray() throws IOException {
+  void decodesExtendedArray() throws IOException {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response = Response.builder()
         .status(200)
@@ -235,7 +235,7 @@ public class JsonDecoderTest {
   }
 
   @Test
-  public void decodeExtendedObject() throws IOException {
+  void decodeExtendedObject() throws IOException {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response = Response.builder()
         .status(200)
