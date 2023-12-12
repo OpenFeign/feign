@@ -18,13 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Parameterized.class)
 public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
     extends AbstractAnnotationErrorDecoderTest<
         AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest.SecondLevelInterface> {
@@ -33,8 +29,6 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
     return SecondLevelInterface.class;
   }
 
-  @Parameters(
-      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
   public static Iterable<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
@@ -87,22 +81,24 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
             MethodSecondLevelAnnotationException.class
           },
         });
-  }
+  } // first data value (0) is default
 
-  @Parameter // first data value (0) is default
   public String testType;
-
-  @Parameter(1)
   public int errorCode;
-
-  @Parameter(2)
   public String method;
-
-  @Parameter(3)
   public Class<? extends Exception> expectedExceptionClass;
 
-  @Test
-  public void test() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
+  void test(
+      String testType,
+      int errorCode,
+      String method,
+      Class<? extends Exception> expectedExceptionClass)
+      throws Exception {
+    initAnnotationErrorDecoderInheritanceMethodLevelAnnotationTest(
+        testType, errorCode, method, expectedExceptionClass);
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(SecondLevelInterface.class).build();
 
@@ -129,9 +125,11 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
   }
 
   interface SecondLevelInterface extends TopLevelInterface {
+    @Override
     @SecondLevelMethodErrorHandling
     void topLevelMethod2();
 
+    @Override
     @ErrorHandling(
         codeSpecific = {
           @ErrorCodes(
@@ -141,6 +139,7 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
         defaultException = MethodSecondLevelDefaultException.class)
     void topLevelMethod3();
 
+    @Override
     @SecondLevelMethodErrorHandling
     void topLevelMethod4();
   }
@@ -187,5 +186,16 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest
 
   static class MethodSecondLevelAnnotationException extends Exception {
     public MethodSecondLevelAnnotationException() {}
+  }
+
+  public void initAnnotationErrorDecoderInheritanceMethodLevelAnnotationTest(
+      String testType,
+      int errorCode,
+      String method,
+      Class<? extends Exception> expectedExceptionClass) {
+    this.testType = testType;
+    this.errorCode = errorCode;
+    this.method = method;
+    this.expectedExceptionClass = expectedExceptionClass;
   }
 }

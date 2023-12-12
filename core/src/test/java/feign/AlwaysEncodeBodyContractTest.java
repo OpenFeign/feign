@@ -14,6 +14,7 @@
 package feign;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -24,10 +25,9 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class AlwaysEncodeBodyContractTest {
+class AlwaysEncodeBodyContractTest {
 
   @Retention(RUNTIME)
   @Target(ElementType.METHOD)
@@ -87,14 +87,14 @@ public class AlwaysEncodeBodyContractTest {
    * non-annotated parameters the client method has, as alwaysEncodeBody is set to true.
    */
   @Test
-  public void alwaysEncodeBodyTrueTest() {
+  void alwaysEncodeBodyTrueTest() {
     SampleTargetMultipleNonAnnotatedParameters sampleClient1 =
         Feign.builder()
             .contract(new SampleContract())
             .encoder(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetMultipleNonAnnotatedParameters.class, "http://localhost");
-    Assert.assertEquals("foobarchar", sampleClient1.concatenate("foo", "bar", "char"));
+    assertThat(sampleClient1.concatenate("foo", "bar", "char")).isEqualTo("foobarchar");
 
     SampleTargetNoParameters sampleClient2 =
         Feign.builder()
@@ -102,7 +102,7 @@ public class AlwaysEncodeBodyContractTest {
             .encoder(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetNoParameters.class, "http://localhost");
-    Assert.assertEquals("", sampleClient2.concatenate());
+    assertThat(sampleClient2.concatenate()).isEqualTo("");
 
     SampleTargetOneParameter sampleClient3 =
         Feign.builder()
@@ -110,6 +110,6 @@ public class AlwaysEncodeBodyContractTest {
             .encoder(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetOneParameter.class, "http://localhost");
-    Assert.assertEquals("moo", sampleClient3.concatenate("moo"));
+    assertThat(sampleClient3.concatenate("moo")).isEqualTo("moo");
   }
 }

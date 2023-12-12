@@ -16,8 +16,8 @@ package feign.client;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Client;
 import feign.CollectionFormat;
@@ -39,22 +39,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import okio.Buffer;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * {@link AbstractClientTest} can be extended to run a set of tests against any {@link Client}
  * implementation.
  */
 public abstract class AbstractClientTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
-  @Rule public final MockWebServer server = new MockWebServer();
+  public final MockWebServer server = new MockWebServer();
 
   /** Create a Feign {@link Builder} with a client configured */
   public abstract Builder newBuilder();
@@ -64,14 +61,14 @@ public abstract class AbstractClientTest {
    * unsupported.
    */
   @Test
-  public void testPatch() throws Exception {
+  public void patch() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    assertEquals("foo", api.patch(""));
+    assertThat(api.patch("")).isEqualTo("foo");
 
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasHeaders(
@@ -128,23 +125,23 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesErrorResponse() {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage(
-        "[500 Server Error] during [GET] to [http://localhost:"
-            + server.getPort()
-            + "/] [TestInterface#get()]: [ARGHH]");
+  void parsesErrorResponse() {
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    api.get();
+    Throwable exception = assertThrows(FeignException.class, () -> api.get());
+    assertThat(exception.getMessage())
+        .contains(
+            "[500 Server Error] during [GET] to [http://localhost:"
+                + server.getPort()
+                + "/] [TestInterface#get()]: [ARGHH]");
   }
 
   @Test
-  public void parsesErrorResponseBody() {
+  void parsesErrorResponseBody() {
     String expectedResponseBody = "ARGHH";
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
@@ -176,7 +173,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void safeRebuffering() {
+  void safeRebuffering() {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api =
@@ -194,7 +191,7 @@ public abstract class AbstractClientTest {
 
   /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
   @Test
-  public void safeRebuffering_noContent() {
+  void safeRebuffering_noContent() {
     server.enqueue(new MockResponse().setResponseCode(204));
 
     TestInterface api =
@@ -211,7 +208,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void noResponseBodyForPost() throws Exception {
+  void noResponseBodyForPost() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -245,7 +242,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesResponseMissingLength() throws IOException {
+  void parsesResponseMissingLength() throws IOException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
     TestInterface api =
@@ -260,7 +257,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void postWithSpacesInPath() throws InterruptedException {
+  void postWithSpacesInPath() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("foo"));
 
     TestInterface api =
@@ -274,7 +271,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testVeryLongResponseNullLength() {
+  public void veryLongResponseNullLength() {
     server.enqueue(
         new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
     TestInterface api =
@@ -286,7 +283,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testResponseLength() {
+  void responseLength() {
     server.enqueue(new MockResponse().setBody("test"));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -294,33 +291,33 @@ public abstract class AbstractClientTest {
     Integer expected = 4;
     Response response = api.post("");
     Integer actual = response.body().length();
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
-  public void testContentTypeWithCharset() throws Exception {
+  void contentTypeWithCharset() throws Exception {
     server.enqueue(new MockResponse().setBody("AAAAAAAA"));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.postWithContentType("foo", "text/plain;charset=utf-8");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
   }
 
   @Test
-  public void testContentTypeWithoutCharset() throws Exception {
+  void contentTypeWithoutCharset() throws Exception {
     server.enqueue(new MockResponse().setBody("AAAAAAAA"));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     Response response = api.postWithContentType("foo", "text/plain");
     // Response length should not be null
-    assertEquals("AAAAAAAA", Util.toString(response.body().asReader(UTF_8)));
+    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
   }
 
   @Test
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -333,7 +330,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testDefaultCollectionFormat() throws Exception {
+  void defaultCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -350,7 +347,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testHeadersWithNullParams() throws InterruptedException {
+  void headersWithNullParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -368,7 +365,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testHeadersWithNotEmptyParams() throws InterruptedException {
+  void headersWithNotEmptyParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -386,7 +383,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void testAlternativeCollectionFormat() throws Exception {
+  void alternativeCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -397,7 +394,8 @@ public abstract class AbstractClientTest {
     assertThat(response.status()).isEqualTo(200);
     assertThat(response.reason()).isEqualTo("OK");
 
-    // Some HTTP libraries percent-encode commas in query parameters and others don't.
+    // Some HTTP libraries percent-encode commas in query parameters and others
+    // don't.
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("GET")
         .hasOneOfPath("/?foo=bar,baz", "/?foo=bar%2Cbaz");
@@ -572,5 +570,10 @@ public abstract class AbstractClientTest {
       deflaterOutputStream.close();
       return bos.toByteArray();
     }
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

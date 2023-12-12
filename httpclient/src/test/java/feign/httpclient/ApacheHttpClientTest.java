@@ -14,8 +14,8 @@
 package feign.httpclient;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -28,10 +28,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class ApacheHttpClientTest extends AbstractClientTest {
@@ -42,25 +42,25 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse().setBody("foo"));
 
-    assertEquals("foo", testInterface.withBody("foo", "bar"));
+    assertThat(testInterface.withBody("foo", "bar")).isEqualTo("foo");
     final RecordedRequest request1 = server.takeRequest();
-    assertEquals("/withBody?foo=foo", request1.getPath());
-    assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request1.getPath()).isEqualTo("/withBody?foo=foo");
+    assertThat(request1.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("bar");
 
-    assertEquals("foo", testInterface.withoutBody("foo"));
+    assertThat(testInterface.withoutBody("foo")).isEqualTo("foo");
     final RecordedRequest request2 = server.takeRequest();
-    assertEquals("/withoutBody?foo=foo", request2.getPath());
-    assertEquals("", request2.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request2.getPath()).isEqualTo("/withoutBody?foo=foo");
+    assertThat(request2.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("");
   }
 
   @Test
-  public void followRedirectIsRespected() throws InterruptedException {
+  void followRedirectIsRespected() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";
@@ -68,13 +68,13 @@ public class ApacheHttpClientTest extends AbstractClientTest {
     server.enqueue(new MockResponse().setBody("redirect"));
     Options options = buildRequestOptions(true);
 
-    assertEquals("redirect", testInterface.withOptions(options));
-    assertEquals("/withOptions", server.takeRequest().getPath());
-    assertEquals(redirectPath, server.takeRequest().getPath());
+    assertThat(testInterface.withOptions(options)).isEqualTo("redirect");
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
+    assertThat(server.takeRequest().getPath()).isEqualTo(redirectPath);
   }
 
   @Test
-  public void notFollowRedirectIsRespected() throws InterruptedException {
+  void notFollowRedirectIsRespected() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";
@@ -83,8 +83,8 @@ public class ApacheHttpClientTest extends AbstractClientTest {
 
     FeignException feignException =
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
-    assertEquals(302, feignException.status());
-    assertEquals("/withOptions", server.takeRequest().getPath());
+    assertThat(feignException.status()).isEqualTo(302);
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
   }
 
   private JaxRsTestInterface buildTestInterface() {

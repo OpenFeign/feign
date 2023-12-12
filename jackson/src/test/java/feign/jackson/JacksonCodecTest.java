@@ -15,9 +15,7 @@ package feign.jackson;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -46,10 +44,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class JacksonCodecTest {
+class JacksonCodecTest {
 
   private String zonesJson =
       "" //
@@ -73,8 +71,8 @@ public class JacksonCodecTest {
           + System.lineSeparator();
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
-    Map<String, Object> map = new LinkedHashMap<String, Object>();
+  void encodesMapObjectNumericalValuesAsInteger() {
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
@@ -91,8 +89,8 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() {
-    Map<String, Object> form = new LinkedHashMap<String, Object>();
+  void encodesFormParams() {
+    Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
@@ -112,7 +110,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
     List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
@@ -126,12 +124,12 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(
-        zones, new JacksonDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(new JacksonDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  void nullBodyDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -140,11 +138,11 @@ public class JacksonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
-    assertNull(new JacksonDecoder().decode(response, String.class));
+    assertThat(new JacksonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  void emptyBodyDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -154,16 +152,16 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
-    assertNull(new JacksonDecoder().decode(response, String.class));
+    assertThat(new JacksonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     JacksonDecoder decoder =
         new JacksonDecoder(
             Arrays.asList(new SimpleModule().addDeserializer(Zone.class, new ZoneDeserializer())));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("DENOMINATOR.IO."));
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
@@ -176,16 +174,17 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(zones, decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     JacksonEncoder encoder =
         new JacksonEncoder(
             Arrays.asList(new SimpleModule().addSerializer(Zone.class, new ZoneSerializer())));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "abcd"));
 
@@ -209,10 +208,10 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decoderCharset() throws IOException {
+  void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
 
     Response response =
@@ -234,15 +233,14 @@ public class JacksonCodecTest {
                             + "}")
                     .getBytes(StandardCharsets.ISO_8859_1))
             .build();
-    assertEquals(
-        zone.get("id"),
-        ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType()))
-            .get("id"));
+    assertThat(
+            ((Zone) new JacksonDecoder().decode(response, new TypeReference<Zone>() {}.getType())))
+        .containsEntry("id", zone.get("id"));
   }
 
   @Test
-  public void decodesIterator() throws Exception {
-    List<Zone> zones = new LinkedList<Zone>();
+  void decodesIterator() throws Exception {
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
@@ -258,19 +256,21 @@ public class JacksonCodecTest {
     Object decoded =
         JacksonIteratorDecoder.create()
             .decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
-    assertTrue(Iterator.class.isAssignableFrom(decoded.getClass()));
-    assertTrue(Closeable.class.isAssignableFrom(decoded.getClass()));
-    assertEquals(zones, asList((Iterator<?>) decoded));
+    assertThat(Iterator.class.isAssignableFrom(decoded.getClass())).isTrue();
+    assertThat(Closeable.class.isAssignableFrom(decoded.getClass())).isTrue();
+    assertThat(asList((Iterator<?>) decoded)).isEqualTo(zones);
   }
 
   private <T> List<T> asList(Iterator<T> iter) {
-    final List<T> copy = new ArrayList<T>();
-    while (iter.hasNext()) copy.add(iter.next());
+    final List<T> copy = new ArrayList<>();
+    while (iter.hasNext()) {
+      copy.add(iter.next());
+    }
     return copy;
   }
 
   @Test
-  public void nullBodyDecodesToEmptyIterator() throws Exception {
+  void nullBodyDecodesToEmptyIterator() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -283,7 +283,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToEmptyIterator() throws Exception {
+  void emptyBodyDecodesToEmptyIterator() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -357,7 +357,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -371,7 +371,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmptyIterator() throws Exception {
+  void notFoundDecodesToEmptyIterator() throws Exception {
     Response response =
         Response.builder()
             .status(404)

@@ -13,10 +13,18 @@
  */
 package feign.jaxb.examples;
 
-import feign.*;
+import feign.Feign;
+import feign.Request;
+import feign.RequestLine;
+import feign.RequestTemplate;
+import feign.Target;
 import feign.jaxb.JAXBContextFactory;
 import feign.jaxb.JAXBDecoder;
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 public class IAMExample {
 

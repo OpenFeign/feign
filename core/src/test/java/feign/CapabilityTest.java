@@ -13,15 +13,14 @@
  */
 package feign;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CapabilityTest {
+class CapabilityTest {
 
   private class AClient implements Client {
 
@@ -53,7 +52,7 @@ public class CapabilityTest {
   }
 
   @Test
-  public void enrichClient() {
+  void enrichClient() {
     Client enriched =
         (Client)
             Capability.enrich(
@@ -73,6 +72,6 @@ public class CapabilityTest {
                       }
                     }));
 
-    assertThat(enriched, CoreMatchers.instanceOf(BClient.class));
+    assertThat(enriched).isInstanceOf(BClient.class);
   }
 }

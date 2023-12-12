@@ -13,12 +13,11 @@
  */
 package feign.error;
 
-import static feign.error.AnnotationErrorDecoderNoAnnotationTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.Response;
 import feign.codec.ErrorDecoder;
-import org.junit.Test;
+import feign.error.AnnotationErrorDecoderNoAnnotationTest.TestClientInterfaceWithNoAnnotations;
+import org.junit.jupiter.api.Test;
 
 public class AnnotationErrorDecoderNoAnnotationTest
     extends AbstractAnnotationErrorDecoderTest<TestClientInterfaceWithNoAnnotations> {
@@ -29,15 +28,9 @@ public class AnnotationErrorDecoderNoAnnotationTest
   }
 
   @Test
-  public void delegatesToDefaultErrorDecoder() throws Exception {
+  void delegatesToDefaultErrorDecoder() throws Exception {
 
-    ErrorDecoder defaultErrorDecoder =
-        new ErrorDecoder() {
-          @Override
-          public Exception decode(String methodKey, Response response) {
-            return new DefaultErrorDecoderException();
-          }
-        };
+    ErrorDecoder defaultErrorDecoder = (methodKey, response) -> new DefaultErrorDecoderException();
 
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(TestClientInterfaceWithNoAnnotations.class)

@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import mockwebserver3.RecordedRequest;
 import okhttp3.Headers;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
@@ -138,7 +138,7 @@ public final class RecordedRequestAssert
     for (String next : headerLines) {
       builder.add(next);
     }
-    List<MapEntry> expected = new ArrayList<MapEntry>();
+    List<MapEntry> expected = new ArrayList<>();
     for (Map.Entry<String, List<String>> next : builder.build().toMultimap().entrySet()) {
       expected.add(entry(next.getKey(), next.getValue()));
     }
@@ -154,7 +154,7 @@ public final class RecordedRequestAssert
 
   public RecordedRequestAssert hasNoHeaderNamed(final String... names) {
     isNotNull();
-    Set<String> found = new LinkedHashSet<String>();
+    Set<String> found = new LinkedHashSet<>();
     for (String header : actual.getHeaders().names()) {
       for (String name : names) {
         if (header.equalsIgnoreCase(name)) {

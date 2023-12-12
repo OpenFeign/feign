@@ -13,6 +13,8 @@
  */
 package feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -24,8 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TypesResolveReturnTypeTest {
 
@@ -48,42 +49,42 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void simple() {
+  void simple() {
     Method[] methods = Simple.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved = Types.resolve(Simple.class, Simple.class, methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(String.class);
+    assertThat(resolved).isEqualTo(String.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteSimple() {
+  void concreteSimple() {
     Method[] methods = ConcreteSimple.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteSimple.class, ConcreteSimple.class, methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(String.class);
+    assertThat(resolved).isEqualTo(String.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overridingConcreteSimple() {
+  void overridingConcreteSimple() {
     Method[] methods = OverridingConcreteSimple.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             OverridingConcreteSimple.class,
             OverridingConcreteSimple.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(String.class);
+    assertThat(resolved).isEqualTo(String.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface SimplePrimitive {
@@ -98,46 +99,46 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void simplePrimitive() {
+  void simplePrimitive() {
     Method[] methods = SimplePrimitive.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             SimplePrimitive.class, SimplePrimitive.class, methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(long.class);
+    assertThat(resolved).isEqualTo(long.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(long.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteSimplePrimitive() {
+  void concreteSimplePrimitive() {
     Method[] methods = ConcreteSimplePrimitive.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteSimplePrimitive.class,
             ConcreteSimplePrimitive.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(long.class);
+    assertThat(resolved).isEqualTo(long.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(long.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overridingConcreteSimplePrimitive() {
+  void overridingConcreteSimplePrimitive() {
     Method[] methods = OverridingConcreteSimplePrimitive.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             OverridingConcreteSimplePrimitive.class,
             OverridingConcreteSimplePrimitive.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(long.class);
+    assertThat(resolved).isEqualTo(long.class);
     // included for completeness sake only
     Type resolvedType = Types.resolveReturnType(long.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface Generic<T> {
@@ -152,49 +153,49 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void generic() {
+  void generic() {
     Method[] methods = Generic.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             Generic.class, Generic.class, Generic.class.getMethods()[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof TypeVariable).isTrue();
+    assertThat(resolved instanceof TypeVariable).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteSimpleClassGenericSecondLevel() {
+  void concreteSimpleClassGenericSecondLevel() {
     Method[] methods = ConcreteSimpleClassGenericSecondLevel.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteSimpleClassGenericSecondLevel.class,
             ConcreteSimpleClassGenericSecondLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overridingConcreteSimpleClassGenericSecondLevel() {
+  void overridingConcreteSimpleClassGenericSecondLevel() {
     Method[] methods = getMethods(OverridingConcreteSimpleClassGenericSecondLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverridingConcreteSimpleClassGenericSecondLevel.class,
             OverridingConcreteSimpleClassGenericSecondLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             OverridingConcreteSimpleClassGenericSecondLevel.class,
             OverridingConcreteSimpleClassGenericSecondLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface SecondGeneric<T> {
@@ -229,149 +230,149 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void concreteSimpleClassMultipleGenericSecondLevel() {
+  void concreteSimpleClassMultipleGenericSecondLevel() {
     Method[] methods = ConcreteSimpleClassMultipleGenericSecondLevel.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             ConcreteSimpleClassMultipleGenericSecondLevel.class,
             ConcreteSimpleClassMultipleGenericSecondLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             ConcreteSimpleClassMultipleGenericSecondLevel.class,
             ConcreteSimpleClassMultipleGenericSecondLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overridingConcreteSimpleClassMultipleGenericSecondLevel() {
+  void overridingConcreteSimpleClassMultipleGenericSecondLevel() {
     Method[] methods = getMethods(OverridingConcreteSimpleClassMultipleGenericSecondLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverridingConcreteSimpleClassMultipleGenericSecondLevel.class,
             OverridingConcreteSimpleClassMultipleGenericSecondLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             OverridingConcreteSimpleClassMultipleGenericSecondLevel.class,
             OverridingConcreteSimpleClassMultipleGenericSecondLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void realizingSimpleClassGenericThirdLevel() {
+  void realizingSimpleClassGenericThirdLevel() {
     Method[] methods = RealizingSimpleClassGenericThirdLevel.class.getMethods();
     // TODO: BUG IN Java Compiler? Multiple same name methods with same return type for same
     // parameters
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             RealizingSimpleClassGenericThirdLevel.class,
             RealizingSimpleClassGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             RealizingSimpleClassGenericThirdLevel.class,
             RealizingSimpleClassGenericThirdLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Long.class);
+    assertThat(resolved2).isEqualTo(Long.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void realizingSimpleClassMultipleGenericThirdLevel() {
+  void realizingSimpleClassMultipleGenericThirdLevel() {
     Method[] methods = getMethods(RealizingSimpleClassMultipleGenericThirdLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             RealizingSimpleClassMultipleGenericThirdLevel.class,
             RealizingSimpleClassMultipleGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             RealizingSimpleClassMultipleGenericThirdLevel.class,
             RealizingSimpleClassMultipleGenericThirdLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void realizingOverridingSimpleClassGenericThirdLevel() {
+  void realizingOverridingSimpleClassGenericThirdLevel() {
     Method[] methods = getMethods(RealizingOverridingSimpleClassGenericThirdLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             RealizingOverridingSimpleClassGenericThirdLevel.class,
             RealizingOverridingSimpleClassGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             RealizingOverridingSimpleClassGenericThirdLevel.class,
             RealizingOverridingSimpleClassGenericThirdLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void realizingOverridingSimpleClassMultipleGenericThirdLevel() {
+  void realizingOverridingSimpleClassMultipleGenericThirdLevel() {
     Method[] methods = getMethods(RealizingOverridingSimpleClassMultipleGenericThirdLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             RealizingOverridingSimpleClassMultipleGenericThirdLevel.class,
             RealizingOverridingSimpleClassMultipleGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             RealizingOverridingSimpleClassMultipleGenericThirdLevel.class,
             RealizingOverridingSimpleClassMultipleGenericThirdLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
-    Assertions.assertThat(resolvedType).isNotEqualTo(resolved2);
+    assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isNotEqualTo(resolved2);
   }
 
   interface MultipleInheritedGeneric<T> extends Generic<T>, SecondGeneric<T> {}
 
   @Test
-  public void multipleInheritedGeneric() {
+  void multipleInheritedGeneric() {
     Method[] methods = MultipleInheritedGeneric.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             MultipleInheritedGeneric.class,
             MultipleInheritedGeneric.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof TypeVariable).isTrue();
+    assertThat(resolved instanceof TypeVariable).isTrue();
     Type resolved2 =
         Types.resolve(
             MultipleInheritedGeneric.class,
             MultipleInheritedGeneric.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2 instanceof TypeVariable).isTrue();
+    assertThat(resolved2 instanceof TypeVariable).isTrue();
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved2);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface SecondLevelSimpleClassGeneric<T extends Number> extends Generic<T> {}
@@ -385,51 +386,51 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void secondLevelSimpleClassGeneric() {
+  void secondLevelSimpleClassGeneric() {
     Method[] methods = SecondLevelSimpleClassGeneric.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             SecondLevelSimpleClassGeneric.class,
             SecondLevelSimpleClassGeneric.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof TypeVariable).isTrue();
+    assertThat(resolved instanceof TypeVariable).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteSimpleClassGenericThirdLevel() {
+  void concreteSimpleClassGenericThirdLevel() {
     Method[] methods = ConcreteSimpleClassGenericThirdLevel.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteSimpleClassGenericThirdLevel.class,
             ConcreteSimpleClassGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void OverridingConcreteSimpleClassGenericThirdLevel() {
+  void OverridingConcreteSimpleClassGenericThirdLevel() {
     Method[] methods = getMethods(OverridingConcreteSimpleClassGenericThirdLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverridingConcreteSimpleClassGenericThirdLevel.class,
             OverridingConcreteSimpleClassGenericThirdLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved).isEqualTo(Long.class);
+    assertThat(resolved).isEqualTo(Long.class);
     Type resolved2 =
         Types.resolve(
             OverridingConcreteSimpleClassGenericThirdLevel.class,
             OverridingConcreteSimpleClassGenericThirdLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface SecondLevelGenericClassGeneric<T extends Generic<?>> extends Generic<T> {}
@@ -477,134 +478,134 @@ public class TypesResolveReturnTypeTest {
   }
 
   @Test
-  public void secondLevelCollectionGeneric() {
+  void secondLevelCollectionGeneric() {
     Method[] methods = SecondLevelCollectionGeneric.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             SecondLevelCollectionGeneric.class,
             SecondLevelCollectionGeneric.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof TypeVariable).isTrue();
+    assertThat(resolved instanceof TypeVariable).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void thirdLevelCollectionGeneric() {
+  void thirdLevelCollectionGeneric() {
     Method[] methods = ThirdLevelCollectionGeneric.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ThirdLevelCollectionGeneric.class,
             ThirdLevelCollectionGeneric.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof TypeVariable).isTrue();
+    assertThat(resolved instanceof TypeVariable).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteCollectionGenericFourthLevel() {
+  void concreteCollectionGenericFourthLevel() {
     Method[] methods = ConcreteCollectionGenericFourthLevel.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteCollectionGenericFourthLevel.class,
             ConcreteCollectionGenericFourthLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overridingConcreteCollectionGenericFourthLevel() {
+  void overridingConcreteCollectionGenericFourthLevel() {
     Method[] methods = getMethods(OverridingConcreteCollectionGenericFourthLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverridingConcreteCollectionGenericFourthLevel.class,
             OverridingConcreteCollectionGenericFourthLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     Type resolved2 =
         Types.resolve(
             OverridingConcreteCollectionGenericFourthLevel.class,
             OverridingConcreteCollectionGenericFourthLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void overrideOverridingConcreteCollectionGenericFourthLevel() {
+  void overrideOverridingConcreteCollectionGenericFourthLevel() {
     Method[] methods = getMethods(OverrideOverridingConcreteCollectionGenericFourthLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverrideOverridingConcreteCollectionGenericFourthLevel.class,
             OverrideOverridingConcreteCollectionGenericFourthLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     Type resolved2 =
         Types.resolve(
             OverrideOverridingConcreteCollectionGenericFourthLevel.class,
             OverrideOverridingConcreteCollectionGenericFourthLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType = Types.resolveReturnType(resolved, resolved2);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void genericFourthLevelCollectionGeneric() {
+  void genericFourthLevelCollectionGeneric() {
     Method[] methods = GenericFourthLevelCollectionGeneric.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             GenericFourthLevelCollectionGeneric.class,
             GenericFourthLevelCollectionGeneric.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     Type resolvedType = Types.resolveReturnType(Object.class, resolved);
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   @Test
-  public void concreteGenericCollectionGenericFifthLevel() {
+  void concreteGenericCollectionGenericFifthLevel() {
     Method[] methods = ConcreteGenericCollectionGenericFifthLevel.class.getMethods();
-    Assertions.assertThat(methods.length).isEqualTo(1);
+    assertThat(methods.length).isEqualTo(1);
     Type resolved =
         Types.resolve(
             ConcreteGenericCollectionGenericFifthLevel.class,
             ConcreteGenericCollectionGenericFifthLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     ParameterizedType parameterizedType = (ParameterizedType) resolved;
   }
 
   @Test
-  public void overridingConcreteGenericCollectionGenericFifthLevel() {
+  void overridingConcreteGenericCollectionGenericFifthLevel() {
     Method[] methods = getMethods(OverridingConcreteGenericCollectionGenericFifthLevel.class);
-    Assertions.assertThat(methods.length).isEqualTo(2);
+    assertThat(methods.length).isEqualTo(2);
     Type resolved =
         Types.resolve(
             OverridingConcreteGenericCollectionGenericFifthLevel.class,
             OverridingConcreteGenericCollectionGenericFifthLevel.class,
             methods[1].getGenericReturnType());
-    Assertions.assertThat(resolved instanceof ParameterizedType).isTrue();
+    assertThat(resolved instanceof ParameterizedType).isTrue();
     Type resolved2 =
         Types.resolve(
             OverridingConcreteGenericCollectionGenericFifthLevel.class,
             OverridingConcreteGenericCollectionGenericFifthLevel.class,
             methods[0].getGenericReturnType());
-    Assertions.assertThat(resolved2).isEqualTo(Object.class);
+    assertThat(resolved2).isEqualTo(Object.class);
     Type resolvedType =
         Types.resolveReturnType(
             methods[1].getGenericReturnType(), methods[0].getGenericReturnType());
-    Assertions.assertThat(resolvedType).isEqualTo(resolved);
+    assertThat(resolvedType).isEqualTo(resolved);
   }
 
   interface SecondLevelMapGeneric<T extends Map<?, ?>> extends Generic<T> {}

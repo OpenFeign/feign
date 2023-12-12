@@ -15,20 +15,18 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests interface inheritance defined per {@link Contract.Default} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class DefaultContractInheritanceTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+class DefaultContractInheritanceTest {
 
   Contract.Default contract = new Contract.Default();
 
@@ -42,7 +40,7 @@ public class DefaultContractInheritanceTest {
   interface SimpleParameterizedApi extends SimpleParameterizedBaseApi<String> {}
 
   @Test
-  public void simpleParameterizedBaseApi() throws Exception {
+  void simpleParameterizedBaseApi() throws Exception {
     final List<MethodMetadata> md = contract.parseAndValidateMetadata(SimpleParameterizedApi.class);
 
     assertThat(md).hasSize(1);
@@ -53,10 +51,13 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void parameterizedApiUnsupported() throws Exception {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Parameterized types unsupported: SimpleParameterizedBaseApi");
-    contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
+  void parameterizedApiUnsupported() throws Exception {
+    Throwable exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class));
+    assertThat(exception.getMessage())
+        .contains("Parameterized types unsupported: SimpleParameterizedBaseApi");
   }
 
   interface OverrideParameterizedApi extends SimpleParameterizedBaseApi<String> {
@@ -75,17 +76,18 @@ public class DefaultContractInheritanceTest {
 
   interface OverrideSimpleApi extends SimpleBaseApi {
 
+    @Override
     @RequestLine("GET /api/v2/{zoneId}")
     String get(@Param("key") String key);
   }
 
   @Test
-  public void overrideParameterizedApiSupported() {
+  void overrideParameterizedApiSupported() {
     contract.parseAndValidateMetadata(OverrideParameterizedApi.class);
   }
 
   @Test
-  public void overrideSimpleApiSupported() {
+  void overrideSimpleApiSupported() {
     contract.parseAndValidateMetadata(OverrideSimpleApi.class);
   }
 
@@ -141,29 +143,32 @@ public class DefaultContractInheritanceTest {
   }
 
   @Test
-  public void singleInheritance() {
+  void singleInheritance() {
     contract.parseAndValidateMetadata(SingleInheritanceChild.class);
   }
 
   @Test
-  public void multipleInheritanceDoneWrong() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Only single inheritance supported: MultipleInheritanceDoneWrong");
-    contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class);
+  void multipleInheritanceDoneWrong() {
+    Throwable exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class));
+    assertThat(exception.getMessage())
+        .contains("Only single inheritance supported: MultipleInheritanceDoneWrong");
   }
 
   @Test
-  public void multipleInheritanceDoneCorrectly() {
+  void multipleInheritanceDoneCorrectly() {
     contract.parseAndValidateMetadata(MultipleInheritanceDoneCorrectly.class);
   }
 
   @Test
-  public void multipleInheritanceDoneCorrectly2() {
+  void multipleInheritanceDoneCorrectly2() {
     contract.parseAndValidateMetadata(MultipleInheritanceApi.class);
   }
 
   @Test
-  public void multipleInheritanceSupported() {
+  void multipleInheritanceSupported() {
     contract.parseAndValidateMetadata(GrandChild.class);
   }
 }

@@ -14,12 +14,8 @@
 package feign.mock;
 
 import static feign.Util.toByteArray;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import feign.Body;
 import feign.Feign;
@@ -35,12 +31,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MockClientSequentialTest {
+class MockClientSequentialTest {
 
   interface GitHub {
 
@@ -84,7 +80,7 @@ public class MockClientSequentialTest {
     @Override
     public Object decode(Response response, Type type)
         throws IOException, DecodeException, FeignException {
-      assertThat(response.request(), notNullValue());
+      assertThat(response.request()).isNotNull();
 
       return delegate.decode(response, type);
     }
@@ -93,8 +89,8 @@ public class MockClientSequentialTest {
   private GitHub githubSequential;
   private MockClient mockClientSequential;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
       RequestHeaders headers = RequestHeaders.builder().add("Name", "netflix").build();
@@ -108,22 +104,22 @@ public class MockClientSequentialTest {
                           RequestKey.builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
                               .headers(headers)
                               .build(),
-                          HttpsURLConnection.HTTP_OK,
+                          HttpURLConnection.HTTP_OK,
                           data)
                       .add(
                           HttpMethod.GET,
                           "/repos/netflix/feign/contributors?client_id=55",
-                          HttpsURLConnection.HTTP_NOT_FOUND)
+                          HttpURLConnection.HTTP_NOT_FOUND)
                       .add(
                           HttpMethod.GET,
                           "/repos/netflix/feign/contributors?client_id=7 7",
-                          HttpsURLConnection.HTTP_INTERNAL_ERROR,
+                          HttpURLConnection.HTTP_INTERNAL_ERROR,
                           new ByteArrayInputStream(data))
                       .add(
                           HttpMethod.GET,
                           "/repos/netflix/feign/contributors",
                           Response.builder()
-                              .status(HttpsURLConnection.HTTP_OK)
+                              .status(HttpURLConnection.HTTP_OK)
                               .headers(RequestHeaders.EMPTY)
                               .body(data)))
               .target(new MockTarget<>(GitHub.class));
@@ -131,19 +127,19 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequests() throws Exception {
+  void sequentialRequests() throws Exception {
     githubSequential.contributors("netflix", "feign");
     try {
       githubSequential.contributors("55", "netflix", "feign");
-      fail();
+      fail("");
     } catch (FeignException e) {
-      assertThat(e.status(), equalTo(HttpsURLConnection.HTTP_NOT_FOUND));
+      assertThat(e.status()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
     }
     try {
       githubSequential.contributors("7 7", "netflix", "feign");
-      fail();
+      fail("");
     } catch (FeignException e) {
-      assertThat(e.status(), equalTo(HttpsURLConnection.HTTP_INTERNAL_ERROR));
+      assertThat(e.status()).isEqualTo(HttpURLConnection.HTTP_INTERNAL_ERROR);
     }
     githubSequential.contributors("netflix", "feign");
 
@@ -151,35 +147,35 @@ public class MockClientSequentialTest {
   }
 
   @Test
-  public void sequentialRequestsCalledTooLess() throws Exception {
+  void sequentialRequestsCalledTooLess() throws Exception {
     githubSequential.contributors("netflix", "feign");
     try {
       mockClientSequential.verifyStatus();
-      fail();
+      fail("");
     } catch (VerificationAssertionError e) {
-      assertThat(e.getMessage(), startsWith("More executions"));
+      assertThat(e.getMessage()).startsWith("More executions");
     }
   }
 
   @Test
-  public void sequentialRequestsCalledTooMany() throws Exception {
+  void sequentialRequestsCalledTooMany() throws Exception {
     sequentialRequests();
 
     try {
       githubSequential.contributors("netflix", "feign");
-      fail();
+      fail("");
     } catch (VerificationAssertionError e) {
-      assertThat(e.getMessage(), containsString("excessive"));
+      assertThat(e.getMessage()).contains("excessive");
     }
   }
 
   @Test
-  public void sequentialRequestsInWrongOrder() throws Exception {
+  void sequentialRequestsInWrongOrder() throws Exception {
     try {
       githubSequential.contributors("7 7", "netflix", "feign");
-      fail();
+      fail("");
     } catch (VerificationAssertionError e) {
-      assertThat(e.getMessage(), startsWith("Expected: \nRequest ["));
+      assertThat(e.getMessage()).startsWith("Expected: \nRequest [");
     }
   }
 }

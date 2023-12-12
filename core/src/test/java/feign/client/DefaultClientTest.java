@@ -15,8 +15,7 @@ package feign.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.hamcrest.core.Is.isA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Client;
 import feign.Client.Proxied;
@@ -33,24 +32,15 @@ import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.util.Collections;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
-import org.junit.Test;
+import mockwebserver3.MockResponse;
+import mockwebserver3.SocketPolicy;
+import org.junit.jupiter.api.Test;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest extends AbstractClientTest {
 
   protected Client disableHostnameVerification =
-      new Client.Default(
-          TrustingSSLSocketFactory.get(),
-          new HostnameVerifier() {
-            @Override
-            public boolean verify(String s, SSLSession sslSession) {
-              return true;
-            }
-          });
+      new Client.Default(TrustingSSLSocketFactory.get(), (s, sslSession) -> true);
 
   @Override
   public Builder newBuilder() {
@@ -58,8 +48,8 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void retriesFailedHandshake() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
@@ -67,12 +57,12 @@ public class DefaultClientTest extends AbstractClientTest {
         newBuilder().target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
-  public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -89,10 +79,9 @@ public class DefaultClientTest extends AbstractClientTest {
    */
   @Test
   @Override
-  public void testPatch() throws Exception {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.testPatch();
+  public void patch() throws Exception {
+    RetryableException exception = assertThrows(RetryableException.class, super::patch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Override
@@ -114,14 +103,14 @@ public class DefaultClientTest extends AbstractClientTest {
   @Test
   @Override
   public void noResponseBodyForPatch() {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.noResponseBodyForPatch();
+    RetryableException exception =
+        assertThrows(RetryableException.class, super::noResponseBodyForPatch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test
-  public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+  void canOverrideHostnameVerifier() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -140,7 +129,7 @@ public class DefaultClientTest extends AbstractClientTest {
    * we are looking to do here.
    */
   @Test
-  public void canCreateWithImplicitOrNoCredentials() throws Exception {
+  void canCreateWithImplicitOrNoCredentials() throws Exception {
     Proxied proxied =
         new Proxied(TrustingSSLSocketFactory.get(), null, new Proxy(Type.HTTP, proxyAddress));
     assertThat(proxied).isNotNull();
@@ -152,7 +141,7 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void canCreateWithExplicitCredentials() throws Exception {
+  void canCreateWithExplicitCredentials() throws Exception {
     Proxied proxied =
         new Proxied(
             TrustingSSLSocketFactory.get(),

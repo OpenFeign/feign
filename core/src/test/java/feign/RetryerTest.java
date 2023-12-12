@@ -13,72 +13,72 @@
  */
 package feign;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Retryer.Default;
 import java.util.Collections;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class RetryerTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+class RetryerTest {
 
   private static final Request REQUEST =
       Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
 
   @Test
-  public void only5TriesAllowedAndExponentialBackoff() {
+  void only5TriesAllowedAndExponentialBackoff() {
     final Long nonRetryable = null;
     RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
     Default retryer = new Retryer.Default();
-    assertEquals(1, retryer.attempt);
-    assertEquals(0, retryer.sleptForMillis);
+    assertThat(retryer.attempt).isEqualTo(1);
+    assertThat(retryer.sleptForMillis).isEqualTo(0);
 
     retryer.continueOrPropagate(e);
-    assertEquals(2, retryer.attempt);
-    assertEquals(150, retryer.sleptForMillis);
+    assertThat(retryer.attempt).isEqualTo(2);
+    assertThat(retryer.sleptForMillis).isEqualTo(150);
 
     retryer.continueOrPropagate(e);
-    assertEquals(3, retryer.attempt);
-    assertEquals(375, retryer.sleptForMillis);
+    assertThat(retryer.attempt).isEqualTo(3);
+    assertThat(retryer.sleptForMillis).isEqualTo(375);
 
     retryer.continueOrPropagate(e);
-    assertEquals(4, retryer.attempt);
-    assertEquals(712, retryer.sleptForMillis);
+    assertThat(retryer.attempt).isEqualTo(4);
+    assertThat(retryer.sleptForMillis).isEqualTo(712);
 
     retryer.continueOrPropagate(e);
-    assertEquals(5, retryer.attempt);
-    assertEquals(1218, retryer.sleptForMillis);
-
-    thrown.expect(RetryableException.class);
-    retryer.continueOrPropagate(e);
+    assertThat(retryer.attempt).isEqualTo(5);
+    assertThat(retryer.sleptForMillis).isEqualTo(1218);
+    assertThrows(RetryableException.class, () -> retryer.continueOrPropagate(e));
   }
 
   @Test
-  public void considersRetryAfterButNotMoreThanMaxPeriod() {
+  void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer =
         new Retryer.Default() {
+          @Override
           protected long currentTimeMillis() {
             return 0;
           }
         };
 
     retryer.continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
-    assertEquals(2, retryer.attempt);
-    assertEquals(1000, retryer.sleptForMillis);
-  }
-
-  @Test(expected = RetryableException.class)
-  public void neverRetryAlwaysPropagates() {
-    Retryer.NEVER_RETRY.continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
+    assertThat(retryer.attempt).isEqualTo(2);
+    assertThat(retryer.sleptForMillis).isEqualTo(1000);
   }
 
   @Test
-  public void defaultRetryerFailsOnInterruptedException() {
+  void neverRetryAlwaysPropagates() {
+    assertThrows(
+        RetryableException.class,
+        () ->
+            Retryer.NEVER_RETRY.continueOrPropagate(
+                new RetryableException(-1, null, null, 5000L, REQUEST)));
+  }
+
+  @Test
+  void defaultRetryerFailsOnInterruptedException() {
     Default retryer = new Retryer.Default();
 
     Thread.currentThread().interrupt();
@@ -87,11 +87,11 @@ public class RetryerTest {
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't
-      Assert.fail("Retryer continued despite interruption");
+      fail("Retryer continued despite interruption");
     } catch (RetryableException e) {
-      Assert.assertTrue("Interrupted status not reset", Thread.interrupted());
-      Assert.assertEquals("Retry attempt not registered as expected", 2, retryer.attempt);
-      Assert.assertEquals("Unexpected exception found", expected, e);
+      assertThat(Thread.interrupted()).as("Interrupted status not reset").isTrue();
+      assertThat(retryer.attempt).as("Retry attempt not registered as expected").isEqualTo(2);
+      assertThat(e).as("Unexpected exception found").isEqualTo(expected);
     }
   }
 }

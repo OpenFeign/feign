@@ -186,10 +186,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     return client
         .execute(request, options, Optional.ofNullable(requestContext))
         .thenApply(
-            response -> {
-              // TODO: remove in Feign 12
-              return ensureRequestIsSet(response, template, request);
-            })
+            response ->
+                // TODO: remove in Feign 12
+                ensureRequestIsSet(response, template, request))
         .exceptionally(
             throwable -> {
               CompletionException completionException =

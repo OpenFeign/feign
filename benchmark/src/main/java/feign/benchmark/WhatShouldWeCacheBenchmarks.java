@@ -17,10 +17,8 @@ import feign.Client;
 import feign.Contract;
 import feign.Feign;
 import feign.MethodMetadata;
-import feign.Request;
 import feign.Response;
 import feign.Target.HardCodedTarget;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,18 +62,15 @@ public class WhatShouldWeCacheBenchmarks {
           }
         };
     fakeClient =
-        new Client() {
-          public Response execute(Request request, Request.Options options) throws IOException {
-            Map<String, Collection<String>> headers =
-                new LinkedHashMap<String, Collection<String>>();
-            return Response.builder()
-                .body((byte[]) null)
-                .status(200)
-                .headers(headers)
-                .reason("ok")
-                .request(request)
-                .build();
-          }
+        (request, options) -> {
+          Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+          return Response.builder()
+              .body((byte[]) null)
+              .status(200)
+              .headers(headers)
+              .reason("ok")
+              .request(request)
+              .build();
         };
     cachedFakeFeign = Feign.builder().client(fakeClient).build();
     cachedFakeApi =

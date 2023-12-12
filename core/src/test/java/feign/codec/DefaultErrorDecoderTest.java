@@ -29,23 +29,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class DefaultErrorDecoderTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+class DefaultErrorDecoderTest {
 
   private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
 
   private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 
   @Test
-  public void throwsFeignException() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("[500 Internal server error] during [GET] to [/api] [Service#foo()]: []");
+  void throwsFeignException() throws Throwable {
 
     Response response =
         Response.builder()
@@ -56,11 +50,13 @@ public class DefaultErrorDecoderTest {
             .headers(headers)
             .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    Throwable exception = errorDecoder.decode("Service#foo()", response);
+    assertThat(exception.getMessage())
+        .contains("[500 Internal server error] during [GET] to [/api] [Service#foo()]: []");
   }
 
   @Test
-  public void throwsFeignExceptionIncludingBody() throws Throwable {
+  void throwsFeignExceptionIncludingBody() throws Throwable {
     Response response =
         Response.builder()
             .status(500)
@@ -82,7 +78,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void throwsFeignExceptionIncludingLongBody() throws Throwable {
+  void throwsFeignExceptionIncludingLongBody() throws Throwable {
     String actualBody = repeatString("hello world ", 200);
     Response response =
         Response.builder()
@@ -116,7 +112,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void testFeignExceptionIncludesStatus() {
+  void feignExceptionIncludesStatus() {
     Response response =
         Response.builder()
             .status(400)
@@ -133,9 +129,7 @@ public class DefaultErrorDecoderTest {
   }
 
   @Test
-  public void retryAfterHeaderThrowsRetryableException() throws Throwable {
-    thrown.expect(FeignException.class);
-    thrown.expectMessage("[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: []");
+  void retryAfterHeaderThrowsRetryableException() throws Throwable {
 
     headers.put(RETRY_AFTER, Collections.singletonList("Sat, 1 Jan 2000 00:00:00 GMT"));
     Response response =
@@ -147,11 +141,13 @@ public class DefaultErrorDecoderTest {
             .headers(headers)
             .build();
 
-    throw errorDecoder.decode("Service#foo()", response);
+    Throwable exception = errorDecoder.decode("Service#foo()", response);
+    assertThat(exception.getMessage())
+        .contains("[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: []");
   }
 
   @Test
-  public void lengthOfBodyExceptionTest() {
+  void lengthOfBodyExceptionTest() {
     Response response = bigBodyResponse();
     Exception defaultException = errorDecoder.decode("Service#foo()", response);
     assertThat(defaultException.getMessage().length()).isLessThan(response.body().length());
@@ -185,7 +181,7 @@ public class DefaultErrorDecoderTest {
             + "And bubbling wine dropped from her hand";
 
     InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
     return Response.builder()
         .status(400)

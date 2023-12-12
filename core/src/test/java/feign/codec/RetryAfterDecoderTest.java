@@ -14,43 +14,43 @@
 package feign.codec;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import java.text.ParseException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RetryAfterDecoderTest {
+class RetryAfterDecoderTest {
 
   private final RetryAfterDecoder decoder =
       new RetryAfterDecoder(RFC_1123_DATE_TIME) {
+        @Override
         protected long currentTimeMillis() {
           return parseDateTime("Sat, 1 Jan 2000 00:00:00 GMT");
         }
       };
 
   @Test
-  public void malformedDateFailsGracefully() {
-    assertNull(decoder.apply("Fri, 31 Dec 1999 23:59:59 ZBW"));
+  void malformedDateFailsGracefully() {
+    assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 ZBW")).isNull();
   }
 
   @Test
-  public void rfc822Parses() throws ParseException {
-    assertEquals(
-        parseDateTime("Fri, 31 Dec 1999 23:59:59 GMT"),
-        decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"));
+  void rfc822Parses() throws ParseException {
+    assertThat(decoder.apply("Fri, 31 Dec 1999 23:59:59 GMT"))
+        .isEqualTo(parseDateTime("Fri, 31 Dec 1999 23:59:59 GMT"));
   }
 
   @Test
-  public void relativeSecondsParses() throws ParseException {
-    assertEquals(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400"));
+  void relativeSecondsParses() throws ParseException {
+    assertThat(decoder.apply("86400")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
   @Test
-  public void relativeSecondsParseDecimalIntegers() throws ParseException {
-    assertEquals(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"), decoder.apply("86400.0"));
+  void relativeSecondsParseDecimalIntegers() throws ParseException {
+    assertThat(decoder.apply("86400.0")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
   private Long parseDateTime(String text) {

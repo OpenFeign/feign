@@ -14,19 +14,18 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class BaseBuilderTest {
+class BaseBuilderTest {
 
   @Test
-  public void checkEnrichTouchesAllAsyncBuilderFields()
+  void checkEnrichTouchesAllAsyncBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
     test(
         AsyncFeign.builder()
@@ -52,13 +51,15 @@ public class BaseBuilderTest {
             .isNotEmpty();
         mockedValue = ((List<Object>) mockedValue).get(0);
       }
-      assertTrue("Field was not enriched " + field, Mockito.mockingDetails(mockedValue).isMock());
+      assertThat(Mockito.mockingDetails(mockedValue).isMock())
+          .as("Field was not enriched " + field)
+          .isTrue();
       assertNotSame(builder, enriched);
     }
   }
 
   @Test
-  public void checkEnrichTouchesAllBuilderFields()
+  void checkEnrichTouchesAllBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
     test(
         Feign.builder()

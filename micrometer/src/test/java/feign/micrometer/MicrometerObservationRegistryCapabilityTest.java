@@ -17,14 +17,14 @@ import feign.AsyncFeign;
 import feign.Feign;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MicrometerObservationRegistryCapabilityTest extends MicrometerCapabilityTest {
+class MicrometerObservationRegistryCapabilityTest extends MicrometerCapabilityTest {
 
   ObservationRegistry observationRegistry = ObservationRegistry.create();
 
-  @Before
-  public void setupRegistry() {
+  @BeforeEach
+  void setupRegistry() {
     observationRegistry
         .observationConfig()
         .observationHandler(new DefaultMeterObservationHandler(metricsRegistry));

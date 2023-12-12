@@ -13,9 +13,6 @@
  */
 package feign.metrics4;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
-
 import com.codahale.metrics.Metered;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -25,7 +22,6 @@ import feign.micrometer.AbstractMetricsTestBase;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.hamcrest.Matcher;
 
 public class Metrics4CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, String, Metric> {
@@ -47,9 +43,8 @@ public class Metrics4CapabilityTest
 
   @Override
   protected boolean doesMetricIdIncludeClient(String metricId) {
-    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
-    Matcher<String> containsSource = containsString("Source");
-    return allOf(containsBase, containsSource).matches(metricId);
+    return metricId.contains("feign.micrometer.AbstractMetricsTestBase$")
+        && metricId.contains("Source");
   }
 
   @Override

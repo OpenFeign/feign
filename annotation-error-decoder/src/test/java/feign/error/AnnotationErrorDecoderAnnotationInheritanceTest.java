@@ -18,13 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Parameterized.class)
 public class AnnotationErrorDecoderAnnotationInheritanceTest
     extends AbstractAnnotationErrorDecoderTest<
         AnnotationErrorDecoderAnnotationInheritanceTest.TestClientInterfaceWithWithMetaAnnotation> {
@@ -33,8 +29,6 @@ public class AnnotationErrorDecoderAnnotationInheritanceTest
     return TestClientInterfaceWithWithMetaAnnotation.class;
   }
 
-  @Parameters(
-      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
   public static Iterable<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
@@ -45,22 +39,24 @@ public class AnnotationErrorDecoderAnnotationInheritanceTest
           {"Test Code Specific At Method", 403, "method2Test", MethodLevelNotFoundException.class},
           {"Test Code Specific At Method", 404, "method2Test", ClassLevelNotFoundException.class},
         });
-  }
+  } // first data value (0) is default
 
-  @Parameter // first data value (0) is default
   public String testType;
-
-  @Parameter(1)
   public int errorCode;
-
-  @Parameter(2)
   public String method;
-
-  @Parameter(3)
   public Class<? extends Exception> expectedExceptionClass;
 
-  @Test
-  public void test() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
+  void test(
+      String testType,
+      int errorCode,
+      String method,
+      Class<? extends Exception> expectedExceptionClass)
+      throws Exception {
+    initAnnotationErrorDecoderAnnotationInheritanceTest(
+        testType, errorCode, method, expectedExceptionClass);
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(TestClientInterfaceWithWithMetaAnnotation.class).build();
 
@@ -69,7 +65,7 @@ public class AnnotationErrorDecoderAnnotationInheritanceTest
   }
 
   @ClassError
-  interface TestClientInterfaceWithWithMetaAnnotation {
+  public static interface TestClientInterfaceWithWithMetaAnnotation {
     @MethodError
     void method1Test();
 
@@ -116,5 +112,16 @@ public class AnnotationErrorDecoderAnnotationInheritanceTest
 
   static class MethodLevelNotFoundException extends Exception {
     public MethodLevelNotFoundException() {}
+  }
+
+  public void initAnnotationErrorDecoderAnnotationInheritanceTest(
+      String testType,
+      int errorCode,
+      String method,
+      Class<? extends Exception> expectedExceptionClass) {
+    this.testType = testType;
+    this.errorCode = errorCode;
+    this.method = method;
+    this.expectedExceptionClass = expectedExceptionClass;
   }
 }

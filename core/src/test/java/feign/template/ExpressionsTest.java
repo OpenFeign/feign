@@ -19,10 +19,10 @@ import static org.assertj.core.api.Assertions.assertThatObject;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-public class ExpressionsTest {
+class ExpressionsTest {
 
   @Test
-  public void simpleExpression() {
+  void simpleExpression() {
     Expression expression = Expressions.create("{foo}");
     assertThat(expression).isNotNull();
     String expanded = expression.expand(Collections.singletonMap("foo", "bar"), false);
@@ -30,7 +30,7 @@ public class ExpressionsTest {
   }
 
   @Test
-  public void malformedExpression() {
+  void malformedExpression() {
     String[] malformedStrings = {"{:}", "{str1:}", "{str1:{:}", "{str1:{str2:}"};
 
     for (String malformed : malformedStrings) {
@@ -43,7 +43,7 @@ public class ExpressionsTest {
   }
 
   @Test
-  public void malformedBodyTemplate() {
+  void malformedBodyTemplate() {
     String bodyTemplate = "{" + "a".repeat(65536) + "}";
 
     try {
@@ -54,7 +54,7 @@ public class ExpressionsTest {
   }
 
   @Test
-  public void androidCompatibility() {
+  void androidCompatibility() {
     // To match close brace on Android, it must be escaped due to the simpler ICU regex engine
     String pattern = Expressions.EXPRESSION_PATTERN.pattern();
     assertThat(pattern.contains("}")).isEqualTo(pattern.contains("\\}"));

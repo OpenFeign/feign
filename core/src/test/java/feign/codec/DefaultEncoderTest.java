@@ -14,43 +14,40 @@
 package feign.codec;
 
 import static feign.Util.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.RequestTemplate;
 import java.time.Clock;
 import java.util.Arrays;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class DefaultEncoderTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+class DefaultEncoderTest {
 
   private final Encoder encoder = new Encoder.Default();
 
   @Test
-  public void testEncodesStrings() throws Exception {
+  void encodesStrings() throws Exception {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, String.class, template);
-    assertEquals(content, new String(template.body(), UTF_8));
+    assertThat(new String(template.body(), UTF_8)).isEqualTo(content);
   }
 
   @Test
-  public void testEncodesByteArray() throws Exception {
+  void encodesByteArray() throws Exception {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, byte[].class, template);
-    assertTrue(Arrays.equals(content, template.body()));
+    assertThat(Arrays.equals(content, template.body())).isTrue();
   }
 
   @Test
-  public void testRefusesToEncodeOtherTypes() throws Exception {
-    thrown.expect(EncodeException.class);
-    thrown.expectMessage("is not a type supported by this encoder.");
-
-    encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate());
+  void refusesToEncodeOtherTypes() throws Exception {
+    Throwable exception =
+        assertThrows(
+            EncodeException.class,
+            () -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()));
+    assertThat(exception.getMessage()).contains("is not a type supported by this encoder.");
   }
 }

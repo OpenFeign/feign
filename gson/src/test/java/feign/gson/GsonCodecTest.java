@@ -15,8 +15,7 @@ package feign.gson;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
@@ -34,13 +33,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class GsonCodecTest {
+class GsonCodecTest {
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -56,7 +55,7 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void decodesMapObjectNumericalValuesAsInteger() throws Exception {
+  void decodesMapObjectNumericalValuesAsInteger() throws Exception {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -69,12 +68,13 @@ public class GsonCodecTest {
             .headers(Collections.emptyMap())
             .body("{\"foo\": 1}", UTF_8)
             .build();
-    assertEquals(
-        new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()), map);
+    assertThat(map)
+        .isEqualTo(
+            new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()));
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
 
     Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
@@ -116,9 +116,9 @@ public class GsonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
@@ -131,12 +131,12 @@ public class GsonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(
-        zones, new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()));
+    assertThat(new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
-  public void nullBodyDecodesToNull() throws Exception {
+  void nullBodyDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -145,11 +145,11 @@ public class GsonCodecTest {
             .request(
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .build();
-    assertNull(new GsonDecoder().decode(response, String.class));
+    assertThat(new GsonDecoder().decode(response, String.class)).isNull();
   }
 
   @Test
-  public void emptyBodyDecodesToNull() throws Exception {
+  void emptyBodyDecodesToNull() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -159,7 +159,7 @@ public class GsonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
-    assertNull(new GsonDecoder().decode(response, String.class));
+    assertThat(new GsonDecoder().decode(response, String.class)).isNull();
   }
 
   private String zonesJson =
@@ -199,7 +199,7 @@ public class GsonCodecTest {
       };
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     GsonDecoder decoder = new GsonDecoder(Collections.singletonList(upperZone));
 
     List<Zone> zones = new LinkedList<>();
@@ -215,11 +215,11 @@ public class GsonCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(zones, decoder.decode(response, new TypeToken<List<Zone>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeToken<List<Zone>>() {}.getType())).isEqualTo(zones);
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     GsonEncoder encoder = new GsonEncoder(Collections.singletonList(upperZone));
 
     List<Zone> zones = new LinkedList<>();
@@ -245,7 +245,7 @@ public class GsonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)

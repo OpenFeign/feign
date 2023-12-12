@@ -18,13 +18,18 @@ import static feign.assertj.FeignAssertions.assertThat;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import feign.RequestTemplate;
-import java.util.*;
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-public class MoshiEncoderTest {
+class MoshiEncoderTest {
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -39,7 +44,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void encodesFormParams() {
+  void encodesFormParams() {
 
     Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
@@ -61,7 +66,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     final UpperZoneJSONAdapter upperZoneAdapter = new UpperZoneJSONAdapter();
 
     MoshiEncoder encoder = new MoshiEncoder(Collections.singleton(upperZoneAdapter));
@@ -88,7 +93,7 @@ public class MoshiEncoderTest {
   }
 
   @Test
-  public void customObjectEncoder() {
+  void customObjectEncoder() {
     final JsonAdapter<VideoGame> videoGameJsonAdapter =
         new Moshi.Builder().build().adapter(VideoGame.class);
     MoshiEncoder encoder = new MoshiEncoder(Collections.singleton(videoGameJsonAdapter));

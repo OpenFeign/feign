@@ -22,8 +22,7 @@ import feign.Response;
 import feign.Util;
 import java.util.Collection;
 import java.util.Collections;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.simple.RecordingSimpleLogger;
 
@@ -45,11 +44,11 @@ public class Slf4jLoggerTest {
           .headers(Collections.<String, Collection<String>>emptyMap())
           .body(new byte[0])
           .build();
-  @Rule public final RecordingSimpleLogger slf4j = new RecordingSimpleLogger();
+  public final RecordingSimpleLogger slf4j = new RecordingSimpleLogger();
   private Slf4jLogger logger;
 
   @Test
-  public void useFeignLoggerByDefault() throws Exception {
+  void useFeignLoggerByDefault() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
         "DEBUG feign.Logger - [someMethod] This is my message" + System.lineSeparator());
@@ -59,7 +58,7 @@ public class Slf4jLoggerTest {
   }
 
   @Test
-  public void useLoggerByNameIfRequested() throws Exception {
+  void useLoggerByNameIfRequested() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
         "DEBUG named.logger - [someMethod] This is my message" + System.lineSeparator());
@@ -69,7 +68,7 @@ public class Slf4jLoggerTest {
   }
 
   @Test
-  public void useLoggerByClassIfRequested() throws Exception {
+  void useLoggerByClassIfRequested() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
         "DEBUG feign.Feign - [someMethod] This is my message" + System.lineSeparator());
@@ -79,7 +78,7 @@ public class Slf4jLoggerTest {
   }
 
   @Test
-  public void useSpecifiedLoggerIfRequested() throws Exception {
+  void useSpecifiedLoggerIfRequested() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
         "DEBUG specified.logger - [someMethod] This is my message" + System.lineSeparator());
@@ -89,7 +88,7 @@ public class Slf4jLoggerTest {
   }
 
   @Test
-  public void logOnlyIfDebugEnabled() throws Exception {
+  void logOnlyIfDebugEnabled() throws Exception {
     slf4j.logLevel("info");
 
     logger = new Slf4jLogger();
@@ -99,7 +98,7 @@ public class Slf4jLoggerTest {
   }
 
   @Test
-  public void logRequestsAndResponses() throws Exception {
+  void logRequestsAndResponses() throws Exception {
     slf4j.logLevel("debug");
     slf4j.expectMessages(
         "DEBUG feign.Logger - [someMethod] A message with 2 formatting tokens."

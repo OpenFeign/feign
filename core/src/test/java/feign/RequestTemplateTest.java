@@ -17,9 +17,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
@@ -28,13 +26,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class RequestTemplateTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   /** Avoid depending on guava solely for map literals. */
   private static <K, V> Map<K, V> mapOf(K key, V val) {
@@ -62,7 +56,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void expandUrlEncoded() {
+  void expandUrlEncoded() {
     for (String val : Arrays.asList("apples", "sp ace", "unic???de", "qu?stion")) {
       assertThat(expand("/users/{user}", mapOf("user", val)))
           .isEqualTo("/users/" + UriUtils.encode(val, Util.UTF_8));
@@ -70,23 +64,23 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void expandMultipleParams() {
+  void expandMultipleParams() {
     assertThat(expand("/users/{user}/{repo}", mapOf("user", "unic???de", "repo", "foo")))
         .isEqualTo("/users/unic%3F%3F%3Fde/foo");
   }
 
   @Test
-  public void expandParamKeyHyphen() {
+  void expandParamKeyHyphen() {
     assertThat(expand("/{user-dir}", mapOf("user-dir", "foo"))).isEqualTo("/foo");
   }
 
   @Test
-  public void expandMissingParamProceeds() {
+  void expandMissingParamProceeds() {
     assertThat(expand("/{user-dir}", mapOf("user_dir", "foo"))).isEqualTo("/");
   }
 
   @Test
-  public void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
+  void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("{zoneId}");
 
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
@@ -95,7 +89,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithBinaryBody() {
+  void resolveTemplateWithBinaryBody() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -107,7 +101,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void canInsertAbsoluteHref() {
+  void canInsertAbsoluteHref() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).uri("/hostedzone/Z1PA6795UKMFR9");
 
@@ -118,7 +112,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithRelativeUriWithQuery() {
+  void resolveTemplateWithRelativeUriWithQuery() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -129,7 +123,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithBaseAndParameterizedQuery() {
+  void resolveTemplateWithBaseAndParameterizedQuery() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -145,7 +139,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithBaseAndParameterizedIterableQuery() {
+  void resolveTemplateWithBaseAndParameterizedIterableQuery() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -161,13 +155,15 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithMixedCollectionFormatsByQuery() {
+  void resolveTemplateWithMixedCollectionFormatsByQuery() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
             .collectionFormat(CollectionFormat.EXPLODED)
             .uri("/api/collections")
-            .query("keys", "{keys}") // default collection format
+            .query("keys", "{keys}") // default
+            // collection
+            // format
             .query("values[]", Collections.singletonList("{values[]}"), CollectionFormat.CSV);
 
     template =
@@ -179,7 +175,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderSubstitutions() {
+  void resolveTemplateWithHeaderSubstitutions() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("Auth-Token", "{authToken}");
 
@@ -189,7 +185,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderSubstitutionsNotAtStart() {
+  void resolveTemplateWithHeaderSubstitutionsNotAtStart() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("Authorization", "Bearer {token}");
 
@@ -200,7 +196,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
+  void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("Encoded", "{{{{dont_expand_me}}");
 
@@ -211,7 +207,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderContainingJsonLiteral() {
+  void resolveTemplateWithHeaderContainingJsonLiteral() {
     String json = "{\"A\":{\"B\":\"C\"}}";
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("A-Header", json);
@@ -221,7 +217,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderWithJson() {
+  void resolveTemplateWithHeaderWithJson() {
     String json = "{ \"string\": \"val\", \"string2\": \"this should not be truncated\"}";
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("A-Header", "{aHeader}");
@@ -232,7 +228,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderWithNestedJson() {
+  void resolveTemplateWithHeaderWithNestedJson() {
     String json =
         "{ \"string\": \"val\", \"string2\": \"this should not be truncated\", \"property\":"
             + " {\"nested\": true}}";
@@ -246,7 +242,7 @@ public class RequestTemplateTest {
 
   /** This ensures we don't mess up vnd types */
   @Test
-  public void resolveTemplateWithHeaderIncludingSpecialCharacters() {
+  void resolveTemplateWithHeaderIncludingSpecialCharacters() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -259,7 +255,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithHeaderEmptyResult() {
+  void resolveTemplateWithHeaderEmptyResult() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("Encoded", "{var}");
 
@@ -269,7 +265,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithMixedRequestLineParams() {
+  void resolveTemplateWithMixedRequestLineParams() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET) //
@@ -286,7 +282,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void insertHasQueryParams() {
+  void insertHasQueryParams() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET) //
@@ -305,7 +301,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
+  void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
@@ -316,10 +312,7 @@ public class RequestTemplateTest {
 
     template =
         template.resolve(
-            mapOf(
-                "customer_name", "netflix",
-                "user_name", "denominator",
-                "password", "password"));
+            mapOf("customer_name", "netflix", "user_name", "denominator", "password", "password"));
 
     assertThat(template)
         .hasBody(
@@ -332,7 +325,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
+  void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
@@ -344,9 +337,12 @@ public class RequestTemplateTest {
     template =
         template.resolve(
             mapOf(
-                "customer_name", "netflix",
-                "user_name", "denominator",
-                "password", "abc+123%25d8"));
+                "customer_name",
+                "netflix",
+                "user_name",
+                "denominator",
+                "password",
+                "abc+123%25d8"));
 
     assertThat(template)
         .hasBody(
@@ -355,7 +351,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void skipUnresolvedQueries() {
+  void skipUnresolvedQueries() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -369,7 +365,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void allQueriesUnresolvable() {
+  void allQueriesUnresolvable() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET) //
@@ -383,7 +379,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void spaceEncodingInUrlParam() {
+  void spaceEncodingInUrlParam() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET) //
@@ -395,7 +391,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void useCaseInsensitiveHeaderFieldNames() {
+  void useCaseInsensitiveHeaderFieldNames() {
     final RequestTemplate template = new RequestTemplate();
 
     final String value = "value1";
@@ -408,15 +404,15 @@ public class RequestTemplateTest {
 
     final String assertionMessage = "Header field names should be case insensitive";
 
-    assertNotNull(assertionMessage, test);
-    assertTrue(assertionMessage, test.contains(value));
-    assertTrue(assertionMessage, test.contains(value2));
-    assertEquals(1, template.headers().size());
-    assertEquals(2, template.headers().get("tesT").size());
+    assertThat(test).as(assertionMessage).isNotNull();
+    assertThat(test.contains(value)).as(assertionMessage).isTrue();
+    assertThat(test.contains(value2)).as(assertionMessage).isTrue();
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().get("tesT")).hasSize(2);
   }
 
   @Test
-  public void encodeSlashTest() {
+  void encodeSlashTest() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).uri("/api/{vhost}").decodeSlash(false);
 
@@ -428,14 +424,17 @@ public class RequestTemplateTest {
   /** Implementations have a bug if they pass junk as the http method. */
   @SuppressWarnings("deprecation")
   @Test
-  public void uriStuffedIntoMethod() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Invalid HTTP Method: /path?queryParam={queryParam}");
-    new RequestTemplate().method("/path?queryParam={queryParam}");
+  void uriStuffedIntoMethod() {
+    Throwable exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new RequestTemplate().method("/path?queryParam={queryParam}"));
+    assertThat(exception.getMessage())
+        .contains("Invalid HTTP Method: /path?queryParam={queryParam}");
   }
 
   @Test
-  public void encodedQueryClearedOnNull() {
+  void encodedQueryClearedOnNull() {
     RequestTemplate template = new RequestTemplate();
 
     template.query("param[]", "value");
@@ -446,17 +445,18 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void encodedQuery() {
+  void encodedQuery() {
     RequestTemplate template = new RequestTemplate().query("params[]", "foo%20bar");
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=foo%20bar");
     assertThat(template).hasQueries(entry("params[]", Collections.singletonList("foo%20bar")));
   }
 
   @Test
-  public void encodedQueryWithUnsafeCharactersMixedWithUnencoded() {
+  void encodedQueryWithUnsafeCharactersMixedWithUnencoded() {
     RequestTemplate template =
         new RequestTemplate()
-            .query("params[]", "not encoded") // stored as "param%5D%5B"
+            .query("params[]", "not encoded") // stored as
+            // "param%5D%5B"
             .query("params[]", "encoded"); // stored as "param[]"
 
     assertThat(template.queryLine()).isEqualTo("?params%5B%5D=not%20encoded&params%5B%5D=encoded");
@@ -467,7 +467,7 @@ public class RequestTemplateTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void shouldRetrieveHeadersWithoutNull() {
+  void shouldRetrieveHeadersWithoutNull() {
     RequestTemplate template =
         new RequestTemplate()
             .header("key1", (String) null)
@@ -503,7 +503,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void fragmentShouldNotBeEncodedInUri() {
+  void fragmentShouldNotBeEncodedInUri() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -514,7 +514,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void fragmentShouldNotBeEncodedInTarget() {
+  void fragmentShouldNotBeEncodedInTarget() {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET)
@@ -525,7 +525,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void urlEncodingRemainsInPlace() {
+  void urlEncodingRemainsInPlace() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).target("https://exa%23mple.com/path%7Cpath");
 
@@ -533,7 +533,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void slashShouldNotBeAppendedForMatrixParams() {
+  void slashShouldNotBeAppendedForMatrixParams() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).uri("/path;key1=value1;key2=value2", true);
 
@@ -541,7 +541,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void encodedReservedPreserveSlash() {
+  void encodedReservedPreserveSlash() {
     RequestTemplate template = new RequestTemplate();
     template.uri("/get?url={url}");
     template.method(HttpMethod.GET);
@@ -550,7 +550,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  public void encodedReservedEncodeSlash() {
+  void encodedReservedEncodeSlash() {
     RequestTemplate template = new RequestTemplate();
     template.uri("/get?url={url}");
     template.decodeSlash(false);

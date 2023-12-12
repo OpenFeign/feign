@@ -16,7 +16,7 @@ package feign.jackson.jr;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
@@ -28,15 +28,23 @@ import feign.Util;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.*;
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.junit.jupiter.api.Test;
 
-public class JacksonCodecTest {
+class JacksonCodecTest {
 
   private static final String DATES_JSON = "[\"2020-01-02\",\"2021-02-03\"]";
 
   @Test
-  public void encodesMapObjectNumericalValuesAsInteger() {
+  void encodesMapObjectNumericalValuesAsInteger() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -47,7 +55,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesMapObjectNumericalValuesToByteArray() {
+  void encodesMapObjectNumericalValuesToByteArray() {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
@@ -58,8 +66,8 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void encodesFormParams() {
-    Map<String, Object> form = new LinkedHashMap<String, Object>();
+  void encodesFormParams() {
+    Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
@@ -70,7 +78,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decodes() throws Exception {
+  void decodes() throws Exception {
     List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
@@ -87,13 +95,13 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
-    assertEquals(
-        zones,
-        new JacksonJrDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()));
+    assertThat(
+            new JacksonJrDecoder().decode(response, new TypeReference<List<Zone>>() {}.getType()))
+        .isEqualTo(zones);
   }
 
   @Test
-  public void nullBodyDecodesToEmpty() throws Exception {
+  void nullBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -106,7 +114,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void emptyBodyDecodesToEmpty() throws Exception {
+  void emptyBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -120,7 +128,7 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void customDecoder() throws Exception {
+  void customDecoder() throws Exception {
     JacksonJrDecoder decoder = new JacksonJrDecoder(singletonList(new JavaLocalDateExtension()));
 
     List<LocalDate> dates = new LinkedList<>();
@@ -136,12 +144,12 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
-    assertEquals(
-        dates, decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()))
+        .isEqualTo(dates);
   }
 
   @Test
-  public void customDecoderExpressedAsMapper() throws Exception {
+  void customDecoderExpressedAsMapper() throws Exception {
     JSON mapper = JSON.builder().register(new JavaLocalDateExtension()).build();
     JacksonJrDecoder decoder = new JacksonJrDecoder(mapper);
 
@@ -158,12 +166,12 @@ public class JacksonCodecTest {
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
-    assertEquals(
-        dates, decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()));
+    assertThat(decoder.decode(response, new TypeReference<List<LocalDate>>() {}.getType()))
+        .isEqualTo(dates);
   }
 
   @Test
-  public void customEncoder() {
+  void customEncoder() {
     JacksonJrEncoder encoder = new JacksonJrEncoder(singletonList(new JavaLocalDateExtension()));
 
     List<LocalDate> dates = new LinkedList<>();
@@ -177,10 +185,10 @@ public class JacksonCodecTest {
   }
 
   @Test
-  public void decoderCharset() throws IOException {
+  void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
 
     Response response =
@@ -202,12 +210,12 @@ public class JacksonCodecTest {
                             + "}")
                     .getBytes(StandardCharsets.ISO_8859_1))
             .build();
-    assertEquals(
-        zone.getId(), ((Zone) new JacksonJrDecoder().decode(response, Zone.class)).getId());
+    assertThat(((Zone) new JacksonJrDecoder().decode(response, Zone.class)).getId())
+        .isEqualTo(zone.getId());
   }
 
   @Test
-  public void decodesToMap() throws Exception {
+  void decodesToMap() throws Exception {
     String json = "{\"name\":\"jim\",\"id\":12}";
 
     Response response =
@@ -225,8 +233,8 @@ public class JacksonCodecTest {
             new JacksonJrDecoder()
                 .decode(response, new TypeReference<Map<String, Object>>() {}.getType());
 
-    assertEquals(12, map.get("id"));
-    assertEquals("jim", map.get("name"));
+    assertThat(map).containsEntry("id", 12);
+    assertThat(map).containsEntry("name", "jim");
   }
 
   public static class Zone {
@@ -288,7 +296,7 @@ public class JacksonCodecTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)

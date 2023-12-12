@@ -35,7 +35,7 @@ public abstract class AbstractAnnotationErrorDecoderTest<T> {
   }
 
   Response testResponse(int status, String body) {
-    return testResponse(status, body, new HashMap<String, Collection<String>>());
+    return testResponse(status, body, new HashMap<>());
   }
 
   Response testResponse(int status, String body, Map<String, Collection<String>> headers) {

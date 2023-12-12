@@ -13,21 +13,38 @@
  */
 package feign.error;
 
-import static feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
-import static feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request;
 import feign.codec.Decoder;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorException;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorWithOtherConstructorsException;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefaultConstructorException;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForBodyAndHeaders;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForBodyAndHeadersSecondOrder;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForHeaders;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForHeadersButNotForBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForNonSupportedBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithAnnotationForOptionalBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithNoAnnotationForBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithRequest;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithRequestAndAnnotationForResponseBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithRequestAndResponseBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithRequestAndResponseHeadersAndOptionalResponseBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DefinedConstructorWithRequestAndResponseHeadersAndResponseBody;
+import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.ParametersException;
 import feign.optionals.OptionalDecoder;
-import java.util.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Parameterized.class)
 public class AnnotationErrorDecoderExceptionConstructorsTest
     extends AbstractAnnotationErrorDecoderTest<
         TestClientInterfaceWithDifferentExceptionConstructors> {
@@ -43,8 +60,7 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
           Request.Body.empty(),
           null);
   private static final feign.Request NO_REQUEST = null;
-  private static final Map<String, Collection<String>> NON_NULL_HEADERS =
-      new HashMap<String, Collection<String>>();
+  private static final Map<String, Collection<String>> NON_NULL_HEADERS = new HashMap<>();
   private static final Map<String, Collection<String>> NO_HEADERS = null;
 
   @Override
@@ -52,8 +68,6 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
     return TestClientInterfaceWithDifferentExceptionConstructors.class;
   }
 
-  @Parameters(
-      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
   public static Iterable<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
@@ -186,28 +200,33 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
             NON_NULL_HEADERS
           }
         });
-  }
+  } // first data value (0) is default
 
-  @Parameter // first data value (0) is default
   public String testName;
-
-  @Parameter(1)
   public int errorCode;
-
-  @Parameter(2)
   public Class<? extends Exception> expectedExceptionClass;
-
-  @Parameter(3)
   public Object expectedRequest;
-
-  @Parameter(4)
   public Object expectedBody;
-
-  @Parameter(5)
   public Map<String, Collection<String>> expectedHeaders;
 
-  @Test
-  public void test() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
+  void test(
+      String testName,
+      int errorCode,
+      Class<? extends Exception> expectedExceptionClass,
+      Object expectedRequest,
+      Object expectedBody,
+      Map<String, Collection<String>> expectedHeaders)
+      throws Exception {
+    initAnnotationErrorDecoderExceptionConstructorsTest(
+        testName,
+        errorCode,
+        expectedExceptionClass,
+        expectedRequest,
+        expectedBody,
+        expectedHeaders);
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(
                 TestClientInterfaceWithDifferentExceptionConstructors.class)
@@ -226,8 +245,24 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
     assertThat(exception.headers()).isEqualTo(expectedHeaders);
   }
 
-  @Test
-  public void testIfExceptionIsNotInTheList() throws Exception {
+  @MethodSource("data")
+  @ParameterizedTest(
+      name = "{0}: When error code ({1}) on method ({2}) should return exception type ({3})")
+  void ifExceptionIsNotInTheList(
+      String testName,
+      int errorCode,
+      Class<? extends Exception> expectedExceptionClass,
+      Object expectedRequest,
+      Object expectedBody,
+      Map<String, Collection<String>> expectedHeaders)
+      throws Exception {
+    initAnnotationErrorDecoderExceptionConstructorsTest(
+        testName,
+        errorCode,
+        expectedExceptionClass,
+        expectedRequest,
+        expectedBody,
+        expectedHeaders);
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(
                 TestClientInterfaceWithDifferentExceptionConstructors.class)
@@ -648,5 +683,20 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
         return headers;
       }
     }
+  }
+
+  public void initAnnotationErrorDecoderExceptionConstructorsTest(
+      String testName,
+      int errorCode,
+      Class<? extends Exception> expectedExceptionClass,
+      Object expectedRequest,
+      Object expectedBody,
+      Map<String, Collection<String>> expectedHeaders) {
+    this.testName = testName;
+    this.errorCode = errorCode;
+    this.expectedExceptionClass = expectedExceptionClass;
+    this.expectedRequest = expectedRequest;
+    this.expectedBody = expectedBody;
+    this.expectedHeaders = expectedHeaders;
   }
 }

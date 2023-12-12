@@ -13,8 +13,8 @@
  */
 package feign.hc5;
 
-import static org.junit.Assume.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -24,8 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
 /** Tests that 'Content-Encoding: gzip' is handled correctly */
@@ -73,13 +73,13 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeTrue("HC5 client seems to hang with response size equalto Long.MAX", false);
+  public void veryLongResponseNullLength() {
+    assumeTrue(true, "HC5 client seems to hang with response size equalto Long.MAX");
   }
 
   @Override
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue("this test is flaky on windows, but works fine.", false);
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
+    assumeTrue(true, "this test is flaky on windows, but works fine.");
   }
 
   public interface TestInterface {

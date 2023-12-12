@@ -14,16 +14,22 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-public class FeignExceptionTest {
+class FeignExceptionTest {
 
   @Test
-  public void canCreateWithRequestAndResponse() {
+  void canCreateWithRequestAndResponse() {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
@@ -48,7 +54,7 @@ public class FeignExceptionTest {
   }
 
   @Test
-  public void canCreateWithRequestOnly() {
+  void canCreateWithRequestOnly() {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
@@ -67,7 +73,7 @@ public class FeignExceptionTest {
   }
 
   @Test
-  public void createFeignExceptionWithCorrectCharsetResponse() {
+  void createFeignExceptionWithCorrectCharsetResponse() {
     Map<String, Collection<String>> map = new HashMap<>();
     map.put("connection", new ArrayList<>(Collections.singletonList("keep-alive")));
     map.put("content-length", new ArrayList<>(Collections.singletonList("100")));
@@ -98,7 +104,7 @@ public class FeignExceptionTest {
   }
 
   @Test
-  public void createFeignExceptionWithErrorCharsetResponse() {
+  void createFeignExceptionWithErrorCharsetResponse() {
     Map<String, Collection<String>> map = new HashMap<>();
     map.put("connection", new ArrayList<>(Collections.singletonList("keep-alive")));
     map.put("content-length", new ArrayList<>(Collections.singletonList("100")));
@@ -129,7 +135,7 @@ public class FeignExceptionTest {
   }
 
   @Test
-  public void canGetResponseHeadersFromException() {
+  void canGetResponseHeadersFromException() {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
@@ -165,7 +171,7 @@ public class FeignExceptionTest {
   }
 
   @Test
-  public void lengthOfBodyExceptionTest() {
+  void lengthOfBodyExceptionTest() {
     String bigResponse =
         "I love a storm in early May\n"
             + "When springtime’s boisterous, firstborn thunder\n"
@@ -212,24 +218,31 @@ public class FeignExceptionTest {
         .isGreaterThanOrEqualTo(bigResponse.length());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void nullRequestShouldThrowNPEwThrowable() {
-    new Derived(404, "message", null, new Throwable());
+  @Test
+  void nullRequestShouldThrowNPEwThrowable() {
+    assertThrows(
+        NullPointerException.class, () -> new Derived(404, "message", null, new Throwable()));
   }
 
-  @Test(expected = NullPointerException.class)
-  public void nullRequestShouldThrowNPEwThrowableAndBytes() {
-    new Derived(404, "message", null, new Throwable(), new byte[1], Collections.emptyMap());
+  @Test
+  void nullRequestShouldThrowNPEwThrowableAndBytes() {
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new Derived(
+                404, "message", null, new Throwable(), new byte[1], Collections.emptyMap()));
   }
 
-  @Test(expected = NullPointerException.class)
-  public void nullRequestShouldThrowNPE() {
-    new Derived(404, "message", null);
+  @Test
+  void nullRequestShouldThrowNPE() {
+    assertThrows(NullPointerException.class, () -> new Derived(404, "message", null));
   }
 
-  @Test(expected = NullPointerException.class)
-  public void nullRequestShouldThrowNPEwBytes() {
-    new Derived(404, "message", null, new byte[1], Collections.emptyMap());
+  @Test
+  void nullRequestShouldThrowNPEwBytes() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new Derived(404, "message", null, new byte[1], Collections.emptyMap()));
   }
 
   static class Derived extends FeignException {

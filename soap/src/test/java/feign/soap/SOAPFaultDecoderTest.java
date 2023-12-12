@@ -14,6 +14,8 @@
 package feign.soap;
 
 import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.FeignException;
 import feign.Request;
@@ -27,21 +29,13 @@ import java.io.InputStream;
 import java.util.Collections;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.ws.soap.SOAPFaultException;
-import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
-public class SOAPFaultDecoderTest {
-
-  @Rule public final ExpectedException thrown = ExpectedException.none();
+class SOAPFaultDecoderTest {
 
   @Test
-  public void soapDecoderThrowsSOAPFaultException() throws IOException {
-
-    thrown.expect(SOAPFaultException.class);
-    thrown.expectMessage("Processing error");
+  void soapDecoderThrowsSOAPFaultException() throws IOException {
 
     Response response =
         Response.builder()
@@ -53,15 +47,18 @@ public class SOAPFaultDecoderTest {
             .body(getResourceBytes("/samples/SOAP_1_2_FAULT.xml"))
             .build();
 
-    new SOAPDecoder.Builder()
-        .withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
-        .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
-        .build()
-        .decode(response, Object.class);
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .build();
+    Throwable exception =
+        assertThrows(SOAPFaultException.class, () -> decoder.decode(response, Object.class));
+    assertThat(exception.getMessage()).contains("Processing error");
   }
 
   @Test
-  public void errorDecoderReturnsSOAPFaultException() throws IOException {
+  void errorDecoderReturnsSOAPFaultException() throws IOException {
     Response response =
         Response.builder()
             .status(400)
@@ -73,13 +70,13 @@ public class SOAPFaultDecoderTest {
             .build();
 
     Exception error = new SOAPErrorDecoder().decode("Service#foo()", response);
-    Assertions.assertThat(error)
+    assertThat(error)
         .isInstanceOf(SOAPFaultException.class)
         .hasMessage("Message was not SOAP 1.1 compliant");
   }
 
   @Test
-  public void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
+  void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
     Response response =
         Response.builder()
             .status(503)
@@ -92,7 +89,7 @@ public class SOAPFaultDecoderTest {
 
     Exception error = new SOAPErrorDecoder().decode("Service#foo()", response);
 
-    Assertions.assertThat(error)
+    assertThat(error)
         .isInstanceOf(FeignException.class)
         .hasMessage(
             "[503 Service Unavailable] during [GET] to [/api] [Service#foo()]: [Service"
@@ -100,7 +97,7 @@ public class SOAPFaultDecoderTest {
   }
 
   @Test
-  public void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
+  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
     String responseBody =
         "<?xml version = '1.0' encoding = 'UTF-8'?>\n"
             + "<SOAP-ENV:Envelope\n"
@@ -122,7 +119,7 @@ public class SOAPFaultDecoderTest {
 
     Exception error = new SOAPErrorDecoder().decode("Service#foo()", response);
 
-    Assertions.assertThat(error)
+    assertThat(error)
         .isInstanceOf(FeignException.class)
         .hasMessage(
             "[500 Internal Server Error] during [GET] to [/api] [Service#foo()]: ["

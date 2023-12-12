@@ -14,23 +14,21 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.SocketTimeoutException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.hamcrest.CoreMatchers;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author pengfei.zhao
  */
 @SuppressWarnings("deprecation")
-public class OptionsTest {
+class OptionsTest {
 
   static class ChildOptions extends Request.Options {
     public ChildOptions(int connectTimeoutMillis, int readTimeoutMillis) {
@@ -49,10 +47,8 @@ public class OptionsTest {
     String get();
   }
 
-  @Rule public final ExpectedException thrown = ExpectedException.none();
-
   @Test
-  public void socketTimeoutTest() {
+  void socketTimeoutTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -61,14 +57,12 @@ public class OptionsTest {
             .options(new Request.Options(1000, 1000))
             .target(OptionsInterface.class, server.url("/").toString());
 
-    thrown.expect(FeignException.class);
-    thrown.expectCause(CoreMatchers.isA(SocketTimeoutException.class));
-
-    api.get();
+    FeignException exception = assertThrows(FeignException.class, () -> api.get());
+    assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test
-  public void normalResponseTest() {
+  void normalResponseTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -81,7 +75,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void normalResponseForChildOptionsTest() {
+  void normalResponseForChildOptionsTest() {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
@@ -94,7 +88,7 @@ public class OptionsTest {
   }
 
   @Test
-  public void socketTimeoutWithMethodOptionsTest() throws Exception {
+  void socketTimeoutWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 3000);
@@ -114,13 +108,14 @@ public class OptionsTest {
             });
     thread.start();
     thread.join();
-    thrown.expect(FeignException.class);
-    thrown.expectCause(CoreMatchers.isA(SocketTimeoutException.class));
-    throw exceptionAtomicReference.get();
+
+    Exception exception = exceptionAtomicReference.get();
+    assertThat(exception).isInstanceOf(FeignException.class);
+    assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test
-  public void normalResponseWithMethodOptionsTest() throws Exception {
+  void normalResponseWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 1000);

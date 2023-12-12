@@ -13,18 +13,19 @@
  */
 package feign.ribbon;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.netflix.client.ClientFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class LBClientFactoryTest {
+class LBClientFactoryTest {
 
   @Test
-  public void testCreateLBClient() {
+  void createLBClient() {
     LBClientFactory.Default lbClientFactory = new LBClientFactory.Default();
     LBClient client = lbClientFactory.create("clientName");
-    assertEquals("clientName", client.getClientName());
-    assertEquals(ClientFactory.getNamedLoadBalancer("clientName"), client.getLoadBalancer());
+    assertThat(client.getClientName()).isEqualTo("clientName");
+    assertThat(client.getLoadBalancer())
+        .isEqualTo(ClientFactory.getNamedLoadBalancer("clientName"));
   }
 }
