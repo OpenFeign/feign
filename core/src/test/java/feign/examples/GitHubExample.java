@@ -13,20 +13,20 @@
  */
 package feign.examples;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
+import static feign.Util.UTF_8;
+import static feign.Util.ensureClosed;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.Decoder;
-import static feign.Util.UTF_8;
-import static feign.Util.ensureClosed;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}

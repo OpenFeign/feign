@@ -21,11 +21,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
-import feign.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import feign.Body;
+import feign.Feign;
+import feign.FeignException;
+import feign.Headers;
+import feign.Param;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
@@ -106,13 +113,13 @@ class MockClientTest {
               .ok(postContributorKey, "{\"login\":\"velo\",\"contributions\":0}")
               .noContent(HttpMethod.PATCH, "/repos/velo/feign-mock/contributors")
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=1234567890",
-                  HttpsURLConnection.HTTP_NOT_FOUND)
+                  HttpURLConnection.HTTP_NOT_FOUND)
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-                  HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
+                  HttpURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-                  HttpsURLConnection.HTTP_INTERNAL_ERROR, "")
+                  HttpURLConnection.HTTP_INTERNAL_ERROR, "")
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=123456789",
-                  HttpsURLConnection.HTTP_INTERNAL_ERROR, data))
+                  HttpURLConnection.HTTP_INTERNAL_ERROR, data))
           .target(new MockTarget<>(GitHub.class));
     }
   }

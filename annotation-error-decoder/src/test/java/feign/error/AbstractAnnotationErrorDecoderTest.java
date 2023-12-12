@@ -13,13 +13,13 @@
  */
 package feign.error;
 
-import feign.Request;
-import feign.Response;
+import static feign.Feign.configKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import static feign.Feign.configKey;
+import feign.Request;
+import feign.Response;
 
 public abstract class AbstractAnnotationErrorDecoderTest<T> {
 
@@ -36,7 +36,7 @@ public abstract class AbstractAnnotationErrorDecoderTest<T> {
   }
 
   Response testResponse(int status, String body) {
-    return testResponse(status, body, new HashMap<String, Collection<String>>());
+    return testResponse(status, body, new HashMap<>());
   }
 
   Response testResponse(int status, String body, Map<String, Collection<String>> headers) {

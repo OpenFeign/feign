@@ -13,12 +13,17 @@
  */
 package feign.moshi;
 
+import static feign.assertj.FeignAssertions.assertThat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import feign.RequestTemplate;
-import java.util.*;
-import org.junit.jupiter.api.Test;
-import static feign.assertj.FeignAssertions.assertThat;
 
 class MoshiEncoderTest {
 

@@ -15,11 +15,11 @@ package feign.template;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import feign.CollectionFormat;
-import feign.Util;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
+import feign.CollectionFormat;
+import feign.Util;
 
 class QueryTemplateTest {
 

@@ -13,12 +13,12 @@
  */
 package feign.error;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AnnotationErrorDecoderInheritanceClassLevelAnnotationTest extends
     AbstractAnnotationErrorDecoderTest<AnnotationErrorDecoderInheritanceClassLevelAnnotationTest.SecondLevelInterface> {

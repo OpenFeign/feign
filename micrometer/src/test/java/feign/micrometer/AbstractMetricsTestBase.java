@@ -17,6 +17,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.AsyncFeign;
 import feign.Capability;
 import feign.Feign;
@@ -26,12 +32,6 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
 

@@ -14,13 +14,18 @@
 package feign.jaxrs2;
 
 import static feign.assertj.FeignAssertions.assertThat;
-import org.assertj.core.data.MapEntry;
-import org.junit.jupiter.api.Test;
-import javax.ws.rs.*;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
+import org.junit.jupiter.api.Test;
 import feign.MethodMetadata;
 import feign.jaxrs.JAXRSContract;
 import feign.jaxrs.JAXRSContractTest;

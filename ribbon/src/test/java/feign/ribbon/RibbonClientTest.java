@@ -32,18 +32,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
-import mockwebserver3.MockResponse;
-import mockwebserver3.SocketPolicy;
-import mockwebserver3.MockWebServer;
 import feign.Client;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
-import feign.Response;
 import feign.RequestLine;
+import feign.Response;
 import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketPolicy;
 
 @Disabled("inconsistent, deprecated toolset")
 public class RibbonClientTest {
@@ -193,7 +193,7 @@ public class RibbonClientTest {
 
   /*
    * This test-case replicates a bug that occurs when using RibbonRequest with a query string.
-   * 
+   *
    * The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string
    * contained invalid characters (ex. space).
    */

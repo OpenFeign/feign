@@ -13,18 +13,9 @@
  */
 package feign.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Util;
+import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,11 +30,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import static feign.Util.UTF_8;
-import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
+import feign.Util;
 
 @SuppressWarnings("deprecation")
 class JacksonCodecTest {
@@ -61,7 +61,7 @@ class JacksonCodecTest {
 
   @Test
   void encodesMapObjectNumericalValuesAsInteger() {
-    Map<String, Object> map = new LinkedHashMap<String, Object>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
@@ -75,7 +75,7 @@ class JacksonCodecTest {
 
   @Test
   void encodesFormParams() {
-    Map<String, Object> form = new LinkedHashMap<String, Object>();
+    Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
@@ -135,7 +135,7 @@ class JacksonCodecTest {
         Arrays.asList(
             new SimpleModule().addDeserializer(Zone.class, new ZoneDeserializer())));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("DENOMINATOR.IO."));
     zones.add(new Zone("DENOMINATOR.IO.", "ABCD"));
 
@@ -155,7 +155,7 @@ class JacksonCodecTest {
     JacksonEncoder encoder = new JacksonEncoder(
         Arrays.asList(new SimpleModule().addSerializer(Zone.class, new ZoneSerializer())));
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "abcd"));
 
@@ -175,7 +175,7 @@ class JacksonCodecTest {
   void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
 
     Response response = Response.builder()
@@ -196,7 +196,7 @@ class JacksonCodecTest {
 
   @Test
   void decodesIterator() throws Exception {
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 
@@ -215,9 +215,10 @@ class JacksonCodecTest {
   }
 
   private <T> List<T> asList(Iterator<T> iter) {
-    final List<T> copy = new ArrayList<T>();
-    while (iter.hasNext())
+    final List<T> copy = new ArrayList<>();
+    while (iter.hasNext()) {
       copy.add(iter.next());
+    }
     return copy;
   }
 

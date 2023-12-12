@@ -47,10 +47,8 @@ class SOAPFaultDecoderTest {
     SOAPDecoder decoder =
         new SOAPDecoder.Builder().withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
             .withJAXBContextFactory(new JAXBContextFactory.Builder().build()).build();
-    Throwable exception = assertThrows(SOAPFaultException.class, () -> {
-      decoder
-          .decode(response, Object.class);
-    });
+    Throwable exception = assertThrows(SOAPFaultException.class, () -> decoder
+        .decode(response, Object.class));
     assertThat(exception.getMessage()).contains("Processing error");
   }
 

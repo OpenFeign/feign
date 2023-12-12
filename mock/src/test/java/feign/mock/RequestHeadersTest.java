@@ -69,7 +69,7 @@ class RequestHeadersTest {
 
   @Test
   void shouldCreateRequestHeadersFromHeadersMap() {
-    Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> map = new HashMap<>();
     map.put("header", Arrays.asList("val", "val2"));
     RequestHeaders headers = RequestHeaders.of(map);
     assertThat(headers.size()).isEqualTo(1);

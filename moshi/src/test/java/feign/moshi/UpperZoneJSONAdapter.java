@@ -13,13 +13,18 @@
  */
 package feign.moshi;
 
-import com.squareup.moshi.*;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
+import com.squareup.moshi.FromJson;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.ToJson;
 
 class UpperZoneJSONAdapter extends JsonAdapter<LinkedList<Zone>> {
 
+  @Override
   @ToJson
   public void toJson(JsonWriter out, LinkedList<Zone> value) throws IOException {
     out.beginArray();
@@ -33,6 +38,7 @@ class UpperZoneJSONAdapter extends JsonAdapter<LinkedList<Zone>> {
     out.endArray();
   }
 
+  @Override
   @FromJson
   public LinkedList<Zone> fromJson(JsonReader in) throws IOException {
     LinkedList<Zone> zones = new LinkedList<>();

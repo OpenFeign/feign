@@ -13,6 +13,12 @@
  */
 package feign.googlehttpclient;
 
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.Response;
@@ -20,12 +26,6 @@ import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import mockwebserver3.MockResponse;
-import org.junit.jupiter.api.Test;
-import java.util.Collections;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
   @Override

@@ -13,13 +13,13 @@
  */
 package feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 
 
 

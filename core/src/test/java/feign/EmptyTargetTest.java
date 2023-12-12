@@ -13,13 +13,12 @@
  */
 package feign;
 
-import feign.Request.HttpMethod;
-import feign.Target.EmptyTarget;
-import java.net.URI;
-import org.junit.jupiter.api.Test;
-import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.net.URI;
+import org.junit.jupiter.api.Test;
+import feign.Request.HttpMethod;
+import feign.Target.EmptyTarget;
 
 class EmptyTargetTest {
 

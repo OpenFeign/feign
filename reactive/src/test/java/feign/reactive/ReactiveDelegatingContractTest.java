@@ -13,16 +13,15 @@
  */
 package feign.reactive;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import feign.Contract;
 import feign.Param;
 import feign.RequestLine;
-import feign.reactive.ReactiveDelegatingContract;
 import io.reactivex.Flowable;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class ReactiveDelegatingContractTest {
 

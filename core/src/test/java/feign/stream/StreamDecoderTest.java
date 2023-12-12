@@ -13,12 +13,8 @@
  */
 package feign.stream;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import feign.*;
-import feign.Request.HttpMethod;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import org.junit.jupiter.api.Test;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -27,8 +23,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.core.type.TypeReference;
+import feign.Feign;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 @SuppressWarnings("deprecation")
 class StreamDecoderTest {

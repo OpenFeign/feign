@@ -15,15 +15,16 @@ package feign.codec;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
-import feign.codec.ErrorDecoder.RetryAfterDecoder;
 import java.text.ParseException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import org.junit.jupiter.api.Test;
+import feign.codec.ErrorDecoder.RetryAfterDecoder;
 
 class RetryAfterDecoderTest {
 
   private final RetryAfterDecoder decoder = new RetryAfterDecoder(RFC_1123_DATE_TIME) {
+    @Override
     protected long currentTimeMillis() {
       return parseDateTime("Sat, 1 Jan 2000 00:00:00 GMT");
     }

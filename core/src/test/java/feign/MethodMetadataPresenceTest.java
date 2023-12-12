@@ -16,12 +16,12 @@ package feign;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.io.IOException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import feign.FeignBuilderTest.TestInterface;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import java.io.IOException;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 

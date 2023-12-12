@@ -13,20 +13,20 @@
  */
 package feign.jaxb;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import org.junit.jupiter.api.Test;
 import feign.jaxb.mock.onepackage.AnotherMockedJAXBObject;
 import feign.jaxb.mock.onepackage.MockedJAXBObject;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.ValidationEventHandler;
-import javax.xml.XMLConstants;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import org.junit.jupiter.api.Test;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class JAXBContextFactoryTest {
 

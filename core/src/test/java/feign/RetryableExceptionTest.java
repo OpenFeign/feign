@@ -13,11 +13,15 @@
  */
 package feign;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.jupiter.api.Test;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class RetryableExceptionTest {
 

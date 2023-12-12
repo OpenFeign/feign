@@ -13,10 +13,10 @@
  */
 package feign;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.lang.reflect.Field;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MultipleLoggerTest {
 

@@ -15,15 +15,25 @@ package feign.hystrix;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-import feign.*;
+import feign.FeignException;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
+import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.gson.GsonDecoder;
 import mockwebserver3.MockResponse;
@@ -161,9 +171,8 @@ public class HystrixBuilderTest {
 
     final GitHub api = target(GitHub.class, "http://localhost:" + server.getPort(), fallback);
 
-    HystrixRuntimeException exception = assertThrows(HystrixRuntimeException.class, () -> {
-      api.contributors("Netflix", "feign");
-    });
+    HystrixRuntimeException exception =
+        assertThrows(HystrixRuntimeException.class, () -> api.contributors("Netflix", "feign"));
     assertThat(exception).hasCauseInstanceOf(FeignException.class)
         .hasMessage("GitHub#contributors(String,String) failed and fallback failed.");
   }
@@ -190,9 +199,8 @@ public class HystrixBuilderTest {
 
     final GitHub api = target(GitHub.class, "http://localhost:" + server.getPort());
 
-    HystrixRuntimeException exception = assertThrows(HystrixRuntimeException.class, () -> {
-      api.contributors("Netflix", "feign");
-    });
+    HystrixRuntimeException exception =
+        assertThrows(HystrixRuntimeException.class, () -> api.contributors("Netflix", "feign"));
     assertThat(exception).hasCauseInstanceOf(FeignException.class)
         .hasMessage("GitHub#contributors(String,String) failed and no fallback available.");
   }
@@ -208,7 +216,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
@@ -225,7 +233,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
@@ -242,7 +250,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
@@ -259,7 +267,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
@@ -276,7 +284,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
@@ -293,7 +301,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
@@ -310,7 +318,7 @@ public class HystrixBuilderTest {
     assertThat(observable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
 
@@ -331,7 +339,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
@@ -348,7 +356,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
@@ -365,7 +373,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
@@ -382,7 +390,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<Integer>();
+    final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
@@ -399,7 +407,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
@@ -416,7 +424,7 @@ public class HystrixBuilderTest {
     assertThat(single).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<List<String>>();
+    final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
     assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
@@ -492,7 +500,7 @@ public class HystrixBuilderTest {
     assertThat(completable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     completable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
 
@@ -511,7 +519,7 @@ public class HystrixBuilderTest {
     assertThat(completable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     completable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
 
@@ -530,7 +538,7 @@ public class HystrixBuilderTest {
     assertThat(completable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     completable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
 
@@ -548,7 +556,7 @@ public class HystrixBuilderTest {
     assertThat(completable).isNotNull();
     assertThat(server.getRequestCount()).isEqualTo(0);
 
-    final TestSubscriber<String> testSubscriber = new TestSubscriber<String>();
+    final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     completable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
 
@@ -602,11 +610,11 @@ public class HystrixBuilderTest {
   @Test
   void equalsHashCodeAndToStringWork() {
     final Target<TestInterface> t1 =
-        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8080");
+        new HardCodedTarget<>(TestInterface.class, "http://localhost:8080");
     final Target<TestInterface> t2 =
-        new HardCodedTarget<TestInterface>(TestInterface.class, "http://localhost:8888");
+        new HardCodedTarget<>(TestInterface.class, "http://localhost:8888");
     final Target<OtherTestInterface> t3 =
-        new HardCodedTarget<OtherTestInterface>(OtherTestInterface.class, "http://localhost:8080");
+        new HardCodedTarget<>(OtherTestInterface.class, "http://localhost:8080");
     final TestInterface i1 = target(t1);
     final TestInterface i2 = target(t1);
     final TestInterface i3 = target(t2);
@@ -718,7 +726,7 @@ public class HystrixBuilderTest {
   class FallbackTestInterface implements TestInterface {
     @Override
     public HystrixCommand<String> command() {
-      return new HystrixCommand<String>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+      return new HystrixCommand<>(HystrixCommandGroupKey.Factory.asKey("Test")) {
         @Override
         protected String run() throws Exception {
           return "fallback";
@@ -728,10 +736,10 @@ public class HystrixBuilderTest {
 
     @Override
     public HystrixCommand<List<String>> listCommand() {
-      return new HystrixCommand<List<String>>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+      return new HystrixCommand<>(HystrixCommandGroupKey.Factory.asKey("Test")) {
         @Override
         protected List<String> run() throws Exception {
-          final List<String> fallbackResult = new ArrayList<String>();
+          final List<String> fallbackResult = new ArrayList<>();
           fallbackResult.add("fallback");
           return fallbackResult;
         }
@@ -740,7 +748,7 @@ public class HystrixBuilderTest {
 
     @Override
     public HystrixCommand<Integer> intCommand() {
-      return new HystrixCommand<Integer>(HystrixCommandGroupKey.Factory.asKey("Test")) {
+      return new HystrixCommand<>(HystrixCommandGroupKey.Factory.asKey("Test")) {
         @Override
         protected Integer run() throws Exception {
           return 0;
@@ -750,7 +758,7 @@ public class HystrixBuilderTest {
 
     @Override
     public Observable<List<String>> listObservable() {
-      final List<String> fallbackResult = new ArrayList<String>();
+      final List<String> fallbackResult = new ArrayList<>();
       fallbackResult.add("fallback");
       return Observable.just(fallbackResult);
     }
@@ -767,7 +775,7 @@ public class HystrixBuilderTest {
 
     @Override
     public Single<List<String>> listSingle() {
-      final List<String> fallbackResult = new ArrayList<String>();
+      final List<String> fallbackResult = new ArrayList<>();
       fallbackResult.add("fallback");
       return Single.just(fallbackResult);
     }
@@ -789,7 +797,7 @@ public class HystrixBuilderTest {
 
     @Override
     public List<String> getList() {
-      final List<String> fallbackResult = new ArrayList<String>();
+      final List<String> fallbackResult = new ArrayList<>();
       fallbackResult.add("fallback");
       return fallbackResult;
     }

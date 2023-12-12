@@ -13,6 +13,13 @@
  */
 package feign.micrometer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import feign.Capability;
 import feign.Util;
 import io.micrometer.core.instrument.Measurement;
@@ -21,13 +28,6 @@ import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 
 public class MicrometerCapabilityTest

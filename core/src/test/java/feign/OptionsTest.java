@@ -13,18 +13,15 @@
  */
 package feign;
 
-
-import org.junit.jupiter.api.Test;
-import feign.codec.DecodeException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.net.SocketTimeoutException;
-import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Test;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author pengfei.zhao
@@ -54,13 +51,10 @@ class OptionsTest {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
-    final OptionsInterface api = Feign.builder()
-        .options(new Request.Options(1000, 1000))
+    final OptionsInterface api = Feign.builder().options(new Request.Options(1000, 1000))
         .target(OptionsInterface.class, server.url("/").toString());
 
-    FeignException exception = assertThrows(FeignException.class, () -> {
-      api.get();
-    });
+    FeignException exception = assertThrows(FeignException.class, () -> api.get());
     assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
@@ -69,8 +63,7 @@ class OptionsTest {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
-    final OptionsInterface api = Feign.builder()
-        .options(new Request.Options(1000, 1000))
+    final OptionsInterface api = Feign.builder().options(new Request.Options(1000, 1000))
         .target(OptionsInterface.class, server.url("/").toString());
 
     assertThat(api.get(new Request.Options(1000, 4 * 1000))).isEqualTo("foo");
@@ -81,8 +74,7 @@ class OptionsTest {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
-    final OptionsInterface api = Feign.builder()
-        .options(new ChildOptions(1000, 1000))
+    final OptionsInterface api = Feign.builder().options(new ChildOptions(1000, 1000))
         .target(OptionsInterface.class, server.url("/").toString());
 
     assertThat(api.getChildOptions(new ChildOptions(1000, 4 * 1000))).isEqualTo("foo");
@@ -93,9 +85,8 @@ class OptionsTest {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 3000);
-    final OptionsInterface api = Feign.builder()
-        .options(options)
-        .target(OptionsInterface.class, server.url("/").toString());
+    final OptionsInterface api = Feign.builder().options(options).target(OptionsInterface.class,
+        server.url("/").toString());
 
     AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
     Thread thread = new Thread(() -> {
@@ -109,11 +100,8 @@ class OptionsTest {
     thread.start();
     thread.join();
 
-
-
-    FeignException exception = assertThrows(FeignException.class, () -> {
-      throw exceptionAtomicReference.get();
-    });
+    Exception exception = exceptionAtomicReference.get();
+    assertThat(exception).isInstanceOf(FeignException.class);
     assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
@@ -122,9 +110,8 @@ class OptionsTest {
     final MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
     Request.Options options = new Request.Options(1000, 1000);
-    final OptionsInterface api = Feign.builder()
-        .options(options)
-        .target(OptionsInterface.class, server.url("/").toString());
+    final OptionsInterface api = Feign.builder().options(options).target(OptionsInterface.class,
+        server.url("/").toString());
 
     CountDownLatch countDownLatch = new CountDownLatch(1);
     Thread thread = new Thread(() -> {

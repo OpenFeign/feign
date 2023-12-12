@@ -13,20 +13,20 @@
  */
 package feign.sax;
 
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Util;
-import org.junit.jupiter.api.Test;
-import org.xml.sax.helpers.DefaultHandler;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.helpers.DefaultHandler;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.Response;
+import feign.Util;
 import feign.codec.Decoder;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("deprecation")
 class SAXDecoderTest {
@@ -62,10 +62,9 @@ class SAXDecoderTest {
 
   @Test
   void niceErrorOnUnconfiguredType() throws ParseException, IOException {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
+    Throwable exception = assertThrows(IllegalStateException.class, () ->
 
-      decoder.decode(statusFailedResponse(), int.class);
-    });
+    decoder.decode(statusFailedResponse(), int.class));
     assertThat(exception.getMessage()).contains("type int not in configured handlers");
   }
 

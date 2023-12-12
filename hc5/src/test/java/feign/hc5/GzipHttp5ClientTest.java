@@ -13,8 +13,8 @@
  */
 package feign.hc5;
 
-import static org.junit.jupiter.api.Assumptions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,8 +24,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RequestLine;
 import feign.client.AbstractClientTest;
-import mockwebserver3.*;
-import mockwebserver3.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 
 /**
  * Tests that 'Content-Encoding: gzip' is handled correctly

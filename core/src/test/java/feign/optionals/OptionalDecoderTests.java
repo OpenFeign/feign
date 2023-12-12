@@ -13,15 +13,15 @@
  */
 package feign.optionals;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.RequestLine;
 import feign.codec.Decoder;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.util.Optional;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class OptionalDecoderTests {
 

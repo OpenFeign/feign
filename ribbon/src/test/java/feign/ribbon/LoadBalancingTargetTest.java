@@ -13,16 +13,16 @@
  */
 package feign.ribbon;
 
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.net.URL;
-import feign.Feign;
-import feign.RequestLine;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.net.URL;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import feign.Feign;
+import feign.RequestLine;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class LoadBalancingTargetTest {
 

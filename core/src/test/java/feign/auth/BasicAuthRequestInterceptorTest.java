@@ -13,11 +13,11 @@
  */
 package feign.auth;
 
-import feign.RequestTemplate;
-import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.data.MapEntry.entry;
+import org.junit.jupiter.api.Test;
+import feign.RequestTemplate;
 
 class BasicAuthRequestInterceptorTest {
 

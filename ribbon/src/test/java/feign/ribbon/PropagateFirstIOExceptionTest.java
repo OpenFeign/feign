@@ -13,14 +13,13 @@
  */
 package feign.ribbon;
 
-import com.netflix.client.ClientException;
-import feign.codec.DecodeException;
-import java.io.IOException;
-import java.net.ConnectException;
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.IOException;
+import java.net.ConnectException;
+import org.junit.jupiter.api.Test;
+import com.netflix.client.ClientException;
 
 class PropagateFirstIOExceptionTest {
 
@@ -34,10 +33,8 @@ class PropagateFirstIOExceptionTest {
 
   @Test
   void propagatesFirstNestedIOE() throws IOException {
-    IOException exception = assertThrows(IOException.class, () -> {
-      RibbonClient
-          .propagateFirstIOException(new ClientException(new IOException(new IOException())));
-    });
+    IOException exception = assertThrows(IOException.class, () -> RibbonClient
+        .propagateFirstIOException(new ClientException(new IOException(new IOException()))));
     assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 

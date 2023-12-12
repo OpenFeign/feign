@@ -16,6 +16,11 @@ package feign.soap;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -24,11 +29,6 @@ import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.soap.SOAPConstants;
 import jakarta.xml.ws.soap.SOAPFaultException;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
 class SOAPFaultDecoderTest {
@@ -55,10 +55,8 @@ class SOAPFaultDecoderTest {
         new SOAPDecoder.Builder().withSOAPProtocol(SOAPConstants.SOAP_1_2_PROTOCOL)
             .withJAXBContextFactory(new JAXBContextFactory.Builder().build()).build();
 
-    Throwable exception = assertThrows(SOAPFaultException.class, () -> {
-      decoder
-          .decode(response, Object.class);
-    });
+    Throwable exception = assertThrows(SOAPFaultException.class, () -> decoder
+        .decode(response, Object.class));
     assertThat(exception.getMessage()).contains("Processing error");
   }
 

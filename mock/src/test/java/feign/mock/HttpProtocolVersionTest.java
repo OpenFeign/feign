@@ -13,11 +13,11 @@
  */
 package feign.mock;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.RequestLine;
 import feign.Response;
-import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpProtocolVersionTest {
 

@@ -13,13 +13,11 @@
  */
 package feign;
 
-import com.google.gson.reflect.TypeToken;
-import org.assertj.core.api.Fail;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.jmx.export.annotation.ManagedOperationParameter;
-import java.lang.annotation.Documented;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,12 +26,15 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import org.assertj.core.api.Fail;
+import org.junit.jupiter.api.Test;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Tests interfaces defined per {@link Contract.Default} are interpreted into expected
@@ -45,27 +46,21 @@ class DefaultContractTest {
 
   @Test
   void httpMethods() throws Exception {
-    assertThat(parseAndValidateMetadata(Methods.class, "post").template())
-        .hasMethod("POST");
+    assertThat(parseAndValidateMetadata(Methods.class, "post").template()).hasMethod("POST");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "put").template())
-        .hasMethod("PUT");
+    assertThat(parseAndValidateMetadata(Methods.class, "put").template()).hasMethod("PUT");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "get").template())
-        .hasMethod("GET");
+    assertThat(parseAndValidateMetadata(Methods.class, "get").template()).hasMethod("GET");
 
-    assertThat(parseAndValidateMetadata(Methods.class, "delete").template())
-        .hasMethod("DELETE");
+    assertThat(parseAndValidateMetadata(Methods.class, "delete").template()).hasMethod("DELETE");
   }
 
   @Test
   void bodyParamIsGeneric() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
-    assertThat(md.bodyIndex())
-        .isEqualTo(0);
-    assertThat(md.bodyType())
-        .isEqualTo(new TypeToken<List<String>>() {}.getType());
+    assertThat(md.bodyIndex()).isEqualTo(0);
+    assertThat(md.bodyType()).isEqualTo(new TypeToken<List<String>>() {}.getType());
   }
 
   @Test
@@ -73,199 +68,163 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
 
-    assertThat(md.bodyIndex())
-        .isEqualTo(1);
-    assertThat(md.indexToName()).containsOnly(
-        entry(0, asList("id")));
+    assertThat(md.bodyIndex()).isEqualTo(1);
+    assertThat(md.indexToName()).containsOnly(entry(0, asList("id")));
   }
 
   @Test
   void tooManyBodies() throws Exception {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-      parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class));
     assertThat(exception.getMessage()).contains("Method has too many Body");
   }
 
   @Test
   void customMethodWithoutPath() throws Exception {
-    assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template())
-        .hasMethod("PATCH")
+    assertThat(parseAndValidateMetadata(CustomMethod.class, "patch").template()).hasMethod("PATCH")
         .hasUrl("/");
   }
 
   @Test
   void queryParamsInPathExtract() throws Exception {
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template())
-        .hasUrl("/")
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "none").template()).hasUrl("/")
         .hasQueries();
 
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")));
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "one").template()).hasPath("/")
+        .hasQueries(entry("Action", asList("GetUser")));
 
-    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08")));
+    assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "two").template()).hasPath("/")
+        .hasQueries(entry("Action", asList("GetUser")), entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "three").template())
-        .hasPath("/")
-        .hasQueries(
-            entry("Action", asList("GetUser")),
-            entry("Version", asList("2010-05-08")),
+        .hasPath("/").hasQueries(
+            entry("Action", asList("GetUser")), entry("Version", asList("2010-05-08")),
             entry("limit", asList("1")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoAndOneEmpty").template())
         .hasPath("/")
-        .hasQueries(
-            entry("flag", new ArrayList<>()),
-            entry("Action", asList("GetUser")),
+        .hasQueries(entry("flag", new ArrayList<>()), entry("Action", asList("GetUser")),
             entry("Version", asList("2010-05-08")));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "oneEmpty").template())
         .hasPath("/")
-        .hasQueries(
-            entry("flag", new ArrayList<>()));
+        .hasQueries(entry("flag", new ArrayList<>()));
 
     assertThat(parseAndValidateMetadata(WithQueryParamsInPath.class, "twoEmpty").template())
         .hasPath("/")
-        .hasQueries(
-            entry("flag", new ArrayList<>()),
-            entry("NoErrors", new ArrayList<>()));
+        .hasQueries(entry("flag", new ArrayList<>()), entry("NoErrors", new ArrayList<>()));
   }
 
   @Test
   void bodyWithoutParameters() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
-    assertThat(md.template())
-        .hasBody("<v01:getAccountsListOfUser/>");
+    assertThat(md.template()).hasBody("<v01:getAccountsListOfUser/>");
   }
 
   @Test
   void headersOnMethodAddsContentTypeHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyWithoutParameters.class, "post");
 
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", asList("application/xml")),
-            entry("Content-Length",
-                asList(String.valueOf(md.template().body().length))));
+    assertThat(md.template()).hasHeaders(entry("Content-Type", asList("application/xml")),
+        entry("Content-Length", asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
   void headersOnTypeAddsContentTypeHeader() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeadersOnType.class, "post");
 
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", asList("application/xml")),
-            entry("Content-Length",
-                asList(String.valueOf(md.template().body().length))));
+    assertThat(md.template()).hasHeaders(entry("Content-Type", asList("application/xml")),
+        entry("Content-Length", asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
   void headersContainsWhitespaces() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeadersContainsWhitespaces.class, "post");
 
-    assertThat(md.template())
-        .hasHeaders(
-            entry("Content-Type", Collections.singletonList("application/xml")),
-            entry("Content-Length",
-                asList(String.valueOf(md.template().body().length))));
+    assertThat(md.template()).hasHeaders(
+        entry("Content-Type", Collections.singletonList("application/xml")),
+        entry("Content-Length", asList(String.valueOf(md.template().body().length))));
   }
 
   @Test
   void withPathAndURIParam() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(WithURIParam.class,
-        "uriParam", String.class, URI.class, String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(WithURIParam.class, "uriParam", String.class, URI.class,
+            String.class);
 
-    assertThat(md.indexToName())
-        .containsExactly(
-            entry(0, asList("1")),
-            // Skips 1 as it is a url index!
-            entry(2, asList("2")));
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("1")),
+        // Skips 1 as it is a url index!
+        entry(2, asList("2")));
 
     assertThat(md.urlIndex()).isEqualTo(1);
   }
 
   @Test
   void pathAndQueryParams() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(WithPathAndQueryParams.class,
-        "recordsByNameAndType", int.class, String.class,
-        String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(WithPathAndQueryParams.class, "recordsByNameAndType",
+            int.class, String.class, String.class);
 
-    assertThat(md.template())
-        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+    assertThat(md.template()).hasQueries(entry("name", asList("{name}")),
+        entry("type", asList("{type}")));
 
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("domainId")),
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("domainId")),
         entry(1, asList("name")),
         entry(2, asList("type")));
   }
 
   @Test
   void autoDiscoverParamNames() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(AutoDiscoverParamNames.class,
-        "recordsByNameAndType", int.class, String.class,
-        String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(AutoDiscoverParamNames.class, "recordsByNameAndType",
+            int.class, String.class, String.class);
 
-    assertThat(md.template())
-        .hasQueries(entry("name", asList("{name}")), entry("type", asList("{type}")));
+    assertThat(md.template()).hasQueries(entry("name", asList("{name}")),
+        entry("type", asList("{type}")));
 
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("domainId")),
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("domainId")),
         entry(1, asList("name")),
         entry(2, asList("type")));
   }
 
   @Test
   void bodyWithTemplate() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "login", String.class, String.class, String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(FormParams.class, "login", String.class, String.class,
+            String.class);
 
-    assertThat(md.template())
-        .hasBodyTemplate(
-            "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
+    assertThat(md.template()).hasBodyTemplate(
+        "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D");
   }
 
   @Test
   void formParamsParseIntoIndexToName() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "login", String.class, String.class, String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(FormParams.class, "login", String.class, String.class,
+            String.class);
 
-    assertThat(md.formParams())
-        .containsExactly("customer_name", "user_name", "password");
+    assertThat(md.formParams()).containsExactly("customer_name", "user_name", "password");
 
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("customer_name")),
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("customer_name")),
         entry(1, asList("user_name")),
         entry(2, asList("password")));
   }
 
   @Test
   void formParamAndBodyParams() throws Exception {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-
-      parseAndValidateMetadata(FormParams.class,
-          "formParamAndBodyParams", String.class, String.class);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> parseAndValidateMetadata(FormParams.class, "formParamAndBodyParams", String.class,
+            String.class));
     assertThat(exception.getMessage())
         .contains("Body parameters cannot be used with form parameters.");
   }
 
   @Test
   void bodyParamsAndformParam() throws Exception {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-
-      parseAndValidateMetadata(FormParams.class,
-          "bodyParamsAndformParam", String.class, String.class);
-      Fail.failBecauseExceptionWasNotThrown(IllegalStateException.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> parseAndValidateMetadata(FormParams.class, "bodyParamsAndformParam", String.class,
+            String.class));
     assertThat(exception.getMessage())
         .contains("Body parameters cannot be used with form parameters.");
   }
@@ -273,26 +232,25 @@ class DefaultContractTest {
   @Test
   void formParamParseIntoFormParams() throws Exception {
 
-    MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "loginNoBodyTemplate", String.class, String.class, String.class);
+    MethodMetadata md =
+        parseAndValidateMetadata(FormParams.class, "loginNoBodyTemplate", String.class,
+            String.class, String.class);
 
-    assertThat(md.formParams())
-        .containsExactly("customer_name", "user_name", "password");
+    assertThat(md.formParams()).containsExactly("customer_name", "user_name", "password");
 
-    assertThat(md.indexToName()).containsExactly(
-        entry(0, asList("customer_name")),
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("customer_name")),
         entry(1, asList("user_name")),
         entry(2, asList("password")));
   }
-
 
   /**
    * Body type is only for the body param.
    */
   @Test
   void formParamsDoesNotSetBodyType() throws Exception {
-    final MethodMetadata md = parseAndValidateMetadata(FormParams.class,
-        "login", String.class, String.class, String.class);
+    final MethodMetadata md =
+        parseAndValidateMetadata(FormParams.class, "login", String.class, String.class,
+            String.class);
 
     assertThat(md.bodyType()).isNull();
   }
@@ -301,11 +259,9 @@ class DefaultContractTest {
   void headerParamsParseIntoIndexToName() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(HeaderParams.class, "logout", String.class);
 
-    assertThat(md.template())
-        .hasHeaders(entry("Auth-Token", asList("{authToken}", "Foo")));
+    assertThat(md.template()).hasHeaders(entry("Auth-Token", asList("{authToken}", "Foo")));
 
-    assertThat(md.indexToName())
-        .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("authToken")));
     assertThat(md.formParams()).isEmpty();
   }
 
@@ -317,8 +273,7 @@ class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(entry("Authorization", asList("Bearer {authToken}", "Foo")));
 
-    assertThat(md.indexToName())
-        .containsExactly(entry(0, asList("authToken")));
+    assertThat(md.indexToName()).containsExactly(entry(0, asList("authToken")));
     assertThat(md.formParams()).isEmpty();
   }
 
@@ -326,8 +281,7 @@ class DefaultContractTest {
   void customExpander() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(CustomExpander.class, "clock", Clock.class);
 
-    assertThat(md.indexToExpanderClass())
-        .containsExactly(entry(0, ClockToMillis.class));
+    assertThat(md.indexToExpanderClass()).containsExactly(entry(0, ClockToMillis.class));
   }
 
   @Test
@@ -378,8 +332,8 @@ class DefaultContractTest {
 
   @Test
   void slashAreEncodedWhenNeeded() throws Exception {
-    MethodMetadata md = parseAndValidateMetadata(SlashNeedToBeEncoded.class,
-        "getQueues", String.class);
+    MethodMetadata md =
+        parseAndValidateMetadata(SlashNeedToBeEncoded.class, "getQueues", String.class);
 
     assertThat(md.template().decodeSlash()).isFalse();
 
@@ -409,8 +363,8 @@ class DefaultContractTest {
   @Test
   void headerMapUserObject() throws Exception {
     final MethodMetadata md =
-        parseAndValidateMetadata(HeaderMapInterface.class,
-            "headerMapUserObject", HeaderMapUserObject.class);
+        parseAndValidateMetadata(HeaderMapInterface.class, "headerMapUserObject",
+            HeaderMapUserObject.class);
     assertThat(md.headerMapIndex()).isEqualTo(0);
   }
 
@@ -521,26 +475,20 @@ class DefaultContractTest {
 
     @RequestLine("POST /")
     @Body("%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", \"password\": \"{password}\"%7D")
-    void login(
-               @Param("customer_name") String customer,
+    void login(@Param("customer_name") String customer,
                @Param("user_name") String user,
                @Param("password") String password);
 
     @RequestLine("POST /")
-    void loginNoBodyTemplate(
-                             @Param("customer_name") String customer,
+    void loginNoBodyTemplate(@Param("customer_name") String customer,
                              @Param("user_name") String user,
                              @Param("password") String password);
 
     @RequestLine("POST /")
-    void formParamAndBodyParams(
-                                @Param("customer_name") String customer,
-                                String body);
+    void formParamAndBodyParams(@Param("customer_name") String customer, String body);
 
     @RequestLine("POST /")
-    void bodyParamsAndformParam(
-                                String body,
-                                @Param("customer_name") String customer);
+    void bodyParamsAndformParam(String body, @Param("customer_name") String customer);
   }
 
   interface HeaderMapInterface {
@@ -662,11 +610,9 @@ class DefaultContractTest {
     private List<Entity<K, M>> entities;
   }
 
-
   interface SubClassHeaders extends Map<String, String> {
 
   }
-
 
   @Headers("Version: 1")
   interface ParameterizedApi extends ParameterizedBaseApi<String, Long> {
@@ -677,13 +623,13 @@ class DefaultContractTest {
   void parameterizedBaseApi() throws Exception {
     final List<MethodMetadata> md = contract.parseAndValidateMetadata(ParameterizedApi.class);
 
-    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<>();
     for (final MethodMetadata m : md) {
       byConfigKey.put(m.configKey(), m);
     }
 
-    assertThat(byConfigKey)
-        .containsOnlyKeys("ParameterizedApi#get(String)", "ParameterizedApi#getAll(Keys)");
+    assertThat(byConfigKey).containsOnlyKeys("ParameterizedApi#get(String)",
+        "ParameterizedApi#getAll(Keys)");
 
     assertThat(byConfigKey.get("ParameterizedApi#get(String)").returnType())
         .isEqualTo(new TypeToken<Entity<String, Long>>() {}.getType());
@@ -695,9 +641,8 @@ class DefaultContractTest {
         .isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());
     assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").bodyType())
         .isEqualTo(new TypeToken<Keys<String>>() {}.getType());
-    assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").template()).hasHeaders(
-        entry("Version", asList("1")),
-        entry("Foo", asList("Bar")));
+    assertThat(byConfigKey.get("ParameterizedApi#getAll(Keys)").template())
+        .hasHeaders(entry("Version", asList("1")), entry("Foo", asList("Bar")));
   }
 
   @Headers("Authorization: {authHdr}")
@@ -716,34 +661,29 @@ class DefaultContractTest {
 
     assertThat(md.get(0).configKey())
         .isEqualTo("ParameterizedHeaderExpandApi#getZone(String,String)");
-    assertThat(md.get(0).returnType())
-        .isEqualTo(String.class);
-    assertThat(md.get(0).template())
-        .hasHeaders(entry("Authorization", asList("{authHdr}")),
-            entry("Accept", asList("application/json")));
-    // Ensure that the authHdr expansion was properly detected and did not create a formParam
-    assertThat(md.get(0).formParams())
-        .isEmpty();
+    assertThat(md.get(0).returnType()).isEqualTo(String.class);
+    assertThat(md.get(0).template()).hasHeaders(entry("Authorization", asList("{authHdr}")),
+        entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a
+    // formParam
+    assertThat(md.get(0).formParams()).isEmpty();
   }
 
   @Test
   void parameterizedHeaderNotStartingWithCurlyBraceExpandApi() throws Exception {
-    final List<MethodMetadata> md =
-        contract.parseAndValidateMetadata(
-            ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
+    final List<MethodMetadata> md = contract
+        .parseAndValidateMetadata(ParameterizedHeaderNotStartingWithCurlyBraceExpandApi.class);
 
     assertThat(md).hasSize(1);
 
     assertThat(md.get(0).configKey())
         .isEqualTo("ParameterizedHeaderNotStartingWithCurlyBraceExpandApi#getZone(String,String)");
-    assertThat(md.get(0).returnType())
-        .isEqualTo(String.class);
-    assertThat(md.get(0).template())
-        .hasHeaders(entry("Authorization", asList("Bearer {authHdr}")),
-            entry("Accept", asList("application/json")));
-    // Ensure that the authHdr expansion was properly detected and did not create a formParam
-    assertThat(md.get(0).formParams())
-        .isEmpty();
+    assertThat(md.get(0).returnType()).isEqualTo(String.class);
+    assertThat(md.get(0).template()).hasHeaders(entry("Authorization", asList("Bearer {authHdr}")),
+        entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a
+    // formParam
+    assertThat(md.get(0).formParams()).isEmpty();
   }
 
   @Headers("Authorization: Bearer {authHdr}")
@@ -771,33 +711,28 @@ class DefaultContractTest {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(ParameterizedHeaderExpandInheritedApi.class);
 
-    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<String, MethodMetadata>();
+    final Map<String, MethodMetadata> byConfigKey = new LinkedHashMap<>();
     for (final MethodMetadata m : mds) {
       byConfigKey.put(m.configKey(), m);
     }
 
-    assertThat(byConfigKey)
-        .containsOnlyKeys("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)",
-            "ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
+    assertThat(byConfigKey).containsOnlyKeys(
+        "ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)",
+        "ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
 
     MethodMetadata md =
         byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZoneAccept(String,String)");
-    assertThat(md.returnType())
-        .isEqualTo(String.class);
-    assertThat(md.template())
-        .hasHeaders(entry("Authorization", asList("{authHdr}")),
-            entry("Accept", asList("application/json")));
-    // Ensure that the authHdr expansion was properly detected and did not create a formParam
-    assertThat(md.formParams())
-        .isEmpty();
+    assertThat(md.returnType()).isEqualTo(String.class);
+    assertThat(md.template()).hasHeaders(entry("Authorization", asList("{authHdr}")),
+        entry("Accept", asList("application/json")));
+    // Ensure that the authHdr expansion was properly detected and did not create a
+    // formParam
+    assertThat(md.formParams()).isEmpty();
 
     md = byConfigKey.get("ParameterizedHeaderExpandInheritedApi#getZone(String,String)");
-    assertThat(md.returnType())
-        .isEqualTo(String.class);
-    assertThat(md.template())
-        .hasHeaders(entry("Authorization", asList("{authHdr}")));
-    assertThat(md.formParams())
-        .isEmpty();
+    assertThat(md.returnType()).isEqualTo(String.class);
+    assertThat(md.template()).hasHeaders(entry("Authorization", asList("{authHdr}")));
+    assertThat(md.formParams()).isEmpty();
   }
 
   private MethodMetadata parseAndValidateMetadata(Class<?> targetType,
@@ -816,10 +751,8 @@ class DefaultContractTest {
   /** Let's help folks not lose time when they mistake request line for a URI! */
   @Test
   void missingMethod() throws Exception {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-
-      contract.parseAndValidateMetadata(MissingMethod.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> contract.parseAndValidateMetadata(MissingMethod.class));
     assertThat(exception.getMessage()).contains(
         "RequestLine annotation didn't start with an HTTP verb on method MissingMethod#updateSharing");
   }
@@ -869,17 +802,14 @@ class DefaultContractTest {
   void paramIsASubstringOfAQuery() throws Exception {
     final List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
 
-    assertThat(mds.get(0).template().queries()).containsExactly(
-        entry("q", asList("body:{body}")));
+    assertThat(mds.get(0).template().queries()).containsExactly(entry("q", asList("body:{body}")));
     assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
   }
 
   @Test
   void errorMessageOnMixedContracts() {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-
-      contract.parseAndValidateMetadata(MixedAnnotations.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> contract.parseAndValidateMetadata(MixedAnnotations.class));
     assertThat(exception.getMessage()).contains("are not used by contract Default");
   }
 
@@ -896,7 +826,6 @@ class DefaultContractTest {
   public static @interface UselessAnnotation {
     String value() default "";
   }
-
 
   class TestClock extends Clock {
 

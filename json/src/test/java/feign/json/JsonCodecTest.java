@@ -13,6 +13,14 @@
  */
 package feign.json;
 
+import static feign.Util.toByteArray;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.io.InputStream;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
@@ -20,14 +28,6 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.io.InputStream;
-import static feign.Util.toByteArray;
-import static org.assertj.core.api.Assertions.assertThat;
 
 
 interface GitHub {

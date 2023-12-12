@@ -18,13 +18,9 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -73,19 +69,18 @@ class SOAPCodecTest {
 
   @Test
   void doesntEncodeParameterizedTypes() throws Exception {
-    Throwable exception = assertThrows(UnsupportedOperationException.class, () -> {
 
-      class ParameterizedHolder {
+    class ParameterizedHolder {
 
-        @SuppressWarnings("unused")
-        Map<String, ?> field;
-      }
-      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+      @SuppressWarnings("unused")
+      Map<String, ?> field;
+    }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
-      RequestTemplate template = new RequestTemplate();
-      new SOAPEncoder(new JAXBContextFactory.Builder().build())
-          .encode(Collections.emptyMap(), parameterized, template);
-    });
+    RequestTemplate template = new RequestTemplate();
+    Throwable exception = assertThrows(UnsupportedOperationException.class,
+        () -> new SOAPEncoder(new JAXBContextFactory.Builder().build())
+            .encode(Collections.emptyMap(), parameterized, template));
     assertThat(exception.getMessage()).contains(
         "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
   }
@@ -301,33 +296,33 @@ class SOAPCodecTest {
 
   @Test
   void doesntDecodeParameterizedTypes() throws Exception {
-    Throwable exception = assertThrows(feign.codec.DecodeException.class, () -> {
 
-      class ParameterizedHolder {
+    class ParameterizedHolder {
 
-        @SuppressWarnings("unused")
-        Map<String, ?> field;
-      }
-      Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
+      @SuppressWarnings("unused")
+      Map<String, ?> field;
+    }
+    Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
-      Response response = Response.builder()
-          .status(200)
-          .reason("OK")
-          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-          .headers(Collections.emptyMap())
-          .body("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
-              + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-              + "<Header/>"
-              + "<Body>"
-              + "<GetPrice>"
-              + "<Item>Apples</Item>"
-              + "</GetPrice>"
-              + "</Body>"
-              + "</Envelope>", UTF_8)
-          .build();
+    Response response = Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(Collections.emptyMap())
+        .body("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+            + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+            + "<Header/>"
+            + "<Body>"
+            + "<GetPrice>"
+            + "<Item>Apples</Item>"
+            + "</GetPrice>"
+            + "</Body>"
+            + "</Envelope>", UTF_8)
+        .build();
 
-      new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, parameterized);
-    });
+    Throwable exception = assertThrows(feign.codec.DecodeException.class,
+        () -> new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response,
+            parameterized));
     assertThat(exception.getMessage())
         .contains("java.util.Map is an interface, and JAXB can't handle interfaces.\n"
             + "\tthis problem is related to the following location:\n"

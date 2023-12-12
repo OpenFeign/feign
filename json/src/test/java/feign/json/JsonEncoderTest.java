@@ -13,17 +13,17 @@
  */
 package feign.json;
 
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.time.Clock;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
-import java.time.Clock;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
 
 class JsonEncoderTest {
 

@@ -13,23 +13,23 @@
  */
 package feign.okhttp;
 
-import feign.Feign.Builder;
-import feign.Headers;
-import feign.RequestLine;
-import feign.Response;
-import feign.Request;
-import feign.Util;
-import feign.assertj.MockWebServerAssertions;
-import feign.client.AbstractClientTest;
-import feign.Feign;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import mockwebserver3.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.Headers;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import feign.assertj.MockWebServerAssertions;
+import feign.client.AbstractClientTest;
+import mockwebserver3.MockResponse;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest extends AbstractClientTest {

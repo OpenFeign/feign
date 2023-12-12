@@ -13,11 +13,11 @@
  */
 package feign.micrometer;
 
+import org.junit.jupiter.api.BeforeEach;
 import feign.AsyncFeign;
 import feign.Feign;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.jupiter.api.BeforeEach;
 
 class MicrometerObservationRegistryCapabilityTest extends MicrometerCapabilityTest {
 

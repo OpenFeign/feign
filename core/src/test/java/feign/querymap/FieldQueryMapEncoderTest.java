@@ -13,14 +13,14 @@
  */
 package feign.querymap;
 
-import feign.Param;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import feign.Param;
 import feign.QueryMapEncoder;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test for {@link FieldQueryMapEncoder}

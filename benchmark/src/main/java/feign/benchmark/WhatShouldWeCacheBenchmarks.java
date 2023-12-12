@@ -23,7 +23,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,17 +61,15 @@ public class WhatShouldWeCacheBenchmarks {
         return cached;
       }
     };
-    fakeClient = new Client() {
-      public Response execute(Request request, Request.Options options) throws IOException {
-        Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
-        return Response.builder()
-            .body((byte[]) null)
-            .status(200)
-            .headers(headers)
-            .reason("ok")
-            .request(request)
-            .build();
-      }
+    fakeClient = (request, options) -> {
+      Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+      return Response.builder()
+          .body((byte[]) null)
+          .status(200)
+          .headers(headers)
+          .reason("ok")
+          .request(request)
+          .build();
     };
     cachedFakeFeign = Feign.builder().client(fakeClient).build();
     cachedFakeApi = cachedFakeFeign.newInstance(

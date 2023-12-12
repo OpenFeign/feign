@@ -13,19 +13,18 @@
  */
 package feign.moshi;
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
-import feign.Request;
-import feign.Response;
-import feign.Util;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import static feign.Util.UTF_8;
-import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
+import feign.Request;
+import feign.Response;
+import feign.Util;
 
 class MoshiDecoderTest {
 

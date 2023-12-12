@@ -13,17 +13,15 @@
  */
 package feign;
 
+import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import com.google.gson.reflect.TypeToken;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.List;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import static feign.assertj.MockWebServerAssertions.assertThat;
 
 public class BaseApiTest {
 
@@ -65,13 +63,10 @@ public class BaseApiTest {
     String baseUrl = server.url("/default").toString();
 
     Feign.builder()
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) {
-            assertThat(type)
-                .isEqualTo(new TypeToken<Entity<String, Long>>() {}.getType());
-            return null;
-          }
+        .decoder((response, type) -> {
+          assertThat(type)
+              .isEqualTo(new TypeToken<Entity<String, Long>>() {}.getType());
+          return null;
         })
         .target(MyApi.class, baseUrl).get("foo");
 
@@ -85,22 +80,14 @@ public class BaseApiTest {
     String baseUrl = server.url("/default").toString();
 
     Feign.builder()
-        .encoder(new Encoder() {
-          @Override
-          public void encode(Object object, Type bodyType, RequestTemplate template) {
-            assertThat(bodyType)
-                .isEqualTo(new TypeToken<Keys<String>>() {}.getType());
-          }
+        .encoder((object, bodyType, template) -> assertThat(bodyType)
+            .isEqualTo(new TypeToken<Keys<String>>() {}.getType()))
+        .decoder((response, type) -> {
+          assertThat(type)
+              .isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());
+          return null;
         })
-        .decoder(new Decoder() {
-          @Override
-          public Object decode(Response response, Type type) {
-            assertThat(type)
-                .isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());
-            return null;
-          }
-        })
-        .target(MyApi.class, baseUrl).getAll(new Keys<String>());
+        .target(MyApi.class, baseUrl).getAll(new Keys<>());
   }
 
   @AfterEach

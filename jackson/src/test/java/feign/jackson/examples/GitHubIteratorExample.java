@@ -13,13 +13,13 @@
  */
 package feign.jackson.examples;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Iterator;
 import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
 import feign.jackson.JacksonIteratorDecoder;
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}

@@ -13,6 +13,9 @@
  */
 package feign.metrics5;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import feign.Capability;
 import feign.Util;
 import feign.micrometer.AbstractMetricsTestBase;
@@ -20,9 +23,6 @@ import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
 
 
 public class Metrics5CapabilityTest

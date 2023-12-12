@@ -13,8 +13,8 @@
  */
 package feign;
 
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,8 +23,8 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 
 class AlwaysEncodeBodyContractTest {
 

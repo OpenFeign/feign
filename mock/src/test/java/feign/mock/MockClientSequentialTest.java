@@ -20,8 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import feign.Body;
@@ -102,13 +102,13 @@ class MockClientSequentialTest {
           .client(mockClientSequential
               .add(RequestKey
                   .builder(HttpMethod.GET, "/repos/netflix/feign/contributors")
-                  .headers(headers).build(), HttpsURLConnection.HTTP_OK, data)
+                  .headers(headers).build(), HttpURLConnection.HTTP_OK, data)
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=55",
-                  HttpsURLConnection.HTTP_NOT_FOUND)
+                  HttpURLConnection.HTTP_NOT_FOUND)
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors?client_id=7 7",
-                  HttpsURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
+                  HttpURLConnection.HTTP_INTERNAL_ERROR, new ByteArrayInputStream(data))
               .add(HttpMethod.GET, "/repos/netflix/feign/contributors",
-                  Response.builder().status(HttpsURLConnection.HTTP_OK)
+                  Response.builder().status(HttpURLConnection.HTTP_OK)
                       .headers(RequestHeaders.EMPTY).body(data)))
           .target(new MockTarget<>(GitHub.class));
     }
@@ -121,13 +121,13 @@ class MockClientSequentialTest {
       githubSequential.contributors("55", "netflix", "feign");
       fail("");
     } catch (FeignException e) {
-      assertThat(e.status()).isEqualTo(HttpsURLConnection.HTTP_NOT_FOUND);
+      assertThat(e.status()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
     }
     try {
       githubSequential.contributors("7 7", "netflix", "feign");
       fail("");
     } catch (FeignException e) {
-      assertThat(e.status()).isEqualTo(HttpsURLConnection.HTTP_INTERNAL_ERROR);
+      assertThat(e.status()).isEqualTo(HttpURLConnection.HTTP_INTERNAL_ERROR);
     }
     githubSequential.contributors("netflix", "feign");
 

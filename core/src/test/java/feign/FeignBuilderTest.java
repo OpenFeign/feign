@@ -14,10 +14,9 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -35,11 +34,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class FeignBuilderTest {
 
@@ -340,7 +341,7 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     String url = "http://localhost:" + server.getPort();
-    Decoder decoder = (response, type) -> new Iterator<Object>() {
+    Decoder decoder = (response, type) -> new Iterator<>() {
       private boolean called = false;
 
       @Override

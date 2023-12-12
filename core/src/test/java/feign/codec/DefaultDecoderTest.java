@@ -16,7 +16,6 @@ package feign.codec;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import feign.Request.HttpMethod;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
@@ -26,6 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.Response;
 import feign.Util;
 
@@ -57,31 +57,23 @@ class DefaultDecoderTest {
 
   @Test
   void refusesToDecodeOtherTypes() throws Exception {
-    Throwable exception = assertThrows(DecodeException.class, () -> {
-
-      decoder.decode(knownResponse(), Document.class);
-    });
+    Throwable exception = assertThrows(DecodeException.class,
+        () -> decoder.decode(knownResponse(), Document.class));
     assertThat(exception.getMessage()).contains(" is not a type supported by this decoder.");
   }
 
   private Response knownResponse() {
     String content = "response body";
     InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Collections.singleton("text/plain"));
-    return Response.builder()
-        .status(200)
-        .reason("OK")
-        .headers(headers)
+    return Response.builder().status(200).reason("OK").headers(headers)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-        .body(inputStream, content.length())
-        .build();
+        .body(inputStream, content.length()).build();
   }
 
   private Response nullBodyResponse() {
-    return Response.builder()
-        .status(200)
-        .reason("OK")
+    return Response.builder().status(200).reason("OK")
         .headers(Collections.<String, Collection<String>>emptyMap())
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .build();

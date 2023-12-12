@@ -13,13 +13,13 @@
  */
 package feign;
 
-import java.util.List;
-import org.junit.jupiter.api.Test;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests interface inheritance defined per {@link Contract.Default} are interpreted into expected
@@ -46,19 +46,15 @@ class DefaultContractInheritanceTest {
 
     assertThat(md).hasSize(1);
 
-    assertThat(md.get(0).configKey())
-        .isEqualTo("SimpleParameterizedApi#get(String)");
-    assertThat(md.get(0).returnType())
-        .isEqualTo(String.class);
-    assertThat(md.get(0).template())
-        .hasHeaders(entry("Foo", asList("Bar")));
+    assertThat(md.get(0).configKey()).isEqualTo("SimpleParameterizedApi#get(String)");
+    assertThat(md.get(0).returnType()).isEqualTo(String.class);
+    assertThat(md.get(0).template()).hasHeaders(entry("Foo", asList("Bar")));
   }
 
   @Test
   void parameterizedApiUnsupported() throws Exception {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-      contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class));
     assertThat(exception.getMessage())
         .contains("Parameterized types unsupported: SimpleParameterizedBaseApi");
   }
@@ -79,6 +75,7 @@ class DefaultContractInheritanceTest {
 
   interface OverrideSimpleApi extends SimpleBaseApi {
 
+    @Override
     @RequestLine("GET /api/v2/{zoneId}")
     String get(@Param("key") String key);
   }
@@ -158,9 +155,8 @@ class DefaultContractInheritanceTest {
 
   @Test
   void multipleInheritanceDoneWrong() {
-    Throwable exception = assertThrows(IllegalStateException.class, () -> {
-      contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class);
-    });
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class));
     assertThat(exception.getMessage())
         .contains("Only single inheritance supported: MultipleInheritanceDoneWrong");
   }

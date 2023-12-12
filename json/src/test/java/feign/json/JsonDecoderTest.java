@@ -19,9 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import feign.Request;
-import feign.Response;
-import feign.codec.DecodeException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -31,6 +28,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import feign.Request;
+import feign.Response;
+import feign.codec.DecodeException;
 
 class JsonDecoderTest {
 

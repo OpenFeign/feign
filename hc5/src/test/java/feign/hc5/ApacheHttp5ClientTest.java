@@ -15,15 +15,15 @@ package feign.hc5;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;

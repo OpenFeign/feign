@@ -13,6 +13,7 @@
  */
 package feign.reactive.examples;
 
+import java.util.List;
 import feign.Logger;
 import feign.Param;
 import feign.RequestLine;
@@ -21,7 +22,6 @@ import feign.reactive.ReactorDecoder;
 import feign.reactive.ReactorFeign;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import java.util.List;
 
 /**
  * adapted from {@code com.example.retrofit.GitHubClient}

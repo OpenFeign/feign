@@ -14,11 +14,11 @@
 package feign.example.github;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.io.File;
+import java.util.Arrays;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.junit.jupiter.api.Test;
-import java.io.File;
-import java.util.Arrays;
 
 /**
  * Run main for {@link GitHubExampleIT}

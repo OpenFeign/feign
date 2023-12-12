@@ -14,9 +14,7 @@
 package feign.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import feign.Util;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import feign.Util;
 
 class UriTemplateTest {
 
@@ -36,9 +35,7 @@ class UriTemplateTest {
 
   @Test
   void nullTemplate() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      UriTemplate.create(null, Util.UTF_8);
-    });
+    assertThrows(IllegalArgumentException.class, () -> UriTemplate.create(null, Util.UTF_8));
   }
 
   @Test
@@ -145,24 +142,23 @@ class UriTemplateTest {
 
   @Test
   void simpleTemplateWithRegularExpressionsValidation() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      String template = "https://www.example.com/{foo:[0-9]{4}}/{bar}";
-      UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
-      assertThat(uriTemplate.getVariables()).contains("foo", "bar").hasSize(2);
+    String template = "https://www.example.com/{foo:[0-9]{4}}/{bar}";
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    assertThat(uriTemplate.getVariables()).contains("foo", "bar").hasSize(2);
 
-      Map<String, Object> variables = new LinkedHashMap<>();
-      variables.put("foo", "abcd");
-      variables.put("bar", "stuff");
+    Map<String, Object> variables = new LinkedHashMap<>();
+    variables.put("foo", "abcd");
+    variables.put("bar", "stuff");
 
-      /* the foo variable must be a number and no more than four, this should fail */
-      uriTemplate.expand(variables);
-      fail("Should not be able to expand, pattern does not match");
-    });
+    /* the foo variable must be a number and no more than four, this should fail */
+    assertThrows(IllegalArgumentException.class, () -> uriTemplate.expand(variables));
   }
 
   @Test
   void nestedExpressionsAreLiterals() {
-    /* the template of {foo{bar}}, will be treated as literals as nested templates are ignored */
+    /*
+     * the template of {foo{bar}}, will be treated as literals as nested templates are ignored
+     */
     String template = "https://www.example.com/{foo{bar}}/{baz}";
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     assertThat(uriTemplate.getVariables()).contains("baz").hasSize(1);
@@ -172,8 +168,8 @@ class UriTemplateTest {
     String expandedTemplate = uriTemplate.expand(variables);
     assertThat(expandedTemplate)
         .isEqualToIgnoringCase("https://www.example.com/%7Bfoo%7Bbar%7D%7D/stuff");
-    assertThat(URI.create(expandedTemplate))
-        .isNotNull(); // this should fail, the result is not a valid uri
+    assertThat(URI.create(expandedTemplate)).isNotNull(); // this should fail, the result is not a
+                                                          // valid uri
   }
 
   @Test
@@ -187,11 +183,8 @@ class UriTemplateTest {
 
   @Test
   void rejectEmptyExpressions() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      String template = "https://www.example.com/{}/things";
-      UriTemplate.create(template, Util.UTF_8);
-      fail("Should not accept empty expressions");
-    });
+    String template = "https://www.example.com/{}/things";
+    assertThrows(IllegalArgumentException.class, () -> UriTemplate.create(template, Util.UTF_8));
   }
 
   @Test
@@ -218,8 +211,7 @@ class UriTemplateTest {
     String template = "https://www.example.com/A Team";
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expandedTemplate = uriTemplate.expand(Collections.emptyMap());
-    assertThat(expandedTemplate)
-        .isEqualToIgnoringCase("https://www.example.com/A%20Team");
+    assertThat(expandedTemplate).isEqualToIgnoringCase("https://www.example.com/A%20Team");
   }
 
   @Test
@@ -249,9 +241,8 @@ class UriTemplateTest {
 
   @Test
   void substituteNullMap() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      UriTemplate.create("stuff", Util.UTF_8).expand(null);
-    });
+    assertThrows(IllegalArgumentException.class,
+        () -> UriTemplate.create("stuff", Util.UTF_8).expand(null));
   }
 
   @Test
@@ -259,8 +250,7 @@ class UriTemplateTest {
     String template = "https://www.example.com/A%20Team";
     UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
     String expandedTemplate = uriTemplate.expand(Collections.emptyMap());
-    assertThat(expandedTemplate)
-        .isEqualToIgnoringCase("https://www.example.com/A%20Team");
+    assertThat(expandedTemplate).isEqualToIgnoringCase("https://www.example.com/A%20Team");
   }
 
   @Test

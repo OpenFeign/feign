@@ -13,17 +13,17 @@
  */
 package feign.hystrix;
 
-import feign.FeignException;
-import feign.RequestLine;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import static feign.assertj.MockWebServerAssertions.assertThat;
+import feign.FeignException;
+import feign.RequestLine;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class FallbackFactoryTest {
 
@@ -73,17 +73,12 @@ public class FallbackFactoryTest {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     // lambda factory
-    api = target(throwable -> new FallbackApiWithCtor(throwable));
+    api = target(FallbackApiWithCtor::new);
 
     server.enqueue(new MockResponse().setResponseCode(500));
 
     // old school
-    api = target(new FallbackFactory<TestInterface>() {
-      @Override
-      public TestInterface create(Throwable cause) {
-        return new FallbackApiWithCtor(cause);
-      }
-    });
+    api = target(FallbackApiWithCtor::new);
 
     assertThat(api.invoke()).isEqualTo("foo");
   }

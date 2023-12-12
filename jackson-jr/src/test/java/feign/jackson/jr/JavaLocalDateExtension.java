@@ -13,6 +13,9 @@
  */
 package feign.jackson.jr;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
@@ -22,9 +25,6 @@ import com.fasterxml.jackson.jr.ob.api.ValueReader;
 import com.fasterxml.jackson.jr.ob.api.ValueWriter;
 import com.fasterxml.jackson.jr.ob.impl.JSONReader;
 import com.fasterxml.jackson.jr.ob.impl.JSONWriter;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Adapted from https://www.andersaaberg.dk/2020/enable-support-for-java-time-with-jackson-jr/ This

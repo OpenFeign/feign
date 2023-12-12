@@ -13,18 +13,18 @@
  */
 package feign.codec;
 
-import feign.FeignException;
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Response;
-import feign.Util;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
+import feign.FeignException;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.Response;
+import feign.Util;
 
 @SuppressWarnings("deprecation")
 public class DefaultErrorDecoderHttpErrorTest {

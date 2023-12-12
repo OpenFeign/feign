@@ -13,13 +13,13 @@
  */
 package feign;
 
-import java.lang.reflect.Method;
 import static org.assertj.core.api.Assertions.assertThat;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;

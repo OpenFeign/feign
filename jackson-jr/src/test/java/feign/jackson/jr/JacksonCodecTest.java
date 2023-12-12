@@ -13,6 +13,23 @@
  */
 package feign.jackson.jr;
 
+import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
 import feign.Request;
@@ -20,15 +37,6 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.*;
-import org.junit.jupiter.api.Test;
-import static feign.Util.UTF_8;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class JacksonCodecTest {
 
@@ -58,7 +66,7 @@ class JacksonCodecTest {
 
   @Test
   void encodesFormParams() {
-    Map<String, Object> form = new LinkedHashMap<String, Object>();
+    Map<String, Object> form = new LinkedHashMap<>();
     form.put("foo", 1);
     form.put("bar", Arrays.asList(2, 3));
 
@@ -173,7 +181,7 @@ class JacksonCodecTest {
   void decoderCharset() throws IOException {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
-    Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
 
     Response response = Response.builder()

@@ -13,13 +13,13 @@
  */
 package feign.assertj;
 
+import static feign.Util.UTF_8;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
 import feign.RequestTemplate;
-import static feign.Util.UTF_8;
 
 public final class RequestTemplateAssert
     extends AbstractAssert<RequestTemplateAssert, RequestTemplate> {

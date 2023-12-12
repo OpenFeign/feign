@@ -13,11 +13,18 @@
  */
 package feign.error;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
-import static feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.*;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.ClassLevelDefaultException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.ClassLevelNotFoundException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.Method1DefaultException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.Method1NotFoundException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.Method2NotFoundException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.Method3DefaultException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.ServeErrorException;
+import feign.error.AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority.UnauthenticatedOrUnauthorizedException;
 
 public class AnnotationErrorDecoderPriorityTest extends
     AbstractAnnotationErrorDecoderTest<AnnotationErrorDecoderPriorityTest.TestClientInterfaceWithExceptionPriority> {

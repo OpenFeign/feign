@@ -13,12 +13,12 @@
  */
 package feign.error;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest extends
     AbstractAnnotationErrorDecoderTest<AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest.SecondLevelInterface> {
@@ -86,15 +86,18 @@ public class AnnotationErrorDecoderInheritanceMethodLevelAnnotationTest extends
   }
 
   interface SecondLevelInterface extends TopLevelInterface {
+    @Override
     @SecondLevelMethodErrorHandling
     void topLevelMethod2();
 
+    @Override
     @ErrorHandling(
         codeSpecific = {
             @ErrorCodes(codes = {404}, generate = MethodSecondLevelErrorHandlingException.class)},
         defaultException = MethodSecondLevelDefaultException.class)
     void topLevelMethod3();
 
+    @Override
     @SecondLevelMethodErrorHandling
     void topLevelMethod4();
   }

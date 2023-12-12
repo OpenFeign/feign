@@ -13,16 +13,16 @@
  */
 package feign.hystrix;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.IOException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import feign.RequestLine;
-import java.io.IOException;
-import static org.assertj.core.api.Assertions.assertThat;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 
@@ -52,9 +52,7 @@ public class SetterFactoryTest {
         .setterFactory(commandKeyIsRequestLine)
         .target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Throwable exception = assertThrows(HystrixRuntimeException.class, () -> {
-      api.invoke();
-    });
+    Throwable exception = assertThrows(HystrixRuntimeException.class, () -> api.invoke());
     assertThat(exception.getMessage()).contains("POST / failed and no fallback available.");
   }
 

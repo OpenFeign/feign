@@ -18,13 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Response;
-import feign.Util;
-import feign.codec.DecodeException;
-import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +26,13 @@ import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.Response;
+import feign.Util;
+import feign.codec.DecodeException;
+import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 
 @SuppressWarnings("deprecation")
 class JacksonIteratorTest {
@@ -75,10 +75,10 @@ class JacksonIteratorTest {
 
   @Test
   void malformedObjectThrowsDecodeException() throws IOException {
-    DecodeException exception = assertThrows(DecodeException.class, () -> {
-      assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe...")).toIterable()
-          .containsOnly(new User("bob"));
-    });
+    DecodeException exception = assertThrows(DecodeException.class,
+        () -> assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
+            .toIterable()
+            .containsOnly(new User("bob")));
     assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
@@ -142,9 +142,8 @@ class JacksonIteratorTest {
         .body(inputStream, jsonBytes.length)
         .build();
 
-    assertThrows(DecodeException.class, () -> {
-      assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1);
-    });
+    assertThrows(DecodeException.class,
+        () -> assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1));
 
     assertThat(closed.get()).isTrue();
   }
@@ -174,7 +173,7 @@ class JacksonIteratorTest {
   }
 
   <T> JacksonIterator<T> iterator(Class<T> type, Response response) throws IOException {
-    return new JacksonIterator<T>(type.getGenericSuperclass(), new ObjectMapper(),
+    return new JacksonIterator<>(type.getGenericSuperclass(), new ObjectMapper(),
         response, response.body().asReader());
   }
 

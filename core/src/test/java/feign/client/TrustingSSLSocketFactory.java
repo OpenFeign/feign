@@ -26,7 +26,13 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509KeyManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Used for ssl tests to simplify setup.
@@ -35,7 +41,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
     implements X509TrustManager, X509KeyManager {
 
   private static final Map<String, SSLSocketFactory> sslSocketFactories =
-      new LinkedHashMap<String, SSLSocketFactory>();
+      new LinkedHashMap<>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
   private final static String[] ENABLED_CIPHER_SUITES = {"TLS_RSA_WITH_AES_256_CBC_SHA"};
   private final SSLSocketFactory delegate;
@@ -134,12 +140,15 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
     return setEnabledCipherSuites(delegate.createSocket(address, port, localAddress, localPort));
   }
 
+  @Override
   public X509Certificate[] getAcceptedIssuers() {
     return null;
   }
 
+  @Override
   public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
+  @Override
   public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 
   @Override

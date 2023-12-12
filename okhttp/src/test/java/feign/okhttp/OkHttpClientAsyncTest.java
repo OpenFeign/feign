@@ -42,10 +42,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import feign.AsyncClient;
 import feign.AsyncFeign;
 import feign.Body;
@@ -161,7 +161,7 @@ public class OkHttpClientAsyncTest {
   void bodyTypeCorrespondsWithParameterType() throws Exception {
     server.enqueue(new MockResponse().setBody("foo"));
 
-    final AtomicReference<Type> encodedType = new AtomicReference<Type>();
+    final AtomicReference<Type> encodedType = new AtomicReference<>();
     final TestInterfaceAsync api = newAsyncBuilder().encoder(new Encoder.Default() {
       @Override
       public void encode(Object object, Type bodyType, RequestTemplate template) {
@@ -262,7 +262,7 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    final Map<String, Object> headerMap = new LinkedHashMap<>();
     headerMap.put("Content-Type", "myContent");
     headerMap.put("Custom-Header", "fooValue");
     final CompletableFuture<?> cf = api.headerMap(headerMap);
@@ -280,7 +280,7 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final Map<String, Object> headerMap = new LinkedHashMap<String, Object>();
+    final Map<String, Object> headerMap = new LinkedHashMap<>();
     headerMap.put("Custom-Header", "fooValue");
     api.headerMapWithHeaderAnnotations(headerMap);
 
@@ -311,7 +311,7 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    final Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", "alice");
     queryMap.put("fooKey", "fooValue");
     final CompletableFuture<?> cf = api.queryMap(queryMap);
@@ -328,10 +328,10 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
-    final Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    final Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
-    queryMap.put("emptyListKey", new ArrayList<String>());
+    queryMap.put("emptyListKey", new ArrayList<>());
     queryMap.put("emptyStringKey", ""); // empty values are ignored.
     final CompletableFuture<?> cf = api.queryMap(queryMap);
 
@@ -347,21 +347,21 @@ public class OkHttpClientAsyncTest {
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("fooKey", "fooValue");
     api.queryMapWithQueryParams("alice", queryMap);
     // query map should be expanded after built-in parameters
     assertThat(server.takeRequest()).hasPath("/?name=alice&fooKey=fooValue");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
+    queryMap = new LinkedHashMap<>();
     queryMap.put("name", "bob");
     api.queryMapWithQueryParams("alice", queryMap);
     // queries are additive
     assertThat(server.takeRequest()).hasPath("/?name=alice&name=bob");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
+    queryMap = new LinkedHashMap<>();
     queryMap.put("name", null);
     api.queryMapWithQueryParams("alice", queryMap);
     // null value for a query map key removes query parameter
@@ -374,25 +374,25 @@ public class OkHttpClientAsyncTest {
         newAsyncBuilder().target("http://localhost:" + server.getPort());
 
     server.enqueue(new MockResponse());
-    Map<String, Object> queryMap = new LinkedHashMap<String, Object>();
+    Map<String, Object> queryMap = new LinkedHashMap<>();
     queryMap.put("name", "{alice");
     api.queryMap(queryMap);
     assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
+    queryMap = new LinkedHashMap<>();
     queryMap.put("{name", "alice");
     api.queryMap(queryMap);
     assertThat(server.takeRequest()).hasPath("/?%7Bname=alice");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
+    queryMap = new LinkedHashMap<>();
     queryMap.put("name", "%7Balice");
     api.queryMapEncoded(queryMap);
     assertThat(server.takeRequest()).hasPath("/?name=%7Balice");
 
     server.enqueue(new MockResponse());
-    queryMap = new LinkedHashMap<String, Object>();
+    queryMap = new LinkedHashMap<>();
     queryMap.put("%7Bname", "%7Balice");
     api.queryMapEncoded(queryMap);
     assertThat(server.takeRequest()).hasPath("/?%7Bname=%7Balice");
@@ -443,7 +443,8 @@ public class OkHttpClientAsyncTest {
         TestInterfaceAsync.class.getDeclaredMethod("post"))).isEqualTo("TestInterfaceAsync#post()");
     assertThat(Feign.configKey(TestInterfaceAsync.class,
         TestInterfaceAsync.class.getDeclaredMethod("uriParam", String.class, URI.class,
-            String.class))).isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
+            String.class)))
+                .isEqualTo("TestInterfaceAsync#uriParam(String,URI,String)");
   }
 
   @Test
@@ -462,15 +463,13 @@ public class OkHttpClientAsyncTest {
 
   @Test
   void canOverrideErrorDecoder() throws Throwable {
-    Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-      server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
+    server.enqueue(new MockResponse().setResponseCode(400).setBody("foo"));
 
-      final TestInterfaceAsync api =
-          newAsyncBuilder().errorDecoder(new IllegalArgumentExceptionOn400())
-              .target("http://localhost:" + server.getPort());
+    final TestInterfaceAsync api =
+        newAsyncBuilder().errorDecoder(new IllegalArgumentExceptionOn400())
+            .target("http://localhost:" + server.getPort());
 
-      unwrap(api.post());
-    });
+    Throwable exception = assertThrows(IllegalArgumentException.class, () -> unwrap(api.post()));
     assertThat(exception.getMessage()).contains("bad zone name");
   }
 
@@ -486,17 +485,15 @@ public class OkHttpClientAsyncTest {
 
   @Test
   void doesntRetryAfterResponseIsSent() throws Throwable {
-    Throwable exception = assertThrows(FeignException.class, () -> {
-      server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse().setBody("success!"));
 
-      final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
-        throw new IOException("timeout");
-      }).target("http://localhost:" + server.getPort());
+    final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
+      throw new IOException("timeout");
+    }).target("http://localhost:" + server.getPort());
 
-      final CompletableFuture<?> cf = api.post();
-      server.takeRequest();
-      unwrap(cf);
-    });
+    final CompletableFuture<?> cf = api.post();
+    server.takeRequest();
+    Throwable exception = assertThrows(FeignException.class, () -> unwrap(cf));
     assertThat(exception.getMessage()).contains("timeout reading POST http://");
   }
 
@@ -541,7 +538,7 @@ public class OkHttpClientAsyncTest {
   @SuppressWarnings("deprecation")
   @Test
   void whenReturnTypeIsResponseNoErrorHandling() throws Throwable {
-    final Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+    final Map<String, Collection<String>> headers = new LinkedHashMap<>();
     headers.put("Location", Arrays.asList("http://bar.com"));
     final Response response = Response.builder().status(302).reason("Found").headers(headers)
         .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
@@ -562,15 +559,13 @@ public class OkHttpClientAsyncTest {
 
   @Test
   void okIfDecodeRootCauseHasNoMessage() throws Throwable {
-    assertThrows(DecodeException.class, () -> {
-      server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse().setBody("success!"));
 
-      final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
-        throw new RuntimeException();
-      }).target("http://localhost:" + server.getPort());
+    final TestInterfaceAsync api = newAsyncBuilder().decoder((response, type) -> {
+      throw new RuntimeException();
+    }).target("http://localhost:" + server.getPort());
 
-      unwrap(api.post());
-    });
+    assertThrows(DecodeException.class, () -> unwrap(api.post()));
   }
 
   @Test
@@ -583,9 +578,7 @@ public class OkHttpClientAsyncTest {
           throw new NoSuchElementException();
         }).target("http://localhost:" + server.getPort());
 
-    DecodeException exception = assertThrows(DecodeException.class, () -> {
-      unwrap(api.post());
-    });
+    DecodeException exception = assertThrows(DecodeException.class, () -> unwrap(api.post()));
     assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
   }
 
@@ -606,28 +599,26 @@ public class OkHttpClientAsyncTest {
 
   @Test
   void okIfEncodeRootCauseHasNoMessage() throws Throwable {
-    assertThrows(EncodeException.class, () -> {
-      server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse().setBody("success!"));
 
-      final TestInterfaceAsync api =
-          newAsyncBuilder().encoder((object, bodyType, template) -> {
-            throw new RuntimeException();
-          }).target("http://localhost:" + server.getPort());
+    final TestInterfaceAsync api =
+        newAsyncBuilder().encoder((object, bodyType, template) -> {
+          throw new RuntimeException();
+        }).target("http://localhost:" + server.getPort());
 
-      unwrap(api.body(Arrays.asList("foo")));
-    });
+    assertThrows(EncodeException.class, () -> unwrap(api.body(Arrays.asList("foo"))));
   }
 
   @Test
   void equalsHashCodeAndToStringWork() {
     final Target<TestInterfaceAsync> t1 =
-        new HardCodedTarget<TestInterfaceAsync>(TestInterfaceAsync.class,
+        new HardCodedTarget<>(TestInterfaceAsync.class,
             "http://localhost:8080");
     final Target<TestInterfaceAsync> t2 =
-        new HardCodedTarget<TestInterfaceAsync>(TestInterfaceAsync.class,
+        new HardCodedTarget<>(TestInterfaceAsync.class,
             "http://localhost:8888");
     final Target<OtherTestInterfaceAsync> t3 =
-        new HardCodedTarget<OtherTestInterfaceAsync>(OtherTestInterfaceAsync.class,
+        new HardCodedTarget<>(OtherTestInterfaceAsync.class,
             "http://localhost:8080");
     final TestInterfaceAsync i1 = newAsyncBuilder().target(t1);
     final TestInterfaceAsync i2 = newAsyncBuilder().target(t1);
@@ -718,17 +709,13 @@ public class OkHttpClientAsyncTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return new ResponseMapper() {
-      @SuppressWarnings("deprecation")
-      @Override
-      public Response map(Response response, Type type) {
-        try {
-          return response.toBuilder()
-              .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
-              .build();
-        } catch (final IOException e) {
-          throw new RuntimeException(e);
-        }
+    return (response, type) -> {
+      try {
+        return response.toBuilder()
+            .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
+            .build();
+      } catch (final IOException e) {
+        throw new RuntimeException(e);
       }
     };
   }

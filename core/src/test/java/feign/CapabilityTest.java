@@ -14,10 +14,10 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import feign.Request.Options;
 import java.io.IOException;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
+import feign.Request.Options;
 
 class CapabilityTest {
 

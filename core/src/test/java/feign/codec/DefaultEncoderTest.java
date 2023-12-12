@@ -13,13 +13,13 @@
  */
 package feign.codec;
 
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.Clock;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import feign.RequestTemplate;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DefaultEncoderTest {
 
@@ -43,10 +43,8 @@ class DefaultEncoderTest {
 
   @Test
   void refusesToEncodeOtherTypes() throws Exception {
-    Throwable exception = assertThrows(EncodeException.class, () -> {
-
-      encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate());
-    });
+    Throwable exception = assertThrows(EncodeException.class,
+        () -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()));
     assertThat(exception.getMessage()).contains("is not a type supported by this encoder.");
   }
 }

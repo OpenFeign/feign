@@ -15,13 +15,19 @@ package feign.http2client.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import java.io.IOException;
-import java.net.ProtocolException;
 import java.net.http.HttpTimeoutException;
 import java.util.concurrent.TimeUnit;
-import feign.*;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import feign.Body;
+import feign.Feign;
+import feign.FeignException;
+import feign.Headers;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
+import feign.Retryer;
 import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
 import mockwebserver3.MockResponse;
@@ -117,9 +123,7 @@ public class Http2ClientTest extends AbstractClientTest {
         .options(new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.SECONDS, true))
         .target(TestInterface.class, server.url("/").toString());
 
-    FeignException exception = assertThrows(FeignException.class, () -> {
-      api.timeout();
-    });
+    FeignException exception = assertThrows(FeignException.class, () -> api.timeout());
     assertThat(exception).hasCauseInstanceOf(HttpTimeoutException.class);
   }
 

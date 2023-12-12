@@ -14,9 +14,9 @@
 package feign.template;
 
 
-import org.junit.jupiter.api.Test;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class UriUtilsTest {
 

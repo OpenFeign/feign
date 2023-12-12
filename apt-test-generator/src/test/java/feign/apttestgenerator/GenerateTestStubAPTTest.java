@@ -15,10 +15,10 @@ package feign.apttestgenerator;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.JavaFileObjects;
 import java.io.File;
 import org.junit.jupiter.api.Test;
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.JavaFileObjects;
 
 /**
  * Test for {@link GenerateTestStubAPT}

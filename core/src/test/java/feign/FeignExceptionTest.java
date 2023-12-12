@@ -13,28 +13,28 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class FeignExceptionTest {
 
   @Test
   void canCreateWithRequestAndResponse() {
-    Request request = Request.create(Request.HttpMethod.GET,
-        "/home", Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_8),
-        StandardCharsets.UTF_8,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8, null);
 
-    Response response = Response.builder()
-        .status(400)
-        .body("response".getBytes(StandardCharsets.UTF_8))
-        .request(request)
-        .build();
+    Response response =
+        Response.builder().status(400).body("response".getBytes(StandardCharsets.UTF_8))
+            .request(request).build();
 
     FeignException exception =
         FeignException.errorReading(request, response, new IOException("socket closed"));
@@ -45,11 +45,8 @@ class FeignExceptionTest {
 
   @Test
   void canCreateWithRequestOnly() {
-    Request request = Request.create(Request.HttpMethod.GET,
-        "/home", Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_8),
-        StandardCharsets.UTF_8,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8, null);
 
     FeignException exception =
         FeignException.errorExecuting(request, new IOException("connection timeout"));
@@ -67,18 +64,12 @@ class FeignExceptionTest {
     map.put("content-type",
         new ArrayList<>(Collections.singletonList("application/json;charset=UTF-16BE")));
 
-    Request request = Request.create(Request.HttpMethod.GET,
-        "/home", Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_16BE),
-        StandardCharsets.UTF_16BE,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_16BE), StandardCharsets.UTF_16BE, null);
 
-    Response response = Response.builder()
-        .status(400)
-        .body("response".getBytes(StandardCharsets.UTF_16BE))
-        .headers(map)
-        .request(request)
-        .build();
+    Response response =
+        Response.builder().status(400).body("response".getBytes(StandardCharsets.UTF_16BE))
+            .headers(map).request(request).build();
 
     FeignException exception = FeignException.errorStatus("methodKey", response);
     assertThat(exception.getMessage())
@@ -93,18 +84,12 @@ class FeignExceptionTest {
     map.put("content-type",
         new ArrayList<>(Collections.singletonList("application/json;charset=UTF-8")));
 
-    Request request = Request.create(Request.HttpMethod.GET,
-        "/home", Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_16BE),
-        StandardCharsets.UTF_16BE,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_16BE), StandardCharsets.UTF_16BE, null);
 
-    Response response = Response.builder()
-        .status(400)
-        .body("response".getBytes(StandardCharsets.UTF_16BE))
-        .headers(map)
-        .request(request)
-        .build();
+    Response response =
+        Response.builder().status(400).body("response".getBytes(StandardCharsets.UTF_16BE))
+            .headers(map).request(request).build();
 
     FeignException exception = FeignException.errorStatus("methodKey", response);
     assertThat(exception.getMessage())
@@ -113,68 +98,46 @@ class FeignExceptionTest {
 
   @Test
   void canGetResponseHeadersFromException() {
-    Request request = Request.create(
-        Request.HttpMethod.GET,
-        "/home",
-        Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_8),
-        StandardCharsets.UTF_8,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8, null);
 
     Map<String, Collection<String>> responseHeaders = new HashMap<>();
     responseHeaders.put("Content-Type", Collections.singletonList("text/plain"));
     responseHeaders.put("Cookie", Arrays.asList("cookie1", "cookie2"));
 
-    Response response = Response.builder()
-        .request(request)
-        .body("some text", StandardCharsets.UTF_8)
-        .headers(responseHeaders)
-        .build();
+    Response response =
+        Response.builder().request(request).body("some text", StandardCharsets.UTF_8)
+            .headers(responseHeaders).build();
 
     FeignException exception = FeignException.errorStatus("methodKey", response);
-    assertThat(exception.responseHeaders())
-        .hasEntrySatisfying("Content-Type", value -> {
-          assertThat(value).contains("text/plain");
-        }).hasEntrySatisfying("Cookie", value -> {
-          assertThat(value).contains("cookie1", "cookie2");
-        });
+    assertThat(exception.responseHeaders()).hasEntrySatisfying("Content-Type", value -> {
+      assertThat(value).contains("text/plain");
+    }).hasEntrySatisfying("Cookie", value -> {
+      assertThat(value).contains("cookie1", "cookie2");
+    });
   }
 
   @Test
   void lengthOfBodyExceptionTest() {
-    String bigResponse = "I love a storm in early May\n" +
-        "When springtime’s boisterous, firstborn thunder\n" +
-        "Over the sky will gaily wander\n" +
-        "And growl and roar as though in play.\n" +
-        "\n" +
-        "A peal, another — gleeful, cheering…\n" +
-        "Rain, raindust… On the trees, behold!-\n" +
-        "The drops hang, each a long pearl earring;\n" +
-        "Bright sunshine paints the thin threads gold.\n" +
-        "\n" +
-        "A stream downhill goes rushing reckless,\n" +
-        "And in the woods the birds rejoice.\n" +
-        "Din. Clamour. Noise. All nature echoes\n" +
-        "The thunder’s youthful, merry voice.\n" +
-        "\n" +
-        "You’ll say: ‘Tis laughing, carefree Hebe —\n" +
-        "She fed her father’s eagle, and\n" +
-        "The Storm Cup brimming with a seething\n" +
-        "And bubbling wine dropped from her hand";
+    String bigResponse = "I love a storm in early May\n"
+        + "When springtime’s boisterous, firstborn thunder\n"
+        + "Over the sky will gaily wander\n" + "And growl and roar as though in play.\n" + "\n"
+        + "A peal, another — gleeful, cheering…\n" + "Rain, raindust… On the trees, behold!-\n"
+        + "The drops hang, each a long pearl earring;\n"
+        + "Bright sunshine paints the thin threads gold.\n"
+        + "\n" + "A stream downhill goes rushing reckless,\n"
+        + "And in the woods the birds rejoice.\n"
+        + "Din. Clamour. Noise. All nature echoes\n" + "The thunder’s youthful, merry voice.\n"
+        + "\n"
+        + "You’ll say: ‘Tis laughing, carefree Hebe —\n" + "She fed her father’s eagle, and\n"
+        + "The Storm Cup brimming with a seething\n" + "And bubbling wine dropped from her hand";
 
-    Request request = Request.create(
-        Request.HttpMethod.GET,
-        "/home",
-        Collections.emptyMap(),
-        "data".getBytes(StandardCharsets.UTF_8),
-        StandardCharsets.UTF_8,
-        null);
+    Request request = Request.create(Request.HttpMethod.GET, "/home", Collections.emptyMap(),
+        "data".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8, null);
 
-    Response response = Response.builder()
-        .status(400)
-        .request(request)
-        .body(bigResponse, StandardCharsets.UTF_8)
-        .build();
+    Response response =
+        Response.builder().status(400).request(request).body(bigResponse, StandardCharsets.UTF_8)
+            .build();
 
     FeignException defaultException = FeignException.errorStatus("methodKey", response);
     assertThat(defaultException.getMessage().length()).isLessThan(bigResponse.length());
@@ -187,30 +150,26 @@ class FeignExceptionTest {
 
   @Test
   void nullRequestShouldThrowNPEwThrowable() {
-    assertThrows(NullPointerException.class, () -> {
-      new Derived(404, "message", null, new Throwable());
-    });
+    assertThrows(NullPointerException.class,
+        () -> new Derived(404, "message", null, new Throwable()));
   }
 
   @Test
   void nullRequestShouldThrowNPEwThrowableAndBytes() {
-    assertThrows(NullPointerException.class, () -> {
-      new Derived(404, "message", null, new Throwable(), new byte[1], Collections.emptyMap());
-    });
+    assertThrows(NullPointerException.class,
+        () -> new Derived(404, "message", null, new Throwable(), new byte[1],
+            Collections.emptyMap()));
   }
 
   @Test
   void nullRequestShouldThrowNPE() {
-    assertThrows(NullPointerException.class, () -> {
-      new Derived(404, "message", null);
-    });
+    assertThrows(NullPointerException.class, () -> new Derived(404, "message", null));
   }
 
   @Test
   void nullRequestShouldThrowNPEwBytes() {
-    assertThrows(NullPointerException.class, () -> {
-      new Derived(404, "message", null, new byte[1], Collections.emptyMap());
-    });
+    assertThrows(NullPointerException.class,
+        () -> new Derived(404, "message", null, new byte[1], Collections.emptyMap()));
   }
 
   static class Derived extends FeignException {

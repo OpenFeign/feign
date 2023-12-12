@@ -43,14 +43,14 @@ class RequestKeyTest {
     assertThat(requestKey.getUrl()).isEqualTo("a");
     assertThat(requestKey.getHeaders().size()).isEqualTo(1);
     assertThat(requestKey.getHeaders().fetch("my-header"))
-        .isEqualTo((Collection<String>) Arrays.asList("val"));
+        .isEqualTo(Arrays.asList("val"));
     assertThat(requestKey.getCharset()).isEqualTo(StandardCharsets.UTF_16);
   }
 
   @SuppressWarnings("deprecation")
   @Test
   void create() throws Exception {
-    Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+    Map<String, Collection<String>> map = new HashMap<>();
     map.put("my-header", Arrays.asList("val"));
     Request request =
         Request.create(Request.HttpMethod.GET, "a", map, "content".getBytes(StandardCharsets.UTF_8),
@@ -61,7 +61,7 @@ class RequestKeyTest {
     assertThat(requestKey.getUrl()).isEqualTo("a");
     assertThat(requestKey.getHeaders().size()).isEqualTo(1);
     assertThat(requestKey.getHeaders().fetch("my-header"))
-        .isEqualTo((Collection<String>) Arrays.asList("val"));
+        .isEqualTo(Arrays.asList("val"));
     assertThat(requestKey.getCharset()).isEqualTo(StandardCharsets.UTF_16);
     assertThat(requestKey.getBody()).isEqualTo("content".getBytes(StandardCharsets.UTF_8));
   }

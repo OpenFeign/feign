@@ -13,15 +13,10 @@
  */
 package feign.jaxrs;
 
-import feign.MethodMetadata;
-import feign.Response;
-import feign.jaxrs.JakartaContractTest.JakartaInternals.BeanParamInput;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.container.AsyncResponse;
-import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.UriInfo;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,9 +24,27 @@ import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
+import feign.MethodMetadata;
+import feign.Response;
+import feign.jaxrs.JakartaContractTest.JakartaInternals.BeanParamInput;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * Tests interfaces defined per {@link JakartaContract} are interpreted into expected

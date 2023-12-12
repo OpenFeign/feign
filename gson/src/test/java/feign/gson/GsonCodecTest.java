@@ -13,13 +13,9 @@
  */
 package feign.gson;
 
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Util;
+import static feign.Util.UTF_8;
+import static feign.assertj.FeignAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,11 +24,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import static feign.Util.UTF_8;
-import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
+import feign.Util;
 
 @SuppressWarnings("deprecation")
 class GsonCodecTest {
@@ -110,7 +110,7 @@ class GsonCodecTest {
   @Test
   void decodes() throws Exception {
 
-    List<Zone> zones = new LinkedList<Zone>();
+    List<Zone> zones = new LinkedList<>();
     zones.add(new Zone("denominator.io."));
     zones.add(new Zone("denominator.io.", "ABCD"));
 

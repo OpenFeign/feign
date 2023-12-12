@@ -14,13 +14,13 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import feign.Target.HardCodedTarget;
 import java.io.IOException;
 import java.net.URI;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import feign.Target.HardCodedTarget;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 @SuppressWarnings("deprecation")
 public class TargetTest {
@@ -53,7 +53,7 @@ public class TargetTest {
     server.enqueue(new MockResponse());
 
     String baseUrl = server.url("/default").toString();
-    Target<TestQuery> custom = new HardCodedTarget<TestQuery>(TestQuery.class, baseUrl) {
+    Target<TestQuery> custom = new HardCodedTarget<>(TestQuery.class, baseUrl) {
 
       @Override
       public Request apply(RequestTemplate input) {

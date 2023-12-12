@@ -13,18 +13,19 @@
  */
 package feign;
 
-import java.util.Collections;
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import feign.Retryer.Default;
 
 @SuppressWarnings("deprecation")
 class RetryerTest {
 
-  private final static Request REQUEST = Request
-      .create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+  private final static Request REQUEST =
+      Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null,
+          Util.UTF_8);
 
   @Test
   void only5TriesAllowedAndExponentialBackoff() {
@@ -49,14 +50,13 @@ class RetryerTest {
     retryer.continueOrPropagate(e);
     assertThat(retryer.attempt).isEqualTo(5);
     assertThat(retryer.sleptForMillis).isEqualTo(1218);
-    assertThrows(RetryableException.class, () -> {
-      retryer.continueOrPropagate(e);
-    });
+    assertThrows(RetryableException.class, () -> retryer.continueOrPropagate(e));
   }
 
   @Test
   void considersRetryAfterButNotMoreThanMaxPeriod() {
     Default retryer = new Retryer.Default() {
+      @Override
       protected long currentTimeMillis() {
         return 0;
       }
@@ -69,10 +69,9 @@ class RetryerTest {
 
   @Test
   void neverRetryAlwaysPropagates() {
-    assertThrows(RetryableException.class, () -> {
-      Retryer.NEVER_RETRY
-          .continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
-    });
+    assertThrows(RetryableException.class,
+        () -> Retryer.NEVER_RETRY
+            .continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST)));
   }
 
   @Test
@@ -81,7 +80,8 @@ class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, System.currentTimeMillis() + 5000, REQUEST);
+        new RetryableException(-1, null, null, System.currentTimeMillis() + 5000,
+            REQUEST);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

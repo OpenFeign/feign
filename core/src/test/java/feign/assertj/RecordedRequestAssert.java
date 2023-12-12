@@ -13,28 +13,28 @@
  */
 package feign.assertj;
 
-import java.util.Arrays;
-import java.util.Collection;
-import okhttp3.Headers;
-import mockwebserver3.RecordedRequest;
-import org.assertj.core.api.AbstractAssert;
-import org.assertj.core.data.MapEntry;
-import org.assertj.core.internal.ByteArrays;
-import org.assertj.core.internal.Failures;
-import org.assertj.core.internal.Maps;
-import org.assertj.core.internal.Objects;
+import static org.assertj.core.data.MapEntry.entry;
+import static org.assertj.core.error.ShouldNotContain.shouldNotContain;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.data.MapEntry;
+import org.assertj.core.internal.ByteArrays;
+import org.assertj.core.internal.Failures;
+import org.assertj.core.internal.Maps;
+import org.assertj.core.internal.Objects;
 import feign.Util;
-import static org.assertj.core.data.MapEntry.entry;
-import static org.assertj.core.error.ShouldNotContain.shouldNotContain;
+import mockwebserver3.RecordedRequest;
+import okhttp3.Headers;
 
 public final class RecordedRequestAssert
     extends AbstractAssert<RecordedRequestAssert, RecordedRequest> {
@@ -139,7 +139,7 @@ public final class RecordedRequestAssert
     for (String next : headerLines) {
       builder.add(next);
     }
-    List<MapEntry> expected = new ArrayList<MapEntry>();
+    List<MapEntry> expected = new ArrayList<>();
     for (Map.Entry<String, List<String>> next : builder.build().toMultimap().entrySet()) {
       expected.add(entry(next.getKey(), next.getValue()));
     }
@@ -155,7 +155,7 @@ public final class RecordedRequestAssert
 
   public RecordedRequestAssert hasNoHeaderNamed(final String... names) {
     isNotNull();
-    Set<String> found = new LinkedHashSet<String>();
+    Set<String> found = new LinkedHashSet<>();
     for (String header : actual.getHeaders().names()) {
       for (String name : names) {
         if (header.equalsIgnoreCase(name)) {
