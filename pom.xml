@@ -83,7 +83,7 @@
 
     <main.basedir>${project.basedir}</main.basedir>
 
-    <okhttp3.version>5.0.0-alpha.11</okhttp3.version>
+    <okhttp3.version>5.0.0-alpha.12</okhttp3.version>
     <guava.version>33.0.0-jre</guava.version>
     <googlehttpclient.version>1.43.3</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
