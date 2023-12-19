@@ -11,12 +11,28 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.jaxrs;
+package feign.jaxrs3;
 
-import feign.jaxrs3.JAXRS3Contract;
+import feign.jaxrs2.JAXRSClient;
+import jakarta.ws.rs.client.ClientBuilder;
 
 /**
- * @deprecated use {@link JAXRS3Contract} instead
+ * This module directs Feign's http requests to jakarta.ws.rs.client.Client . Ex:
+ *
+ * <pre>
+ * GitHub github =
+ *     Feign.builder().client(new JaxRSClient()).target(GitHub.class, "https://api.github.com");
+ * </pre>
  */
-public class JakartaContract extends JAXRS3Contract {
+public class JAXRS3Client extends JAXRSClient {
+
+  public JAXRS3Client() {
+    this(ClientBuilder.newBuilder());
+  }
+
+  public JAXRS3Client(ClientBuilder clientBuilder) {
+    super(clientBuilder);
+  }
+
 }
+

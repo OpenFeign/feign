@@ -26,7 +26,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import feign.MethodMetadata;
 import feign.Response;
-import feign.jaxrs.JakartaContractTest.JakartaInternals.BeanParamInput;
+import feign.jaxrs.JAXRS3ContractTest.JakartaInternals.BeanParamInput;
+import feign.jaxrs3.JAXRS3Contract;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -47,10 +48,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
 
 /**
- * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
+ * Tests interfaces defined per {@link JAXRS3Contract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
+class JAXRS3ContractTest extends JAXRSContractTestSupport<JAXRS3Contract> {
 
   @Test
   void injectJaxrsInternals() throws Exception {
@@ -354,8 +355,8 @@ class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
   }
 
   @Override
-  protected JakartaContract createContract() {
-    return new JakartaContract();
+  protected JAXRS3Contract createContract() {
+    return new JAXRS3Contract();
   }
 
   @Override
