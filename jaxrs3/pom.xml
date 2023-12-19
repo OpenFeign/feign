@@ -23,37 +23,31 @@
     <version>13.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-jaxrs2</artifactId>
-  <name>Feign JAX-RS 2</name>
-  <description>Feign JAX-RS 2</description>
+  <artifactId>feign-jaxrs3</artifactId>
+  <name>Feign JAXRS 3</name>
+  <description>Feign JAXRS 3</description>
 
   <properties>
+    <main.java.version>11</main.java.version>
     <main.basedir>${project.basedir}/..</main.basedir>
-
-    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-core</artifactId>
+      <artifactId>feign-jaxrs</artifactId>
+      <classifier>jakarta</classifier>
     </dependency>
-
-    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>javax.ws.rs-api</artifactId>
-      <version>2.1.1</version>
-    </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>feign-jaxrs2</artifactId>
+      <classifier>jakarta</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+      <version>3.1.0</version>
     </dependency>
 
     <!-- for example -->
@@ -81,45 +75,29 @@
         </exclusion>
       </exclusions>
     </dependency>
-
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>2.41</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.inject</groupId>
-      <artifactId>jersey-hk2</artifactId>
-      <version>2.41</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.eclipse.transformer</groupId>
-        <artifactId>org.eclipse.transformer.maven</artifactId>
-        <version>0.2.0</version>
-        <executions>
-          <execution>
-            <id>jakarta-ee</id>
-            <phase>package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <classifier>jakarta</classifier>
-            </configuration>
-          </execution>
-        </executions>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+          <module>
+            <moduleInfo>
+              <exports>!jsr311.api;
+                      !feign.jaxrs;
+                      !feign.jaxrs2;
+                      *;</exports>
+              <requires>!jsr311.api;
+                      !feign.jaxrs;
+                      !feign.jaxrs2;
+                      *;</requires>
+              <addServiceUses>true</addServiceUses>
+            </moduleInfo>
+          </module>
+        </configuration>
       </plugin>
     </plugins>
   </build>

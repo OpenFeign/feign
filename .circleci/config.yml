@@ -91,7 +91,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
-            ./mvnw -ntp -B test
+            ./mvnw -ntp -B verify
       - verify-formatting
 
   deploy:

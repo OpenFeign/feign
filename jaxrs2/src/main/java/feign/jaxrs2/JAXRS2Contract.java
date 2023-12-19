@@ -26,7 +26,7 @@ import javax.ws.rs.core.Context;
  * Please refer to the <a href="https://github.com/Netflix/feign/tree/master/feign-jaxrs2">Feign
  * JAX-RS 2 README</a>.
  */
-public final class JAXRS2Contract extends JAXRSContract {
+public class JAXRS2Contract extends JAXRSContract {
 
   public JAXRS2Contract() {
     // parameter with unsupported jax-rs annotations should not be passed as body params.

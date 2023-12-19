@@ -38,6 +38,7 @@
     <module>jaxb-jakarta</module>
     <module>jaxrs</module>
     <module>jaxrs2</module>
+    <module>jaxrs3</module>
     <module>java11</module>
     <module>jakarta</module>
     <module>json</module>
@@ -236,7 +237,43 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs</artifactId>
+        <version>${project.version}</version>
+        <classifier>jakarta</classifier>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs2</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs2</artifactId>
+        <version>${project.version}</version>
+        <classifier>jakarta</classifier>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>feign-jaxrs</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs3</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -484,6 +521,22 @@
         <groupId>org.moditect</groupId>
         <artifactId>moditect-maven-plugin</artifactId>
         <version>${moditect-maven-plugin.version}</version>
+        <configuration>
+          <skip>${moditect.skip}</skip>
+          <overwriteExistingFiles>true</overwriteExistingFiles>
+          <module>
+            <moduleInfo>
+              <!-- module name will be derived from filename -->
+              <!-- export everything -->
+              <exports>*;</exports>
+              <!-- declare services consumed by the artifact -->
+              <addServiceUses>true</addServiceUses>
+            </moduleInfo>
+          </module>
+          <jdepsExtraArgs>
+            <arg>--multi-release=9</arg>
+          </jdepsExtraArgs>
+        </configuration>
         <executions>
           <execution>
             <id>add-module-infos</id>
@@ -491,22 +544,6 @@
             <goals>
               <goal>add-module-info</goal>
             </goals>
-            <configuration>
-              <skip>${moditect.skip}</skip>
-              <overwriteExistingFiles>true</overwriteExistingFiles>
-              <module>
-                <moduleInfo>
-                  <!-- module name will be derived from filename -->
-                  <!-- export everything -->
-                  <exports>*;</exports>
-                  <!-- declare services consumed by the artifact -->
-                  <addServiceUses>true</addServiceUses>
-                </moduleInfo>
-              </module>
-              <jdepsExtraArgs>
-                <arg>--multi-release=9</arg>
-              </jdepsExtraArgs>
-            </configuration>
           </execution>
         </executions>
       </plugin>

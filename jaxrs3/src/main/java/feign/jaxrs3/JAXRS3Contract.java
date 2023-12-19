@@ -11,11 +11,8 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package feign.jaxrs;
+package feign.jaxrs3;
 
-import feign.jaxrs3.JAXRS3Contract;
+import feign.jaxrs2.JAXRS2Contract;
 
-/**
- * @deprecated use {@link JAXRS3Contract} instead
- */
-public class JakartaContract extends JAXRS3Contract {}
+public class JAXRS3Contract extends JAXRS2Contract {}
