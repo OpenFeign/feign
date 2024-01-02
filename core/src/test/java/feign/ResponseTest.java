@@ -13,17 +13,22 @@
  */
 package feign;
 
-import feign.Request.HttpMethod;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.assertj.core.util.Lists;
-import org.junit.Test;
-import java.util.*;
-import static feign.assertj.FeignAssertions.assertThat;
+import org.junit.jupiter.api.Test;
+import feign.Request.HttpMethod;
 
 @SuppressWarnings("deprecation")
-public class ResponseTest {
+class ResponseTest {
 
   @Test
-  public void reasonPhraseIsOptional() {
+  void reasonPhraseIsOptional() {
     Response response = Response.builder()
         .status(200)
         .headers(Collections.<String, Collection<String>>emptyMap())
@@ -36,7 +41,7 @@ public class ResponseTest {
   }
 
   @Test
-  public void canAccessHeadersCaseInsensitively() {
+  void canAccessHeadersCaseInsensitively() {
     Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     List<String> valueList = Collections.singletonList("application/json");
     headersMap.put("Content-Type", valueList);
@@ -55,7 +60,7 @@ public class ResponseTest {
   }
 
   @Test
-  public void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
+  void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
     Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
     headersMap.put("set-cookie", Collections.singletonList("Cookie-C=Value"));
@@ -73,7 +78,7 @@ public class ResponseTest {
   }
 
   @Test
-  public void headersAreOptional() {
+  void headersAreOptional() {
     Response response = Response.builder()
         .status(200)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
@@ -83,7 +88,7 @@ public class ResponseTest {
   }
 
   @Test
-  public void support1xxStatusCodes() {
+  void support1xxStatusCodes() {
     Response response = Response.builder()
         .status(103)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
@@ -94,7 +99,7 @@ public class ResponseTest {
   }
 
   @Test
-  public void statusCodesOfAnyValueAreAllowed() {
+  void statusCodesOfAnyValueAreAllowed() {
     Lists.list(600, 50, 35600).forEach(statusCode -> {
       Response response = Response.builder()
           .status(statusCode)

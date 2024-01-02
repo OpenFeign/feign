@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.0-SNAPSHOT</version>
+    <version>13.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jakarta</artifactId>
@@ -30,38 +30,21 @@
   <properties>
     <main.java.version>11</main.java.version>
     <main.basedir>${project.basedir}/..</main.basedir>
+
+    <moditect.skip>true</moditect.skip>
   </properties>
+
+  <distributionManagement>
+    <relocation>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-jaxrs3</artifactId>
+    </relocation>
+  </distributionManagement>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>jakarta.ws.rs</groupId>
-      <artifactId>jakarta.ws.rs-api</artifactId>
-      <version>3.1.0</version>
-    </dependency>
-
-    <!-- for example -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-gson</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <artifactId>feign-jaxrs3</artifactId>
     </dependency>
   </dependencies>
 </project>

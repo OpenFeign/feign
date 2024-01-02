@@ -13,35 +13,30 @@
  */
 package feign.querymap;
 
-import feign.Param;
-import feign.QueryMapEncoder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import feign.Param;
+import feign.QueryMapEncoder;
 
 /**
  * Test for {@link BeanQueryMapEncoder}
  */
-public class BeanQueryMapEncoderTest {
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
+class BeanQueryMapEncoderTest {
 
   private final QueryMapEncoder encoder = new BeanQueryMapEncoder();
 
   @Test
-  public void testDefaultEncoder_acceptNullValue() {
-    assertEquals("Empty map should be returned", Collections.EMPTY_MAP, encoder.encode(null));
+  void defaultEncoder_acceptNullValue() {
+    assertThat(encoder.encode(null)).as("Empty map should be returned")
+        .isEqualTo(Collections.EMPTY_MAP);
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithValues() {
+  void defaultEncoder_normalClassWithValues() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("foo", "fooz");
     expected.put("bar", "barz");
@@ -50,20 +45,21 @@ public class BeanQueryMapEncoderTest {
 
     Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertEquals("Unexpected encoded query map", expected, encodedMap);
+    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
   }
 
   @Test
-  public void testDefaultEncoder_normalClassWithOutValues() {
+  void defaultEncoder_normalClassWithOutValues() {
     NormalObject normalObject = new NormalObject(null, null);
 
     Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertTrue("Non-empty map generated from null getter: " + encodedMap, encodedMap.isEmpty());
+    assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null getter: " + encodedMap)
+        .isTrue();
   }
 
   @Test
-  public void testDefaultEncoder_haveSuperClass() {
+  void defaultEncoder_haveSuperClass() {
     Map<String, Object> expected = new HashMap<>();
     expected.put("page", 1);
     expected.put("size", 10);
@@ -75,11 +71,11 @@ public class BeanQueryMapEncoderTest {
 
     Map<String, Object> encodedMap = encoder.encode(subClass);
 
-    assertEquals("Unexpected encoded query map", expected, encodedMap);
+    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
   }
 
   @Test
-  public void testDefaultEncoder_withOverriddenParamName() {
+  void defaultEncoder_withOverriddenParamName() {
     HashSet<Object> expectedNames = new HashSet<>();
     expectedNames.add("fooAlias");
     expectedNames.add("bar");
@@ -88,7 +84,7 @@ public class BeanQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertEquals("@Param ignored", expectedNames, encodedMap.keySet());
+    assertThat(encodedMap.keySet()).as("@Param ignored").isEqualTo(expectedNames);
   }
 
   class NormalObjectWithOverriddenParamName {

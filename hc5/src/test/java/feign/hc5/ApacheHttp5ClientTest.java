@@ -14,25 +14,24 @@
 package feign.hc5;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assume.assumeTrue;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Request;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -45,25 +44,25 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     server.enqueue(new MockResponse().setBody("foo"));
     server.enqueue(new MockResponse().setBody("foo"));
 
-    assertEquals("foo", testInterface.withBody("foo", "bar"));
+    assertThat(testInterface.withBody("foo", "bar")).isEqualTo("foo");
     final RecordedRequest request1 = server.takeRequest();
-    assertEquals("/withBody?foo=foo", request1.getPath());
-    assertEquals("bar", request1.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request1.getPath()).isEqualTo("/withBody?foo=foo");
+    assertThat(request1.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("bar");
 
-    assertEquals("foo", testInterface.withoutBody("foo"));
+    assertThat(testInterface.withoutBody("foo")).isEqualTo("foo");
     final RecordedRequest request2 = server.takeRequest();
-    assertEquals("/withoutBody?foo=foo", request2.getPath());
-    assertEquals("", request2.getBody().readString(StandardCharsets.UTF_8));
+    assertThat(request2.getPath()).isEqualTo("/withoutBody?foo=foo");
+    assertThat(request2.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("");
   }
 
   @Test
-  public void followRedirectsIsTrue() throws InterruptedException {
+  void followRedirectsIsTrue() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
@@ -72,13 +71,13 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
     Request.Options options = buildRequestOptions(true);
 
     Object response = testInterface.withOptions(options);
-    assertNotNull(response);
-    assertEquals("redirected", response);
-    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo("redirected");
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
   }
 
   @Test
-  public void followRedirectsIsFalse() throws InterruptedException {
+  void followRedirectsIsFalse() throws InterruptedException {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
@@ -87,10 +86,10 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
     FeignException feignException =
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
-    assertEquals(302, feignException.status());
-    assertEquals(redirectPath,
-        feignException.responseHeaders().get("location").stream().findFirst().orElse(null));
-    assertEquals("/withRequestOptions", server.takeRequest().getPath());
+    assertThat(feignException.status()).isEqualTo(302);
+    assertThat(feignException.responseHeaders().get("location").stream().findFirst().orElse(null))
+        .isEqualTo(redirectPath);
+    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
   }
 
   private JaxRsTestInterface buildTestInterface() {
@@ -113,13 +112,13 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Override
-  public void testVeryLongResponseNullLength() {
-    assumeTrue("HC5 client seems to hang with response size equalto Long.MAX", false);
+  public void veryLongResponseNullLength() {
+    assumeTrue(false, "HC5 client seems to hang with response size equalto Long.MAX");
   }
 
   @Override
-  public void testContentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue("this test is flaky on windows, but works fine.", false);
+  public void contentTypeDefaultsToRequestCharset() throws Exception {
+    assumeTrue(false, "this test is flaky on windows, but works fine.");
   }
 
   @Path("/")

@@ -13,23 +13,23 @@
  */
 package feign.ribbon;
 
-import feign.Request.HttpMethod;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import feign.Request;
+import feign.Request.HttpMethod;
 import feign.ribbon.LBClient.RibbonRequest;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("deprecation")
-public class LBClientTest {
+class LBClientTest {
 
   @Test
-  public void testParseCodes() {
+  void parseCodes() {
     assertThat(LBClient.parseStatusCodes("")).isEmpty();
     assertThat(LBClient.parseStatusCodes(null)).isEmpty();
     assertThat(LBClient.parseStatusCodes("504")).contains(504);
@@ -37,13 +37,13 @@ public class LBClientTest {
   }
 
   @Test
-  public void testRibbonRequest() throws URISyntaxException {
+  void ribbonRequest() throws URISyntaxException {
     // test for RibbonRequest.toRequest()
     // the url has a query whose value is an encoded json string
     String urlWithEncodedJson = "http://test.feign.com/p?q=%7b%22a%22%3a1%7d";
     HttpMethod method = HttpMethod.GET;
     URI uri = new URI(urlWithEncodedJson);
-    Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
     // create a Request for recreating another Request by toRequest()
     Request requestOrigin =
         Request.create(method, uri.toASCIIString(), headers, null, Charset.forName("utf-8"));

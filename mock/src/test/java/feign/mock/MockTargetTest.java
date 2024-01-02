@@ -13,23 +13,22 @@
  */
 package feign.mock;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.Before;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MockTargetTest {
+class MockTargetTest {
 
   private MockTarget<MockTargetTest> target;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     target = new MockTarget<>(MockTargetTest.class);
   }
 
   @Test
-  public void test() {
-    assertThat(target.name(), equalTo("MockTargetTest"));
+  void test() {
+    assertThat(target.name()).isEqualTo("MockTargetTest");
   }
 
 }

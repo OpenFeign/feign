@@ -15,20 +15,20 @@ package feign.apttestgenerator;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
+import java.io.File;
+import org.junit.jupiter.api.Test;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
-import org.junit.Test;
-import java.io.File;
 
 /**
  * Test for {@link GenerateTestStubAPT}
  */
-public class GenerateTestStubAPTTest {
+class GenerateTestStubAPTTest {
 
   private final File main = new File("../example-github/src/main/java/").getAbsoluteFile();
 
   @Test
-  public void test() throws Exception {
+  void test() throws Exception {
     final Compilation compilation =
         javac()
             .withProcessors(new GenerateTestStubAPT())

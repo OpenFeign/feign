@@ -13,12 +13,12 @@
  */
 package feign.moshi.examples;
 
+import java.util.List;
 import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
 import feign.moshi.MoshiDecoder;
 import feign.moshi.MoshiEncoder;
-import java.util.List;
 
 public class GithubExample {
 

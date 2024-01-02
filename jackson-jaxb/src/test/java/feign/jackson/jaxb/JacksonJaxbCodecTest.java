@@ -15,23 +15,24 @@ package feign.jackson.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.Util;
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.Util;
 
 @SuppressWarnings("deprecation")
-public class JacksonJaxbCodecTest {
+class JacksonJaxbCodecTest {
 
   @Test
-  public void encodeTest() {
+  void encodeTest() {
     JacksonJaxbJsonEncoder encoder = new JacksonJaxbJsonEncoder();
     RequestTemplate template = new RequestTemplate();
 
@@ -41,7 +42,7 @@ public class JacksonJaxbCodecTest {
   }
 
   @Test
-  public void decodeTest() throws Exception {
+  void decodeTest() throws Exception {
     Response response = Response.builder()
         .status(200)
         .reason("OK")
@@ -59,7 +60,7 @@ public class JacksonJaxbCodecTest {
    * Enabled via {@link feign.Feign.Builder#dismiss404()}
    */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

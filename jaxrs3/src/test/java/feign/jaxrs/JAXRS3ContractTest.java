@@ -13,34 +13,48 @@
  */
 package feign.jaxrs;
 
-import feign.MethodMetadata;
-import feign.Response;
-import feign.jaxrs.JakartaContractTest.JakartaInternals.BeanParamInput;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.container.AsyncResponse;
-import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.UriInfo;
-import org.junit.Test;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.List;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
+import org.junit.jupiter.api.Test;
+import feign.MethodMetadata;
+import feign.Response;
+import feign.jaxrs.JAXRS3ContractTest.JakartaInternals.BeanParamInput;
+import feign.jaxrs3.JAXRS3Contract;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
- * Tests interfaces defined per {@link JakartaContract} are interpreted into expected
+ * Tests interfaces defined per {@link JAXRS3Contract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContract> {
+class JAXRS3ContractTest extends JAXRSContractTestSupport<JAXRS3Contract> {
 
   @Test
-  public void injectJaxrsInternals() throws Exception {
+  void injectJaxrsInternals() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(JakartaInternals.class, "inject", AsyncResponse.class,
             UriInfo.class);
@@ -49,7 +63,7 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
   }
 
   @Test
-  public void injectBeanParam() throws Exception {
+  void injectBeanParam() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(JakartaInternals.class, "beanParameters", BeanParamInput.class);
     assertThat(methodMetadata.template())
@@ -341,8 +355,8 @@ public class JakartaContractTest extends JAXRSContractTestSupport<JakartaContrac
   }
 
   @Override
-  protected JakartaContract createContract() {
-    return new JakartaContract();
+  protected JAXRS3Contract createContract() {
+    return new JAXRS3Contract();
   }
 
   @Override

@@ -14,17 +14,17 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import feign.Target.HardCodedTarget;
+import java.io.IOException;
 import java.net.URI;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import feign.Target.HardCodedTarget;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 @SuppressWarnings("deprecation")
 public class TargetTest {
 
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   interface TestQuery {
@@ -34,7 +34,7 @@ public class TargetTest {
   }
 
   @Test
-  public void baseCaseQueryParamsArePercentEncoded() throws InterruptedException {
+  void baseCaseQueryParamsArePercentEncoded() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     String baseUrl = server.url("/default").toString();
@@ -49,11 +49,11 @@ public class TargetTest {
    * percent encoding. Here's how.
    */
   @Test
-  public void targetCanCreateCustomRequest() throws InterruptedException {
+  void targetCanCreateCustomRequest() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     String baseUrl = server.url("/default").toString();
-    Target<TestQuery> custom = new HardCodedTarget<TestQuery>(TestQuery.class, baseUrl) {
+    Target<TestQuery> custom = new HardCodedTarget<>(TestQuery.class, baseUrl) {
 
       @Override
       public Request apply(RequestTemplate input) {
@@ -78,7 +78,7 @@ public class TargetTest {
   }
 
   @Test
-  public void emptyTarget() throws InterruptedException {
+  void emptyTarget() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     UriTarget uriTarget = Feign.builder()
@@ -93,7 +93,7 @@ public class TargetTest {
   }
 
   @Test
-  public void hardCodedTargetWithURI() throws InterruptedException {
+  void hardCodedTargetWithURI() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     String host = server.getHostName();
@@ -106,5 +106,10 @@ public class TargetTest {
     uriTarget.get(URI.create("http://" + host + ":" + port + "/path?query=param"));
 
     assertThat(server.takeRequest()).hasPath("/path?query=param").hasQueryParams("query=param");
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

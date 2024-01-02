@@ -177,10 +177,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
 
     long start = System.nanoTime();
     return client.execute(request, options, Optional.ofNullable(requestContext))
-        .thenApply(response -> {
-          // TODO: remove in Feign 12
-          return ensureRequestIsSet(response, template, request);
-        })
+        .thenApply(response ->
+        // TODO: remove in Feign 12
+        ensureRequestIsSet(response, template, request))
         .exceptionally(throwable -> {
           CompletionException completionException = throwable instanceof CompletionException
               ? (CompletionException) throwable

@@ -13,19 +13,20 @@
  */
 package feign;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
-import org.junit.Test;
+import static feign.assertj.MockWebServerAssertions.assertThat;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import static feign.assertj.MockWebServerAssertions.assertThat;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class ContractWithRuntimeInjectionTest {
 
@@ -48,7 +49,6 @@ public class ContractWithRuntimeInjectionTest {
     }
   }
 
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   interface TestExpander {
@@ -58,7 +58,7 @@ public class ContractWithRuntimeInjectionTest {
   }
 
   @Test
-  public void baseCaseExpanderNewInstance() throws InterruptedException {
+  void baseCaseExpanderNewInstance() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     String baseUrl = server.url("/default").toString();
@@ -96,7 +96,7 @@ public class ContractWithRuntimeInjectionTest {
     public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
       List<MethodMetadata> result = new Contract.Default().parseAndValidateMetadata(targetType);
       for (MethodMetadata md : result) {
-        Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<Integer, Param.Expander>();
+        Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<>();
         for (Map.Entry<Integer, Class<? extends Param.Expander>> entry : md.indexToExpanderClass()
             .entrySet()) {
           indexToExpander.put(entry.getKey(), beanFactory.getBean(entry.getValue()));
@@ -108,7 +108,7 @@ public class ContractWithRuntimeInjectionTest {
   }
 
   @Test
-  public void contractWithRuntimeInjection() throws InterruptedException {
+  void contractWithRuntimeInjection() throws InterruptedException {
     server.enqueue(new MockResponse());
 
     String baseUrl = server.url("/default").toString();
@@ -119,5 +119,10 @@ public class ContractWithRuntimeInjectionTest {
         .target(TestExpander.class, baseUrl).get("FOO");
 
     assertThat(server.takeRequest()).hasPath("/default/path?query=foo");
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 }

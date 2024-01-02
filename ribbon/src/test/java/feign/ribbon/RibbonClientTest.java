@@ -15,64 +15,58 @@ package feign.ribbon;
 
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
-import okhttp3.mockwebserver.MockWebServer;
 import feign.Client;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
-import feign.Response;
 import feign.RequestLine;
+import feign.Response;
 import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketPolicy;
 
-@Ignore("inconsistent, deprecated toolset")
+@Disabled("inconsistent, deprecated toolset")
 public class RibbonClientTest {
 
-  @Rule
-  public final TestName testName = new TestName();
-  @Rule
+
+  public String testName;
   public final MockWebServer server1 = new MockWebServer();
-  @Rule
   public final MockWebServer server2 = new MockWebServer();
 
   private static String oldRetryConfig = null;
 
   private static final String SUN_RETRY_PROPERTY = "sun.net.http.retryPost";
 
-  @BeforeClass
-  public static void disableSunRetry() throws Exception {
+  @BeforeAll
+  static void disableSunRetry() throws Exception {
     // The Sun HTTP Client retries all requests once on an IOException, which makes testing retry
     // code harder than would
     // be ideal. We can only disable it for post, so lets at least do that.
     oldRetryConfig = System.setProperty(SUN_RETRY_PROPERTY, "false");
   }
 
-  @AfterClass
-  public static void resetSunRetry() throws Exception {
+  @AfterAll
+  static void resetSunRetry() throws Exception {
     if (oldRetryConfig == null) {
       System.clearProperty(SUN_RETRY_PROPERTY);
     } else {
@@ -86,7 +80,7 @@ public class RibbonClientTest {
   }
 
   @Test
-  public void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setBody("success!"));
     server2.enqueue(new MockResponse().setBody("success!"));
 
@@ -100,14 +94,14 @@ public class RibbonClientTest {
     api.post();
     api.post();
 
-    assertEquals(1, server1.getRequestCount());
-    assertEquals(1, server2.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
+    assertThat(server2.getRequestCount()).isEqualTo(1);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
   @Test
-  public void ioExceptionRetry() throws IOException, InterruptedException {
+  void ioExceptionRetry() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
@@ -118,13 +112,13 @@ public class RibbonClientTest {
 
     api.post();
 
-    assertEquals(2, server1.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
   @Test
-  public void ioExceptionFailsAfterTooManyFailures() throws IOException, InterruptedException {
+  void ioExceptionFailsAfterTooManyFailures() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
@@ -146,7 +140,7 @@ public class RibbonClientTest {
   }
 
   @Test
-  public void ribbonRetryConfigurationOnSameServer() throws IOException, InterruptedException {
+  void ribbonRetryConfigurationOnSameServer() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
@@ -165,14 +159,14 @@ public class RibbonClientTest {
     } catch (RetryableException ignored) {
 
     }
-    assertTrue(server1.getRequestCount() >= 2 || server2.getRequestCount() >= 2);
+    assertThat(server1.getRequestCount() >= 2 || server2.getRequestCount() >= 2).isTrue();
     assertThat(server1.getRequestCount() + server2.getRequestCount()).isGreaterThanOrEqualTo(2);
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
   @Test
-  public void ribbonRetryConfigurationOnMultipleServers() throws IOException, InterruptedException {
+  void ribbonRetryConfigurationOnMultipleServers() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server2.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
@@ -199,12 +193,12 @@ public class RibbonClientTest {
 
   /*
    * This test-case replicates a bug that occurs when using RibbonRequest with a query string.
-   * 
+   *
    * The querystrings would not be URL-encoded, leading to invalid HTTP-requests if the query string
    * contained invalid characters (ex. space).
    */
   @Test
-  public void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
+  void urlEncodeQueryStringParameters() throws IOException, InterruptedException {
     String queryStringValue = "some string with space";
 
     /* values must be pct encoded, see RFC 6750 */
@@ -222,16 +216,16 @@ public class RibbonClientTest {
 
     final String recordedRequestLine = server1.takeRequest().getRequestLine();
 
-    assertEquals(recordedRequestLine, expectedRequestLine);
+    assertThat(expectedRequestLine).isEqualTo(recordedRequestLine);
   }
 
 
   @Test
-  public void testHTTPSViaRibbon() {
+  void hTTPSViaRibbon() {
 
     Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
 
-    server1.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+    server1.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server1.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));
@@ -240,12 +234,12 @@ public class RibbonClientTest {
         Feign.builder().client(RibbonClient.builder().delegate(trustSSLSockets).build())
             .target(TestInterface.class, "https://" + client());
     api.post();
-    assertEquals(1, server1.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
 
   }
 
   @Test
-  public void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
+  void ioExceptionRetryWithBuilder() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
     server1.enqueue(new MockResponse().setBody("success!"));
 
@@ -257,13 +251,13 @@ public class RibbonClientTest {
 
     api.post();
 
-    assertEquals(server1.getRequestCount(), 2);
+    assertThat(2).isEqualTo(server1.getRequestCount());
     // TODO: verify ribbon stats match
     // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
   }
 
   @Test
-  public void ribbonRetryOnStatusCodes() throws IOException, InterruptedException {
+  void ribbonRetryOnStatusCodes() throws IOException, InterruptedException {
     server1.enqueue(new MockResponse().setResponseCode(502));
     server2.enqueue(new MockResponse().setResponseCode(503));
 
@@ -282,13 +276,13 @@ public class RibbonClientTest {
     } catch (Exception ignored) {
 
     }
-    assertEquals(1, server1.getRequestCount());
-    assertEquals(1, server2.getRequestCount());
+    assertThat(server1.getRequestCount()).isEqualTo(1);
+    assertThat(server2.getRequestCount()).isEqualTo(1);
   }
 
 
   @Test
-  public void testFeignOptionsFollowRedirect() {
+  void feignOptionsFollowRedirect() {
     String expectedLocation = server2.url("").url().toString();
     server1
         .enqueue(new MockResponse().setResponseCode(302).setHeader("Location", expectedLocation));
@@ -305,11 +299,11 @@ public class RibbonClientTest {
 
     try {
       Response response = api.get();
-      assertEquals(302, response.status());
+      assertThat(response.status()).isEqualTo(302);
       Collection<String> location = response.headers().get("Location");
-      assertNotNull(location);
-      assertFalse(location.isEmpty());
-      assertEquals(expectedLocation, location.iterator().next());
+      assertThat(location).isNotNull();
+      assertThat(location).isNotEmpty();
+      assertThat(location.iterator().next()).isEqualTo(expectedLocation);
     } catch (Exception ignored) {
       ignored.printStackTrace();
       fail("Shouldn't throw ");
@@ -318,7 +312,7 @@ public class RibbonClientTest {
   }
 
   @Test
-  public void testFeignOptionsNoFollowRedirect() {
+  void feignOptionsNoFollowRedirect() {
     // 302 will say go to server 2
     server1.enqueue(new MockResponse().setResponseCode(302).setHeader("Location",
         server2.url("").url().toString()));
@@ -338,8 +332,8 @@ public class RibbonClientTest {
 
     try {
       Response response = api.get();
-      assertEquals(200, response.status());
-      assertEquals("Hello", response.body().toString());
+      assertThat(response.status()).isEqualTo(200);
+      assertThat(response.body().toString()).isEqualTo("Hello");
     } catch (Exception ignored) {
       ignored.printStackTrace();
       fail("Shouldn't throw ");
@@ -348,41 +342,43 @@ public class RibbonClientTest {
   }
 
   @Test
-  public void testFeignOptionsClientConfig() {
+  void feignOptionsClientConfig() {
     Request.Options options =
         new Request.Options(1111, TimeUnit.MILLISECONDS, 22222, TimeUnit.MILLISECONDS, true);
     IClientConfig config = new RibbonClient.FeignOptionsClientConfig(options);
-    assertThat(config.get(CommonClientConfigKey.ConnectTimeout),
-        equalTo(options.connectTimeoutMillis()));
-    assertThat(config.get(CommonClientConfigKey.ReadTimeout), equalTo(options.readTimeoutMillis()));
-    assertThat(config.get(CommonClientConfigKey.FollowRedirects),
-        equalTo(options.isFollowRedirects()));
-    assertEquals(3, config.getProperties().size());
+    assertThat(config.get(CommonClientConfigKey.ConnectTimeout))
+        .isEqualTo(options.connectTimeoutMillis());
+    assertThat(config.get(CommonClientConfigKey.ReadTimeout))
+        .isEqualTo(options.readTimeoutMillis());
+    assertThat(config.get(CommonClientConfigKey.FollowRedirects))
+        .isEqualTo(options.isFollowRedirects());
+    assertThat(config.getProperties()).hasSize(3);
   }
 
   @Test
-  public void testCleanUrlWithMatchingHostAndPart() throws IOException {
+  void cleanUrlWithMatchingHostAndPart() throws IOException {
     URI uri = RibbonClient.cleanUrl("http://questions/questions/answer/123", "questions");
-    assertEquals("http:///questions/answer/123", uri.toString());
+    assertThat(uri.toString()).isEqualTo("http:///questions/answer/123");
   }
 
   @Test
-  public void testCleanUrl() throws IOException {
+  void cleanUrl() throws IOException {
     URI uri = RibbonClient.cleanUrl("http://myservice/questions/answer/123", "myservice");
-    assertEquals("http:///questions/answer/123", uri.toString());
+    assertThat(uri.toString()).isEqualTo("http:///questions/answer/123");
   }
 
   private String client() {
-    return testName.getMethodName();
+    return testName;
   }
 
   private String serverListKey() {
     return client() + ".ribbon.listOfServers";
   }
 
-  @After
-  public void clearServerList() {
+  @AfterEach
+  void clearServerList() throws IOException {
     getConfigInstance().clearProperty(serverListKey());
+    server2.close();
   }
 
   interface TestInterface {
@@ -395,5 +391,13 @@ public class RibbonClientTest {
 
     @RequestLine("GET /")
     Response get();
+  }
+
+  @BeforeEach
+  void setup(TestInfo testInfo) {
+    Optional<Method> testMethod = testInfo.getTestMethod();
+    if (testMethod.isPresent()) {
+      this.testName = testMethod.get().getName();
+    }
   }
 }

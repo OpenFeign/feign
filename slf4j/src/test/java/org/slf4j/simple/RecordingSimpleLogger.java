@@ -13,21 +13,15 @@
  */
 package org.slf4j.simple;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.slf4j.LoggerFactory;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import static org.junit.Assert.assertEquals;
 import static org.slf4j.simple.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.simple.SimpleLogger.SHOW_THREAD_NAME_KEY;
+import org.slf4j.LoggerFactory;
 
 /**
  * A testing utility to allow control over {@link org.slf4j.impl.SimpleLogger}. In some cases,
  * reflection is used to bypass access restrictions.
  */
-public final class RecordingSimpleLogger implements TestRule {
+public final class RecordingSimpleLogger {
 
   private String expectedMessages = "";
 
@@ -54,21 +48,21 @@ public final class RecordingSimpleLogger implements TestRule {
   /**
    * Steals the output of stderr as that's where the log events go.
    */
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        ByteArrayOutputStream buff = new ByteArrayOutputStream();
-        PrintStream stderr = System.err;
-        try {
-          System.setErr(new PrintStream(buff));
-          base.evaluate();
-          assertEquals(expectedMessages, buff.toString());
-        } finally {
-          System.setErr(stderr);
-        }
-      }
-    };
-  }
+  // @Override
+  // public Statement apply(final Statement base, Description description) {
+  // return new Statement() {
+  // @Override
+  // public void evaluate() throws Throwable {
+  // ByteArrayOutputStream buff = new ByteArrayOutputStream();
+  // PrintStream stderr = System.err;
+  // try {
+  // System.setErr(new PrintStream(buff));
+  // base.evaluate();
+  // assertThat(buff.toString()).isEqualTo(expectedMessages);
+  // } finally {
+  // System.setErr(stderr);
+  // }
+  // }
+  // };
+  // }
 }

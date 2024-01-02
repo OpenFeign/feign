@@ -13,17 +13,9 @@
  */
 package feign.client;
 
-import feign.Client;
-import feign.Client.Proxied;
-import feign.Feign;
-import feign.Feign.Builder;
-import feign.RetryableException;
-import feign.assertj.MockWebServerAssertions;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
-import org.junit.Test;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -33,23 +25,23 @@ import java.net.Proxy.Type;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.util.Collections;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.hamcrest.core.Is.isA;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import feign.Client;
+import feign.Client.Proxied;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.RetryableException;
+import feign.assertj.MockWebServerAssertions;
+import mockwebserver3.MockResponse;
+import mockwebserver3.SocketPolicy;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
 public class DefaultClientTest extends AbstractClientTest {
 
-  protected Client disableHostnameVerification =
-      new Client.Default(TrustingSSLSocketFactory.get(), new HostnameVerifier() {
-        @Override
-        public boolean verify(String s, SSLSession sslSession) {
-          return true;
-        }
-      });
+  protected Client disableHostnameVerification = new Client.Default(TrustingSSLSocketFactory.get(),
+      (s, sslSession) -> true);
 
   @Override
   public Builder newBuilder() {
@@ -57,25 +49,25 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void retriesFailedHandshake() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
-    TestInterface api = newBuilder()
-        .target(TestInterface.class, "https://localhost:" + server.getPort());
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
-    assertEquals(2, server.getRequestCount());
+    assertThat(server.getRequestCount()).isEqualTo(2);
   }
 
   @Test
-  public void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
+  void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
     server.enqueue(new MockResponse());
 
-    TestInterface api = newBuilder()
-        .target(TestInterface.class, "https://localhost:" + server.getPort());
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "https://localhost:" + server.getPort());
 
     api.post("foo");
   }
@@ -88,50 +80,46 @@ public class DefaultClientTest extends AbstractClientTest {
    */
   @Test
   @Override
-  public void testPatch() throws Exception {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.testPatch();
+  public void patch() throws Exception {
+    RetryableException exception = assertThrows(RetryableException.class, super::patch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Override
   public void noResponseBodyForPost() throws Exception {
     super.noResponseBodyForPost();
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasMethod("POST")
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
   @Override
   public void noResponseBodyForPut() throws Exception {
     super.noResponseBodyForPut();
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasMethod("PUT")
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("PUT")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
   @Test
   @Override
   public void noResponseBodyForPatch() {
-    thrown.expect(RetryableException.class);
-    thrown.expectCause(isA(ProtocolException.class));
-    super.noResponseBodyForPatch();
+    RetryableException exception =
+        assertThrows(RetryableException.class, super::noResponseBodyForPatch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test
-  public void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
+  void canOverrideHostnameVerifier() throws IOException, InterruptedException {
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
     server.enqueue(new MockResponse());
 
-    TestInterface api = Feign.builder()
-        .client(disableHostnameVerification)
-        .target(TestInterface.class, "https://localhost:" + server.getPort());
+    TestInterface api =
+        Feign.builder().client(disableHostnameVerification).target(TestInterface.class,
+            "https://localhost:" + server.getPort());
 
     api.post("foo");
   }
 
-  private final SocketAddress proxyAddress =
-      new InetSocketAddress("proxy.example.com", 8080);
+  private final SocketAddress proxyAddress = new InetSocketAddress("proxy.example.com", 8080);
 
   /**
    * Test that the proxy is being used, but don't check the credentials. Credentials can still be
@@ -139,10 +127,9 @@ public class DefaultClientTest extends AbstractClientTest {
    * we are looking to do here.
    */
   @Test
-  public void canCreateWithImplicitOrNoCredentials() throws Exception {
-    Proxied proxied = new Proxied(
-        TrustingSSLSocketFactory.get(), null,
-        new Proxy(Type.HTTP, proxyAddress));
+  void canCreateWithImplicitOrNoCredentials() throws Exception {
+    Proxied proxied =
+        new Proxied(TrustingSSLSocketFactory.get(), null, new Proxy(Type.HTTP, proxyAddress));
     assertThat(proxied).isNotNull();
     assertThat(proxied.getCredentials()).isNullOrEmpty();
 
@@ -152,10 +139,10 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void canCreateWithExplicitCredentials() throws Exception {
-    Proxied proxied = new Proxied(
-        TrustingSSLSocketFactory.get(), null,
-        new Proxy(Type.HTTP, proxyAddress), "user", "password");
+  void canCreateWithExplicitCredentials() throws Exception {
+    Proxied proxied = new Proxied(TrustingSSLSocketFactory.get(), null,
+        new Proxy(Type.HTTP, proxyAddress), "user",
+        "password");
     assertThat(proxied).isNotNull();
     assertThat(proxied.getCredentials()).isNotBlank();
 

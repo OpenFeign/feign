@@ -13,13 +13,13 @@
  */
 package feign.mock;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.RequestLine;
 import feign.Response;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
-public class HttpProtocolVersionTest {
+class HttpProtocolVersionTest {
 
   interface Remote {
 
@@ -29,15 +29,15 @@ public class HttpProtocolVersionTest {
   }
 
   @Test
-  public void testMockProtocolVersion() {
+  void mockProtocolVersion() {
     Remote remote = Feign.builder()
         .client(new MockClient().ok(HttpMethod.GET, "/test"))
         .target(new MockTarget<>(Remote.class));
 
     Response response = remote.test();
 
-    assertNotNull(response.protocolVersion());
-    assertEquals("MOCK", response.protocolVersion().toString());
+    assertThat(response.protocolVersion()).isNotNull();
+    assertThat(response.protocolVersion().toString()).isEqualTo("MOCK");
   }
 
 }

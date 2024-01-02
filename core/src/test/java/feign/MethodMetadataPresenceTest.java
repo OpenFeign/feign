@@ -14,23 +14,23 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.io.IOException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import feign.FeignBuilderTest.TestInterface;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 
 public class MethodMetadataPresenceTest {
 
-  @Rule
   public final MockWebServer server = new MockWebServer();
 
   @Test
-  public void client() throws Exception {
+  void client() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     final String url = "http://localhost:" + server.getPort();
@@ -44,14 +44,14 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
   }
 
   @Test
-  public void encoder() throws Exception {
+  void encoder() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     final String url = "http://localhost:" + server.getPort();
@@ -65,14 +65,14 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
   }
 
   @Test
-  public void decoder() throws Exception {
+  void decoder() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
     final String url = "http://localhost:" + server.getPort();
@@ -87,10 +87,15 @@ public class MethodMetadataPresenceTest {
         .target(TestInterface.class, url);
 
     final Response response = api.codecPost("request data");
-    assertEquals("response data", Util.toString(response.body().asReader(Util.UTF_8)));
+    assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest())
         .hasBody("request data");
+  }
+
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
   }
 
 }

@@ -13,25 +13,33 @@
  */
 package feign.jaxrs2;
 
-import feign.MethodMetadata;
-import feign.jaxrs.JAXRSContract;
-import feign.jaxrs.JAXRSContractTest;
-import feign.jaxrs2.JAXRS2ContractWithBeanParamSupportTest.Jaxrs2Internals.BeanParamInput;
-import org.junit.Test;
-import javax.ws.rs.*;
+import static feign.assertj.FeignAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
-import static feign.assertj.FeignAssertions.assertThat;
-import static java.util.Arrays.asList;
-import static org.assertj.core.data.MapEntry.entry;
+import org.junit.jupiter.api.Test;
+import feign.MethodMetadata;
+import feign.jaxrs.JAXRSContract;
+import feign.jaxrs.JAXRSContractTest;
+import feign.jaxrs2.JAXRS2ContractWithBeanParamSupportTest.Jaxrs2Internals.BeanParamInput;
 
 /**
  * Tests interfaces defined per {@link JAXRS2Contract} are interpreted into expected
  * {@link feign .RequestTemplate template} instances.
  */
-public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
+class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
 
   @Override
   protected JAXRSContract createContract() {
@@ -39,7 +47,7 @@ public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
   }
 
   @Test
-  public void injectJaxrsInternals() throws Exception {
+  void injectJaxrsInternals() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(Jaxrs2Internals.class, "inject", AsyncResponse.class,
             UriInfo.class);
@@ -48,7 +56,7 @@ public class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
   }
 
   @Test
-  public void injectBeanParam() throws Exception {
+  void injectBeanParam() throws Exception {
     final MethodMetadata methodMetadata =
         parseAndValidateMetadata(Jaxrs2Internals.class, "beanParameters", BeanParamInput.class);
     assertThat(methodMetadata.template())

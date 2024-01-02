@@ -17,6 +17,7 @@ import feign.Param.Expander;
 import feign.Util;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -154,6 +155,17 @@ public final class Expressions {
         expanded.append(this.expandIterable((Iterable<?>) variable));
       } else if (Map.class.isAssignableFrom(variable.getClass())) {
         expanded.append(this.expandMap((Map<String, ?>) variable));
+      } else if (Optional.class.isAssignableFrom(variable.getClass())) {
+        Optional<?> optional = (Optional) variable;
+        if (optional.isPresent()) {
+          expanded.append(this.expand(optional.get(), encode));
+        } else {
+          if (!this.nameRequired) {
+            return null;
+          }
+          expanded.append(this.encode(this.getName()))
+              .append("=");
+        }
       } else {
         if (this.nameRequired) {
           expanded.append(this.encode(this.getName()))

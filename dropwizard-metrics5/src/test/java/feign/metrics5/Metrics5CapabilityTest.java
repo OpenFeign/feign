@@ -13,9 +13,9 @@
  */
 package feign.metrics5;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasEntry;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import feign.Capability;
 import feign.Util;
 import feign.micrometer.AbstractMetricsTestBase;
@@ -23,10 +23,7 @@ import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
 import io.dropwizard.metrics5.MetricRegistry;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
-import org.hamcrest.Matcher;
+
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
@@ -49,20 +46,20 @@ public class Metrics5CapabilityTest
   @Override
   protected boolean doesMetricIdIncludeClient(MetricName metricId) {
     String tag = metricId.getTags().get("client");
-    Matcher<String> containsBase = containsString("feign.micrometer.AbstractMetricsTestBase$");
-    Matcher<String> containsSource = containsString("Source");
-    return allOf(containsBase, containsSource).matches(tag);
+    return tag.contains("feign.micrometer.AbstractMetricsTestBase$") && tag.contains("Source");
   }
 
   @Override
   protected boolean doesMetricIncludeVerb(MetricName metricId, String verb) {
-    return hasEntry("method", verb).matches(metricId.getTags());
+    String entry = metricId.getTags().get("method");
+    return entry != null && entry.equals(verb);
   }
 
   @Override
   protected boolean doesMetricIncludeHost(MetricName metricId) {
     // hostname is null due to feign-mock shortfalls
-    return hasEntry("host", null).matches(metricId.getTags());
+    String entry = metricId.getTags().get("host");
+    return entry == null;
   }
 
   @Override

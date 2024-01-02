@@ -44,7 +44,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   protected Decoder decoder = new Decoder.Default();
   protected boolean closeAfterDecode = true;
   protected boolean decodeVoid = false;
-  protected QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+  protected QueryMapEncoder queryMapEncoder = QueryMap.MapEncoder.FIELD.instance();
   protected ErrorDecoder errorDecoder = new ErrorDecoder.Default();
   protected Options options = new Options();
   protected InvocationHandlerFactory invocationHandlerFactory =
@@ -164,7 +164,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * {@link #client(Client) client}.
    *
    * @since 8.12
-   * @deprecated
+   * @deprecated use {@link #dismiss404()} instead.
    */
   @Deprecated
   public B decode404() {

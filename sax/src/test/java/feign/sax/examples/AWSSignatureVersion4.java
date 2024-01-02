@@ -13,6 +13,7 @@
  */
 package feign.sax.examples;
 
+import static feign.Util.UTF_8;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.time.Clock;
@@ -20,7 +21,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import feign.Request;
 import feign.RequestTemplate;
-import static feign.Util.UTF_8;
 
 // http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 public class AWSSignatureVersion4 {

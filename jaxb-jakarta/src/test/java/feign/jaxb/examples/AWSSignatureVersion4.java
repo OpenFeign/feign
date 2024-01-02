@@ -13,14 +13,14 @@
  */
 package feign.jaxb.examples;
 
-import feign.Request;
-import feign.RequestTemplate;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import static feign.Util.UTF_8;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.time.Clock;
-import static feign.Util.UTF_8;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import feign.Request;
+import feign.RequestTemplate;
 
 // http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 public class AWSSignatureVersion4 {

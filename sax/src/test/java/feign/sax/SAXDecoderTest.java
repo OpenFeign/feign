@@ -13,26 +13,23 @@
  */
 package feign.sax;
 
-import feign.Request;
-import feign.Request.HttpMethod;
-import feign.Util;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.xml.sax.helpers.DefaultHandler;
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.helpers.DefaultHandler;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.Response;
+import feign.Util;
 import feign.codec.Decoder;
-import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("deprecation")
-public class SAXDecoderTest {
+class SAXDecoderTest {
 
   static String statusFailed = ""//
       + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
@@ -45,8 +42,6 @@ public class SAXDecoderTest {
       + "    </ns1:getNeustarNetworkStatusResponse>\n"//
       + "  </soap:Body>\n"//
       + "</soap:Envelope>";
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
   Decoder decoder = SAXDecoder.builder() //
       .registerContentHandler(NetworkStatus.class,
           new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
@@ -59,17 +54,18 @@ public class SAXDecoderTest {
       .build();
 
   @Test
-  public void parsesConfiguredTypes() throws ParseException, IOException {
-    assertEquals(NetworkStatus.FAILED, decoder.decode(statusFailedResponse(), NetworkStatus.class));
-    assertEquals("Failed", decoder.decode(statusFailedResponse(), String.class));
+  void parsesConfiguredTypes() throws ParseException, IOException {
+    assertThat(decoder.decode(statusFailedResponse(), NetworkStatus.class))
+        .isEqualTo(NetworkStatus.FAILED);
+    assertThat(decoder.decode(statusFailedResponse(), String.class)).isEqualTo("Failed");
   }
 
   @Test
-  public void niceErrorOnUnconfiguredType() throws ParseException, IOException {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("type int not in configured handlers");
+  void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+    Throwable exception = assertThrows(IllegalStateException.class, () ->
 
-    decoder.decode(statusFailedResponse(), int.class);
+    decoder.decode(statusFailedResponse(), int.class));
+    assertThat(exception.getMessage()).contains("type int not in configured handlers");
   }
 
   private Response statusFailedResponse() {
@@ -83,7 +79,7 @@ public class SAXDecoderTest {
   }
 
   @Test
-  public void nullBodyDecodesToEmpty() throws Exception {
+  void nullBodyDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(204)
         .reason("OK")
@@ -95,7 +91,7 @@ public class SAXDecoderTest {
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */
   @Test
-  public void notFoundDecodesToEmpty() throws Exception {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response = Response.builder()
         .status(404)
         .reason("NOT FOUND")

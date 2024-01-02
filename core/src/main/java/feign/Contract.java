@@ -59,7 +59,7 @@ public interface Contract {
       for (final Method method : targetType.getMethods()) {
         if (method.getDeclaringClass() == Object.class ||
             (method.getModifiers() & Modifier.STATIC) != 0 ||
-            Util.isDefault(method)) {
+            Util.isDefault(method) || method.isAnnotationPresent(FeignIgnore.class)) {
           continue;
         }
         final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
@@ -315,6 +315,7 @@ public interface Contract {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
+        data.queryMapEncoder(queryMap.mapEncoder().instance());
       });
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,
