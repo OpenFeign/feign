@@ -94,7 +94,7 @@
 
     <junit5.version>5.10.1</junit5.version>
     <jackson.version>2.16.1</jackson.version>
-    <assertj.version>3.25.0</assertj.version>
+    <assertj.version>3.25.1</assertj.version>
     <mockito.version>5.8.0</mockito.version>
 
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
