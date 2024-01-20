@@ -16,8 +16,8 @@ package feign.jackson.jr;
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -29,6 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
@@ -37,6 +39,9 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class JacksonCodecTest {
 
@@ -288,5 +293,58 @@ class JacksonCodecTest {
         .headers(Collections.emptyMap())
         .build();
     assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @MethodSource("decodeGenericsArguments")
+  void decodeGenerics(Response response, Type responseType, DataWrapper<?> expectedDataWrapper) throws IOException {
+    assertThat(new JacksonJrDecoder().decode(response, responseType)).isEqualTo(expectedDataWrapper);
+  }
+
+  static class DataWrapper<T> {
+    private T data;
+
+    DataWrapper() {
+    }
+
+    DataWrapper(T data) {
+      this.data = data;
+    }
+
+    public void setData(T data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      DataWrapper<?> that = (DataWrapper<?>) o;
+      return Objects.equals(data, that.data);
+    }
+  }
+
+  static Stream<Arguments> decodeGenericsArguments() {
+    Response.Builder responseBuilder = Response
+        .builder()
+        .request(Request.create(
+            HttpMethod.GET,
+            "/v1/dummy",
+            Collections.emptyMap(),
+            Request.Body.empty(),
+            null
+        ));
+    return Stream.of(
+        Arguments.of(
+            responseBuilder.body("{\"data\":2024}", StandardCharsets.UTF_8).build(),
+            new TypeReference<DataWrapper<Integer>>() {}.getType(),
+            new DataWrapper<>(2024)
+        ),
+        Arguments.of(
+            responseBuilder.body("{\"data\":\"Hello, World!\"}", StandardCharsets.UTF_8).build(),
+            new TypeReference<DataWrapper<String>>() {}.getType(),
+            new DataWrapper<>("Hello, World!")
+        )
+    );
   }
 }

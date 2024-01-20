@@ -93,9 +93,6 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
   }
 
   private static Transformer findTransformer(Response response, Type type) {
-    if (type instanceof Class) {
-      return (mapper, reader) -> mapper.beanFrom((Class<?>) type, reader);
-    }
     if (type instanceof ParameterizedType) {
       Type rawType = ((ParameterizedType) type).getRawType();
       Type[] parameterType = ((ParameterizedType) type).getActualTypeArguments();
@@ -105,6 +102,11 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
       if (rawType.equals(Map.class)) {
         return (mapper, reader) -> mapper.mapOfFrom((Class<?>) parameterType[1], reader);
       }
+      type = rawType;
+    }
+    if (type instanceof Class) {
+      Class<?> clazz = (Class<?>) type;
+      return (mapper, reader) -> mapper.beanFrom(clazz, reader);
     }
     throw new DecodeException(500, "Cannot decode type: " + type.getTypeName(), response.request());
   }
