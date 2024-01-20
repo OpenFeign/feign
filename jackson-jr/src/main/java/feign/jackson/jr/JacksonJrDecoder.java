@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -34,7 +34,7 @@ import java.util.Map;
 public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
 
   @FunctionalInterface
-  interface Transformer {
+  protected interface Transformer {
     Object apply(JSON mapper, Reader reader) throws IOException;
   }
 
@@ -92,7 +92,7 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
     }
   }
 
-  private static Transformer findTransformer(Response response, Type type) {
+  protected Transformer findTransformer(Response response, Type type) {
     if (type instanceof Class) {
       return (mapper, reader) -> mapper.beanFrom((Class<?>) type, reader);
     }
