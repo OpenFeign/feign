@@ -34,7 +34,7 @@ import java.util.Map;
 public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
 
   @FunctionalInterface
-  interface Transformer {
+  protected interface Transformer {
     Object apply(JSON mapper, Reader reader) throws IOException;
   }
 
@@ -92,7 +92,7 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
     }
   }
 
-  private static Transformer findTransformer(Response response, Type type) {
+  protected Transformer findTransformer(Response response, Type type) {
     if (type instanceof ParameterizedType) {
       Type rawType = ((ParameterizedType) type).getRawType();
       Type[] parameterType = ((ParameterizedType) type).getActualTypeArguments();
