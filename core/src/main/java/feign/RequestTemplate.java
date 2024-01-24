@@ -703,6 +703,10 @@ public final class RequestTemplate implements Serializable {
    * @see RequestTemplate#header(String, Iterable)
    */
   public RequestTemplate header(String name, String... values) {
+    if (values == null) {
+      return appendHeader(name, new Collections.emptyList())
+    }
+
     return header(name, Arrays.asList(values));
   }
 
