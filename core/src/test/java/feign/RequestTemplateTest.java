@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -496,5 +496,13 @@ public class RequestTemplateTest {
     template.method(HttpMethod.GET);
     template = template.resolve(Collections.singletonMap("url", "https://www.google.com"));
     assertThat(template.url()).isEqualToIgnoringCase("/get?url=https%3A%2F%2Fwww.google.com");
+  }
+
+  @Test
+  void nullValuesOfHeaderShouldBeHandled() {
+    RequestTemplate template = new RequestTemplate();
+    String[] values = null;
+    String name = "";
+    template.header(name, values);
   }
 }
