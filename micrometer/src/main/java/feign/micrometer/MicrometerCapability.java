@@ -22,8 +22,13 @@ import feign.codec.Encoder;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MicrometerCapability implements Capability {
 
@@ -35,6 +40,17 @@ public class MicrometerCapability implements Capability {
   }
 
   public MicrometerCapability(MeterRegistry meterRegistry) {
+    this.meterRegistry = meterRegistry;
+  }
+
+  public MicrometerCapability(MeterRegistry meterRegistry, List<Tag> tagsList) {
+    meterRegistry.config().commonTags(tagsList);
+    this.meterRegistry = meterRegistry;
+  }
+
+  public MicrometerCapability(MeterRegistry meterRegistry, Map<String, String> tagsMap) {
+    List<Tag> tagsList = mapTags(tagsMap);
+    meterRegistry.config().commonTags(tagsList);
     this.meterRegistry = meterRegistry;
   }
 
@@ -61,5 +77,11 @@ public class MicrometerCapability implements Capability {
   @Override
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return new MeteredInvocationHandleFactory(invocationHandlerFactory, meterRegistry);
+  }
+
+  private List<Tag> mapTags(Map<String, String> tags) {
+    return tags.keySet().stream()
+            .map(tagKey -> Tag.of(tagKey, tags.get(tagKey)))
+            .collect(Collectors.toList());
   }
 }
