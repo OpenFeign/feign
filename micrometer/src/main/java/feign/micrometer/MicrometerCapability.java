@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,7 +80,7 @@ public class MicrometerCapability implements Capability {
 
   private List<Tag> mapTags(Map<String, String> tags) {
     return tags.keySet().stream()
-            .map(tagKey -> Tag.of(tagKey, tags.get(tagKey)))
-            .collect(Collectors.toList());
+        .map(tagKey -> Tag.of(tagKey, tags.get(tagKey)))
+        .collect(Collectors.toList());
   }
 }

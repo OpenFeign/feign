@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
@@ -297,15 +296,16 @@ class JacksonCodecTest {
 
   @ParameterizedTest
   @MethodSource("decodeGenericsArguments")
-  void decodeGenerics(Response response, Type responseType, DataWrapper<?> expectedDataWrapper) throws IOException {
-    assertThat(new JacksonJrDecoder().decode(response, responseType)).isEqualTo(expectedDataWrapper);
+  void decodeGenerics(Response response, Type responseType, DataWrapper<?> expectedDataWrapper)
+      throws IOException {
+    assertThat(new JacksonJrDecoder().decode(response, responseType))
+        .isEqualTo(expectedDataWrapper);
   }
 
   static class DataWrapper<T> {
     private T data;
 
-    DataWrapper() {
-    }
+    DataWrapper() {}
 
     DataWrapper(T data) {
       this.data = data;
@@ -317,8 +317,10 @@ class JacksonCodecTest {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
       DataWrapper<?> that = (DataWrapper<?>) o;
       return Objects.equals(data, that.data);
     }
@@ -332,19 +334,15 @@ class JacksonCodecTest {
             "/v1/dummy",
             Collections.emptyMap(),
             Request.Body.empty(),
-            null
-        ));
+            null));
     return Stream.of(
         Arguments.of(
             responseBuilder.body("{\"data\":2024}", StandardCharsets.UTF_8).build(),
             new TypeReference<DataWrapper<Integer>>() {}.getType(),
-            new DataWrapper<>(2024)
-        ),
+            new DataWrapper<>(2024)),
         Arguments.of(
             responseBuilder.body("{\"data\":\"Hello, World!\"}", StandardCharsets.UTF_8).build(),
             new TypeReference<DataWrapper<String>>() {}.getType(),
-            new DataWrapper<>("Hello, World!")
-        )
-    );
+            new DataWrapper<>("Hello, World!")));
   }
 }
