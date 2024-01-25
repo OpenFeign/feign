@@ -188,7 +188,7 @@ public interface Client {
             }
           }
           // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
-          if (field.equals(ACCEPT_ENCODING)) {
+          else if (field.equals(ACCEPT_ENCODING)) {
             connection.addRequestProperty(field, String.join(", ", request.headers().get(field)));
             break;
           } else {
