@@ -86,9 +86,9 @@
 
     <okhttp3.version>5.0.0-alpha.11</okhttp3.version>
     <guava.version>33.0.0-jre</guava.version>
-    <googlehttpclient.version>1.43.3</googlehttpclient.version>
+    <googlehttpclient.version>1.44.1</googlehttpclient.version>
     <gson.version>2.10.1</gson.version>
-    <moshi.version>1.15.0</moshi.version>
+    <moshi.version>1.15.1</moshi.version>
     <slf4j.version>2.0.11</slf4j.version>
     <json.version>20231013</json.version>
 
