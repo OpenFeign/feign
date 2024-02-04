@@ -29,8 +29,8 @@ import feign.FeignException;
 import feign.Request.Options;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
-import mockwebserver3.MockResponse;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.

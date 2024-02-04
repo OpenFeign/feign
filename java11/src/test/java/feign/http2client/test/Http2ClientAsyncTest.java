@@ -78,8 +78,8 @@ import feign.codec.StringDecoder;
 import feign.http2client.Http2Client;
 import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
 
 public class Http2ClientAsyncTest {

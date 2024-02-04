@@ -24,8 +24,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RequestLine;
 import feign.client.AbstractClientTest;
-import mockwebserver3.MockResponse;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 
 /**
  * Tests that 'Content-Encoding: gzip' is handled correctly

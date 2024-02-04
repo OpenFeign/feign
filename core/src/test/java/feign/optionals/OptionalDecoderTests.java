@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.RequestLine;
 import feign.codec.Decoder;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 class OptionalDecoderTests {
 

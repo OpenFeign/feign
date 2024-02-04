@@ -25,7 +25,7 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
-import mockwebserver3.MockResponse;
+import okhttp3.mockwebserver.MockResponse;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
   @Override

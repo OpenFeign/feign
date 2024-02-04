@@ -41,9 +41,9 @@ import feign.Response;
 import feign.RetryableException;
 import feign.Retryer;
 import feign.client.TrustingSSLSocketFactory;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.SocketPolicy;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 
 @Disabled("inconsistent, deprecated toolset")
 public class RibbonClientTest {

@@ -40,9 +40,9 @@ import feign.RequestLine;
 import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import okio.Buffer;
 
 /**

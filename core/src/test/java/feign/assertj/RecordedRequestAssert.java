@@ -33,7 +33,7 @@ import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
 import feign.Util;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.Headers;
 
 public final class RecordedRequestAssert

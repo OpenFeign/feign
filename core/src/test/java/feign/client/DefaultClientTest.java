@@ -32,8 +32,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
-import mockwebserver3.MockResponse;
-import mockwebserver3.SocketPolicy;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.SocketPolicy;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.

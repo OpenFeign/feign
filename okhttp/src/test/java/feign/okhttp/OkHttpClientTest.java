@@ -29,7 +29,7 @@ import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
-import mockwebserver3.MockResponse;
+import okhttp3.mockwebserver.MockResponse;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class OkHttpClientTest extends AbstractClientTest {

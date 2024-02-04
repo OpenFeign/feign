@@ -14,7 +14,7 @@
 package feign.assertj;
 
 import org.assertj.core.api.Assertions;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class MockWebServerAssertions extends Assertions {
 

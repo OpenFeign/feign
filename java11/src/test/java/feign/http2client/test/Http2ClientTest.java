@@ -30,7 +30,7 @@ import feign.Response;
 import feign.Retryer;
 import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
-import mockwebserver3.MockResponse;
+import okhttp3.mockwebserver.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.

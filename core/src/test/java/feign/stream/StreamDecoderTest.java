@@ -31,8 +31,8 @@ import feign.Request.HttpMethod;
 import feign.RequestLine;
 import feign.Response;
 import feign.Util;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 @SuppressWarnings("deprecation")
 class StreamDecoderTest {
