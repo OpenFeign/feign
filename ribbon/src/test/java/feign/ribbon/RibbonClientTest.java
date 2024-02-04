@@ -225,7 +225,7 @@ public class RibbonClientTest {
 
     Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
 
-    server1.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server1.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server1.enqueue(new MockResponse().setBody("success!"));
 
     getConfigInstance().setProperty(serverListKey(), hostAndPort(server1.url("").url()));

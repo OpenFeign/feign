@@ -50,7 +50,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
@@ -63,7 +63,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -109,7 +109,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =
