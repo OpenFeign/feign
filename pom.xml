@@ -96,6 +96,7 @@
     <jackson.version>2.16.1</jackson.version>
     <assertj.version>3.25.2</assertj.version>
     <mockito.version>5.10.0</mockito.version>
+    <mockwebserver3.version>5.0.0-alpha.11</mockwebserver3.version>
 
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
@@ -340,6 +341,12 @@
         <groupId>com.squareup.moshi</groupId>
         <artifactId>moshi</artifactId>
         <version>${moshi.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver3-junit5</artifactId>
+        <version>${mockwebserver3.version}</version>
       </dependency>
 
       <dependency>
