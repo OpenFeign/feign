@@ -66,7 +66,7 @@
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
+      <artifactId>mockwebserver</artifactId>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
