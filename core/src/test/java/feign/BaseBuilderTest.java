@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -58,6 +62,37 @@ class BaseBuilderTest {
       throws IllegalArgumentException, IllegalAccessException {
     test(Feign.builder().requestInterceptor(template -> {
     }).responseInterceptor((ic, c) -> c.next(ic)), 12);
+  }
+
+  @Test
+  void concurrentAccessToInterceptors() throws IllegalAccessException, InterruptedException {
+    // Given
+    int numberOfIterations = 5000;
+    int numberOfThreads = Runtime.getRuntime().availableProcessors();
+    ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
+    CountDownLatch latch = new CountDownLatch(numberOfThreads);
+    AsyncFeign.AsyncBuilder<?> builder = AsyncFeign.builder();
+
+    // When
+    for (int idx = 0; idx < numberOfIterations; idx++) { // to simulate increase iterations
+      service.submit(() -> {
+        try {
+          setupBuilder(builder);
+        } catch (InterruptedException ignored) {}
+
+        latch.countDown();
+      });
+    }
+
+    // Then
+    latch.await();
+    test(builder, 14);
+  }
+
+  private synchronized void setupBuilder(BaseBuilder<?, ?> builder) throws InterruptedException {
+    builder.requestInterceptor(template -> {});
+    wait(10);
+    builder.responseInterceptor((ic, c) -> c.next(ic));
   }
 
 }

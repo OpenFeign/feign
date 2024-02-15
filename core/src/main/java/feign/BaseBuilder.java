@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -13,29 +13,30 @@
  */
 package feign;
 
-import static feign.ExceptionPropagationPolicy.NONE;
 import feign.Feign.ResponseMappingDecoder;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.querymap.FieldQueryMapEncoder;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+
+import static feign.ExceptionPropagationPolicy.NONE;
 
 public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
 
   private final B thisB;
 
-  protected final List<RequestInterceptor> requestInterceptors =
-      new ArrayList<>();
-  protected final List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
+  protected final List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<>();
+  protected final List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new Contract.Default();
   protected Retryer retryer = new Retryer.Default();
