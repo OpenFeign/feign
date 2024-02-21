@@ -35,8 +35,7 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
 
   // There is no need to instantiate this class multiple times, but it may be extended,
   // hence protected visibility.
-  protected DefaultFeignObservationConvention() {
-  }
+  protected DefaultFeignObservationConvention() {}
 
   @Override
   public String getName() {
@@ -58,7 +57,7 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
             .withValue(requestTemplate.methodMetadata().template().url()),
         FeignObservationDocumentation.HttpClientTags.STATUS
             .withValue(getStatusValue(context.getResponse())),
-        FeignObservationDocumentation.HttpClientTags.CLIENT
+        FeignObservationDocumentation.HttpClientTags.CLIENT_NAME
             .withValue(requestTemplate.feignTarget().type().getName()));
   }
 

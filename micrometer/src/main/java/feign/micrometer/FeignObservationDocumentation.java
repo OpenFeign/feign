@@ -76,10 +76,10 @@ public enum FeignObservationDocumentation implements ObservationDocumentation {
         return "net.peer.port";
       }
     },
-    CLIENT {
+    CLIENT_NAME {
       @Override
       public String asString() {
-        return "client";
+        return "clientName";
       }
     }
 

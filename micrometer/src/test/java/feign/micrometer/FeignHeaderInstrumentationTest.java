@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.AsyncFeign;
@@ -101,7 +100,7 @@ class FeignHeaderInstrumentationTest {
     assertMetricIdIncludesMethod(requestsId);
     assertMetricIdIncludesURI(requestsId);
     assertMetricIdIncludesStatus(requestsId);
-    assertsMetricIdIncludesClient(requestsId);
+    assertsMetricIdIncludesClientName(requestsId);
   }
 
   private void assertMetricIdIncludesMethod(Id metricId) {
@@ -125,9 +124,9 @@ class FeignHeaderInstrumentationTest {
     assertThat(tag).as("Expect status to be 200: " + metricId).isEqualTo("200");
   }
 
-  private void assertsMetricIdIncludesClient(Id metricId) {
-    String tag = metricId.getTag("client");
-    assertThat(tag).as("Expect all metric names to have tag 'client': " + metricId).isNotNull();
+  private void assertsMetricIdIncludesClientName(Id metricId) {
+    String tag = metricId.getTag("clientName");
+    assertThat(tag).as("Expect all metric names to have tag 'clientName': " + metricId).isNotNull();
     assertThat(tag).as("Expect class to be present: " + metricId)
         .startsWith("feign.micrometer.FeignHeaderInstrumentationTest$");
     assertThat(tag).endsWith("TestClient");
