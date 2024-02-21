@@ -20,7 +20,7 @@ import io.micrometer.observation.docs.ObservationDocumentation;
 
 /**
  * {@link ObservationDocumentation} for Feign.
- * 
+ *
  * @since 12.1
  */
 public enum FeignObservationDocumentation implements ObservationDocumentation {
@@ -36,6 +36,7 @@ public enum FeignObservationDocumentation implements ObservationDocumentation {
       return HttpClientTags.values();
     }
   };
+
 
   enum HttpClientTags implements KeyName {
 
@@ -73,6 +74,12 @@ public enum FeignObservationDocumentation implements ObservationDocumentation {
       @Override
       public String asString() {
         return "net.peer.port";
+      }
+    },
+    CLIENT {
+      @Override
+      public String asString() {
+        return "client";
       }
     }
 

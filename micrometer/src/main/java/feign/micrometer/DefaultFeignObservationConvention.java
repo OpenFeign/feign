@@ -14,6 +14,7 @@
 package feign.micrometer;
 
 import feign.Request;
+import feign.RequestTemplate;
 import feign.Response;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.lang.Nullable;
@@ -21,8 +22,8 @@ import io.micrometer.common.lang.Nullable;
 /**
  * Default implementation of {@link FeignObservationConvention}.
  *
- * @since 12.1
  * @see FeignObservationConvention
+ * @since 12.1
  */
 public class DefaultFeignObservationConvention implements FeignObservationConvention {
 
@@ -34,7 +35,8 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
 
   // There is no need to instantiate this class multiple times, but it may be extended,
   // hence protected visibility.
-  protected DefaultFeignObservationConvention() {}
+  protected DefaultFeignObservationConvention() {
+  }
 
   @Override
   public String getName() {
@@ -48,14 +50,16 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
-    String templatedUrl = context.getCarrier().requestTemplate().methodMetadata().template().url();
+    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
     return KeyValues.of(
         FeignObservationDocumentation.HttpClientTags.METHOD
             .withValue(getMethodString(context.getCarrier())),
         FeignObservationDocumentation.HttpClientTags.URI
-            .withValue(templatedUrl),
+            .withValue(requestTemplate.methodMetadata().template().url()),
         FeignObservationDocumentation.HttpClientTags.STATUS
-            .withValue(getStatusValue(context.getResponse())));
+            .withValue(getStatusValue(context.getResponse())),
+        FeignObservationDocumentation.HttpClientTags.CLIENT
+            .withValue(requestTemplate.feignTarget().type().getName()));
   }
 
   String getStatusValue(@Nullable Response response) {

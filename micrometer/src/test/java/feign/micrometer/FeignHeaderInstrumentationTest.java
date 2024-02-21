@@ -22,11 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.AsyncFeign;
@@ -35,6 +31,7 @@ import feign.Param;
 import feign.Request;
 import feign.RequestLine;
 import feign.Response;
+import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
@@ -43,10 +40,17 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.transport.RequestReplySenderContext;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @WireMockTest
 class FeignHeaderInstrumentationTest {
+
+  static final String METER_NAME = "http.client.requests";
 
   MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
@@ -67,9 +71,11 @@ class FeignHeaderInstrumentationTest {
     testClient.templated("1", "2");
 
     verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
-    Timer timer = meterRegistry.get("http.client.requests").timer();
+    Timer timer = meterRegistry.get(METER_NAME).timer();
     assertThat(timer.count()).isEqualTo(1);
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
+
+    assertTags();
   }
 
   @Test
@@ -82,9 +88,49 @@ class FeignHeaderInstrumentationTest {
     testClient.templated("1", "2").get();
 
     verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
-    Timer timer = meterRegistry.get("http.client.requests").timer();
+    Timer timer = meterRegistry.get(METER_NAME).timer();
     assertThat(timer.count()).isEqualTo(1);
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
+
+    assertTags();
+  }
+
+  private void assertTags() {
+    Id requestsId = meterRegistry.get(METER_NAME).meter().getId();
+
+    assertMetricIdIncludesMethod(requestsId);
+    assertMetricIdIncludesURI(requestsId);
+    assertMetricIdIncludesStatus(requestsId);
+    assertsMetricIdIncludesClient(requestsId);
+  }
+
+  private void assertMetricIdIncludesMethod(Id metricId) {
+    String tag = metricId.getTag("http.method");
+    assertThat(tag).as("Expect all metric names to have tag 'http.method': " + metricId)
+        .isNotNull();
+    assertThat(tag).as("Expect method to be GET: " + metricId).isEqualTo("GET");
+  }
+
+  private void assertMetricIdIncludesURI(Id metricId) {
+    String tag = metricId.getTag("http.url");
+    assertThat(tag).as("Expect all metric names to have tag 'http.url': " + metricId).isNotNull();
+    assertThat(tag).as("Expect url to match path template: " + metricId)
+        .isEqualTo("/customers/{customerId}/carts/{cartId}");
+  }
+
+  private void assertMetricIdIncludesStatus(Id metricId) {
+    String tag = metricId.getTag("http.status_code");
+    assertThat(tag).as("Expect all metric names to have tag 'http.status_code': " + metricId)
+        .isNotNull();
+    assertThat(tag).as("Expect status to be 200: " + metricId).isEqualTo("200");
+  }
+
+  private void assertsMetricIdIncludesClient(Id metricId) {
+    String tag = metricId.getTag("client");
+    assertThat(tag).as("Expect all metric names to have tag 'client': " + metricId).isNotNull();
+    assertThat(tag).as("Expect class to be present: " + metricId)
+        .startsWith("feign.micrometer.FeignHeaderInstrumentationTest$");
+    assertThat(tag).endsWith("TestClient");
   }
 
   private TestClient clientInstrumentedWithObservations(String url) {
@@ -107,12 +153,14 @@ class FeignHeaderInstrumentationTest {
     String templated(@Param("customerId") String customerId, @Param("cartId") String cartId);
   }
 
+
   public interface AsyncTestClient {
 
     @RequestLine("GET /customers/{customerId}/carts/{cartId}")
     CompletableFuture<String> templated(@Param("customerId") String customerId,
                                         @Param("cartId") String cartId);
   }
+
 
   static class HeaderMutatingHandler
       implements ObservationHandler<RequestReplySenderContext<Request, Response>> {
