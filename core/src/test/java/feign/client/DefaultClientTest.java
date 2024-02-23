@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -32,8 +32,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
-import mockwebserver3.MockResponse;
-import mockwebserver3.SocketPolicy;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.SocketPolicy;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
@@ -50,7 +50,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
     server.enqueue(new MockResponse());
 
@@ -63,7 +63,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =
@@ -109,7 +109,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
     server.enqueue(new MockResponse());
 
     TestInterface api =

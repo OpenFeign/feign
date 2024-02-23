@@ -34,7 +34,7 @@
   <dependencies>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>6.1.3</version>
+      <version>6.1.4</version>
       <scope>test</scope>
     </dependency>
 

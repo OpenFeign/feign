@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -33,7 +33,7 @@ import org.assertj.core.internal.Failures;
 import org.assertj.core.internal.Maps;
 import org.assertj.core.internal.Objects;
 import feign.Util;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.Headers;
 
 public final class RecordedRequestAssert
