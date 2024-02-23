@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,8 +24,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.RequestLine;
 import feign.client.AbstractClientTest;
-import mockwebserver3.MockResponse;
-import mockwebserver3.RecordedRequest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 
 /**
  * Tests that 'Content-Encoding: gzip' is handled correctly

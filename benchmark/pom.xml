@@ -30,7 +30,7 @@
     <jmh.version>1.37</jmh.version>
     <rx.netty.version>0.5.3</rx.netty.version>
     <rx.java.version>1.3.8</rx.java.version>
-    <netty.version>4.1.106.Final</netty.version>
+    <netty.version>4.1.107.Final</netty.version>
     <main.basedir>${project.basedir}/..</main.basedir>
 
     <moditect.skip>true</moditect.skip>
@@ -66,7 +66,7 @@
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
+      <artifactId>mockwebserver</artifactId>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
@@ -137,7 +137,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.5.2</version>
         <executions>
           <execution>
             <phase>package</phase>

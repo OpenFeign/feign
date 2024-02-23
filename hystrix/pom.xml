@@ -50,7 +50,7 @@
     <dependency>
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
-      <version>0.7.10</version>
+      <version>0.7.11</version>
       <scope>test</scope>
     </dependency>
 
@@ -75,7 +75,7 @@
 
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver3-junit5</artifactId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
 
