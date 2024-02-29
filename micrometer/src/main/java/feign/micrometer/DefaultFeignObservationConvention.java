@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package feign.micrometer;
 
 import feign.Request;
+import feign.RequestTemplate;
 import feign.Response;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.lang.Nullable;
@@ -21,8 +22,8 @@ import io.micrometer.common.lang.Nullable;
 /**
  * Default implementation of {@link FeignObservationConvention}.
  *
- * @since 12.1
  * @see FeignObservationConvention
+ * @since 12.1
  */
 public class DefaultFeignObservationConvention implements FeignObservationConvention {
 
@@ -46,13 +47,16 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
-    String templatedUrl = context.getCarrier().requestTemplate().methodMetadata().template().url();
+    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
     return KeyValues.of(
         FeignObservationDocumentation.HttpClientTags.METHOD.withValue(
             getMethodString(context.getCarrier())),
-        FeignObservationDocumentation.HttpClientTags.URI.withValue(templatedUrl),
+        FeignObservationDocumentation.HttpClientTags.URI.withValue(
+            requestTemplate.methodMetadata().template().url()),
         FeignObservationDocumentation.HttpClientTags.STATUS.withValue(
-            getStatusValue(context.getResponse())));
+            getStatusValue(context.getResponse())),
+        FeignObservationDocumentation.HttpClientTags.CLIENT_NAME.withValue(
+            requestTemplate.feignTarget().type().getName()));
   }
 
   String getStatusValue(@Nullable Response response) {
