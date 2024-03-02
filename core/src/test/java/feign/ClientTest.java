@@ -82,8 +82,11 @@ class ClientTest {
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
     String requestProperty = urlConnection.getRequestProperty(Util.CONTENT_LENGTH);
-    // "Content-Length" not be added to HttpURLConnection at convertAndSend Method
-    // See @sun.net.www.protocol.http.HttpURLConnection.addRequestProperty
+    /*
+     * By default, "Content-Length" will not be added because this key is in the
+     * restrictedHeaderSet of HttpURLConnection.
+     * Unless set system property "sun.net.http.allowRestrictedHeaders" to "true"
+     */
     assertNull(requestProperties.get(Util.CONTENT_LENGTH));
   }
 

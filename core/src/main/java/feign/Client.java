@@ -184,9 +184,6 @@ public interface Client {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest && !deflateEncodedRequest) {
               contentLength = Integer.valueOf(value);
-              // Actually "Content-Length" will not be added
-              // because this key is in the restrictedHeaderSet of HttpURLConnection
-              // @see sun.net.www.protocol.http.HttpURLConnection.isRestrictedHeader
               connection.addRequestProperty(field, value);
             }
           }
