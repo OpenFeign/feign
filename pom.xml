@@ -93,7 +93,7 @@
     <json.version>20240303</json.version>
 
     <junit5.version>5.10.2</junit5.version>
-    <jackson.version>2.16.1</jackson.version>
+    <jackson.version>2.16.2</jackson.version>
     <assertj.version>3.25.3</assertj.version>
     <mockito.version>5.11.0</mockito.version>
 
