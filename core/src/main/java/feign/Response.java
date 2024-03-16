@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -125,7 +125,7 @@ public final class Response implements Closeable {
      * HTTP protocol version
      */
     public Builder protocolVersion(ProtocolVersion protocolVersion) {
-      this.protocolVersion = protocolVersion;
+      this.protocolVersion = (protocolVersion != null) ? protocolVersion : ProtocolVersion.HTTP_1_1;
       return this;
     }
 
