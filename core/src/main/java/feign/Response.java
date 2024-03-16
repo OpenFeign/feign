@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -51,13 +51,14 @@ public final class Response implements Closeable {
   }
 
   public static final class Builder {
+    private static final ProtocolVersion DEFAULT_PROTOCOL_VERSION = ProtocolVersion.HTTP_1_1;
     int status;
     String reason;
     Map<String, Collection<String>> headers;
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
-    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
+    private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
 
     Builder() {}
 
@@ -125,7 +126,7 @@ public final class Response implements Closeable {
      * HTTP protocol version
      */
     public Builder protocolVersion(ProtocolVersion protocolVersion) {
-      this.protocolVersion = protocolVersion;
+      this.protocolVersion = (protocolVersion != null) ? protocolVersion : DEFAULT_PROTOCOL_VERSION;
       return this;
     }
 

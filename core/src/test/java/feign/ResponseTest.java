@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -109,5 +109,18 @@ class ResponseTest {
 
       assertThat(response.status()).isEqualTo(statusCode);
     });
+  }
+
+  @Test
+  void protocolVersionDefaultsToHttp1_1() {
+    Response response = Response.builder()
+        .status(200)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .protocolVersion(null)
+        .body(new byte[0])
+        .build();
+
+    assertThat(response.protocolVersion()).isEqualTo(Request.ProtocolVersion.HTTP_1_1);
+    assertThat(response.toString()).startsWith("HTTP/1.1 200");
   }
 }
