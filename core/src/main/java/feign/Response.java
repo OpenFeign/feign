@@ -58,7 +58,7 @@ public final class Response implements Closeable {
     Body body;
     Request request;
     private RequestTemplate requestTemplate;
-    private ProtocolVersion protocolVersion = ProtocolVersion.HTTP_1_1;
+    private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
 
     Builder() {}
 
