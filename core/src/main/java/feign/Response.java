@@ -51,6 +51,7 @@ public final class Response implements Closeable {
   }
 
   public static final class Builder {
+    private static final ProtocolVersion DEFAULT_PROTOCOL_VERSION = ProtocolVersion.HTTP_1_1;
     int status;
     String reason;
     Map<String, Collection<String>> headers;
@@ -125,7 +126,7 @@ public final class Response implements Closeable {
      * HTTP protocol version
      */
     public Builder protocolVersion(ProtocolVersion protocolVersion) {
-      this.protocolVersion = (protocolVersion != null) ? protocolVersion : ProtocolVersion.HTTP_1_1;
+      this.protocolVersion = (protocolVersion != null) ? protocolVersion : DEFAULT_PROTOCOL_VERSION;
       return this;
     }
 
