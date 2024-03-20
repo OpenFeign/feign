@@ -114,7 +114,7 @@
     <maven-gpg-plugin.version>3.2.1</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
-    <moditect-maven-plugin.version>1.1.0</moditect-maven-plugin.version>
+    <moditect-maven-plugin.version>1.2.0.Final</moditect-maven-plugin.version>
   </properties>
   <url>https://github.com/openfeign/feign</url>
   <inceptionYear>2012</inceptionYear>
