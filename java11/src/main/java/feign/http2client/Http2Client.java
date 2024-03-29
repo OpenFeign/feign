@@ -203,8 +203,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
   static {
     // A case insensitive TreeSet of strings.
     final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    treeSet.addAll(Set.of("connection", "content-length", "date", "expect", "from", "host",
-        "origin", "referer", "upgrade", "via", "warning"));
+    treeSet.addAll(Set.of("connection", "content-length", "expect", "host", "upgrade"));
     DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
   }
 
