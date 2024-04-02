@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -204,19 +204,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
   static {
     // A case insensitive TreeSet of strings.
     final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    treeSet.addAll(
-        Set.of(
-            "connection",
-            "content-length",
-            "date",
-            "expect",
-            "from",
-            "host",
-            "origin",
-            "referer",
-            "upgrade",
-            "via",
-            "warning"));
+    treeSet.addAll(Set.of("connection", "content-length", "expect", "host", "upgrade"));
     DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
   }
 
