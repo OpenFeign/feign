@@ -457,6 +457,12 @@ public final class RequestTemplate implements Serializable {
       uri = "/" + uri;
     }
 
+    int fragmentIndex = uri.indexOf('#');
+    if (fragmentIndex > -1) {
+      fragment = uri.substring(fragmentIndex);
+      uri = uri.substring(0, fragmentIndex);
+    }
+
     /*
      * templates may provide query parameters. since we want to manage those explicity, we will need
      * to extract those out, leaving the uriTemplate with only the path to deal with.
@@ -470,12 +476,6 @@ public final class RequestTemplate implements Serializable {
 
       /* reduce the uri to the path */
       uri = uri.substring(0, queryMatcher.start());
-    }
-
-    int fragmentIndex = uri.indexOf('#');
-    if (fragmentIndex > -1) {
-      fragment = uri.substring(fragmentIndex);
-      uri = uri.substring(0, fragmentIndex);
     }
 
     /* replace the uri template */

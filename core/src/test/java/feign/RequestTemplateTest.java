@@ -463,6 +463,16 @@ public class RequestTemplateTest {
   }
 
   @Test
+  void fragmentShouldBeExtractedWhenQueryParamsExist() {
+    RequestTemplate template =
+            new RequestTemplate().method(HttpMethod.GET).uri("/path?query=queryValue#fragment",
+                    true);
+
+    assertThat(template.url()).isEqualTo("/path?query=queryValue#fragment");
+    assertThat(template.queryLine()).isEqualTo("?query=queryValue");
+  }
+
+  @Test
   void urlEncodingRemainsInPlace() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)
         .target("https://exa%23mple.com/path%7Cpath");
