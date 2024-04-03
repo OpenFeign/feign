@@ -64,6 +64,7 @@
     <module>example-wikipedia-with-springboot</module>
     <module>benchmark</module>
     <module>moshi</module>
+    <module>fastjson2</module>
   </modules>
 
   <properties>
@@ -96,6 +97,7 @@
     <jackson.version>2.17.0</jackson.version>
     <assertj.version>3.25.3</assertj.version>
     <mockito.version>5.11.0</mockito.version>
+    <fastjson2.version>2.0.48</fastjson2.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
@@ -408,6 +410,12 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-nop</artifactId>
         <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.alibaba.fastjson2</groupId>
+        <artifactId>fastjson2</artifactId>
+        <version>${fastjson2.version}</version>
       </dependency>
 
     </dependencies>

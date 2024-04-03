@@ -474,6 +474,23 @@ public class Example {
 
 NB: you may also need to add `SOAPErrorDecoder` if SOAP Faults are returned in response with error http codes (4xx, 5xx, ...)
 
+#### Fastjson2 
+
+[fastjson2](./fastjson2) includes an encoder and decoder you can use with a JSON API.
+
+Add `Fastjson2Encoder` and/or `Fastjson2Decoder` to your `Feign.Builder` like so:
+
+```java
+public class Example {
+  public static void main(String[] args) {
+      GitHub github = Feign.builder()
+                     .encoder(new Fastjson2Encoder())
+                     .decoder(new Fastjson2Decoder())
+                     .target(GitHub.class, "https://api.github.com");
+  }
+}
+```
+
 ### Contract
 
 #### JAX-RS
