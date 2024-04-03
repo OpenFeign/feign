@@ -35,6 +35,7 @@ left side
 *** Sax
 *** JSON-java
 *** Moshi
+*** Fastjson2
 ** metrics
 *** Dropwizard Metrics 5
 *** Micrometer
