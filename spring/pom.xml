@@ -23,14 +23,14 @@
     <version>13.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-spring4</artifactId>
-  <name>Feign spring</name>
-  <description>Feign Contracts for Spring4</description>
+  <artifactId>feign-spring</artifactId>
+  <name>Feign Spring</name>
+  <description>Feign Contracts for Spring</description>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
 
-    <spring.version>4.3.30.RELEASE</spring.version>
+    <spring.version>5.3.34</spring.version>
   </properties>
 
   <dependencies>

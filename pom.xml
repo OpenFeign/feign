@@ -47,7 +47,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
-    <module>spring4</module>
+    <module>spring</module>
     <module>soap</module>
     <module>soap-jakarta</module>
     <module>reactive</module>
