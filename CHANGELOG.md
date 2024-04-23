@@ -1,3 +1,7 @@
+### Unreleased
+
+* The Spring4 module has been renamed to Spring and moved from `spring4` to `spring`. Now it depends on Spring Web 5. (#2392)
+
 ### Version 11.9
 
 * `OkHttpClient` now implements `AsyncClient`
