@@ -35,9 +35,7 @@
 
   <distributionManagement>
     <relocation>
-      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-spring</artifactId>
-      <version>13.3-SNAPSHOT</version>
     </relocation>
   </distributionManagement>
 </project>
