@@ -47,6 +47,7 @@
     <module>ribbon</module>
     <module>sax</module>
     <module>slf4j</module>
+    <module>spring</module>
     <module>spring4</module>
     <module>soap</module>
     <module>soap-jakarta</module>
@@ -643,30 +644,34 @@
         <artifactId>license-maven-plugin</artifactId>
         <version>${license-maven-plugin.version}</version>
         <configuration>
-          <!-- session.executionRootDirectory resolves properly even with nested modules -->
-          <header>${main.basedir}/src/etc/header.txt</header>
-          <excludes>
-            <exclude>.travis.yml</exclude>
-            <exclude>.editorconfig</exclude>
-            <exclude>.gitattributes</exclude>
-            <exclude>.gitignore</exclude>
-            <exclude>.mvn/**</exclude>
-            <exclude>mvnw*</exclude>
-            <exclude>etc/header.txt</exclude>
-            <exclude>**/.idea/**</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>LICENSE</exclude>
-            <exclude>NOTICE</exclude>
-            <exclude>OSSMETADATA</exclude>
-            <exclude>**/*.md</exclude>
-            <exclude>**/*.asciidoc</exclude>
-            <exclude>**/*.iuml</exclude>
-            <exclude>bnd.bnd</exclude>
-            <exclude>travis/**</exclude>
-            <exclude>src/test/resources/**</exclude>
-            <exclude>src/main/resources/**</exclude>
-            <exclude>.circleci/**</exclude>
-          </excludes>
+          <licenseSets>
+            <licenseSet>
+              <!-- session.executionRootDirectory resolves properly even with nested modules -->
+              <header>${main.basedir}/src/etc/header.txt</header>
+              <excludes>
+                <exclude>.travis.yml</exclude>
+                <exclude>.editorconfig</exclude>
+                <exclude>.gitattributes</exclude>
+                <exclude>.gitignore</exclude>
+                <exclude>.mvn/**</exclude>
+                <exclude>mvnw*</exclude>
+                <exclude>etc/header.txt</exclude>
+                <exclude>**/.idea/**</exclude>
+                <exclude>**/target/**</exclude>
+                <exclude>LICENSE</exclude>
+                <exclude>NOTICE</exclude>
+                <exclude>OSSMETADATA</exclude>
+                <exclude>**/*.md</exclude>
+                <exclude>**/*.asciidoc</exclude>
+                <exclude>**/*.iuml</exclude>
+                <exclude>bnd.bnd</exclude>
+                <exclude>travis/**</exclude>
+                <exclude>src/test/resources/**</exclude>
+                <exclude>src/main/resources/**</exclude>
+                <exclude>.circleci/**</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
           <strictCheck>true</strictCheck>
           <mapping>
             <java>SLASHSTAR_STYLE</java>
