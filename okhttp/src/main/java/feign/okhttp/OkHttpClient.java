@@ -16,15 +16,16 @@ package feign.okhttp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.lang.ref.SoftReference;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import feign.AsyncClient;
 import feign.Client;
-import feign.Request.HttpMethod;
 import feign.Request.ProtocolVersion;
 import okhttp3.*;
 import static feign.Util.enumForName;
@@ -41,6 +42,8 @@ import static feign.Util.enumForName;
 public final class OkHttpClient implements Client, AsyncClient<Object> {
 
   private final okhttp3.OkHttpClient delegate;
+
+  private final Map<Long, SoftReference<okhttp3.OkHttpClient>> clients = new ConcurrentHashMap<>();
 
   public OkHttpClient() {
     this(new okhttp3.OkHttpClient());
@@ -154,19 +157,22 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
   }
 
   private okhttp3.OkHttpClient getClient(feign.Request.Options options) {
-    okhttp3.OkHttpClient requestScoped;
-    if (delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
-        || delegate.readTimeoutMillis() != options.readTimeoutMillis()
-        || delegate.followRedirects() != options.isFollowRedirects()) {
-      requestScoped = delegate.newBuilder()
-          .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
-          .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
-          .followRedirects(options.isFollowRedirects())
-          .build();
-    } else {
-      requestScoped = delegate;
+    if (doesClientConfigurationDiffer(options)) {
+      final long clientKey = createClientKey(options);
+      SoftReference<okhttp3.OkHttpClient> requestScopedSoftReference = clients.get(clientKey);
+      okhttp3.OkHttpClient requestScoped = requestScopedSoftReference == null ? null : requestScopedSoftReference.get();
+
+      if (requestScoped == null) {
+        requestScoped = delegate.newBuilder()
+            .connectTimeout(options.connectTimeoutMillis(), TimeUnit.MILLISECONDS)
+            .readTimeout(options.readTimeoutMillis(), TimeUnit.MILLISECONDS)
+            .followRedirects(options.isFollowRedirects())
+            .build();
+        clients.put(clientKey, new SoftReference<>(requestScoped));
+      }
+      return requestScoped;
     }
-    return requestScoped;
+    return delegate;
   }
 
   @Override
@@ -201,4 +207,26 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
     });
     return responseFuture;
   }
+
+  private boolean doesClientConfigurationDiffer(feign.Request.Options options) {
+    return delegate.connectTimeoutMillis() != options.connectTimeoutMillis()
+            || delegate.readTimeoutMillis() != options.readTimeoutMillis()
+            || delegate.followRedirects() != options.isFollowRedirects();
+  }
+
+  /**
+   * Creates long key that represents {@link feign.Request.Options} settings based
+   * on {@link OkHttpClient#doesClientConfigurationDiffer(feign.Request.Options)} method
+   * @param options value
+   * @return long key
+   */
+  public long createClientKey(feign.Request.Options options) {
+    // converting two integers into a long value
+    long key = (((long) options.connectTimeoutMillis()) << 32) | (options.readTimeoutMillis() & 0xffffffffL);
+    if (options.isFollowRedirects()) {
+      key |= 1L << 63; // connectTimeoutMillis always positive, so we can use first sign bit for isFollowRedirects flag
+    }
+    return key;
+  }
+
 }
