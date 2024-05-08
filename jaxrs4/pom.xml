@@ -23,32 +23,26 @@
     <version>13.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-jaxrs3</artifactId>
-  <name>Feign JAXRS 3</name>
-  <description>Feign JAXRS 3</description>
+  <artifactId>feign-jaxrs4</artifactId>
+  <name>Feign JAXRS 4</name>
+  <description>Feign JAXRS 4</description>
 
   <properties>
-    <main.java.version>11</main.java.version>
-    <jersey.version>3.1.6</jersey.version>
+    <main.java.version>17</main.java.version>
+    <jersey.version>4.0.0-M1</jersey.version>
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs</artifactId>
-      <classifier>jakarta</classifier>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>feign-jaxrs2</artifactId>
-      <classifier>jakarta</classifier>
+      <artifactId>feign-jaxrs3</artifactId>
     </dependency>
 
     <dependency>
       <groupId>jakarta.ws.rs</groupId>
       <artifactId>jakarta.ws.rs-api</artifactId>
-      <version>3.1.0</version>
+      <version>4.0.0</version>
     </dependency>
 
     <!-- for example -->
@@ -98,7 +92,6 @@
       <version>${jersey.version}</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>

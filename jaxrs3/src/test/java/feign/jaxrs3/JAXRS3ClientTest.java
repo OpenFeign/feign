@@ -13,6 +13,15 @@
  */
 package feign.jaxrs3;
 
-import feign.jaxrs2.JAXRS2Contract;
+import feign.Feign;
+import feign.Feign.Builder;
+import feign.jaxrs2.AbstractJAXRSClientTest;
 
-public class JAXRS3Contract extends JAXRS2Contract {}
+/** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
+public class JAXRS3ClientTest extends AbstractJAXRSClientTest {
+
+  @Override
+  public Builder newBuilder() {
+    return Feign.builder().client(new JAXRS3Client());
+  }
+}
