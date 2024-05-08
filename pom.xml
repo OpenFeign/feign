@@ -39,6 +39,7 @@
     <module>jaxrs</module>
     <module>jaxrs2</module>
     <module>jaxrs3</module>
+    <module>jaxrs4</module>
     <module>java11</module>
     <module>jakarta</module>
     <module>json</module>
@@ -255,6 +256,14 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-jaxrs2</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jaxrs2</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>

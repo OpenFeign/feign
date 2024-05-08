@@ -15,125 +15,32 @@ package feign.jaxrs2;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Collections;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.ProcessingException;
 import org.assertj.core.data.MapEntry;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import feign.Feign;
 import feign.Feign.Builder;
-import feign.Headers;
-import feign.RequestLine;
 import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
-import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
 import okhttp3.mockwebserver.MockResponse;
 
 /**
  * Tests client-specific behavior, such as ensuring Content-Length is sent when specified.
  */
-public class JAXRSClientTest extends AbstractClientTest {
+public class JAXRSClientTest extends AbstractJAXRSClientTest {
 
   @Override
   public Builder newBuilder() {
     return Feign.builder().client(new JAXRSClient());
   }
 
-  @Override
-  public void patch() throws Exception {
-    try {
-      super.patch();
-    } catch (final ProcessingException e) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
-    }
-  }
 
-  @Override
-  public void noResponseBodyForPut() throws Exception {
-    try {
-      super.noResponseBodyForPut();
-    } catch (final IllegalStateException e) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support empty bodies on PUT");
-    }
-  }
-
-  @Override
-  public void noResponseBodyForPatch() {
-    try {
-      super.noResponseBodyForPatch();
-    } catch (final IllegalStateException e) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
-    }
-  }
-
-  @Override
-  @Test
-  public void reasonPhraseIsOptional() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
-
-    final TestInterface api = newBuilder()
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    final Response response = api.post("foo");
-
-    assertThat(response.status()).isEqualTo(200);
-    // jaxrsclient is creating a reason when none is present
-    // assertThat(response.reason()).isNullOrEmpty();
-  }
-
-  @Override
-  @Test
-  public void parsesRequestAndResponse() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
-
-    final TestInterface api = newBuilder()
-        .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    final Response response = api.post("foo");
-
-    assertThat(response.status()).isEqualTo(200);
-    assertThat(response.reason()).isEqualTo("OK");
-    assertThat(response.headers())
-        .hasEntrySatisfying("Content-Length", value -> {
-          assertThat(value).contains("3");
-        }).hasEntrySatisfying("Foo", value -> {
-          assertThat(value).contains("Bar");
-        });
-    assertThat(response.body().asInputStream())
-        .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
-
-    /* queries with no values are omitted from the uri. See RFC 6750 */
-    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("POST")
-        .hasPath("/?foo=bar&foo=baz&qux")
-        .hasBody("foo");
-  }
-
-  @Test
-  void contentTypeWithoutCharset2() throws Exception {
-    server.enqueue(new MockResponse()
-        .setBody("AAAAAAAA"));
-    final JaxRSClientTestInterface api = newBuilder()
-        .target(JaxRSClientTestInterface.class, "http://localhost:" + server.getPort());
-
-    final Response response = api.getWithContentType();
-    // Response length should not be null
-    assertThat(Util.toString(response.body().asReader(UTF_8))).isEqualTo("AAAAAAAA");
-
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasHeaders(
-            MapEntry.entry("Accept", Collections.singletonList("text/plain")),
-            MapEntry.entry("Content-Type", Collections.singletonList("text/plain")))
-        .hasMethod("GET");
-  }
 
   @Test
   void consumesMultipleWithContentTypeHeaderAndBody() throws Exception {
@@ -153,51 +60,11 @@ public class JAXRSClientTest extends AbstractClientTest {
         .hasMethod("POST");
   }
 
-  /*
-   * JaxRS does not support gzip and deflate compression out-of-the-box.
-   */
-  @Override
-  public void canSupportGzip() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
-  @Override
-  public void canSupportGzipOnError() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
-  @Override
-  public void canSupportDeflate() throws Exception {
-    assumeFalse(false, "JaxRS client do not support deflate compression");
-  }
-
-  @Override
-  public void canSupportDeflateOnError() throws Exception {
-    assumeFalse(false, "JaxRS client do not support deflate compression");
-  }
-
-  @Override
-  public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
-  public interface JaxRSClientTestInterface {
-
-    @RequestLine("GET /")
-    @Headers({"Accept: text/plain", "Content-Type: text/plain"})
-    Response getWithContentType();
-  }
-
   public interface JaxRSClientTestInterfaceWithJaxRsContract {
     @Path("/")
     @POST
     @Consumes({"application/xml", "application/json"})
     Response consumesMultipleWithContentTypeHeaderAndBody(@HeaderParam("Content-Type") String contentType,
                                                           String body);
-  }
-
-  @Override
-  public void veryLongResponseNullLength() {
-    assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }
 }
