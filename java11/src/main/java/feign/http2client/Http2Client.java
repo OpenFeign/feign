@@ -15,6 +15,7 @@ package feign.http2client;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -39,6 +40,7 @@ import java.util.OptionalLong;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import feign.AsyncClient;
@@ -53,6 +55,8 @@ import static feign.Util.enumForName;
 public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
+
+  private final Map<Integer, SoftReference<HttpClient>> clients = new ConcurrentHashMap<>();
 
   /**
    * Creates the new Http2Client using following defaults:
@@ -140,15 +144,24 @@ public class Http2Client implements Client, AsyncClient<Object> {
     if (doesClientConfigurationDiffer(options)) {
       // create a new client from the existing one - but with connectTimeout and followRedirect
       // settings from options
-      java.net.http.HttpClient.Builder builder = newClientBuilder(options)
-          .sslContext(client.sslContext())
-          .sslParameters(client.sslParameters())
-          .version(client.version());
-      client.authenticator().ifPresent(builder::authenticator);
-      client.cookieHandler().ifPresent(builder::cookieHandler);
-      client.executor().ifPresent(builder::executor);
-      client.proxy().ifPresent(builder::proxy);
-      return builder.build();
+      final int clientKey = createClientKey(options);
+
+      SoftReference<HttpClient> requestScopedSoftReference = clients.get(clientKey);
+      HttpClient requestScoped = requestScopedSoftReference == null ? null : requestScopedSoftReference.get();
+
+      if (requestScoped == null) {
+        java.net.http.HttpClient.Builder builder = newClientBuilder(options)
+            .sslContext(client.sslContext())
+            .sslParameters(client.sslParameters())
+            .version(client.version());
+        client.authenticator().ifPresent(builder::authenticator);
+        client.cookieHandler().ifPresent(builder::cookieHandler);
+        client.executor().ifPresent(builder::executor);
+        client.proxy().ifPresent(builder::proxy);
+        requestScoped = builder.build();
+        clients.put(clientKey, new SoftReference<>(requestScoped));
+      }
+      return requestScoped;
     }
     return client;
   }
@@ -160,6 +173,20 @@ public class Http2Client implements Client, AsyncClient<Object> {
     return client.connectTimeout()
         .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
         .orElse(true);
+  }
+
+  /**
+   * Creates integer key that represents {@link Options} settings based
+   * on {@link Http2Client#doesClientConfigurationDiffer(Options)} method
+   * @param options value
+   * @return integer key
+   */
+  public int createClientKey(feign.Request.Options options) {
+    int key = options.connectTimeoutMillis();
+    if (options.isFollowRedirects()) {
+      key |= 1 << 31; // connectTimeoutMillis always positive, so we can use first sign bit for isFollowRedirects flag
+    }
+    return key;
   }
 
   private static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
