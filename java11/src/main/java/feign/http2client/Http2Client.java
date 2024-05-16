@@ -13,8 +13,16 @@
  */
 package feign.http2client;
 
-import java.io.ByteArrayInputStream;
+import feign.AsyncClient;
+import feign.Client;
+import feign.Request;
+import feign.Request.Options;
+import feign.Request.ProtocolVersion;
+import feign.Response;
+import feign.Util;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,13 +51,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import feign.AsyncClient;
-import feign.Client;
-import feign.Request;
-import feign.Request.Options;
-import feign.Request.ProtocolVersion;
-import feign.Response;
-import feign.Util;
+
 import static feign.Util.enumForName;
 
 public class Http2Client implements Client, AsyncClient<Object> {
@@ -98,9 +100,9 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
 
     HttpClient clientForRequest = getOrCreateClient(options);
-    HttpResponse<byte[]> httpResponse;
+    HttpResponse<InputStream> httpResponse;
     try {
-      httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofByteArray());
+      httpResponse = clientForRequest.send(httpRequest, BodyHandlers.ofInputStream());
     } catch (final InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IOException(e);
@@ -121,18 +123,17 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
 
     HttpClient clientForRequest = getOrCreateClient(options);
-    CompletableFuture<HttpResponse<byte[]>> future =
-        clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+    CompletableFuture<HttpResponse<InputStream>> future =
+        clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
     return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse));
   }
 
-  protected Response toFeignResponse(Request request, HttpResponse<byte[]> httpResponse) {
+  protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
     return Response.builder()
         .protocolVersion(enumForName(ProtocolVersion.class, httpResponse.version()))
-        .body(new ByteArrayInputStream(httpResponse.body()),
-            length.isPresent() ? (int) length.getAsLong() : null)
+        .body(httpResponse.body(), length.isPresent() ? (int) length.getAsLong() : null)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
         .request(request)
         .status(httpResponse.statusCode())
