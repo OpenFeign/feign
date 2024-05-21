@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import feign.AsyncClient;
 import feign.Client;
-import feign.Request.HttpMethod;
 import feign.Request.ProtocolVersion;
 import okhttp3.*;
 import static feign.Util.enumForName;
@@ -94,7 +93,7 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
   private static feign.Response toFeignResponse(Response response, feign.Request request)
       throws IOException {
     return feign.Response.builder()
-        .protocolVersion(enumForName(ProtocolVersion.class, response.protocol()))
+        .protocolVersion(enumForName(ProtocolVersion.class, response.protocol().name()))
         .status(response.code())
         .reason(response.message())
         .request(request)
