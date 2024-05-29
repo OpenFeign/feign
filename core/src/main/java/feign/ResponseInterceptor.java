@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -35,7 +35,7 @@ public interface ResponseInterceptor {
   /**
    * Return a new {@link ResponseInterceptor} that invokes the current interceptor first and then
    * the one that is passed in.
-   * 
+   *
    * @param nextInterceptor the interceptor to delegate to after the current
    * @return a new interceptor that chains the two
    */
@@ -52,7 +52,7 @@ public interface ResponseInterceptor {
 
     /**
      * Delegate to the rest of the chain to execute the request.
-     * 
+     *
      * @param context the request to execute the {@link Chain} .
      * @return the response
      */
@@ -61,7 +61,7 @@ public interface ResponseInterceptor {
 
   /**
    * Apply this interceptor to the given {@code Chain} resulting in an intercepted chain.
-   * 
+   *
    * @param chain the chain to add interception around
    * @return a new chain instance
    */

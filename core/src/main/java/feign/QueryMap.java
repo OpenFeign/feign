@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * precedence over any previously specified query parameters. It is not necessary to reference the
  * parameter map as a variable. <br>
  * <br>
- * 
+ *
  * <pre>
  * ...
  * &#64;RequestLine("POST /servers")
@@ -39,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * void get(&#64;Param("serverId") String serverId, &#64;Param("count") int count, &#64;QueryMap Map<String, Object>);
  * ...
  * </pre>
- * 
+ *
  * The annotated parameter must be an instance of {@link Map}, and the keys must be Strings. The
  * query value of a key will be the value of its toString method, except in the following cases:
  * <br>
@@ -75,7 +75,7 @@ public @interface QueryMap {
 
   /**
    * Specifies the QueryMapEncoder implementation to use to transform DTO into query map.
-   * 
+   *
    * @return the enum containing the instance of QueryMapEncoder
    */
   MapEncoder mapEncoder() default MapEncoder.DEFAULT;

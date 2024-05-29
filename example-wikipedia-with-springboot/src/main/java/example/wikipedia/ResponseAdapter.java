@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -33,7 +33,7 @@ abstract class ResponseAdapter<X> extends TypeAdapter<WikipediaClient.Response<X
    * ex. If {@link #query()} is {@code pages}, then this would parse the value of each key in the
    * dict {@code pages}. In the example below, this would first start at line {@code 3}.
    * <p/>
-   * 
+   *
    * <pre>
    * "pages": {
    *   "2576129": {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,11 +22,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Expands headers supplied in the {@code value}. Variables to the the right of the colon are
  * expanded. <br>
- * 
+ *
  * <pre>
  * &#64;Headers("Content-Type: application/xml")
  * interface SoapApi {
- * ...   
+ * ...
  * &#64;RequestLine("GET /")
  * &#64;Headers("Cache-Control: max-age=640000")
  * ...
@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Param("token") String token);
  * ...
  * </pre>
- * 
+ *
  * <br>
  * <strong>Notes:</strong>
  * <ul>
@@ -52,7 +52,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * The following two forms are identical. <br>
  * <br>
  * Feign:
- * 
+ *
  * <pre>
  * &#64;RequestLine("POST /")
  * &#64;Headers({
@@ -60,10 +60,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }) void post(&#64;Named("token") String token);
  * ...
  * </pre>
- * 
+ *
  * <br>
  * JAX-RS:
- * 
+ *
  * <pre>
  * &#64;POST &#64;Path("/")
  * void post(&#64;HeaderParam("X-Ping") String token);

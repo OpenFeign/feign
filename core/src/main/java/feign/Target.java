@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -43,7 +43,7 @@ public interface Target<T> {
    * headers or query parameters. <br>
    * <br>
    * For example: <br>
-   * 
+   *
    * <pre>
    * public Request apply(RequestTemplate input) {
    *   input.insert(0, url());
@@ -51,7 +51,7 @@ public interface Target<T> {
    *   return input.asRequest();
    * }
    * </pre>
-   * 
+   *
    * <br>
    * <br>
    * <br>

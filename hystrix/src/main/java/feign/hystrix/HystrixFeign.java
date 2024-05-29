@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -80,7 +80,7 @@ public final class HystrixFeign {
      * use this feature, pass a safe implementation of your target interface as the last parameter.
      *
      * Here's an example:
-     * 
+     *
      * <pre>
      * {@code
      *

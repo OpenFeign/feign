@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -26,7 +26,7 @@ import feign.codec.ErrorDecoder;
 /**
  * Wraps the returned {@link SOAPFault} if present into a {@link SOAPFaultException}. So you need to
  * catch {@link SOAPFaultException} to retrieve the reason of the {@link SOAPFault}.
- * 
+ *
  * <p>
  * If no faults is returned then the default {@link ErrorDecoder} is used to return exception and
  * eventually retry the call.
@@ -43,9 +43,9 @@ public class SOAPErrorDecoder implements ErrorDecoder {
 
   /**
    * SOAPErrorDecoder constructor allowing you to specify the SOAP protocol.
-   * 
+   *
    * @param soapProtocol a string constant representing the MessageFactory protocol.
-   * 
+   *
    * @see SOAPConstants#SOAP_1_1_PROTOCOL
    * @see SOAPConstants#SOAP_1_2_PROTOCOL
    * @see SOAPConstants#DYNAMIC_SOAP_PROTOCOL

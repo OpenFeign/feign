@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -34,14 +34,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * can be cumbersome (it requires more code for per-method customization, it is difficult to
  * implement in a thread-safe manner and it requires customization when the Feign client for the API
  * is built). <br>
- * 
+ *
  * <pre>
  * ...
  * &#64;RequestLine("GET /servers/{serverId}")
  * void get(&#64;Param("serverId") String serverId, &#64;HeaderMap Map<String, Object>);
  * ...
  * </pre>
- * 
+ *
  * The annotated parameter must be an instance of {@link Map}, and the keys must be Strings. The
  * header field value of a key will be the value of its toString method, except in the following
  * cases: <br>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -28,12 +28,12 @@ import static java.lang.String.format;
  * Using this will enable dynamic url discovery via ribbon including incrementing server request
  * counts. <br>
  * Ex.
- * 
+ *
  * <pre>
  * MyService api = Feign.builder().target(LoadBalancingTarget.create(MyService.class,
  * "http://myAppProd"))
  * </pre>
- * 
+ *
  * Where {@code myAppProd} is the ribbon loadbalancer name and {@code
  * myAppProd.ribbon.listOfServers} configuration is set.
  *

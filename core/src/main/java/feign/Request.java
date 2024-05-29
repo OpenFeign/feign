@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -310,7 +310,7 @@ public final class Request implements Serializable {
 
     /**
      * Get an Options by methodName
-     * 
+     *
      * @param methodName it's your FeignInterface method name.
      * @return method Options
      */
@@ -323,7 +323,7 @@ public final class Request implements Serializable {
 
     /**
      * Set methodOptions by methodKey and options
-     * 
+     *
      * @param methodName it's your FeignInterface method name.
      * @param options it's the Options for this method.
      */

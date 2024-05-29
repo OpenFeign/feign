@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,16 +22,16 @@ import static java.lang.String.format;
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
  * Encoder} is used when a method parameter has no {@code @Param} annotation. For example: <br>
  * <p/>
- * 
+ *
  * <pre>
  * &#064;POST
  * &#064;Path(&quot;/&quot;)
  * void create(User user);
  * </pre>
- * 
+ *
  * Example implementation: <br>
  * <p/>
- * 
+ *
  * <pre>
  * public class GsonEncoder implements Encoder {
  *   private final Gson gson;
@@ -57,7 +57,7 @@ import static java.lang.String.format;
  * Ex. The following is a form. Notice the parameters aren't consumed in the request line. A map
  * including "username" and "password" keys will passed to the encoder, and the body type will be
  * {@link #MAP_STRING_WILDCARD}.
- * 
+ *
  * <pre>
  * &#064;RequestLine(&quot;POST /&quot;)
  * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,12 +25,12 @@ import java.net.URI;
 /**
  * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
  * provided by Ribbon. Ex.
- * 
+ *
  * <pre>
  * MyService api = Feign.builder.client(RibbonClient.create()).target(MyService.class,
  *     &quot;http://myAppProd&quot;);
  * </pre>
- * 
+ *
  * Where {@code myAppProd} is the ribbon client name and {@code myAppProd.ribbon.listOfServers}
  * configuration is set.
  */

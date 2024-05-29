@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -104,7 +104,7 @@ public final class JAXBContextFactory {
 
   /**
    * Will preload factory's cache with JAXBContext for provided classes
-   * 
+   *
    * @param classes
    * @throws JAXBException
    */
@@ -176,7 +176,7 @@ public final class JAXBContextFactory {
 
     /**
      * Sets the given property of any Marshaller created by this factory.
-     * 
+     *
      * <p>
      * Example : <br>
      * <br>
