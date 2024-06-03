@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -188,7 +188,7 @@ public interface Client {
             }
           }
           // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
-          if (field.equals(ACCEPT_ENCODING)) {
+          else if (field.equals(ACCEPT_ENCODING)) {
             connection.addRequestProperty(field, String.join(", ", request.headers().get(field)));
             break;
           } else {
