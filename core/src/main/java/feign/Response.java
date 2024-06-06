@@ -158,8 +158,8 @@ public final class Response implements Closeable {
 
   /**
    * Nullable and not set when using http/2
-   *
-   * See https://github.com/http2/http2-spec/issues/202
+   * See <a href="https://github.com/http2/http2-spec/issues/202">...</a>
+   * See <a href="https://github.com/http2/http2-spec/issues/202">...</a>
    */
   public String reason() {
     return reason;
@@ -195,6 +195,11 @@ public final class Response implements Closeable {
     return protocolVersion;
   }
 
+  /**
+   * Returns a charset object based on the requests content type. Defaults to UTF-8
+   * See <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-5.3.3">rfc7231 - Accept-Charset</a>
+   * See <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1">rfc7231 - Media Type</a>
+   */
   public Charset charset() {
 
     Collection<String> contentTypeHeaders = headers().get("Content-Type");
@@ -205,7 +210,8 @@ public final class Response implements Closeable {
         if (contentTypeParmeters.length > 1) {
           String[] charsetParts = contentTypeParmeters[1].split("=");
           if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
-            return Charset.forName(charsetParts[1]);
+            String charsetString = charsetParts[1].replaceAll("\"", "");
+            return Charset.forName(charsetString);
           }
         }
       }
@@ -314,7 +320,7 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public Reader asReader(Charset charset) throws IOException {
+    public Reader asReader(Charset charset) {
       checkNotNull(charset, "charset should not be null");
       return new InputStreamReader(inputStream, charset);
     }
@@ -360,24 +366,24 @@ public final class Response implements Closeable {
     }
 
     @Override
-    public InputStream asInputStream() throws IOException {
+    public InputStream asInputStream() {
       return new ByteArrayInputStream(data);
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public Reader asReader() throws IOException {
+    public Reader asReader() {
       return new InputStreamReader(asInputStream(), UTF_8);
     }
 
     @Override
-    public Reader asReader(Charset charset) throws IOException {
+    public Reader asReader(Charset charset) {
       checkNotNull(charset, "charset should not be null");
       return new InputStreamReader(asInputStream(), charset);
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
 
   }
 
