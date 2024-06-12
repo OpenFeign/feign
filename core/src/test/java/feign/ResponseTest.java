@@ -70,6 +70,22 @@ class ResponseTest {
   }
 
   @Test
+  void charsetSupportsMediaTypesWithQuotedCharset() {
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
+    List<String> valueList = Collections.singletonList("application/json; charset=\"utf-8\"");
+    headersMap.put("Content-Type", valueList);
+    Response response =
+        Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
+    assertThat(response.charset()).isEqualTo(Util.UTF_8);
+  }
+
+  @Test
   void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
     Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
