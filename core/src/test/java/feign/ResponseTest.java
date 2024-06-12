@@ -14,6 +14,8 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +59,20 @@ class ResponseTest {
         }).hasEntrySatisfying("Content-Type", value -> {
           assertThat(value).contains("application/json");
         });
+  }
+
+  @Test
+  void charsetSupportsMediaTypesWithQuotedCharset() {
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
+    List<String> valueList = Collections.singletonList("application/json; charset=\"utf-8\"");
+    headersMap.put("Content-Type", valueList);
+    Response response = Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
+    assertThat(response.charset()).isEqualTo(Util.UTF_8);
   }
 
   @Test
