@@ -18,7 +18,7 @@ Include the dependency to your app:
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form</artifactId>
-    <version>3.8.0</version>
+    <version>4.0.0</version>
   </dependency>
   ...
 </dependencies>
@@ -27,7 +27,7 @@ Include the dependency to your app:
 **Gradle**:
 
 ```groovy
-compile 'io.github.openfeign.form:feign-form:3.8.0'
+compile 'io.github.openfeign.form:feign-form:4.0.0'
 ```
 
 ## Requirements
@@ -163,12 +163,12 @@ Include the dependencies to your project's pom.xml file:
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form</artifactId>
-    <version>3.8.0</version>
+    <version>4.0.0</version>
   </dependency>
   <dependency>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>feign-form-spring</artifactId>
-    <version>3.8.0</version>
+    <version>4.0.0</version>
   </dependency>
 </dependencies>
 ```

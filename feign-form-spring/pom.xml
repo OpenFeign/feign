@@ -21,7 +21,7 @@ limitations under the License.
   <parent>
     <groupId>io.github.openfeign.form</groupId>
     <artifactId>parent</artifactId>
-    <version>3.8.0</version>
+    <version>4.0.0</version>
   </parent>
 
   <artifactId>feign-form-spring</artifactId>
