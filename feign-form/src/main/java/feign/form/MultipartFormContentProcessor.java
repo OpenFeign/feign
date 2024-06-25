@@ -30,7 +30,6 @@ import java.util.Map;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -101,8 +100,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
       // Feign's clients try to determine binary/string content by charset presence
       // so, I set it to null (in spite of availability charset) for backward compatibility.
       val bytes = output.toByteArray();
-      val body = Request.Body.encoded(bytes, null);
-      template.body(body);
+      template.body(bytes, null);
     } catch (IOException ex) {
       throw new EncodeException("Output closing error", ex);
     }

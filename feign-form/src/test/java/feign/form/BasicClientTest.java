@@ -33,12 +33,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import feign.Feign;
+import feign.Logger.JavaLogger;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
 
 @SpringBootTest(
-    webEnvironment = DEFINED_PORT,
-    classes = Server.class
+  webEnvironment = DEFINED_PORT,
+  classes = Server.class
 )
 class BasicClientTest {
 
@@ -47,7 +48,7 @@ class BasicClientTest {
   static {
     API = Feign.builder()
         .encoder(new FormEncoder(new JacksonEncoder()))
-        .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
+        .logger(new JavaLogger(BasicClientTest.class).appendToFile("log.txt"))
         .logLevel(FULL)
         .target(TestClient.class, "http://localhost:8080");
   }

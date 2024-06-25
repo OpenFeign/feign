@@ -48,7 +48,7 @@ public class DelegateWriter extends AbstractWriter {
   protected void write (Output output, String key, Object value) throws EncodeException {
     val fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
-    val bytes = fake.requestBody().asBytes();
+    val bytes = fake.body();
     val string = new String(bytes, output.getCharset()).replaceAll("\n", "");
     parameterWriter.write(output, key, string);
   }

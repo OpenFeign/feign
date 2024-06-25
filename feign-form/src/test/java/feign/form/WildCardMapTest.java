@@ -29,7 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import feign.Feign;
 import feign.Headers;
-import feign.Logger;
+import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.Response;
 
@@ -45,7 +45,7 @@ class WildCardMapTest {
   static void configureClient () {
     api = Feign.builder()
         .encoder(new FormEncoder())
-        .logger(new Logger.JavaLogger().appendToFile("log.txt"))
+        .logger(new JavaLogger(WildCardMapTest.class).appendToFile("log.txt"))
         .logLevel(FULL)
         .target(FormUrlEncodedApi.class, "http://localhost:8080");
   }

@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import feign.Feign;
 import feign.Headers;
+import feign.Logger.JavaLogger;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
@@ -44,7 +45,7 @@ class ByteArrayClientTest {
 
     API = Feign.builder()
         .encoder(encoder)
-        .logger(new feign.Logger.JavaLogger().appendToFile("log-byte.txt"))
+        .logger(new JavaLogger(ByteArrayClientTest.class).appendToFile("log-byte.txt"))
         .logLevel(FULL)
         .target(CustomClient.class, "http://localhost:8080");
   }
