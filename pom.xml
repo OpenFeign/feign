@@ -163,6 +163,19 @@ limitations under the License.
     </dependency>
 
     <dependency>
+      <groupId>io.undertow</groupId>
+      <artifactId>undertow-core</artifactId>
+      <version>2.3.14.Final</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.appulse</groupId>
+      <artifactId>utils-java</artifactId>
+      <version>1.18.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <version>5.10.2</version>
@@ -398,6 +411,62 @@ limitations under the License.
               <goal>jar</goal>
             </goals>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <skipTests>${skipUnitTests}</skipTests>
+          <trimStackTrace>false</trimStackTrace>
+          <includes>
+            <include>**/*Test.java</include>
+            <include>**/*Tests.java</include>
+            <include>**/Test*.java</include>
+          </includes>
+          <excludes>
+            <exclude>**/it/**</exclude>
+            <exclude>**/*IntegrationTest.java</exclude>
+            <exclude>**/*IntegrationTests.java</exclude>
+            <exclude>**/*IT.java</exclude>
+            <exclude>**/IT*.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <skipITs>${skipIntegrationTests}</skipITs>
+          <trimStackTrace>false</trimStackTrace>
+          <includes>
+            <include>**/*IntegrationTest.java</include>
+            <include>**/*IntegrationTests.java</include>
+            <include>**/*IT.java</include>
+            <include>**/IT*.java</include>
+            <include>**/it/**/*Test.java</include>
+            <include>**/it/**/*Tests.java</include>
+            <include>**/it/**/Test*.java</include>
+          </includes>
+          <classpathDependencyExcludes>
+            <classpathDependencyExcludes>${project.groupId}:${project.artifactId}</classpathDependencyExcludes>
+          </classpathDependencyExcludes>
+          <additionalClasspathElements>
+            <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
+          </additionalClasspathElements>
+        </configuration>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

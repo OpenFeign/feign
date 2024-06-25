@@ -41,6 +41,7 @@ limitations under the License.
         <configuration>
           <instructions>
             <Export-Package>feign.form</Export-Package>
+            <Export-Package>feign.form.multipart</Export-Package>
           </instructions>
         </configuration>
       </plugin>
