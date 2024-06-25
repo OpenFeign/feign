@@ -75,7 +75,6 @@ public class Output implements Closeable {
    *
    * @return this output
    */
-  @SneakyThrows
   public Output write (byte[] bytes, int offset, int length) {
     outputStream.write(bytes, offset, length);
     return this;
