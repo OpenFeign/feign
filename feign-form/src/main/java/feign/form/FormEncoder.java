@@ -83,13 +83,13 @@ public class FormEncoder implements Encoder {
       throws EncodeException {
     String contentTypeValue = getContentTypeValue(template.headers());
     val contentType = ContentType.of(contentTypeValue);
-    if (!processors.containsKey(contentType)) {
+    if (processors.containsKey(contentType) == false) {
       delegate.encode(object, bodyType, template);
       return;
     }
 
     Map<String, Object> data;
-    if (MAP_STRING_WILDCARD.equals(bodyType)) {
+    if (object instanceof Map) {
       data = (Map<String, Object>) object;
     } else if (isUserPojo(bodyType)) {
       data = toMap(object);
