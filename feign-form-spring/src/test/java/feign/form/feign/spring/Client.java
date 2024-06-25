@@ -39,14 +39,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * @author Artem Labazin
- */
 @FeignClient(
     name = "multipart-support-service",
     url = "http://localhost:8080",
     configuration = Client.ClientConfiguration.class)
-public interface Client {
+interface Client {
 
   @RequestMapping(
       value = "/multipart/upload1/{folder}",
@@ -54,8 +51,8 @@ public interface Client {
       consumes = MULTIPART_FORM_DATA_VALUE)
   String upload1(
       @PathVariable("folder") String folder,
-      @RequestPart MultipartFile file,
-      @RequestParam(value = "message", required = false) String message);
+      @RequestPart("file") MultipartFile file,
+      @RequestParam(name = "message", required = false) String message);
 
   @RequestMapping(
       value = "/multipart/upload2/{folder}",
@@ -64,7 +61,7 @@ public interface Client {
   String upload2(
       @RequestBody MultipartFile file,
       @PathVariable("folder") String folder,
-      @RequestParam(value = "message", required = false) String message);
+      @RequestParam(name = "message", required = false) String message);
 
   @RequestMapping(
       value = "/multipart/upload3/{folder}",
@@ -73,7 +70,7 @@ public interface Client {
   String upload3(
       @RequestBody MultipartFile file,
       @PathVariable("folder") String folder,
-      @RequestParam(value = "message", required = false) String message);
+      @RequestParam(name = "message", required = false) String message);
 
   @RequestMapping(
       path = "/multipart/upload4/{id}",
@@ -88,22 +85,22 @@ public interface Client {
   Response upload5(Dto dto);
 
   @RequestMapping(path = "/multipart/upload6", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
-  String upload6Array(@RequestPart MultipartFile[] files);
+  String upload6Array(MultipartFile[] files);
 
   @RequestMapping(path = "/multipart/upload6", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
-  String upload6Collection(@RequestPart List<MultipartFile> files);
+  String upload6Collection(List<MultipartFile> files);
 
   class ClientConfiguration {
 
     @Autowired private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
-    public Encoder feignEncoder() {
+    Encoder feignEncoder() {
       return new SpringFormEncoder(new SpringEncoder(messageConverters));
     }
 
     @Bean
-    public Logger.Level feignLogger() {
+    Logger.Level feignLogger() {
       return Logger.Level.FULL;
     }
   }

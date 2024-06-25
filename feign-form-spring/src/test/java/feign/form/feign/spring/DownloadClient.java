@@ -36,7 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
     name = "multipart-download-support-service",
     url = "http://localhost:8081",
     configuration = DownloadClient.ClientConfiguration.class)
-public interface DownloadClient {
+interface DownloadClient {
 
   @RequestMapping("/multipart/download/{fileId}")
   MultipartFile[] download(@PathVariable("fileId") String fileId);
@@ -46,7 +46,7 @@ public interface DownloadClient {
     @Autowired private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
-    public Decoder feignDecoder() {
+    Decoder feignDecoder() {
       val springConverters = messageConverters.getObject().getConverters();
       val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
@@ -66,7 +66,7 @@ public interface DownloadClient {
     }
 
     @Bean
-    public Logger.Level feignLoggerLevel() {
+    Logger.Level feignLoggerLevel() {
       return Logger.Level.FULL;
     }
   }

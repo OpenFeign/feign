@@ -1,0 +1,442 @@
+[INFO] Scanning for projects...
+[INFO] Inspecting build with total of 3 modules...
+[INFO] Installing Nexus Staging features:
+[INFO]   ... total of 3 executions of maven-deploy-plugin replaced with nexus-staging-maven-plugin
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] Open Feign Forms Parent                                            [pom]
+[INFO] Open Feign Forms Core                                              [jar]
+[INFO] Open Feign Forms Extension for Spring                              [jar]
+[INFO] 
+[INFO] ------------------< io.github.openfeign.form:parent >-------------------
+[INFO] Building Open Feign Forms Parent 4.0.0                             [1/3]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- dependency:3.7.0:tree (default-cli) @ parent ---
+[INFO] io.github.openfeign.form:parent:pom:4.0.0
+[INFO] +- org.projectlombok:lombok:jar:1.18.32:provided
+[INFO] +- org.slf4j:slf4j-api:jar:2.0.13:compile
+[INFO] +- io.github.openfeign:feign-core:jar:13.3:provided
+[INFO] +- io.github.openfeign:feign-jackson:jar:13.3:test
+[INFO] |  +- (io.github.openfeign:feign-core:jar:13.3:test - omitted for duplicate)
+[INFO] |  \- com.fasterxml.jackson.core:jackson-databind:jar:2.17.1:test
+[INFO] |     +- com.fasterxml.jackson.core:jackson-annotations:jar:2.17.1:test
+[INFO] |     \- com.fasterxml.jackson.core:jackson-core:jar:2.17.1:test
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.7.18:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter:jar:2.7.18:test
+[INFO] |  |  +- org.springframework.boot:spring-boot:jar:2.7.18:test
+[INFO] |  |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  |  \- (org.springframework:spring-context:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test
+[INFO] |  |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-starter-logging:jar:2.7.18:test
+[INFO] |  |  |  +- ch.qos.logback:logback-classic:jar:1.2.12:test
+[INFO] |  |  |  |  +- ch.qos.logback:logback-core:jar:1.2.12:test
+[INFO] |  |  |  |  \- (org.slf4j:slf4j-api:jar:1.7.32:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:test
+[INFO] |  |  |  |  +- (org.slf4j:slf4j-api:jar:1.7.35:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  |  \- org.apache.logging.log4j:log4j-api:jar:2.17.2:test
+[INFO] |  |  |  \- org.slf4j:jul-to-slf4j:jar:1.7.36:test
+[INFO] |  |  |     \- (org.slf4j:slf4j-api:jar:1.7.36:test - omitted for conflict with 2.0.13)
+[INFO] |  |  +- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test
+[INFO] |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  \- org.yaml:snakeyaml:jar:1.30:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter-json:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-annotations:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.13.5:test
+[INFO] |  |     +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |     \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.7.18:test
+[INFO] |  |  +- (jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test - omitted for duplicate)
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-el:jar:9.0.83:test
+[INFO] |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.83:test
+[INFO] |  |     \- (org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test - omitted for duplicate)
+[INFO] |  +- org.springframework:spring-web:jar:5.3.31:test
+[INFO] |  |  +- org.springframework:spring-beans:jar:5.3.31:test
+[INFO] |  |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.springframework:spring-webmvc:jar:5.3.31:test
+[INFO] |     +- org.springframework:spring-aop:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-context:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-aop:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-expression:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-expression:jar:5.3.31:test
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     \- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] +- org.springframework.boot:spring-boot-starter-test:jar:2.7.18:test
+[INFO] |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test:jar:2.7.18:test
+[INFO] |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework.boot:spring-boot-test:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  \- (org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- com.jayway.jsonpath:json-path:jar:2.7.0:test
+[INFO] |  |  +- net.minidev:json-smart:jar:2.4.7:test
+[INFO] |  |  |  \- net.minidev:accessors-smart:jar:2.4.7:test
+[INFO] |  |  |     \- org.ow2.asm:asm:jar:9.1:test
+[INFO] |  |  \- (org.slf4j:slf4j-api:jar:1.7.33:test - omitted for conflict with 2.0.13)
+[INFO] |  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test
+[INFO] |  |  \- jakarta.activation:jakarta.activation-api:jar:1.2.2:test
+[INFO] |  +- (org.assertj:assertj-core:jar:3.22.0:test - omitted for conflict with 3.26.0)
+[INFO] |  +- org.hamcrest:hamcrest:jar:2.2:test
+[INFO] |  +- org.junit.jupiter:junit-jupiter:jar:5.8.2:test
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-params:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  \- (org.junit.jupiter:junit-jupiter-engine:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  +- (org.mockito:mockito-core:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- (org.mockito:mockito-junit-jupiter:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- org.skyscreamer:jsonassert:jar:1.5.1:test
+[INFO] |  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+[INFO] |  +- org.springframework:spring-core:jar:5.3.31:test
+[INFO] |  |  \- org.springframework:spring-jcl:jar:5.3.31:test
+[INFO] |  +- org.springframework:spring-test:jar:5.3.31:test
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.xmlunit:xmlunit-core:jar:2.9.1:test
+[INFO] |     \- (jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test - omitted for duplicate)
+[INFO] +- org.junit.jupiter:junit-jupiter-engine:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- org.junit.platform:junit-platform-engine:jar:1.10.2:test
+[INFO] |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
+[INFO] |  |  +- org.junit.platform:junit-platform-commons:jar:1.10.2:test
+[INFO] |  |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  +- org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test
+[INFO] |  |  +- (org.opentest4j:opentest4j:jar:1.3.0:test - omitted for duplicate)
+[INFO] |  |  +- (org.junit.platform:junit-platform-commons:jar:1.10.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  \- org.apiguardian:apiguardian-api:jar:1.1.2:test
+[INFO] +- org.junit.jupiter:junit-jupiter-params:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] +- org.assertj:assertj-core:jar:3.26.0:test (scope not updated to test)
+[INFO] |  \- net.bytebuddy:byte-buddy:jar:1.14.16:test
+[INFO] +- org.mockito:mockito-core:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (net.bytebuddy:byte-buddy:jar:1.14.15:test - omitted for conflict with 1.14.16)
+[INFO] |  +- net.bytebuddy:byte-buddy-agent:jar:1.14.15:test
+[INFO] |  \- org.objenesis:objenesis:jar:3.3:test
+[INFO] +- org.mockito:mockito-junit-jupiter:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (org.mockito:mockito-core:jar:5.12.0:test - omitted for duplicate)
+[INFO] |  \- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] +- net.jcip:jcip-annotations:jar:1.0:provided
+[INFO] \- com.github.spotbugs:spotbugs-annotations:jar:4.8.6:provided
+[INFO]    \- com.google.code.findbugs:jsr305:jar:3.0.2:provided
+[INFO] 
+[INFO] ----------------< io.github.openfeign.form:feign-form >-----------------
+[INFO] Building Open Feign Forms Core 4.0.0                               [2/3]
+[INFO]   from feign-form/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- dependency:3.7.0:tree (default-cli) @ feign-form ---
+[INFO] io.github.openfeign.form:feign-form:jar:4.0.0
+[INFO] +- org.projectlombok:lombok:jar:1.18.32:provided
+[INFO] +- org.slf4j:slf4j-api:jar:2.0.13:compile
+[INFO] +- io.github.openfeign:feign-core:jar:13.3:provided
+[INFO] +- io.github.openfeign:feign-jackson:jar:13.3:test
+[INFO] |  +- (io.github.openfeign:feign-core:jar:13.3:test - omitted for duplicate)
+[INFO] |  \- com.fasterxml.jackson.core:jackson-databind:jar:2.17.1:test
+[INFO] |     +- com.fasterxml.jackson.core:jackson-annotations:jar:2.17.1:test
+[INFO] |     \- com.fasterxml.jackson.core:jackson-core:jar:2.17.1:test
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.7.18:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter:jar:2.7.18:test
+[INFO] |  |  +- org.springframework.boot:spring-boot:jar:2.7.18:test
+[INFO] |  |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  |  \- (org.springframework:spring-context:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test
+[INFO] |  |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-starter-logging:jar:2.7.18:test
+[INFO] |  |  |  +- ch.qos.logback:logback-classic:jar:1.2.12:test
+[INFO] |  |  |  |  +- ch.qos.logback:logback-core:jar:1.2.12:test
+[INFO] |  |  |  |  \- (org.slf4j:slf4j-api:jar:1.7.32:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:test
+[INFO] |  |  |  |  +- (org.slf4j:slf4j-api:jar:1.7.35:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  |  \- org.apache.logging.log4j:log4j-api:jar:2.17.2:test
+[INFO] |  |  |  \- org.slf4j:jul-to-slf4j:jar:1.7.36:test
+[INFO] |  |  |     \- (org.slf4j:slf4j-api:jar:1.7.36:test - omitted for conflict with 2.0.13)
+[INFO] |  |  +- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test
+[INFO] |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  \- org.yaml:snakeyaml:jar:1.30:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter-json:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-annotations:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.13.5:test
+[INFO] |  |     +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |     \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.7.18:test
+[INFO] |  |  +- (jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test - omitted for duplicate)
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-el:jar:9.0.83:test
+[INFO] |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.83:test
+[INFO] |  |     \- (org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test - omitted for duplicate)
+[INFO] |  +- org.springframework:spring-web:jar:5.3.31:test
+[INFO] |  |  +- org.springframework:spring-beans:jar:5.3.31:test
+[INFO] |  |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.springframework:spring-webmvc:jar:5.3.31:test
+[INFO] |     +- org.springframework:spring-aop:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-context:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-aop:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-expression:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-expression:jar:5.3.31:test
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     \- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] +- org.springframework.boot:spring-boot-starter-test:jar:2.7.18:test
+[INFO] |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test:jar:2.7.18:test
+[INFO] |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework.boot:spring-boot-test:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  \- (org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- com.jayway.jsonpath:json-path:jar:2.7.0:test
+[INFO] |  |  +- net.minidev:json-smart:jar:2.4.7:test
+[INFO] |  |  |  \- net.minidev:accessors-smart:jar:2.4.7:test
+[INFO] |  |  |     \- org.ow2.asm:asm:jar:9.1:test
+[INFO] |  |  \- (org.slf4j:slf4j-api:jar:1.7.33:test - omitted for conflict with 2.0.13)
+[INFO] |  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test
+[INFO] |  |  \- jakarta.activation:jakarta.activation-api:jar:1.2.2:test
+[INFO] |  +- (org.assertj:assertj-core:jar:3.22.0:test - omitted for conflict with 3.26.0)
+[INFO] |  +- org.hamcrest:hamcrest:jar:2.2:test
+[INFO] |  +- org.junit.jupiter:junit-jupiter:jar:5.8.2:test
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-params:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  \- (org.junit.jupiter:junit-jupiter-engine:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  +- (org.mockito:mockito-core:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- (org.mockito:mockito-junit-jupiter:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- org.skyscreamer:jsonassert:jar:1.5.1:test
+[INFO] |  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+[INFO] |  +- org.springframework:spring-core:jar:5.3.31:test
+[INFO] |  |  \- org.springframework:spring-jcl:jar:5.3.31:test
+[INFO] |  +- org.springframework:spring-test:jar:5.3.31:test
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.xmlunit:xmlunit-core:jar:2.9.1:test
+[INFO] |     \- (jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test - omitted for duplicate)
+[INFO] +- org.junit.jupiter:junit-jupiter-engine:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- org.junit.platform:junit-platform-engine:jar:1.10.2:test
+[INFO] |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
+[INFO] |  |  +- org.junit.platform:junit-platform-commons:jar:1.10.2:test
+[INFO] |  |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  +- org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test
+[INFO] |  |  +- (org.opentest4j:opentest4j:jar:1.3.0:test - omitted for duplicate)
+[INFO] |  |  +- (org.junit.platform:junit-platform-commons:jar:1.10.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  \- org.apiguardian:apiguardian-api:jar:1.1.2:test
+[INFO] +- org.junit.jupiter:junit-jupiter-params:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] +- org.assertj:assertj-core:jar:3.26.0:test (scope not updated to test)
+[INFO] |  \- net.bytebuddy:byte-buddy:jar:1.14.16:test
+[INFO] +- org.mockito:mockito-core:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (net.bytebuddy:byte-buddy:jar:1.14.15:test - omitted for conflict with 1.14.16)
+[INFO] |  +- net.bytebuddy:byte-buddy-agent:jar:1.14.15:test
+[INFO] |  \- org.objenesis:objenesis:jar:3.3:test
+[INFO] +- org.mockito:mockito-junit-jupiter:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (org.mockito:mockito-core:jar:5.12.0:test - omitted for duplicate)
+[INFO] |  \- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] +- net.jcip:jcip-annotations:jar:1.0:provided
+[INFO] \- com.github.spotbugs:spotbugs-annotations:jar:4.8.6:provided
+[INFO]    \- com.google.code.findbugs:jsr305:jar:3.0.2:provided
+[INFO] 
+[INFO] -------------< io.github.openfeign.form:feign-form-spring >-------------
+[INFO] Building Open Feign Forms Extension for Spring 4.0.0               [3/3]
+[INFO]   from feign-form-spring/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- dependency:3.7.0:tree (default-cli) @ feign-form-spring ---
+[INFO] io.github.openfeign.form:feign-form-spring:jar:4.0.0
+[INFO] +- io.github.openfeign.form:feign-form:jar:4.0.0:compile
+[INFO] |  \- (org.slf4j:slf4j-api:jar:2.0.13:compile - omitted for duplicate)
+[INFO] +- org.springframework:spring-web:jar:5.3.31:compile
+[INFO] |  +- org.springframework:spring-beans:jar:5.3.31:compile (scope not updated to compile)
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:compile - omitted for duplicate)
+[INFO] |  \- org.springframework:spring-core:jar:5.3.31:compile (scope not updated to compile)
+[INFO] |     \- org.springframework:spring-jcl:jar:5.3.31:compile
+[INFO] +- commons-fileupload:commons-fileupload:jar:1.5:compile
+[INFO] |  \- commons-io:commons-io:jar:2.11.0:compile
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.7.18:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter:jar:2.7.18:test
+[INFO] |  |  +- org.springframework.boot:spring-boot:jar:2.7.18:test
+[INFO] |  |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  |  \- (org.springframework:spring-context:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test
+[INFO] |  |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- org.springframework.boot:spring-boot-starter-logging:jar:2.7.18:test
+[INFO] |  |  |  +- ch.qos.logback:logback-classic:jar:1.2.12:test
+[INFO] |  |  |  |  +- ch.qos.logback:logback-core:jar:1.2.12:test
+[INFO] |  |  |  |  \- (org.slf4j:slf4j-api:jar:1.7.32:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:test
+[INFO] |  |  |  |  +- (org.slf4j:slf4j-api:jar:1.7.35:test - omitted for conflict with 2.0.13)
+[INFO] |  |  |  |  \- org.apache.logging.log4j:log4j-api:jar:2.17.2:test
+[INFO] |  |  |  \- org.slf4j:jul-to-slf4j:jar:1.7.36:test
+[INFO] |  |  |     \- (org.slf4j:slf4j-api:jar:1.7.36:test - omitted for conflict with 2.0.13)
+[INFO] |  |  +- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test
+[INFO] |  |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  \- org.yaml:snakeyaml:jar:1.30:test
+[INFO] |  +- org.springframework.boot:spring-boot-starter-json:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  |  +- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.13.5:test
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-annotations:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  |  \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.13.5:test
+[INFO] |  |     +- (com.fasterxml.jackson.core:jackson-core:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  |     \- (com.fasterxml.jackson.core:jackson-databind:jar:2.13.5:test - omitted for conflict with 2.17.1)
+[INFO] |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.7.18:test
+[INFO] |  |  +- (jakarta.annotation:jakarta.annotation-api:jar:1.3.5:test - omitted for duplicate)
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-el:jar:9.0.83:test
+[INFO] |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.83:test
+[INFO] |  |     \- (org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.83:test - omitted for duplicate)
+[INFO] |  +- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.springframework:spring-webmvc:jar:5.3.31:test
+[INFO] |     +- org.springframework:spring-aop:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-context:jar:5.3.31:test
+[INFO] |     |  +- (org.springframework:spring-aop:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-beans:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     |  \- (org.springframework:spring-expression:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     +- org.springframework:spring-expression:jar:5.3.31:test
+[INFO] |     |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |     \- (org.springframework:spring-web:jar:5.3.31:test - omitted for duplicate)
+[INFO] +- org.springframework.cloud:spring-cloud-starter-openfeign:jar:3.1.9:test
+[INFO] |  +- org.springframework.cloud:spring-cloud-starter:jar:3.1.8:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot-starter:jar:2.6.15:test - omitted for conflict with 2.7.18)
+[INFO] |  |  +- org.springframework.cloud:spring-cloud-context:jar:3.1.8:test
+[INFO] |  |  |  \- (org.springframework.security:spring-security-crypto:jar:5.6.10:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework.cloud:spring-cloud-commons:jar:3.1.8:test - omitted for duplicate)
+[INFO] |  |  \- org.springframework.security:spring-security-rsa:jar:1.0.12.RELEASE:test
+[INFO] |  |     \- org.bouncycastle:bcpkix-jdk18on:jar:1.73:test
+[INFO] |  |        +- org.bouncycastle:bcprov-jdk18on:jar:1.73:test
+[INFO] |  |        \- org.bouncycastle:bcutil-jdk18on:jar:1.73:test
+[INFO] |  |           \- (org.bouncycastle:bcprov-jdk18on:jar:1.73:test - omitted for duplicate)
+[INFO] |  +- org.springframework.cloud:spring-cloud-openfeign-core:jar:3.1.9:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot-autoconfigure:jar:2.6.15:test - omitted for conflict with 2.7.18)
+[INFO] |  |  +- org.springframework.boot:spring-boot-starter-aop:jar:2.6.15:test
+[INFO] |  |  |  +- (org.springframework.boot:spring-boot-starter:jar:2.6.15:test - omitted for conflict with 2.7.18)
+[INFO] |  |  |  +- (org.springframework:spring-aop:jar:5.3.27:test - omitted for conflict with 5.3.31)
+[INFO] |  |  |  \- org.aspectj:aspectjweaver:jar:1.9.7:test
+[INFO] |  |  \- (commons-fileupload:commons-fileupload:jar:1.5:test - omitted for duplicate)
+[INFO] |  +- (org.springframework:spring-web:jar:5.3.27:test - omitted for conflict with 5.3.31)
+[INFO] |  +- org.springframework.cloud:spring-cloud-commons:jar:3.1.8:test
+[INFO] |  |  \- org.springframework.security:spring-security-crypto:jar:5.6.10:test
+[INFO] |  +- (io.github.openfeign:feign-core:jar:11.10:test - omitted for conflict with 13.3)
+[INFO] |  \- io.github.openfeign:feign-slf4j:jar:11.10:test
+[INFO] |     +- (io.github.openfeign:feign-core:jar:11.10:test - omitted for conflict with 13.3)
+[INFO] |     \- (org.slf4j:slf4j-api:jar:1.7.36:test - omitted for conflict with 2.0.13)
+[INFO] +- org.projectlombok:lombok:jar:1.18.32:provided
+[INFO] +- org.slf4j:slf4j-api:jar:2.0.13:compile
+[INFO] +- io.github.openfeign:feign-core:jar:13.3:provided
+[INFO] +- io.github.openfeign:feign-jackson:jar:13.3:test
+[INFO] |  +- (io.github.openfeign:feign-core:jar:13.3:test - omitted for duplicate)
+[INFO] |  \- com.fasterxml.jackson.core:jackson-databind:jar:2.17.1:test
+[INFO] |     +- com.fasterxml.jackson.core:jackson-annotations:jar:2.17.1:test
+[INFO] |     \- com.fasterxml.jackson.core:jackson-core:jar:2.17.1:test
+[INFO] +- org.springframework.boot:spring-boot-starter-test:jar:2.7.18:test
+[INFO] |  +- (org.springframework.boot:spring-boot-starter:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test:jar:2.7.18:test
+[INFO] |  |  \- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:2.7.18:test
+[INFO] |  |  +- (org.springframework.boot:spring-boot:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  +- (org.springframework.boot:spring-boot-test:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  |  \- (org.springframework.boot:spring-boot-autoconfigure:jar:2.7.18:test - omitted for duplicate)
+[INFO] |  +- com.jayway.jsonpath:json-path:jar:2.7.0:test
+[INFO] |  |  +- net.minidev:json-smart:jar:2.4.7:test
+[INFO] |  |  |  \- net.minidev:accessors-smart:jar:2.4.7:test
+[INFO] |  |  |     \- org.ow2.asm:asm:jar:9.1:test
+[INFO] |  |  \- (org.slf4j:slf4j-api:jar:1.7.33:test - omitted for conflict with 2.0.13)
+[INFO] |  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test
+[INFO] |  |  \- jakarta.activation:jakarta.activation-api:jar:1.2.2:test
+[INFO] |  +- (org.assertj:assertj-core:jar:3.22.0:test - omitted for conflict with 3.26.0)
+[INFO] |  +- org.hamcrest:hamcrest:jar:2.2:test
+[INFO] |  +- org.junit.jupiter:junit-jupiter:jar:5.8.2:test
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  +- (org.junit.jupiter:junit-jupiter-params:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  |  \- (org.junit.jupiter:junit-jupiter-engine:jar:5.8.2:test - omitted for conflict with 5.10.2)
+[INFO] |  +- (org.mockito:mockito-core:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- (org.mockito:mockito-junit-jupiter:jar:4.5.1:test - omitted for conflict with 5.12.0)
+[INFO] |  +- org.skyscreamer:jsonassert:jar:1.5.1:test
+[INFO] |  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+[INFO] |  +- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  +- org.springframework:spring-test:jar:5.3.31:test
+[INFO] |  |  \- (org.springframework:spring-core:jar:5.3.31:test - omitted for duplicate)
+[INFO] |  \- org.xmlunit:xmlunit-core:jar:2.9.1:test
+[INFO] |     \- (jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test - omitted for duplicate)
+[INFO] +- org.junit.jupiter:junit-jupiter-engine:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- org.junit.platform:junit-platform-engine:jar:1.10.2:test
+[INFO] |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
+[INFO] |  |  +- org.junit.platform:junit-platform-commons:jar:1.10.2:test
+[INFO] |  |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  +- org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test
+[INFO] |  |  +- (org.opentest4j:opentest4j:jar:1.3.0:test - omitted for duplicate)
+[INFO] |  |  +- (org.junit.platform:junit-platform-commons:jar:1.10.2:test - omitted for duplicate)
+[INFO] |  |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] |  \- org.apiguardian:apiguardian-api:jar:1.1.2:test
+[INFO] +- org.junit.jupiter:junit-jupiter-params:jar:5.10.2:test (scope not updated to test)
+[INFO] |  +- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] |  \- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+[INFO] +- org.assertj:assertj-core:jar:3.26.0:test (scope not updated to test)
+[INFO] |  \- net.bytebuddy:byte-buddy:jar:1.14.16:test
+[INFO] +- org.mockito:mockito-core:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (net.bytebuddy:byte-buddy:jar:1.14.15:test - omitted for conflict with 1.14.16)
+[INFO] |  +- net.bytebuddy:byte-buddy-agent:jar:1.14.15:test
+[INFO] |  \- org.objenesis:objenesis:jar:3.3:test
+[INFO] +- org.mockito:mockito-junit-jupiter:jar:5.12.0:test (scope not updated to test)
+[INFO] |  +- (org.mockito:mockito-core:jar:5.12.0:test - omitted for duplicate)
+[INFO] |  \- (org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test - omitted for duplicate)
+[INFO] +- net.jcip:jcip-annotations:jar:1.0:provided
+[INFO] \- com.github.spotbugs:spotbugs-annotations:jar:4.8.6:provided
+[INFO]    \- com.google.code.findbugs:jsr305:jar:3.0.2:provided
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Open Feign Forms Parent 4.0.0:
+[INFO] 
+[INFO] Open Feign Forms Parent ............................ SUCCESS [  0.270 s]
+[INFO] Open Feign Forms Core .............................. SUCCESS [  0.032 s]
+[INFO] Open Feign Forms Extension for Spring .............. SUCCESS [  0.033 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.700 s
+[INFO] Finished at: 2024-06-25T01:43:33+02:00
+[INFO] ------------------------------------------------------------------------

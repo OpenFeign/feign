@@ -16,9 +16,9 @@
 
 package feign.form;
 
-import static feign.form.util.CharsetUtil.UTF_8;
 import static feign.form.util.PojoUtil.isUserPojo;
 import static feign.form.util.PojoUtil.toMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -35,6 +35,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * A Feign's form encoder.
+ *
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)

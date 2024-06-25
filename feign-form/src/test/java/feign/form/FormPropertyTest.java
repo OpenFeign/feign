@@ -17,28 +17,19 @@
 package feign.form;
 
 import static feign.Logger.Level.FULL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
 import feign.Headers;
 import feign.RequestLine;
 import feign.jackson.JacksonEncoder;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-/**
- * @author marembo
- */
-@Slf4j
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
-public class FormPropertyTest {
+class FormPropertyTest {
 
   private static final FormClient API;
 
@@ -52,18 +43,13 @@ public class FormPropertyTest {
   }
 
   @Test
-  public void test() {
+  void test() {
     val dto = new FormDto("Amigo", 23);
-    val stringResponse = API.postData(dto);
 
-    assertNotNull(stringResponse);
-
-    log.info("Response: {}", stringResponse);
-
-    assertEquals("Amigo=23", stringResponse);
+    assertThat(API.postData(dto)).isEqualTo("Amigo=23");
   }
 
-  public interface FormClient {
+  interface FormClient {
 
     @RequestLine("POST /form-data")
     @Headers("Content-Type: application/x-www-form-urlencoded")

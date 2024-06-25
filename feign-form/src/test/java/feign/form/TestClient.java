@@ -26,9 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author Artem Labazin
- */
 public interface TestClient {
 
   @RequestLine("POST /form")

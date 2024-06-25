@@ -24,6 +24,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
+ * A base writer class.
+ *
  * @author Artem Labazin
  */
 public abstract class AbstractWriter implements Writer {

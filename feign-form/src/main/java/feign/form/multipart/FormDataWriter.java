@@ -21,8 +21,10 @@ import feign.form.FormData;
 import lombok.val;
 
 /**
- * @author Guillaume Simard
+ * A {@link FormData} writer.
+ *
  * @since 24.03.2018
+ * @author Guillaume Simard
  */
 public class FormDataWriter extends AbstractWriter {
 

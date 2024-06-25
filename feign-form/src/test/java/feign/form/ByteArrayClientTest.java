@@ -17,8 +17,7 @@
 package feign.form;
 
 import static feign.Logger.Level.FULL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
@@ -28,14 +27,11 @@ import feign.RequestLine;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
 import lombok.val;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
-public class ByteArrayClientTest {
+class ByteArrayClientTest {
 
   private static final CustomClient API;
 
@@ -51,15 +47,13 @@ public class ByteArrayClientTest {
   }
 
   @Test
-  public void testNotTreatedAsFileUpload() {
+  void testNotTreatedAsFileUpload() {
     byte[] bytes = "Hello World".getBytes();
-    val response = API.uploadByteArray(bytes);
 
-    assertNotNull(response);
-    assertEquals(200, response.status());
+    assertThat(API.uploadByteArray(bytes)).isNotNull().extracting(Response::status).isEqualTo(200);
   }
 
-  public interface CustomClient {
+  interface CustomClient {
 
     @RequestLine("POST /upload/byte_array_parameter")
     @Headers("Content-Type: multipart/form-data")

@@ -24,6 +24,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
+ * A form property annotation to specify a field's name.
+ *
  * @author marembo
  */
 @Documented

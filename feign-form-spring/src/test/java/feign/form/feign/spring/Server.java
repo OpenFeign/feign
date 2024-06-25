@@ -46,10 +46,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
- * @since 22.08.2016
- */
 @RestController
 @EnableFeignClients
 @SpringBootApplication
@@ -63,7 +59,7 @@ public class Server {
   @SneakyThrows
   public String upload1(
       @PathVariable("folder") String folder,
-      @RequestPart MultipartFile file,
+      @RequestPart("file") MultipartFile file,
       @RequestParam(value = "message", required = false) String message) {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }

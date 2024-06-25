@@ -23,9 +23,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-/**
- * @author marembo
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

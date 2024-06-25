@@ -22,6 +22,8 @@ import feign.codec.EncodeException;
 import lombok.val;
 
 /**
+ * A writer for a single parameter.
+ *
  * @author Artem Labazin
  */
 public class SingleParameterWriter extends AbstractWriter {

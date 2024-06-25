@@ -31,6 +31,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
+ * An URL encoded form content processor.
+ *
  * @author Artem Labazin
  */
 public class UrlencodedFormContentProcessor implements ContentProcessor {

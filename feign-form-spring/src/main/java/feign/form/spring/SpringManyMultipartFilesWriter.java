@@ -26,6 +26,8 @@ import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
+ * A Spring multiple files writer.
+ *
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)

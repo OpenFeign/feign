@@ -65,16 +65,18 @@ limitations under the License.
 
   <module name="SuppressWarningsFilter" />
 
+  <module name="LineLength">
+    <property name="max" value="140"/>
+  </module>
 
   <module name="TreeWalker">
     <module name="SuppressWarningsHolder" />
 
     <!-- Checks for Javadoc comments.                     -->
     <!-- See http://checkstyle.sf.net/config_javadoc.html -->
-    <!-- <module name="JavadocMethod">
-      <property name="scope" value="protected"/>
+    <module name="JavadocMethod">
+      <property name="accessModifiers" value="protected"/>
       <property name="allowedAnnotations" value="Override, Test"/>
-      <property name="allowThrowsTagsForSubclasses" value="true"/>
     </module>
     <module name="JavadocType">
       <property name="scope" value="protected"/>
@@ -97,7 +99,7 @@ limitations under the License.
       <property name="tagOrder" value="@param, @return, @throws, @see, @since, @author, @version, @deprecated"/>
       <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
     </module>
-    <module name="NonEmptyAtclauseDescription"/> -->
+    <module name="NonEmptyAtclauseDescription"/>
 
 
     <!-- Checks for Naming Conventions.                  -->
@@ -169,8 +171,9 @@ limitations under the License.
       <property name="sortImportsInGroupAlphabetically" value="true"/>
       <property name="separateLineBetweenGroups" value="true"/>
       <property name="customImportOrderRules"
-                value="STATIC###STANDARD_JAVA_PACKAGE###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE"/>
-      <property name="specialImportsRegExp" value="^io\.appulse"/>
+                value="STATIC###STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS"/>
+      <property name="specialImportsRegExp"
+                value="^feign"/>
     </module>
     <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
     <module name="RedundantImport"/>
@@ -181,9 +184,6 @@ limitations under the License.
     <!-- See http://checkstyle.sf.net/config_sizes.html -->
     <module name="AnonInnerLength">
       <property name="max" value="20"/>
-    </module>
-    <module name="LineLength">
-      <property name="max" value="140"/>
     </module>
     <module name="MethodLength">
       <property name="tokens" value="METHOD_DEF"/>
@@ -346,7 +346,6 @@ limitations under the License.
     <module name="OneStatementPerLine"/>
     <module name="PackageDeclaration"/>
     <module name="ParameterAssignment"/>
-    <module name="SimplifyBooleanExpression"/>
     <module name="SimplifyBooleanReturn"/>
     <module name="StringLiteralEquality"/>
     <module name="SuperClone"/>
@@ -377,7 +376,7 @@ limitations under the License.
       <property name="braceAdjustment" value="0"/>
       <property name="caseIndent" value="0"/>
       <property name="throwsIndent" value="0"/>
-      <property name="lineWrappingIndentation" value="4"/>
+      <property name="lineWrappingIndentation" value="2"/>
       <property name="arrayInitIndent" value="2"/>
       <property name="forceStrictCondition" value="false"/>
     </module>

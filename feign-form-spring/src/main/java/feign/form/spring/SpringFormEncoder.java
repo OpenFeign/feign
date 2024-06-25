@@ -32,8 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Adds support for {@link MultipartFile} type to {@link FormEncoder}.
  *
- * @author Tomasz Juchniewicz &lt;tjuchniewicz@gmail.com&gt;
  * @since 14.09.2016
+ * @author Tomasz Juchniewicz &lt;tjuchniewicz@gmail.com&gt;
  */
 public class SpringFormEncoder extends FormEncoder {
 

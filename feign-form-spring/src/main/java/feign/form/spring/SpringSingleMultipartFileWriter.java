@@ -24,6 +24,8 @@ import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
+ * A Spring single file writer.
+ *
  * @author Artem Labazin
  */
 public class SpringSingleMultipartFileWriter extends AbstractWriter {

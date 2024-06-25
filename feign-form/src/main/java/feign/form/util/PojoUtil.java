@@ -20,11 +20,11 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import feign.form.FormProperty;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.rmi.UnexpectedException;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +37,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * An utility class to work with POJOs.
+ *
  * @author Artem Labazin
  */
 public final class PojoUtil {
@@ -53,17 +55,16 @@ public final class PojoUtil {
   }
 
   @SneakyThrows
+  @SuppressFBWarnings("DP_DO_INSIDE_DO_PRIVILEGED")
   public static Map<String, Object> toMap(@NonNull Object object) {
     val result = new HashMap<String, Object>();
     val type = object.getClass();
-    val setAccessibleAction = new SetAccessibleAction();
     for (val field : type.getDeclaredFields()) {
       val modifiers = field.getModifiers();
       if (isFinal(modifiers) || isStatic(modifiers)) {
         continue;
       }
-      setAccessibleAction.setField(field);
-      AccessController.doPrivileged(setAccessibleAction);
+      field.setAccessible(true);
 
       val fieldValue = field.get(object);
       if (fieldValue == null) {
@@ -87,7 +88,7 @@ public final class PojoUtil {
   @Setter
   @NoArgsConstructor
   @FieldDefaults(level = PRIVATE)
-  private static class SetAccessibleAction implements PrivilegedAction<Object> {
+  private static final class SetAccessibleAction implements PrivilegedAction<Object> {
 
     @Nullable Field field;
 

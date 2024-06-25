@@ -26,6 +26,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * A delegate writer.
+ *
  * @author Artem Labazin
  */
 @RequiredArgsConstructor

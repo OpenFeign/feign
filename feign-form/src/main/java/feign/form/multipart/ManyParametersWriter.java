@@ -23,6 +23,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * A multiple parameters writer.
+ *
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)

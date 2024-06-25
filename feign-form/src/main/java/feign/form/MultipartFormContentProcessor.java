@@ -44,6 +44,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * Multipart form content processor.
+ *
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)
@@ -60,7 +62,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
    *     request parameter.
    */
   public MultipartFormContentProcessor(Encoder delegate) {
-    writers = new LinkedList<Writer>();
+    writers = new LinkedList<>();
     addWriter(new ByteArrayWriter());
     addWriter(new FormDataWriter());
     addWriter(new SingleFileWriter());
@@ -76,38 +78,34 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
       throws EncodeException {
     val boundary = Long.toHexString(System.currentTimeMillis());
-    val output = new Output(charset);
-
-    for (val entry : data.entrySet()) {
-      if (entry == null || entry.getKey() == null || entry.getValue() == null) {
-        continue;
+    try (val output = new Output(charset)) {
+      for (val entry : data.entrySet()) {
+        if (entry == null || entry.getKey() == null || entry.getValue() == null) {
+          continue;
+        }
+        val writer = findApplicableWriter(entry.getValue());
+        writer.write(output, boundary, entry.getKey(), entry.getValue());
       }
-      val writer = findApplicableWriter(entry.getValue());
-      writer.write(output, boundary, entry.getKey(), entry.getValue());
-    }
 
-    output.write("--").write(boundary).write("--").write(CRLF);
+      output.write("--").write(boundary).write("--").write(CRLF);
 
-    val contentTypeHeaderValue =
-        new StringBuilder()
-            .append(getSupportedContentType().getHeader())
-            .append("; charset=")
-            .append(charset.name())
-            .append("; boundary=")
-            .append(boundary)
-            .toString();
+      val contentTypeHeaderValue =
+          new StringBuilder()
+              .append(getSupportedContentType().getHeader())
+              .append("; charset=")
+              .append(charset.name())
+              .append("; boundary=")
+              .append(boundary)
+              .toString();
 
-    template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
-    template.header(CONTENT_TYPE_HEADER, contentTypeHeaderValue);
+      template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
+      template.header(CONTENT_TYPE_HEADER, contentTypeHeaderValue);
 
-    // Feign's clients try to determine binary/string content by charset presence
-    // so, I set it to null (in spite of availability charset) for backward compatibility.
-    val bytes = output.toByteArray();
-    val body = Request.Body.encoded(bytes, null);
-    template.body(body);
-
-    try {
-      output.close();
+      // Feign's clients try to determine binary/string content by charset presence
+      // so, I set it to null (in spite of availability charset) for backward compatibility.
+      val bytes = output.toByteArray();
+      val body = Request.Body.encoded(bytes, null);
+      template.body(body);
     } catch (IOException ex) {
       throw new EncodeException("Output closing error", ex);
     }

@@ -26,6 +26,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * A custom user's POJO writer.
+ *
  * @author Artem Labazin
  */
 @RequiredArgsConstructor

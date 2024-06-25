@@ -24,6 +24,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.val;
 
 /**
+ * A writer for multiple files.
+ *
  * @author Artem Labazin
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)

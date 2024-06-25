@@ -18,8 +18,7 @@ package feign.form;
 
 import static feign.Logger.Level.FULL;
 import static feign.form.ContentType.MULTIPART;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
@@ -31,18 +30,11 @@ import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.Output;
 import feign.jackson.JacksonEncoder;
 import lombok.val;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-/**
- * @author Artem Labazin
- * @since 27.11.2017
- */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
-public class CustomClientTest {
+class CustomClientTest {
 
   private static final CustomClient API;
 
@@ -60,14 +52,11 @@ public class CustomClientTest {
   }
 
   @Test
-  public void test() {
-    val stringResponse = API.uploadByteArray(new byte[0]);
-
-    assertNotNull(stringResponse);
-    assertEquals("popa.txt", stringResponse);
+  void test() {
+    assertThat(API.uploadByteArray(new byte[0])).isNotNull().isEqualTo("popa.txt");
   }
 
-  private static class CustomByteArrayWriter extends ByteArrayWriter {
+  private static final class CustomByteArrayWriter extends ByteArrayWriter {
 
     @Override
     protected void write(Output output, String key, Object value) throws EncodeException {
@@ -78,7 +67,7 @@ public class CustomClientTest {
     }
   }
 
-  public interface CustomClient {
+  interface CustomClient {
 
     @RequestLine("POST /upload/byte_array")
     @Headers("Content-Type: multipart/form-data")
