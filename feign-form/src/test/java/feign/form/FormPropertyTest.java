@@ -22,6 +22,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import feign.Feign;
 import feign.Headers;
+import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.jackson.JacksonEncoder;
 import lombok.val;
@@ -37,7 +38,7 @@ class FormPropertyTest {
     API =
         Feign.builder()
             .encoder(new FormEncoder(new JacksonEncoder()))
-            .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
+            .logger(new JavaLogger(FormPropertyTest.class).appendToFile("log.txt"))
             .logLevel(FULL)
             .target(FormClient.class, "http://localhost:8080");
   }

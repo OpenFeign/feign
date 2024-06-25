@@ -124,7 +124,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
 
   private byte[] getMultiPartBoundary(MediaType contentType) {
     val boundaryString = unquote(contentType.getParameter("boundary"));
-    if (StringUtils.isEmpty(boundaryString)) {
+    if (StringUtils.hasLength(boundaryString) == false) {
       throw new HttpMessageConversionException("Content-Type missing boundary information.");
     }
     return boundaryString.getBytes(UTF_8);
@@ -161,7 +161,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
       Pattern keyValueSeparatorPattern,
       boolean unquoteValue) {
     val keyValuePairs = new IgnoreKeyCaseMap();
-    if (!StringUtils.isEmpty(str)) {
+    if (StringUtils.hasLength(str)) {
       val tokens = entriesSeparatorPattern.split(str);
       for (val token : tokens) {
         val pair = keyValueSeparatorPattern.split(token.trim(), 2);

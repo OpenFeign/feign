@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
+import feign.Logger.JavaLogger;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
 import java.io.File;
@@ -43,7 +44,7 @@ class BasicClientTest {
     API =
         Feign.builder()
             .encoder(new FormEncoder(new JacksonEncoder()))
-            .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
+            .logger(new JavaLogger(BasicClientTest.class).appendToFile("log.txt"))
             .logLevel(FULL)
             .target(TestClient.class, "http://localhost:8080");
   }

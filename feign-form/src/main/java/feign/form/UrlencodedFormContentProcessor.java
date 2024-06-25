@@ -18,7 +18,6 @@ package feign.form;
 
 import static feign.form.ContentType.URLENCODED;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.net.URLEncoder;
@@ -68,11 +67,10 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
             .toString();
 
     val bytes = bodyData.toString().getBytes(charset);
-    val body = Request.Body.encoded(bytes, charset);
 
     template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeValue);
-    template.body(body);
+    template.body(bytes, charset);
   }
 
   @Override
@@ -98,9 +96,8 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
         .toString();
   }
 
-  @SuppressWarnings("unchecked")
   private String createKeyValuePairFromCollection(String key, Object values, Charset charset) {
-    val collection = (Collection) values;
+    val collection = (Collection<?>) values;
     val array = collection.toArray(new Object[0]);
     return createKeyValuePairFromArray(key, array, charset);
   }

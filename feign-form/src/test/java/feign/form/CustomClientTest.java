@@ -23,6 +23,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import feign.Feign;
 import feign.Headers;
+import feign.Logger.JavaLogger;
 import feign.Param;
 import feign.RequestLine;
 import feign.codec.EncodeException;
@@ -46,7 +47,7 @@ class CustomClientTest {
     API =
         Feign.builder()
             .encoder(encoder)
-            .logger(new feign.Logger.JavaLogger().appendToFile("log.txt"))
+            .logger(new JavaLogger(CustomClientTest.class).appendToFile("log.txt"))
             .logLevel(FULL)
             .target(CustomClient.class, "http://localhost:8080");
   }
