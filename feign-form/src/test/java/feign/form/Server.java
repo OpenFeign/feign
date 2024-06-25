@@ -25,7 +25,6 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -35,10 +34,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -50,14 +49,14 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @SuppressWarnings("checkstyle:DesignForExtension")
 public class Server {
 
-  @RequestMapping(path = "/form", method = POST)
+  @PostMapping("/form")
   public ResponseEntity<Void> form(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
     val status = !key1.equals(key2) ? BAD_REQUEST : OK;
     return ResponseEntity.status(status).body(null);
   }
 
-  @RequestMapping(path = "/upload/{id}", method = POST)
+  @PostMapping("/upload/{id}")
   @ResponseStatus(OK)
   public ResponseEntity<Long> upload(
       @PathVariable("id") Integer id,
@@ -78,7 +77,7 @@ public class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(path = "/upload", method = POST)
+  @PostMapping("/upload")
   public ResponseEntity<Long> upload(@RequestParam("file") MultipartFile file) {
     HttpStatus status;
     if (file.getSize() == 0) {
@@ -91,7 +90,7 @@ public class Server {
     return ResponseEntity.status(status).body(file.getSize());
   }
 
-  @RequestMapping(path = "/upload/files", method = POST)
+  @PostMapping("/upload/files")
   public ResponseEntity<Long> upload(@RequestParam("files") MultipartFile[] files) {
     HttpStatus status;
     if (files[0].getSize() == 0 || files[1].getSize() == 0) {
@@ -107,7 +106,7 @@ public class Server {
     return ResponseEntity.status(status).body(files[0].getSize() + files[1].getSize());
   }
 
-  @RequestMapping(path = "/json", method = POST, consumes = APPLICATION_JSON_VALUE)
+  @PostMapping(path = "/json", consumes = APPLICATION_JSON_VALUE)
   public ResponseEntity<String> json(@RequestBody Dto dto) {
     HttpStatus status;
     if (!dto.getName().equals("Artem")) {
@@ -120,16 +119,13 @@ public class Server {
     return ResponseEntity.status(status).body("ok");
   }
 
-  @RequestMapping("/query_map")
+  @GetMapping("/query_map")
   public ResponseEntity<Integer> queryMap(@RequestParam("filter") List<String> filters) {
     val status = filters != null && !filters.isEmpty() ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(filters.size());
   }
 
-  @RequestMapping(
-      path = "/wild-card-map",
-      method = POST,
-      consumes = APPLICATION_FORM_URLENCODED_VALUE)
+  @PostMapping(path = "/wild-card-map", consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Integer> wildCardMap(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
     val status = key1.equals(key2) ? OK : I_AM_A_TEAPOT;

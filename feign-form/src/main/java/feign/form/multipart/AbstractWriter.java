@@ -20,7 +20,6 @@ import static feign.form.ContentProcessor.CRLF;
 
 import feign.codec.EncodeException;
 import java.net.URLConnection;
-import lombok.SneakyThrows;
 import lombok.val;
 
 /**
@@ -61,7 +60,6 @@ public abstract class AbstractWriter implements Writer {
    * @param contentType type of file content. May be the {@code null}, in that case it will be
    *     determined by file name.
    */
-  @SneakyThrows
   protected void writeFileMetadata(
       Output output, String name, String fileName, String contentType) {
     val contentDespositionBuilder =

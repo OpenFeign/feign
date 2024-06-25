@@ -71,7 +71,6 @@ public class Output implements Closeable {
    * @param length the number of bytes to be read from the given array
    * @return this output
    */
-  @SneakyThrows
   public Output write(byte[] bytes, int offset, int length) {
     outputStream.write(bytes, offset, length);
     return this;
