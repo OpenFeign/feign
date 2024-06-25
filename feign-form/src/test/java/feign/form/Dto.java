@@ -25,15 +25,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-/**
- * @author Artem Labazin
- * @since 01.05.2016
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = PRIVATE)
-public class Dto implements Serializable {
+class Dto implements Serializable {
 
   private static final long serialVersionUID = 4743133513526293872L;
 

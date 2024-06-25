@@ -25,13 +25,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
 
+import feign.Request;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+
 /**
+ * An URL encoded form content processor.
  *
  * @author Artem Labazin
  */

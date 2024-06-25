@@ -32,8 +32,14 @@ import feign.codec.EncodeException;
  */
 public interface ContentProcessor {
 
+  /**
+   * A content type header name.
+   */
   String CONTENT_TYPE_HEADER = "Content-Type";
 
+  /**
+   * End line symbols.
+   */
   String CRLF = "\r\n";
 
   /**

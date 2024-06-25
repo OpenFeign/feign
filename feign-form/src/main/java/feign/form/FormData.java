@@ -29,8 +29,8 @@ import lombok.experimental.FieldDefaults;
  * This object encapsulates a byte array and its associated content type.
  * Use if if you want to specify the content type of your provided byte array.
  *
- * @author Guillaume Simard
  * @since 24.03.2018
+ * @author Guillaume Simard
  */
 @Data
 @Builder

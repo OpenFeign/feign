@@ -18,11 +18,13 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.codec.EncodeException;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A multiple parameters writer.
  *
  * @author Artem Labazin
  */

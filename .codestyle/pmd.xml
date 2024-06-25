@@ -24,16 +24,15 @@ limitations under the License.
   <description>PMD Rules</description>
 
   <rule ref="category/java/bestpractices.xml">
-    <exclude name="UseVarargs" />
+    <exclude name="AvoidPrintStackTrace" />
     <exclude name="SystemPrintln" />
+    <exclude name="UseVarargs" />
   </rule>
   <rule ref="category/java/codestyle.xml">
-    <exclude name="AbstractNaming" />
+    <exclude name="LinguisticNaming" />
     <exclude name="AtLeastOneConstructor" />
-    <exclude name="AvoidPrefixingMethodParameters" />
     <exclude name="ClassNamingConventions" />
     <exclude name="CommentDefaultAccessModifier" />
-    <exclude name="DefaultPackage" />
     <exclude name="FieldDeclarationsShouldBeAtStartOfClass" />
     <exclude name="LocalVariableCouldBeFinal" />
     <exclude name="LongVariable" />
@@ -48,6 +47,7 @@ limitations under the License.
   </rule>
   <rule ref="category/java/design.xml">
     <exclude name="AvoidCatchingGenericException" />
+    <exclude name="AvoidUncheckedExceptionsInSignatures" />
     <exclude name="AvoidRethrowingException" />
     <exclude name="AvoidThrowingNullPointerException" />
     <exclude name="CyclomaticComplexity" />
@@ -55,11 +55,17 @@ limitations under the License.
     <exclude name="ExcessivePublicCount" />
     <exclude name="LawOfDemeter" />
     <exclude name="LoosePackageCoupling" />
+    <exclude name="SimplifyBooleanExpressions" />
     <exclude name="TooManyFields" />
     <exclude name="TooManyMethods" />
 
     <!-- remove it -->
     <exclude name="NcssCount" />
+  </rule>
+  <rule ref="category/java/design.xml/UseUtilityClass">
+    <properties>
+      <property name="violationSuppressXPath" value="//ClassOrInterfaceDeclaration/preceding-sibling::Annotation/MarkerAnnotation/Name[@Image='SpringBootApplication']" />
+    </properties>
   </rule>
   <rule ref="category/java/documentation.xml">
     <exclude name="CommentSize" />
@@ -68,18 +74,14 @@ limitations under the License.
     <exclude name="CommentRequired" />
   </rule>
   <rule ref="category/java/errorprone.xml">
-    <exclude name="AvoidFieldNameMatchingTypeName" />
     <exclude name="AvoidFieldNameMatchingMethodName" />
-    <exclude name="BeanMembersShouldSerialize" />
-    <exclude name="DataflowAnomalyAnalysis" />
+    <exclude name="AvoidFieldNameMatchingTypeName" />
+    <exclude name="CompareObjectsWithEquals" />
     <exclude name="DontImportSun" />
-    <exclude name="MissingBreakInSwitch" />
   </rule>
   <rule ref="category/java/multithreading.xml">
+    <exclude name="AvoidSynchronizedAtMethodLevel" />
     <exclude name="DoNotUseThreads" />
     <exclude name="UseConcurrentHashMap" />
-  </rule>
-  <rule ref="category/java/performance.xml">
-    <exclude name="AvoidUsingShortType" />
   </rule>
 </ruleset>

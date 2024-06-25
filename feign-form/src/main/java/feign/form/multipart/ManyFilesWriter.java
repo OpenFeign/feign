@@ -20,11 +20,13 @@ import static lombok.AccessLevel.PRIVATE;
 
 import java.io.File;
 
-import feign.codec.EncodeException;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A writer for multiple files.
  *
  * @author Artem Labazin
  */

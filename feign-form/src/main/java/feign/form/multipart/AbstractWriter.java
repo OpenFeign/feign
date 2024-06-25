@@ -20,11 +20,13 @@ import static feign.form.ContentProcessor.CRLF;
 
 import java.net.URLConnection;
 
-import feign.codec.EncodeException;
 import lombok.SneakyThrows;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A base writer class.
  *
  * @author Artem Labazin
  */
@@ -47,8 +49,8 @@ public abstract class AbstractWriter implements Writer {
    * @throws EncodeException in case of write errors
    */
   @SuppressWarnings({
-      "PMD.UncommentedEmptyMethodBody",
-      "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
+    "PMD.UncommentedEmptyMethodBody",
+    "PMD.EmptyMethodInAbstractClassShouldBeAbstract"
   })
   protected void write (Output output, String key, Object value) throws EncodeException {
   }

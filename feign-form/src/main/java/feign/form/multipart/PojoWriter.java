@@ -20,12 +20,14 @@ import static feign.form.util.PojoUtil.isUserPojo;
 import static feign.form.util.PojoUtil.toMap;
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.codec.EncodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A custom user's POJO writer.
  *
  * @author Artem Labazin
  */

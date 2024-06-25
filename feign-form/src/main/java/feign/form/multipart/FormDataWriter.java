@@ -16,15 +16,16 @@
 
 package feign.form.multipart;
 
+import lombok.val;
+
 import feign.codec.EncodeException;
 import feign.form.FormData;
 
-import lombok.val;
-
 /**
+ * A {@link FormData} writer.
  *
- * @author Guillaume Simard
  * @since 24.03.2018
+ * @author Guillaume Simard
  */
 public class FormDataWriter extends AbstractWriter {
 

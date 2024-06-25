@@ -19,6 +19,7 @@ package feign.form.multipart;
 import feign.codec.EncodeException;
 
 /**
+ * A writer interface.
  *
  * @author Artem Labazin
  */

@@ -27,10 +27,6 @@ import feign.QueryMap;
 import feign.RequestLine;
 import feign.Response;
 
-/**
- *
- * @author Artem Labazin
- */
 public interface TestClient {
 
   @RequestLine("POST /form")

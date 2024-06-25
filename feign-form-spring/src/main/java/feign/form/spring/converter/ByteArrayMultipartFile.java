@@ -21,10 +21,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import lombok.NonNull;
 import lombok.Value;
+import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -60,14 +60,8 @@ class ByteArrayMultipartFile implements MultipartFile {
 
   @Override
   public void transferTo (File destination) throws IOException {
-    OutputStream outputStream = null;
-    try {
-      outputStream = new FileOutputStream(destination);
+    try (val outputStream = new FileOutputStream(destination)) {
       outputStream.write(bytes);
-    } finally {
-      if (outputStream != null) {
-        outputStream.close();
-      }
     }
   }
 }

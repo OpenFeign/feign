@@ -18,15 +18,16 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+
 /**
+ * A delegate writer.
  *
  * @author Artem Labazin
  */

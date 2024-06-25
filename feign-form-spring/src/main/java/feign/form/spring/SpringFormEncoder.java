@@ -22,20 +22,20 @@ import static java.util.Collections.singletonMap;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 
+import lombok.val;
+import org.springframework.web.multipart.MultipartFile;
+
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
 
-import lombok.val;
-import org.springframework.web.multipart.MultipartFile;
-
 /**
  * Adds support for {@link MultipartFile} type to {@link FormEncoder}.
  *
- * @author Tomasz Juchniewicz &lt;tjuchniewicz@gmail.com&gt;
  * @since 14.09.2016
+ * @author Tomasz Juchniewicz &lt;tjuchniewicz@gmail.com&gt;
  */
 public class SpringFormEncoder extends FormEncoder {
 

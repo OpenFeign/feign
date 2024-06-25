@@ -18,10 +18,12 @@ package feign.form.multipart;
 
 import static feign.form.ContentProcessor.CRLF;
 
-import feign.codec.EncodeException;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A writer for a single parameter.
  *
  * @author Artem Labazin
  */

@@ -19,6 +19,7 @@ package feign.form.multipart;
 import feign.codec.EncodeException;
 
 /**
+ * A byte array writer.
  *
  * @author Artem Labazin
  */

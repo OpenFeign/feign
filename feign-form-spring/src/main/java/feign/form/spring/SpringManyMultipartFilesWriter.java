@@ -18,15 +18,16 @@ package feign.form.spring;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.codec.EncodeException;
-import feign.form.multipart.AbstractWriter;
-import feign.form.multipart.Output;
-
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
+import feign.codec.EncodeException;
+import feign.form.multipart.AbstractWriter;
+import feign.form.multipart.Output;
+
 /**
+ * A Spring multiple files writer.
  *
  * @author Artem Labazin
  */

@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Locale;
 
 /**
- * A Map<String, String> implementation that normalizes the key to UPPER CASE, so
- * that value retrieval via the key is case insensitive.
+ * A Map implementation that normalizes the key to UPPER CASE, so that value
+ * retrieval via the key is case insensitive.
  */
 final class IgnoreKeyCaseMap extends HashMap<String, String> {
 

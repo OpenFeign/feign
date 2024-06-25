@@ -31,8 +31,17 @@ import lombok.val;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public enum ContentType {
 
+  /**
+   * Unknown content type.
+   */
   UNDEFINED("undefined"),
+  /**
+   * Url encoded content type.
+   */
   URLENCODED("application/x-www-form-urlencoded"),
+  /**
+   * Multipart form data content type.
+   */
   MULTIPART("multipart/form-data");
 
   String header;

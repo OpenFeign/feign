@@ -21,15 +21,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import feign.codec.EncodeException;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import feign.codec.EncodeException;
+
 /**
+ * A single-file writer.
  *
  * @author Artem Labazin
  */
-@Slf4j
 public class SingleFileWriter extends AbstractWriter {
 
   @Override
@@ -42,9 +42,7 @@ public class SingleFileWriter extends AbstractWriter {
     val file = (File) value;
     writeFileMetadata(output, key, file.getName(), null);
 
-    InputStream input = null;
-    try {
-      input = new FileInputStream(file);
+    try (InputStream input = new FileInputStream(file)) {
       val buf = new byte[4096];
       int length = input.read(buf);
       while (length > 0) {
@@ -54,14 +52,6 @@ public class SingleFileWriter extends AbstractWriter {
     } catch (IOException ex) {
       val message = String.format("Writing file's '%s' content error", file.getName());
       throw new EncodeException(message, ex);
-    } finally {
-      if (input != null) {
-        try {
-          input.close();
-        } catch (IOException ex) {
-          log.error("Closing file '{}' error", file.getName(), ex);
-        }
-      }
     }
   }
 }

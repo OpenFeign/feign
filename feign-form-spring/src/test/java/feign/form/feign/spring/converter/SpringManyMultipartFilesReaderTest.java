@@ -17,6 +17,7 @@
 package feign.form.feign.spring.converter;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
@@ -24,37 +25,44 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
-public class SpringManyMultipartFilesReaderTest {
+import feign.form.spring.converter.SpringManyMultipartFilesReader;
+
+class SpringManyMultipartFilesReaderTest {
 
   private static final String DUMMY_MULTIPART_BOUNDARY = "Boundary_4_574237629_1500021738802";
 
   @Test
-  public void readMultipartFormDataTest () throws IOException {
+  void readMultipartFormDataTest () throws IOException {
     val multipartFilesReader = new SpringManyMultipartFilesReader(4096);
     val multipartFiles = multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());
 
-    Assert.assertEquals(2, multipartFiles.length);
+    assertThat(multipartFiles.length)
+      .isEqualTo(2);
 
-    Assert.assertEquals(MediaType.APPLICATION_JSON_VALUE, multipartFiles[0].getContentType());
-    Assert.assertEquals("form-item-1", multipartFiles[0].getName());
-    Assert.assertFalse(multipartFiles[0].isEmpty());
+    assertThat(multipartFiles[0].getContentType())
+      .isEqualTo(MediaType.APPLICATION_JSON_VALUE);
+    assertThat(multipartFiles[0].getName())
+      .isEqualTo("form-item-1");
+    assertThat(multipartFiles[0].isEmpty())
+      .isFalse();
 
-    Assert.assertEquals(MediaType.TEXT_PLAIN_VALUE, multipartFiles[1].getContentType());
-    Assert.assertEquals("form-item-2-file-1", multipartFiles[1].getOriginalFilename());
-    Assert.assertEquals("Plain text", IOUtils.toString(multipartFiles[1].getInputStream(), "US-ASCII"));
+    assertThat(multipartFiles[1].getContentType())
+      .isEqualTo(MediaType.TEXT_PLAIN_VALUE);
+    assertThat(multipartFiles[1].getOriginalFilename())
+      .isEqualTo("form-item-2-file-1");
+    assertThat(IOUtils.toString(multipartFiles[1].getInputStream(), "US-ASCII"))
+      .isEqualTo("Plain text");
   }
 
-  public static class ValidMultipartMessage implements HttpInputMessage {
+  static class ValidMultipartMessage implements HttpInputMessage {
 
     @Override
     public InputStream getBody () throws IOException {
@@ -77,8 +85,8 @@ public class SpringManyMultipartFilesReaderTest {
     public HttpHeaders getHeaders () {
       val httpHeaders = new HttpHeaders();
       httpHeaders.put(
-          CONTENT_TYPE,
-          singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY)
+        CONTENT_TYPE,
+        singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY)
       );
       return httpHeaders;
     }

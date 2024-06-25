@@ -46,10 +46,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-/**
- * @author Artem Labazin
- * @since 30.04.2016
- */
 @Controller
 @SpringBootApplication
 @SuppressWarnings("checkstyle:DesignForExtension")

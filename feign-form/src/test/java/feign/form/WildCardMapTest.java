@@ -17,34 +17,32 @@
 package feign.form;
 
 import static feign.Logger.Level.FULL;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import feign.Feign;
 import feign.Headers;
 import feign.Logger;
 import feign.RequestLine;
 import feign.Response;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class
 )
-public class WildCardMapTest {
+class WildCardMapTest {
 
   private static FormUrlEncodedApi api;
 
-  @BeforeClass
-  public static void configureClient () {
+  @BeforeAll
+  static void configureClient () {
     api = Feign.builder()
         .encoder(new FormEncoder())
         .logger(new Logger.JavaLogger().appendToFile("log.txt"))
@@ -53,7 +51,7 @@ public class WildCardMapTest {
   }
 
   @Test
-  public void testOk () {
+  void testOk () {
     Map<String, Object> param = new HashMap<String, Object>() {
 
         private static final long serialVersionUID = 3109256773218160485L;
@@ -63,12 +61,15 @@ public class WildCardMapTest {
           put("key2", "1");
         }
     };
-    Response response = api.wildCardMap(param);
-    Assert.assertEquals(200, response.status());
+
+    assertThat(api.wildCardMap(param))
+      .isNotNull()
+      .extracting(Response::status)
+      .isEqualTo(200);
   }
 
   @Test
-  public void testBadRequest () {
+  void testBadRequest () {
     Map<String, Object> param = new HashMap<String, Object>() {
 
         private static final long serialVersionUID = 3109256773218160485L;
@@ -79,8 +80,11 @@ public class WildCardMapTest {
           put("key2", "2");
         }
     };
-    Response response = api.wildCardMap(param);
-    Assert.assertEquals(418, response.status());
+
+    assertThat(api.wildCardMap(param))
+      .isNotNull()
+      .extracting(Response::status)
+      .isEqualTo(418);
   }
 
   interface FormUrlEncodedApi {

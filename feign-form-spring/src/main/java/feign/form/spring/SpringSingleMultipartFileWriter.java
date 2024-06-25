@@ -18,13 +18,15 @@ package feign.form.spring;
 
 import java.io.IOException;
 
-import feign.codec.EncodeException;
-import feign.form.multipart.AbstractWriter;
-import feign.form.multipart.Output;
 import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
+import feign.codec.EncodeException;
+import feign.form.multipart.AbstractWriter;
+import feign.form.multipart.Output;
+
 /**
+ * A Spring single file writer.
  *
  * @author Artem Labazin
  */

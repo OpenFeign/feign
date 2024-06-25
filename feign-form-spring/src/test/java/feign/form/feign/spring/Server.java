@@ -47,11 +47,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-
-/**
- * @author Tomasz Juchniewicz <tjuchniewicz@gmail.com>
- * @since 22.08.2016
- */
 @RestController
 @EnableFeignClients
 @SpringBootApplication
@@ -59,22 +54,22 @@ import org.springframework.web.multipart.MultipartFile;
 public class Server {
 
   @RequestMapping(
-      path = "/multipart/upload1/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/upload1/{folder}",
+    method = POST,
+    consumes = MULTIPART_FORM_DATA_VALUE
   )
   @SneakyThrows
   public String upload1 (@PathVariable("folder") String folder,
-                         @RequestPart MultipartFile file,
+                         @RequestPart("file") MultipartFile file,
                          @RequestParam(value = "message", required = false) String message
   ) {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }
 
   @RequestMapping(
-      path = "/multipart/upload2/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/upload2/{folder}",
+    method = POST,
+    consumes = MULTIPART_FORM_DATA_VALUE
   )
   @SneakyThrows
   public String upload2 (@RequestBody MultipartFile file,
@@ -85,9 +80,9 @@ public class Server {
   }
 
   @RequestMapping(
-      path = "/multipart/upload3/{folder}",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/upload3/{folder}",
+    method = POST,
+    consumes = MULTIPART_FORM_DATA_VALUE
   )
   public String upload3 (@RequestBody MultipartFile file,
                          @PathVariable("folder") String folder,
@@ -105,9 +100,9 @@ public class Server {
   }
 
   @RequestMapping(
-      path = "/multipart/upload5",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/upload5",
+    method = POST,
+    consumes = MULTIPART_FORM_DATA_VALUE
   )
   void upload5 (Dto dto) throws IOException {
     assert "field 1 value".equals(dto.getField1());
@@ -117,9 +112,9 @@ public class Server {
   }
 
   @RequestMapping(
-      path = "/multipart/upload6",
-      method = POST,
-      consumes = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/upload6",
+    method = POST,
+    consumes = MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<String> upload6 (@RequestParam("popa1") MultipartFile popa1,
                                          @RequestParam("popa2") MultipartFile popa2
@@ -134,9 +129,9 @@ public class Server {
   }
 
   @RequestMapping(
-      path = "/multipart/download/{fileId}",
-      method = GET,
-      produces = MULTIPART_FORM_DATA_VALUE
+    path = "/multipart/download/{fileId}",
+    method = GET,
+    produces = MULTIPART_FORM_DATA_VALUE
   )
   public MultiValueMap<String, Object> download (@PathVariable("fileId") String fileId) {
     val multiParts = new LinkedMultiValueMap<String, Object>();

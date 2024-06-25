@@ -18,9 +18,6 @@ package feign.form.feign.spring;
 
 import java.util.ArrayList;
 
-import feign.Logger;
-import feign.codec.Decoder;
-import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import lombok.val;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +30,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
+import feign.Logger;
+import feign.codec.Decoder;
+import feign.form.spring.converter.SpringManyMultipartFilesReader;
+
 @FeignClient(
-    name = "multipart-download-support-service",
-    url = "http://localhost:8081",
-    configuration = DownloadClient.ClientConfiguration.class
+  name = "multipart-download-support-service",
+  url = "http://localhost:8081",
+  configuration = DownloadClient.ClientConfiguration.class
 )
-public interface DownloadClient {
+interface DownloadClient {
 
   @RequestMapping("/multipart/download/{fileId}")
   MultipartFile[] download (@PathVariable("fileId") String fileId);
@@ -49,7 +50,7 @@ public interface DownloadClient {
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
-    public Decoder feignDecoder () {
+    Decoder feignDecoder () {
       val springConverters = messageConverters.getObject().getConverters();
       val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
@@ -62,13 +63,13 @@ public interface DownloadClient {
 
         @Override
         public HttpMessageConverters getObject () {
-            return httpMessageConverters;
+          return httpMessageConverters;
         }
       });
     }
 
     @Bean
-    public Logger.Level feignLoggerLevel () {
+    Logger.Level feignLoggerLevel () {
       return Logger.Level.FULL;
     }
   }
