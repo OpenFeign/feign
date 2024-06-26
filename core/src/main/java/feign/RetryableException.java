@@ -31,6 +31,7 @@ public class RetryableException extends FeignException {
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   *                   If you don't want to retry, set null.
    */
   public RetryableException(int status, String message, HttpMethod httpMethod, Throwable cause,
       Long retryAfter, Request request) {
@@ -49,6 +50,7 @@ public class RetryableException extends FeignException {
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   *                   If you don't want to retry, set null.
    */
   public RetryableException(int status, String message, HttpMethod httpMethod, Long retryAfter,
       Request request) {
