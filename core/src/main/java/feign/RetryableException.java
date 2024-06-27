@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +30,8 @@ public class RetryableException extends FeignException {
   private final HttpMethod httpMethod;
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header. If you
+   *     don't want to retry, set null.
    */
   public RetryableException(
       int status,
@@ -58,7 +59,8 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header. If you
+   *     don't want to retry, set null.
    */
   public RetryableException(
       int status, String message, HttpMethod httpMethod, Long retryAfter, Request request) {
