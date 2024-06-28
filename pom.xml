@@ -95,7 +95,7 @@
     <slf4j.version>2.0.13</slf4j.version>
     <json.version>20240303</json.version>
 
-    <junit5.version>5.10.2</junit5.version>
+    <junit5.version>5.10.3</junit5.version>
     <jackson.version>2.17.1</jackson.version>
     <assertj.version>3.26.0</assertj.version>
     <mockito.version>5.12.0</mockito.version>
