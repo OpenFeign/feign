@@ -83,9 +83,9 @@ class ClientTest {
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
     String requestProperty = urlConnection.getRequestProperty(Util.CONTENT_LENGTH);
     /*
-     * By default, "Content-Length" will not be added because this key is in the
-     * restrictedHeaderSet of HttpURLConnection.
-     * Unless set system property "sun.net.http.allowRestrictedHeaders" to "true"
+     * By default, "Content-Length" will not be added because this key is in the restrictedHeaderSet
+     * of HttpURLConnection. Unless set system property "sun.net.http.allowRestrictedHeaders" to
+     * "true"
      */
     assertNull(requestProperties.get(Util.CONTENT_LENGTH));
   }

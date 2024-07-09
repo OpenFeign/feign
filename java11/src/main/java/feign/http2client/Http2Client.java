@@ -20,7 +20,6 @@ import feign.Request.Options;
 import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.SoftReference;
@@ -51,7 +50,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import static feign.Util.enumForName;
 
 public class Http2Client implements Client, AsyncClient<Object> {
@@ -148,7 +146,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
       final int clientKey = createClientKey(options);
 
       SoftReference<HttpClient> requestScopedSoftReference = clients.get(clientKey);
-      HttpClient requestScoped = requestScopedSoftReference == null ? null : requestScopedSoftReference.get();
+      HttpClient requestScoped =
+          requestScopedSoftReference == null ? null : requestScopedSoftReference.get();
 
       if (requestScoped == null) {
         java.net.http.HttpClient.Builder builder = newClientBuilder(options)
@@ -177,15 +176,17 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   /**
-   * Creates integer key that represents {@link Options} settings based
-   * on {@link Http2Client#doesClientConfigurationDiffer(Options)} method
+   * Creates integer key that represents {@link Options} settings based on
+   * {@link Http2Client#doesClientConfigurationDiffer(Options)} method
+   * 
    * @param options value
    * @return integer key
    */
   public int createClientKey(feign.Request.Options options) {
     int key = options.connectTimeoutMillis();
     if (options.isFollowRedirects()) {
-      key |= 1 << 31; // connectTimeoutMillis always positive, so we can use first sign bit for isFollowRedirects flag
+      key |= 1 << 31; // connectTimeoutMillis always positive, so we can use first sign bit for
+                      // isFollowRedirects flag
     }
     return key;
   }

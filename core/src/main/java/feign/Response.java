@@ -157,9 +157,9 @@ public final class Response implements Closeable {
   }
 
   /**
-   * Nullable and not set when using http/2
-   * See <a href="https://github.com/http2/http2-spec/issues/202">...</a>
-   * See <a href="https://github.com/http2/http2-spec/issues/202">...</a>
+   * Nullable and not set when using http/2 See
+   * <a href="https://github.com/http2/http2-spec/issues/202">...</a> See
+   * <a href="https://github.com/http2/http2-spec/issues/202">...</a>
    */
   public String reason() {
     return reason;
@@ -196,9 +196,11 @@ public final class Response implements Closeable {
   }
 
   /**
-   * Returns a charset object based on the requests content type. Defaults to UTF-8
-   * See <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-5.3.3">rfc7231 - Accept-Charset</a>
-   * See <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1">rfc7231 - Media Type</a>
+   * Returns a charset object based on the requests content type. Defaults to UTF-8 See
+   * <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-5.3.3">rfc7231 -
+   * Accept-Charset</a> See
+   * <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1">rfc7231 - Media
+   * Type</a>
    */
   public Charset charset() {
 
