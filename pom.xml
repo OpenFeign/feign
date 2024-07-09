@@ -711,6 +711,7 @@
           <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
           <excludes>
             <exclude>travis/**</exclude>
+            <exclude>**/SAXDecoderTest.java</exclude>
           </excludes>
         </configuration>
         <executions>

@@ -17,13 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.ProtocolException;
-import java.net.Proxy;
-import java.net.Proxy.Type;
-import java.net.SocketAddress;
-import java.net.URL;
+import java.net.*;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import feign.Client;
@@ -129,24 +123,26 @@ public class DefaultClientTest extends AbstractClientTest {
   @Test
   void canCreateWithImplicitOrNoCredentials() throws Exception {
     Proxied proxied =
-        new Proxied(TrustingSSLSocketFactory.get(), null, new Proxy(Type.HTTP, proxyAddress));
+        new Proxied(TrustingSSLSocketFactory.get(), null, new Proxy(Proxy.Type.HTTP, proxyAddress));
     assertThat(proxied).isNotNull();
     assertThat(proxied.getCredentials()).isNullOrEmpty();
 
     /* verify that the proxy */
-    HttpURLConnection connection = proxied.getConnection(new URL("http://www.example.com"));
+    HttpURLConnection connection =
+        proxied.getConnection(URI.create("http://www.example.com").toURL());
     assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
   }
 
   @Test
   void canCreateWithExplicitCredentials() throws Exception {
     Proxied proxied = new Proxied(TrustingSSLSocketFactory.get(), null,
-        new Proxy(Type.HTTP, proxyAddress), "user",
+        new Proxy(Proxy.Type.HTTP, proxyAddress), "user",
         "password");
     assertThat(proxied).isNotNull();
     assertThat(proxied.getCredentials()).isNotBlank();
 
-    HttpURLConnection connection = proxied.getConnection(new URL("http://www.example.com"));
+    HttpURLConnection connection =
+        proxied.getConnection(URI.create("http://www.example.com").toURL());
     assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
   }
 

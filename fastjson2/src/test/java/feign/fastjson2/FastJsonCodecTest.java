@@ -137,11 +137,12 @@ class FastJsonCodecTest {
         .request(Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null,
             Util.UTF_8))
         .headers(headers)
-        .body(new String("" //
-            + "{"
-            + "  \"name\" : \"DENOMINATOR.IO.\","
-            + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\""
-            + "}").getBytes(StandardCharsets.ISO_8859_1))
+        .body(new String("""
+            {\
+              "name" : "DENOMINATOR.IO.",\
+              "id" : "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ"\
+            }\
+            """).getBytes(StandardCharsets.ISO_8859_1))
         .build();
     assertThat(
         ((Zone) new Fastjson2Decoder().decode(response, new TypeReference<Zone>() {}.getType())))

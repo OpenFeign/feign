@@ -203,7 +203,7 @@ public class RibbonClientTest {
 
     /* values must be pct encoded, see RFC 6750 */
     String expectedQueryStringValue = "some%20string%20with%20space";
-    String expectedRequestLine = String.format("GET /?a=%s HTTP/1.1", expectedQueryStringValue);
+    String expectedRequestLine = "GET /?a=%s HTTP/1.1".formatted(expectedQueryStringValue);
 
     server1.enqueue(new MockResponse().setBody("success!"));
 

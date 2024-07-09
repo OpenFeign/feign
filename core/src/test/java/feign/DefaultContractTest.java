@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -659,14 +659,14 @@ class DefaultContractTest {
 
     assertThat(md).hasSize(1);
 
-    assertThat(md.get(0).configKey())
+    assertThat(md.getFirst().configKey())
         .isEqualTo("ParameterizedHeaderExpandApi#getZone(String,String)");
-    assertThat(md.get(0).returnType()).isEqualTo(String.class);
-    assertThat(md.get(0).template()).hasHeaders(entry("Authorization", asList("{authHdr}")),
+    assertThat(md.getFirst().returnType()).isEqualTo(String.class);
+    assertThat(md.getFirst().template()).hasHeaders(entry("Authorization", asList("{authHdr}")),
         entry("Accept", asList("application/json")));
     // Ensure that the authHdr expansion was properly detected and did not create a
     // formParam
-    assertThat(md.get(0).formParams()).isEmpty();
+    assertThat(md.getFirst().formParams()).isEmpty();
   }
 
   @Test
@@ -676,14 +676,15 @@ class DefaultContractTest {
 
     assertThat(md).hasSize(1);
 
-    assertThat(md.get(0).configKey())
+    assertThat(md.getFirst().configKey())
         .isEqualTo("ParameterizedHeaderNotStartingWithCurlyBraceExpandApi#getZone(String,String)");
-    assertThat(md.get(0).returnType()).isEqualTo(String.class);
-    assertThat(md.get(0).template()).hasHeaders(entry("Authorization", asList("Bearer {authHdr}")),
+    assertThat(md.getFirst().returnType()).isEqualTo(String.class);
+    assertThat(md.getFirst().template()).hasHeaders(
+        entry("Authorization", asList("Bearer {authHdr}")),
         entry("Accept", asList("application/json")));
     // Ensure that the authHdr expansion was properly detected and did not create a
     // formParam
-    assertThat(md.get(0).formParams()).isEmpty();
+    assertThat(md.getFirst().formParams()).isEmpty();
   }
 
   @Headers("Authorization: Bearer {authHdr}")
@@ -771,7 +772,7 @@ class DefaultContractTest {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(StaticMethodOnInterface.class);
     assertThat(mds).hasSize(1);
-    final MethodMetadata md = mds.get(0);
+    final MethodMetadata md = mds.getFirst();
     assertThat(md.configKey()).isEqualTo("StaticMethodOnInterface#get(String)");
   }
 
@@ -789,7 +790,7 @@ class DefaultContractTest {
     final List<MethodMetadata> mds =
         contract.parseAndValidateMetadata(DefaultMethodOnInterface.class);
     assertThat(mds).hasSize(1);
-    final MethodMetadata md = mds.get(0);
+    final MethodMetadata md = mds.getFirst();
     assertThat(md.configKey()).isEqualTo("DefaultMethodOnInterface#get(String)");
   }
 
@@ -802,8 +803,9 @@ class DefaultContractTest {
   void paramIsASubstringOfAQuery() throws Exception {
     final List<MethodMetadata> mds = contract.parseAndValidateMetadata(SubstringQuery.class);
 
-    assertThat(mds.get(0).template().queries()).containsExactly(entry("q", asList("body:{body}")));
-    assertThat(mds.get(0).formParams()).isEmpty(); // Prevent issue 424
+    assertThat(mds.getFirst().template().queries())
+        .containsExactly(entry("q", asList("body:{body}")));
+    assertThat(mds.getFirst().formParams()).isEmpty(); // Prevent issue 424
   }
 
   @Test

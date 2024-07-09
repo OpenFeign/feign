@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -31,18 +31,17 @@ import feign.codec.Decoder;
 @SuppressWarnings("deprecation")
 class SAXDecoderTest {
 
-  static String statusFailed = ""//
-      + "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-      //
-      + "  <soap:Body>\n"//
-      + "    <ns1:getNeustarNetworkStatusResponse xmlns:ns1=\"http://webservice.api.ultra.neustar.com/v01/\">\n"
-      //
-      + "      <NeustarNetworkStatus xmlns:ns2=\"http://schema.ultraservice.neustar.com/v01/\">Failed</NeustarNetworkStatus>\n"
-      //
-      + "    </ns1:getNeustarNetworkStatusResponse>\n"//
-      + "  </soap:Body>\n"//
-      + "</soap:Envelope>";
-  Decoder decoder = SAXDecoder.builder() //
+  static String statusFailed =
+      """
+          <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+              <ns1:getNeustarNetworkStatusResponse xmlns:ns1="http://webservice.api.ultra.neustar.com/v01/">
+                <NeustarNetworkStatus xmlns:ns2="http://schema.ultraservice.neustar.com/v01/">Failed</NeustarNetworkStatus>
+              </ns1:getNeustarNetworkStatusResponse>
+            </soap:Body>
+          </soap:Envelope>
+          """;
+  Decoder decoder = SAXDecoder.builder()
       .registerContentHandler(NetworkStatus.class,
           new SAXDecoder.ContentHandlerWithResult.Factory<NetworkStatus>() {
             @Override
