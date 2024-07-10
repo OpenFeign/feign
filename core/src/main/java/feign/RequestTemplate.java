@@ -733,7 +733,7 @@ public final class RequestTemplate implements Serializable {
    */
   public RequestTemplate headerLiteral(String name, String... values) {
     if (values == null) {
-      return appendHeader(name, Collections.emptyList(), true);
+      return headerLiteral(name, Collections.emptyList());
     }
 
     return headerLiteral(name, Arrays.asList(values));
