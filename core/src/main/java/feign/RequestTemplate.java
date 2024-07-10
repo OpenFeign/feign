@@ -730,6 +730,36 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * @see RequestTemplate#headerLiteral(String, Iterable)
+   */
+  public RequestTemplate headerLiteral(String name, String... values) {
+    if (values == null) {
+      return headerLiteral(name, Collections.emptyList());
+    }
+
+    return headerLiteral(name, Arrays.asList(values));
+  }
+
+  /**
+   * Specify a Header, with the specified values. Values are treated as literals. Template
+   * expressions are not resolved.
+   *
+   * @param name of the header.
+   * @param values for this header.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate headerLiteral(String name, Iterable<String> values) {
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name is required.");
+    }
+    if (values == null) {
+      values = Collections.emptyList();
+    }
+
+    return appendHeader(name, values, true);
+  }
+
+  /**
    * Clear on reader from {@link RequestTemplate}
    *
    * @param name of the header.
