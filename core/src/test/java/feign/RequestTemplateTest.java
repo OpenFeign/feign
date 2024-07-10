@@ -247,6 +247,26 @@ public class RequestTemplateTest {
   }
 
   @Test
+  void templateWithEmptyJsonObjectLiteralHeader() {
+    String emptyJsonObject = "{}";
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).headerLiteral("A-Header", emptyJsonObject);
+
+    template.resolve(new LinkedHashMap<>());
+    assertThat(template).hasHeaders(entry("A-Header", Collections.singletonList(emptyJsonObject)));
+  }
+
+  @Test
+  void templateWithTemplateExpressionLiteralHeader() {
+    String header = "{var}";
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).headerLiteral("A-Header", header);
+
+    template = template.resolve(mapOf("var", "value"));
+    assertThat(template).hasHeaders(entry("A-Header", Collections.singletonList(header)));
+  }
+
+  @Test
   void resolveTemplateWithMixedRequestLineParams() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET)//
         .uri("/domains/{domainId}/records")//
