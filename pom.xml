@@ -7,7 +7,7 @@
 
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx</artifactId>
-    <version>5.1.1</version>
+    <version>6.0.0</version>
     <packaging>jar</packaging>
 
     <name>feign-vertx</name>
@@ -54,8 +54,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <vertx.version>4.3.2</vertx.version>
-        <feign.version>11.9</feign.version>
+        <vertx.version>4.5.8</vertx.version>
+        <feign.version>13.3</feign.version>
 
         <!-- Tests -->
         <junit.version>5.7.0</junit.version>

@@ -33,13 +33,14 @@ compile group: 'io.github.openfeign', name: 'feign-vertx', version: '5.1.0'
 
 ## Compatibility
 
-Feign                  | feign-vertx            | Vertx
----------------------- | ---------------------- | ----------------------
-8.x                    | 1.x+                   | 3.5.x - 3.9.x (except 3.5.2)
-9.x                    | 2.x+                   | 3.5.x - 3.9.x (except 3.5.2)
-10.x (except 10.5.0)   | 3.x+                   | 3.5.x - 3.9.x (except 3.5.2)
-11.x                   | 4.x+                   | 3.5.x - 3.9.x (except 3.5.2)
-11.x                   | 5.x+                   | 4.0.x
+Feign                  | feign-vertx | Vertx
+---------------------- |-------------| ----------------------
+8.x                    | 1.x+        | 3.5.x - 3.9.x (except 3.5.2)
+9.x                    | 2.x+        | 3.5.x - 3.9.x (except 3.5.2)
+10.x (except 10.5.0)   | 3.x+        | 3.5.x - 3.9.x (except 3.5.2)
+11.x                   | 4.x+        | 3.5.x - 3.9.x (except 3.5.2)
+11.x                   | 5.x+        | 4.x
+12.x - 13.x            | 6.x+        | 4.x
 
 ## Usage
 
