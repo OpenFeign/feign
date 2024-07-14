@@ -60,7 +60,7 @@
         <!-- Tests -->
         <junit.version>5.7.0</junit.version>
         <assertj.version>3.18.1</assertj.version>
-        <wiremock.version>2.27.2</wiremock.version>
+        <wiremock.version>2.35.1</wiremock.version>
         <jackson.version>2.12.0</jackson.version>
         <slf4j-log4j12.version>1.8.0-beta0</slf4j-log4j12.version>
 
