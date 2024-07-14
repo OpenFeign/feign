@@ -21,10 +21,7 @@ jobs:
           java-version: ${{ env.jdk_version }}
 
       - name: Configure GPG Key
-        run: |
-          mkdir -p ~/.gnupg/
-          echo "$GPG_SIGNING_KEY" > ~/.gnupg/private.key
-          gpg --import ~/.gnupg/private.key
+        run: echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --import
 
       - name: Build
         run: mvn clean install
