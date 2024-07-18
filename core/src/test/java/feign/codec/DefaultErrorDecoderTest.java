@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -129,18 +129,27 @@ class DefaultErrorDecoderTest {
   }
 
   private Response bigBodyResponse() {
-    String content = "I love a storm in early May\n"
-        + "When springtime’s boisterous, firstborn thunder\n"
-        + "Over the sky will gaily wander\n" + "And growl and roar as though in play.\n" + "\n"
-        + "A peal, another — gleeful, cheering…\n" + "Rain, raindust… On the trees, behold!-\n"
-        + "The drops hang, each a long pearl earring;\n"
-        + "Bright sunshine paints the thin threads gold.\n"
-        + "\n" + "A stream downhill goes rushing reckless,\n"
-        + "And in the woods the birds rejoice.\n"
-        + "Din. Clamour. Noise. All nature echoes\n" + "The thunder’s youthful, merry voice.\n"
-        + "\n"
-        + "You’ll say: ‘Tis laughing, carefree Hebe —\n" + "She fed her father’s eagle, and\n"
-        + "The Storm Cup brimming with a seething\n" + "And bubbling wine dropped from her hand";
+    String content = """
+        I love a storm in early May
+        When springtime’s boisterous, firstborn thunder
+        Over the sky will gaily wander
+        And growl and roar as though in play.
+        
+        A peal, another — gleeful, cheering…
+        Rain, raindust… On the trees, behold!-
+        The drops hang, each a long pearl earring;
+        Bright sunshine paints the thin threads gold.
+        
+        A stream downhill goes rushing reckless,
+        And in the woods the birds rejoice.
+        Din. Clamour. Noise. All nature echoes
+        The thunder’s youthful, merry voice.
+        
+        You’ll say: ‘Tis laughing, carefree Hebe —
+        She fed her father’s eagle, and
+        The Storm Cup brimming with a seething
+        And bubbling wine dropped from her hand\
+        """;
 
     InputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
     Map<String, Collection<String>> headers = new HashMap<>();

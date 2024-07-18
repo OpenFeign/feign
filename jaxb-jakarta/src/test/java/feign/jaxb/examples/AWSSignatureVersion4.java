@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -95,7 +95,7 @@ public class AWSSignatureVersion4 {
   private static String hex(byte[] data) {
     StringBuilder result = new StringBuilder(data.length * 2);
     for (byte b : data) {
-      result.append(String.format("%02x", b & 0xff));
+      result.append("%02x".formatted(b & 0xff));
     }
     return result.toString();
   }
@@ -122,7 +122,7 @@ public class AWSSignatureVersion4 {
     String timestamp = Clock.systemUTC().instant().toString();
 
     String credentialScope =
-        String.format("%s/%s/%s/%s", timestamp.substring(0, 8), region, service, "aws4_request");
+        "%s/%s/%s/%s".formatted(timestamp.substring(0, 8), region, service, "aws4_request");
 
     input.query("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
     input.query("X-Amz-Credential", accessKey + "/" + credentialScope);

@@ -407,7 +407,7 @@ public class LoggerTest {
 
     @Override
     protected void log(String configKey, String format, Object... args) {
-      messages.add(methodTag(configKey) + String.format(format, args));
+      messages.add(methodTag(configKey) + format.formatted(args));
     }
 
     // @Override

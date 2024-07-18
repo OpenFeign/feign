@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -98,13 +98,15 @@ class MoshiEncoderTest {
 
 
     assertThat(template)
-        .hasBody("{\n" +
-            "  \"hero\": {\n" +
-            "    \"enemy\": \"Bowser\",\n" +
-            "    \"name\": \"Luigi\"\n" +
-            "  },\n" +
-            "  \"name\": \"Super Mario\"\n" +
-            "}");
+        .hasBody("""
+            {
+              "hero": {
+                "enemy": "Bowser",
+                "name": "Luigi"
+              },
+              "name": "Super Mario"
+            }\
+            """);
   }
 }
 

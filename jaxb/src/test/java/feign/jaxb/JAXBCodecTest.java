@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -90,8 +90,10 @@ class JAXBCodecTest {
     RequestTemplate template = new RequestTemplate();
     encoder.encode(mock, MockObject.class, template);
 
-    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-16\" "
-        + "standalone=\"yes\"?><mockObject><value>Test</value></mockObject>");
+    assertThat(template).hasBody("""
+        <?xml version="1.0" encoding="UTF-16" \
+        standalone="yes"?><mockObject><value>Test</value></mockObject>\
+        """);
   }
 
   @Test
@@ -109,10 +111,12 @@ class JAXBCodecTest {
     RequestTemplate template = new RequestTemplate();
     encoder.encode(mock, MockObject.class, template);
 
-    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\" " +
-        "standalone=\"yes\"?><mockObject xsi:schemaLocation=\"http://apihost " +
-        "http://apihost/schema.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-        "<value>Test</value></mockObject>");
+    assertThat(template).hasBody("""
+        <?xml version="1.0" encoding="UTF-8" \
+        standalone="yes"?><mockObject xsi:schemaLocation="http://apihost \
+        http://apihost/schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
+        <value>Test</value></mockObject>\
+        """);
   }
 
   @Test
@@ -131,10 +135,12 @@ class JAXBCodecTest {
 
     assertThat(template)
         .hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" "
-                + "standalone=\"yes\"?><mockObject xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
-                + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
-                + "<value>Test</value></mockObject>");
+            """
+            <?xml version="1.0" encoding="UTF-8" \
+            standalone="yes"?><mockObject xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd" \
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
+            <value>Test</value></mockObject>\
+            """);
   }
 
   @Test
@@ -168,8 +174,10 @@ class JAXBCodecTest {
     MockObject mock = new MockObject();
     mock.value = "Test";
 
-    String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockObject>"
-        + "<value>Test</value></mockObject>";
+    String mockXml = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?><mockObject>\
+        <value>Test</value></mockObject>\
+        """;
 
     Response response = Response.builder()
         .status(200)
@@ -205,9 +213,11 @@ class JAXBCodecTest {
         () -> new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response,
             parameterized));
     assertThat(exception.getMessage())
-        .contains("java.util.Map is an interface, and JAXB can't handle interfaces.\n"
-            + "\tthis problem is related to the following location:\n"
-            + "\t\tat java.util.Map");
+        .contains("""
+            java.util.Map is an interface, and JAXB can't handle interfaces.
+            	this problem is related to the following location:
+            		at java.util.Map\
+            """);
   }
 
   @XmlRootElement
@@ -266,8 +276,10 @@ class JAXBCodecTest {
   @Test
   void decodeThrowsExceptionWhenUnmarshallingFailsWithSetSchema() throws Exception {
 
-    String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
-        + "<value>Test</value></mockIntObject>";
+    String mockXml = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?><mockIntObject>\
+        <value>Test</value></mockIntObject>\
+        """;
 
     Response response = Response.builder()
         .status(200)
@@ -287,8 +299,10 @@ class JAXBCodecTest {
 
   @Test
   void decodesIgnoringErrorsWithEventHandler() throws Exception {
-    String mockXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><mockIntObject>"
-        + "<value>Test</value></mockIntObject>";
+    String mockXml = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?><mockIntObject>\
+        <value>Test</value></mockIntObject>\
+        """;
 
     Response response = Response.builder()
         .status(200)
@@ -334,8 +348,10 @@ class JAXBCodecTest {
 
     RequestTemplate template = new RequestTemplate();
     encoder.encode(new MockIntObject(), MockIntObject.class, template);
-    assertThat(template).hasBody("<?xml version=\"1.0\" encoding=\"UTF-8\"" +
-        " standalone=\"yes\"?><mockIntObject/>");
+    assertThat(template).hasBody("""
+        <?xml version="1.0" encoding="UTF-8"\
+         standalone="yes"?><mockIntObject/>\
+        """);
   }
 
   @XmlRootElement
@@ -365,11 +381,13 @@ class JAXBCodecTest {
   }
 
   private static Schema getMockIntObjSchema() throws Exception {
-    String schema = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-        + "<xs:schema version=\"1.0\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">"
-        + "<xs:element name=\"mockIntObject\" type=\"mockIntObject\"/><xs:complexType name=\"mockIntObject\">"
-        + "<xs:sequence><xs:element name=\"value\" type=\"xs:int\"/></xs:sequence></xs:complexType>"
-        + "</xs:schema>";
+    String schema = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">\
+        <xs:element name="mockIntObject" type="mockIntObject"/><xs:complexType name="mockIntObject">\
+        <xs:sequence><xs:element name="value" type="xs:int"/></xs:sequence></xs:complexType>\
+        </xs:schema>\
+        """;
     SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
     return schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
   }
@@ -383,8 +401,7 @@ class JAXBCodecTest {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof MockObject) {
-        MockObject other = (MockObject) obj;
+      if (obj instanceof MockObject other) {
         return value.equals(other.value);
       }
       return false;

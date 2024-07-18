@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -41,10 +41,10 @@ class BaseBuilderTest {
     for (Field field : fields) {
       field.setAccessible(true);
       Object mockedValue = field.get(enriched);
-      if (mockedValue instanceof List) {
-        assertThat((List) mockedValue).withFailMessage("Enriched list missing contents %s", field)
+      if (mockedValue instanceof List<?> list) {
+        assertThat(list).withFailMessage("Enriched list missing contents %s", field)
             .isNotEmpty();
-        mockedValue = ((List<Object>) mockedValue).get(0);
+        mockedValue = list.getFirst();
       }
       assertThat(Mockito.mockingDetails(mockedValue)
           .isMock()).as("Field was not enriched " + field).isTrue();

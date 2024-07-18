@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -88,14 +88,16 @@ class SOAPFaultDecoderTest {
 
   @Test
   void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
-    String responseBody = "<?xml version = '1.0' encoding = 'UTF-8'?>\n" +
-        "<SOAP-ENV:Envelope\n" +
-        "   xmlns:SOAP-ENV = \"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-        "   xmlns:xsi = \"http://www.w3.org/1999/XMLSchema-instance\"\n" +
-        "   xmlns:xsd = \"http://www.w3.org/1999/XMLSchema\">\n" +
-        "   <SOAP-ENV:Body>\n" +
-        "   </SOAP-ENV:Body>\n" +
-        "</SOAP-ENV:Envelope>";
+    String responseBody = """
+        <?xml version = '1.0' encoding = 'UTF-8'?>
+        <SOAP-ENV:Envelope
+           xmlns:SOAP-ENV = "http://schemas.xmlsoap.org/soap/envelope/"
+           xmlns:xsi = "http://www.w3.org/1999/XMLSchema-instance"
+           xmlns:xsd = "http://www.w3.org/1999/XMLSchema">
+           <SOAP-ENV:Body>
+           </SOAP-ENV:Body>
+        </SOAP-ENV:Envelope>\
+        """;
     Response response = Response.builder()
         .status(500)
         .reason("Internal Server Error")
