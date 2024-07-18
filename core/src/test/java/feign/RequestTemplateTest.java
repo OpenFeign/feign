@@ -326,8 +326,10 @@ public class RequestTemplateTest {
         new RequestTemplate()
             .method(HttpMethod.POST)
             .bodyTemplate(
-                "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\", "
-                    + "\"password\": \"{password}\"%7D",
+                """
+                %7B"customer_name": "{customer_name}", "user_name": "{user_name}", \
+                "password": "{password}"%7D\
+                """,
                 Util.UTF_8);
 
     template =

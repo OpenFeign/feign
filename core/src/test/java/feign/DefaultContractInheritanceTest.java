@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -45,9 +45,9 @@ class DefaultContractInheritanceTest {
 
     assertThat(md).hasSize(1);
 
-    assertThat(md.get(0).configKey()).isEqualTo("SimpleParameterizedApi#get(String)");
-    assertThat(md.get(0).returnType()).isEqualTo(String.class);
-    assertThat(md.get(0).template()).hasHeaders(entry("Foo", asList("Bar")));
+    assertThat(md.getFirst().configKey()).isEqualTo("SimpleParameterizedApi#get(String)");
+    assertThat(md.getFirst().returnType()).isEqualTo(String.class);
+    assertThat(md.getFirst().template()).hasHeaders(entry("Foo", asList("Bar")));
   }
 
   @Test

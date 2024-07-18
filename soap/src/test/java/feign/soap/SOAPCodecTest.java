@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -58,15 +58,17 @@ class SOAPCodecTest {
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
-            + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-            + "<SOAP-ENV:Header/>"
-            + "<SOAP-ENV:Body>"
-            + "<GetPrice>"
-            + "<Item>Apples</Item>"
-            + "</GetPrice>"
-            + "</SOAP-ENV:Body>"
-            + "</SOAP-ENV:Envelope>";
+        """
+        <?xml version="1.0" encoding="UTF-8" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Header/>\
+        <SOAP-ENV:Body>\
+        <GetPrice>\
+        <Item>Apples</Item>\
+        </GetPrice>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\
+        """;
     assertThat(template).hasBody(soapEnvelop);
   }
 
@@ -112,15 +114,17 @@ class SOAPCodecTest {
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
-        "<?xml version=\"1.0\" encoding=\"UTF-16\" ?>"
-            + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-            + "<SOAP-ENV:Header/>"
-            + "<SOAP-ENV:Body>"
-            + "<GetPrice>"
-            + "<Item>Apples</Item>"
-            + "</GetPrice>"
-            + "</SOAP-ENV:Body>"
-            + "</SOAP-ENV:Envelope>";
+        """
+        <?xml version="1.0" encoding="UTF-16" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Header/>\
+        <SOAP-ENV:Body>\
+        <GetPrice>\
+        <Item>Apples</Item>\
+        </GetPrice>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\
+        """;
     byte[] utf16Bytes = soapEnvelop.getBytes(StandardCharsets.UTF_16LE);
     assertThat(template).hasBody(utf16Bytes);
   }
@@ -143,11 +147,17 @@ class SOAPCodecTest {
 
     assertThat(template)
         .hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><SOAP-ENV:Envelope"
-                + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Header/>"
-                + "<SOAP-ENV:Body><GetPrice xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-                + " xsi:schemaLocation=\"http://apihost http://apihost/schema.xsd\">"
-                + "<Item>Apples</Item></GetPrice></SOAP-ENV:Body></SOAP-ENV:Envelope>");
+            """
+<?xml version="1.0" encoding="UTF-8" ?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+<SOAP-ENV:Header/>\
+<SOAP-ENV:Body>\
+<GetPrice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://apihost http://apihost/schema.xsd">\
+<Item>Apples</Item>\
+</GetPrice>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>\
+""");
   }
 
   @Test
@@ -168,11 +178,17 @@ class SOAPCodecTest {
 
     assertThat(template)
         .hasBody(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><SOAP-ENV:Envelope"
-                + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Header/>"
-                + "<SOAP-ENV:Body><GetPrice xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-                + " xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\"><Item>Apples</Item>"
-                + "</GetPrice></SOAP-ENV:Body></SOAP-ENV:Envelope>");
+            """
+<?xml version="1.0" encoding="UTF-8" ?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+<SOAP-ENV:Header/>\
+<SOAP-ENV:Body>\
+<GetPrice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd">\
+<Item>Apples</Item>\
+</GetPrice>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>\
+""");
   }
 
   @Test
@@ -220,11 +236,17 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><SOAP-ENV:Envelope"
-            + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Header/>"
-            + "<SOAP-ENV:Body><GetPrice xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-            + " xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\"><Item>Apples</Item>"
-            + "</GetPrice></SOAP-ENV:Body></SOAP-ENV:Envelope>";
+        """
+<?xml version="1.0" encoding="UTF-8" ?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+<SOAP-ENV:Header/>\
+<SOAP-ENV:Body>\
+<GetPrice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd">\
+<Item>Apples</Item>\
+</GetPrice>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>\
+""";
 
     Response response =
         Response.builder()
@@ -248,13 +270,19 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><SOAP-ENV:Envelope"
-            + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\""
-            + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-            + " xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\" "
-            + "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><SOAP-ENV:Header/><SOAP-ENV:Body>"
-            + "<GetPrice><Item xsi:type=\"xsd:string\">Apples</Item></GetPrice></SOAP-ENV:Body>"
-            + "</SOAP-ENV:Envelope>";
+        """
+<?xml version="1.0" encoding="UTF-8" ?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" \
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd" \
+xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
+<SOAP-ENV:Header/>\
+<SOAP-ENV:Body>\
+<GetPrice>\
+<Item xsi:type="xsd:string">Apples</Item>\
+</GetPrice>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>\
+""";
 
     Response response =
         Response.builder()
@@ -282,11 +310,17 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><SOAP-ENV:Envelope"
-            + " xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Header/>"
-            + "<SOAP-ENV:Body><GetPrice xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-            + " xsi:noNamespaceSchemaLocation=\"http://apihost/schema.xsd\"><Item>Apples</Item>"
-            + "</GetPrice></SOAP-ENV:Body></SOAP-ENV:Envelope>";
+        """
+<?xml version="1.0" encoding="UTF-8" ?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+<SOAP-ENV:Header/>\
+<SOAP-ENV:Body>\
+<GetPrice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd">\
+<Item>Apples</Item>\
+</GetPrice>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>\
+""";
 
     Response response =
         Response.builder()
@@ -321,15 +355,17 @@ class SOAPCodecTest {
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
-                    + "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-                    + "<Header/>"
-                    + "<Body>"
-                    + "<GetPrice>"
-                    + "<Item>Apples</Item>"
-                    + "</GetPrice>"
-                    + "</Body>"
-                    + "</Envelope>",
+                """
+                <?xml version="1.0" encoding="UTF-8" ?>\
+                <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">\
+                <Header/>\
+                <Body>\
+                <GetPrice>\
+                <Item>Apples</Item>\
+                </GetPrice>\
+                </Body>\
+                </Envelope>\
+                """,
                 UTF_8)
             .build();
 
@@ -341,9 +377,11 @@ class SOAPCodecTest {
                     .decode(response, parameterized));
     assertThat(exception.getMessage())
         .contains(
-            "java.util.Map is an interface, and JAXB can't handle interfaces.\n"
-                + "\tthis problem is related to the following location:\n"
-                + "\t\tat java.util.Map");
+            """
+            java.util.Map is an interface, and JAXB can't handle interfaces.
+            	this problem is related to the following location:
+            		at java.util.Map\
+            """);
   }
 
   @XmlRootElement
@@ -469,8 +507,7 @@ class SOAPCodecTest {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof GetPrice) {
-        GetPrice getPrice = (GetPrice) obj;
+      if (obj instanceof GetPrice getPrice) {
         return item.value.equals(getPrice.item.value);
       }
       return false;
@@ -490,8 +527,7 @@ class SOAPCodecTest {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof Item) {
-        Item item = (Item) obj;
+      if (obj instanceof Item item) {
         return value.equals(item.value);
       }
       return false;

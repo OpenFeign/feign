@@ -161,11 +161,12 @@ class FastJsonCodecTest {
             .headers(headers)
             .body(
                 new String(
-                        "" //
-                            + "{"
-                            + "  \"name\" : \"DENOMINATOR.IO.\","
-                            + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\""
-                            + "}")
+                        """
+                        {\
+                          "name" : "DENOMINATOR.IO.",\
+                          "id" : "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ"\
+                        }\
+                        """)
                     .getBytes(StandardCharsets.ISO_8859_1))
             .build();
     assertThat(

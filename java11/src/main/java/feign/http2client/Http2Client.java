@@ -185,10 +185,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
   public int createClientKey(feign.Request.Options options) {
     int key = options.connectTimeoutMillis();
     if (options.isFollowRedirects()) {
-      key |=
-          1
-              << 31; // connectTimeoutMillis always positive, so we can use first sign bit for
-                     // isFollowRedirects flag
+      key |= 1 << 31; // connectTimeoutMillis always positive, so we can use first sign bit for
+      // isFollowRedirects flag
     }
     return key;
   }
