@@ -1253,9 +1253,7 @@ The Bill Of Material is a special POM file that groups dependency versions that 
 
 ```xml
 <project>
-
 ...
-
   <dependencyManagement>
     <dependencies>
       <dependency>
