@@ -42,7 +42,7 @@ jobs:
 
       # Execute recipes
       - name: Apply OpenRewrite recipes
-        run: mvn --activate-profiles openrewrite org.openrewrite.maven:rewrite-maven-plugin:run
+        run: ./mvnw -Dtoolchain.skip=true -Dlicense.skip=true -DskipTests=true -P openrewrite clean install
 
       # Capture the diff
       - name: Create patch
