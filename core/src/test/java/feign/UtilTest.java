@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -84,6 +85,16 @@ class UtilTest {
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
     assertThat(last).isEqualTo(listStringType);
+  }
+
+
+  @Test
+  void fake() throws Exception {
+    Type context =
+        LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
+    Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
+    Type last = resolveLastTypeParameter(context, Parameterized.class);
+    assertEquals(last, listStringType);
   }
 
   @Test
