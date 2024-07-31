@@ -935,7 +935,7 @@
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>2.20.0</version>
+                <version>2.21.0</version>
               </dependency>
             </dependencies>
 
