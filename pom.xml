@@ -114,7 +114,7 @@
     <bom-generator.version>0.200.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.1.0</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.17.0</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.17.1</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.2</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
