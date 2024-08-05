@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,8 +18,6 @@ import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,44 +25,24 @@ import java.util.stream.Stream;
 
 final class SynchronousMethodHandler implements MethodHandler {
 
-  private final MethodMetadata metadata;
-  private final Target<?> target;
   private final Client client;
-  private final Retryer retryer;
-  private final List<RequestInterceptor> requestInterceptors;
-  private final Logger logger;
-  private final Logger.Level logLevel;
-  private final RequestTemplate.Factory buildTemplateFromArgs;
-  private final Options options;
-  private final ExceptionPropagationPolicy propagationPolicy;
   private final ResponseHandler responseHandler;
+  private final MethodHandlerConfiguration methodHandlerConfiguration;
 
+  private SynchronousMethodHandler(MethodHandlerConfiguration methodHandlerConfiguration,
+      Client client, ResponseHandler responseHandler) {
 
-  private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors,
-      Logger logger, Logger.Level logLevel, MethodMetadata metadata,
-      RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      ResponseHandler responseHandler, ExceptionPropagationPolicy propagationPolicy) {
-
-    this.target = checkNotNull(target, "target");
-    this.client = checkNotNull(client, "client for %s", target);
-    this.retryer = checkNotNull(retryer, "retryer for %s", target);
-    this.requestInterceptors =
-        checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
-    this.logger = checkNotNull(logger, "logger for %s", target);
-    this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
-    this.metadata = checkNotNull(metadata, "metadata for %s", target);
-    this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
-    this.options = checkNotNull(options, "options for %s", target);
-    this.propagationPolicy = propagationPolicy;
+    this.methodHandlerConfiguration =
+        checkNotNull(methodHandlerConfiguration, "methodHandlerConfiguration");
+    this.client = checkNotNull(client, "client for %s", methodHandlerConfiguration.getTarget());
     this.responseHandler = responseHandler;
   }
 
   @Override
   public Object invoke(Object[] argv) throws Throwable {
-    RequestTemplate template = buildTemplateFromArgs.create(argv);
+    RequestTemplate template = methodHandlerConfiguration.getBuildTemplateFromArgs().create(argv);
     Options options = findOptions(argv);
-    Retryer retryer = this.retryer.clone();
+    Retryer retryer = this.methodHandlerConfiguration.getRetryer().clone();
     while (true) {
       try {
         return executeAndDecode(template, options);
@@ -73,14 +51,16 @@ final class SynchronousMethodHandler implements MethodHandler {
           retryer.continueOrPropagate(e);
         } catch (RetryableException th) {
           Throwable cause = th.getCause();
-          if (propagationPolicy == UNWRAP && cause != null) {
+          if (methodHandlerConfiguration.getPropagationPolicy() == UNWRAP && cause != null) {
             throw cause;
           } else {
             throw th;
           }
         }
-        if (logLevel != Logger.Level.NONE) {
-          logger.logRetry(metadata.configKey(), logLevel);
+        if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
+          methodHandlerConfiguration.getLogger().logRetry(
+              methodHandlerConfiguration.getMetadata().configKey(),
+              methodHandlerConfiguration.getLogLevel());
         }
         continue;
       }
@@ -90,8 +70,10 @@ final class SynchronousMethodHandler implements MethodHandler {
   Object executeAndDecode(RequestTemplate template, Options options) throws Throwable {
     Request request = targetRequest(template);
 
-    if (logLevel != Logger.Level.NONE) {
-      logger.logRequest(metadata.configKey(), logLevel, request);
+    if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
+      methodHandlerConfiguration.getLogger().logRequest(
+          methodHandlerConfiguration.getMetadata().configKey(),
+          methodHandlerConfiguration.getLogLevel(), request);
     }
 
     Response response;
@@ -104,15 +86,18 @@ final class SynchronousMethodHandler implements MethodHandler {
           .requestTemplate(template)
           .build();
     } catch (IOException e) {
-      if (logLevel != Logger.Level.NONE) {
-        logger.logIOException(metadata.configKey(), logLevel, e, elapsedTime(start));
+      if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
+        methodHandlerConfiguration.getLogger().logIOException(
+            methodHandlerConfiguration.getMetadata().configKey(),
+            methodHandlerConfiguration.getLogLevel(), e, elapsedTime(start));
       }
       throw errorExecuting(request, e);
     }
 
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     return responseHandler.handleResponse(
-        metadata.configKey(), response, metadata.returnType(), elapsedTime);
+        methodHandlerConfiguration.getMetadata().configKey(), response,
+        methodHandlerConfiguration.getMetadata().returnType(), elapsedTime);
   }
 
   long elapsedTime(long start) {
@@ -120,21 +105,23 @@ final class SynchronousMethodHandler implements MethodHandler {
   }
 
   Request targetRequest(RequestTemplate template) {
-    for (RequestInterceptor interceptor : requestInterceptors) {
+    for (RequestInterceptor interceptor : methodHandlerConfiguration.getRequestInterceptors()) {
       interceptor.apply(template);
     }
-    return target.apply(template);
+    return methodHandlerConfiguration.getTarget().apply(template);
   }
 
   Options findOptions(Object[] argv) {
     if (argv == null || argv.length == 0) {
-      return this.options.getMethodOptions(metadata.method().getName());
+      return this.methodHandlerConfiguration.getOptions()
+          .getMethodOptions(methodHandlerConfiguration.getMetadata().method().getName());
     }
     return Stream.of(argv)
         .filter(Options.class::isInstance)
         .map(Options.class::cast)
         .findFirst()
-        .orElse(this.options.getMethodOptions(metadata.method().getName()));
+        .orElse(this.methodHandlerConfiguration.getOptions()
+            .getMethodOptions(methodHandlerConfiguration.getMetadata().method().getName()));
   }
 
   static class Factory implements MethodHandler.Factory<Object> {
@@ -167,14 +154,16 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.options = checkNotNull(options, "options");
     }
 
+    @Override
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
                                 Object requestContext) {
       final RequestTemplate.Factory buildTemplateFromArgs =
           requestTemplateFactoryResolver.resolve(target, md);
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
-          logger, logLevel, md, buildTemplateFromArgs, options,
-          responseHandler, propagationPolicy);
+      MethodHandlerConfiguration methodHandlerConfiguration =
+          new MethodHandlerConfiguration(md, target, retryer, requestInterceptors, logger, logLevel,
+              buildTemplateFromArgs, options, propagationPolicy);
+      return new SynchronousMethodHandler(methodHandlerConfiguration, client, responseHandler);
     }
   }
 }
