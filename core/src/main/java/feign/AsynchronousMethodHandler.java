@@ -15,8 +15,6 @@ package feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -35,29 +33,14 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   private final C requestContext;
   private final AsyncResponseHandler asyncResponseHandler;
   private final MethodInfo methodInfo;
-  private MethodHandlerConfiguration methodHandlerConfiguration =
-      new MethodHandlerConfiguration(null, null, null, null, null, null, null, null, null);
+  private final MethodHandlerConfiguration methodHandlerConfiguration;
 
-
-  private AsynchronousMethodHandler(Target<?> target, AsyncClient<C> client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors,
-      Logger logger, Logger.Level logLevel, MethodMetadata metadata,
-      RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      AsyncResponseHandler asyncResponseHandler, ExceptionPropagationPolicy propagationPolicy,
-      C requestContext, MethodInfo methodInfo) {
-
-    this.methodHandlerConfiguration.setTarget(checkNotNull(target, "target"));
-    this.client = checkNotNull(client, "client for %s", target);
-    this.methodHandlerConfiguration.setRetryer(checkNotNull(retryer, "retryer for %s", target));
-    this.methodHandlerConfiguration.setRequestInterceptors(
-        checkNotNull(requestInterceptors, "requestInterceptors for %s", target));
-    this.methodHandlerConfiguration.setLogger(checkNotNull(logger, "logger for %s", target));
-    this.methodHandlerConfiguration.setLogLevel(checkNotNull(logLevel, "logLevel for %s", target));
-    this.methodHandlerConfiguration.setMetadata(checkNotNull(metadata, "metadata for %s", target));
-    this.methodHandlerConfiguration
-        .setBuildTemplateFromArgs(checkNotNull(buildTemplateFromArgs, "metadata for %s", target));
-    this.methodHandlerConfiguration.setOptions(checkNotNull(options, "options for %s", target));
-    this.methodHandlerConfiguration.setPropagationPolicy(propagationPolicy);
+  private AsynchronousMethodHandler(MethodHandlerConfiguration methodHandlerConfiguration,
+      AsyncClient<C> client, AsyncResponseHandler asyncResponseHandler, C requestContext,
+      MethodInfo methodInfo) {
+    this.methodHandlerConfiguration =
+        checkNotNull(methodHandlerConfiguration, "methodHandlerConfiguration");
+    this.client = checkNotNull(client, "client for %s", methodHandlerConfiguration.getTarget());
     this.requestContext = requestContext;
     this.asyncResponseHandler = asyncResponseHandler;
     this.methodInfo = methodInfo;
@@ -248,8 +231,6 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     private final MethodInfoResolver methodInfoResolver;
     private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
-    private final Decoder decoder;
-    private final ErrorDecoder errorDecoder;
 
     Factory(AsyncClient<C> client, Retryer retryer, List<RequestInterceptor> requestInterceptors,
         AsyncResponseHandler responseHandler,
@@ -257,9 +238,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         ExceptionPropagationPolicy propagationPolicy,
         MethodInfoResolver methodInfoResolver,
         RequestTemplateFactoryResolver requestTemplateFactoryResolver,
-        Options options,
-        Decoder decoder,
-        ErrorDecoder errorDecoder) {
+        Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
@@ -271,19 +250,20 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
       this.requestTemplateFactoryResolver =
           checkNotNull(requestTemplateFactoryResolver, "requestTemplateFactoryResolver");
       this.options = checkNotNull(options, "options");
-      this.errorDecoder = checkNotNull(errorDecoder, "errorDecoder");
-      this.decoder = checkNotNull(decoder, "decoder");
     }
 
+    @Override
     public MethodHandler create(Target<?> target,
-                                MethodMetadata md,
+                                MethodMetadata metadata,
                                 C requestContext) {
       final RequestTemplate.Factory buildTemplateFromArgs =
-          requestTemplateFactoryResolver.resolve(target, md);
-      return new AsynchronousMethodHandler<C>(target, client, retryer, requestInterceptors,
-          logger, logLevel, md, buildTemplateFromArgs, options, responseHandler,
-          propagationPolicy, requestContext,
-          methodInfoResolver.resolve(target.type(), md.method()));
+          requestTemplateFactoryResolver.resolve(target, metadata);
+
+      MethodHandlerConfiguration methodHandlerConfiguration =
+          new MethodHandlerConfiguration(metadata, target, retryer, requestInterceptors, logger,
+              logLevel, buildTemplateFromArgs, options, propagationPolicy);
+      return new AsynchronousMethodHandler<C>(methodHandlerConfiguration, client, responseHandler,
+          requestContext, methodInfoResolver.resolve(target.type(), metadata.method()));
     }
   }
 }

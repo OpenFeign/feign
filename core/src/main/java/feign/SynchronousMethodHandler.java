@@ -18,8 +18,6 @@ import static feign.FeignException.errorExecuting;
 import static feign.Util.checkNotNull;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -29,28 +27,14 @@ final class SynchronousMethodHandler implements MethodHandler {
 
   private final Client client;
   private final ResponseHandler responseHandler;
-  private MethodHandlerConfiguration methodHandlerConfiguration =
-      new MethodHandlerConfiguration(null, null, null, null, null, null, null, null, null);
+  private final MethodHandlerConfiguration methodHandlerConfiguration;
 
+  private SynchronousMethodHandler(MethodHandlerConfiguration methodHandlerConfiguration,
+      Client client, ResponseHandler responseHandler) {
 
-  private SynchronousMethodHandler(Target<?> target, Client client, Retryer retryer,
-      List<RequestInterceptor> requestInterceptors,
-      Logger logger, Logger.Level logLevel, MethodMetadata metadata,
-      RequestTemplate.Factory buildTemplateFromArgs, Options options,
-      ResponseHandler responseHandler, ExceptionPropagationPolicy propagationPolicy) {
-
-    this.methodHandlerConfiguration.setTarget(checkNotNull(target, "target"));
-    this.client = checkNotNull(client, "client for %s", target);
-    this.methodHandlerConfiguration.setRetryer(checkNotNull(retryer, "retryer for %s", target));
-    this.methodHandlerConfiguration.setRequestInterceptors(
-        checkNotNull(requestInterceptors, "requestInterceptors for %s", target));
-    this.methodHandlerConfiguration.setLogger(checkNotNull(logger, "logger for %s", target));
-    this.methodHandlerConfiguration.setLogLevel(checkNotNull(logLevel, "logLevel for %s", target));
-    this.methodHandlerConfiguration.setMetadata(checkNotNull(metadata, "metadata for %s", target));
-    this.methodHandlerConfiguration
-        .setBuildTemplateFromArgs(checkNotNull(buildTemplateFromArgs, "metadata for %s", target));
-    this.methodHandlerConfiguration.setOptions(checkNotNull(options, "options for %s", target));
-    this.methodHandlerConfiguration.setPropagationPolicy(propagationPolicy);
+    this.methodHandlerConfiguration =
+        checkNotNull(methodHandlerConfiguration, "methodHandlerConfiguration");
+    this.client = checkNotNull(client, "client for %s", methodHandlerConfiguration.getTarget());
     this.responseHandler = responseHandler;
   }
 
@@ -170,14 +154,16 @@ final class SynchronousMethodHandler implements MethodHandler {
       this.options = checkNotNull(options, "options");
     }
 
+    @Override
     public MethodHandler create(Target<?> target,
                                 MethodMetadata md,
                                 Object requestContext) {
       final RequestTemplate.Factory buildTemplateFromArgs =
           requestTemplateFactoryResolver.resolve(target, md);
-      return new SynchronousMethodHandler(target, client, retryer, requestInterceptors,
-          logger, logLevel, md, buildTemplateFromArgs, options,
-          responseHandler, propagationPolicy);
+      MethodHandlerConfiguration methodHandlerConfiguration =
+          new MethodHandlerConfiguration(md, target, retryer, requestInterceptors, logger, logLevel,
+              buildTemplateFromArgs, options, propagationPolicy);
+      return new SynchronousMethodHandler(methodHandlerConfiguration, client, responseHandler);
     }
   }
 }

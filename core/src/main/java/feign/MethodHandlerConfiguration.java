@@ -14,26 +14,27 @@
 package feign;
 
 import java.util.List;
+import static feign.Util.checkNotNull;
 
 public class MethodHandlerConfiguration {
 
-  private MethodMetadata metadata;
+  private final MethodMetadata metadata;
 
-  private Target<?> target;
+  private final Target<?> target;
 
-  private Retryer retryer;
+  private final Retryer retryer;
 
-  private List<RequestInterceptor> requestInterceptors;
+  private final List<RequestInterceptor> requestInterceptors;
 
-  private Logger logger;
+  private final Logger logger;
 
-  private Logger.Level logLevel;
+  private final Logger.Level logLevel;
 
-  private RequestTemplate.Factory buildTemplateFromArgs;
+  private final RequestTemplate.Factory buildTemplateFromArgs;
 
-  private Request.Options options;
+  private final Request.Options options;
 
-  private ExceptionPropagationPolicy propagationPolicy;
+  private final ExceptionPropagationPolicy propagationPolicy;
 
   public MethodMetadata getMetadata() {
     return metadata;
@@ -71,55 +72,22 @@ public class MethodHandlerConfiguration {
     return propagationPolicy;
   }
 
-  public void setMetadata(MethodMetadata metadata) {
-    this.metadata = metadata;
-  }
-
-  public void setTarget(Target<?> target) {
-    this.target = target;
-  }
-
-  public void setRetryer(Retryer retryer) {
-    this.retryer = retryer;
-  }
-
-  public void setRequestInterceptors(List<RequestInterceptor> requestInterceptors) {
-    this.requestInterceptors = requestInterceptors;
-  }
-
-  public void setLogger(Logger logger) {
-    this.logger = logger;
-  }
-
-  public void setLogLevel(Logger.Level logLevel) {
-    this.logLevel = logLevel;
-  }
-
-  public void setBuildTemplateFromArgs(RequestTemplate.Factory buildTemplateFromArgs) {
-    this.buildTemplateFromArgs = buildTemplateFromArgs;
-  }
-
-  public void setOptions(Request.Options options) {
-    this.options = options;
-  }
-
-  public void setPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
-    this.propagationPolicy = propagationPolicy;
-  }
 
   public MethodHandlerConfiguration(MethodMetadata metadata, Target<?> target,
       Retryer retryer, List<RequestInterceptor> requestInterceptors,
       Logger logger,
       Logger.Level logLevel, RequestTemplate.Factory buildTemplateFromArgs,
       Request.Options options, ExceptionPropagationPolicy propagationPolicy) {
-    this.metadata = metadata;
-    this.target = target;
-    this.retryer = retryer;
-    this.requestInterceptors = requestInterceptors;
-    this.logger = logger;
-    this.logLevel = logLevel;
-    this.buildTemplateFromArgs = buildTemplateFromArgs;
-    this.options = options;
+    this.target = checkNotNull(target, "target");
+    this.retryer = checkNotNull(retryer, "retryer for %s", target);
+    this.requestInterceptors =
+        checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
+    this.logger = checkNotNull(logger, "logger for %s", target);
+    this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
+    this.metadata = checkNotNull(metadata, "metadata for %s", target);
+    this.buildTemplateFromArgs = checkNotNull(buildTemplateFromArgs, "metadata for %s", target);
+    this.options = checkNotNull(options, "options for %s", target);
     this.propagationPolicy = propagationPolicy;
+
   }
 }

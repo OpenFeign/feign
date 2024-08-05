@@ -210,7 +210,7 @@ public final class AsyncFeign<C> {
               responseHandler, logger, logLevel,
               propagationPolicy, methodInfoResolver,
               new RequestTemplateFactoryResolver(encoder, queryMapEncoder),
-              options, decoder, errorDecoder);
+              options);
       final ReflectiveFeign<C> feign =
           new ReflectiveFeign<>(contract, methodHandlerFactory, invocationHandlerFactory,
               defaultContextSupplier);
