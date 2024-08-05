@@ -22,15 +22,12 @@ name: "CodeQL"
 
 on:
   push:
-    branches: ["master", "querydsl-5.0.0"]
+    branches: ["master"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: ["master", "querydsl-5.0.0"]
+    branches: ["master"]
   schedule:
     - cron: '0 13 * * 3'
-
-env:
-  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryhandler.count=5 -Dmaven.wagon.httpconnectionManager.ttlSeconds=240
 
 permissions:
   contents: read
