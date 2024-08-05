@@ -819,6 +819,20 @@
 
   <profiles>
     <profile>
+      <id>quickbuild</id>
+      <properties>
+        <skipTests>true</skipTests>
+        <enforcer.skip>true</enforcer.skip>
+        <animal.sniffer.skip>true</animal.sniffer.skip>
+        <japicmp.skip>true</japicmp.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <formatter.skip>true</formatter.skip>
+        <license.skip>true</license.skip>
+      </properties>
+    </profile>
+
+    <profile>
       <id>windows</id>
       <activation>
         <os>
