@@ -420,6 +420,25 @@ public abstract class AbstractClientTest {
   }
 
   @Test
+  public void canSupportGzipOnErrorWithoutBody() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(400)
+            .addHeader("Content-Encoding", "gzip"));
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+      fail("Expect FeignException");
+    } catch (FeignException e) {
+      /* verify that the response is unzipped */
+      assertThat(e.responseBody()).isNotEmpty()
+              .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+              .get().isEqualTo("");
+    }
+  }
+
+  @Test
   public void canSupportDeflate() throws Exception {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
@@ -453,6 +472,25 @@ public abstract class AbstractClientTest {
       assertThat(e.responseBody()).isNotEmpty()
           .map(body -> new String(body.array(), StandardCharsets.UTF_8))
           .get().isEqualTo(responseData);
+    }
+  }
+
+  @Test
+  public void canSupportDeflateOnErrorWithoutBody() throws Exception {
+    server.enqueue(new MockResponse().setResponseCode(400)
+            .addHeader("Content-Encoding", "deflate"));
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    try {
+      api.get();
+      fail("Expect FeignException");
+    } catch (FeignException e) {
+      /* verify that the response is unzipped */
+      assertThat(e.responseBody()).isNotEmpty()
+              .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+              .get().isEqualTo("");
     }
   }
 

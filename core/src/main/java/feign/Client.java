@@ -134,9 +134,9 @@ public interface Client {
       } else {
         stream = connection.getInputStream();
       }
-      if (this.isGzip(headers.get(CONTENT_ENCODING))) {
+      if (stream != null && this.isGzip(headers.get(CONTENT_ENCODING))) {
         stream = new GZIPInputStream(stream);
-      } else if (this.isDeflate(headers.get(CONTENT_ENCODING))) {
+      } else if (stream != null && this.isDeflate(headers.get(CONTENT_ENCODING))) {
         stream = new InflaterInputStream(stream);
       }
       return Response.builder()
