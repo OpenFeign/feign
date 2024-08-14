@@ -422,7 +422,7 @@ public abstract class AbstractClientTest {
   @Test
   public void canSupportGzipOnErrorWithoutBody() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(400)
-            .addHeader("Content-Encoding", "gzip"));
+        .addHeader("Content-Encoding", "gzip"));
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -433,8 +433,8 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody()).isNotEmpty()
-              .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-              .get().isEqualTo("");
+          .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+          .get().isEqualTo("");
     }
   }
 
@@ -478,7 +478,7 @@ public abstract class AbstractClientTest {
   @Test
   public void canSupportDeflateOnErrorWithoutBody() throws Exception {
     server.enqueue(new MockResponse().setResponseCode(400)
-            .addHeader("Content-Encoding", "deflate"));
+        .addHeader("Content-Encoding", "deflate"));
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -489,8 +489,8 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody()).isNotEmpty()
-              .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-              .get().isEqualTo("");
+          .map(body -> new String(body.array(), StandardCharsets.UTF_8))
+          .get().isEqualTo("");
     }
   }
 
