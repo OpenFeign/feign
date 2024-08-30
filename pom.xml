@@ -480,7 +480,7 @@
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
             <excludes>
-              <exclude/>
+              <exclude></exclude>
             </excludes>
           </configuration>
         </plugin>
