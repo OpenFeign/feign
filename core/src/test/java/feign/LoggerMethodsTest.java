@@ -43,7 +43,8 @@ public class LoggerMethodsTest {
     Response.Body spyBody = spy(response.body());
     response = response.toBuilder().body(spyBody).build();
 
-    Response rebufferedResponse = logger.logAndRebufferResponse("someMethod()", Level.FULL, response, 100);
+    Response rebufferedResponse =
+        logger.logAndRebufferResponse("someMethod()", Level.FULL, response, 100);
 
     verify(spyBody).close();
     assertThat(rebufferedResponse.body()).isNotSameAs(spyBody);
