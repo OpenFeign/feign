@@ -45,7 +45,6 @@ public class LoggerTest {
                  @Param("password") String password);
   }
 
-  @Nested
   public static class LogLevelEmitsTest extends LoggerTest {
 
     private Level logLevel;
@@ -98,8 +97,7 @@ public class LoggerTest {
     }
   }
 
-  @Nested
-  public static class ReasonPhraseOptional extends LoggerTest {
+  public static class ReasonPhraseOptionalTest extends LoggerTest {
 
     private Level logLevel;
 
@@ -128,7 +126,6 @@ public class LoggerTest {
     }
   }
 
-  @Nested
   public static class HttpProtocolVersionTest extends LoggerTest {
 
     private Level logLevel;
@@ -174,7 +171,6 @@ public class LoggerTest {
     }
   }
 
-  @Nested
   public static class ReadTimeoutEmitsTest extends LoggerTest {
 
     private Level logLevel;
@@ -231,7 +227,6 @@ public class LoggerTest {
     }
   }
 
-  @Nested
   public static class UnknownHostEmitsTest extends LoggerTest {
 
     private Level logLevel;
@@ -283,7 +278,6 @@ public class LoggerTest {
     }
   }
 
-  @Nested
   public static class FormatCharacterTest extends LoggerTest {
 
     private Level logLevel;
@@ -335,7 +329,6 @@ public class LoggerTest {
     }
   }
 
-  @Nested
   public static class RetryEmitsTest extends LoggerTest {
 
     private Level logLevel;
