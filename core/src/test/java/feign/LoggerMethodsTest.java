@@ -15,8 +15,6 @@ package feign;
 
 import feign.Logger.Level;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 import java.util.Collections;
 
 import static feign.Util.UTF_8;
