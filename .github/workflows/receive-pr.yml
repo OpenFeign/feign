@@ -43,6 +43,8 @@ jobs:
       # Execute recipes
       - name: Apply OpenRewrite recipes
         run: ./mvnw -Dtoolchain.skip=true -Dlicense.skip=true -DskipTests=true -P openrewrite clean install
+        secrets:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       # Capture the diff
       - name: Create patch
