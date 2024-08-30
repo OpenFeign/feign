@@ -15,8 +15,8 @@ package feign;
 
 import feign.Logger.Level;
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import java.util.Collections;
-
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -26,13 +26,13 @@ public class LoggerMethodsTest {
 
   Logger logger = new Logger() {
     @Override
-    protected void log(String configKey, String format, Object... args) {
-    }
+    protected void log(String configKey, String format, Object... args) {}
   };
 
   @Test
   void responseIsClosedAfterRebuffer() throws IOException {
-    Request request = Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, UTF_8, null);
+    Request request =
+        Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, UTF_8, null);
     Response response = Response.builder()
         .status(200)
         .reason("OK")
