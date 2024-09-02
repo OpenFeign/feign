@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign;
 
 import static feign.Util.UTF_8;
 import static feign.Util.decodeOrDefault;
+import static feign.Util.ensureClosed;
 import static feign.Util.valuesOrEmpty;
 import static java.util.Objects.nonNull;
 import java.io.IOException;
@@ -126,6 +127,7 @@ public abstract class Logger {
           log(configKey, ""); // CRLF
         }
         byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        ensureClosed(response.body());
         bodyLength = bodyData.length;
         if (logLevel.ordinal() >= Level.FULL.ordinal() && bodyLength > 0) {
           log(configKey, "%s", decodeOrDefault(bodyData, UTF_8, "Binary data"));
