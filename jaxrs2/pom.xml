@@ -31,7 +31,7 @@
     <main.basedir>${project.basedir}/..</main.basedir>
 
     <moditect.skip>true</moditect.skip>
-    <jersey.version>2.44</jersey.version>
+    <jersey.version>2.45</jersey.version>
   </properties>
 
   <dependencies>
