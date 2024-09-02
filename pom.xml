@@ -479,6 +479,9 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
+            <excludes>
+              <exclude></exclude>
+            </excludes>
           </configuration>
         </plugin>
 
