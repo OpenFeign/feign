@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,12 +19,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MethodInfoTest {
 
-  @Nested
   static class AsyncClientTest {
     public interface AsyncClient {
       CompletableFuture<String> log();
@@ -38,7 +36,6 @@ public class MethodInfoTest {
     }
   }
 
-  @Nested
   static class GenericAsyncClientTest {
     public interface GenericAsyncClient<T> {
       T log();
@@ -54,7 +51,6 @@ public class MethodInfoTest {
     }
   }
 
-  @Nested
   static class SyncClientTest {
     public interface SyncClient {
       String log();
@@ -68,7 +64,6 @@ public class MethodInfoTest {
     }
   }
 
-  @Nested
   static class GenericSyncClientTest {
     public interface GenericSyncClient<T> {
       T log();

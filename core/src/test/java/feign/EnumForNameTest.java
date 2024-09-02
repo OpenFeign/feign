@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,14 +18,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.ProtocolVersion;
 import java.util.Arrays;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class EnumForNameTest {
 
-  @Nested
-  public static class KnownEnumValues {
+  public static class KnownEnumValuesTest {
     public Object name;
     public ProtocolVersion expectedProtocolVersion;
 
@@ -56,8 +54,7 @@ public class EnumForNameTest {
     }
   }
 
-  @Nested
-  public static class UnknownEnumValues {
+  public static class UnknownEnumValuesTest {
 
     public Object name;
 
