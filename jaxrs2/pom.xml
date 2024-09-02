@@ -20,7 +20,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.4</version>
+    <version>13.5-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jaxrs2</artifactId>
