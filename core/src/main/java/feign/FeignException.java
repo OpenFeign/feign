@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package feign;
 
 import static feign.Util.*;
 import static java.lang.String.format;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -530,14 +532,18 @@ public class FeignException extends RuntimeException {
         return null;
       }
 
-      Pattern pattern = Pattern.compile(".*charset=([^\\s|^;]+).*");
+      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
       Matcher matcher = pattern.matcher(strings.iterator().next());
       if (!matcher.lookingAt()) {
         return null;
       }
 
       String group = matcher.group(1);
-      if (!Charset.isSupported(group)) {
+      try {
+        if (!Charset.isSupported(group)) {
+          return null;
+        }
+      } catch (IllegalCharsetNameException ex) {
         return null;
       }
       return Charset.forName(group);
