@@ -94,7 +94,7 @@ jobs:
 
     - name: Compile project
       run: ./mvnw -B -ntp clean package -Pquickbuild -Dtoolchain.skip=true
-      secrets:
+      env:
         DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
     - name: Perform CodeQL Analysis
