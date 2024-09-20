@@ -67,6 +67,8 @@
     <module>benchmark</module>
     <module>moshi</module>
     <module>fastjson2</module>
+    <module>feign-form</module>
+    <module>feign-form-spring</module>
   </modules>
 
   <properties>
@@ -332,6 +334,17 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-form</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-form-spring</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
@@ -1070,6 +1083,17 @@
     <contributor>
       <name>Spencer Gibb</name>
       <email>spencer@gibb.us</email>
+    </contributor>
+    <contributor>
+      <name>Artem Labazin</name>
+      <email>xxlabaza@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Tomasz Juchniewicz</name>
+      <email>tjuchniewicz@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Guillaume Simard</name>
     </contributor>
   </contributors>
 </project>
