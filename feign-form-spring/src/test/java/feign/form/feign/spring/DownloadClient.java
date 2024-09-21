@@ -1,23 +1,19 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2012-2024 The Feign Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
-
 package feign.form.feign.spring;
 
 import java.util.ArrayList;
-
 import lombok.val;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,44 +25,44 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
-
 import feign.Logger;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 
-@FeignClient(name = "multipart-download-support-service", url = "http://localhost:8081", configuration = DownloadClient.ClientConfiguration.class)
+@FeignClient(name = "multipart-download-support-service", url = "http://localhost:8081",
+    configuration = DownloadClient.ClientConfiguration.class)
 interface DownloadClient {
 
-	@RequestMapping("/multipart/download/{fileId}")
-	MultipartFile[] download(@PathVariable("fileId") String fileId);
+  @RequestMapping("/multipart/download/{fileId}")
+  MultipartFile[] download(@PathVariable("fileId") String fileId);
 
-	class ClientConfiguration {
+  class ClientConfiguration {
 
-		@Autowired
-		private ObjectFactory<HttpMessageConverters> messageConverters;
+    @Autowired
+    private ObjectFactory<HttpMessageConverters> messageConverters;
 
-		@Bean
-		Decoder feignDecoder() {
-			val springConverters = messageConverters.getObject().getConverters();
-			val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+    @Bean
+    Decoder feignDecoder() {
+      val springConverters = messageConverters.getObject().getConverters();
+      val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
-			decoderConverters.addAll(springConverters);
-			decoderConverters.add(new SpringManyMultipartFilesReader(4096));
+      decoderConverters.addAll(springConverters);
+      decoderConverters.add(new SpringManyMultipartFilesReader(4096));
 
-			val httpMessageConverters = new HttpMessageConverters(decoderConverters);
+      val httpMessageConverters = new HttpMessageConverters(decoderConverters);
 
-			return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
+      return new SpringDecoder(new ObjectFactory<HttpMessageConverters>() {
 
-				@Override
-				public HttpMessageConverters getObject() {
-					return httpMessageConverters;
-				}
-			});
-		}
+        @Override
+        public HttpMessageConverters getObject() {
+          return httpMessageConverters;
+        }
+      });
+    }
 
-		@Bean
-		Logger.Level feignLoggerLevel() {
-			return Logger.Level.FULL;
-		}
-	}
+    @Bean
+    Logger.Level feignLoggerLevel() {
+      return Logger.Level.FULL;
+    }
+  }
 }
