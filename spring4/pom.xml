@@ -39,4 +39,12 @@
       <artifactId>feign-spring</artifactId>
     </relocation>
   </distributionManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-spring</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>

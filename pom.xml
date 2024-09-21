@@ -980,6 +980,7 @@
                   <exportDatatables>true</exportDatatables>
                   <activeRecipes>
                     <recipe>org.openrewrite.java.testing.hamcrest.MigrateHamcrestToAssertJ</recipe>
+                    <recipe>org.openrewrite.java.testing.junit5.AssertToAssertions</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.JUnitToAssertj</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.Assertj</recipe>
                     <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
