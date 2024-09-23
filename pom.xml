@@ -99,7 +99,7 @@
     <jackson.version>2.17.2</jackson.version>
     <assertj.version>3.26.3</assertj.version>
     <mockito.version>5.13.0</mockito.version>
-    <fastjson2.version>2.0.52</fastjson2.version>
+    <fastjson2.version>2.0.53</fastjson2.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.3</maven-install-plugin.version>
