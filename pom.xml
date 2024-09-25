@@ -67,6 +67,8 @@
     <module>benchmark</module>
     <module>moshi</module>
     <module>fastjson2</module>
+    <module>feign-form</module>
+    <module>feign-form-spring</module>
   </modules>
 
   <properties>
@@ -99,7 +101,7 @@
     <jackson.version>2.17.2</jackson.version>
     <assertj.version>3.26.3</assertj.version>
     <mockito.version>5.13.0</mockito.version>
-    <fastjson2.version>2.0.52</fastjson2.version>
+    <fastjson2.version>2.0.53</fastjson2.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.3</maven-install-plugin.version>
@@ -332,6 +334,17 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-form</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-form-spring</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
@@ -952,7 +965,7 @@
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>2.25.0</version>
+                <version>2.25.1</version>
               </dependency>
             </dependencies>
 
@@ -967,6 +980,7 @@
                   <exportDatatables>true</exportDatatables>
                   <activeRecipes>
                     <recipe>org.openrewrite.java.testing.hamcrest.MigrateHamcrestToAssertJ</recipe>
+                    <recipe>org.openrewrite.java.testing.junit5.AssertToAssertions</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.JUnitToAssertj</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.Assertj</recipe>
                     <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
@@ -1070,6 +1084,17 @@
     <contributor>
       <name>Spencer Gibb</name>
       <email>spencer@gibb.us</email>
+    </contributor>
+    <contributor>
+      <name>Artem Labazin</name>
+      <email>xxlabaza@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Tomasz Juchniewicz</name>
+      <email>tjuchniewicz@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Guillaume Simard</name>
     </contributor>
   </contributors>
 </project>

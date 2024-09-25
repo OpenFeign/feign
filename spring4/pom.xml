@@ -24,9 +24,9 @@
   </parent>
 
   <artifactId>feign-spring4</artifactId>
+  <packaging>pom</packaging>
   <name>Feign Spring4</name>
   <description>Feign Contracts for Spring4</description>
-  <packaging>pom</packaging>
 
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
@@ -39,4 +39,12 @@
       <artifactId>feign-spring</artifactId>
     </relocation>
   </distributionManagement>
+  
+  <dependencies>
+  <dependency>
+   <groupId>io.github.openfeign</groupId>
+  <artifactId>feign-spring</artifactId>
+    <version>${project.version}</version>
+  </dependency>
+  </dependencies>
 </project>
