@@ -29,6 +29,7 @@ import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class DefaultClientTest extends AbstractClientTest {
@@ -78,19 +79,41 @@ public class DefaultClientTest extends AbstractClientTest {
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
+  @Test
   @Override
   public void noResponseBodyForPost() throws Exception {
     super.noResponseBodyForPost();
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("POST")
+        .hasNoHeaderNamed("Content-Type");
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void noRequestBodyForPostWithAllowRestrictedHeaders() throws Exception {
+    super.noResponseBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasNoHeaderNamed("Content-Type")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
+  @Test
   @Override
   public void noResponseBodyForPut() throws Exception {
     super.noResponseBodyForPut();
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("PUT")
+        .hasNoHeaderNamed("Content-Type");
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void noResponseBodyForPutWithAllowRestrictedHeaders() throws Exception {
+    super.noResponseBodyForPut();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("PUT")
+        .hasNoHeaderNamed("Content-Type")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
   }
 
