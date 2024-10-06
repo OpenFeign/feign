@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 The Feign Authors
+ * Copyright 2012-2024 The Feign Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +24,7 @@ import io.micrometer.core.instrument.Timer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-/** Warp feign {@link Client} with metrics. */
+/** Wrap feign {@link Client} with metrics. */
 public class MeteredAsyncClient extends BaseMeteredClient implements AsyncClient<Object> {
 
   private final AsyncClient<Object> client;
