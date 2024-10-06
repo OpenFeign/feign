@@ -21,7 +21,7 @@ import feign.codec.Encoder;
 import io.micrometer.core.instrument.*;
 import java.lang.reflect.Type;
 
-/** Warp feign {@link Encoder} with metrics. */
+/** Wrap feign {@link Encoder} with metrics. */
 public class MeteredEncoder implements Encoder {
 
   private final Encoder encoder;

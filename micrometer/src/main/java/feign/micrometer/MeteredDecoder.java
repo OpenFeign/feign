@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-/** Warp feign {@link Decoder} with metrics. */
+/** Wrap feign {@link Decoder} with metrics. */
 public class MeteredDecoder implements Decoder {
 
   private final Decoder decoder;

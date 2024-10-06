@@ -24,7 +24,7 @@ import io.micrometer.core.instrument.Timer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-/** Warp feign {@link Client} with metrics. */
+/** Wrap feign {@link Client} with metrics. */
 public class MeteredAsyncClient extends BaseMeteredClient implements AsyncClient<Object> {
 
   private final AsyncClient<Object> client;

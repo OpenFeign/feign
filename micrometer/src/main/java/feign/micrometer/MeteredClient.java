@@ -22,7 +22,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.io.IOException;
 
-/** Warp feign {@link Client} with metrics. */
+/** Wrap feign {@link Client} with metrics. */
 public class MeteredClient extends BaseMeteredClient implements Client {
 
   private final Client client;

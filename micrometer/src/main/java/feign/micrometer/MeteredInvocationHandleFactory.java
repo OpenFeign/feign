@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/** Warp feign {@link InvocationHandler} with metrics. */
+/** Wrap feign {@link InvocationHandler} with metrics. */
 public class MeteredInvocationHandleFactory implements InvocationHandlerFactory {
 
   /**
