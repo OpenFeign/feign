@@ -24,7 +24,7 @@ import java.util.Map;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
- * Warp feign {@link InvocationHandler} with metrics.
+ * Wrap feign {@link InvocationHandler} with metrics.
  */
 public class MeteredInvocationHandleFactory implements InvocationHandlerFactory {
 

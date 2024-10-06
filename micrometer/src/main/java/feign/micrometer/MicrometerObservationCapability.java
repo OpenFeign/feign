@@ -21,7 +21,7 @@ import feign.Response;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 
-/** Warp feign {@link Client} with metrics. */
+/** Wrap feign {@link Client} with metrics. */
 public class MicrometerObservationCapability implements Capability {
 
   private final ObservationRegistry observationRegistry;

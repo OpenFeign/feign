@@ -21,7 +21,7 @@ import java.lang.reflect.Type;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
- * Warp feign {@link Encoder} with metrics.
+ * Wrap feign {@link Encoder} with metrics.
  */
 public class MeteredEncoder implements Encoder {
 

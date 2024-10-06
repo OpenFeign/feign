@@ -26,7 +26,7 @@ import java.util.Optional;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 /**
- * Warp feign {@link Decoder} with metrics.
+ * Wrap feign {@link Decoder} with metrics.
  */
 public class MeteredDecoder implements Decoder {
 
