@@ -1,3 +1,6 @@
 .idea/
 feign-vertx.iml
 target
+
+# NonDex generated files
+.nondex

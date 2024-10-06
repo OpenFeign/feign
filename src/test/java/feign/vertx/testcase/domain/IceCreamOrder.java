@@ -2,7 +2,7 @@ package feign.vertx.testcase.domain;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -26,7 +26,7 @@ public class IceCreamOrder {
   IceCreamOrder(final Instant orderTimestamp) {
     this.id = ThreadLocalRandom.current().nextInt();
     this.balls = new HashMap<>();
-    this.mixins = new HashSet<>();
+    this.mixins = new LinkedHashSet<>();
     this.orderTimestamp = orderTimestamp;
   }
 
