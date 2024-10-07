@@ -27,19 +27,19 @@
   <name>Feign Jakarta</name>
   <description>Feign Jakarta</description>
 
-  <properties>
-    <main.java.version>11</main.java.version>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
-    <moditect.skip>true</moditect.skip>
-  </properties>
-
   <distributionManagement>
     <relocation>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-jaxrs3</artifactId>
     </relocation>
   </distributionManagement>
+
+  <properties>
+    <main.java.version>11</main.java.version>
+    <main.basedir>${project.basedir}/..</main.basedir>
+
+    <moditect.skip>true</moditect.skip>
+  </properties>
 
   <dependencies>
     <dependency>

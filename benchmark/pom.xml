@@ -140,10 +140,10 @@
         <version>3.6.0</version>
         <executions>
           <execution>
-            <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <phase>package</phase>
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -164,10 +164,10 @@
         </configuration>
         <executions>
           <execution>
-            <phase>package</phase>
             <goals>
               <goal>really-executable-jar</goal>
             </goals>
+            <phase>package</phase>
           </execution>
         </executions>
       </plugin>

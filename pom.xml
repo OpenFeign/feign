@@ -24,6 +24,57 @@
 
   <name>Feign (Parent)</name>
   <description>Feign makes writing java http clients easier</description>
+  <url>https://github.com/openfeign/feign</url>
+  <inceptionYear>2012</inceptionYear>
+
+  <organization>
+    <name>OpenFeign</name>
+    <url>https://github.com/openfeign</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>velo</id>
+      <name>Marvin Herman Froeder</name>
+      <email>velo br at gmail dot com</email>
+      <url>about.me/velo</url>
+    </developer>
+    <developer>
+      <id>kdavisk6</id>
+      <name>Kevin Davis</name>
+      <email>kdavisk6@gmail.com</email>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Adrian Cole</name>
+      <email>acole@pivotal.io</email>
+    </contributor>
+    <contributor>
+      <name>Spencer Gibb</name>
+      <email>spencer@gibb.us</email>
+    </contributor>
+    <contributor>
+      <name>Artem Labazin</name>
+      <email>xxlabaza@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Tomasz Juchniewicz</name>
+      <email>tjuchniewicz@gmail.com</email>
+    </contributor>
+    <contributor>
+      <name>Guillaume Simard</name>
+    </contributor>
+  </contributors>
 
   <modules>
     <module>core</module>
@@ -70,6 +121,29 @@
     <module>feign-form</module>
     <module>feign-form-spring</module>
   </modules>
+
+  <scm>
+    <connection>scm:git:git@github.com:OpenFeign/feign.git</connection>
+    <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/openfeign/feign</url>
+  </scm>
+
+  <issueManagement>
+    <system>Github</system>
+    <url>https://github.com/openfeign/feign/issues</url>
+  </issueManagement>
+
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -122,58 +196,6 @@
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
     <moditect-maven-plugin.version>1.2.2.Final</moditect-maven-plugin.version>
   </properties>
-  <url>https://github.com/openfeign/feign</url>
-  <inceptionYear>2012</inceptionYear>
-
-  <organization>
-    <name>OpenFeign</name>
-    <url>https://github.com/openfeign</url>
-  </organization>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <scm>
-    <url>https://github.com/openfeign/feign</url>
-    <connection>scm:git:git@github.com:OpenFeign/feign.git</connection>
-    <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-
-  <developers>
-    <developer>
-      <id>velo</id>
-      <name>Marvin Herman Froeder</name>
-      <email>velo br at gmail dot com</email>
-      <url>about.me/velo</url>
-    </developer>
-    <developer>
-      <id>kdavisk6</id>
-      <name>Kevin Davis</name>
-      <email>kdavisk6@gmail.com</email>
-    </developer>
-  </developers>
-
-  <distributionManagement>
-    <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-
-  <issueManagement>
-    <system>Github</system>
-    <url>https://github.com/openfeign/feign/issues</url>
-  </issueManagement>
 
   <dependencyManagement>
     <dependencies>
@@ -534,10 +556,10 @@
         <executions>
           <execution>
             <id>add-module-infos</id>
-            <phase>package</phase>
             <goals>
               <goal>add-module-info</goal>
             </goals>
+            <phase>package</phase>
           </execution>
         </executions>
       </plugin>
@@ -554,10 +576,10 @@
           <!-- Ensure main source tree compiles to Java ${main.java.version} bytecode. -->
           <execution>
             <id>default-compile</id>
-            <phase>compile</phase>
             <goals>
               <goal>compile</goal>
             </goals>
+            <phase>compile</phase>
             <configuration>
               <source>${main.java.version}</source>
               <target>${main.java.version}</target>
@@ -565,10 +587,10 @@
           </execution>
           <execution>
             <id>default-testCompile</id>
-            <phase>test-compile</phase>
             <goals>
               <goal>testCompile</goal>
             </goals>
+            <phase>test-compile</phase>
             <configuration>
               <fork>true</fork>
               <compilerArgs>
@@ -617,10 +639,10 @@
         <executions>
           <execution>
             <id>bundle-manifest</id>
-            <phase>process-classes</phase>
             <goals>
               <goal>manifest</goal>
             </goals>
+            <phase>process-classes</phase>
           </execution>
         </executions>
       </plugin>
@@ -665,14 +687,6 @@
             <java>SLASHSTAR_STYLE</java>
           </mapping>
         </configuration>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
         <dependencies>
           <dependency>
             <groupId>com.mycila</groupId>
@@ -680,6 +694,14 @@
             <version>${license-maven-plugin.version}</version>
           </dependency>
         </dependencies>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>validate</phase>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>com.marvinformatics.formatter</groupId>
@@ -695,10 +717,10 @@
         </configuration>
         <executions>
           <execution>
-            <phase>validate</phase>
             <goals>
               <goal>format</goal>
             </goals>
+            <phase>validate</phase>
           </execution>
         </executions>
       </plugin>
@@ -731,16 +753,16 @@
         <configuration>
           <keepBlankLines>true</keepBlankLines>
           <lineSeparator>\n</lineSeparator>
-          <sortOrderFile>src/config/pomSortOrder.xml</sortOrderFile>
+          <predefinedSortOrder>recommended_2008_06</predefinedSortOrder>
           <createBackupFile>false</createBackupFile>
         </configuration>
         <executions>
           <execution>
             <id>format</id>
-            <phase>verify</phase>
             <goals>
               <goal>sort</goal>
             </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>
@@ -1075,26 +1097,4 @@
       </build>
     </profile>
   </profiles>
-
-  <contributors>
-    <contributor>
-      <name>Adrian Cole</name>
-      <email>acole@pivotal.io</email>
-    </contributor>
-    <contributor>
-      <name>Spencer Gibb</name>
-      <email>spencer@gibb.us</email>
-    </contributor>
-    <contributor>
-      <name>Artem Labazin</name>
-      <email>xxlabaza@gmail.com</email>
-    </contributor>
-    <contributor>
-      <name>Tomasz Juchniewicz</name>
-      <email>tjuchniewicz@gmail.com</email>
-    </contributor>
-    <contributor>
-      <name>Guillaume Simard</name>
-    </contributor>
-  </contributors>
 </project>

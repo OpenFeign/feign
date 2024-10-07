@@ -71,10 +71,10 @@
         <executions>
           <execution>
             <id>add-module-infos</id>
-            <phase>package</phase>
             <goals>
               <goal>add-module-info</goal>
             </goals>
+            <phase>package</phase>
             <configuration>
               <exclusions>
                 <exclusion>

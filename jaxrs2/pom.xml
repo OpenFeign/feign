@@ -122,10 +122,10 @@
         <executions>
           <execution>
             <id>jakarta-ee</id>
-            <phase>package</phase>
             <goals>
               <goal>run</goal>
             </goals>
+            <phase>package</phase>
             <configuration>
               <classifier>jakarta</classifier>
             </configuration>

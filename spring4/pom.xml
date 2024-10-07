@@ -28,17 +28,17 @@
   <name>Feign Spring4</name>
   <description>Feign Contracts for Spring4</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
-    <spring.version>4.3.30.RELEASE</spring.version>
-  </properties>
-
   <distributionManagement>
     <relocation>
       <artifactId>feign-spring</artifactId>
     </relocation>
   </distributionManagement>
+
+  <properties>
+    <main.basedir>${project.basedir}/..</main.basedir>
+
+    <spring.version>4.3.30.RELEASE</spring.version>
+  </properties>
 
   <dependencies>
     <dependency>
