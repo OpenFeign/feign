@@ -448,7 +448,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             + (System.getProperty("java.version").startsWith("1.8")
                 ? "<wss:Security xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">"
                 : "<wss:Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\""
-                      + " xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">")
+                    + " xmlns:wss=\"http://schemas.xmlsoap.org/ws/2002/12/secext\">")
             + "<wss:UsernameToken>"
             + "<wss:Username>test</wss:Username>"
             + "<wss:Password>test</wss:Password>"

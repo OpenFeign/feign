@@ -177,6 +177,7 @@
     <mockito.version>5.14.1</mockito.version>
     <fastjson2.version>2.0.53</fastjson2.version>
 
+    <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.3</maven-install-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
@@ -704,23 +705,33 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>com.marvinformatics.formatter</groupId>
-        <artifactId>formatter-maven-plugin</artifactId>
-        <version>2.2.0</version>
-        <configuration>
-          <lineEnding>LF</lineEnding>
-          <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
-          <excludes>
-            <exclude>travis/**</exclude>
-            <exclude>**/SAXDecoderTest.java</exclude>
-          </excludes>
-        </configuration>
+        <groupId>com.cosium.code</groupId>
+        <artifactId>git-code-format-maven-plugin</artifactId>
+        <version>${git-code-format-maven-plugin.version}</version>
+        <dependencies>
+          <!-- Enable https://github.com/google/google-java-format -->
+          <dependency>
+            <groupId>com.cosium.code</groupId>
+            <artifactId>google-java-format</artifactId>
+            <version>${git-code-format-maven-plugin.version}</version>
+          </dependency>
+        </dependencies>
         <executions>
+          <!-- On commit, format the modified files -->
           <execution>
+            <id>install-formatter-hook</id>
             <goals>
-              <goal>format</goal>
+              <goal>install-hooks</goal>
             </goals>
-            <phase>validate</phase>
+            <inherited>false</inherited>
+          </execution>
+          <!-- On Maven verify phase, fail if any file (including unmodified) is
+            badly formatted -->
+          <execution>
+            <id>validate-code-format</id>
+            <goals>
+              <goal>validate-code-format</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -880,33 +891,6 @@
       <properties>
         <bom.template.file.path>file:///${project.basedir}/src/config/bom.xml</bom.template.file.path>
       </properties>
-    </profile>
-
-    <profile>
-      <id>validateCodeFormat</id>
-
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.marvinformatics.formatter</groupId>
-            <artifactId>formatter-maven-plugin</artifactId>
-            <version>2.2.0</version>
-            <configuration>
-              <lineEnding>LF</lineEnding>
-              <configFile>${main.basedir}/src/config/eclipse-java-style.xml</configFile>
-            </configuration>
-            <executions>
-              <execution>
-                <id>validate-only</id>
-                <goals>
-                  <goal>validate</goal>
-                </goals>
-                <phase>initialize</phase>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
 
     <profile>
