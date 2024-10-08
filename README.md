@@ -815,6 +815,12 @@ in a context-specific manner -- for example, thread-local storage can be used to
 header values depending on the invoking thread, which can be useful for things such as setting
 thread-specific trace identifiers for requests.
 
+#### Set zero Content-Length Header
+
+To specify `Content-Length: 0` header when making a request with empty body, system property `sun.net.http.allowRestrictedHeaders` should be set to `true`
+
+If not, the `Content-Length` header will not be added.
+
 ### Advanced usage
 
 #### Base Apis

@@ -206,19 +206,14 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      boolean hasEmptyBody = false;
       byte[] body = request.body();
-      if (body == null && request.httpMethod().isWithBody()) {
-        body = new byte[0];
-        hasEmptyBody = true;
-      }
 
       if (body != null) {
         /*
          * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
          * retry logic applies to such requests.
          */
-        if (disableRequestBuffering && !hasEmptyBody) {
+        if (disableRequestBuffering) {
           if (contentLength != null) {
             connection.setFixedLengthStreamingMode(contentLength);
           } else {
@@ -241,6 +236,12 @@ public interface Client {
           }
         }
       }
+
+      if (body == null && request.httpMethod().isWithBody()) {
+        // To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
+        connection.addRequestProperty("Content-Length", "0");
+      }
+
       return connection;
     }
 
