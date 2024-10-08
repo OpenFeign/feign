@@ -31,7 +31,6 @@
   <properties>
     <!-- override default bytecode version for src/main from parent pom -->
     <main.java.version>11</main.java.version>
-    <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <dependencies>

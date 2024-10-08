@@ -29,9 +29,6 @@
   <name>Feign Apache HttpClient</name>
   <description>Feign Apache HttpClient</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>

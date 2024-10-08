@@ -31,8 +31,6 @@
   <description>Feign code generation tool for mocked clients</description>
 
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
     <moditect.skip>true</moditect.skip>
   </properties>
 

@@ -29,10 +29,6 @@
   <name>Feign JAX-RS</name>
   <description>Feign JAX-RS</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

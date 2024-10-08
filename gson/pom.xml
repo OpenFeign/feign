@@ -29,10 +29,6 @@
   <name>Feign Gson</name>
   <description>Feign Gson</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

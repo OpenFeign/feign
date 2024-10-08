@@ -30,7 +30,6 @@
   <description>Feign OkHttp</description>
 
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
     <!-- see https://github.com/square/okhttp/issues/4184 -->
     <!-- <moditect.skip>true</moditect.skip> -->
   </properties>

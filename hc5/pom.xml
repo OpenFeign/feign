@@ -29,10 +29,6 @@
   <name>Feign Apache HttpComponents Client 5</name>
   <description>Feign Apache HttpComponents Client 5</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

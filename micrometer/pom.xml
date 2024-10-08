@@ -28,7 +28,6 @@
   <description>Feign Micrometer Application Metrics</description>
 
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
     <micrometer.version>1.13.5</micrometer.version>
   </properties>
 

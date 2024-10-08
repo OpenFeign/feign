@@ -30,8 +30,6 @@
   <description>Feign SOAP CoDec</description>
 
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
     <moditect.skip>true</moditect.skip>
   </properties>
 

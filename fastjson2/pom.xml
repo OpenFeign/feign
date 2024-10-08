@@ -29,10 +29,6 @@
   <name>Feign Fastjson2</name>
   <description>Feign Fastjson2</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

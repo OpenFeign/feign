@@ -29,10 +29,6 @@
   <name>Feign SLF4J</name>
   <description>Feign SLF4J</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

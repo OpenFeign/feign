@@ -29,10 +29,6 @@
   <name>Feign Jackson Jr</name>
   <description>Feign Jackson Jr</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

@@ -29,10 +29,6 @@
   <artifactId>feign-form</artifactId>
 
   <name>Open Feign Forms Core</name>
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>

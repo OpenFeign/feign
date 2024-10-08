@@ -29,10 +29,6 @@
   <name>Feign Hystrix</name>
   <description>Feign Hystrix</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>

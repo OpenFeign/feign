@@ -29,10 +29,6 @@
   <name>Feign Annotation Error Decoder</name>
   <description>Feign Annotation Error Decoder</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

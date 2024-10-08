@@ -38,8 +38,6 @@
 
   <properties>
     <main.java.version>11</main.java.version>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
     <moditect.skip>true</moditect.skip>
   </properties>
 

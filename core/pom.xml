@@ -29,10 +29,6 @@
   <name>Feign Core</name>
   <description>Feign Core</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>

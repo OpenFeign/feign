@@ -32,7 +32,6 @@
 
   <properties>
     <main.java.version>17</main.java.version>
-    <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <dependencies>

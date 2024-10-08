@@ -29,10 +29,6 @@
   <name>Feign Google HTTP Client</name>
   <description>Feign Google HTTP Client</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

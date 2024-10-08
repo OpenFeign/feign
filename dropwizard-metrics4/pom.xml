@@ -27,10 +27,6 @@
   <name>Feign Dropwizard Metrics4</name>
   <description>Feign Dropwizard Metrics 4</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

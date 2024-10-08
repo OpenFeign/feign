@@ -30,10 +30,6 @@
   <packaging>jar</packaging>
   <name>Wikipedia Example</name>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.github.openfeign</groupId>

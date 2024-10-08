@@ -29,10 +29,6 @@
   <packaging>jar</packaging>
   <name>GitHub Example</name>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.github.openfeign</groupId>

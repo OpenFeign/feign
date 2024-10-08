@@ -29,10 +29,6 @@
   <name>Feign Moshi</name>
   <description>Feign Moshi</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

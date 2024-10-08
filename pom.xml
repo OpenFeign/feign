@@ -163,8 +163,6 @@
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
     <maven.compiler.target>${main.java.version}</maven.compiler.target>
 
-    <main.basedir>${project.basedir}</main.basedir>
-
     <okhttp3.version>4.12.0</okhttp3.version>
     <guava.version>33.3.1-jre</guava.version>
     <googlehttpclient.version>1.45.0</googlehttpclient.version>

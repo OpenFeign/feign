@@ -29,10 +29,6 @@
   <name>Feign JAXB</name>
   <description>Feign JAXB</description>
 
-  <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

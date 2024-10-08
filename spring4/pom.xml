@@ -37,8 +37,6 @@
   </distributionManagement>
 
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>
-
     <spring.version>4.3.30.RELEASE</spring.version>
   </properties>
 
