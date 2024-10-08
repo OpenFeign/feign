@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.5-SNAPSHOT</version>
+    <version>13.5</version>
   </parent>
 
   <groupId>io.github.openfeign</groupId>
