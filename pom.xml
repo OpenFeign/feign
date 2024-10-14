@@ -964,7 +964,7 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>5.41.0</version>
+            <version>5.42.2</version>
 
             <dependencies>
               <dependency>
