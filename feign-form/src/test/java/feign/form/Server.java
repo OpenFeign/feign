@@ -26,10 +26,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.IOException;
-import org.springframework.web.util.HtmlUtils;
 import java.util.Collection;
 import java.util.List;
 import lombok.val;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.util.HtmlUtils;
 
 @Controller
 @SpringBootApplication
@@ -162,7 +163,7 @@ public class Server {
   @PostMapping(path = "/upload/unknown_type", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadUnknownType(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getContentType());
+    return ResponseEntity.status(status).body(StringEscapeUtils.escapeHtml4(file.getContentType()));
   }
 
   @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
