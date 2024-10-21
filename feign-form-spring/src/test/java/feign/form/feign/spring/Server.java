@@ -22,9 +22,9 @@ import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.IOException;
-import org.springframework.web.util.HtmlUtils;
 import java.util.Map;
 import lombok.val;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.io.ClassPathResource;
@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 @RestController
 @EnableFeignClients
@@ -100,7 +101,9 @@ public class Server {
     String result = "";
     if (popa1 != null && popa2 != null) {
       status = OK;
-      result = new String(popa1.getBytes()) + new String(popa2.getBytes());
+      result =
+          StringEscapeUtils.escapeHtml4(new String(popa1.getBytes()))
+              + StringEscapeUtils.escapeHtml4(new String(popa2.getBytes()));
     }
     return ResponseEntity.status(status).body(result);
   }
