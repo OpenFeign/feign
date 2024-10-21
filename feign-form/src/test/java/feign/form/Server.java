@@ -28,6 +28,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import org.apache.commons.text.StringEscapeUtils;
 import lombok.val;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -166,8 +167,9 @@ public class Server {
   @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadFormData(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
+    String sanitizedFilename = StringEscapeUtils.escapeHtml4(file.getOriginalFilename());
     return ResponseEntity.status(status)
-        .body(file.getOriginalFilename() + ':' + file.getContentType());
+        .body(sanitizedFilename + ':' + file.getContentType());
   }
 
   @PostMapping(path = "/submit/url", consumes = APPLICATION_FORM_URLENCODED_VALUE)
