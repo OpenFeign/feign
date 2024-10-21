@@ -26,6 +26,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.IOException;
+import org.springframework.web.util.HtmlUtils;
 import java.util.Collection;
 import java.util.List;
 import lombok.val;
@@ -140,7 +141,8 @@ public class Server {
   @PostMapping(path = "/upload/byte_array", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadByteArray(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getOriginalFilename());
+    String safeFilename = HtmlUtils.htmlEscape(file.getOriginalFilename());
+    return ResponseEntity.status(status).body(safeFilename);
   }
 
   @PostMapping(path = "/upload/byte_array_parameter", consumes = MULTIPART_FORM_DATA_VALUE)
