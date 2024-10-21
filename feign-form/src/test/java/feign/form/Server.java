@@ -170,7 +170,8 @@ public class Server {
   public ResponseEntity<String> uploadFormData(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
     String sanitizedFilename = StringEscapeUtils.escapeHtml4(file.getOriginalFilename());
-    return ResponseEntity.status(status).body(sanitizedFilename + ':' + file.getContentType());
+    String sanitizedContentType = StringEscapeUtils.escapeHtml4(file.getContentType());
+    return ResponseEntity.status(status).body(sanitizedFilename + ':' + sanitizedContentType);
   }
 
   @PostMapping(path = "/submit/url", consumes = APPLICATION_FORM_URLENCODED_VALUE)
