@@ -958,6 +958,27 @@
     </profile>
 
     <profile>
+      <id>dev</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.cosium.code</groupId>
+            <artifactId>git-code-format-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>format-code</id>
+                <goals>
+                  <goal>format-code</goal>
+                </goals>
+                <phase>initialize</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
       <id>openrewrite</id>
       <build>
         <plugins>
