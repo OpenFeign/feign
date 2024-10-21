@@ -174,7 +174,7 @@
     <junit5.version>5.11.2</junit5.version>
     <jackson.version>2.18.0</jackson.version>
     <assertj.version>3.26.3</assertj.version>
-    <mockito.version>5.14.1</mockito.version>
+    <mockito.version>5.14.2</mockito.version>
     <fastjson2.version>2.0.53</fastjson2.version>
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
