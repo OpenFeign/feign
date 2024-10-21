@@ -22,6 +22,7 @@ import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.IOException;
+import org.springframework.web.util.HtmlUtils;
 import java.util.Map;
 import lombok.val;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -80,7 +81,7 @@ public class Server {
       @PathVariable("id") String id,
       @RequestBody Map<String, Object> map,
       @RequestParam String userName) {
-    return userName + ':' + id + ':' + map.size();
+    return HtmlUtils.htmlEscape(userName) + ':' + HtmlUtils.htmlEscape(id) + ':' + map.size();
   }
 
   @PostMapping(path = "/multipart/upload5", consumes = MULTIPART_FORM_DATA_VALUE)
