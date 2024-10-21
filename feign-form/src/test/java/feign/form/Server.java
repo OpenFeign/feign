@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import lombok.val;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.util.HtmlUtils;
 
 @Controller
 @SpringBootApplication
@@ -140,7 +142,8 @@ public class Server {
   @PostMapping(path = "/upload/byte_array", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadByteArray(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getOriginalFilename());
+    String safeFilename = HtmlUtils.htmlEscape(file.getOriginalFilename());
+    return ResponseEntity.status(status).body(safeFilename);
   }
 
   @PostMapping(path = "/upload/byte_array_parameter", consumes = MULTIPART_FORM_DATA_VALUE)
@@ -160,14 +163,15 @@ public class Server {
   @PostMapping(path = "/upload/unknown_type", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadUnknownType(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status).body(file.getContentType());
+    return ResponseEntity.status(status).body(StringEscapeUtils.escapeHtml4(file.getContentType()));
   }
 
   @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadFormData(@RequestPart("file") MultipartFile file) {
     val status = file != null ? OK : I_AM_A_TEAPOT;
-    return ResponseEntity.status(status)
-        .body(file.getOriginalFilename() + ':' + file.getContentType());
+    String sanitizedFilename = StringEscapeUtils.escapeHtml4(file.getOriginalFilename());
+    String sanitizedContentType = StringEscapeUtils.escapeHtml4(file.getContentType());
+    return ResponseEntity.status(status).body(sanitizedFilename + ':' + sanitizedContentType);
   }
 
   @PostMapping(path = "/submit/url", consumes = APPLICATION_FORM_URLENCODED_VALUE)
