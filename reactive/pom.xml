@@ -29,7 +29,7 @@
   <description>Reactive Wrapper for Feign Clients</description>
 
   <properties>
-    <reactor.version>3.6.10</reactor.version>
+    <reactor.version>3.6.11</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
   </properties>
