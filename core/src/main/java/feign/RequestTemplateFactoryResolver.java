@@ -261,7 +261,9 @@ final class RequestTemplateFactoryResolver {
       Object body = null;
       if (!alwaysEncodeBody) {
         body = argv[metadata.bodyIndex()];
-        checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
+        if (mutable.methodMetadata().isBodyRequired()) {
+          checkArgument(body != null, "Body parameter %s was null", metadata.bodyIndex());
+        }
       }
 
       try {
