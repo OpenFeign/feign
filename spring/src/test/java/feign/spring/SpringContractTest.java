@@ -17,7 +17,6 @@ package feign.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import feign.Feign;
 import feign.Param;
@@ -171,12 +170,10 @@ class SpringContractTest {
 
   @Test
   void requiredRequestBodyIsNull() {
-    try {
-      resource.checkWithRequiredRequestBody(null);
-      fail("Expected IllegalArgumentException");
-    } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Body parameter 0 was null");
-    }
+    Throwable exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> resource.checkWithRequiredRequestBody(null));
+    assertThat(exception.getMessage()).contains("Body parameter 0 was null");
   }
 
   @Test
@@ -194,8 +191,7 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(object);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().body()).asString()
-            .contains("\"name\" : \"hello\"");
+    assertThat(request.requestTemplate().body()).asString().contains("\"name\" : \"hello\"");
   }
 
   @Test
@@ -338,7 +334,7 @@ class SpringContractTest {
     void checkWithNonRequiredRequestBody(@RequestBody(required = false) UserObject obj);
 
     @RequestMapping(value = "/withRequiredRequestBody", method = RequestMethod.POST)
-    void checkWithRequiredRequestBody(@RequestBody(required = true) UserObject obj);
+    void checkWithRequiredRequestBody(@RequestBody() UserObject obj);
 
     @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
     void checkRequestPart(
