@@ -54,8 +54,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <vertx.version>4.5.8</vertx.version>
-        <feign.version>13.4</feign.version>
+        <vertx.version>4.5.10</vertx.version>
+        <feign.version>13.5</feign.version>
 
         <!-- Tests -->
         <junit.version>5.7.0</junit.version>
