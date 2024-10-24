@@ -53,6 +53,7 @@ class FeignExceptionTest {
     FeignException exception =
         FeignException.errorReading(request, response, new IOException("socket closed"));
     assertThat(exception.responseBody()).isNotEmpty();
+    assertThat(exception.responseBody().get().array()).asString().isEqualTo("response");
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
   }

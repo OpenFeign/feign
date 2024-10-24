@@ -527,7 +527,7 @@ public class OkHttpClientAsyncTest {
     } catch (final FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
+      assertThat(e.contentUTF8()).isEqualTo("success!");
       return;
     }
     fail("");
