@@ -14,13 +14,13 @@ import java.util.Map;
 /**
  * Copy of private {@code ReflectiveFeign.BuildTemplateByResolvingArgs}.
  */
-class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
+class VertxBuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   private final QueryMapEncoder queryMapEncoder;
   final MethodMetadata metadata;
   final Target<?> target;
   private final Map<Integer, Param.Expander> indexToExpander = new HashMap<>();
 
-  BuildTemplateByResolvingArgs(
+  VertxBuildTemplateByResolvingArgs(
       final MethodMetadata metadata,
       final QueryMapEncoder queryMapEncoder,
       final Target target) {
@@ -177,7 +177,7 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   /**
    * Public copy of {@code ReflectiveFeign.BuildFormEncodedTemplateFromArgs}.
    */
-  static final class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+  static final class BuildFormEncodedTemplateFromArgs extends VertxBuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
     BuildFormEncodedTemplateFromArgs(
@@ -217,7 +217,7 @@ class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
   /**
    * Public copy of {@code ReflectiveFeign.BuildEncodedTemplateFromArgs}.
    */
-  static final class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+  static final class BuildEncodedTemplateFromArgs extends VertxBuildTemplateByResolvingArgs {
     private final Encoder encoder;
 
     BuildEncodedTemplateFromArgs(

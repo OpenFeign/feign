@@ -394,8 +394,8 @@ public final class VertxFeign extends Feign {
       checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
 
       final VertxHttpClient client = new VertxHttpClient(vertx, options, timeout, requestPreProcessor);
-      final AsynchronousMethodHandler.Factory methodHandlerFactory =
-          new AsynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
+      final VertxMethodHandler.Factory methodHandlerFactory =
+          new VertxMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404);
       final ParseHandlersByName handlersByName = new ParseHandlersByName(
           contract, options, encoder, decoder, queryMapEncoder, capabilities, errorDecoder, methodHandlerFactory);
@@ -414,7 +414,7 @@ public final class VertxFeign extends Feign {
     private final QueryMapEncoder queryMapEncoder;
     private final List<Capability> capabilities;
     private final ErrorDecoder errorDecoder;
-    private final AsynchronousMethodHandler.Factory factory;
+    private final VertxMethodHandler.Factory factory;
 
     private ParseHandlersByName(
         final Contract contract,
@@ -424,7 +424,7 @@ public final class VertxFeign extends Feign {
         final QueryMapEncoder queryMapEncoder,
         final List<Capability> capabilities,
         final ErrorDecoder errorDecoder,
-        final AsynchronousMethodHandler.Factory factory) {
+        final VertxMethodHandler.Factory factory) {
       this.contract = contract;
       this.options = options;
       this.factory = factory;
@@ -440,17 +440,17 @@ public final class VertxFeign extends Feign {
       final Map<String, MethodHandler> result = new HashMap<>();
 
       for (final MethodMetadata metadata : metadatas) {
-        BuildTemplateByResolvingArgs buildTemplate;
+        VertxBuildTemplateByResolvingArgs buildTemplate;
 
         if (!metadata.formParams().isEmpty()
             && metadata.template().bodyTemplate() == null) {
-          buildTemplate = new BuildTemplateByResolvingArgs
+          buildTemplate = new VertxBuildTemplateByResolvingArgs
               .BuildFormEncodedTemplateFromArgs(metadata, queryMapEncoder, target, encoder);
         } else if (metadata.bodyIndex() != null) {
-          buildTemplate = new BuildTemplateByResolvingArgs
+          buildTemplate = new VertxBuildTemplateByResolvingArgs
               .BuildEncodedTemplateFromArgs(metadata, queryMapEncoder, target, encoder);
         } else {
-          buildTemplate = new BuildTemplateByResolvingArgs(metadata, queryMapEncoder, target);
+          buildTemplate = new VertxBuildTemplateByResolvingArgs(metadata, queryMapEncoder, target);
         }
 
         result.put(metadata.configKey(), factory.create(

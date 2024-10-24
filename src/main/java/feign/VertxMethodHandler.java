@@ -26,7 +26,7 @@ import static feign.Util.ensureClosed;
  * @author Alexei KLENIN
  * @author Gordon McKinney
  */
-final class AsynchronousMethodHandler implements MethodHandler {
+final class VertxMethodHandler implements MethodHandler {
   private static final long MAX_RESPONSE_BUFFER_SIZE = 8192L;
 
   private final MethodMetadata metadata;
@@ -41,7 +41,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
   private final ErrorDecoder errorDecoder;
   private final boolean decode404;
 
-  private AsynchronousMethodHandler(
+  private VertxMethodHandler(
       final Target<?> target,
       final VertxHttpClient client,
       final Retryer retryer,
@@ -260,7 +260,7 @@ final class AsynchronousMethodHandler implements MethodHandler {
         final RequestTemplate.Factory buildTemplateFromArgs,
         final Decoder decoder,
         final ErrorDecoder errorDecoder) {
-      return new AsynchronousMethodHandler(
+      return new VertxMethodHandler(
           target,
           client,
           retryer,
