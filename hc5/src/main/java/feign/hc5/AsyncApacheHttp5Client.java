@@ -53,7 +53,9 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private final CloseableHttpAsyncClient client;
 
-  protected volatile BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory;
+  protected volatile BiFunction<
+          Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>>
+      futureCallbackFactory;
 
   public AsyncApacheHttp5Client() {
     this(createStartedClient());
@@ -76,8 +78,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
     final CompletableFuture<Response> result = new CompletableFuture<>();
 
-    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory =
-        this.futureCallbackFactory;
+    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>>
+        futureCallbackFactory = this.futureCallbackFactory;
     if (futureCallbackFactory == null) {
       futureCallbackFactory = this::defaultFutureCallbackFactory;
     }
@@ -85,7 +87,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     final FutureCallback<SimpleHttpResponse> callback =
         futureCallbackFactory.apply(request, result);
 
-    client.execute(httpUriRequest,
+    client.execute(
+        httpUriRequest,
         configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
 
@@ -211,8 +214,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         .build();
   }
 
-  public FutureCallback<SimpleHttpResponse> defaultFutureCallbackFactory(Request request,
-                                                                         CompletableFuture<Response> result) {
+  public FutureCallback<SimpleHttpResponse> defaultFutureCallbackFactory(
+      Request request, CompletableFuture<Response> result) {
     return new FutureCallback<SimpleHttpResponse>() {
 
       @Override
@@ -232,16 +235,19 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     };
   }
 
-  public BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> getFutureCallbackFactory() {
-    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory =
-        this.futureCallbackFactory;
+  public BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>>
+      getFutureCallbackFactory() {
+    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>>
+        futureCallbackFactory = this.futureCallbackFactory;
 
     return futureCallbackFactory == null
         ? this::defaultFutureCallbackFactory
         : futureCallbackFactory;
   }
 
-  public void setFutureCallbackFactory(BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory) {
+  public void setFutureCallbackFactory(
+      BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>>
+          futureCallbackFactory) {
     this.futureCallbackFactory = futureCallbackFactory;
   }
 
