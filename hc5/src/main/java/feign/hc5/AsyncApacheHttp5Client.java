@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.zip.GZIPOutputStream;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -52,6 +53,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private final CloseableHttpAsyncClient client;
 
+  protected volatile BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory;
+
   public AsyncApacheHttp5Client() {
     this(createStartedClient());
   }
@@ -72,27 +75,17 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     final SimpleHttpRequest httpUriRequest = toClassicHttpRequest(request, options);
 
     final CompletableFuture<Response> result = new CompletableFuture<>();
+
+    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory =
+        this.futureCallbackFactory;
+    if (futureCallbackFactory == null) {
+      futureCallbackFactory = this::defaultFutureCallbackFactory;
+    }
+
     final FutureCallback<SimpleHttpResponse> callback =
-        new FutureCallback<SimpleHttpResponse>() {
+        futureCallbackFactory.apply(request, result);
 
-          @Override
-          public void completed(SimpleHttpResponse httpResponse) {
-            result.complete(toFeignResponse(httpResponse, request));
-          }
-
-          @Override
-          public void failed(Exception ex) {
-            result.completeExceptionally(ex);
-          }
-
-          @Override
-          public void cancelled() {
-            result.cancel(false);
-          }
-        };
-
-    client.execute(
-        httpUriRequest,
+    client.execute(httpUriRequest,
         configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
 
@@ -216,6 +209,40 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         .request(request)
         .body(httpResponse.getBodyBytes())
         .build();
+  }
+
+  public FutureCallback<SimpleHttpResponse> defaultFutureCallbackFactory(Request request,
+                                                                         CompletableFuture<Response> result) {
+    return new FutureCallback<SimpleHttpResponse>() {
+
+      @Override
+      public void completed(SimpleHttpResponse httpResponse) {
+        result.complete(toFeignResponse(httpResponse, request));
+      }
+
+      @Override
+      public void failed(Exception ex) {
+        result.completeExceptionally(ex);
+      }
+
+      @Override
+      public void cancelled() {
+        result.cancel(false);
+      }
+    };
+  }
+
+  public BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> getFutureCallbackFactory() {
+    BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory =
+        this.futureCallbackFactory;
+
+    return futureCallbackFactory == null
+        ? this::defaultFutureCallbackFactory
+        : futureCallbackFactory;
+  }
+
+  public void setFutureCallbackFactory(BiFunction<Request, CompletableFuture<Response>, FutureCallback<SimpleHttpResponse>> futureCallbackFactory) {
+    this.futureCallbackFactory = futureCallbackFactory;
   }
 
   @Override
