@@ -1,7 +1,7 @@
 name: Auto Merge Dependabot PRs
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set up Node.js (required by `github-script`)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
       - name: Auto-approve Dependabot PRs
         if: success()
