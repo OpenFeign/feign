@@ -29,24 +29,32 @@ import feign.codec.EncodeException;
 import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.Output;
 import feign.jackson.JacksonEncoder;
+import java.nio.file.Path;
 import lombok.val;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 class CustomClientTest {
 
-  private static final CustomClient API;
+  private static CustomClient API;
 
-  static {
+  @TempDir static Path logDir;
+
+  @BeforeAll
+  static void configureClient() {
     val encoder = new FormEncoder(new JacksonEncoder());
     val processor = (MultipartFormContentProcessor) encoder.getContentProcessor(MULTIPART);
     processor.addFirstWriter(new CustomByteArrayWriter());
 
+    val logFile = logDir.resolve("log.txt").toString();
+
     API =
         Feign.builder()
             .encoder(encoder)
-            .logger(new JavaLogger(CustomClientTest.class).appendToFile("log.txt"))
+            .logger(new JavaLogger(CustomClientTest.class).appendToFile(logFile))
             .logLevel(FULL)
             .target(CustomClient.class, "http://localhost:8080");
   }

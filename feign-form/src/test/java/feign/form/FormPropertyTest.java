@@ -24,20 +24,28 @@ import feign.Headers;
 import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.jackson.JacksonEncoder;
+import java.nio.file.Path;
 import lombok.val;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 class FormPropertyTest {
 
-  private static final FormClient API;
+  private static FormClient API;
 
-  static {
+  @TempDir static Path logDir;
+
+  @BeforeAll
+  static void configureClient() {
+    val logFile = logDir.resolve("log.txt").toString();
+
     API =
         Feign.builder()
             .encoder(new FormEncoder(new JacksonEncoder()))
-            .logger(new JavaLogger(FormPropertyTest.class).appendToFile("log.txt"))
+            .logger(new JavaLogger(FormPropertyTest.class).appendToFile(logFile))
             .logLevel(FULL)
             .target(FormClient.class, "http://localhost:8080");
   }
