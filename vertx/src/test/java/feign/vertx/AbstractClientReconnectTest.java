@@ -50,7 +50,7 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("All requests should be answered")
-  void testAllRequestsShouldBeAnswered(VertxTestContext testContext) {
+  void allRequestsShouldBeAnswered(VertxTestContext testContext) {
     sendRequests(10).compose(responses -> assertAllRequestsAnswered(responses, testContext));
   }
 
@@ -65,7 +65,7 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("All requests should fail")
-    void testAllRequestsShouldFail(VertxTestContext testContext) {
+    void allRequestsShouldFail(VertxTestContext testContext) {
       sendRequests(10)
           .onComplete(
               responses ->
@@ -104,7 +104,7 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
 
       @Test
       @DisplayName("All requests should be answered")
-      void testAllRequestsShouldBeAnswered(VertxTestContext testContext) {
+      void allRequestsShouldBeAnswered(VertxTestContext testContext) {
         sendRequests(10).compose(responses -> assertAllRequestsAnswered(responses, testContext));
       }
     }

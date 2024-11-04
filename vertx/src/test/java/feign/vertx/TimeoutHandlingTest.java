@@ -37,7 +37,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests of handling of timeouts")
-public class TimeoutHandlingTest extends AbstractFeignVertxTest {
+class TimeoutHandlingTest extends AbstractFeignVertxTest {
   IcecreamServiceApi client;
 
   @BeforeEach
@@ -55,7 +55,7 @@ public class TimeoutHandlingTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("when timeout is reached")
-  void testWhenTimeoutIsReached(VertxTestContext testContext) {
+  void whenTimeoutIsReached(VertxTestContext testContext) {
 
     /* Given */
     wireMock.stubFor(
@@ -88,7 +88,7 @@ public class TimeoutHandlingTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("when timeout is not reached")
-  void testWhenTimeoutIsNotReached(VertxTestContext testContext) {
+  void whenTimeoutIsNotReached(VertxTestContext testContext) {
 
     /* Given */
     wireMock.stubFor(

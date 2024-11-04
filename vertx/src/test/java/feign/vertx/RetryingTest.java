@@ -40,7 +40,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("When server ask client to retry")
-public class RetryingTest extends AbstractFeignVertxTest {
+class RetryingTest extends AbstractFeignVertxTest {
   static IcecreamServiceApi client;
 
   @BeforeAll
@@ -57,7 +57,7 @@ public class RetryingTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("should succeed when client retries less than max attempts")
-  public void testRetrying_success(VertxTestContext testContext) {
+  void retryingSuccess(VertxTestContext testContext) {
 
     /* Given */
     String scenario = "testRetrying_success";
@@ -110,7 +110,7 @@ public class RetryingTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("should fail when after max number of attempts")
-  public void testRetrying_noMoreAttempts(VertxTestContext testContext) {
+  void retryingNoMoreAttempts(VertxTestContext testContext) {
 
     /* Given */
     wireMock.stubFor(

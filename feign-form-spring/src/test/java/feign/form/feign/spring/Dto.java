@@ -17,6 +17,7 @@ package feign.form.feign.spring;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @FieldDefaults(level = PRIVATE)
 public class Dto implements Serializable {
 
-  private static final long serialVersionUID = -4218390863359894943L;
+  @Serial private static final long serialVersionUID = -4218390863359894943L;
 
   String field1;
 

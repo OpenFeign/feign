@@ -17,6 +17,7 @@ package feign.vertx;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Logger;
 import feign.VertxFeign;
@@ -30,13 +31,12 @@ import io.vertx.core.http.HttpClientOptions;
 import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
 import java.util.Collection;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Test request pre processor")
-public class RequestPreProcessorTest extends AbstractFeignVertxTest {
+class RequestPreProcessorTest extends AbstractFeignVertxTest {
   IcecreamServiceApi client;
 
   @BeforeEach
@@ -54,7 +54,7 @@ public class RequestPreProcessorTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("request pre processor must be applied")
-  void testRequestPreProcessorMustApply(VertxTestContext testContext) {
+  void requestPreProcessorMustApply(VertxTestContext testContext) {
 
     /* Given */
     wireMock.stubFor(
@@ -77,7 +77,7 @@ public class RequestPreProcessorTest extends AbstractFeignVertxTest {
                 () -> {
                   if (res.succeeded()) {
                     Collection<Flavor> flavors = res.result();
-                    Assertions.assertThat(flavors)
+                    assertThat(flavors)
                         .hasSize(Flavor.values().length)
                         .containsAll(Arrays.asList(Flavor.values()));
                     testContext.completeNow();

@@ -17,6 +17,7 @@ package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,7 +30,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = PRIVATE)
 class Dto implements Serializable {
 
-  private static final long serialVersionUID = 4743133513526293872L;
+  @Serial private static final long serialVersionUID = 4743133513526293872L;
 
   String name;
 

@@ -15,6 +15,7 @@
  */
 package feign.moshi;
 
+import java.io.Serial;
 import java.util.LinkedHashMap;
 
 public class Zone extends LinkedHashMap<String, Object> {
@@ -34,5 +35,5 @@ public class Zone extends LinkedHashMap<String, Object> {
     }
   }
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 }
