@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 
 @DisplayName("Tests of reconnection with HTTP 1.1")
-public class Http11ClientReconnectTest extends AbstractClientReconnectTest {
+class Http11ClientReconnectTest extends AbstractClientReconnectTest {
 
   @BeforeAll
   @Override

@@ -17,6 +17,7 @@ package feign.vertx;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Logger;
 import feign.Request;
@@ -32,13 +33,12 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("FeignVertx client should be created from")
-public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
+class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
   @BeforeAll
   static void setupStub() {
@@ -54,7 +54,7 @@ public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("HttpClientOptions from Vertx")
-  public void testHttpClientOptions(Vertx vertx, VertxTestContext testContext) {
+  void httpClientOptions(Vertx vertx, VertxTestContext testContext) {
     HttpClientOptions options =
         new HttpClientOptions()
             .setProtocolVersion(HttpVersion.HTTP_2)
@@ -76,7 +76,7 @@ public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("Request Options from Feign")
-  public void testRequestOptions(Vertx vertx, VertxTestContext testContext) {
+  void requestOptions(Vertx vertx, VertxTestContext testContext) {
     IcecreamServiceApi client =
         VertxFeign.builder()
             .vertx(vertx)
@@ -97,7 +97,7 @@ public class VertxHttpOptionsTest extends AbstractFeignVertxTest {
               if (res.succeeded()) {
                 Collection<Flavor> flavors = res.result();
 
-                Assertions.assertThat(flavors)
+                assertThat(flavors)
                     .hasSize(Flavor.values().length)
                     .containsAll(Arrays.asList(Flavor.values()));
                 testContext.completeNow();

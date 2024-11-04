@@ -37,7 +37,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("When creating client from 'raw' contract")
-public class RawContractTest extends AbstractFeignVertxTest {
+class RawContractTest extends AbstractFeignVertxTest {
   static RawServiceAPI client;
 
   @BeforeAll
@@ -52,7 +52,7 @@ public class RawContractTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("should get available flavors")
-  public void testGetAvailableFlavors(VertxTestContext testContext) {
+  void getAvailableFlavors(VertxTestContext testContext) {
 
     /* Given */
     wireMock.stubFor(
@@ -94,7 +94,7 @@ public class RawContractTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("should pay bill")
-  public void testPayBill(VertxTestContext testContext) {
+  void payBill(VertxTestContext testContext) {
 
     /* Given */
     Bill bill = Bill.makeBill(generator.generate());

@@ -57,17 +57,18 @@ class StreamDecoderTest {
   }
 
   private String carsJson =
-      "" //
-          + "[\n" //
-          + "  {\n" //
-          + "    \"name\": \"Megane\",\n" //
-          + "    \"manufacturer\": \"Renault\"\n" //
-          + "  },\n" //
-          + "  {\n" //
-          + "    \"name\": \"C4\",\n" //
-          + "    \"manufacturer\": \"Citroën\"\n" //
-          + "  }\n" //
-          + "]\n";
+      """
+      [
+        {
+          "name": "Megane",
+          "manufacturer": "Renault"
+        },
+        {
+          "name": "C4",
+          "manufacturer": "Citroën"
+        }
+      ]
+      """;
 
   @Test
   void simpleStreamTest() {

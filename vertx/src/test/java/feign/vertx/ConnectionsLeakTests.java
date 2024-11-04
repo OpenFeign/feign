@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
 @DisplayName("Test that connections does not leak")
-public class ConnectionsLeakTests {
+class ConnectionsLeakTests {
   private static final HttpServerOptions serverOptions =
       new HttpServerOptions().setLogActivity(true).setPort(8091).setSsl(false);
 
@@ -49,7 +49,7 @@ public class ConnectionsLeakTests {
   private final Set<HttpConnection> connections = new ConcurrentHashSet<>();
 
   @BeforeEach
-  public void initServer(Vertx vertx) {
+  void initServer(Vertx vertx) {
     httpServer = vertx.createHttpServer(serverOptions);
     httpServer.requestHandler(
         request -> {
@@ -62,14 +62,14 @@ public class ConnectionsLeakTests {
   }
 
   @AfterEach
-  public void shutdownServer() {
+  void shutdownServer() {
     httpServer.close();
     connections.clear();
   }
 
   @Test
   @DisplayName("when use HTTP 1.1")
-  public void testHttp11NoConnectionLeak(Vertx vertx, VertxTestContext testContext) {
+  void http11NoConnectionLeak(Vertx vertx, VertxTestContext testContext) {
     int pollSize = 3;
     int nbRequests = 100;
 
@@ -88,7 +88,7 @@ public class ConnectionsLeakTests {
 
   @Test
   @DisplayName("when use HTTP 2")
-  public void testHttp2NoConnectionLeak(Vertx vertx, VertxTestContext testContext) {
+  void http2NoConnectionLeak(Vertx vertx, VertxTestContext testContext) {
     int pollSize = 1;
     int nbRequests = 100;
 
@@ -117,7 +117,7 @@ public class ConnectionsLeakTests {
                 testContext.verify(
                     () -> {
                       try {
-                        assertThat(this.connections.size()).isEqualTo(pollSize);
+                        assertThat(this.connections).hasSize(pollSize);
                         testContext.completeNow();
                       } catch (Throwable assertionFailure) {
                         testContext.failNow(assertionFailure);

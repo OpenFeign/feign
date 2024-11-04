@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 
 @DisplayName("Tests of reconnection with HTTP 2")
-public class Http2ClientReconnectTest extends AbstractClientReconnectTest {
+class Http2ClientReconnectTest extends AbstractClientReconnectTest {
 
   @BeforeAll
   @Override

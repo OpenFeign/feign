@@ -40,7 +40,6 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -69,7 +68,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will get flavors")
-    void testWillGetFlavors(VertxTestContext testContext) {
+    void willGetFlavors(VertxTestContext testContext) {
 
       /* Given */
       wireMock.stubFor(
@@ -92,7 +91,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
                     if (res.succeeded()) {
                       Collection<Flavor> flavors = res.result();
 
-                      Assertions.assertThat(flavors)
+                      assertThat(flavors)
                           .hasSize(Flavor.values().length)
                           .containsAll(Arrays.asList(Flavor.values()));
                       testContext.completeNow();
@@ -104,7 +103,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will get mixins")
-    void testWillGetMixins(VertxTestContext testContext) {
+    void willGetMixins(VertxTestContext testContext) {
 
       /* Given */
       wireMock.stubFor(
@@ -127,7 +126,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
                     if (res.succeeded()) {
                       Collection<Mixin> mixins = res.result();
 
-                      Assertions.assertThat(mixins)
+                      assertThat(mixins)
                           .hasSize(Mixin.values().length)
                           .containsAll(Arrays.asList(Mixin.values()));
                       testContext.completeNow();
@@ -139,7 +138,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will get order by id")
-    void testWillGetOrderById(VertxTestContext testContext) {
+    void willGetOrderById(VertxTestContext testContext) {
 
       /* Given */
       IceCreamOrder order = generator.generate();
@@ -174,7 +173,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will return 404 when try to get non-existing order by id")
-    void testWillReturn404WhenTryToGetNonExistingOrderById(VertxTestContext testContext) {
+    void willReturn404WhenTryToGetNonExistingOrderById(VertxTestContext testContext) {
 
       /* Given */
       wireMock.stubFor(
@@ -220,7 +219,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will make an order")
-    void testWillMakeOrder(VertxTestContext testContext) {
+    void willMakeOrder(VertxTestContext testContext) {
 
       /* Given */
       IceCreamOrder order = generator.generate();
@@ -258,7 +257,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("will pay bill")
-    void testWillPayBill(VertxTestContext testContext) {
+    void willPayBill(VertxTestContext testContext) {
 
       /* Given */
       Bill bill = Bill.makeBill(generator.generate());
@@ -293,7 +292,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("when Vertx is not provided")
-    void testWhenVertxMissing() {
+    void whenVertxMissing() {
 
       /* Given */
       ThrowableAssert.ThrowingCallable instantiateContractForgottenVertx =
@@ -307,7 +306,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
     @Test
     @DisplayName("when try to instantiate contract that have method that not return future")
-    void testWhenTryToInstantiateBrokenContract(Vertx vertx) {
+    void whenTryToInstantiateBrokenContract(Vertx vertx) {
 
       /* Given */
       ThrowableAssert.ThrowingCallable instantiateBrokenContract =

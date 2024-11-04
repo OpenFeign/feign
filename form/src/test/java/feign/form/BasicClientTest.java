@@ -27,7 +27,7 @@ import feign.Response;
 import feign.jackson.JacksonEncoder;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import lombok.val;
@@ -61,7 +61,7 @@ class BasicClientTest {
   @Test
   void testUpload() throws Exception {
     val path =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
     assertThat(API.upload(path.toFile())).asLong().isEqualTo(Files.size(path));
@@ -70,7 +70,7 @@ class BasicClientTest {
   @Test
   void testUploadWithParam() throws Exception {
     val path =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
     assertThat(API.upload(10, Boolean.TRUE, path.toFile())).asLong().isEqualTo(Files.size(path));
@@ -94,11 +94,11 @@ class BasicClientTest {
   @Test
   void testMultipleFilesArray() throws Exception {
     val path1 =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
 
     val path2 =
-        Paths.get(
+        Path.of(
             Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     assertThat(path2).exists();
 
@@ -110,11 +110,11 @@ class BasicClientTest {
   @Test
   void testMultipleFilesList() throws Exception {
     val path1 =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
 
     val path2 =
-        Paths.get(
+        Path.of(
             Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     assertThat(path2).exists();
 
@@ -128,7 +128,7 @@ class BasicClientTest {
     val dto = new Dto("Artem", 11);
 
     val path =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
     assertThat(API.uploadWithDto(dto, path.toFile()))
@@ -140,7 +140,7 @@ class BasicClientTest {
   @Test
   void testUnknownTypeFile() throws Exception {
     val path =
-        Paths.get(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
+        Path.of(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
     assertThat(path).exists();
 
     assertThat(API.uploadUnknownType(path.toFile())).isEqualTo("application/octet-stream");

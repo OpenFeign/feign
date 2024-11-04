@@ -49,11 +49,11 @@ class GsonCodecTest {
     new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
-        .hasBody(
-            "" //
-                + "{\n" //
-                + "  \"foo\": 1\n" //
-                + "}");
+        .hasBody("""
+            {
+              "foo": 1
+            }\
+            """);
   }
 
   @Test
@@ -87,14 +87,15 @@ class GsonCodecTest {
 
     assertThat(template)
         .hasBody(
-            "" //
-                + "{\n" //
-                + "  \"foo\": 1,\n" //
-                + "  \"bar\": [\n" //
-                + "    2,\n" //
-                + "    3\n" //
-                + "  ]\n" //
-                + "}");
+            """
+            {
+              "foo": 1,
+              "bar": [
+                2,
+                3
+              ]
+            }\
+            """);
   }
 
   static class Zone extends LinkedHashMap<String, Object> {
@@ -165,16 +166,17 @@ class GsonCodecTest {
   }
 
   private String zonesJson =
-      "" //
-          + "[\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\"\n" //
-          + "  },\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\",\n" //
-          + "    \"id\": \"ABCD\"\n" //
-          + "  }\n" //
-          + "]\n";
+      """
+      [
+        {
+          "name": "denominator.io."
+        },
+        {
+          "name": "denominator.io.",
+          "id": "ABCD"
+        }
+      ]
+      """;
 
   final TypeAdapter upperZone =
       new TypeAdapter<Zone>() {
@@ -233,16 +235,16 @@ class GsonCodecTest {
 
     assertThat(template)
         .hasBody(
-            "" //
-                + "[\n" //
-                + "  {\n" //
-                + "    \"name\": \"DENOMINATOR.IO.\"\n" //
-                + "  },\n" //
-                + "  {\n" //
-                + "    \"name\": \"DENOMINATOR.IO.\",\n" //
-                + "    \"id\": \"ABCD\"\n" //
-                + "  }\n" //
-                + "]");
+            """
+            [
+              {
+                "name": "DENOMINATOR.IO."
+              },
+              {
+                "name": "DENOMINATOR.IO.",
+                "id": "ABCD"
+              }
+            ]""");
   }
 
   /** Enabled via {@link feign.Feign.Builder#dismiss404()} */

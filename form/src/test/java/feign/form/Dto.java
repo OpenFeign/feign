@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.form.feign.spring;
+package feign.form;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = PRIVATE)
-public class Dto implements Serializable {
+class Dto implements Serializable {
 
-  private static final long serialVersionUID = -4218390863359894943L;
+  @Serial private static final long serialVersionUID = 4743133513526293872L;
 
-  String field1;
+  String name;
 
-  int field2;
-
-  MultipartFile file;
+  Integer age;
 }

@@ -16,7 +16,7 @@
 package feign.vertx;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.*;
 import feign.jackson.JacksonDecoder;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Tests of QueryMapEncoder")
-public class QueryMapEncoderTest extends AbstractFeignVertxTest {
+class QueryMapEncoderTest extends AbstractFeignVertxTest {
   interface Api {
 
     @RequestLine("POST /icecream/orders")
@@ -61,7 +61,7 @@ public class QueryMapEncoderTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("QueryMapEncoder will be used")
-  void testWillMakeOrder(VertxTestContext testContext) {
+  void willMakeOrder(VertxTestContext testContext) {
 
     /* Given */
     IceCreamOrder order = new IceCreamOrder();

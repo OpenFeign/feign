@@ -69,16 +69,17 @@ class MoshiDecoderTest {
   }
 
   private String zonesJson =
-      "" //
-          + "[\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\"\n" //
-          + "  },\n" //
-          + "  {\n" //
-          + "    \"name\": \"denominator.io.\",\n" //
-          + "    \"id\": \"ABCD\"\n" //
-          + "  }\n" //
-          + "]\n";
+      """
+      [
+        {
+          "name": "denominator.io."
+        },
+        {
+          "name": "denominator.io.",
+          "id": "ABCD"
+        }
+      ]
+      """;
 
   private final String videoGamesJson =
       """
