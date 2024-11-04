@@ -76,6 +76,10 @@
     <contributor>
       <name>Guillaume Simard</name>
     </contributor>
+    <contributor>
+      <name>Alexei KLENIN</name>
+      <email>alexei.klenin@gmail.com</email>
+    </contributor>
   </contributors>
 
   <modules>
@@ -120,8 +124,9 @@
     <module>benchmark</module>
     <module>moshi</module>
     <module>fastjson2</module>
-    <module>feign-form</module>
-    <module>feign-form-spring</module>
+    <module>form</module>
+    <module>form-spring</module>
+    <module>vertx</module>
   </modules>
 
   <scm>

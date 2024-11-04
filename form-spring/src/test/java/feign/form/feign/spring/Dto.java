@@ -13,27 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.form.feign.spring;
+
+import static lombok.AccessLevel.PRIVATE;
 
 import java.io.Serial;
-import java.util.LinkedHashMap;
+import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
-public class Zone extends LinkedHashMap<String, Object> {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
+public class Dto implements Serializable {
 
-  Zone() {
-    // for reflective instantiation.
-  }
+  @Serial private static final long serialVersionUID = -4218390863359894943L;
 
-  Zone(String name) {
-    this(name, null);
-  }
+  String field1;
 
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
+  int field2;
 
-  @Serial private static final long serialVersionUID = 1L;
+  MultipartFile file;
 }

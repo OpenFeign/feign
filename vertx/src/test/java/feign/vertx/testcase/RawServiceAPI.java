@@ -13,27 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.vertx.testcase;
 
-import java.io.Serial;
-import java.util.LinkedHashMap;
+import feign.Headers;
+import feign.RequestLine;
+import feign.Response;
+import feign.vertx.testcase.domain.Bill;
+import io.vertx.core.Future;
 
-public class Zone extends LinkedHashMap<String, Object> {
+/**
+ * Example of an API to to test rarely used features of Feign.
+ *
+ * @author Alexei KLENIN
+ */
+@Headers({"Accept: application/json"})
+public interface RawServiceAPI {
 
-  Zone() {
-    // for reflective instantiation.
-  }
+  @RequestLine("GET /icecream/flavors")
+  Future<Response> getAvailableFlavors();
 
-  Zone(String name) {
-    this(name, null);
-  }
-
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
-
-  @Serial private static final long serialVersionUID = 1L;
+  @RequestLine("POST /icecream/bills/pay")
+  @Headers("Content-Type: application/json")
+  Future<Response> payBill(Bill bill);
 }

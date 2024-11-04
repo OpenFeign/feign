@@ -13,27 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.vertx.testcase;
 
-import java.io.Serial;
-import java.util.LinkedHashMap;
+import feign.Headers;
+import feign.RequestLine;
+import feign.Response;
+import io.vertx.core.Future;
 
-public class Zone extends LinkedHashMap<String, Object> {
+/**
+ * Example of an API to to test number of Http2 connections of Feign.
+ *
+ * @author James Xu
+ */
+@Headers({"Accept: application/json"})
+public interface HelloServiceAPI {
 
-  Zone() {
-    // for reflective instantiation.
-  }
-
-  Zone(String name) {
-    this(name, null);
-  }
-
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
-
-  @Serial private static final long serialVersionUID = 1L;
+  @RequestLine("GET /hello")
+  Future<Response> hello();
 }

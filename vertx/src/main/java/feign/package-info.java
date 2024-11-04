@@ -13,27 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
 
-import java.io.Serial;
-import java.util.LinkedHashMap;
-
-public class Zone extends LinkedHashMap<String, Object> {
-
-  Zone() {
-    // for reflective instantiation.
-  }
-
-  Zone(String name) {
-    this(name, null);
-  }
-
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
-
-  @Serial private static final long serialVersionUID = 1L;
-}
+/**
+ * Package for extensions that must be able use package-private classes of {@code feign}.
+ *
+ * @author Alexei KLENIN
+ */
+package feign;

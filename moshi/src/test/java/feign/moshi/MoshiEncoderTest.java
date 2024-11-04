@@ -39,10 +39,11 @@ class MoshiEncoderTest {
     new MoshiEncoder().encode(map, Map.class, template);
 
     assertThat(template)
-        .hasBody(
-            "{\n" //
-                + "  \"foo\": 1\n" //
-                + "}");
+        .hasBody("""
+            {
+              "foo": 1
+            }\
+            """);
   }
 
   @Test
@@ -58,13 +59,15 @@ class MoshiEncoderTest {
 
     assertThat(template)
         .hasBody(
-            "{\n" //
-                + "  \"foo\": 1,\n" //
-                + "  \"bar\": [\n" //
-                + "    2,\n" //
-                + "    3\n" //
-                + "  ]\n" //
-                + "}");
+            """
+            {
+              "foo": 1,
+              "bar": [
+                2,
+                3
+              ]
+            }\
+            """);
   }
 
   @Test
@@ -82,16 +85,16 @@ class MoshiEncoderTest {
 
     assertThat(template)
         .hasBody(
-            "" //
-                + "[\n" //
-                + "  {\n" //
-                + "    \"name\": \"DENOMINATOR.IO.\"\n" //
-                + "  },\n" //
-                + "  {\n" //
-                + "    \"name\": \"DENOMINATOR.IO.\",\n" //
-                + "    \"id\": \"ABCD\"\n" //
-                + "  }\n" //
-                + "]");
+            """
+            [
+              {
+                "name": "DENOMINATOR.IO."
+              },
+              {
+                "name": "DENOMINATOR.IO.",
+                "id": "ABCD"
+              }
+            ]""");
   }
 
   @Test

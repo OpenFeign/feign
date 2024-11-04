@@ -13,27 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.vertx;
 
-import java.io.Serial;
-import java.util.LinkedHashMap;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-public class Zone extends LinkedHashMap<String, Object> {
+class TestUtils {
+  static final ObjectMapper MAPPER = new ObjectMapper();
 
-  Zone() {
-    // for reflective instantiation.
+  static {
+    MAPPER.registerModule(new JavaTimeModule());
   }
 
-  Zone(String name) {
-    this(name, null);
-  }
-
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
+  static String encodeAsJsonString(final Object object) {
+    try {
+      return MAPPER.writeValueAsString(object);
+    } catch (JsonProcessingException unexpectedException) {
+      return "";
     }
   }
-
-  @Serial private static final long serialVersionUID = 1L;
 }

@@ -13,27 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.vertx.testcase.domain;
 
-import java.io.Serial;
-import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class Zone extends LinkedHashMap<String, Object> {
+/**
+ * Ice cream flavors.
+ *
+ * @author Alexei KLENIN
+ */
+public enum Flavor {
+  STRAWBERRY,
+  CHOCOLATE,
+  BANANA,
+  PISTACHIO,
+  MELON,
+  VANILLA;
 
-  Zone() {
-    // for reflective instantiation.
-  }
-
-  Zone(String name) {
-    this(name, null);
-  }
-
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
-
-  @Serial private static final long serialVersionUID = 1L;
+  public static final String FLAVORS_JSON =
+      Stream.of(Flavor.values())
+          .map(flavor -> "\"" + flavor + "\"")
+          .collect(Collectors.joining(", ", "[ ", " ]"));
 }

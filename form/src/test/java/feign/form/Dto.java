@@ -13,27 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.moshi;
+package feign.form;
+
+import static lombok.AccessLevel.PRIVATE;
 
 import java.io.Serial;
-import java.util.LinkedHashMap;
+import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
-public class Zone extends LinkedHashMap<String, Object> {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
+class Dto implements Serializable {
 
-  Zone() {
-    // for reflective instantiation.
-  }
+  @Serial private static final long serialVersionUID = 4743133513526293872L;
 
-  Zone(String name) {
-    this(name, null);
-  }
+  String name;
 
-  Zone(String name, String id) {
-    put("name", name);
-    if (id != null) {
-      put("id", id);
-    }
-  }
-
-  @Serial private static final long serialVersionUID = 1L;
+  Integer age;
 }
