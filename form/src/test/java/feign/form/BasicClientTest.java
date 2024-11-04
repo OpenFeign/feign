@@ -31,19 +31,26 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import lombok.val;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 class BasicClientTest {
 
-  private static final TestClient API;
+  private static TestClient API;
 
-  static {
+  @TempDir static Path logDir;
+
+  @BeforeAll
+  static void configureClient() {
+    val logFile = logDir.resolve("log.txt").toString();
+
     API =
         Feign.builder()
             .encoder(new FormEncoder(new JacksonEncoder()))
-            .logger(new JavaLogger(BasicClientTest.class).appendToFile("log.txt"))
+            .logger(new JavaLogger(BasicClientTest.class).appendToFile(logFile))
             .logLevel(FULL)
             .target(TestClient.class, "http://localhost:8080");
   }

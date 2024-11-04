@@ -26,22 +26,29 @@ import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
+import java.nio.file.Path;
 import lombok.val;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
 class ByteArrayClientTest {
 
-  private static final CustomClient API;
+  private static CustomClient API;
 
-  static {
+  @TempDir static Path logDir;
+
+  @BeforeAll
+  static void configureClient() {
     val encoder = new FormEncoder(new JacksonEncoder());
+    val logFile = logDir.resolve("log-byte.txt").toString();
 
     API =
         Feign.builder()
             .encoder(encoder)
-            .logger(new JavaLogger(ByteArrayClientTest.class).appendToFile("log-byte.txt"))
+            .logger(new JavaLogger(ByteArrayClientTest.class).appendToFile(logFile))
             .logLevel(FULL)
             .target(CustomClient.class, "http://localhost:8080");
   }
