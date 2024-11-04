@@ -23,6 +23,16 @@ function print_result() {
   echo "\t${color}${version} ${mark}${NC}"
 }
 
+feign_versions=( "12.5" "13.5" )
+
+for feign_version in $feign_versions; do
+  echo "Tests with Feign ${version}:"
+
+  printf "\tRun tests with Feign %s...\n" "${feign_version}"
+  mvn clean compile test -Dfeign.version="$feign_version" &> /dev/null
+  print_result "$feign_version" $?
+done
+
 declare -A vertx_versions
 vertx_versions=( [v40x]="4.0.x", [v41x]="4.1.x", [v42x]="4.2.x", [v43x]="4.3.x", [v44x]="4.4.x", [v45x]="4.5.x" )
 v40x=( "4.0.2" )
