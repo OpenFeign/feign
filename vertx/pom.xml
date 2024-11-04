@@ -33,7 +33,7 @@
     <vertx.version>4.5.10</vertx.version>
     <jackson.version>2.18.1</jackson.version>
     <slf4j-log4j12.version>2.0.0-alpha6</slf4j-log4j12.version>
-    <wiremock.version>2.35.1</wiremock.version>
+    <wiremock.version>2.35.2</wiremock.version>
   </properties>
 
   <dependencyManagement>
