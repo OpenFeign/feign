@@ -47,7 +47,7 @@ final class RequestTemplateFactoryResolver {
     }
   }
 
-  private static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
+  static class BuildTemplateByResolvingArgs implements RequestTemplate.Factory {
 
     private final QueryMapEncoder queryMapEncoder;
 
@@ -56,7 +56,7 @@ final class RequestTemplateFactoryResolver {
     private final Map<Integer, Param.Expander> indexToExpander =
         new LinkedHashMap<Integer, Param.Expander>();
 
-    private BuildTemplateByResolvingArgs(
+    BuildTemplateByResolvingArgs(
         MethodMetadata metadata, QueryMapEncoder queryMapEncoder, Target target) {
       this.metadata = metadata;
       this.target = target;
@@ -212,11 +212,11 @@ final class RequestTemplateFactoryResolver {
     }
   }
 
-  private static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+  static class BuildFormEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
 
     private final Encoder encoder;
 
-    private BuildFormEncodedTemplateFromArgs(
+    BuildFormEncodedTemplateFromArgs(
         MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder, Target target) {
       super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
@@ -242,11 +242,11 @@ final class RequestTemplateFactoryResolver {
     }
   }
 
-  private static class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
+  static class BuildEncodedTemplateFromArgs extends BuildTemplateByResolvingArgs {
 
     private final Encoder encoder;
 
-    private BuildEncodedTemplateFromArgs(
+    BuildEncodedTemplateFromArgs(
         MethodMetadata metadata, Encoder encoder, QueryMapEncoder queryMapEncoder, Target target) {
       super(metadata, queryMapEncoder, target);
       this.encoder = encoder;
