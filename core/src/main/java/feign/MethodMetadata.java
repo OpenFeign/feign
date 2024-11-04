@@ -44,6 +44,7 @@ public final class MethodMetadata implements Serializable {
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
+  private boolean bodyRequired = true;
   private transient Class<?> targetType;
   private transient Method method;
   private final transient List<String> warnings = new ArrayList<>();
@@ -226,6 +227,14 @@ public final class MethodMetadata implements Serializable {
 
   public boolean isIgnored() {
     return ignored;
+  }
+
+  public boolean isBodyRequired() {
+    return bodyRequired;
+  }
+
+  public void setBodyRequired(boolean bodyRequired) {
+    this.bodyRequired = bodyRequired;
   }
 
   @Experimental

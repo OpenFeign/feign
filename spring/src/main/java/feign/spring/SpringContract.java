@@ -116,6 +116,7 @@ public class SpringContract extends DeclarativeContract {
     registerParameterAnnotation(
         RequestBody.class,
         (body, data, paramIndex) -> {
+          data.setBodyRequired(body.required());
           handleConsumesAnnotation(data, "application/json");
         });
     registerParameterAnnotation(RequestParam.class, requestParamParameterAnnotationProcessor());

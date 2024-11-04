@@ -76,6 +76,8 @@ class SpringContractTest {
             .noContent(HttpMethod.GET, "/health/optional")
             .noContent(HttpMethod.GET, "/health/optional?param=value")
             .noContent(HttpMethod.GET, "/health/optional?param")
+            .noContent(HttpMethod.POST, "/health/withNonRequiredRequestBody")
+            .noContent(HttpMethod.POST, "/health/withRequiredRequestBody")
             .noContent(HttpMethod.GET, "/health/1?deep=true")
             .noContent(HttpMethod.GET, "/health/1?deep=true&dryRun=true")
             .noContent(HttpMethod.GET, "/health/name?deep=true&dryRun=true")
@@ -164,6 +166,32 @@ class SpringContractTest {
     resource.checkWithOptional(Optional.ofNullable(null));
 
     mockClient.verifyOne(HttpMethod.GET, "/health/optional");
+  }
+
+  @Test
+  void requiredRequestBodyIsNull() {
+    Throwable exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> resource.checkWithRequiredRequestBody(null));
+    assertThat(exception.getMessage()).contains("Body parameter 0 was null");
+  }
+
+  @Test
+  void nonRequiredRequestBodyIsNull() {
+    resource.checkWithNonRequiredRequestBody(null);
+
+    Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
+    assertThat(request.requestTemplate().body()).asString().isEqualTo("null");
+  }
+
+  @Test
+  void nonRequiredRequestBodyIsObject() {
+    UserObject object = new UserObject();
+    object.setName("hello");
+    resource.checkWithNonRequiredRequestBody(object);
+
+    Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
+    assertThat(request.requestTemplate().body()).asString().contains("\"name\" : \"hello\"");
   }
 
   @Test
@@ -302,6 +330,12 @@ class SpringContractTest {
     @RequestMapping(value = "/optional", method = RequestMethod.GET)
     void checkWithOptional(@RequestParam(name = "param") Optional<String> param);
 
+    @RequestMapping(value = "/withNonRequiredRequestBody", method = RequestMethod.POST)
+    void checkWithNonRequiredRequestBody(@RequestBody(required = false) UserObject obj);
+
+    @RequestMapping(value = "/withRequiredRequestBody", method = RequestMethod.POST)
+    void checkWithRequiredRequestBody(@RequestBody() UserObject obj);
+
     @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
     void checkRequestPart(
         @PathVariable(name = "id") String campaignId,
@@ -317,6 +351,19 @@ class SpringContractTest {
 
     @RequestMapping(value = "/header/pojo", method = RequestMethod.GET)
     void checkRequestHeaderPojo(@RequestHeader HeaderMapUserObject object);
+  }
+
+  class UserObject {
+    @Param("name1")
+    private String name;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
   }
 
   class HeaderMapUserObject {
