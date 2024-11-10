@@ -19,6 +19,7 @@ import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -57,9 +58,12 @@ public class MicrometerObservationCapability implements Capability {
 
       try {
         Response response = client.execute(request, options);
+
+        throwExceptionOnErrorStatusCode(response, request);
+
         finalizeObservation(feignContext, observation, null, response);
         return response;
-      } catch (FeignException ex) {
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
         throw ex;
       }
@@ -83,8 +87,16 @@ public class MicrometerObservationCapability implements Capability {
       try {
         return client
             .execute(feignContext.getCarrier(), options, context)
-            .whenComplete((r, ex) -> finalizeObservation(feignContext, observation, ex, r));
-      } catch (FeignException ex) {
+            .whenComplete(
+                (r, ex) -> {
+                  try {
+                    throwExceptionOnErrorStatusCode(r, request);
+                    finalizeObservation(feignContext, observation, ex, r);
+                  } catch (FeignException statusCodeException) {
+                    finalizeObservation(feignContext, observation, statusCodeException, null);
+                  }
+                });
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
 
         throw ex;
@@ -99,5 +111,11 @@ public class MicrometerObservationCapability implements Capability {
       observation.error(ex);
     }
     observation.stop();
+  }
+
+  private void throwExceptionOnErrorStatusCode(Response response, Request request) {
+    if (response.status() >= 400 && response.status() < 600) {
+      throw FeignException.errorStatus(request.requestTemplate().method(), response);
+    }
   }
 }

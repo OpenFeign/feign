@@ -16,6 +16,7 @@
 package feign.micrometer;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
@@ -29,6 +30,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.AsyncFeign;
 import feign.Feign;
+import feign.FeignException;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
@@ -82,6 +84,22 @@ class FeignHeaderInstrumentationTest {
   }
 
   @Test
+  void getTemplatedPathForUriWithException(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(badRequest()));
+
+    TestClient testClient = clientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+
+    try {
+      testClient.templated("1", "2");
+    } catch (FeignException e) {
+      assertThat(e).isInstanceOf(FeignException.BadRequest.class);
+    }
+
+    assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
+        .isEqualTo("BadRequest");
+  }
+
+  @Test
   void getTemplatedPathForUriForAsync(WireMockRuntimeInfo wmRuntimeInfo)
       throws ExecutionException, InterruptedException {
     stubFor(get(anyUrl()).willReturn(ok()));
@@ -96,6 +114,21 @@ class FeignHeaderInstrumentationTest {
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
 
     assertTags();
+  }
+
+  @Test
+  void getTemplatedPathForUriForAsyncWithException(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(badRequest()));
+
+    AsyncTestClient testClient =
+        asyncClientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+    testClient
+        .templated("1", "2")
+        .whenComplete(
+            (s, throwable) -> {
+              assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
+                  .isEqualTo("BadRequest");
+            });
   }
 
   private void assertTags() {
