@@ -21,6 +21,7 @@ import feign.Client;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
+import feign.Util;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 
@@ -59,9 +60,18 @@ public class MicrometerObservationCapability implements Capability {
       try {
         Response response = client.execute(request, options);
 
-        throwExceptionOnErrorStatusCode(response, request);
+        if (response.body() != null) {
+          response =
+              response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
+        }
 
-        finalizeObservation(feignContext, observation, null, response);
+        FeignException exception = null;
+
+        if (responseContainsError(response)) {
+          exception = getFeignExceptionFromStatusCode(response, request);
+        }
+
+        finalizeObservation(feignContext, observation, exception, response);
         return response;
       } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
@@ -89,12 +99,13 @@ public class MicrometerObservationCapability implements Capability {
             .execute(feignContext.getCarrier(), options, context)
             .whenComplete(
                 (r, ex) -> {
-                  try {
-                    throwExceptionOnErrorStatusCode(r, request);
-                    finalizeObservation(feignContext, observation, ex, r);
-                  } catch (FeignException statusCodeException) {
-                    finalizeObservation(feignContext, observation, statusCodeException, null);
+                  FeignException exception = null;
+
+                  if (responseContainsError(r)) {
+                    exception = getFeignExceptionFromStatusCode(r, request);
                   }
+
+                  finalizeObservation(feignContext, observation, exception, r);
                 });
       } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
@@ -113,9 +124,14 @@ public class MicrometerObservationCapability implements Capability {
     observation.stop();
   }
 
-  private void throwExceptionOnErrorStatusCode(Response response, Request request) {
-    if (response.status() >= 400 && response.status() < 600) {
-      throw FeignException.errorStatus(request.requestTemplate().method(), response);
+  private FeignException getFeignExceptionFromStatusCode(Response response, Request request) {
+    if (responseContainsError(response)) {
+      return FeignException.errorStatus(request.requestTemplate().method(), response);
     }
+    return null;
+  }
+
+  private boolean responseContainsError(Response response) {
+    return response.status() >= 400 && response.status() < 600;
   }
 }
