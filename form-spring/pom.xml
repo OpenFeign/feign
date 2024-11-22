@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <version>3.3.5</version>
+      <version>${springboot.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -99,14 +99,8 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <version>3.3.5</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
-      <version>3.3.5</version>
+      <version>${springboot.version}</version>
       <scope>test</scope>
     </dependency>
 
