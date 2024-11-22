@@ -12,6 +12,7 @@
 *** java.net.URL
 *** Apache HC5
 *** OkHttp
+*** Vertx
 ** contracts
 *** Feign
 *** JAX-RS
