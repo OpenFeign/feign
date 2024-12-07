@@ -490,7 +490,7 @@ public class FeignUnderAsyncTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
+      assertThat(e.contentUTF8()).isEqualTo("success!");
     }
   }
 
@@ -511,7 +511,7 @@ public class FeignUnderAsyncTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("");
+      assertThat(e.contentUTF8()).isEqualTo("success!");
     }
   }
 
