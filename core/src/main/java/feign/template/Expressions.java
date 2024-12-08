@@ -262,7 +262,7 @@ public final class Expressions {
     @Override
     public String getValue() {
       if (this.getPattern() != null) {
-        return "{" + this.separator + this.getName() + ":" + this.getName() + "}";
+        return "{" + this.separator + this.getName() + ":" + this.getPattern() + "}";
       }
       return "{" + this.separator + this.getName() + "}";
     }
