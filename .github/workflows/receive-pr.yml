@@ -28,6 +28,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+      - name: Setup Develocity
+        uses: gradle/develocity-actions/setup-maven@v1.2
+        with:
+          add-pr-comment: false
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       # Capture the PR number
       # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#using-data-from-the-triggering-workflow
@@ -43,8 +48,6 @@ jobs:
       # Execute recipes
       - name: Apply OpenRewrite recipes
         run: ./mvnw -Dtoolchain.skip=true -Dlicense.skip=true -DskipTests=true -P openrewrite clean install
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       # Capture the diff
       - name: Create patch
