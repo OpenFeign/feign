@@ -16,9 +16,11 @@
 package feign.micrometer;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -29,6 +31,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.AsyncFeign;
 import feign.Feign;
+import feign.FeignException;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
@@ -82,6 +85,37 @@ class FeignHeaderInstrumentationTest {
   }
 
   @Test
+  void getTemplatedPathForUriWithException(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(badRequest()));
+
+    TestClient testClient = clientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+
+    try {
+      testClient.templated("1", "2");
+    } catch (FeignException e) {
+      assertThat(e).isInstanceOf(FeignException.BadRequest.class);
+    }
+
+    assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
+        .isEqualTo("BadRequest");
+  }
+
+  @Test
+  void getTemplatedPathForUriWithNoContent(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(noContent()));
+
+    TestClient testClient = clientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+
+    try {
+      testClient.templated("1", "2");
+    } catch (FeignException e) {
+      assertThat(e).isInstanceOf(FeignException.BadRequest.class);
+    }
+
+    assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error")).isEqualTo("none");
+  }
+
+  @Test
   void getTemplatedPathForUriForAsync(WireMockRuntimeInfo wmRuntimeInfo)
       throws ExecutionException, InterruptedException {
     stubFor(get(anyUrl()).willReturn(ok()));
@@ -96,6 +130,22 @@ class FeignHeaderInstrumentationTest {
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
 
     assertTags();
+  }
+
+  @Test
+  void getTemplatedPathForUriForAsyncWithException(WireMockRuntimeInfo wmRuntimeInfo)
+      throws InterruptedException {
+    stubFor(get(anyUrl()).willReturn(badRequest()));
+
+    AsyncTestClient testClient =
+        asyncClientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+
+    try {
+      testClient.templated("1", "2").get();
+    } catch (ExecutionException e) {
+      assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
+          .isEqualTo("BadRequest");
+    }
   }
 
   private void assertTags() {
