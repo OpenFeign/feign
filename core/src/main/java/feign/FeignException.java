@@ -182,8 +182,8 @@ public class FeignException extends RuntimeException {
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.body(),
-        request.headers());
+        readResponseBody(response),
+        response.headers());
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
@@ -193,13 +193,7 @@ public class FeignException extends RuntimeException {
   public static FeignException errorStatus(
       String methodKey, Response response, Integer maxBodyBytesLength, Integer maxBodyCharsLength) {
 
-    byte[] body = {};
-    try {
-      if (response.body() != null) {
-        body = Util.toByteArray(response.body().asInputStream());
-      }
-    } catch (IOException ignored) { // NOPMD
-    }
+    byte[] body = readResponseBody(response);
 
     String message =
         new FeignExceptionMessageBuilder()
@@ -211,6 +205,17 @@ public class FeignException extends RuntimeException {
             .build();
 
     return errorStatus(response.status(), message, response.request(), body, response.headers());
+  }
+
+  private static byte[] readResponseBody(Response response) {
+    byte[] body = {};
+    try {
+      if (response.body() != null) {
+        body = Util.toByteArray(response.body().asInputStream());
+      }
+    } catch (IOException ignored) { // NOPMD
+    }
+    return body;
   }
 
   private static FeignException errorStatus(
