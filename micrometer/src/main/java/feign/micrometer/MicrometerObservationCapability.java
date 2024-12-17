@@ -19,7 +19,9 @@ import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
+import feign.Util;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 
@@ -57,9 +59,21 @@ public class MicrometerObservationCapability implements Capability {
 
       try {
         Response response = client.execute(request, options);
-        finalizeObservation(feignContext, observation, null, response);
+
+        if (response.body() != null) {
+          response =
+              response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
+        }
+
+        FeignException exception = null;
+
+        if (responseContainsError(response)) {
+          exception = getFeignExceptionFromStatusCode(response, request);
+        }
+
+        finalizeObservation(feignContext, observation, exception, response);
         return response;
-      } catch (FeignException ex) {
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
         throw ex;
       }
@@ -83,8 +97,17 @@ public class MicrometerObservationCapability implements Capability {
       try {
         return client
             .execute(feignContext.getCarrier(), options, context)
-            .whenComplete((r, ex) -> finalizeObservation(feignContext, observation, ex, r));
-      } catch (FeignException ex) {
+            .whenComplete(
+                (r, ex) -> {
+                  FeignException exception = null;
+
+                  if (responseContainsError(r)) {
+                    exception = getFeignExceptionFromStatusCode(r, request);
+                  }
+
+                  finalizeObservation(feignContext, observation, exception, r);
+                });
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
 
         throw ex;
@@ -99,5 +122,16 @@ public class MicrometerObservationCapability implements Capability {
       observation.error(ex);
     }
     observation.stop();
+  }
+
+  private FeignException getFeignExceptionFromStatusCode(Response response, Request request) {
+    if (responseContainsError(response)) {
+      return FeignException.errorStatus(request.requestTemplate().method(), response);
+    }
+    return null;
+  }
+
+  private boolean responseContainsError(Response response) {
+    return response.status() >= 400 && response.status() < 600;
   }
 }
