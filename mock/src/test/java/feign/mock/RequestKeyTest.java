@@ -58,6 +58,7 @@ class RequestKeyTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "a",
             map,
             "content".getBytes(StandardCharsets.UTF_8),

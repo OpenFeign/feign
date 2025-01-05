@@ -97,7 +97,13 @@ class JacksonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -113,7 +119,13 @@ class JacksonCodecTest {
             .status(204)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
@@ -126,7 +138,13 @@ class JacksonCodecTest {
             .status(204)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -146,7 +164,13 @@ class JacksonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
@@ -168,7 +192,13 @@ class JacksonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
@@ -202,7 +232,13 @@ class JacksonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .body(
                 new String(
@@ -229,7 +265,13 @@ class JacksonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
             .build();
@@ -308,7 +350,13 @@ class JacksonCodecTest {
             .status(404)
             .reason("NOT FOUND")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
@@ -350,6 +398,7 @@ class JacksonCodecTest {
             .request(
                 Request.create(
                     HttpMethod.GET,
+                    "Wikipedia#search(String)",
                     "/v1/dummy",
                     Collections.emptyMap(),
                     Request.Body.empty(),

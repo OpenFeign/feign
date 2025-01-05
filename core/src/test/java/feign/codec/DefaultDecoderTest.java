@@ -74,7 +74,14 @@ class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(headers)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(
+            Request.create(
+                HttpMethod.GET,
+                "Wikipedia#search(String)",
+                "/api",
+                Collections.emptyMap(),
+                null,
+                Util.UTF_8))
         .body(inputStream, content.length())
         .build();
   }
@@ -84,7 +91,14 @@ class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(Collections.<String, Collection<String>>emptyMap())
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(
+            Request.create(
+                HttpMethod.GET,
+                "Wikipedia#search(String)",
+                "/api",
+                Collections.emptyMap(),
+                null,
+                Util.UTF_8))
         .build();
   }
 }

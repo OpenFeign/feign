@@ -85,6 +85,7 @@ final class RequestTemplateFactoryResolver {
     public RequestTemplate create(Object[] argv) {
       RequestTemplate mutable = RequestTemplate.from(metadata.template());
       mutable.feignTarget(target);
+      mutable.methodKey(metadata.configKey());
       if (metadata.urlIndex() != null) {
         int urlIndex = metadata.urlIndex();
         checkArgument(argv[urlIndex] != null, "URI parameter %s was null", urlIndex);

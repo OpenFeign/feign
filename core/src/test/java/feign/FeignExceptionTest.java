@@ -37,6 +37,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_8),
@@ -62,6 +63,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_8),
@@ -88,6 +90,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_16BE),
@@ -102,9 +105,9 @@ class FeignExceptionTest {
             .request(request)
             .build();
 
-    FeignException exception = FeignException.errorStatus("methodKey", response);
+    FeignException exception = FeignException.errorStatus("Wikipedia#search(String)", response);
     assertThat(exception.getMessage())
-        .isEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
+        .isEqualTo("[400] during [GET] to [/home] [Wikipedia#search(String)]: [response]");
   }
 
   @ParameterizedTest
@@ -125,6 +128,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_16BE),
@@ -139,9 +143,9 @@ class FeignExceptionTest {
             .request(request)
             .build();
 
-    FeignException exception = FeignException.errorStatus("methodKey", response);
+    FeignException exception = FeignException.errorStatus("Wikipedia#search(String)", response);
     assertThat(exception.getMessage())
-        .isEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
+        .isEqualTo("[400] during [GET] to [/home] [Wikipedia#search(String)]: [response]");
   }
 
   @Test
@@ -156,6 +160,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_16BE),
@@ -170,9 +175,9 @@ class FeignExceptionTest {
             .request(request)
             .build();
 
-    FeignException exception = FeignException.errorStatus("methodKey", response);
+    FeignException exception = FeignException.errorStatus("Wikipedia#search(String)", response);
     assertThat(exception.getMessage())
-        .isNotEqualTo("[400] during [GET] to [/home] [methodKey]: [response]");
+        .isNotEqualTo("[400] during [GET] to [/home] [Wikipedia#search(String)]: [response]");
   }
 
   @Test
@@ -180,6 +185,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_8),
@@ -197,7 +203,7 @@ class FeignExceptionTest {
             .headers(responseHeaders)
             .build();
 
-    FeignException exception = FeignException.errorStatus("methodKey", response);
+    FeignException exception = FeignException.errorStatus("Wikipedia#search(String)", response);
     assertThat(exception.responseHeaders())
         .hasEntrySatisfying(
             "Content-Type",
@@ -239,6 +245,7 @@ class FeignExceptionTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/home",
             Collections.emptyMap(),
             "data".getBytes(StandardCharsets.UTF_8),
@@ -252,11 +259,12 @@ class FeignExceptionTest {
             .body(bigResponse, StandardCharsets.UTF_8)
             .build();
 
-    FeignException defaultException = FeignException.errorStatus("methodKey", response);
+    FeignException defaultException =
+        FeignException.errorStatus("Wikipedia#search(String)", response);
     assertThat(defaultException.getMessage().length()).isLessThan(bigResponse.length());
 
     FeignException customLengthBodyException =
-        FeignException.errorStatus("methodKey", response, 4000, 2000);
+        FeignException.errorStatus("Wikipedia#search(String)", response, 4000, 2000);
     assertThat(customLengthBodyException.getMessage().length())
         .isGreaterThanOrEqualTo(bigResponse.length());
   }

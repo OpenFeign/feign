@@ -407,6 +407,7 @@ public class RequestTemplateTest {
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.GET) //
+            .methodKey("Wikipedia#search(String)")
             .uri("/api/{value1}?key={value2}");
 
     template = template.resolve(mapOf("value1", "ABC 123", "value2", "XYZ 123"));
@@ -598,5 +599,14 @@ public class RequestTemplateTest {
     String[] values = null;
     String name = "";
     template.header(name, values);
+  }
+
+  @Test
+  void methodKeyShouldBeStored() {
+    RequestTemplate template = new RequestTemplate();
+
+    template.methodKey("Wikipedia#search(String)");
+
+    assertThat(template.methodKey()).isEqualTo("Wikipedia#search(String)");
   }
 }

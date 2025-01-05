@@ -124,7 +124,13 @@ class JacksonIteratorTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
@@ -151,7 +157,13 @@ class JacksonIteratorTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
@@ -182,7 +194,13 @@ class JacksonIteratorTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
             .build();

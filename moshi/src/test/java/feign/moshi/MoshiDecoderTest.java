@@ -61,7 +61,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
 
@@ -107,7 +112,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .build();
     assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
   }
@@ -121,7 +131,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body(new byte[0])
             .build();
     assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
@@ -137,7 +152,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .build();
     assertThat((byte[]) new MoshiDecoder().decode(response, byte[].class)).isEmpty();
   }
@@ -159,7 +179,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
 
@@ -182,7 +207,12 @@ class MoshiDecoderTest {
             .headers(Collections.emptyMap())
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body(videoGamesJson, UTF_8)
             .build();
 

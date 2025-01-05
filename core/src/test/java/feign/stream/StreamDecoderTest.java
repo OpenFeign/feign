@@ -139,7 +139,13 @@ class StreamDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body("", UTF_8)
             .build();
 

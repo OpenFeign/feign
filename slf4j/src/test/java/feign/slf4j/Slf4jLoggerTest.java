@@ -35,6 +35,7 @@ public class Slf4jLoggerTest {
   private static final Request REQUEST =
       new RequestTemplate()
           .method(HttpMethod.GET)
+          .methodKey("Wikipedia#search(String)")
           .target("http://api.example.com")
           .resolve(Collections.emptyMap())
           .request();
@@ -42,7 +43,14 @@ public class Slf4jLoggerTest {
       Response.builder()
           .status(200)
           .reason("OK")
-          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .request(
+              Request.create(
+                  HttpMethod.GET,
+                  "Wikipedia#search(String)",
+                  "/api",
+                  Collections.emptyMap(),
+                  null,
+                  Util.UTF_8))
           .headers(Collections.<String, Collection<String>>emptyMap())
           .body(new byte[0])
           .build();

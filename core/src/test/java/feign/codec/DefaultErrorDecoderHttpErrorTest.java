@@ -142,6 +142,7 @@ public class DefaultErrorDecoderHttpErrorTest {
             .request(
                 Request.create(
                     HttpMethod.GET,
+                    "Wikipedia#search(String)",
                     "http://example.com/api",
                     Collections.emptyMap(),
                     null,

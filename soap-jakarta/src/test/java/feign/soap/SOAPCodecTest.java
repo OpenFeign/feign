@@ -255,7 +255,13 @@ class SOAPCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -291,7 +297,13 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -329,7 +341,13 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -354,7 +372,13 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(
                 """
@@ -405,7 +429,13 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .status(200)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(template.body())
             .build();
@@ -421,7 +451,13 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .status(404)
             .reason("NOT FOUND")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat(

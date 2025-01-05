@@ -30,6 +30,7 @@ public class RetryableException extends FeignException {
 
   private final Long retryAfter;
   private final HttpMethod httpMethod;
+  private final String methodKey;
 
   /**
    * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header. If you
@@ -39,11 +40,13 @@ public class RetryableException extends FeignException {
       int status,
       String message,
       HttpMethod httpMethod,
+      String methodKey,
       Throwable cause,
       Long retryAfter,
       Request request) {
     super(status, message, request, cause);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter;
   }
 
@@ -52,11 +55,13 @@ public class RetryableException extends FeignException {
       int status,
       String message,
       HttpMethod httpMethod,
+      String methodKey,
       Throwable cause,
       Date retryAfter,
       Request request) {
     super(status, message, request, cause);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
@@ -65,17 +70,29 @@ public class RetryableException extends FeignException {
    *     don't want to retry, set null.
    */
   public RetryableException(
-      int status, String message, HttpMethod httpMethod, Long retryAfter, Request request) {
+      int status,
+      String message,
+      HttpMethod httpMethod,
+      String methodKey,
+      Long retryAfter,
+      Request request) {
     super(status, message, request);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter;
   }
 
   @Deprecated
   public RetryableException(
-      int status, String message, HttpMethod httpMethod, Date retryAfter, Request request) {
+      int status,
+      String message,
+      HttpMethod httpMethod,
+      String methodKey,
+      Date retryAfter,
+      Request request) {
     super(status, message, request);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
@@ -86,12 +103,14 @@ public class RetryableException extends FeignException {
       int status,
       String message,
       HttpMethod httpMethod,
+      String methodKey,
       Long retryAfter,
       Request request,
       byte[] responseBody,
       Map<String, Collection<String>> responseHeaders) {
     super(status, message, request, responseBody, responseHeaders);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter;
   }
 
@@ -100,12 +119,14 @@ public class RetryableException extends FeignException {
       int status,
       String message,
       HttpMethod httpMethod,
+      String methodKey,
       Date retryAfter,
       Request request,
       byte[] responseBody,
       Map<String, Collection<String>> responseHeaders) {
     super(status, message, request, responseBody, responseHeaders);
     this.httpMethod = httpMethod;
+    this.methodKey = methodKey;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
   }
 
@@ -119,5 +140,9 @@ public class RetryableException extends FeignException {
 
   public HttpMethod method() {
     return this.httpMethod;
+  }
+
+  public String methodKey() {
+    return this.methodKey;
   }
 }

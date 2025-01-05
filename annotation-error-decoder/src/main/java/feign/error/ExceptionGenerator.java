@@ -47,7 +47,12 @@ class ExceptionGenerator {
             .headers(testHeaders)
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "http://test", testHeaders, Request.Body.empty(), null))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "http://test",
+                    testHeaders,
+                    Request.Body.empty(),
+                    null))
             .build();
   }
 

@@ -36,6 +36,7 @@ class ClientTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "http://example.com",
             Collections.emptyMap(),
             null,
@@ -67,7 +68,12 @@ class ClientTest {
 
     Request request =
         Request.create(
-            Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
+            Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
+            "http://example.com",
+            headers,
+            body,
+            requestTemplate);
     Client.Default defaultClient = new Client.Default(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
@@ -88,7 +94,12 @@ class ClientTest {
 
     Request request =
         Request.create(
-            Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
+            Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
+            "http://example.com",
+            headers,
+            body,
+            requestTemplate);
     Client.Default defaultClient = new Client.Default(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();

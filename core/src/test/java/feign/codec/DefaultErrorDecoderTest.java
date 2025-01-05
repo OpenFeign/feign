@@ -48,7 +48,13 @@ class DefaultErrorDecoderTest {
             .status(500)
             .reason("Internal server error")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .build();
 
@@ -64,7 +70,13 @@ class DefaultErrorDecoderTest {
             .status(500)
             .reason("Internal server error")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .body("hello world", UTF_8)
             .build();
@@ -87,7 +99,13 @@ class DefaultErrorDecoderTest {
             .status(500)
             .reason("Internal server error")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .body(actualBody, UTF_8)
             .build();
@@ -120,7 +138,13 @@ class DefaultErrorDecoderTest {
             .status(400)
             .reason("Bad request")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .build();
 
@@ -139,7 +163,13 @@ class DefaultErrorDecoderTest {
             .status(503)
             .reason("Service Unavailable")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .build();
 
@@ -192,6 +222,7 @@ class DefaultErrorDecoderTest {
         .request(
             Request.create(
                 Request.HttpMethod.GET,
+                "Wikipedia#search(String)",
                 "/home",
                 Collections.emptyMap(),
                 "data".getBytes(Util.UTF_8),
