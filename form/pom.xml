@@ -28,7 +28,7 @@
 
   <artifactId>feign-form</artifactId>
 
-  <name>Open Feign Forms Core</name>
+  <name>Feign Forms Core</name>
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>
