@@ -87,24 +87,26 @@ public final class Request implements Serializable {
    * No parameters can be null except {@code body} and {@code charset}. All parameters must be
    * effectively immutable, via safe copies, not mutating or otherwise.
    *
-   * @deprecated {@link #create(HttpMethod, String, Map, byte[], Charset)}
+   * @deprecated {@link #create(HttpMethod, String, String, Map, byte[], Charset)}
    */
   @Deprecated
   public static Request create(
       String method,
+      String methodKey,
       String url,
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset) {
     checkNotNull(method, "httpMethod of %s", method);
     final HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
-    return create(httpMethod, url, headers, body, charset, null);
+    return create(httpMethod, methodKey, url, headers, body, charset, null);
   }
 
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
    * @param httpMethod for the request.
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param url for the request.
    * @param headers to include.
    * @param body of the request, can be {@literal null}
@@ -114,17 +116,19 @@ public final class Request implements Serializable {
   @Deprecated
   public static Request create(
       HttpMethod httpMethod,
+      String methodKey,
       String url,
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset) {
-    return create(httpMethod, url, headers, Body.create(body, charset), null);
+    return create(httpMethod, methodKey, url, headers, Body.create(body, charset), null);
   }
 
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
    * @param httpMethod for the request.
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param url for the request.
    * @param headers to include.
    * @param body of the request, can be {@literal null}
@@ -133,18 +137,20 @@ public final class Request implements Serializable {
    */
   public static Request create(
       HttpMethod httpMethod,
+      String methodKey,
       String url,
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset,
       RequestTemplate requestTemplate) {
-    return create(httpMethod, url, headers, Body.create(body, charset), requestTemplate);
+    return create(httpMethod, methodKey, url, headers, Body.create(body, charset), requestTemplate);
   }
 
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
    * @param httpMethod for the request.
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param url for the request.
    * @param headers to include.
    * @param body of the request, can be {@literal null}
@@ -152,14 +158,16 @@ public final class Request implements Serializable {
    */
   public static Request create(
       HttpMethod httpMethod,
+      String methodKey,
       String url,
       Map<String, Collection<String>> headers,
       Body body,
       RequestTemplate requestTemplate) {
-    return new Request(httpMethod, url, headers, body, requestTemplate);
+    return new Request(httpMethod, methodKey, url, headers, body, requestTemplate);
   }
 
   private final HttpMethod httpMethod;
+  private final String methodKey;
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final Body body;
@@ -170,6 +178,7 @@ public final class Request implements Serializable {
    * Creates a new Request.
    *
    * @param method of the request.
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param url for the request.
    * @param headers for the request.
    * @param body for the request, optional.
@@ -177,11 +186,13 @@ public final class Request implements Serializable {
    */
   Request(
       HttpMethod method,
+      String methodKey,
       String url,
       Map<String, Collection<String>> headers,
       Body body,
       RequestTemplate requestTemplate) {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
+    this.methodKey = checkNotNull(methodKey, "methodKey of %s", methodKey);
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
     this.body = body;
@@ -207,6 +218,15 @@ public final class Request implements Serializable {
    */
   public HttpMethod httpMethod() {
     return this.httpMethod;
+  }
+
+  /**
+   * Method key from {@link Feign#configKey(Class, java.lang.reflect.Method)} for this request.
+   *
+   * @return the methodKey string
+   */
+  public String methodKey() {
+    return this.methodKey;
   }
 
   /**

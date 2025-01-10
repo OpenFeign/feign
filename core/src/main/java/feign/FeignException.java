@@ -298,6 +298,7 @@ public class FeignException extends RuntimeException {
         -1,
         format("%s executing %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request.httpMethod(),
+        request.methodKey(),
         cause,
         nonRetryable,
         request);

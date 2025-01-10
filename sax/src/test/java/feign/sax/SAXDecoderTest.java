@@ -77,7 +77,14 @@ class SAXDecoderTest {
     return Response.builder()
         .status(200)
         .reason("OK")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(
+            Request.create(
+                HttpMethod.GET,
+                "Wikipedia#search(String)",
+                "/api",
+                Collections.emptyMap(),
+                null,
+                Util.UTF_8))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(statusFailed, UTF_8)
         .build();
@@ -90,7 +97,13 @@ class SAXDecoderTest {
             .status(204)
             .reason("OK")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
@@ -104,7 +117,13 @@ class SAXDecoderTest {
             .status(404)
             .reason("NOT FOUND")
             .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();

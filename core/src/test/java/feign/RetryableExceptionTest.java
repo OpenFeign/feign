@@ -32,19 +32,28 @@ class RetryableExceptionTest {
   void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
     Long retryAfter = 5000L;
+    String expectedMethodKey = "Wikipedia#search(String)";
     Request request =
-        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+        Request.create(
+            Request.HttpMethod.GET,
+            expectedMethodKey,
+            "/",
+            Collections.emptyMap(),
+            null,
+            Util.UTF_8);
     byte[] response = "response".getBytes(StandardCharsets.UTF_8);
     Map<String, Collection<String>> responseHeader = new HashMap<>();
     responseHeader.put("TEST_HEADER", Arrays.asList("TEST_CONTENT"));
 
     // when
     RetryableException retryableException =
-        new RetryableException(-1, null, null, retryAfter, request, response, responseHeader);
+        new RetryableException(
+            -1, null, null, expectedMethodKey, retryAfter, request, response, responseHeader);
 
     // then
     assertThat(retryableException).isNotNull();
     assertThat(retryableException.retryAfter()).isEqualTo(retryAfter);
+    assertThat(retryableException.methodKey()).isEqualTo(expectedMethodKey);
     assertThat(retryableException.contentUTF8()).isEqualTo(new String(response, UTF_8));
     assertThat(retryableException.responseHeaders()).containsKey("TEST_HEADER");
     assertThat(retryableException.responseHeaders().get("TEST_HEADER")).contains("TEST_CONTENT");

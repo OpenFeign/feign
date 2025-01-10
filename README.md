@@ -1043,7 +1043,7 @@ public class Example {
         public Exception decode(String methodKey, Response response) {
             // wrapper 401 to RetryableException in order to retry
             if (response.status() == 401) {
-                return new RetryableException(response.status(), response.reason(), response.request().httpMethod(), null, response.request());
+                return new RetryableException(response.status(), response.reason(), response.request().httpMethod(), methodKey, null, response.request());
             }
             return defaultErrorDecoder.decode(methodKey, response);
         }

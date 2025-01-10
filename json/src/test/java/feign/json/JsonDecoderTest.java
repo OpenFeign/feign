@@ -52,6 +52,7 @@ class JsonDecoderTest {
     request =
         Request.create(
             Request.HttpMethod.GET,
+            "Wikipedia#search(String)",
             "/qwerty",
             Collections.emptyMap(),
             "xyz".getBytes(StandardCharsets.UTF_8),

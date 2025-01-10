@@ -61,6 +61,7 @@ public final class RequestTemplate implements Serializable {
   private UriTemplate uriTemplate;
   private BodyTemplate bodyTemplate;
   private HttpMethod method;
+  private String methodKey;
   private transient Charset charset = Util.UTF_8;
   private Request.Body body = Request.Body.empty();
   private boolean decodeSlash = true;
@@ -81,6 +82,7 @@ public final class RequestTemplate implements Serializable {
    * @param uriTemplate for the template.
    * @param bodyTemplate for the template, may be {@literal null}
    * @param method of the request.
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}
    * @param charset for the request.
    * @param body of the request, may be {@literal null}
    * @param decodeSlash if the request uri should encode slash characters.
@@ -94,6 +96,7 @@ public final class RequestTemplate implements Serializable {
       UriTemplate uriTemplate,
       BodyTemplate bodyTemplate,
       HttpMethod method,
+      String methodKey,
       Charset charset,
       Request.Body body,
       boolean decodeSlash,
@@ -106,6 +109,7 @@ public final class RequestTemplate implements Serializable {
     this.bodyTemplate = bodyTemplate;
     this.method = method;
     this.charset = charset;
+    this.methodKey = methodKey;
     this.body = body;
     this.decodeSlash = decodeSlash;
     this.collectionFormat =
@@ -128,6 +132,7 @@ public final class RequestTemplate implements Serializable {
             requestTemplate.uriTemplate,
             requestTemplate.bodyTemplate,
             requestTemplate.method,
+            requestTemplate.methodKey,
             requestTemplate.charset,
             requestTemplate.body,
             requestTemplate.decodeSlash,
@@ -157,6 +162,7 @@ public final class RequestTemplate implements Serializable {
     this.target = toCopy.target;
     this.fragment = toCopy.fragment;
     this.method = toCopy.method;
+    this.methodKey = toCopy.methodKey;
     this.queries.putAll(toCopy.queries);
     this.headers.putAll(toCopy.headers);
     this.charset = toCopy.charset;
@@ -288,7 +294,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    return Request.create(this.method, this.url(), this.headers(), this.body, this);
+    return Request.create(this.method, this.methodKey, this.url(), this.headers(), this.body, this);
   }
 
   /**
@@ -328,6 +334,26 @@ public final class RequestTemplate implements Serializable {
    */
   public String method() {
     return (method != null) ? method.name() : null;
+  }
+
+  /**
+   * Set the method key.
+   *
+   * @param methodKey value of {@link Feign#configKey(Class, java.lang.reflect.Method)}.
+   * @return a RequestTemplate for chaining.
+   */
+  public RequestTemplate methodKey(String methodKey) {
+    this.methodKey = methodKey;
+    return this;
+  }
+
+  /**
+   * The request method key as value of {@link Feign#configKey(Class, java.lang.reflect.Method)}.
+   *
+   * @return method key.
+   */
+  public String methodKey() {
+    return methodKey;
   }
 
   /**
