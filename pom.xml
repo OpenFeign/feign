@@ -181,7 +181,7 @@
     <jackson.version>2.18.2</jackson.version>
     <assertj.version>3.27.2</assertj.version>
     <mockito.version>5.15.2</mockito.version>
-    <fastjson2.version>2.0.53</fastjson2.version>
+    <fastjson2.version>2.0.54</fastjson2.version>
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
@@ -991,18 +991,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>5.47.3</version>
+            <version>6.0.2</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>2.24.1</version>
+                <version>3.0.0</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>2.31.1</version>
+                <version>3.0.0</version>
               </dependency>
             </dependencies>
 
