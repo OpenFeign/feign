@@ -32,11 +32,9 @@ import java.io.IOException;
 import java.net.http.HttpTimeoutException;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
-@Disabled
 public class Http2ClientTest extends AbstractClientTest {
 
   public interface TestInterface {
