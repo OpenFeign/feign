@@ -115,12 +115,13 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   void timeoutTest() {
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(30, TimeUnit.SECONDS));
+    server.enqueue(new MockResponse().setBody("foo").setHeadersDelay(1, TimeUnit.SECONDS));
 
     final TestInterface api =
         newBuilder()
             .retryer(Retryer.NEVER_RETRY)
-            .options(new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.SECONDS, true))
+            .options(
+                new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
             .target(TestInterface.class, server.url("/").toString());
 
     FeignException exception = assertThrows(FeignException.class, () -> api.timeout());
