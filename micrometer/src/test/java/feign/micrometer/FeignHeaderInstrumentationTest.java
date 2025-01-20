@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -98,6 +99,22 @@ class FeignHeaderInstrumentationTest {
 
     assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
         .isEqualTo("BadRequest");
+  }
+
+  @Test
+  void getTemplatedPathForUriWithExceptionBody(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(serverError().withBody("\"error\": \"Server Error\"")));
+
+    TestClient testClient = clientInstrumentedWithObservations(wmRuntimeInfo.getHttpBaseUrl());
+
+    try {
+      testClient.templated("1", "2");
+    } catch (FeignException e) {
+      assertThat(e).isInstanceOf(FeignException.InternalServerError.class);
+    }
+
+    assertThat(meterRegistry.get(METER_NAME).meter().getId().getTag("error"))
+        .isEqualTo("InternalServerError");
   }
 
   @Test

@@ -24,6 +24,7 @@ import feign.Response;
 import feign.Util;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import java.io.IOException;
 
 /** Wrap feign {@link Client} with metrics. */
 public class MicrometerObservationCapability implements Capability {
@@ -59,17 +60,9 @@ public class MicrometerObservationCapability implements Capability {
 
       try {
         Response response = client.execute(request, options);
-
-        if (response.body() != null) {
-          response =
-              response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
-        }
-
         FeignException exception = null;
 
-        if (responseContainsError(response)) {
-          exception = getFeignExceptionFromStatusCode(response, request);
-        }
+        exception = getFeignExceptionOnErrorStatusCode(response, request);
 
         finalizeObservation(feignContext, observation, exception, response);
         return response;
@@ -98,14 +91,12 @@ public class MicrometerObservationCapability implements Capability {
         return client
             .execute(feignContext.getCarrier(), options, context)
             .whenComplete(
-                (r, ex) -> {
+                (response, ex) -> {
                   FeignException exception = null;
 
-                  if (responseContainsError(r)) {
-                    exception = getFeignExceptionFromStatusCode(r, request);
-                  }
+                  exception = getFeignExceptionOnErrorStatusCode(response, request);
 
-                  finalizeObservation(feignContext, observation, exception, r);
+                  finalizeObservation(feignContext, observation, exception, response);
                 });
       } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
@@ -124,14 +115,24 @@ public class MicrometerObservationCapability implements Capability {
     observation.stop();
   }
 
-  private FeignException getFeignExceptionFromStatusCode(Response response, Request request) {
-    if (responseContainsError(response)) {
-      return FeignException.errorStatus(request.requestTemplate().method(), response);
-    }
-    return null;
+  private boolean isErrorStatusCode(int statusCode) {
+    return statusCode >= 400 && statusCode < 600;
   }
 
-  private boolean responseContainsError(Response response) {
-    return response.status() >= 400 && response.status() < 600;
+  private FeignException getFeignExceptionOnErrorStatusCode(Response response, Request request) {
+    try {
+      if (isErrorStatusCode(response.status())) {
+
+        if (response.body() != null) {
+          response =
+              response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
+        }
+
+        return FeignException.errorStatus(request.requestTemplate().method(), response);
+      }
+    } catch (IOException ignored) { // NOPMD
+    }
+
+    return null;
   }
 }
