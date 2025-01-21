@@ -15,7 +15,7 @@
  */
 package feign.http2client;
 
-import static feign.Util.enumForName;
+import static feign.Util.*;
 
 import feign.AsyncClient;
 import feign.Client;
@@ -54,6 +54,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
@@ -129,9 +131,20 @@ public class Http2Client implements Client, AsyncClient<Object> {
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
 
+    InputStream body = httpResponse.body();
+
+    if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_GZIP)) {
+      try {
+        body = new GZIPInputStream(body);
+      } catch (IOException ignored) {
+      }
+    } else if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_DEFLATE)) {
+      body = new InflaterInputStream(body);
+    }
+
     return Response.builder()
         .protocolVersion(enumForName(ProtocolVersion.class, httpResponse.version()))
-        .body(httpResponse.body(), length.isPresent() ? (int) length.getAsLong() : null)
+        .body(body, length.isPresent() ? (int) length.getAsLong() : null)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
         .request(request)
         .status(httpResponse.statusCode())
