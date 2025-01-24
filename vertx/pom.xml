@@ -30,7 +30,7 @@
   <description>Implementation of Feign on Vertx web client.</description>
 
   <properties>
-    <vertx.version>4.5.11</vertx.version>
+    <vertx.version>4.5.12</vertx.version>
     <jackson.version>2.18.2</jackson.version>
     <slf4j-log4j12.version>2.0.0-alpha6</slf4j-log4j12.version>
     <wiremock.version>2.35.2</wiremock.version>
