@@ -27,12 +27,18 @@ import org.junit.jupiter.api.Test;
 class RetryerTest {
 
   private static final Request REQUEST =
-      Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+      Request.create(
+          Request.HttpMethod.GET,
+          "Wikipedia#search(String)",
+          "/",
+          Collections.emptyMap(),
+          null,
+          Util.UTF_8);
 
   @Test
   void only5TriesAllowedAndExponentialBackoff() {
     final Long nonRetryable = null;
-    RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
+    RetryableException e = new RetryableException(-1, null, null, null, nonRetryable, REQUEST);
     Default retryer = new Retryer.Default();
     assertThat(retryer.attempt).isEqualTo(1);
     assertThat(retryer.sleptForMillis).isEqualTo(0);
@@ -65,7 +71,7 @@ class RetryerTest {
           }
         };
 
-    retryer.continueOrPropagate(new RetryableException(-1, null, null, 5000L, REQUEST));
+    retryer.continueOrPropagate(new RetryableException(-1, null, null, null, 5000L, REQUEST));
     assertThat(retryer.attempt).isEqualTo(2);
     assertThat(retryer.sleptForMillis).isEqualTo(1000);
   }
@@ -76,7 +82,7 @@ class RetryerTest {
         RetryableException.class,
         () ->
             Retryer.NEVER_RETRY.continueOrPropagate(
-                new RetryableException(-1, null, null, 5000L, REQUEST)));
+                new RetryableException(-1, null, null, null, 5000L, REQUEST)));
   }
 
   @Test
@@ -85,7 +91,7 @@ class RetryerTest {
 
     Thread.currentThread().interrupt();
     RetryableException expected =
-        new RetryableException(-1, null, null, System.currentTimeMillis() + 5000, REQUEST);
+        new RetryableException(-1, null, null, null, System.currentTimeMillis() + 5000, REQUEST);
     try {
       retryer.continueOrPropagate(expected);
       Thread.interrupted(); // reset interrupted flag in case it wasn't

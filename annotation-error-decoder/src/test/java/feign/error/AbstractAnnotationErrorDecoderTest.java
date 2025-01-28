@@ -47,7 +47,12 @@ public abstract class AbstractAnnotationErrorDecoderTest<T> {
         .headers(headers)
         .request(
             Request.create(
-                Request.HttpMethod.GET, "http://test", headers, Request.Body.empty(), null))
+                Request.HttpMethod.GET,
+                "Wikipedia#search(String)",
+                "http://test",
+                headers,
+                Request.Body.empty(),
+                null))
         .build();
   }
 }

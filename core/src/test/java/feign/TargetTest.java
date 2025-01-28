@@ -57,13 +57,14 @@ public class TargetTest {
 
     String baseUrl = server.url("/default").toString();
     Target<TestQuery> custom =
-        new HardCodedTarget<>(TestQuery.class, baseUrl) {
+        new HardCodedTarget<TestQuery>(TestQuery.class, baseUrl) {
 
           @Override
           public Request apply(RequestTemplate input) {
             Request urlEncoded = super.apply(input);
             return Request.create(
                 urlEncoded.httpMethod(),
+                "Wikipedia#search(String)",
                 urlEncoded.url().replace("%2F", "/"),
                 urlEncoded.headers(),
                 urlEncoded.body(),

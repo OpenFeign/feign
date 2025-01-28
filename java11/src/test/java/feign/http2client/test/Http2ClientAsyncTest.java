@@ -565,7 +565,14 @@ public class Http2ClientAsyncTest {
             .status(302)
             .reason("Found")
             .headers(headers)
-            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .body(new byte[0])
             .build();
 
@@ -769,7 +776,14 @@ public class Http2ClientAsyncTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(
+            Request.create(
+                HttpMethod.GET,
+                "Wikipedia#search(String)",
+                "/api",
+                Collections.emptyMap(),
+                null,
+                Util.UTF_8))
         .headers(new HashMap<>())
         .build();
   }

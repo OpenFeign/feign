@@ -82,7 +82,14 @@ public class DecoderIteratorsBenchmark {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
+            .request(
+                Request.create(
+                    HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(carsJson(Integer.parseInt(size)), Util.UTF_8)
             .build();

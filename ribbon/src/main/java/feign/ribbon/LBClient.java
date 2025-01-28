@@ -130,7 +130,12 @@ public final class LBClient
       headers.putAll(request.headers());
       headers.put(Util.CONTENT_LENGTH, Collections.singletonList(String.valueOf(bodyLength)));
       return Request.create(
-          request.httpMethod(), getUri().toASCIIString(), headers, body, request.charset());
+          request.httpMethod(),
+          request.methodKey(),
+          getUri().toASCIIString(),
+          headers,
+          body,
+          request.charset());
     }
 
     Client client() {

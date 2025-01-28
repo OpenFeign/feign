@@ -108,7 +108,12 @@ class FastJsonCodecTest {
             .reason("OK")
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -125,7 +130,12 @@ class FastJsonCodecTest {
             .reason("OK")
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat(new Fastjson2Decoder().decode(response, String.class)).isNull();
@@ -139,7 +149,12 @@ class FastJsonCodecTest {
             .reason("OK")
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -159,7 +174,12 @@ class FastJsonCodecTest {
             .reason("OK")
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(headers)
             .body(
                 new String(
@@ -206,7 +226,12 @@ class FastJsonCodecTest {
             .reason("NOT FOUND")
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                    Request.HttpMethod.GET,
+                    "Wikipedia#search(String)",
+                    "/api",
+                    Collections.emptyMap(),
+                    null,
+                    Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new Fastjson2Decoder().decode(response, byte[].class)).isEmpty();

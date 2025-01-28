@@ -57,6 +57,7 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
   private static final feign.Request REQUEST =
       feign.Request.create(
           feign.Request.HttpMethod.GET,
+          "Wikipedia#search(String)",
           "http://test",
           Collections.emptyMap(),
           Request.Body.empty(),
