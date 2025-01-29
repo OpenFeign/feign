@@ -536,6 +536,22 @@
             <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
+
+        <plugin>
+          <groupId>com.gradle</groupId>
+          <artifactId>develocity-maven-extension</artifactId>
+          <configuration>
+            <develocity>
+              <normalization>
+                <runtimeClassPath>
+                  <metaInf>
+                    <ignoreCompletely>true</ignoreCompletely>
+                  </metaInf>
+                </runtimeClassPath>
+              </normalization>
+            </develocity>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -991,18 +1007,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>6.0.4</version>
+            <version>6.0.5</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.0</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.0.1</version>
+                <version>3.1.0</version>
               </dependency>
             </dependencies>
 
