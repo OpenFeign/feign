@@ -54,6 +54,7 @@ class DefaultDecoderTest {
   }
 
   @Test
+  // TODO: KD - can we just use an empty body and not have to do null checks like this?  Not sure about the difference between returning an empty string or null - but it seems like empty string would be a much better option if the body content length is 0
   void decodesNullBodyToNull() throws Exception {
     assertThat(decoder.decode(nullBodyResponse(), Document.class)).isNull();
   }

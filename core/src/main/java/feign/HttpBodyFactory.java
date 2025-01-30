@@ -140,7 +140,12 @@ public class HttpBodyFactory {
     	}
     	
     	public InputStream asInputStream() {
-    		return resettableInputStream;
+    		try {
+	    		resettableInputStream.reset();
+	    		return resettableInputStream;
+    		} catch (IOException e) {
+    			throw FeignException.bodyException("Unable to reset body stream - " + e.getMessage(), e);
+    		}
     	}
     	
     	public long getLength() {
@@ -153,7 +158,7 @@ public class HttpBodyFactory {
     	
     	public Reader asReader() {
     		return getEncoding()
-    				.map(e -> new InputStreamReader(resettableInputStream, e) )
+    				.map(e -> new InputStreamReader(asInputStream(), e) )
     				.orElseThrow(() -> new IllegalArgumentException("No encoding specified, asReader() not allowed"));
     	}
     	
@@ -169,7 +174,7 @@ public class HttpBodyFactory {
     	public PeekResult peek() {
     		try {
 	    		byte[] buf = new byte[resetSize];
-	    		int count = resettableInputStream.read(buf);
+	    		int count = asInputStream().read(buf);
 	    		
 	    		return new PeekResult(count >= resetSize, buf, count, encoding);
     		} catch (IOException e) {
@@ -189,7 +194,7 @@ public class HttpBodyFactory {
 			System.err.println("Deprecated method HttpBody.asBytes() called");
 			
 			try {
-				return resettableInputStream.readAllBytes();
+				return asInputStream().readAllBytes();
 			} catch (IOException e) {
 				throw FeignException.bodyException(e.getMessage(), e);
 			}
@@ -235,7 +240,7 @@ public class HttpBodyFactory {
 		public Reader asReader(Charset charset) throws IOException {
 			// TODO: Any way to do proper logging of these types of messages? 
 			System.err.println("Deprecated method HttpBody.asReader(Charset) called");
-			return new InputStreamReader(resettableInputStream, charset);
+			return new InputStreamReader(asInputStream(), charset);
 		}    	
     }
 

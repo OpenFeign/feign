@@ -132,10 +132,6 @@ public interface Client {
         }
       }
 
-      Integer length = connection.getContentLength();
-      if (length == -1) {
-        length = null;
-      }
       InputStream stream;
       if (status >= 400) {
         stream = connection.getErrorStream();
@@ -152,7 +148,7 @@ public interface Client {
           .reason(reason)
           .headers(headers)
           .request(request)
-          .body(stream, length)
+          .body(stream, connection.getContentLength())
           .build();
     }
 

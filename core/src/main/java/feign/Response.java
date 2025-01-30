@@ -70,7 +70,7 @@ public final class Response implements Closeable {
     int status;
     String reason;
     Map<String, Collection<String>> headers = Collections.emptyMap();
-    Function<Builder, HttpBody> bodySupplier;
+    Function<Builder, HttpBody> bodySupplier = b -> null;
     Request request;
     private RequestTemplate requestTemplate;
     private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
