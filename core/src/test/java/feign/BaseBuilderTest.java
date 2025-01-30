@@ -17,8 +17,10 @@ package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.mockito.Mockito.RETURNS_MOCKS;
 
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import java.lang.reflect.Field;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -36,9 +38,20 @@ class BaseBuilderTest {
         14);
   }
 
+  @Test
+  void checkEnrichTouchesAllBuilderFields()
+      throws IllegalArgumentException, IllegalAccessException {
+    test(
+        Feign.builder()
+            .requestInterceptor(template -> {})
+            .responseInterceptor((ic, c) -> c.next(ic)),
+        12);
+  }
+
   private void test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
       throws IllegalArgumentException, IllegalAccessException {
-    Capability mockingCapability = Mockito.mock(Capability.class, RETURNS_MOCKS);
+    Capability mockingCapability = new MockingCapability();
+
     BaseBuilder<?, ?> enriched = builder.addCapability(mockingCapability).enrich();
 
     List<Field> fields = enriched.getFieldsToEnrich();
@@ -58,13 +71,98 @@ class BaseBuilderTest {
     }
   }
 
-  @Test
-  void checkEnrichTouchesAllBuilderFields()
-      throws IllegalArgumentException, IllegalAccessException {
-    test(
-        Feign.builder()
-            .requestInterceptor(template -> {})
-            .responseInterceptor((ic, c) -> c.next(ic)),
-        12);
+  private final class MockingCapability implements Capability {
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <C> AsyncContextSupplier<C> enrich(AsyncContextSupplier<C> asyncContextSupplier) {
+      return (AsyncContextSupplier<C>) Mockito.mock(AsyncContextSupplier.class);
+    }
+
+    @Override
+    public AsyncResponseHandler enrich(AsyncResponseHandler asyncResponseHandler) {
+      return Mockito.mock(AsyncResponseHandler.class);
+    }
+
+    @Override
+    public ResponseInterceptor.Chain enrich(ResponseInterceptor.Chain chain) {
+      return Mockito.mock(ResponseInterceptor.Chain.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public AsyncClient<Object> enrich(AsyncClient<Object> client) {
+      return (AsyncClient<Object>) Mockito.mock(AsyncClient.class);
+    }
+
+    @Override
+    public Client enrich(Client client) {
+      return Mockito.mock(Client.class);
+    }
+
+    @Override
+    public Contract enrich(Contract contract) {
+      return Mockito.mock(Contract.class);
+    }
+
+    @Override
+    public Decoder enrich(Decoder decoder) {
+      return Mockito.mock(Decoder.class);
+    }
+
+    @Override
+    public ErrorDecoder enrich(ErrorDecoder decoder) {
+      return Mockito.mock(ErrorDecoder.class);
+    }
+
+    @Override
+    public Encoder enrich(Encoder encoder) {
+      return Mockito.mock(Encoder.class);
+    }
+
+    @Override
+    public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
+      return Mockito.mock(InvocationHandlerFactory.class);
+    }
+
+    @Override
+    public Logger.Level enrich(Logger.Level level) {
+      return Mockito.mock(Logger.Level.class);
+    }
+
+    @Override
+    public Logger enrich(Logger logger) {
+      return Mockito.mock(Logger.class);
+    }
+
+    @Override
+    public MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
+      return Mockito.mock(MethodInfoResolver.class);
+    }
+
+    @Override
+    public Request.Options enrich(Request.Options options) {
+      return Mockito.mock(Request.Options.class);
+    }
+
+    @Override
+    public QueryMapEncoder enrich(QueryMapEncoder queryMapEncoder) {
+      return Mockito.mock(QueryMapEncoder.class);
+    }
+
+    @Override
+    public RequestInterceptor enrich(RequestInterceptor requestInterceptor) {
+      return Mockito.mock(RequestInterceptor.class);
+    }
+
+    @Override
+    public ResponseInterceptor enrich(ResponseInterceptor responseInterceptor) {
+      return Mockito.mock(ResponseInterceptor.class);
+    }
+
+    @Override
+    public Retryer enrich(Retryer retryer) {
+      return Mockito.mock(Retryer.class);
+    }
   }
 }
