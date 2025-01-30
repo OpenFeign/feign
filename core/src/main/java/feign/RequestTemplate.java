@@ -18,12 +18,7 @@ package feign;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.checkNotNull;
 
-import feign.Request.HttpMethod;
-import feign.template.BodyTemplate;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -42,6 +37,14 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Request.HttpMethod;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
 
 /**
  * Request Builder for an HTTP Target.
@@ -62,7 +65,7 @@ public final class RequestTemplate implements Serializable {
   private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
-  private Request.Body body = Request.Body.empty();
+  private HttpBody body = HttpBodyFactory.empty();
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
   private MethodMetadata methodMetadata;
@@ -95,7 +98,7 @@ public final class RequestTemplate implements Serializable {
       BodyTemplate bodyTemplate,
       HttpMethod method,
       Charset charset,
-      Request.Body body,
+      HttpBody body,
       boolean decodeSlash,
       CollectionFormat collectionFormat,
       MethodMetadata methodMetadata,
@@ -869,7 +872,7 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(byte[] data, Charset charset) {
-    this.body(Request.Body.create(data, charset));
+    this.body(HttpBodyFactory.forBytes(data, charset));
     return this;
   }
 
@@ -880,7 +883,7 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(String bodyText) {
-    this.body(Request.Body.create(bodyText.getBytes(this.charset), this.charset));
+    this.body(HttpBodyFactory.forBytes(bodyText.getBytes(this.charset), charset));
     return this;
   }
 
@@ -891,16 +894,17 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    * @deprecated use {@link #body(byte[], Charset)} instead.
    */
+  // TODO: KD - I don't think this should be deprecated
   @Deprecated
-  public RequestTemplate body(Request.Body body) {
+  public RequestTemplate body(HttpBody body) {
     this.body = body;
 
     /* body template must be cleared to prevent double processing */
     this.bodyTemplate = null;
 
     header(CONTENT_LENGTH, Collections.emptyList());
-    if (body.length() > 0) {
-      header(CONTENT_LENGTH, String.valueOf(body.length()));
+    if (body.getLength() > 0) {
+      header(CONTENT_LENGTH, String.valueOf(body.getLength()));
     }
 
     return this;
@@ -923,8 +927,10 @@ public final class RequestTemplate implements Serializable {
    *
    * @return the request body.
    */
-  public byte[] body() {
-    return body.asBytes();
+  // TODO: KD - I added a throws here - let's see what else this breaks
+  @Deprecated
+  public byte[] body() throws IOException {
+    return body == null ? null : body.asBytes();
   }
 
   /**
@@ -934,7 +940,8 @@ public final class RequestTemplate implements Serializable {
    * @deprecated this abstraction is leaky and will be removed in later releases.
    */
   @Deprecated
-  public Request.Body requestBody() {
+  // TODO: KD - I don't think this should be deprecated
+  public HttpBody requestBody() throws IOException  {
     return this.body;
   }
 

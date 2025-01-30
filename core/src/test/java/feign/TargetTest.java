@@ -17,13 +17,15 @@ package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
-import feign.Target.HardCodedTarget;
 import java.io.IOException;
 import java.net.URI;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import feign.Target.HardCodedTarget;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 @SuppressWarnings("deprecation")
 public class TargetTest {
@@ -62,11 +64,11 @@ public class TargetTest {
           @Override
           public Request apply(RequestTemplate input) {
             Request urlEncoded = super.apply(input);
-            return Request.create(
+            return Request.createForHttpBody(
                 urlEncoded.httpMethod(),
                 urlEncoded.url().replace("%2F", "/"),
                 urlEncoded.headers(),
-                urlEncoded.body(),
+                urlEncoded.httpBody(),
                 urlEncoded.charset());
           }
         };

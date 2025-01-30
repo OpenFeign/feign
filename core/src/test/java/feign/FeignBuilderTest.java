@@ -20,8 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -39,11 +37,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.HttpBodyFactory.PeekResult;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 public class FeignBuilderTest {
 
@@ -412,7 +416,7 @@ public class FeignBuilderTest {
                         .reason(original.reason())
                         .request(original.request())
                         .body(
-                            new Response.Body() {
+                            new HttpBody() { // TODO: KD - it's a shame we can't use mocks for this... See how LoggerMethodsTest uses spy() to to check close() was called.  Seems like verifyNoInteractions() would do the trick nicely.
                               @Override
                               public Integer length() {
                                 return original.body().length();
@@ -424,14 +428,13 @@ public class FeignBuilderTest {
                               }
 
                               @Override
-                              public InputStream asInputStream() throws IOException {
+                              public InputStream asInputStream() {
                                 return original.body().asInputStream();
                               }
 
-                              @SuppressWarnings("deprecation")
                               @Override
-                              public Reader asReader() throws IOException {
-                                return original.body().asReader(Util.UTF_8);
+                              public Reader asReader() {
+                                return original.body().asReader();
                               }
 
                               @Override
@@ -444,6 +447,47 @@ public class FeignBuilderTest {
                                 closed.set(true);
                                 original.body().close();
                               }
+                              
+                              // TODO: KD - need to clean up indentation to use Feign coding standards (two spaces instead of tabs)
+                              	@Override
+                            	public byte[] asBytes() {
+                            		return original.body().asBytes();
+                            	}
+                              
+                              	@Override
+                            	public Optional<Charset> getEncoding() {
+                            		return original.body().getEncoding();
+                            	}
+                              
+                              	@Override
+                            	public long getLength() {
+                            		return original.body().getLength();
+                            	}
+                              	
+                              	@Override
+                              		public boolean isBinary() {
+                              			return original.body().isBinary();
+                              		}
+                              	
+                              	@Override
+                              		public PeekResult peek() {
+                              			return original.body().peek();
+                              		}
+                              	
+                              	@Override
+                              		public boolean tryReset() {
+                              			return original.body().tryReset();
+                              		}
+                              	
+                              	@Override
+                              		public String asString() {
+                              			return original.body().asString();
+                              		}
+                              	
+                              	@Override
+                              		public String toString() {
+                              			return original.body().toString();
+                              		}
                             })
                         .build();
                   }

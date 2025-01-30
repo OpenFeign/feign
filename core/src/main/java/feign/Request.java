@@ -19,6 +19,7 @@ import static feign.Util.checkNotNull;
 import static feign.Util.getThreadIdentifier;
 import static feign.Util.valuesOrEmpty;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
@@ -31,6 +32,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import feign.HttpBodyFactory.HttpBody;
 
 /** An immutable request to an http server. */
 public final class Request implements Serializable {
@@ -118,9 +121,20 @@ public final class Request implements Serializable {
       Map<String, Collection<String>> headers,
       byte[] body,
       Charset charset) {
-    return create(httpMethod, url, headers, Body.create(body, charset), null);
+    return create(httpMethod, url, headers, HttpBodyFactory.forBytes(body, charset), (RequestTemplate)null);
   }
 
+  // TODO: KD - all of these create methods are very, very difficult to understand.  I think some consolidation is called for, and possible switch to using a builder.
+  // TODO: KD - I am naming this method something different than 'create' because it caused a lot of argument list collisions where callers are passing null, etc...
+  public static Request createForHttpBody(
+	      HttpMethod httpMethod,
+	      String url,
+	      Map<String, Collection<String>> headers,
+	      HttpBody body,
+	      Charset charset) {
+	    return create(httpMethod, url, headers, body, (RequestTemplate)null);
+	  }
+  
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
@@ -138,9 +152,11 @@ public final class Request implements Serializable {
       byte[] body,
       Charset charset,
       RequestTemplate requestTemplate) {
-    return create(httpMethod, url, headers, Body.create(body, charset), requestTemplate);
+    return create(httpMethod, url, headers, HttpBodyFactory.forBytes(body, charset), requestTemplate);
   }
 
+
+  
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
    *
@@ -154,7 +170,7 @@ public final class Request implements Serializable {
       HttpMethod httpMethod,
       String url,
       Map<String, Collection<String>> headers,
-      Body body,
+      HttpBody body,
       RequestTemplate requestTemplate) {
     return new Request(httpMethod, url, headers, body, requestTemplate);
   }
@@ -162,7 +178,7 @@ public final class Request implements Serializable {
   private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
-  private final Body body;
+  private final HttpBody body;
   private final RequestTemplate requestTemplate;
   private final ProtocolVersion protocolVersion;
 
@@ -179,7 +195,7 @@ public final class Request implements Serializable {
       HttpMethod method,
       String url,
       Map<String, Collection<String>> headers,
-      Body body,
+      HttpBody body,
       RequestTemplate requestTemplate) {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
@@ -252,8 +268,9 @@ public final class Request implements Serializable {
    *
    * @return the current character set for the request, may be {@literal null} for binary data.
    */
+  // TODO: KD - returning null for no charset is ugly...
   public Charset charset() {
-    return body.encoding;
+    return body.getEncoding().orElse(null);
   }
 
   /**
@@ -262,10 +279,17 @@ public final class Request implements Serializable {
    *
    * @see #charset()
    */
-  public byte[] body() {
-    return body.data;
+  @Deprecated
+  // TODO: KD - added throws IOException - check if that breaks anything
+  public byte[] body() throws IOException {
+    return body.asBytes();
+  }
+  
+  public HttpBody httpBody() {
+	  return body;
   }
 
+  @Deprecated
   public boolean isBinary() {
     return body.isBinary();
   }
@@ -275,8 +299,9 @@ public final class Request implements Serializable {
    *
    * @return size of the request body.
    */
-  public int length() {
-    return this.body.length();
+  // TODO: KD - I changed the return type from int to long - make sure that doesn't cause problems
+  public long length() {
+    return this.body.getLength();
   }
 
   /**
@@ -309,7 +334,7 @@ public final class Request implements Serializable {
       }
     }
     if (body != null) {
-      builder.append('\n').append(body.asString());
+		builder.append('\n').append(body.peek().asStringDescription());
     }
     return builder.toString();
   }
@@ -583,8 +608,8 @@ public final class Request implements Serializable {
       return create(data, charset);
     }
 
-    public static Body empty() {
-      return new Body();
+    public static HttpBody empty() {
+      return HttpBodyFactory.empty();
     }
   }
 }

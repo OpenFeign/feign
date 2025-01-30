@@ -28,6 +28,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
+import feign.HttpBodyFactory.PeekResult;
+
 /** Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}. */
 public abstract class Logger {
 
@@ -78,14 +80,15 @@ public abstract class Logger {
         }
       }
 
-      int bodyLength = 0;
-      if (request.body() != null) {
-        bodyLength = request.length();
-        if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-          String bodyText =
-              request.charset() != null ? new String(request.body(), request.charset()) : null;
-          log(configKey, ""); // CRLF
-          log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
+      long bodyLength = 0;
+      // TODO: KD - ideally, we won't use null checks - can we have an Empty Body implementation instead of null?
+      if (request.httpBody() != null) {
+          bodyLength = request.length();
+          
+          if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+	          log(configKey, ""); // CRLF
+        	  PeekResult peek = request.httpBody().peek();
+	          log(configKey, "%s", peek.asStringDescription());
         }
       }
       log(configKey, "---> END HTTP (%s-byte body)", bodyLength);

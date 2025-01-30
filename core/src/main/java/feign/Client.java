@@ -26,7 +26,6 @@ import static feign.Util.isNotBlank;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.format;
 
-import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,9 +42,13 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Request.Options;
 
 /** Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe. */
 public interface Client {
@@ -206,9 +209,9 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      byte[] body = request.body();
+      HttpBody body = request.httpBody();
 
-      if (body != null) {
+      if (body != null && body.getLength() > 0) {
         /*
          * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
          * retry logic applies to such requests.
@@ -228,7 +231,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          out.write(body);
+          body.asInputStream().transferTo(out);
         } finally {
           try {
             out.close();

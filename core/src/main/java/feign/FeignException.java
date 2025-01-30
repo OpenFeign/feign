@@ -42,6 +42,8 @@ public class FeignException extends RuntimeException {
       "request should not be null";
   private static final long serialVersionUID = 0;
   private final int status;
+  
+  // TODO: KD - it would probably be a lot cleaner to store HttpBody here - but there are a *ton* of places that assume byte[]...
   private byte[] responseBody;
   private Map<String, Collection<String>> responseHeaders;
   private final Request request;
@@ -177,13 +179,24 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorReading(Request request, Response response, IOException cause) {
+	byte[] body = request.httpBody() == null ? null : new byte[0];
+	try {
+		body = request.httpBody().peek().asInputStream().readAllBytes();
+	} catch (IOException e) {
+		// TODO: KD - Any way to properly log this?
+	} 
+	  
     return new FeignException(
         response.status(),
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.body(),
+        body,
         request.headers());
+  }
+  
+  static FeignException bodyException(String message, IOException cause) {
+	  return new FeignException(-1, message, cause);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
@@ -437,6 +450,7 @@ public class FeignException extends RuntimeException {
     }
   }
 
+  // TODO: KD - consider passing HttpBody instead of byte[]
   private static class FeignExceptionMessageBuilder {
 
     private static final int MAX_BODY_BYTES_LENGTH = 400;

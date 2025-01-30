@@ -53,7 +53,7 @@ public final class RequestTemplateAssert
     return this;
   }
 
-  public RequestTemplateAssert hasBody(String utf8Expected) {
+  public RequestTemplateAssert hasBody(String utf8Expected) throws Exception{
     isNotNull();
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
@@ -62,7 +62,7 @@ public final class RequestTemplateAssert
     return this;
   }
 
-  public RequestTemplateAssert hasBody(byte[] expected) {
+  public RequestTemplateAssert hasBody(byte[] expected) throws Exception {
     isNotNull();
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
@@ -71,7 +71,7 @@ public final class RequestTemplateAssert
     return this;
   }
 
-  public RequestTemplateAssert hasBodyTemplate(String expected) {
+  public RequestTemplateAssert hasBodyTemplate(String expected) throws Exception {
     isNotNull();
     if (actual.body() != null) {
       failWithMessage("\nExpecting body to be null, but was:<%s>", actual.bodyTemplate());
@@ -97,7 +97,7 @@ public final class RequestTemplateAssert
     return this;
   }
 
-  public RequestTemplateAssert noRequestBody() {
+  public RequestTemplateAssert noRequestBody() throws Exception {
     isNotNull();
     if (actual.body() != null) {
       if (actual.bodyTemplate() != null) {
