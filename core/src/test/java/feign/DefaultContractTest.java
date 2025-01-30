@@ -222,6 +222,8 @@ class DefaultContractTest {
         parseAndValidateMetadata(
             FormParams.class, "login", String.class, String.class, String.class);
 
+    RequestTemplate template = md.template();
+    
     assertThat(md.template())
         .hasBodyTemplate(
             "%7B\"customer_name\": \"{customer_name}\", \"user_name\": \"{user_name}\","

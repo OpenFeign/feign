@@ -928,9 +928,10 @@ public final class RequestTemplate implements Serializable {
    * @return the request body.
    */
   // TODO: KD - I added a throws here - let's see what else this breaks
+  // TODO: KD - More code that is weird b/c of body length=0 handling needing to return null.
   @Deprecated
   public byte[] body() throws IOException {
-    return body == null ? null : body.asBytes();
+    return (body == null || body.getLength() == 0) ? null : body.asBytes();
   }
 
   /**
