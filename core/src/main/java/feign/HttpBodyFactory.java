@@ -194,7 +194,7 @@ public class HttpBodyFactory {
 			System.err.println("Deprecated method HttpBody.asBytes() called");
 			
 			try {
-				return asInputStream().readAllBytes();
+				return Util.toByteArray(asInputStream());
 			} catch (IOException e) {
 				throw FeignException.bodyException(e.getMessage(), e);
 			}
@@ -215,7 +215,7 @@ public class HttpBodyFactory {
     	@Deprecated
 		@Override
 		public boolean isBinary() {
-			return encoding.isEmpty();
+			return !encoding.isPresent();
 		}
 
     	@Deprecated
@@ -276,7 +276,7 @@ public class HttpBodyFactory {
     	}
     	
     	public String asStringDescription() {
-    		if (encoding.isEmpty())
+    		if (!encoding.isPresent())
     			return "BINARY DATA";
 
     		try {

@@ -181,7 +181,7 @@ public class FeignException extends RuntimeException {
   static FeignException errorReading(Request request, Response response, IOException cause) {
 	byte[] body = request.httpBody() == null ? null : new byte[0];
 	try {
-		body = request.httpBody().peek().asInputStream().readAllBytes();
+		body = Util.toByteArray(request.httpBody().peek().asInputStream());
 	} catch (IOException e) {
 		// TODO: KD - Any way to properly log this?
 	} 

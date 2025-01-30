@@ -227,7 +227,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          body.asInputStream().transferTo(out);
+          Util.copy(body.asInputStream(), out);
         } finally {
           try {
             out.close();
