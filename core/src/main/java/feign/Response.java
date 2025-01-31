@@ -15,17 +15,14 @@
  */
 package feign;
 
-import static feign.Util.UTF_8;
 import static feign.Util.caseInsensitiveCopyOf;
 import static feign.Util.checkNotNull;
 import static feign.Util.checkState;
 import static feign.Util.valuesOrEmpty;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -297,6 +294,10 @@ public final class Response implements Closeable {
     Util.ensureClosed(body);
   }
 
+  /**
+   * @deprecated use HttpBody instead
+   */
+  @Deprecated
   public interface Body extends Closeable {
 
     /**
@@ -328,107 +329,5 @@ public final class Response implements Closeable {
     Reader asReader(Charset charset) throws IOException;
   }
 
-  private static final class InputStreamBody implements Response.Body {
 
-    private final InputStream inputStream;
-    private final Integer length;
-
-    private InputStreamBody(InputStream inputStream, Integer length) {
-      this.inputStream = inputStream;
-      this.length = length;
-    }
-
-    private static Body orNull(InputStream inputStream, Integer length) {
-      if (inputStream == null) {
-        return null;
-      }
-      return new InputStreamBody(inputStream, length);
-    }
-
-    @Override
-    public Integer length() {
-      return length;
-    }
-
-    @Override
-    public boolean isRepeatable() {
-      return false;
-    }
-
-    @Override
-    public InputStream asInputStream() {
-      return inputStream;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Reader asReader() {
-      return new InputStreamReader(inputStream, UTF_8);
-    }
-
-    @Override
-    public Reader asReader(Charset charset) {
-      checkNotNull(charset, "charset should not be null");
-      return new InputStreamReader(inputStream, charset);
-    }
-
-    @Override
-    public void close() throws IOException {
-      inputStream.close();
-    }
-  }
-
-  private static final class ByteArrayBody implements Response.Body {
-
-    private final byte[] data;
-
-    public ByteArrayBody(byte[] data) {
-      this.data = data;
-    }
-
-    private static Body orNull(byte[] data) {
-      if (data == null) {
-        return null;
-      }
-      return new ByteArrayBody(data);
-    }
-
-    private static Body orNull(String text, Charset charset) {
-      if (text == null) {
-        return null;
-      }
-      checkNotNull(charset, "charset");
-      return new ByteArrayBody(text.getBytes(charset));
-    }
-
-    @Override
-    public Integer length() {
-      return data.length;
-    }
-
-    @Override
-    public boolean isRepeatable() {
-      return true;
-    }
-
-    @Override
-    public InputStream asInputStream() {
-      return new ByteArrayInputStream(data);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Reader asReader() {
-      return new InputStreamReader(asInputStream(), UTF_8);
-    }
-
-    @Override
-    public Reader asReader(Charset charset) {
-      checkNotNull(charset, "charset should not be null");
-      return new InputStreamReader(asInputStream(), charset);
-    }
-
-    @Override
-    public void close() {}
-  }
 }

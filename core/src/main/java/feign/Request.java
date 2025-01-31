@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -532,84 +531,5 @@ public final class Request implements Serializable {
     return this.requestTemplate;
   }
 
-  /**
-   * Request Body
-   *
-   * <p>Considered experimental, will most likely be made internal going forward.
-   */
-  @Experimental
-  public static class Body implements Serializable {
 
-    private transient Charset encoding;
-
-    private byte[] data;
-
-    private Body() {
-      super();
-    }
-
-    private Body(byte[] data) {
-      this.data = data;
-    }
-
-    private Body(byte[] data, Charset encoding) {
-      this.data = data;
-      this.encoding = encoding;
-    }
-
-    public Optional<Charset> getEncoding() {
-      return Optional.ofNullable(this.encoding);
-    }
-
-    public int length() {
-      /* calculate the content length based on the data provided */
-      return data != null ? data.length : 0;
-    }
-
-    public byte[] asBytes() {
-      return data;
-    }
-
-    public String asString() {
-      return !isBinary() ? new String(data, encoding) : "Binary data";
-    }
-
-    public boolean isBinary() {
-      return encoding == null || data == null;
-    }
-
-    public static Body create(String data) {
-      return new Body(data.getBytes());
-    }
-
-    public static Body create(String data, Charset charset) {
-      return new Body(data.getBytes(charset), charset);
-    }
-
-    public static Body create(byte[] data) {
-      return new Body(data);
-    }
-
-    public static Body create(byte[] data, Charset charset) {
-      return new Body(data, charset);
-    }
-
-    /**
-     * Creates a new Request Body with charset encoded data.
-     *
-     * @param data to be encoded.
-     * @param charset to encode the data with. if {@literal null}, then data will be considered
-     *     binary and will not be encoded.
-     * @return a new Request.Body instance with the encoded data.
-     * @deprecated please use {@link Request.Body#create(byte[], Charset)}
-     */
-    @Deprecated
-    public static Body encoded(byte[] data, Charset charset) {
-      return create(data, charset);
-    }
-
-    public static HttpBody empty() {
-      return HttpBodyFactory.empty();
-    }
-  }
 }
