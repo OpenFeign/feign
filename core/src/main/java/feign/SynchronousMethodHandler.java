@@ -90,6 +90,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     long start = System.nanoTime();
     try {
       response = client.execute(request, options);
+      request.httpBody().close();
       // ensure the request is set. TODO: remove in Feign 12
       response = response.toBuilder().request(request).requestTemplate(template).build();
     } catch (IOException e) {

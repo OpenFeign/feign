@@ -108,7 +108,7 @@ public abstract class Feign {
     }
 
     public Builder client(Client client) {
-      this.client = client;
+      this.client = new Client.ForceRequestCloseDecoratorClient(client);
 
       return this;
     }

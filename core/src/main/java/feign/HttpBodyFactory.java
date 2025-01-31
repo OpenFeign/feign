@@ -3,6 +3,9 @@ package feign;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,7 +14,7 @@ import java.nio.charset.Charset;
 import java.util.Optional;
 
 public class HttpBodyFactory {
-	private static final int RESET_SIZE = 8092;
+	private static final int RESET_SIZE = 0x800;
 	private static final long UNKNOWN_SIZE = -1;
 	private static final Charset UNKNOWN_ENCODING = null;
 
@@ -41,6 +44,14 @@ public class HttpBodyFactory {
 		return new StreamHttpBody(new ByteArrayInputStream(data), RESET_SIZE, data.length, encoding);
 	}
 	
+	// TODO: KD - we could create a file specific implementation of HttpBody that doesn't rely on resettable streams (i.e. reset possible without regard to RESET_SIZE)
+	public static HttpBody forFile(File f) throws FileNotFoundException {
+		if (f == null) return empty();
+		
+		InputStream is = new FileInputStream(f);
+		return forInputStream(is);
+	}
+	
 	public static HttpBody empty() {
 		return new StreamHttpBody(new ByteArrayInputStream(new byte[0]), RESET_SIZE, 0, null);
 	}
@@ -62,11 +73,12 @@ public class HttpBodyFactory {
 		
 		Reader asReader();
 		
+    	// TODO: KD - Do we really need this?  I'd much rather not have it
 		boolean tryReset();
 		
 		public PeekResult peek();
 		
-		public void close() throws IOException;
+		public void close();
 		
 		
 		// ******** Methods from Request.Body ***********
@@ -139,6 +151,8 @@ public class HttpBodyFactory {
     		this.encoding = Optional.ofNullable(encoding);
     	}
     	
+    	// TODO: KD - we should wrap the returned stream so it cannot be reset from outside
+    	// TODO: KD - We also want to be able to mark the stream as invalid/closed when we reset so callers don't accidentally wind up with multiple views of our stream (i.e. someone could call close() on an old stream and wind up closing our underlying stream)
     	public InputStream asInputStream() {
     		try {
 	    		resettableInputStream.reset();
@@ -162,6 +176,7 @@ public class HttpBodyFactory {
     				.orElseThrow(() -> new IllegalArgumentException("No encoding specified, asReader() not allowed"));
     	}
     	
+    	// TODO: KD - Do we really need this?  I'd much rather not have it
     	public boolean tryReset() {
     		try {
 				resettableInputStream.reset();
@@ -183,8 +198,10 @@ public class HttpBodyFactory {
     	}
     	
 		@Override
-		public void close() throws IOException {
-			resettableInputStream.close();
+		public void close() {
+			try {
+				resettableInputStream.close();
+			} catch (IOException ignore) {}
 		}
     	
     	@Deprecated
@@ -229,6 +246,7 @@ public class HttpBodyFactory {
 
     	@Deprecated
 		@Override
+		// TODO: KD - I feel like we are always repeatable now, unless someone has consumed too much of the stream. Maybe always return true here? The only place this is used is in a few tests - maybe not needed anymore?
 		public boolean isRepeatable() {
 			// TODO: Any way to do proper logging of these types of messages? 
 			System.err.println("Deprecated method HttpBody.isRepeatable() called");

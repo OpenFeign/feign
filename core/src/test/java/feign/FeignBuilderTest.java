@@ -443,7 +443,7 @@ public class FeignBuilderTest {
                               }
 
                               @Override
-                              public void close() throws IOException {
+                              public void close() {
                                 closed.set(true);
                                 original.body().close();
                               }

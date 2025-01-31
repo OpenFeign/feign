@@ -37,6 +37,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
@@ -53,8 +54,12 @@ import feign.Request.Options;
 /** Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe. */
 public interface Client {
 
+	// TODO: KD - Note there is a breaking change requirement that the underlying httpbody be closed. I do not know how to enforce this requirement (or move the close() call up higher in the call stack).
+	// TODO: KD - See note on Feign.client() for a potential solution here (wrapping the client)
   /**
    * Executes a request against its {@link Request#url() url} and returns a response.
+   * 
+   * Implementations MUST call request.httpBody().close() if the execution was successful
    *
    * @param request safe to replay.
    * @param options options to apply to this request.
@@ -63,6 +68,23 @@ public interface Client {
    */
   Response execute(Request request, Options options) throws IOException;
 
+  class ForceRequestCloseDecoratorClient implements Client {
+	  private final Client delegate;
+	  
+	  public ForceRequestCloseDecoratorClient(Client delegate) {
+		this.delegate = delegate;
+	}
+	  
+	  @Override
+	public Response execute(Request request, Options options) throws IOException {
+		try {
+			return delegate.execute(request, options);
+		} finally {
+		    Optional.ofNullable(request.httpBody()).ifPresent(HttpBody::close);
+		}
+	}
+  }
+  
   class Default implements Client {
 
     private final SSLSocketFactory sslContextFactory;
@@ -148,7 +170,7 @@ public interface Client {
           .reason(reason)
           .headers(headers)
           .request(request)
-          .body(stream, connection.getContentLength())
+          .body(stream, connection.getContentLengthLong())
           .build();
     }
 
@@ -174,12 +196,14 @@ public interface Client {
       connection.setInstanceFollowRedirects(options.isFollowRedirects());
       connection.setRequestMethod(request.httpMethod().name());
 
+      HttpBody body = request.httpBody();
+
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
       boolean gzipEncodedRequest = this.isGzip(contentEncodingValues);
       boolean deflateEncodedRequest = this.isDeflate(contentEncodingValues);
 
       boolean hasAcceptHeader = false;
-      Integer contentLength = null;
+      Long contentLength = null;
       for (String field : request.headers().keySet()) {
         if (field.equalsIgnoreCase("Accept")) {
           hasAcceptHeader = true;
@@ -187,7 +211,7 @@ public interface Client {
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest && !deflateEncodedRequest) {
-              contentLength = Integer.valueOf(value);
+              contentLength = Long.valueOf(value);
               connection.addRequestProperty(field, value);
             }
           }
@@ -205,9 +229,7 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      HttpBody body = request.httpBody();
-
-      if (body != null && body.getLength() > 0) {
+      if (body != null && body.getLength() != 0) {
         /*
          * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
          * retry logic applies to such requests.

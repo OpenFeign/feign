@@ -513,10 +513,7 @@ public class FeignException extends RuntimeException {
     }
 
     private String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
-      Charset charset = getResponseCharset(headers);
-      if (charset == null) {
-        charset = Util.UTF_8;
-      }
+      Charset charset = Response.charsetFromHeaders(headers);
       return getResponseBody(body, charset);
     }
 
@@ -541,28 +538,29 @@ public class FeignException extends RuntimeException {
       }
     }
 
-    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
-
-      Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.isEmpty()) {
-        return null;
-      }
-
-      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
-      Matcher matcher = pattern.matcher(strings.iterator().next());
-      if (!matcher.lookingAt()) {
-        return null;
-      }
-
-      String group = matcher.group(1);
-      try {
-        if (!Charset.isSupported(group)) {
-          return null;
-        }
-      } catch (IllegalCharsetNameException ex) {
-        return null;
-      }
-      return Charset.forName(group);
-    }
+// KD - replaced with call to Response.charsetFromHeaders()...    
+//    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
+//
+//      Collection<String> strings = headers.get(Util.CONTENT_TYPE);
+//      if (strings == null || strings.isEmpty()) {
+//        return null;
+//      }
+//
+//      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
+//      Matcher matcher = pattern.matcher(strings.iterator().next());
+//      if (!matcher.lookingAt()) {
+//        return null;
+//      }
+//
+//      String group = matcher.group(1);
+//      try {
+//        if (!Charset.isSupported(group)) {
+//          return null;
+//        }
+//      } catch (IllegalCharsetNameException ex) {
+//        return null;
+//      }
+//      return Charset.forName(group);
+//    }
   }
 }

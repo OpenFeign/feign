@@ -804,7 +804,7 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
-    if (name.equals("Content-Type")) {
+    if (name.equals(Util.CONTENT_TYPE)) {
       // a client can only produce content of one single type, so always override Content-Type and
       // only add a single type
       this.headers.remove(name);
@@ -895,7 +895,7 @@ public final class RequestTemplate implements Serializable {
    * @deprecated use {@link #body(byte[], Charset)} instead.
    */
   // TODO: KD - I don't think this should be deprecated
-  @Deprecated
+  @Deprecated(since = "KD - I don't think this should be deprecated")
   public RequestTemplate body(HttpBody body) {
     this.body = body;
 
@@ -907,6 +907,15 @@ public final class RequestTemplate implements Serializable {
       header(CONTENT_LENGTH, String.valueOf(body.getLength()));
     }
 
+    if (body.getLength() != 0 && !body.getEncoding().isEmpty()) {
+    	// TODO: KD - need to refactor content type parsing and header handling - this is really ugly
+    	String contentTypeHeader = Response.getContentTypeHeader(headers()).orElse(null);
+    	if (contentTypeHeader != null) {
+    		contentTypeHeader = Response.addEncodingToContentTypeHeader(contentTypeHeader, body.getEncoding().get());
+    		header(Util.CONTENT_TYPE, contentTypeHeader);
+    	}
+    }
+    
     return this;
   }
 

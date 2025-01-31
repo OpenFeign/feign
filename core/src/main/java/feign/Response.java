@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import feign.HttpBodyFactory.HttpBody;
@@ -230,24 +231,49 @@ public final class Response implements Closeable {
     return charsetFromHeaders(headers());
   }
 
-  private static Charset charsetFromHeaders(Map<String, Collection<String>> headers) {
+  // TODO: KD - should this be in a utility class?
+  public static Charset charsetFromHeaders(Map<String, Collection<String>> headers) {
 	  
-	    Collection<String> contentTypeHeaders = headers.get("Content-Type");
+	  return getContentTypeHeader(headers)
+			  	.flatMap(h -> getEncodingFromContentTypeHeader(h))
+			  	.orElse(Util.UTF_8);
+	  
+  }
+  
+  public static Optional<String> getContentTypeHeader(Map<String, Collection<String>> headers) {
+	    Collection<String> contentTypeHeaders = headers.get(Util.CONTENT_TYPE);
+	    if (contentTypeHeaders == null || contentTypeHeaders.isEmpty()) return Optional.empty();
 
-	    if (contentTypeHeaders != null) {
-	      for (String contentTypeHeader : contentTypeHeaders) {
-	        String[] contentTypeParmeters = contentTypeHeader.split(";");
-	        if (contentTypeParmeters.length > 1) {
-	          String[] charsetParts = contentTypeParmeters[1].split("=");
-	          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
-	            String charsetString = charsetParts[1].replaceAll("\"", "");
-	            return Charset.forName(charsetString);
-	          }
-	        }
-	      }
-	    }
+	    return Optional.of(contentTypeHeaders.iterator().next());
+  }
+  
+  public static Optional<Charset> getEncodingFromContentTypeHeader(String contentTypeHeader) {
+      String[] contentTypeParmeters = contentTypeHeader.split(";");
+      if (contentTypeParmeters.length > 1) {
+        String[] charsetParts = contentTypeParmeters[1].split("=");
+        if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+          String charsetString = charsetParts[1].replaceAll("\"", "");
+          // TODO: KD - should we catch IllegalCharsetNameException and return UTF_8 ?
+          return Optional.of( Charset.forName(charsetString) );
+        }
+      }
+	  
+      return Optional.empty();
+  }
+  
+  public static String getContentTypeFromContentTypeHeader(String contentTypeHeader) {
+      String[] contentTypeParmeters = contentTypeHeader.split(";");
+      return contentTypeParmeters[0];
+  }
+  
+  public static String addEncodingToContentTypeHeader(String contentTypeHeader, Charset encoding) {
 
-	    return Util.UTF_8;
+	  String contentType = getContentTypeFromContentTypeHeader(contentTypeHeader);
+
+	  return Optional.ofNullable(encoding)
+			  .filter(e -> !Util.UTF_8.equals(e)) // don't include charset=UTF-8 (the default)
+			  .map(e -> contentType + "; charset=" + e.name())
+			  .orElse(contentType);
 	  
   }
   
