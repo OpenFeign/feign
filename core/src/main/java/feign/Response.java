@@ -297,6 +297,7 @@ public final class Response implements Closeable {
   /**
    * @deprecated use HttpBody instead
    */
+  // TODO: KD - we should be able to remove this interface
   @Deprecated
   public interface Body extends Closeable {
 

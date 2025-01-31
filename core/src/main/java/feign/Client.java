@@ -59,7 +59,7 @@ public interface Client {
    * 
    * @param request safe to replay.
    * @param options options to apply to this request.
-   * @return connected response, {@link Response.Body} is absent or unread.
+   * @return connected response, {@link HttpBody} is absent or unread.
    * @throws IOException on a network error connecting to {@link Request#url()}.
    */
   Response execute(Request request, Options options) throws IOException;

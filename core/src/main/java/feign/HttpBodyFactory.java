@@ -62,7 +62,7 @@ public class HttpBodyFactory {
 	 * Represents the body of an http request or response.
 	 * @implNote for now, we implement Response.Body to minimize disruption to existing code.  We also make the class have the same methods as the Request.Body class.
 	 */
-	public interface HttpBody extends Closeable, Response.Body{
+	public interface HttpBody extends Closeable{
 		
 		// ******** Non-deprecated methods ***********
 		Optional<Charset> getEncoding();
