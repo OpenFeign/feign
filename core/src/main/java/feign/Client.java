@@ -77,11 +77,9 @@ public interface Client {
 	  
 	  @Override
 	public Response execute(Request request, Options options) throws IOException {
-		try {
-			return delegate.execute(request, options);
-		} finally {
-		    Optional.ofNullable(request.httpBody()).ifPresent(HttpBody::close);
-		}
+		Response resp = delegate.execute(request, options);
+	    Optional.ofNullable(request.httpBody()).ifPresent(HttpBody::close);
+	    return resp;
 	}
   }
   
