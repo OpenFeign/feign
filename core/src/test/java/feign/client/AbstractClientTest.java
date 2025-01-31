@@ -272,17 +272,18 @@ public abstract class AbstractClientTest {
         .hasBody("foo");
   }
 
-  @Test
-  public void veryLongResponseNullLength() {
-    server.enqueue(
-        new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
-    TestInterface api =
-        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    Response response = api.post("foo");
-    // Response length greater than Integer.MAX_VALUE should be null
-    assertThat(response.body().length()).isNull();
-  }
+// TODO: KD - I don't think this test is applicable anymore - we now support streaming of content of any length  
+//  @Test
+//  public void veryLongResponseNullLength() {
+//    server.enqueue(
+//        new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
+//    TestInterface api =
+//        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+//
+//    Response response = api.post("foo");
+//    // Response length greater than Integer.MAX_VALUE should be null
+//    assertThat(response.body().length()).isNull();
+//  }
 
   @Test
   void responseLength() {

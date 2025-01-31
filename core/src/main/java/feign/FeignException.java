@@ -42,6 +42,8 @@ public class FeignException extends RuntimeException {
       "request should not be null";
   private static final long serialVersionUID = 0;
   private final int status;
+  
+  // TODO: KD - it would probably be a lot cleaner to store HttpBody here - but there are a *ton* of places that assume byte[]...
   private byte[] responseBody;
   private Map<String, Collection<String>> responseHeaders;
   private final Request request;
@@ -177,13 +179,24 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorReading(Request request, Response response, IOException cause) {
+	byte[] body = request.httpBody() == null ? null : new byte[0];
+	try {
+		body = Util.toByteArray(request.httpBody().peek().asInputStream());
+	} catch (IOException e) {
+		// TODO: KD - Any way to properly log this?
+	} 
+	  
     return new FeignException(
         response.status(),
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.body(),
+        body,
         request.headers());
+  }
+  
+  static FeignException bodyException(String message, IOException cause) {
+	  return new FeignException(-1, message, cause);
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {
@@ -437,6 +450,7 @@ public class FeignException extends RuntimeException {
     }
   }
 
+  // TODO: KD - consider passing HttpBody instead of byte[]
   private static class FeignExceptionMessageBuilder {
 
     private static final int MAX_BODY_BYTES_LENGTH = 400;
@@ -499,10 +513,7 @@ public class FeignException extends RuntimeException {
     }
 
     private String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
-      Charset charset = getResponseCharset(headers);
-      if (charset == null) {
-        charset = Util.UTF_8;
-      }
+      Charset charset = Response.charsetFromHeaders(headers);
       return getResponseBody(body, charset);
     }
 
@@ -527,28 +538,29 @@ public class FeignException extends RuntimeException {
       }
     }
 
-    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
-
-      Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.isEmpty()) {
-        return null;
-      }
-
-      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
-      Matcher matcher = pattern.matcher(strings.iterator().next());
-      if (!matcher.lookingAt()) {
-        return null;
-      }
-
-      String group = matcher.group(1);
-      try {
-        if (!Charset.isSupported(group)) {
-          return null;
-        }
-      } catch (IllegalCharsetNameException ex) {
-        return null;
-      }
-      return Charset.forName(group);
-    }
+// KD - replaced with call to Response.charsetFromHeaders()...    
+//    private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
+//
+//      Collection<String> strings = headers.get(Util.CONTENT_TYPE);
+//      if (strings == null || strings.isEmpty()) {
+//        return null;
+//      }
+//
+//      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
+//      Matcher matcher = pattern.matcher(strings.iterator().next());
+//      if (!matcher.lookingAt()) {
+//        return null;
+//      }
+//
+//      String group = matcher.group(1);
+//      try {
+//        if (!Charset.isSupported(group)) {
+//          return null;
+//        }
+//      } catch (IllegalCharsetNameException ex) {
+//        return null;
+//      }
+//      return Charset.forName(group);
+//    }
   }
 }

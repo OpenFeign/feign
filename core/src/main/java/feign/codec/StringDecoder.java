@@ -17,16 +17,18 @@ package feign.codec;
 
 import static java.lang.String.format;
 
-import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Response;
+import feign.Util;
 
 public class StringDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    Response.Body body = response.body();
+    HttpBody body = response.body();
     if (response.status() == 404 || response.status() == 204 || body == null) {
       return null;
     }

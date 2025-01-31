@@ -17,6 +17,8 @@ package feign.error;
 
 import static feign.Util.checkState;
 
+import feign.HttpBodyFactory;
+import feign.HttpBodyFactory.HttpBody;
 import feign.Request;
 import feign.Response;
 import feign.Types;
@@ -43,11 +45,11 @@ class ExceptionGenerator {
     TEST_RESPONSE =
         Response.builder()
             .status(500)
-            .body((Response.Body) null)
+            .body((HttpBody) null)
             .headers(testHeaders)
             .request(
                 Request.create(
-                    Request.HttpMethod.GET, "http://test", testHeaders, Request.Body.empty(), null))
+                    Request.HttpMethod.GET, "http://test", testHeaders, HttpBodyFactory.empty(), null))
             .build();
   }
 

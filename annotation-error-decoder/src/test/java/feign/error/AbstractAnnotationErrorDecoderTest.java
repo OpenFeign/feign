@@ -17,6 +17,7 @@ package feign.error;
 
 import static feign.Feign.configKey;
 
+import feign.HttpBodyFactory;
 import feign.Request;
 import feign.Response;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +48,7 @@ public abstract class AbstractAnnotationErrorDecoderTest<T> {
         .headers(headers)
         .request(
             Request.create(
-                Request.HttpMethod.GET, "http://test", headers, Request.Body.empty(), null))
+                Request.HttpMethod.GET, "http://test", headers, HttpBodyFactory.empty(), null))
         .build();
   }
 }

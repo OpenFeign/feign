@@ -26,7 +26,6 @@ import static feign.Util.isNotBlank;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.format;
 
-import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,28 +37,49 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Request.Options;
 
 /** Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe. */
 public interface Client {
 
   /**
    * Executes a request against its {@link Request#url() url} and returns a response.
-   *
+   * 
    * @param request safe to replay.
    * @param options options to apply to this request.
-   * @return connected response, {@link Response.Body} is absent or unread.
+   * @return connected response, {@link HttpBody} is absent or unread.
    * @throws IOException on a network error connecting to {@link Request#url()}.
    */
   Response execute(Request request, Options options) throws IOException;
 
+  class ForceRequestCloseDecoratorClient implements Client {
+	  private final Client delegate;
+	  
+	  public ForceRequestCloseDecoratorClient(Client delegate) {
+		this.delegate = delegate;
+	}
+	
+	  // TODO: KD - get rid of null check if we can agree to not allow null bodies...
+	@Override
+	public Response execute(Request request, Options options) throws IOException {
+		Response resp = delegate.execute(request, options);
+	    Optional.ofNullable(request.httpBody()).ifPresent(HttpBody::close);
+	    return resp;
+	}
+  }
+  
   class Default implements Client {
 
     private final SSLSocketFactory sslContextFactory;
@@ -129,10 +149,6 @@ public interface Client {
         }
       }
 
-      Integer length = connection.getContentLength();
-      if (length == -1) {
-        length = null;
-      }
       InputStream stream;
       if (status >= 400) {
         stream = connection.getErrorStream();
@@ -149,7 +165,7 @@ public interface Client {
           .reason(reason)
           .headers(headers)
           .request(request)
-          .body(stream, length)
+          .body(stream, connection.getContentLengthLong())
           .build();
     }
 
@@ -175,12 +191,14 @@ public interface Client {
       connection.setInstanceFollowRedirects(options.isFollowRedirects());
       connection.setRequestMethod(request.httpMethod().name());
 
+      HttpBody body = request.httpBody();
+
       Collection<String> contentEncodingValues = request.headers().get(CONTENT_ENCODING);
       boolean gzipEncodedRequest = this.isGzip(contentEncodingValues);
       boolean deflateEncodedRequest = this.isDeflate(contentEncodingValues);
 
       boolean hasAcceptHeader = false;
-      Integer contentLength = null;
+      Long contentLength = null;
       for (String field : request.headers().keySet()) {
         if (field.equalsIgnoreCase("Accept")) {
           hasAcceptHeader = true;
@@ -188,7 +206,7 @@ public interface Client {
         for (String value : request.headers().get(field)) {
           if (field.equals(CONTENT_LENGTH)) {
             if (!gzipEncodedRequest && !deflateEncodedRequest) {
-              contentLength = Integer.valueOf(value);
+              contentLength = Long.valueOf(value);
               connection.addRequestProperty(field, value);
             }
           }
@@ -206,9 +224,7 @@ public interface Client {
         connection.addRequestProperty("Accept", "*/*");
       }
 
-      byte[] body = request.body();
-
-      if (body != null) {
+      if (body != null && body.getLength() != 0) {
         /*
          * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
          * retry logic applies to such requests.
@@ -228,7 +244,7 @@ public interface Client {
           out = new DeflaterOutputStream(out);
         }
         try {
-          out.write(body);
+          Util.copy(body.asInputStream(), out);
         } finally {
           try {
             out.close();

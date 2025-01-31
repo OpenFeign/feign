@@ -97,7 +97,7 @@ public final class RequestTemplateAssert
     return this;
   }
 
-  public RequestTemplateAssert noRequestBody() {
+  public RequestTemplateAssert noRequestBody() throws Exception {
     isNotNull();
     if (actual.body() != null) {
       if (actual.bodyTemplate() != null) {

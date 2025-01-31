@@ -323,7 +323,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() {
+  void resolveTemplateWithBodyTemplateSetsBodyAndContentLength() throws Exception{
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)
@@ -349,7 +349,7 @@ public class RequestTemplateTest {
   }
 
   @Test
-  void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() {
+  void resolveTemplateWithBodyTemplateDoesNotDoubleDecode() throws Exception{
     RequestTemplate template =
         new RequestTemplate()
             .method(HttpMethod.POST)

@@ -20,10 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import feign.Logger.Level;
 import java.io.IOException;
 import java.util.Collections;
+
 import org.junit.jupiter.api.Test;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Logger.Level;
 
 public class LoggerMethodsTest {
 
@@ -45,7 +48,7 @@ public class LoggerMethodsTest {
             .headers(Collections.emptyMap())
             .body("some text", UTF_8)
             .build();
-    Response.Body spyBody = spy(response.body());
+    HttpBody spyBody = spy(response.body());
     response = response.toBuilder().body(spyBody).build();
 
     Response rebufferedResponse =

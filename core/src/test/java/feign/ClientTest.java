@@ -23,9 +23,18 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+
+import feign.HttpBodyFactory.HttpBody;
 
 class ClientTest {
 
@@ -61,9 +70,11 @@ class ClientTest {
     headers.put(Util.ACCEPT_ENCODING, acceptEncoding);
 
     RequestTemplate requestTemplate = mock(RequestTemplate.class);
-    Request.Body body = mock(Request.Body.class);
+    
+    HttpBody body = HttpBodyFactory.empty();
+    
+    
     Request.Options options = mock(Request.Options.class);
-    Client client = mock(Client.class);
 
     Request request =
         Request.create(
@@ -82,7 +93,7 @@ class ClientTest {
     headers.put(Util.CONTENT_LENGTH, Collections.singletonList("100"));
 
     RequestTemplate requestTemplate = mock(RequestTemplate.class);
-    Request.Body body = mock(Request.Body.class);
+    HttpBody body = mock(HttpBody.class);
     Request.Options options = mock(Request.Options.class);
     Client client = mock(Client.class);
 

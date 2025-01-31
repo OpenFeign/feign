@@ -17,6 +17,7 @@ package feign.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.HttpBodyFactory;
 import feign.Request;
 import feign.codec.Decoder;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
@@ -59,7 +60,7 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
           feign.Request.HttpMethod.GET,
           "http://test",
           Collections.emptyMap(),
-          Request.Body.empty(),
+          HttpBodyFactory.empty(),
           null);
   private static final feign.Request NO_REQUEST = null;
   private static final Map<String, Collection<String>> NON_NULL_HEADERS = new HashMap<>();

@@ -21,6 +21,8 @@ import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.jr.ob.JSON;
+
+import feign.HttpBodyFactory;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -352,7 +354,7 @@ class JacksonCodecTest {
                     HttpMethod.GET,
                     "/v1/dummy",
                     Collections.emptyMap(),
-                    Request.Body.empty(),
+                    HttpBodyFactory.empty(),
                     null));
     return Stream.of(
         Arguments.of(

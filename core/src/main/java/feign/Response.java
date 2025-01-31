@@ -15,13 +15,25 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.caseInsensitiveCopyOf;
+import static feign.Util.checkNotNull;
+import static feign.Util.checkState;
+import static feign.Util.valuesOrEmpty;
 
-import feign.Request.ProtocolVersion;
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Request.ProtocolVersion;
 
 /** An immutable response to an http invocation which only returns string content. */
 public final class Response implements Closeable {
@@ -29,7 +41,7 @@ public final class Response implements Closeable {
   private final int status;
   private final String reason;
   private final Map<String, Collection<String>> headers;
-  private final Body body;
+  private final HttpBody body;
   private final Request request;
   private final ProtocolVersion protocolVersion;
 
@@ -39,7 +51,7 @@ public final class Response implements Closeable {
     this.request = builder.request;
     this.reason = builder.reason; // nullable
     this.headers = caseInsensitiveCopyOf(builder.headers);
-    this.body = builder.body; // nullable
+    this.body = builder.bodySupplier.apply(builder); // nullable
     this.protocolVersion = builder.protocolVersion;
   }
 
@@ -55,8 +67,8 @@ public final class Response implements Closeable {
     private static final ProtocolVersion DEFAULT_PROTOCOL_VERSION = ProtocolVersion.HTTP_1_1;
     int status;
     String reason;
-    Map<String, Collection<String>> headers;
-    Body body;
+    Map<String, Collection<String>> headers = Collections.emptyMap();
+    Function<Builder, HttpBody> bodySupplier = b -> null;
     Request request;
     private RequestTemplate requestTemplate;
     private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
@@ -67,7 +79,7 @@ public final class Response implements Closeable {
       this.status = source.status;
       this.reason = source.reason;
       this.headers = source.headers;
-      this.body = source.body;
+      this.bodySupplier = b -> source.body;
       this.request = source.request;
       this.protocolVersion = source.protocolVersion;
     }
@@ -99,33 +111,37 @@ public final class Response implements Closeable {
     /**
      * @see Response#body
      */
-    public Builder body(Body body) {
-      this.body = body;
+    // TODO: KD - is there some way to make body so it can't be null?  Seems like an empty body would be much better
+    public Builder body(HttpBody body) {
+      this.bodySupplier = b -> body;
       return this;
     }
 
     /**
      * @see Response#body
      */
-    public Builder body(InputStream inputStream, Integer length) {
-      this.body = InputStreamBody.orNull(inputStream, length);
+    // TODO: KD - is there some way to make body so it can't be null?  Seems like an empty body would be much better
+    public Builder body(InputStream inputStream, long length) {
+      this.bodySupplier = b -> inputStream == null ? null : HttpBodyFactory.forInputStream(inputStream, length, charsetFromHeaders(b.headers));
       return this;
     }
 
     /**
      * @see Response#body
      */
+    // TODO: KD - is there some way to make body so it can't be null?  Seems like an empty body would be much better
     public Builder body(byte[] data) {
-      this.body = ByteArrayBody.orNull(data);
+      this.bodySupplier = b -> data == null ? null : HttpBodyFactory.forBytes(data, charsetFromHeaders(b.headers));
       return this;
     }
 
     /**
      * @see Response#body
      */
+    //TODO: KD - this is weird.  So we are specifying a text string in a charset that is potentially different than the charset of the HTTP response?
+    // TODO: KD - is there some way to make body so it can't be null?  Seems like an empty body would be much better
     public Builder body(String text, Charset charset) {
-      this.body = ByteArrayBody.orNull(text, charset);
-      return this;
+      return body(text.getBytes(charset));
     }
 
     /**
@@ -184,7 +200,7 @@ public final class Response implements Closeable {
   }
 
   /** if present, the response had a body */
-  public Body body() {
+  public HttpBody body() {
     return body;
   }
 
@@ -209,25 +225,55 @@ public final class Response implements Closeable {
    * Type</a>
    */
   public Charset charset() {
-
-    Collection<String> contentTypeHeaders = headers().get("Content-Type");
-
-    if (contentTypeHeaders != null) {
-      for (String contentTypeHeader : contentTypeHeaders) {
-        String[] contentTypeParmeters = contentTypeHeader.split(";");
-        if (contentTypeParmeters.length > 1) {
-          String[] charsetParts = contentTypeParmeters[1].split("=");
-          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
-            String charsetString = charsetParts[1].replaceAll("\"", "");
-            return Charset.forName(charsetString);
-          }
-        }
-      }
-    }
-
-    return Util.UTF_8;
+    return charsetFromHeaders(headers());
   }
 
+  // TODO: KD - should this be in a utility class?
+  public static Charset charsetFromHeaders(Map<String, Collection<String>> headers) {
+	  
+	  return getContentTypeHeader(headers)
+			  	.flatMap(h -> getEncodingFromContentTypeHeader(h))
+			  	.orElse(Util.UTF_8);
+	  
+  }
+  
+  public static Optional<String> getContentTypeHeader(Map<String, Collection<String>> headers) {
+	    Collection<String> contentTypeHeaders = headers.get(Util.CONTENT_TYPE);
+	    if (contentTypeHeaders == null || contentTypeHeaders.isEmpty()) return Optional.empty();
+
+	    return Optional.of(contentTypeHeaders.iterator().next());
+  }
+  
+  public static Optional<Charset> getEncodingFromContentTypeHeader(String contentTypeHeader) {
+      String[] contentTypeParmeters = contentTypeHeader.split(";");
+      if (contentTypeParmeters.length > 1) {
+        String[] charsetParts = contentTypeParmeters[1].split("=");
+        if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
+          String charsetString = charsetParts[1].replaceAll("\"", "");
+          // TODO: KD - should we catch IllegalCharsetNameException and return UTF_8 ?
+          return Optional.of( Charset.forName(charsetString) );
+        }
+      }
+	  
+      return Optional.empty();
+  }
+  
+  public static String getContentTypeFromContentTypeHeader(String contentTypeHeader) {
+      String[] contentTypeParmeters = contentTypeHeader.split(";");
+      return contentTypeParmeters[0];
+  }
+  
+  public static String addEncodingToContentTypeHeader(String contentTypeHeader, Charset encoding) {
+
+	  String contentType = getContentTypeFromContentTypeHeader(contentTypeHeader);
+
+	  return Optional.ofNullable(encoding)
+			  .filter(e -> !Util.UTF_8.equals(e)) // don't include charset=UTF-8 (the default)
+			  .map(e -> contentType + "; charset=" + e.name())
+			  .orElse(contentType);
+	  
+  }
+  
   @Override
   public String toString() {
     StringBuilder builder =
@@ -248,6 +294,11 @@ public final class Response implements Closeable {
     Util.ensureClosed(body);
   }
 
+  /**
+   * @deprecated use HttpBody instead
+   */
+  // TODO: KD - we should be able to remove this interface
+  @Deprecated
   public interface Body extends Closeable {
 
     /**
@@ -279,107 +330,5 @@ public final class Response implements Closeable {
     Reader asReader(Charset charset) throws IOException;
   }
 
-  private static final class InputStreamBody implements Response.Body {
 
-    private final InputStream inputStream;
-    private final Integer length;
-
-    private InputStreamBody(InputStream inputStream, Integer length) {
-      this.inputStream = inputStream;
-      this.length = length;
-    }
-
-    private static Body orNull(InputStream inputStream, Integer length) {
-      if (inputStream == null) {
-        return null;
-      }
-      return new InputStreamBody(inputStream, length);
-    }
-
-    @Override
-    public Integer length() {
-      return length;
-    }
-
-    @Override
-    public boolean isRepeatable() {
-      return false;
-    }
-
-    @Override
-    public InputStream asInputStream() {
-      return inputStream;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Reader asReader() {
-      return new InputStreamReader(inputStream, UTF_8);
-    }
-
-    @Override
-    public Reader asReader(Charset charset) {
-      checkNotNull(charset, "charset should not be null");
-      return new InputStreamReader(inputStream, charset);
-    }
-
-    @Override
-    public void close() throws IOException {
-      inputStream.close();
-    }
-  }
-
-  private static final class ByteArrayBody implements Response.Body {
-
-    private final byte[] data;
-
-    public ByteArrayBody(byte[] data) {
-      this.data = data;
-    }
-
-    private static Body orNull(byte[] data) {
-      if (data == null) {
-        return null;
-      }
-      return new ByteArrayBody(data);
-    }
-
-    private static Body orNull(String text, Charset charset) {
-      if (text == null) {
-        return null;
-      }
-      checkNotNull(charset, "charset");
-      return new ByteArrayBody(text.getBytes(charset));
-    }
-
-    @Override
-    public Integer length() {
-      return data.length;
-    }
-
-    @Override
-    public boolean isRepeatable() {
-      return true;
-    }
-
-    @Override
-    public InputStream asInputStream() {
-      return new ByteArrayInputStream(data);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Reader asReader() {
-      return new InputStreamReader(asInputStream(), UTF_8);
-    }
-
-    @Override
-    public Reader asReader(Charset charset) {
-      checkNotNull(charset, "charset should not be null");
-      return new InputStreamReader(asInputStream(), charset);
-    }
-
-    @Override
-    public void close() {}
-  }
 }

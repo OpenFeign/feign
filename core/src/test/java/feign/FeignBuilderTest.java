@@ -20,8 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -39,11 +37,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.HttpBodyFactory.PeekResult;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 public class FeignBuilderTest {
 
@@ -412,38 +416,43 @@ public class FeignBuilderTest {
                         .reason(original.reason())
                         .request(original.request())
                         .body(
-                            new Response.Body() {
+                            new HttpBody() { // TODO: KD - it's a shame we can't use mocks for this... See how LoggerMethodsTest uses spy() to to check close() was called.  Seems like verifyNoInteractions() would do the trick nicely.
                               @Override
-                              public Integer length() {
-                                return original.body().length();
+                              public InputStream asInputStream() {
+                                  return original.body().asInputStream();
                               }
 
                               @Override
-                              public boolean isRepeatable() {
-                                return original.body().isRepeatable();
+                              public long getLength() {
+                                return original.body().getLength();
                               }
 
                               @Override
-                              public InputStream asInputStream() throws IOException {
-                                return original.body().asInputStream();
+                              public Optional<Charset> getEncoding() {
+                            	return original.body().getEncoding();
                               }
-
-                              @SuppressWarnings("deprecation")
+                              
                               @Override
-                              public Reader asReader() throws IOException {
-                                return original.body().asReader(Util.UTF_8);
-                              }
-
-                              @Override
-                              public Reader asReader(Charset charset) throws IOException {
-                                return original.body().asReader(charset);
+                              public Reader asReader() {
+                                return original.body().asReader();
                               }
 
                               @Override
-                              public void close() throws IOException {
+                              public boolean tryReset() {
+                            	return original.body().tryReset();
+                              }
+                              
+                              @Override
+                              public PeekResult peek() {
+                            	return original.body().peek();
+                              }
+                              
+                              @Override
+                              public void close() {
                                 closed.set(true);
                                 original.body().close();
                               }
+
                             })
                         .build();
                   }

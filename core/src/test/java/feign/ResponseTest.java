@@ -17,15 +17,18 @@ package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.Request.HttpMethod;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
+
+import feign.HttpBodyFactory.HttpBody;
+import feign.Request.HttpMethod;
 
 @SuppressWarnings("deprecation")
 class ResponseTest {
@@ -129,7 +132,7 @@ class ResponseTest {
             .status(103)
             .request(
                 Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-            .body((Response.Body) null)
+            .body((HttpBody) null) // TODO: KD - can we use HttpBodyFactory.empty() instead of null ?
             .build();
 
     assertThat(response.status()).isEqualTo(103);
@@ -146,7 +149,7 @@ class ResponseTest {
                       .request(
                           Request.create(
                               HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
-                      .body((Response.Body) null)
+                      .body((HttpBody) null)
                       .build();
 
               assertThat(response.status()).isEqualTo(statusCode);
