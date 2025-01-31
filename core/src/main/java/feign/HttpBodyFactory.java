@@ -87,17 +87,33 @@ public class HttpBodyFactory {
 		// Covered by Integer length()
 		// public int length();
 		
-		//  throws IOException is a change from Request.Body - let's see if that breaks too many things
-		@Deprecated
-		byte[] asBytes();
-		
-		//  throws IOException is a change from Request.Body - let's see if that breaks too many things
-		@Deprecated
-		String asString() ;
-		
-		@Deprecated
-		boolean isBinary();
-		
+    	@Deprecated
+		default public byte[] asBytes() {
+			// TODO: Any way to do proper logging of these types of messages? 
+			System.err.println("Deprecated method HttpBody.asBytes() called");
+			
+			try {
+				return Util.toByteArray(asInputStream());
+			} catch (IOException e) {
+				throw FeignException.bodyException(e.getMessage(), e);
+			}
+		}
+
+    	@Deprecated
+		default public String asString() {
+			// TODO: Any way to do proper logging of these types of messages? 
+			System.err.println("Deprecated method HttpBody.asString() called");
+			try {
+				return Util.toString(asReader());
+			} catch (IOException e) {
+				throw FeignException.bodyException(e.getMessage(), e);
+			}
+		}
+
+    	@Deprecated
+		default public boolean isBinary() {
+			return !getEncoding().isPresent();
+		}
 		
 		
 		// ******** Methods from Response.Body ***********
@@ -108,29 +124,31 @@ public class HttpBodyFactory {
 	     * <b>Note</b><br>
 	     * This is an integer as most implementations cannot do bodies greater than 2GB.
 	     */
-		@Deprecated
-	    Integer length();
+    	@Deprecated
+		default public Integer length() {
+			// TODO: Any way to do proper logging of these types of messages? 
+			System.err.println("Deprecated method HttpBody.length() called");
+			long length = getLength();
+			if (length > Integer.MAX_VALUE) throw new IllegalArgumentException("Length is larger than Integer.MAX_VALUE");
+			return length == -1 ? null : Integer.valueOf((int)length);
+		}
+
 
 	    /** True if {@link #asInputStream()} and {@link #asReader()} can be called more than once. */
-		@Deprecated
-	    boolean isRepeatable();
+    	@Deprecated
+		// TODO: KD - I feel like we are always repeatable now, unless someone has consumed too much of the stream. Maybe always return true here? The only place this is used is in a few tests - maybe not needed anymore?
+		default public boolean isRepeatable() {
+			// TODO: Any way to do proper logging of these types of messages? 
+			System.err.println("Deprecated method HttpBody.isRepeatable() called");
+			return tryReset();
+		}
 
-	    ///** It is the responsibility of the caller to close the stream. */
-	    //InputStream asInputStream() throws IOException;
-		
-//	    /**
-//	     * It is the responsibility of the caller to close the stream.
-//	     *
-//	     * @deprecated favor {@link Body#asReader(Charset)}
-//	     */
-//	    @Deprecated
-//	    default Reader asReader() throws IOException {
-//	      return asReader(StandardCharsets.UTF_8);
-//	    }
-
-	    /** It is the responsibility of the caller to close the stream. */
-		@Deprecated
-	    Reader asReader(Charset charset) throws IOException;
+    	@Deprecated
+		default public Reader asReader(Charset charset) throws IOException {
+			// TODO: Any way to do proper logging of these types of messages? 
+			System.err.println("Deprecated method HttpBody.asReader(Charset) called");
+			return new InputStreamReader(asInputStream(), charset);
+		}    	
 
 	    
 	}
@@ -204,62 +222,8 @@ public class HttpBodyFactory {
 			} catch (IOException ignore) {}
 		}
     	
-    	@Deprecated
-		@Override
-		public byte[] asBytes() {
-			// TODO: Any way to do proper logging of these types of messages? 
-			System.err.println("Deprecated method HttpBody.asBytes() called");
-			
-			try {
-				return Util.toByteArray(asInputStream());
-			} catch (IOException e) {
-				throw FeignException.bodyException(e.getMessage(), e);
-			}
-		}
 
-    	@Deprecated
-		@Override
-		public String asString() {
-			// TODO: Any way to do proper logging of these types of messages? 
-			System.err.println("Deprecated method HttpBody.asString() called");
-			try {
-				return Util.toString(asReader());
-			} catch (IOException e) {
-				throw FeignException.bodyException(e.getMessage(), e);
-			}
-		}
 
-    	@Deprecated
-		@Override
-		public boolean isBinary() {
-			return !encoding.isPresent();
-		}
-
-    	@Deprecated
-		@Override
-		public Integer length() {
-			// TODO: Any way to do proper logging of these types of messages? 
-			System.err.println("Deprecated method HttpBody.length() called");
-			if (length > Integer.MAX_VALUE) throw new IllegalArgumentException("Length is larger than Integer.MAX_VALUE");
-			return length == -1 ? null : Integer.valueOf((int)length);
-		}
-
-    	@Deprecated
-		@Override
-		// TODO: KD - I feel like we are always repeatable now, unless someone has consumed too much of the stream. Maybe always return true here? The only place this is used is in a few tests - maybe not needed anymore?
-		public boolean isRepeatable() {
-			// TODO: Any way to do proper logging of these types of messages? 
-			System.err.println("Deprecated method HttpBody.isRepeatable() called");
-			return tryReset();
-		}
-
-    	@Deprecated
-		@Override
-		public Reader asReader(Charset charset) throws IOException {
-			// TODO: Any way to do proper logging of these types of messages? 
-			System.err.println("Deprecated method HttpBody.asReader(Charset) called");
-			return new InputStreamReader(asInputStream(), charset);
-		}    	
     }
 
     public static class PeekResult{

@@ -418,76 +418,41 @@ public class FeignBuilderTest {
                         .body(
                             new HttpBody() { // TODO: KD - it's a shame we can't use mocks for this... See how LoggerMethodsTest uses spy() to to check close() was called.  Seems like verifyNoInteractions() would do the trick nicely.
                               @Override
-                              public Integer length() {
-                                return original.body().length();
-                              }
-
-                              @Override
-                              public boolean isRepeatable() {
-                                return original.body().isRepeatable();
-                              }
-
-                              @Override
                               public InputStream asInputStream() {
-                                return original.body().asInputStream();
+                                  return original.body().asInputStream();
                               }
 
+                              @Override
+                              public long getLength() {
+                                return original.body().getLength();
+                              }
+
+                              @Override
+                              public Optional<Charset> getEncoding() {
+                            	return original.body().getEncoding();
+                              }
+                              
                               @Override
                               public Reader asReader() {
                                 return original.body().asReader();
                               }
 
                               @Override
-                              public Reader asReader(Charset charset) throws IOException {
-                                return original.body().asReader(charset);
+                              public boolean tryReset() {
+                            	return original.body().tryReset();
                               }
-
+                              
+                              @Override
+                              public PeekResult peek() {
+                            	return original.body().peek();
+                              }
+                              
                               @Override
                               public void close() {
                                 closed.set(true);
                                 original.body().close();
                               }
-                              
-                              // TODO: KD - need to clean up indentation to use Feign coding standards (two spaces instead of tabs)
-                              	@Override
-                            	public byte[] asBytes() {
-                            		return original.body().asBytes();
-                            	}
-                              
-                              	@Override
-                            	public Optional<Charset> getEncoding() {
-                            		return original.body().getEncoding();
-                            	}
-                              
-                              	@Override
-                            	public long getLength() {
-                            		return original.body().getLength();
-                            	}
-                              	
-                              	@Override
-                              		public boolean isBinary() {
-                              			return original.body().isBinary();
-                              		}
-                              	
-                              	@Override
-                              		public PeekResult peek() {
-                              			return original.body().peek();
-                              		}
-                              	
-                              	@Override
-                              		public boolean tryReset() {
-                              			return original.body().tryReset();
-                              		}
-                              	
-                              	@Override
-                              		public String asString() {
-                              			return original.body().asString();
-                              		}
-                              	
-                              	@Override
-                              		public String toString() {
-                              			return original.body().toString();
-                              		}
+
                             })
                         .build();
                   }
