@@ -127,7 +127,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void parsesErrorResponse() {
+  public void parsesErrorResponse() {
 
     server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
 
@@ -244,7 +244,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void parsesResponseMissingLength() throws IOException {
+  public void parsesResponseMissingLength() throws IOException {
     server.enqueue(new MockResponse().setChunkedBody("foo", 1));
 
     TestInterface api =
@@ -333,7 +333,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void defaultCollectionFormat() throws Exception {
+  public void defaultCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -350,7 +350,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void headersWithNullParams() throws InterruptedException {
+  public void headersWithNullParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -368,7 +368,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void headersWithNotEmptyParams() throws InterruptedException {
+  public void headersWithNotEmptyParams() throws InterruptedException {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
@@ -386,7 +386,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void alternativeCollectionFormat() throws Exception {
+  public void alternativeCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
     TestInterface api =
