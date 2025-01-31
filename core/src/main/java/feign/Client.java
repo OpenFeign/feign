@@ -54,13 +54,9 @@ import feign.Request.Options;
 /** Submits HTTP {@link Request requests}. Implementations are expected to be thread-safe. */
 public interface Client {
 
-	// TODO: KD - Note there is a breaking change requirement that the underlying httpbody be closed. I do not know how to enforce this requirement (or move the close() call up higher in the call stack).
-	// TODO: KD - See note on Feign.client() for a potential solution here (wrapping the client)
   /**
    * Executes a request against its {@link Request#url() url} and returns a response.
    * 
-   * Implementations MUST call request.httpBody().close() if the execution was successful
-   *
    * @param request safe to replay.
    * @param options options to apply to this request.
    * @return connected response, {@link Response.Body} is absent or unread.
@@ -74,8 +70,9 @@ public interface Client {
 	  public ForceRequestCloseDecoratorClient(Client delegate) {
 		this.delegate = delegate;
 	}
-	  
-	  @Override
+	
+	  // TODO: KD - get rid of null check if we can agree to not allow null bodies...
+	@Override
 	public Response execute(Request request, Options options) throws IOException {
 		Response resp = delegate.execute(request, options);
 	    Optional.ofNullable(request.httpBody()).ifPresent(HttpBody::close);
