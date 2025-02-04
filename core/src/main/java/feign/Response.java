@@ -212,7 +212,7 @@ public final class Response implements Closeable {
    */
   public Charset charset() {
 
-	return ContentTypeParser.parseContentTypeFromHeaders(headers()).getCharset().orElse(Util.UTF_8);
+	return ContentTypeParser.parseContentTypeFromHeaders(headers(), "").getCharset().orElse(Util.UTF_8);
 
   }
 

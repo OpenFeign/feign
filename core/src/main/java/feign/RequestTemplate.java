@@ -1,5 +1,4 @@
 /*
- * Copyright © 2012 The Feign Authors (feign@commonhaus.dev)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -801,7 +800,7 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
-    if (name.equals("Content-Type")) {
+    if (name.equalsIgnoreCase("Content-Type")) { // headers are case-insensitive
       // a client can only produce content of one single type, so always override Content-Type and
       // only add a single type
       this.headers.remove(name);

@@ -2,26 +2,22 @@ package feign.utils;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-
-import feign.Util;
 
 public final class ContentTypeParser {
 
 	private ContentTypeParser() {
 	}
 
-	public static ContentTypeResult parseContentTypeFromHeaders(Map<String, Collection<String>> headers) {
-		for(Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase("content-type")) {
-				for (String val : entry.getValue()) {
-					return parseContentTypeHeader(val);
-				}
-			}
+	public static ContentTypeResult parseContentTypeFromHeaders(Map<String, Collection<String>> headers, String ifMissing) {
+		// The header map *should* be a case insensitive treemap
+		for (String val : headers.getOrDefault("content-type", Collections.emptyList())) {
+			return parseContentTypeHeader(val);
 		}
 		
-		return new ContentTypeResult("", null);
+		return new ContentTypeResult(ifMissing, null);
 	}
 	
 	public static ContentTypeResult parseContentTypeHeader(String contentTypeHeader) {
@@ -43,6 +39,8 @@ public final class ContentTypeParser {
 	}
 	
 	public static class ContentTypeResult{
+		public static final ContentTypeResult MISSING = new ContentTypeResult("", null);
+		
 		private String contentType;
 		private Optional<Charset> charset;
 		

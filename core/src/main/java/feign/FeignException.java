@@ -531,7 +531,7 @@ public class FeignException extends RuntimeException {
 
     private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
 
-      return ContentTypeParser.parseContentTypeFromHeaders(headers).getCharset().orElse(Util.UTF_8);
+      return ContentTypeParser.parseContentTypeFromHeaders(headers, "").getCharset().orElse(Util.UTF_8);
 
     }
     
