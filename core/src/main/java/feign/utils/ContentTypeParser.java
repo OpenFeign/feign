@@ -31,7 +31,7 @@ public final class ContentTypeParser {
           // TODO: KD - this doesn't really implement the full parser definition for the content-type header (esp related to quoted strings, etc...) - see https://www.w3.org/Protocols/rfc1341/4_Content-Type.html
           charsetString = charsetParts[1].trim();
           if (charsetString.length() > 1 &&  charsetString.startsWith("\"") && charsetString.endsWith("\""))
-        	charsetString = charsetString.substring(1, charsetString.length()-2);
+        	charsetString = charsetString.substring(1, charsetString.length()-1);
         }
       }
       

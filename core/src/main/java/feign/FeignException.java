@@ -502,9 +502,7 @@ public class FeignException extends RuntimeException {
 
     private String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
       Charset charset = getResponseCharset(headers);
-      if (charset == null) {
-        charset = Util.UTF_8;
-      }
+
       return getResponseBody(body, charset);
     }
 
