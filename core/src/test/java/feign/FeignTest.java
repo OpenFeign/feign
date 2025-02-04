@@ -31,21 +31,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import feign.Feign.ResponseMappingDecoder;
-import feign.QueryMap.MapEncoder;
-import feign.Request.HttpMethod;
-import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.codec.StringDecoder;
-import feign.querymap.BeanQueryMapEncoder;
-import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.Clock;
@@ -60,16 +48,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.SocketPolicy;
-import okio.Buffer;
+
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import feign.Feign.ResponseMappingDecoder;
+import feign.QueryMap.MapEncoder;
+import feign.Request.HttpMethod;
+import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.codec.StringDecoder;
+import feign.querymap.BeanQueryMapEncoder;
+import feign.querymap.FieldQueryMapEncoder;
+import feign.stream.InputStreamAndReaderDecoder;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
+import okio.Buffer;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -1219,6 +1226,81 @@ public class FeignTest {
       assertThat(e.getMessage()).isEqualTo("Method \"ignore\" should not be called");
     }
   }
+
+  @Test
+  void streamingResponse() throws Exception{
+	    byte[] expectedResponse = new byte[16184];
+		new Random().nextBytes(expectedResponse);
+	    server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse)));
+
+	    LargeStreamTestInterface api = Feign.builder()
+	    		.decoder(new InputStreamAndReaderDecoder(null))
+	        	.target( LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+	    try(InputStream is = api.getLargeStream()){
+	    	byte[] out = is.readAllBytes();
+	    	assertThat(out.length).isEqualTo(expectedResponse.length);
+	    	assertThat(out).isEqualTo(expectedResponse);
+	    }
+  }
+  
+  @Test
+  void streamingReaderResponse() throws Exception{
+	    String expectedResponse = new Random().ints(1, 1500 + 1)
+	    	      .limit(16184)
+	    	      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+	    	      .toString();
+
+	    server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse.getBytes(Util.UTF_8))).addHeader("content-type", "text/plan; charset=utf-8"));
+
+	    LargeStreamTestInterface api = Feign.builder()
+	    		.decoder(new InputStreamAndReaderDecoder(null))
+	        	.target( LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+	    try(Reader r = api.getLargeReader()){
+	    	String out = Util.toString(r);
+	    	assertThat(out.length()).isEqualTo(expectedResponse.length());
+	    	assertThat(out).isEqualTo(expectedResponse);
+	    }
+  }  
+  
+  @Test
+  void streamingReaderResponseWithNoCharset() throws Exception{
+	    String expectedResponse = new Random().ints(1, 1500 + 1)
+	    	      .limit(16184)
+	    	      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+	    	      .toString();
+
+	    server.enqueue(new MockResponse().setBody(new Buffer().write(expectedResponse.getBytes(Util.UTF_8))).addHeader("content-type", "text/plan"));
+
+	    LargeStreamTestInterface api = Feign.builder()
+	    		.decoder(new InputStreamAndReaderDecoder(null))
+	        	.target( LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+	    try(Reader r = api.getLargeReader()){
+	    	String out = Util.toString(r);
+	    	assertThat(out.length()).isEqualTo(expectedResponse.length());
+	    	assertThat(out).isEqualTo(expectedResponse);
+	    }
+  }    
+  
+  interface LargeStreamTestInterface {
+
+//	    @RequestLine("POST /")
+//	    String postLargeStream(InputStream stream);
+//
+//	    @RequestLine("POST /")
+//	    void postLargeFile(File file);
+
+	    @RequestLine("GET /")
+	    InputStream getLargeStream();
+	    
+	    @RequestLine("GET /")
+	    Reader getLargeReader();
+	    
+	  }
+
+  
 
   interface TestInterface {
 
