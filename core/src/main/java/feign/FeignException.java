@@ -15,9 +15,10 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.UTF_8;
+import static feign.Util.caseInsensitiveCopyOf;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,13 +28,10 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import feign.utils.ContentTypeParser;
 
