@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 import feign.utils.ContentTypeParser;
 
 /** Origin exception type for all Http Apis. */
+// TODO: KD - FeignException does not currently support streaming bodies.  Usually, error responses are short enough that this isn't an issue, but we may want to eventually replace byte[] responseBody with Response.Body responseBody;
+// TODO: KD - for that matter, why aren't we just capturing the response itself instead of the headers and body as separate parameters? errorReading() captures the response...
 public class FeignException extends RuntimeException {
 
   private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST =
