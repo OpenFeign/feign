@@ -18,6 +18,8 @@ package feign;
 import static feign.Util.*;
 
 import feign.Request.ProtocolVersion;
+import feign.utils.ContentTypeParser;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -210,22 +212,8 @@ public final class Response implements Closeable {
    */
   public Charset charset() {
 
-    Collection<String> contentTypeHeaders = headers().get("Content-Type");
+	return ContentTypeParser.parseContentTypeFromHeaders(headers()).getCharset().orElse(Util.UTF_8);
 
-    if (contentTypeHeaders != null) {
-      for (String contentTypeHeader : contentTypeHeaders) {
-        String[] contentTypeParmeters = contentTypeHeader.split(";");
-        if (contentTypeParmeters.length > 1) {
-          String[] charsetParts = contentTypeParmeters[1].split("=");
-          if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
-            String charsetString = charsetParts[1].replaceAll("\"", "");
-            return Charset.forName(charsetString);
-          }
-        }
-      }
-    }
-
-    return Util.UTF_8;
   }
 
   @Override

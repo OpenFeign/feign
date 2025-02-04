@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import feign.utils.ContentTypeParser;
+
 /** Origin exception type for all Http Apis. */
 public class FeignException extends RuntimeException {
 
@@ -529,26 +531,9 @@ public class FeignException extends RuntimeException {
 
     private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
 
-      Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.isEmpty()) {
-        return null;
-      }
+      return ContentTypeParser.parseContentTypeFromHeaders(headers).getCharset().orElse(Util.UTF_8);
 
-      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
-      Matcher matcher = pattern.matcher(strings.iterator().next());
-      if (!matcher.lookingAt()) {
-        return null;
-      }
-
-      String group = matcher.group(1);
-      try {
-        if (!Charset.isSupported(group)) {
-          return null;
-        }
-      } catch (IllegalCharsetNameException ex) {
-        return null;
-      }
-      return Charset.forName(group);
     }
+    
   }
 }
