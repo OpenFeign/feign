@@ -20,26 +20,17 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.github.openfeign</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>feign-vertx-parent</artifactId>
     <version>13.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-vertx-parent</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>feign-vertx</artifactId>
 
-  <modules>
-    <module>feign-vertx</module>
-    <module>tests-vertx4</module>
-    <module>tests-vertx-common</module>
-    <module>tests-vertx5</module>
-  </modules>
+  <name>Feign Vertx</name>
+  <description>Implementation of Feign on Vertx web client.</description>
 
   <properties>
-    <main.java.version>11</main.java.version>
-
-    <vertx.version>5.0.0.CR4</vertx.version>
-    <slf4j-log4j12.version>2.0.16</slf4j-log4j12.version>
-    <wiremock.version>3.0.1</wiremock.version>
+    <jackson.version>2.18.2</jackson.version>
   </properties>
 
   <dependencyManagement>
@@ -51,24 +42,28 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>tests-vertx-common</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
-        <version>${slf4j-log4j12.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.tomakehurst</groupId>
-        <artifactId>wiremock-jre8</artifactId>
-        <version>${wiremock.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-core</artifactId>
+    </dependency>
+
+    <!-- Vertx -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertx.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+      <version>${vertx.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 </project>

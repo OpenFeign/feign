@@ -2,7 +2,7 @@
 
 Implementation of Feign on Vertx. Brings you the best of two worlds together : 
 concise syntax of Feign to write client side API on fast, asynchronous and
-non-blocking HTTP client of Vertx.
+non-blocking WebClient of Vertx.
 
 ## Installation
 
@@ -14,7 +14,6 @@ non-blocking HTTP client of Vertx.
     <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-vertx</artifactId>
-        <version>14.0</version>
     </dependency>
     ...
 </dependencies>
@@ -23,14 +22,14 @@ non-blocking HTTP client of Vertx.
 ### With Gradle
 
 ```groovy
-compile group: 'io.github.openfeign', name: 'feign-vertx', version: '14.0'
+compile group: 'io.github.openfeign', name: 'feign-vertx'
 ```
 
 ## Compatibility
 
 Feign                  | Vertx
 ---------------------- | ----------------------
-14.x                   | 4.x
+14.x                   | 4.x - 5.x 
 
 ## Usage
 
@@ -62,15 +61,15 @@ interface IcecreamServiceApi {
 Build the client :
 
 ```java
-Vertx vertx = Vertx.vertx();  // get Vertx instance
+WebClient webClient = WebClient.create(vertx);  // create Vert.x WebClient
 
 /* Create instance of your API */
 IcecreamServiceApi icecreamApi = VertxFeign
     .builder()
-    .vertx(vertx) // provide vertx instance
+    .webClient(webClient) // provide WebClient instance
     .encoder(new JacksonEncoder())
     .decoder(new JacksonDecoder())
-    .target(IcecreamServiceApi.class, "http://www.icecreame.com");
+    .target(IcecreamServiceApi.class, "https://www.icecream.com");
     
 /* Execute requests asynchronously */
 Future<Collection<Flavor>> flavorsFuture = icecreamApi.getAvailableFlavors();
