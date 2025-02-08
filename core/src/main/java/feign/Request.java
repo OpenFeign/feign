@@ -271,10 +271,10 @@ public final class Request implements Serializable {
    */
   @Deprecated
   public byte[] body() {
-	System.err.println("Deprecated method called");
+	// Anyone calling this method is circumventing the streaming capabilities
+	//System.err.println("Deprecated method called");
 	if (body == null) return null;
-	  try {
-		    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	  try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 		    body.sendToOutputStream(baos);
 	        return baos.toByteArray();
 	  } catch (IOException e) {
