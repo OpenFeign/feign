@@ -18,13 +18,12 @@ package feign;
 import static feign.FeignException.errorReading;
 import static feign.Util.ensureClosed;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.lang.reflect.Type;
-
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import java.io.Closeable;
+import java.io.IOException;
+import java.lang.reflect.Type;
 
 public class InvocationContext {
   private final String configKey;
@@ -73,7 +72,7 @@ public class InvocationContext {
     }
 
     boolean noClose = false;
-    
+
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
@@ -89,12 +88,12 @@ public class InvocationContext {
       }
 
       Class<?> rawType = Types.getRawType(returnType);
-      
+
       // if the return type is closable, then it is the callers responsibility to close.
-      if (Closeable.class.isAssignableFrom(rawType)) { 
-    	  noClose = true;
+      if (Closeable.class.isAssignableFrom(rawType)) {
+        noClose = true;
       }
-      
+
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
         return TypedResponse.builder(response).body(decode(response, bodyType)).build();

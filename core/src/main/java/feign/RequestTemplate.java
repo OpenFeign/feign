@@ -1,4 +1,19 @@
 /*
+ * Copyright © 2012 The Feign Authors (feign@commonhaus.dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +32,15 @@ package feign;
 import static feign.Util.CONTENT_LENGTH;
 import static feign.Util.checkNotNull;
 
+import feign.Request.HttpMethod;
+import feign.Request.OutputStreamSender;
+import feign.Request.WriterSender;
+import feign.template.BodyTemplate;
+import feign.template.HeaderTemplate;
+import feign.template.QueryTemplate;
+import feign.template.UriTemplate;
+import feign.template.UriUtils;
+import feign.utils.ContentTypeParser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -33,22 +57,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import feign.Request.HttpMethod;
-import feign.Request.OutputStreamSender;
-import feign.Request.WriterSender;
-import feign.template.BodyTemplate;
-import feign.template.HeaderTemplate;
-import feign.template.QueryTemplate;
-import feign.template.UriTemplate;
-import feign.template.UriUtils;
-import feign.utils.ContentTypeParser;
 
 /**
  * Request Builder for an HTTP Target.
@@ -107,8 +120,8 @@ public final class RequestTemplate implements Serializable {
       CollectionFormat collectionFormat,
       MethodMetadata methodMetadata,
       Target<?> feignTarget) {
-	  
-	this();
+
+    this();
     this.target = target;
     this.fragment = fragment;
     this.uriTemplate = uriTemplate;
@@ -297,7 +310,7 @@ public final class RequestTemplate implements Serializable {
     if (!this.resolved) {
       throw new IllegalStateException("template has not been resolved.");
     }
-    
+
     return Request.create(this.method, this.url(), this.headers(), this.body, this);
   }
 
@@ -875,7 +888,7 @@ public final class RequestTemplate implements Serializable {
    * Sets the Body and Charset for this request.
    *
    * @param data to send, can be null.
-   * @param charset of the encoded data.  Ignored (see deprecation note)
+   * @param charset of the encoded data. Ignored (see deprecation note)
    * @return a RequestTemplate for chaining.
    * @deprecated Charset always comes from the content-type header. Use {@link #body(byte[])}
    */
@@ -886,76 +899,79 @@ public final class RequestTemplate implements Serializable {
 
   /**
    * Sets the body output to a fixed byte[]
+   *
    * @param data the data for the body
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(byte[] data) {
-	  this.body(Request.Body.create(data));
-	  this.header(CONTENT_LENGTH, Integer.toString(data.length) );
-	  return this;
+    this.body(Request.Body.create(data));
+    this.header(CONTENT_LENGTH, Integer.toString(data.length));
+    return this;
   }
-  
+
   /**
-   * Set the Body for this request.  The content length header will be set to the length of the encoded string.
-   * Encoding is done using the {@link #requestCharset()}
+   * Set the Body for this request. The content length header will be set to the length of the
+   * encoded string. Encoding is done using the {@link #requestCharset()}
    *
    * @param bodyText to send.
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate body(String bodyText) {
 
-	this.body(Request.Body.create(bodyText, requestCharset()) );
-    this.header(CONTENT_LENGTH, Integer.toString(bodyText.getBytes(requestCharset()).length) );
+    this.body(Request.Body.create(bodyText, requestCharset()));
+    this.header(CONTENT_LENGTH, Integer.toString(bodyText.getBytes(requestCharset()).length));
     return this;
   }
 
   /**
-   * Sets the sender for the body content using the request template's content-type charset encoding (or utf-8 if charset is not specified)
+   * Sets the sender for the body content using the request template's content-type charset encoding
+   * (or utf-8 if charset is not specified)
+   *
    * @param sender the sender that will generate the body content
-   * @param stringRepresentation the string that will be used for logging and toString methods. If null, the request will be read from the sender, which will cause downstream failures if the sender cannot be re-used, so be sure to set this for streaming requests.
+   * @param stringRepresentation the string that will be used for logging and toString methods. If
+   *     null, the request will be read from the sender, which will cause downstream failures if the
+   *     sender cannot be re-used, so be sure to set this for streaming requests.
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate bodyWriterSender(WriterSender sender, String stringRepresentation) {
-	  
-	  if (stringRepresentation == null) {
-		  try(StringWriter writer = new StringWriter()) {
-			sender.sendToWriter(writer);
-			stringRepresentation = sender.toString();
-		} catch (IOException e) {
-			stringRepresentation = "-- Unable to determine body: " + e.getMessage() + " --";
-		}
-		  
-	  }
-	  
-	  return body(
-			  	Request.Body.createForWriterSender(sender, requestCharset(), stringRepresentation)
-			  );
-	  
+
+    if (stringRepresentation == null) {
+      try (StringWriter writer = new StringWriter()) {
+        sender.sendToWriter(writer);
+        stringRepresentation = sender.toString();
+      } catch (IOException e) {
+        stringRepresentation = "-- Unable to determine body: " + e.getMessage() + " --";
+      }
+    }
+
+    return body(Request.Body.createForWriterSender(sender, requestCharset(), stringRepresentation));
   }
-  
-  public RequestTemplate bodyOutputStreamSender(OutputStreamSender sender, String stringRepresentation) {
-	  return body(
-			  		Request.Body.createForOutputStreamSender(sender, stringRepresentation)
-			  );
+
+  public RequestTemplate bodyOutputStreamSender(
+      OutputStreamSender sender, String stringRepresentation) {
+    return body(Request.Body.createForOutputStreamSender(sender, stringRepresentation));
   }
-  
+
   /**
-   * Set the Body for this request and clear the content-length header.  Callers can set the content-length after calling this if they are able to compute the length.
+   * Set the Body for this request and clear the content-length header. Callers can set the
+   * content-length after calling this if they are able to compute the length.
    *
    * @param body to send.
    * @return a RequestTemplate for chaining.
-   * @deprecated this method will eventually be changed to private.  Use the various public body(...) methods instead.
+   * @deprecated this method will eventually be changed to private. Use the various public body(...)
+   *     methods instead.
    */
   @Deprecated
   public RequestTemplate body(Request.Body body) {
     this.body = body;
 
-	// Enforce invariant: bodyTemplate or body must be set, but not both
+    // Enforce invariant: bodyTemplate or body must be set, but not both
     this.bodyTemplate = null;
 
-    // remove the content length header to indicate streaming is required, callers can set it again if they are able to compute the length
-	this.header(CONTENT_LENGTH);
-	  
+    // remove the content length header to indicate streaming is required, callers can set it again
+    // if they are able to compute the length
+    this.header(CONTENT_LENGTH);
+
     return this;
   }
 
@@ -964,35 +980,37 @@ public final class RequestTemplate implements Serializable {
    *
    * @return the currently applied Charset.
    */
-  
-  
   public Charset requestCharset() {
-	
-	// KD - Note that this is the charset of the request body - *not* the 'charset' field of this RequestTemplate object.
-	  //    As near as I can tell, the RequestTemplate#charset field isn't actually necessary except for feeding UriTemplate and QueryTemplate
-	  //    and neither of those benefit from an externally supplied charset. At the end of the day, all of these calls terminate at UriUtils#encodeChunk,
-	  //    which encodes, processes bytes, then immediately decodes. Any encoding would work.
-	
-	return ContentTypeParser.parseContentTypeFromHeaders(headers(), "Unknown/Unknown").getCharset().orElse(Util.UTF_8);
-	  
+
+    // KD - Note that this is the charset of the request body - *not* the 'charset' field of this
+    // RequestTemplate object.
+    //    As near as I can tell, the RequestTemplate#charset field isn't actually necessary except
+    // for feeding UriTemplate and QueryTemplate
+    //    and neither of those benefit from an externally supplied charset. At the end of the day,
+    // all of these calls terminate at UriUtils#encodeChunk,
+    //    which encodes, processes bytes, then immediately decodes. Any encoding would work.
+
+    return ContentTypeParser.parseContentTypeFromHeaders(headers(), "Unknown/Unknown")
+        .getCharset()
+        .orElse(Util.UTF_8);
   }
 
   /**
    * The Request Body.
    *
-   * @implNote This should not be called unless the request body is resettable (e.g. the body was set using {@link #body(byte[])} or {@link #body(String)} )
-   *
+   * @implNote This should not be called unless the request body is resettable (e.g. the body was
+   *     set using {@link #body(byte[])} or {@link #body(String)} )
    * @return the request body as a byte array
    */
   public byte[] body() {
-	  if (this.body == null) return null;
-	  try {
-	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    this.body.sendToOutputStream(baos);
-        return baos.toByteArray();
-	  } catch (IOException e) {
-		  throw new FeignException(-1, e.getMessage(), e);
-	  }
+    if (this.body == null) return null;
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      this.body.sendToOutputStream(baos);
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new FeignException(-1, e.getMessage(), e);
+    }
   }
 
   /**
@@ -1023,8 +1041,8 @@ public final class RequestTemplate implements Serializable {
    * @return a RequestTemplate for chaining.
    */
   public RequestTemplate bodyTemplate(String bodyTemplate, Charset charset) {
-	  
-	// Enforce invariant: bodyTemplate or body must be set, but not both
+
+    // Enforce invariant: bodyTemplate or body must be set, but not both
     this.bodyTemplate = BodyTemplate.create(bodyTemplate, charset);
     this.body = null;
     return this;

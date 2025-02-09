@@ -20,12 +20,14 @@ import static feign.Util.checkNotNull;
 import static feign.Util.getThreadIdentifier;
 import static feign.Util.valuesOrEmpty;
 
+import feign.Request.OutputStreamSender;
+import feign.Request.WriterSender;
+import feign.utils.ContentTypeParser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
@@ -36,13 +38,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import feign.Request.OutputStreamSender;
-import feign.Request.WriterSender;
-import feign.utils.ContentTypeParser;
 
 /** An immutable request to an http server. */
 public final class Request implements Serializable {
@@ -112,12 +109,12 @@ public final class Request implements Serializable {
       Map<String, Collection<String>> headers,
       byte[] bodyBytes,
       Charset charset) {
-    return create(httpMethod, url, headers, Body.create(bodyBytes), (RequestTemplate)null);
+    return create(httpMethod, url, headers, Body.create(bodyBytes), (RequestTemplate) null);
   }
-  
+
   /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
-   * Used for unit testing only
+   * Builds a Request. All parameters must be effectively immutable, via safe copies. Used for unit
+   * testing only
    *
    * @param httpMethod for the request.
    * @param url for the request.
@@ -127,14 +124,14 @@ public final class Request implements Serializable {
    * @return a Request
    */
   public static Request create(
-	      HttpMethod httpMethod,
-	      String url,
-	      Map<String, Collection<String>> headers,
-	      byte[] bodyBytes,
-	      Charset charset,
-	      RequestTemplate requestTemplate) {
-	    return create(httpMethod, url, headers, Body.create(bodyBytes), requestTemplate);
-	  }
+      HttpMethod httpMethod,
+      String url,
+      Map<String, Collection<String>> headers,
+      byte[] bodyBytes,
+      Charset charset,
+      RequestTemplate requestTemplate) {
+    return create(httpMethod, url, headers, Body.create(bodyBytes), requestTemplate);
+  }
 
   /**
    * Builds a Request. All parameters must be effectively immutable, via safe copies.
@@ -153,7 +150,7 @@ public final class Request implements Serializable {
       RequestTemplate requestTemplate) {
     return new Request(httpMethod, url, headers, body, requestTemplate);
   }
-  
+
   private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
@@ -248,20 +245,23 @@ public final class Request implements Serializable {
    * @return the current character set for the request, may be {@literal null} for binary data.
    */
   public Charset charset() {
-	return ContentTypeParser.parseContentTypeFromHeaders(headers, "Unknown/Unknown").getCharset().orElse(null);
+    return ContentTypeParser.parseContentTypeFromHeaders(headers, "Unknown/Unknown")
+        .getCharset()
+        .orElse(null);
   }
 
   public boolean hasBody() {
-	  return body != null;
+    return body != null;
   }
-  
+
   /**
-   * @return A string representation of the body as would be written to logs (this is NOT guaranteed to be an exact replica of the request body)
+   * @return A string representation of the body as would be written to logs (this is NOT guaranteed
+   *     to be an exact replica of the request body)
    */
   public String bodyAsString() {
-	  return body.asString();
+    return body.asString();
   }
-  
+
   /**
    * If present, this is the replayable body to send to the server. In some cases, this may be
    * interpretable as text.
@@ -271,31 +271,32 @@ public final class Request implements Serializable {
    */
   @Deprecated
   public byte[] body() {
-	// Anyone calling this method is circumventing the streaming capabilities
-	//System.err.println("Deprecated method called");
-	if (body == null) return null;
-	  try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-		    body.sendToOutputStream(baos);
-	        return baos.toByteArray();
-	  } catch (IOException e) {
-		  throw new FeignException(-1, e.getMessage(), e);
-	  }
+    // Anyone calling this method is circumventing the streaming capabilities
+    // System.err.println("Deprecated method called");
+    if (body == null) return null;
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      body.sendToOutputStream(baos);
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new FeignException(-1, e.getMessage(), e);
+    }
   }
 
   public void sendBodyToOutputStream(OutputStream os) throws IOException {
-	body.sendToOutputStream(os);
+    body.sendToOutputStream(os);
   }
 
   /**
    * Request Length.
    *
-   * @return size of the request body (using the Content-Length header value) if specified, or -1 if unknown
+   * @return size of the request body (using the Content-Length header value) if specified, or -1 if
+   *     unknown
    */
   public int length() {
     for (String value : headers().get(CONTENT_LENGTH)) {
-  	  return Integer.valueOf(value);
+      return Integer.valueOf(value);
     }
-	  
+
     return -1;
   }
 
@@ -527,14 +528,14 @@ public final class Request implements Serializable {
     return this.requestTemplate;
   }
 
-  public static interface OutputStreamSender{
-	  public void sendToOutputStream(OutputStream os) throws IOException;
+  public static interface OutputStreamSender {
+    public void sendToOutputStream(OutputStream os) throws IOException;
   }
-  
-  public static interface WriterSender{
-	  public void sendToWriter(Writer w) throws IOException;
+
+  public static interface WriterSender {
+    public void sendToWriter(Writer w) throws IOException;
   }
-  
+
   /**
    * Request Body
    *
@@ -543,21 +544,22 @@ public final class Request implements Serializable {
   @Experimental
   public static class Body implements Serializable {
 
-	private static final Body EMPTY = new Body(os -> {}, "-- EMPTY BODY --");
-	  
-	private final OutputStreamSender streamSender;
-	
-	/**
-	 * The string representation of this body as it will be displayed in log output or toString() methods
-	 */
-	private final String stringRepresentation;
-	
+    private static final Body EMPTY = new Body(os -> {}, "-- EMPTY BODY --");
+
+    private final OutputStreamSender streamSender;
+
+    /**
+     * The string representation of this body as it will be displayed in log output or toString()
+     * methods
+     */
+    private final String stringRepresentation;
+
     protected Body(OutputStreamSender streamSender, String stringRepresentation) {
       this.streamSender = streamSender;
       this.stringRepresentation = stringRepresentation;
     }
 
-    public void sendToOutputStream(OutputStream os) throws IOException{
+    public void sendToOutputStream(OutputStream os) throws IOException {
       streamSender.sendToOutputStream(os);
     }
 
@@ -566,41 +568,38 @@ public final class Request implements Serializable {
     }
 
     public static Body create(String data, Charset charset) {
-    	Objects.requireNonNull(data);
-    	Objects.requireNonNull(charset);
-    	
-    	return createForWriterSender(w -> w.write(data), charset, data);
+      Objects.requireNonNull(data);
+      Objects.requireNonNull(charset);
+
+      return createForWriterSender(w -> w.write(data), charset, data);
     }
 
     public static Body create(byte[] data) {
-    	// Compatibility with a zillion unit tests that use a null byte[] to indicate no body
-    	if (data == null) return null;
-    	
+      // Compatibility with a zillion unit tests that use a null byte[] to indicate no body
+      if (data == null) return null;
+
       return createForOutputStreamSender(
-    			os -> os.write(data),
-    			"Binary data (" + data.length + " bytes)"
-    			);
+          os -> os.write(data), "Binary data (" + data.length + " bytes)");
     }
-    
-    public static Body createForWriterSender(WriterSender sender, Charset charset, String stringRep) {
-    	Objects.requireNonNull(charset);
-    	
-    	OutputStreamSender osSender = os -> {
-			try(Writer osw =  new OutputStreamWriter(os, charset)){
-				sender.sendToWriter( osw );
-			}
-    	};
-    	
-      	  return createForOutputStreamSender(
-	      			osSender,
-	      			stringRep
-					);
+
+    public static Body createForWriterSender(
+        WriterSender sender, Charset charset, String stringRep) {
+      Objects.requireNonNull(charset);
+
+      OutputStreamSender osSender =
+          os -> {
+            try (Writer osw = new OutputStreamWriter(os, charset)) {
+              sender.sendToWriter(osw);
+            }
+          };
+
+      return createForOutputStreamSender(osSender, stringRep);
     }
 
     public static Body createForOutputStreamSender(OutputStreamSender sender, String stringRep) {
-    	return new Request.Body(sender, stringRep);
+      return new Request.Body(sender, stringRep);
     }
-    
+
     public static Body empty() {
       return EMPTY;
     }

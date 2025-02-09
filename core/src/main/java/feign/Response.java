@@ -19,7 +19,6 @@ import static feign.Util.*;
 
 import feign.Request.ProtocolVersion;
 import feign.utils.ContentTypeParser;
-
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -210,11 +209,13 @@ public final class Response implements Closeable {
    * See <a href="https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1">rfc7231 - Media
    * Type</a>
    */
-  // TODO: KD - RFC 7231 spec says default charset if not specified is ISO-8859-1 (at least for HTTP/1.1). Seems dangerous to assume UTF_8 here...
+  // TODO: KD - RFC 7231 spec says default charset if not specified is ISO-8859-1 (at least for
+  // HTTP/1.1). Seems dangerous to assume UTF_8 here...
   public Charset charset() {
 
-	return ContentTypeParser.parseContentTypeFromHeaders(headers(), "").getCharset().orElse(Util.UTF_8);
-
+    return ContentTypeParser.parseContentTypeFromHeaders(headers(), "")
+        .getCharset()
+        .orElse(Util.UTF_8);
   }
 
   @Override
@@ -231,29 +232,29 @@ public final class Response implements Closeable {
     if (body != null) builder.append('\n').append(bodyPreview());
     return builder.toString();
   }
-  
-  private String bodyPreview(){
-      final int MAX_CHARS = 1024;
-      
-      try {
 
-	    	char[] preview = new char[MAX_CHARS];
-	        Reader reader = new InputStreamReader(body.asInputStream(), charset());
-	        int count = reader.read(preview);
-	        
-	        if (count == -1) return "";
-	        
-	        boolean fullBody = count < preview.length;
-	
-	        String bodyPreview = new String(preview, 0, count);
-	        
-	        if (!fullBody) bodyPreview = bodyPreview + "... (" + body.length() + " bytes)";
-	
-	        return bodyPreview;
-      } catch (IOException e) {
-      	return e + " , failed to parse response body preview";
-      }
-    }  
+  private String bodyPreview() {
+    final int MAX_CHARS = 1024;
+
+    try {
+
+      char[] preview = new char[MAX_CHARS];
+      Reader reader = new InputStreamReader(body.asInputStream(), charset());
+      int count = reader.read(preview);
+
+      if (count == -1) return "";
+
+      boolean fullBody = count < preview.length;
+
+      String bodyPreview = new String(preview, 0, count);
+
+      if (!fullBody) bodyPreview = bodyPreview + "... (" + body.length() + " bytes)";
+
+      return bodyPreview;
+    } catch (IOException e) {
+      return e + " , failed to parse response body preview";
+    }
+  }
 
   @Override
   public void close() {
@@ -289,17 +290,19 @@ public final class Response implements Closeable {
 
     /** It is the responsibility of the caller to close the stream. */
     Reader asReader(Charset charset) throws IOException;
-  
   }
 
   private static final class InputStreamBody implements Response.Body {
-	private final int REWIND_LIMIT = 8092;
+    private final int REWIND_LIMIT = 8092;
 
     private final InputStream inputStream;
     private final Integer length;
 
     private InputStreamBody(InputStream inputStream, Integer length) {
-      this.inputStream = inputStream.markSupported() ? inputStream : new BufferedInputStream(inputStream, REWIND_LIMIT);
+      this.inputStream =
+          inputStream.markSupported()
+              ? inputStream
+              : new BufferedInputStream(inputStream, REWIND_LIMIT);
       this.inputStream.mark(0);
       this.length = length;
     }
@@ -343,7 +346,6 @@ public final class Response implements Closeable {
     public void close() throws IOException {
       inputStream.close();
     }
-    
   }
 
   private static final class ByteArrayBody implements Response.Body {
