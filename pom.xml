@@ -170,7 +170,7 @@
 
     <okhttp3.version>4.12.0</okhttp3.version>
     <guava.version>33.4.0-jre</guava.version>
-    <googlehttpclient.version>1.45.3</googlehttpclient.version>
+    <googlehttpclient.version>1.46.1</googlehttpclient.version>
     <gson.version>2.12.1</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.16</slf4j.version>
@@ -1014,18 +1014,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>6.0.5</version>
+            <version>6.1.0</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.1.0</version>
+                <version>3.2.0</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.1.0</version>
+                <version>3.2.0</version>
               </dependency>
             </dependencies>
 
