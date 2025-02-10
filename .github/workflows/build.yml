@@ -13,7 +13,13 @@
 #
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'  # Runs on all new tags
+  pull_request:
 
 jobs:
   build:
@@ -26,8 +32,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Cache local Maven repository
         uses: actions/cache@v3
@@ -69,6 +75,9 @@ jobs:
           mkdir -p ~/.m2
           cp .github/files/toolchains.xml ~/.m2/toolchains.xml
 
+      - name: Download dependencies only
+        run: ./mvnw -ntp -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies
+
       - name: Build
         run: ./mvnw -ntp -B clean install
 
@@ -76,7 +85,7 @@ jobs:
         run: scripts/no-git-changes.sh
 
       - name: Nexus deploy
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
         run: |
           cp .github/files/settings.xml ~/.m2/settings.xml
           echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
