@@ -76,7 +76,7 @@ jobs:
           cp .github/files/toolchains.xml ~/.m2/toolchains.xml
 
       - name: Download dependencies only
-        run: ./mvnw -ntp -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies
+        run: ./mvnw -ntp -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies -fn
 
       - name: Build
         run: ./mvnw -ntp -B clean install
