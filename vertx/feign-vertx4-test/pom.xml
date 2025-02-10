@@ -24,54 +24,42 @@
     <version>13.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-vertx</artifactId>
+  <artifactId>feign-vertx4-test</artifactId>
 
-  <name>Feign Vertx</name>
-  <description>Implementation of Feign on Vertx web client.</description>
+  <name>Feign Vertx (tests with Vertx 4.x)</name>
+  <description>Tests with Vertx 4.x.</description>
 
   <properties>
-    <jackson.version>2.18.2</jackson.version>
+    <vertx.version>4.5.12</vertx.version>
   </properties>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
-
-    <!-- Feign -->
+    <!-- Tests -->
     <dependency>
       <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-core</artifactId>
+      <artifactId>feign-vertx</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
 
-    <!-- Vertx -->
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-vertx</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
+      <artifactId>vertx-junit5</artifactId>
       <version>${vertx.version}</version>
-      <scope>provided</scope>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-client</artifactId>
-      <version>${vertx.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Tests -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
       <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
@@ -124,20 +112,4 @@
       </exclusions>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>
