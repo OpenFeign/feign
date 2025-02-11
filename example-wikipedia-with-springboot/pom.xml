@@ -53,6 +53,10 @@
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-form</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
       <artifactId>feign-gson</artifactId>
     </dependency>
     <dependency>

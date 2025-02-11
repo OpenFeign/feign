@@ -28,7 +28,7 @@
 
   <artifactId>feign-form-spring</artifactId>
 
-  <name>Open Feign Forms Extension for Spring</name>
+  <name>Feign Forms Extension for Spring</name>
 
   <properties>
     <main.java.version>17</main.java.version>
@@ -101,19 +101,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${springboot.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.undertow</groupId>
-      <artifactId>undertow-core</artifactId>
-      <version>2.3.18.Final</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.appulse</groupId>
-      <artifactId>utils-java</artifactId>
-      <version>1.18.0</version>
       <scope>test</scope>
     </dependency>
 
