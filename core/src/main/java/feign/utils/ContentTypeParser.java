@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+import feign.Util;
+
 public final class ContentTypeParser {
 
 	private ContentTypeParser() {
@@ -39,7 +41,7 @@ public final class ContentTypeParser {
 
 	public static ContentTypeResult parseContentTypeFromHeaders(Map<String, Collection<String>> headers, String ifMissing) {
 		// The header map *should* be a case insensitive treemap
-		for (String val : headers.getOrDefault("content-type", Collections.emptyList())) {
+		for (String val : headers.getOrDefault(Util.CONTENT_TYPE, Collections.emptyList())) {
 			return parseContentTypeHeader(val);
 		}
 		
