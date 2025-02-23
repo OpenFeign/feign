@@ -82,11 +82,7 @@ public class OAuth2Authentication implements Capability {
     idpClient = new OAuth2IDPClient(httpClient, httpOptions, jsonDecoder);
 
     return baseBuilder
-        .requestInterceptor(
-            (final RequestTemplate requestTemplate) -> {
-              final String accessToken = getAccessToken();
-              requestTemplate.header("Authorization", "Bearer " + accessToken);
-            })
+        .requestInterceptor(new AuthenticationInterceptor())
         .retryer(new UnauthorizedRetryer())
         .errorDecoder(UnauthorizedErrorDecoder.INSTANCE);
   }
@@ -117,6 +113,15 @@ public class OAuth2Authentication implements Capability {
 
     expiresAt = Instant.now().plus(oAuth2TokenResponse.getExpiresIn(), ChronoUnit.SECONDS);
     return oAuth2TokenResponse.getAccessToken();
+  }
+
+  final class AuthenticationInterceptor implements RequestInterceptor {
+
+    @Override
+    public void apply(final RequestTemplate requestTemplate) {
+      final String accessToken = getAccessToken();
+      requestTemplate.header("Authorization", "Bearer " + accessToken);
+    }
   }
 
   final class UnauthorizedRetryer implements Retryer {
