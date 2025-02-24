@@ -24,16 +24,19 @@
     <version>13.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>feign-vertx</artifactId>
+  <artifactId>feign-vertx-parent</artifactId>
+  <packaging>pom</packaging>
 
-  <name>Feign Vertx</name>
-  <description>Implementation of Feign on Vertx web client.</description>
+  <modules>
+    <module>feign-vertx</module>
+    <module>feign-vertx4-test</module>
+    <module>feign-vertx5-test</module>
+  </modules>
 
   <properties>
-    <vertx.version>4.5.13</vertx.version>
-    <jackson.version>2.18.2</jackson.version>
-    <slf4j-log4j12.version>2.0.0-alpha6</slf4j-log4j12.version>
-    <wiremock.version>2.35.2</wiremock.version>
+    <vertx.version>5.0.0.CR4</vertx.version>
+    <slf4j-log4j12.version>2.0.16</slf4j-log4j12.version>
+    <wiremock.version>3.0.1</wiremock.version>
   </properties>
 
   <dependencyManagement>
@@ -45,79 +48,24 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-vertx-common-test</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j-log4j12.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.tomakehurst</groupId>
+        <artifactId>wiremock-jre8</artifactId>
+        <version>${wiremock.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <dependencies>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-core</artifactId>
-    </dependency>
-
-    <!-- Vertx -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-      <version>${vertx.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Tests -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
-      <version>${vertx.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-jackson</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jsr310</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-slf4j</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>${slf4j-log4j12.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock-jre8</artifactId>
-      <version>${wiremock.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.junit</groupId>
-          <artifactId>junit-bom</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-  </dependencies>
 </project>
