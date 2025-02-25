@@ -25,14 +25,19 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 public class OAuth2Authentication implements Capability {
+  private static final java.util.logging.Logger JAVA_LOGGER =
+      java.util.logging.Logger.getLogger(OAuth2Authentication.class.getName());
+
   protected ClientRegistration clientRegistration;
   protected OAuth2IDPClient idpClient;
 
   protected AsyncClient<Object> httpClient;
   protected Request.Options httpOptions;
   protected Decoder jsonDecoder;
+  protected Logger logger;
 
   private OAuth2TokenResponse oAuth2TokenResponse = null;
   private Instant expiresAt = null;
@@ -66,6 +71,12 @@ public class OAuth2Authentication implements Capability {
   }
 
   @Override
+  public Logger enrich(final Logger logger) {
+    this.logger = new ConfidentialLogger(logger);
+    return this.logger;
+  }
+
+  @Override
   public <B extends BaseBuilder<B, T>, T> B beforeBuild(final B baseBuilder) {
     if (httpClient == null) {
       throw new IllegalStateException("httpClient is missing");
@@ -84,12 +95,14 @@ public class OAuth2Authentication implements Capability {
     return baseBuilder
         .requestInterceptor(new AuthenticationInterceptor())
         .retryer(new UnauthorizedRetryer())
-        .errorDecoder(UnauthorizedErrorDecoder.INSTANCE);
+        .errorDecoder(UnauthorizedErrorDecoder.INSTANCE)
+        .logger(this.logger);
   }
 
   private synchronized String getAccessToken() {
     if (expiresAt != null && expiresAt.minus(10, ChronoUnit.SECONDS).isBefore(Instant.now())) {
       // Access token is expired or about to expire
+      JAVA_LOGGER.log(Level.INFO, "Access token is about to be expired. Refreshing token.");
       expiresAt = null;
       oAuth2TokenResponse = null;
     }
@@ -102,6 +115,8 @@ public class OAuth2Authentication implements Capability {
   }
 
   private synchronized String forceAuthentication() {
+    JAVA_LOGGER.log(Level.INFO, "Perform authentication against IDP.");
+
     try {
       oAuth2TokenResponse =
           idpClient
@@ -136,9 +151,14 @@ public class OAuth2Authentication implements Capability {
       }
 
       if (reauthenticated) {
+        JAVA_LOGGER.log(
+            Level.WARNING,
+            "Client still unauthorized event after access token was updated. Fail request.");
         throw unauthorizedException;
       }
 
+      JAVA_LOGGER.log(
+          Level.INFO, "Request was unauthorized by Resource Server. Refresh access token.");
       final String accessToken = forceAuthentication();
 
       final RequestTemplate requestTemplate = unauthorizedException.request().requestTemplate();
