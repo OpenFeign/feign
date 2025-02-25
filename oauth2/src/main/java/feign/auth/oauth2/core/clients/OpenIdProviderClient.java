@@ -63,8 +63,9 @@ public class OpenIdProviderClient extends OAuth2IDPClient {
                   @SuppressWarnings("unchecked")
                   final Map<String, Object> jsonResponse =
                       (Map<String, Object>) jsonDecoder.decode(response, Map.class);
-                  OpenIdProviderConfigurationResponse configuration =
+                  final OpenIdProviderConfigurationResponse configuration =
                       OpenIdProviderConfigurationResponse.fromMap(jsonResponse);
+                  validateIssuer(clientRegistration, configuration);
                   return toClientRegistration(clientRegistration, configuration);
                 } else {
                   final byte[] bytes = Util.toByteArray(response.body().asInputStream());
@@ -193,5 +194,25 @@ public class OpenIdProviderClient extends OAuth2IDPClient {
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 1000)) // 1 minute expiration
         .withJWTId(UUID.randomUUID().toString()); // Unique identifier
+  }
+
+  /**
+   * Prevent impersonation attack
+   *
+   * @see https://openid.net/specs/openid-connect-discovery-1_0.html#Impersonation
+   */
+  private static void validateIssuer(
+      final ClientRegistration clientRegistration,
+      final OpenIdProviderConfigurationResponse configuration) {
+    final String originalIssuer =
+        clientRegistration.getProviderDetails().getIssuerUri().replaceAll("/+$", "");
+    final String configurationIssuer = configuration.getIssuer().replaceAll("/+$", "");
+
+    if (!originalIssuer.equals(configurationIssuer)) {
+      throw new IllegalStateException(
+          String.format(
+              "Issuer in request mismatch issuer in configuration response.\nOriginal: %s\nConfiguration: %s",
+              originalIssuer, configurationIssuer));
+    }
   }
 }
