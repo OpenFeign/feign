@@ -262,7 +262,13 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                 }
               });
 
-      return clone;
+      B enrichedBuilder = (B) clone.clone();
+
+      for (final Capability capability : capabilities) {
+        enrichedBuilder = capability.beforeBuild(enrichedBuilder);
+      }
+
+      return enrichedBuilder;
     } catch (CloneNotSupportedException e) {
       throw new AssertionError(e);
     }
