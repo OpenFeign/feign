@@ -185,7 +185,7 @@
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
-    <maven-install-plugin.version>3.1.3</maven-install-plugin.version>
+    <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <license-maven-plugin.version>4.6</license-maven-plugin.version>
