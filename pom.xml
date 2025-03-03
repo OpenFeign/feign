@@ -359,6 +359,12 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>feign-vertx</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>feign-micrometer</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
