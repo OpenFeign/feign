@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class Http2ClientTest extends AbstractClientTest {
@@ -148,19 +150,21 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  void getWithRequestBody() {
+  void getWithRequestBody() throws JSONException {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.getWithBody();
-    assertThat(result).contains("\"data\": \"some request body\"");
+    String expected = "{ \"data\": \"some request body\" }";
+    JSONAssert.assertEquals(expected, result, false);
   }
 
   @Test
-  void deleteWithRequestBody() {
+  void deleteWithRequestBody() throws JSONException {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.deleteWithBody();
-    assertThat(result).contains("\"data\": \"some request body\"");
+    String expected = "{ \"data\": \"some request body\" }";
+    JSONAssert.assertEquals(expected, result, false);
   }
 
   @Override
