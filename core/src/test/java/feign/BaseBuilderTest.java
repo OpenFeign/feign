@@ -67,4 +67,27 @@ class BaseBuilderTest {
             .responseInterceptor((ic, c) -> c.next(ic)),
         12);
   }
+
+  @Test
+  void checkCloneDontLooseInterceptors() {
+    Feign.Builder originalBuilder = Feign.builder().addCapability(new Capability() {});
+
+    // There is no any interceptors
+    assertThat(originalBuilder.requestInterceptors).isNotNull().isEmpty();
+
+    Feign.Builder enrichedBuilder = originalBuilder.enrich();
+    Feign.Builder enrichedBuilderWithInterceptor = enrichedBuilder.requestInterceptor((req) -> {});
+
+    // Original builder should have no interceptor
+    assertThat(originalBuilder.requestInterceptors).isNotNull().isEmpty();
+
+    // enrichedBuilder should have an interceptor
+    assertThat(enrichedBuilder.requestInterceptors).isNotNull().isNotEmpty().hasSize(1);
+
+    // enrichedBuilderWithInterceptor should have an interceptor
+    assertThat(enrichedBuilderWithInterceptor.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(1);
+  }
 }
