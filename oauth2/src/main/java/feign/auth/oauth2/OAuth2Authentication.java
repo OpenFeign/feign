@@ -92,11 +92,12 @@ public class OAuth2Authentication implements Capability {
 
     idpClient = new OAuth2IDPClient(httpClient, httpOptions, jsonDecoder);
 
-    return baseBuilder
-        .requestInterceptor(new AuthenticationInterceptor())
-        .retryer(new UnauthorizedRetryer())
-        .errorDecoder(UnauthorizedErrorDecoder.INSTANCE)
-        .logger(this.logger);
+    baseBuilder.requestInterceptor(new AuthenticationInterceptor());
+    baseBuilder.retryer(new UnauthorizedRetryer());
+    baseBuilder.errorDecoder(UnauthorizedErrorDecoder.INSTANCE);
+    baseBuilder.logger(this.logger);
+
+    return baseBuilder;
   }
 
   private synchronized String getAccessToken() {

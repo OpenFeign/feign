@@ -262,7 +262,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                 }
               });
 
-      B enrichedBuilder = (B) clone.clone();
+      B enrichedBuilder = clone;
 
       for (final Capability capability : capabilities) {
         enrichedBuilder = capability.beforeBuild(enrichedBuilder);
