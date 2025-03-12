@@ -30,6 +30,7 @@
   <description>Implementation of Feign on Vertx web client.</description>
 
   <properties>
+    <main.java.version>11</main.java.version>
     <jackson.version>2.18.2</jackson.version>
   </properties>
 
