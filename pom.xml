@@ -1031,7 +1031,7 @@
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.3.0</version>
+                <version>3.4.0</version>
               </dependency>
             </dependencies>
 
