@@ -38,6 +38,8 @@ public class OAuth2Authentication implements Capability {
   protected Request.Options httpOptions;
   protected Decoder jsonDecoder;
   protected Logger logger;
+  private Retryer unauthorizedRetryer;
+  private ErrorDecoder unauthorizedErrorDecoder;
 
   private OAuth2TokenResponse oAuth2TokenResponse = null;
   private Instant expiresAt = null;
@@ -77,6 +79,18 @@ public class OAuth2Authentication implements Capability {
   }
 
   @Override
+  public Retryer enrich(final Retryer retryer) {
+    this.unauthorizedRetryer = new UnauthorizedRetryer(this, retryer);
+    return this.unauthorizedRetryer;
+  }
+
+  @Override
+  public ErrorDecoder enrich(final ErrorDecoder decoder) {
+    this.unauthorizedErrorDecoder = new UnauthorizedErrorDecoder(decoder);
+    return this.unauthorizedErrorDecoder;
+  }
+
+  @Override
   public <B extends BaseBuilder<B, T>, T> B beforeBuild(final B baseBuilder) {
     if (httpClient == null) {
       throw new IllegalStateException("httpClient is missing");
@@ -92,15 +106,20 @@ public class OAuth2Authentication implements Capability {
 
     idpClient = new OAuth2IDPClient(httpClient, httpOptions, jsonDecoder);
 
-    baseBuilder.requestInterceptor(new AuthenticationInterceptor());
-    baseBuilder.retryer(new UnauthorizedRetryer());
-    baseBuilder.errorDecoder(UnauthorizedErrorDecoder.INSTANCE);
-    baseBuilder.logger(this.logger);
+    baseBuilder.requestInterceptor(new AuthenticationInterceptor(this));
+
+    if (this.unauthorizedRetryer == null) {
+      baseBuilder.retryer(new UnauthorizedRetryer(this, null));
+    }
+
+    if (this.unauthorizedErrorDecoder == null) {
+      baseBuilder.errorDecoder(new UnauthorizedErrorDecoder(new ErrorDecoder.Default()));
+    }
 
     return baseBuilder;
   }
 
-  private synchronized String getAccessToken() {
+  synchronized String getAccessToken() {
     if (expiresAt != null && expiresAt.minus(10, ChronoUnit.SECONDS).isBefore(Instant.now())) {
       // Access token is expired or about to expire
       JAVA_LOGGER.log(Level.INFO, "Access token is about to be expired. Refreshing token.");
@@ -115,7 +134,7 @@ public class OAuth2Authentication implements Capability {
     return oAuth2TokenResponse.getAccessToken();
   }
 
-  private synchronized String forceAuthentication() {
+  synchronized String forceAuthentication() {
     JAVA_LOGGER.log(Level.INFO, "Perform authentication against IDP.");
 
     try {
@@ -129,71 +148,5 @@ public class OAuth2Authentication implements Capability {
 
     expiresAt = Instant.now().plus(oAuth2TokenResponse.getExpiresIn(), ChronoUnit.SECONDS);
     return oAuth2TokenResponse.getAccessToken();
-  }
-
-  final class AuthenticationInterceptor implements RequestInterceptor {
-
-    @Override
-    public void apply(final RequestTemplate requestTemplate) {
-      final String accessToken = getAccessToken();
-      requestTemplate.header("Authorization", "Bearer " + accessToken);
-    }
-  }
-
-  final class UnauthorizedRetryer implements Retryer {
-    private boolean reauthenticated = false;
-
-    private UnauthorizedRetryer() {}
-
-    @Override
-    public void continueOrPropagate(final RetryableException unauthorizedException) {
-      if (unauthorizedException.status() != 401) {
-        throw unauthorizedException;
-      }
-
-      if (reauthenticated) {
-        JAVA_LOGGER.log(
-            Level.WARNING,
-            "Client still unauthorized event after access token was updated. Fail request.");
-        throw unauthorizedException;
-      }
-
-      JAVA_LOGGER.log(
-          Level.INFO, "Request was unauthorized by Resource Server. Refresh access token.");
-      final String accessToken = forceAuthentication();
-
-      final RequestTemplate requestTemplate = unauthorizedException.request().requestTemplate();
-      requestTemplate.removeHeader("Authorization");
-      requestTemplate.header("Authorization", "Bearer " + accessToken);
-
-      reauthenticated = true;
-    }
-
-    @Override
-    public Retryer clone() {
-      return new UnauthorizedRetryer();
-    }
-  }
-
-  static final class UnauthorizedErrorDecoder implements ErrorDecoder {
-    private static final UnauthorizedErrorDecoder INSTANCE = new UnauthorizedErrorDecoder();
-    private static final ErrorDecoder DEFAULT_ERROR_DECODER = new Default();
-
-    @Override
-    public Exception decode(final String methodKey, final Response response) {
-      // wrapper 401 to RetryableException in order to retry
-      if (response.status() == 401) {
-        return new RetryableException(
-            response.status(),
-            response.reason(),
-            response.request().httpMethod(),
-            (Long) null,
-            response.request());
-      }
-
-      return DEFAULT_ERROR_DECODER.decode(methodKey, response);
-    }
-
-    private UnauthorizedErrorDecoder() {}
   }
 }
