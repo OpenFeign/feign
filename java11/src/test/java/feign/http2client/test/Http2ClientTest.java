@@ -152,7 +152,7 @@ public class Http2ClientTest extends AbstractClientTest {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.getWithBody();
-    assertThat(result).contains("\"data\": \"some request body\"");
+    assertThat(result).contains("\"data\":\"some request body\"");
   }
 
   @Test
@@ -160,7 +160,7 @@ public class Http2ClientTest extends AbstractClientTest {
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.deleteWithBody();
-    assertThat(result).contains("\"data\": \"some request body\"");
+    assertThat(result).contains("\"data\":\"some request body\"");
   }
 
   @Override

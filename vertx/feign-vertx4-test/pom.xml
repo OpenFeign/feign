@@ -20,82 +20,96 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.github.openfeign</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>feign-vertx-parent</artifactId>
     <version>13.6-SNAPSHOT</version>
   </parent>
-  <artifactId>feign-reactive-wrappers</artifactId>
 
-  <name>Feign Reactive Wrappers</name>
-  <description>Reactive Wrapper for Feign Clients</description>
+  <artifactId>feign-vertx4-test</artifactId>
+
+  <name>Feign Vertx (tests with Vertx 4.x)</name>
+  <description>Tests with Vertx 4.x.</description>
 
   <properties>
-    <reactor.version>3.7.4</reactor.version>
-    <reactive.streams.version>1.0.4</reactive.streams.version>
-    <reactivex.version>2.2.21</reactivex.version>
+    <vertx.version>4.5.12</vertx.version>
   </properties>
 
   <dependencies>
+    <!-- Tests -->
     <dependency>
       <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams</artifactId>
-      <version>${reactive.streams.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-core</artifactId>
-      <version>${reactor.version}</version>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>io.reactivex.rxjava2</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>${reactivex.version}</version>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${mockito.version}</version>
+      <artifactId>feign-vertx</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <version>${mockito.version}</version>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-vertx</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-test</artifactId>
-      <version>${reactor.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-okhttp</artifactId>
+      <artifactId>feign-slf4j</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-jaxrs</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock-jre8</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit</groupId>
+          <artifactId>junit-bom</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
-
 </project>
