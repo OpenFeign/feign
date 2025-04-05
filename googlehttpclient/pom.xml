@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.6-SNAPSHOT</version>
+    <version>13.6</version>
   </parent>
 
   <artifactId>feign-googlehttpclient</artifactId>
