@@ -93,4 +93,4 @@ jobs:
         run: |
           cp .github/files/settings.xml ~/.m2/settings.xml
           echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
-          ./mvnw -ntp -nsu -P release -pl -:feign-benchmark -DskipTests=true deploy
+          ./mvnw -ntp -nsu -P release -pl -:feign-benchmark -DskipTests=true deploy -T1
