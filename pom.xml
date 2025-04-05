@@ -557,21 +557,6 @@
           </configuration>
         </plugin>
 
-        <plugin>
-          <groupId>com.gradle</groupId>
-          <artifactId>develocity-maven-extension</artifactId>
-          <configuration>
-            <develocity>
-              <normalization>
-                <runtimeClassPath>
-                  <metaInf>
-                    <ignoreCompletely>true</ignoreCompletely>
-                  </metaInf>
-                </runtimeClassPath>
-              </normalization>
-            </develocity>
-          </configuration>
-        </plugin>
       </plugins>
     </pluginManagement>
 
