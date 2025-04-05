@@ -182,6 +182,7 @@
     <assertj.version>3.27.3</assertj.version>
     <mockito.version>5.16.1</mockito.version>
     <fastjson2.version>2.0.57</fastjson2.version>
+    <jsonassert.version>1.5.3</jsonassert.version>
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
@@ -474,6 +475,12 @@
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
         <version>${fastjson2.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.skyscreamer</groupId>
+        <artifactId>jsonassert</artifactId>
+        <version>${jsonassert.version}</version>
       </dependency>
 
     </dependencies>
