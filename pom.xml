@@ -180,7 +180,7 @@
     <junit5.version>5.11.4</junit5.version>
     <jackson.version>2.18.3</jackson.version>
     <assertj.version>3.27.3</assertj.version>
-    <mockito.version>5.16.1</mockito.version>
+    <mockito.version>5.17.0</mockito.version>
     <fastjson2.version>2.0.57</fastjson2.version>
     <jsonassert.version>1.5.3</jsonassert.version>
 
