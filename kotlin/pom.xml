@@ -31,7 +31,7 @@
 
   <properties>
     <kotlin.version>2.1.20</kotlin.version>
-    <kotlinx.coroutines.version>1.10.1</kotlinx.coroutines.version>
+    <kotlinx.coroutines.version>1.10.2</kotlinx.coroutines.version>
   </properties>
 
   <dependencies>
