@@ -21,7 +21,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>parent</artifactId>
-  <version>13.6-SNAPSHOT</version>
+  <version>13.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -169,7 +169,7 @@
     <maven.compiler.target>${main.java.version}</maven.compiler.target>
 
     <okhttp3.version>4.12.0</okhttp3.version>
-    <guava.version>33.4.6-jre</guava.version>
+    <guava.version>33.4.7-jre</guava.version>
     <googlehttpclient.version>1.46.3</googlehttpclient.version>
     <gson.version>2.12.1</gson.version>
     <moshi.version>1.15.2</moshi.version>
@@ -180,8 +180,9 @@
     <junit5.version>5.11.4</junit5.version>
     <jackson.version>2.18.3</jackson.version>
     <assertj.version>3.27.3</assertj.version>
-    <mockito.version>5.16.1</mockito.version>
-    <fastjson2.version>2.0.56</fastjson2.version>
+    <mockito.version>5.17.0</mockito.version>
+    <fastjson2.version>2.0.57</fastjson2.version>
+    <jsonassert.version>1.5.3</jsonassert.version>
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
@@ -474,6 +475,12 @@
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
         <version>${fastjson2.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.skyscreamer</groupId>
+        <artifactId>jsonassert</artifactId>
+        <version>${jsonassert.version}</version>
       </dependency>
 
     </dependencies>
@@ -1020,18 +1027,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>6.3.2</version>
+            <version>6.6.1</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.1</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.4.0</version>
+                <version>3.7.0</version>
               </dependency>
             </dependencies>
 

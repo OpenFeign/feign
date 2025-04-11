@@ -86,7 +86,11 @@ jobs:
 
       - name: Nexus deploy
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           cp .github/files/settings.xml ~/.m2/settings.xml
           echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
-          ./mvnw -ntp -nsu -P release -pl -:feign-benchmark -DskipTests=true deploy
+          ./mvnw -ntp -nsu -P release -pl -:feign-benchmark -DskipTests=true deploy -T1
