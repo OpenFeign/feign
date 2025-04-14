@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.openfeign</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>feign-parent</artifactId>
   <version>13.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -171,13 +171,13 @@
     <okhttp3.version>4.12.0</okhttp3.version>
     <guava.version>33.4.7-jre</guava.version>
     <googlehttpclient.version>1.46.3</googlehttpclient.version>
-    <gson.version>2.12.1</gson.version>
+    <gson.version>2.13.0</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.17</slf4j.version>
     <json.version>20250107</json.version>
     <springboot.version>3.3.5</springboot.version>
 
-    <junit5.version>5.11.4</junit5.version>
+    <junit5.version>5.12.2</junit5.version>
     <jackson.version>2.18.3</jackson.version>
     <assertj.version>3.27.3</assertj.version>
     <mockito.version>5.17.0</mockito.version>
@@ -494,6 +494,11 @@
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
@@ -533,18 +538,11 @@
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
-            <argLine>${jvm.options}</argLine>
+            <argLine>${jvm.options} ${argLine}</argLine>
             <excludes>
               <exclude></exclude>
             </excludes>
           </configuration>
-          <dependencies>
-            <dependency>
-              <groupId>org.junit.jupiter</groupId>
-              <artifactId>junit-jupiter-engine</artifactId>
-              <version>${junit5.version}</version>
-            </dependency>
-          </dependencies>
         </plugin>
 
         <plugin>
@@ -908,6 +906,46 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.13</version>
+        <configuration>
+          <includes>
+            <include>feign/**</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.marvinformatics.jacoco</groupId>
+        <artifactId>easy-jacoco-maven-plugin</artifactId>
+        <version>0.1.3</version>
+        <configuration>
+          <projectRules>
+            <rule>
+              <limits>
+                <limit>
+                  <counter>INSTRUCTION</counter>
+                  <value>COVEREDRATIO</value>
+                  <minimum>0.70</minimum>
+                </limit>
+              </limits>
+            </rule>
+          </projectRules>
+          <haltOnFailure>true</haltOnFailure>
+          <projectExtraProperties>
+            <license.skip>true</license.skip>
+          </projectExtraProperties>
+          <includes>
+            <include>feign/**</include>
+          </includes>
+          <excludeModules>
+            <excludeModule>feign-benchmark</excludeModule>
+            <excludeModule>feign-apt-test-generator</excludeModule>
+          </excludeModules>
+        </configuration>
       </plugin>
     </plugins>
   </build>

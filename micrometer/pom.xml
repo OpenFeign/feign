@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.github.openfeign</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>feign-parent</artifactId>
     <version>13.7-SNAPSHOT</version>
   </parent>
   <artifactId>feign-micrometer</artifactId>
@@ -28,7 +28,7 @@
   <description>Feign Micrometer Application Metrics</description>
 
   <properties>
-    <micrometer.version>1.14.5</micrometer.version>
+    <micrometer.version>1.14.6</micrometer.version>
   </properties>
 
   <dependencies>
