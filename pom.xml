@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.openfeign</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>feign-parent</artifactId>
   <version>13.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -533,7 +533,7 @@
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
-            <argLine>${jvm.options}</argLine>
+            <argLine>${jvm.options} ${argLine}</argLine>
             <excludes>
               <exclude></exclude>
             </excludes>
