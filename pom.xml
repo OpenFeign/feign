@@ -909,6 +909,46 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.13</version>
+        <configuration>
+          <includes>
+            <include>feign/**</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.marvinformatics.jacoco</groupId>
+        <artifactId>easy-jacoco-maven-plugin</artifactId>
+        <version>0.1.3</version>
+        <configuration>
+          <projectRules>
+            <rule>
+              <limits>
+                <limit>
+                  <counter>INSTRUCTION</counter>
+                  <value>COVEREDRATIO</value>
+                  <minimum>0.70</minimum>
+                </limit>
+              </limits>
+            </rule>
+          </projectRules>
+          <haltOnFailure>true</haltOnFailure>
+          <projectExtraProperties>
+            <license.skip>true</license.skip>
+          </projectExtraProperties>
+          <includes>
+            <include>feign/**</include>
+          </includes>
+          <excludeModules>
+            <excludeModule>feign-benchmark</excludeModule>
+            <excludeModule>feign-apt-test-generator</excludeModule>
+          </excludeModules>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
