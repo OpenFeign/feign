@@ -30,7 +30,7 @@
   <description>Tests with Vertx 5.x.</description>
 
   <properties>
-    <vertx.version>5.0.0.CR5</vertx.version>
+    <vertx.version>5.0.0.CR6</vertx.version>
   </properties>
 
   <dependencies>
