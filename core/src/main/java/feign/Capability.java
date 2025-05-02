@@ -144,4 +144,18 @@ public interface Capability {
   default MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
     return methodInfoResolver;
   }
+
+  /**
+   * Hook executed before the build of Feign client is done. Any interceptors or retryers added by
+   * this method are not enriched by this or any other Capability.
+   *
+   * @param baseBuilder feign client builder
+   * @return enriched builder
+   * @param <B> builder class
+   * @param <T> target class
+   * @see OAuth2Authentication
+   */
+  default <B extends BaseBuilder<B, T>, T> B beforeBuild(B baseBuilder) {
+    return baseBuilder;
+  }
 }

@@ -41,6 +41,7 @@ left side
 *** Dropwizard Metrics 5
 *** Micrometer
 ** extras
+*** OAuth2
 *** Hystrix
 *** SLF4J
 *** Mock
