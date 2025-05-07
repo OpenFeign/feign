@@ -73,8 +73,8 @@ public final class RequestTemplateAssert
 
   public RequestTemplateAssert hasBodyTemplate(String expected) {
     isNotNull();
-    if (actual.body() != null) {
-      failWithMessage("\nExpecting body to be null, but was:<%s>", actual.bodyTemplate());
+    if (actual.requestBody() != null) {
+      failWithMessage("\nExpecting requestBody to be null, but was:<%s>", actual.requestBody());
     }
     objects.assertEqual(info, actual.bodyTemplate(), expected);
     return this;
