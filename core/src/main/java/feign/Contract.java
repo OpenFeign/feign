@@ -327,7 +327,12 @@ public interface Contract {
               name = annotationName;
             }
             checkState(
-                emptyToNull(name) != null, "Param annotation was empty on param %s.", paramIndex);
+                emptyToNull(name) != null,
+                "Param annotation was empty on param %s.\nHint: %s",
+                paramIndex,
+                "Prefer using @Param(value=\"name\"), or compile your code with the -parameters flag.\n"
+                    + "If the value is missing, Feign attempts to retrieve the parameter name from bytecode, "
+                    + "which only works if the class was compiled with the -parameters flag.");
             nameParam(data, name, paramIndex);
             final Class<? extends Param.Expander> expander = paramAnnotation.expander();
             if (expander != Param.ToStringExpander.class) {
