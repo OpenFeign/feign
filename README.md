@@ -1135,7 +1135,7 @@ Metric Capabilities provide a first-class Metrics API that users can tap into to
 
 #### Dropwizard Metrics 4
 
-```
+```java
 public class MyApp {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
@@ -1150,7 +1150,7 @@ public class MyApp {
 
 #### Dropwizard Metrics 5
 
-```
+```java
 public class MyApp {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
@@ -1165,7 +1165,7 @@ public class MyApp {
 
 #### Micrometer
 
-```
+```java
 public class MyApp {
   public static void main(String[] args) {
     GitHub github = Feign.builder()
