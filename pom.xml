@@ -195,7 +195,7 @@
     <maven-bundle-plugin.version>6.0.0</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-    <bom-generator.version>0.200.3</bom-generator.version>
+    <bom-generator.version>0.200.4</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.1.0</maven-scm-plugin.version>
     <maven-versions-plugin.version>2.18.0</maven-versions-plugin.version>
