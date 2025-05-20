@@ -96,4 +96,31 @@ class RetryerTest {
       assertThat(e).as("Unexpected exception found").isEqualTo(expected);
     }
   }
+
+  @Test
+  void canCreateRetryableExceptionWithoutRetryAfter() {
+    RetryableException exception =
+        new RetryableException(500, "Internal Server Error", Request.HttpMethod.GET, REQUEST);
+
+    assertThat(exception.status()).isEqualTo(500);
+    assertThat(exception.getMessage()).contains("Internal Server Error");
+    assertThat(exception.method()).isEqualTo(Request.HttpMethod.GET);
+    assertThat(exception.retryAfter()).isNull();
+  }
+
+  @Test
+  void canCreateRetryableExceptionWithoutRetryAfterAndWithCause() {
+    Throwable cause = new IllegalArgumentException("Illegal argument exception");
+
+    try {
+      throw new RetryableException(
+          500, "Internal Server Error", Request.HttpMethod.GET, cause, REQUEST);
+    } catch (RetryableException exception) {
+      assertThat(exception.status()).isEqualTo(500);
+      assertThat(exception.getMessage()).contains("Internal Server Error");
+      assertThat(exception.method()).isEqualTo(Request.HttpMethod.GET);
+      assertThat(exception.retryAfter()).isNull();
+      assertThat(exception.getCause()).isEqualTo(cause);
+    }
+  }
 }
