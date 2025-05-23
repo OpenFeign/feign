@@ -19,9 +19,12 @@ import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
+import feign.Util;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import java.io.IOException;
 
 /** Wrap feign {@link Client} with metrics. */
 public class MicrometerObservationCapability implements Capability {
@@ -57,9 +60,13 @@ public class MicrometerObservationCapability implements Capability {
 
       try {
         Response response = client.execute(request, options);
-        finalizeObservation(feignContext, observation, null, response);
+        FeignException exception = null;
+
+        exception = getFeignExceptionOnErrorStatusCode(response, request);
+
+        finalizeObservation(feignContext, observation, exception, response);
         return response;
-      } catch (FeignException ex) {
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
         throw ex;
       }
@@ -83,8 +90,15 @@ public class MicrometerObservationCapability implements Capability {
       try {
         return client
             .execute(feignContext.getCarrier(), options, context)
-            .whenComplete((r, ex) -> finalizeObservation(feignContext, observation, ex, r));
-      } catch (FeignException ex) {
+            .whenComplete(
+                (response, ex) -> {
+                  FeignException exception = null;
+
+                  exception = getFeignExceptionOnErrorStatusCode(response, request);
+
+                  finalizeObservation(feignContext, observation, exception, response);
+                });
+      } catch (Exception ex) {
         finalizeObservation(feignContext, observation, ex, null);
 
         throw ex;
@@ -99,5 +113,26 @@ public class MicrometerObservationCapability implements Capability {
       observation.error(ex);
     }
     observation.stop();
+  }
+
+  private boolean isErrorStatusCode(int statusCode) {
+    return statusCode >= 400 && statusCode < 600;
+  }
+
+  private FeignException getFeignExceptionOnErrorStatusCode(Response response, Request request) {
+    try {
+      if (isErrorStatusCode(response.status())) {
+
+        if (response.body() != null) {
+          response =
+              response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
+        }
+
+        return FeignException.errorStatus(request.requestTemplate().method(), response);
+      }
+    } catch (IOException ignored) { // NOPMD
+    }
+
+    return null;
   }
 }
