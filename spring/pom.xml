@@ -31,7 +31,7 @@
 
   <properties>
     <main.java.version>17</main.java.version>
-    <spring.version>6.1.13</spring.version>
+    <spring.version>6.1.14</spring.version>
   </properties>
 
   <dependencies>
