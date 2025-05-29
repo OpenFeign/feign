@@ -29,6 +29,6 @@
     <extension>
         <groupId>com.marvinformatics.jacoco</groupId>
         <artifactId>easy-jacoco-maven-plugin</artifactId>
-        <version>0.1.3</version>
+        <version>0.1.4</version>
     </extension>
 </extensions>
