@@ -26,6 +26,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import org.assertj.core.api.Fail;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -900,5 +903,44 @@ class DefaultContractTest {
     public Instant instant() {
       return Instant.ofEpochMilli(millis);
     }
+  }
+
+  interface NoValueParamsInterface {
+    @RequestLine("GET /getSomething?id={id}")
+    String getSomething(@Param String id);
+  }
+
+  @Test
+  void errorMessageOnMissingParamNames() {
+    Assumptions.assumeTrue(
+        !isCompiledWithParameters(NoValueParamsInterface.class), "Skip if -parameters is enabled");
+
+    Throwable exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> contract.parseAndValidateMetadata(NoValueParamsInterface.class));
+
+    assertThat(exception.getMessage())
+        .contains("Param annotation was empty on param 0")
+        .contains("Hint");
+  }
+
+  /**
+   * Checks whether the given class was compiled with the `-parameters` compiler flag. If parameter
+   * names are preserved (i.e., not default like arg0, arg1...), we assume it was.
+   *
+   * @param clazz the class to inspect
+   * @return true if `-parameters` was likely used, false otherwise
+   */
+  private static boolean isCompiledWithParameters(Class<?> clazz) {
+    for (Method method : clazz.getDeclaredMethods()) {
+      for (Parameter parameter : method.getParameters()) {
+        String paramName = parameter.getName();
+        if (!paramName.matches("arg\\d+")) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
