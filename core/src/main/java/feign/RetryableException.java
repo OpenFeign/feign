@@ -32,8 +32,58 @@ public class RetryableException extends FeignException {
   private final HttpMethod httpMethod;
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header. If you
-   *     don't want to retry, set null.
+   * Represents a non-retryable exception when Retry-After information is explicitly not provided.
+   *
+   * <p>Use this constructor when the server response does not include a Retry-After header or when
+   * retries are not expected.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param request the original HTTP request
+   */
+  public RetryableException(int status, String message, HttpMethod httpMethod, Request request) {
+    super(status, message, request);
+    this.httpMethod = httpMethod;
+    this.retryAfter = null;
+  }
+
+  /**
+   * Represents a non-retryable exception when Retry-After information is explicitly not provided.
+   *
+   * <p>Use this constructor when the server response does not include a Retry-After header or when
+   * retries are not expected.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param cause the underlying cause of the exception
+   * @param request the original HTTP request
+   */
+  public RetryableException(
+      int status, String message, HttpMethod httpMethod, Throwable cause, Request request) {
+    super(status, message, request, cause);
+    this.httpMethod = httpMethod;
+    this.retryAfter = null;
+  }
+
+  /**
+   * Represents a retryable exception when Retry-After information is available.
+   *
+   * <p>Use this constructor when the server response includes a Retry-After header specifying the
+   * delay in milliseconds before retrying.
+   *
+   * <p>If {@code retryAfter} is {@code null}, prefer using {@link #RetryableException(int, String,
+   * HttpMethod, Throwable, Request)} instead.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param cause the underlying cause of the exception
+   * @param retryAfter the retry delay in milliseconds retryAfter usually corresponds to the {@link
+   *     feign.Util#RETRY_AFTER} header. If you don't want to retry, use {@link
+   *     #RetryableException(int, String, HttpMethod, Throwable, Request)}.
+   * @param request the original HTTP request
    */
   public RetryableException(
       int status,
@@ -47,6 +97,17 @@ public class RetryableException extends FeignException {
     this.retryAfter = retryAfter;
   }
 
+  /**
+   * @deprecated Use {@link #RetryableException(int, String, HttpMethod, Throwable, Long, Request)}
+   *     instead. This constructor uses {@link Date} for retryAfter, which has been replaced by
+   *     {@link Long}.
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param cause the underlying cause of the exception
+   * @param retryAfter the retry-after time as a {@link Date}
+   * @param request the original HTTP request
+   */
   @Deprecated
   public RetryableException(
       int status,
@@ -61,8 +122,17 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header. If you
-   *     don't want to retry, set null.
+   * Represents a retryable exception when Retry-After information is available.
+   *
+   * <p>Use this constructor when the server response includes a Retry-After header.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param retryAfter the retry delay in milliseconds retryAfter usually corresponds to the {@link
+   *     feign.Util#RETRY_AFTER} header. If you don't want to retry, use {@link
+   *     #RetryableException(int, String, HttpMethod, Request)}
+   * @param request the original HTTP request
    */
   public RetryableException(
       int status, String message, HttpMethod httpMethod, Long retryAfter, Request request) {
@@ -71,6 +141,15 @@ public class RetryableException extends FeignException {
     this.retryAfter = retryAfter;
   }
 
+  /**
+   * @deprecated Use {@link #RetryableException(int, String, HttpMethod, Long, Request)} instead.
+   *     This constructor uses {@link Date} for retryAfter, which has been replaced by {@link Long}.
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param retryAfter the retry-after time as a {@link Date}
+   * @param request the original HTTP request
+   */
   @Deprecated
   public RetryableException(
       int status, String message, HttpMethod httpMethod, Date retryAfter, Request request) {
@@ -80,7 +159,18 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * @param retryAfter usually corresponds to the {@link feign.Util#RETRY_AFTER} header.
+   * Represents a retryable exception with response body and headers.
+   *
+   * <p>Use this constructor when handling HTTP responses that include Retry-After information.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param retryAfter the retry delay in milliseconds retryAfter usually corresponds to the {@link
+   *     feign.Util#RETRY_AFTER} header.
+   * @param request the original HTTP request
+   * @param responseBody the HTTP response body
+   * @param responseHeaders the HTTP response headers
    */
   public RetryableException(
       int status,
@@ -95,6 +185,18 @@ public class RetryableException extends FeignException {
     this.retryAfter = retryAfter;
   }
 
+  /**
+   * @deprecated Use {@link #RetryableException(int, String, HttpMethod, Long, Request, byte[],
+   *     Map)} instead. This constructor uses {@link Date} for retryAfter, which has been replaced
+   *     by {@link Long}.
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param retryAfter the retry-after time as a {@link Date}
+   * @param request the original HTTP request
+   * @param responseBody the HTTP response body
+   * @param responseHeaders the HTTP response headers
+   */
   @Deprecated
   public RetryableException(
       int status,
