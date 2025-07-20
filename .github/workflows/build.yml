@@ -79,7 +79,7 @@ jobs:
         run: ./mvnw -ntp -B org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies -fn
 
       - name: Build
-        run: ./mvnw -ntp -B clean install
+        run: ./mvnw -ntp -B clean install -T1 -Pci
 
       - name: Verify formatting
         run: scripts/no-git-changes.sh
