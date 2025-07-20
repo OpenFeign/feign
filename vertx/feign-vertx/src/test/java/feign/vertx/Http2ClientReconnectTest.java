@@ -25,11 +25,9 @@ import io.vertx.core.http.PoolOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 
 @DisplayName("Tests of reconnection with HTTP 2")
-@Disabled("Temporarily disabled - requires assistance from contributors familiar with this test")
 class Http2ClientReconnectTest extends AbstractClientReconnectTest {
 
   @BeforeAll
