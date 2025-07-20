@@ -27,6 +27,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.*;
@@ -50,8 +51,9 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
 
   @Test
   @DisplayName("All requests should be answered")
-  void allRequestsShouldBeAnswered(VertxTestContext testContext) {
+  void allRequestsShouldBeAnswered(VertxTestContext testContext) throws InterruptedException {
     sendRequests(10).compose(responses -> assertAllRequestsAnswered(responses, testContext));
+    testContext.awaitCompletion(1, TimeUnit.MINUTES);
   }
 
   @Nested
