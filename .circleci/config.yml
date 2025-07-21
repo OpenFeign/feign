@@ -15,11 +15,45 @@
 # common executors
 executors:
   java:
-    docker:
-      - image: velo/toolchains-4-ci-builds:with-21
+    machine:
+      image: ubuntu-2204:2023.10.1
 
 # common commands
 commands:
+  install-java:
+    description: 'Install Java using SDKMAN'
+    steps:
+      - restore_cache:
+          keys:
+            - sdkman-java-{{ .Environment.CIRCLE_JOB }}-{{ checksum "~/.m2/toolchains.xml" }}
+            - sdkman-java-{{ .Environment.CIRCLE_JOB }}-
+      - run:
+          name: 'Install SDKMAN!'
+          command: |
+            if [ ! -d "$HOME/.sdkman" ]; then
+              curl -s "https://get.sdkman.io" | bash
+            fi
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+      - run:
+          name: 'Install JDKs (8, 11, 17, 21)'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            jdk_versions=("8.0.382-tem" "11.0.22-tem" "17.0.10-tem" "21.0.2-tem")
+            for jdk_version in "${jdk_versions[@]}"; do
+              if [ ! -d "$HOME/.sdkman/candidates/java/$jdk_version" ]; then
+                yes n | sdk install java "$jdk_version"
+              fi
+            done
+            sdk default java 21.0.2-tem
+      - run:
+          name: 'Configure Maven Toolchain'
+          command: |
+            mkdir -p ~/.m2
+            cp .circleci/toolchains.xml ~/.m2/toolchains.xml
+      - save_cache:
+          paths:
+            - ~/.sdkman
+          key: sdkman-java-{{ .Environment.CIRCLE_JOB }}-{{ checksum "~/.m2/toolchains.xml" }}
   resolve-dependencies:
     description: 'Download and prepare all dependencies'
     steps:
@@ -44,6 +78,7 @@ commands:
       - run:
           name: 'Deploy Core Modules Sonatype'
           command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
             ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
 
 # our job defaults
@@ -79,6 +114,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - install-java
       - restore_cache:
           keys:
             - feign-dependencies-v2-{{ checksum "pom.xml" }}
@@ -91,6 +127,7 @@ jobs:
       - run:
           name: 'Test'
           command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
             ./mvnw -ntp -B verify
       - verify-formatting
 
@@ -100,6 +137,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - install-java
       - restore_cache:
           keys:
             - feign-dependencies-v2-{{ checksum "pom.xml" }}
