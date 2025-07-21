@@ -20,13 +20,25 @@ executors:
 
 # common commands
 commands:
-  install-java:
-    description: 'Install Java using SDKMAN'
+  setup-build-environment:
+    description: 'Setup Java and Maven dependencies with unified caching'
     steps:
       - restore_cache:
           keys:
-            - sdkman-java-{{ .Environment.CIRCLE_JOB }}-{{ checksum "~/.m2/toolchains.xml" }}
-            - sdkman-java-{{ .Environment.CIRCLE_JOB }}-
+            - dependencies-v1-{{ checksum "pom.xml" }}
+      - run:
+          name: 'Check if cache was restored'
+          command: |
+            if [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
+              echo "Complete cache hit detected - SDKMAN and Maven dependencies available."
+              circleci step halt
+            elif [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ]; then
+              echo "SDKMAN cache hit detected, but need to download Maven dependencies."
+            elif [ -d ~/.m2/repository/io/github/openfeign ]; then
+              echo "Maven cache hit detected, but need to install SDKMAN."
+            else
+              echo "No cache hit, setting up complete build environment."
+            fi
       - run:
           name: 'Install SDKMAN!'
           command: |
@@ -41,7 +53,7 @@ commands:
             jdk_versions=("8.0.382-tem" "11.0.22-tem" "17.0.10-tem" "21.0.2-tem")
             for jdk_version in "${jdk_versions[@]}"; do
               if [ ! -d "$HOME/.sdkman/candidates/java/$jdk_version" ]; then
-                yes n | sdk install java "$jdk_version"
+                echo "n" | sdk install java "$jdk_version" || true
               fi
             done
             sdk default java 21.0.2-tem
@@ -50,17 +62,25 @@ commands:
           command: |
             mkdir -p ~/.m2
             cp .circleci/toolchains.xml ~/.m2/toolchains.xml
+      - run:
+          name: 'Download Maven dependencies'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            ./mvnw -ntp -B \
+              org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline \
+              de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies \
+              -T2 -pl -:feign-benchmark
       - save_cache:
           paths:
             - ~/.sdkman
-          key: sdkman-java-{{ .Environment.CIRCLE_JOB }}-{{ checksum "~/.m2/toolchains.xml" }}
-  resolve-dependencies:
-    description: 'Download and prepare all dependencies'
+            - ~/.m2
+          key: dependencies-v1-{{ checksum "pom.xml" }}
+  restore-build-environment:
+    description: 'Restore cached build environment'
     steps:
-      - run:
-          name: 'Resolving Dependencies'
-          command: |
-            ./mvnw -ntp dependency:resolve-plugins go-offline:resolve-dependencies -DskipTests=true -B
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "pom.xml" }}
   verify-formatting:
     steps:
       - run:
@@ -108,22 +128,21 @@ all-branches: &all-branches
 version: 2.1
 
 jobs:
+  setup-build-environment:
+    executor:
+      name: java
+    <<: *defaults
+    steps:
+      - checkout
+      - setup-build-environment
+
   test:
     executor:
       name: java
     <<: *defaults
     steps:
       - checkout
-      - install-java
-      - restore_cache:
-          keys:
-            - feign-dependencies-v2-{{ checksum "pom.xml" }}
-            - feign-dependencies-v2-
-      - resolve-dependencies
-      - save_cache:
-          paths:
-            - ~/.m2/repository
-          key: feign-dependencies-v2-{{ checksum "pom.xml" }}
+      - restore-build-environment
       - run:
           name: 'Test'
           command: |
@@ -137,12 +156,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - install-java
-      - restore_cache:
-          keys:
-            - feign-dependencies-v2-{{ checksum "pom.xml" }}
-            - feign-dependencies-v2-
-      - resolve-dependencies
+      - restore-build-environment
       - configure-gpg
       - nexus-deploy
 
@@ -150,15 +164,27 @@ workflows:
   version: 2
   build:
     jobs:
+      - setup-build-environment:
+          name: 'setup-environment'
+          filters:
+            <<: *all-branches
       - test:
           name: 'pr-build'
+          requires:
+            - 'setup-environment'
           filters:
             <<: *all-branches
 
   snapshot:
     jobs:
+      - setup-build-environment:
+          name: 'setup-environment-snapshot'
+          filters:
+            <<: *master-only
       - test:
           name: 'snapshot'
+          requires:
+            - 'setup-environment-snapshot'
           filters:
             <<: *master-only
       - deploy:
@@ -171,8 +197,14 @@ workflows:
 
   release:
     jobs:
+      - setup-build-environment:
+          name: 'setup-environment-release'
+          filters:
+            <<: *tags-only
       - deploy:
           name: 'release to maven central'
+          requires:
+            - 'setup-environment-release'
           context: Sonatype
           filters:
             <<: *tags-only
