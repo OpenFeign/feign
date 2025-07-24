@@ -147,7 +147,7 @@ jobs:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify
+            ./mvnw -ntp -B verify -T1C
       - verify-formatting
 
   deploy:
