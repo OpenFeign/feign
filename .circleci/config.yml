@@ -147,7 +147,7 @@ jobs:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify
+            ./mvnw -ntp -B verify -T1C
       - verify-formatting
 
   deploy:
@@ -191,7 +191,7 @@ workflows:
           name: 'deploy snapshot'
           requires:
             - 'snapshot'
-          context: Sonatype
+          context: central
           filters:
             <<: *master-only
 
@@ -205,6 +205,6 @@ workflows:
           name: 'release to maven central'
           requires:
             - 'setup-environment-release'
-          context: Sonatype
+          context: central
           filters:
             <<: *tags-only
