@@ -216,4 +216,30 @@ class QueryTemplateTest {
     /* dollar will be pct-encoded */
     assertThat(expanded).isEqualToIgnoringCase("%24collection=1%2C2");
   }
+
+  @Test
+  void shouldNotIncludeKeyWhenValueIsBlank() {
+    QueryTemplate template = QueryTemplate.create("c", Arrays.asList(""), StandardCharsets.UTF_8);
+    assertNull(template.toString()); 
+  }
+
+  @Test
+  void shouldIncludeKeyWhenValueExists() {
+    QueryTemplate template = QueryTemplate.create("a", Arrays.asList("11"), StandardCharsets.UTF_8);
+    assertEquals("a=11", template.toString());
+  }
+
+  @Test
+  void shouldIncludeOnlyKeysWithValues() {
+    QueryTemplate a = QueryTemplate.create("a", Arrays.asList("11"), StandardCharsets.UTF_8);
+    QueryTemplate b = QueryTemplate.create("b", Arrays.asList(""), StandardCharsets.UTF_8);
+    QueryTemplate c = QueryTemplate.create("c", Arrays.asList("22"), StandardCharsets.UTF_8);
+
+    StringBuilder sb = new StringBuilder();
+    if (a.toString() != null) sb.append(a.toString());
+    if (c.toString() != null) sb.append('&').append(c.toString());
+
+    assertEquals("a=11&c=22", sb.toString());
+  }
+
 }

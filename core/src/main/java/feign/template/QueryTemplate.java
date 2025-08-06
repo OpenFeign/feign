@@ -215,15 +215,15 @@ public final class QueryTemplate {
   }
 
   private String queryString(String name, List<String> values) {
-    if (this.pure) {
-      return name;
+    /*
+    * If no values are present (including pure parameters), do not include key-only parameters. 
+    */
+    if (this.pure || values == null || values.isEmpty()) {
+      return null;
     }
-
-    if (!values.isEmpty()) {
-      return this.collectionFormat.join(name, values, StandardCharsets.UTF_8).toString();
-    }
-
-    /* nothing to return, all values are unresolved */
-    return null;
+    /* 
+    * Join the parameter name and values according to the collection format.
+    */
+    return this.collectionFormat.join(name, values, StandardCharsets.UTF_8).toString();
   }
 }
