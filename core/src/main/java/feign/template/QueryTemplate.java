@@ -84,7 +84,7 @@ public final class QueryTemplate {
     /* remove all empty values from the array */
     Collection<String> remaining =
         StreamSupport.stream(values.spliterator(), false)
-            .filter(Util::isNotBlank)
+            .filter(value -> value != null)
             .collect(Collectors.toList());
 
     return new QueryTemplate(name, remaining, charset, collectionFormat, decodeSlash);
@@ -140,11 +140,7 @@ public final class QueryTemplate {
 
     /* parse each value into a template chunk for resolution later */
     for (String value : values) {
-      if (value.isEmpty()) {
-        /* skip */
-        continue;
-      }
-
+      // Do NOT skip empty strings; keep them to allow key=
       this.values.add(
           new Template(
               value, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, !decodeSlash, charset));
@@ -215,15 +211,15 @@ public final class QueryTemplate {
   }
 
   private String queryString(String name, List<String> values) {
-    /*
-    * If no values are present (including pure parameters), do not include key-only parameters. 
-    */
-    if (this.pure || values == null || values.isEmpty()) {
+    if (this.pure) {
       return null;
     }
-    /* 
-    * Join the parameter name and values according to the collection format.
-    */
-    return this.collectionFormat.join(name, values, StandardCharsets.UTF_8).toString();
+
+    if (!values.isEmpty()) {
+      return this.collectionFormat.join(name, values, StandardCharsets.UTF_8).toString();
+    }
+
+    /* nothing to return, all values are unresolved */
+    return null;
   }
 }

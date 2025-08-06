@@ -218,28 +218,49 @@ class QueryTemplateTest {
   }
 
   @Test
-  void shouldNotIncludeKeyWhenValueIsBlank() {
-    QueryTemplate template = QueryTemplate.create("c", Arrays.asList(""), StandardCharsets.UTF_8);
-    assertNull(template.toString()); 
+  void parameterWithNullValueIsOmitted() {
+    QueryTemplate template = QueryTemplate.create("foo", Collections.singletonList(null), Util.UTF_8);
+    assertThat(template.toString()).isNull();
   }
 
   @Test
-  void shouldIncludeKeyWhenValueExists() {
-    QueryTemplate template = QueryTemplate.create("a", Arrays.asList("11"), StandardCharsets.UTF_8);
-    assertEquals("a=11", template.toString());
+  void parameterWithEmptyStringIsRenderedAsKeyEquals() {
+    QueryTemplate template = QueryTemplate.create("foo", Collections.singletonList(""), Util.UTF_8);
+    assertThat(template.toString()).isEqualTo("foo=");
   }
 
   @Test
-  void shouldIncludeOnlyKeysWithValues() {
-    QueryTemplate a = QueryTemplate.create("a", Arrays.asList("11"), StandardCharsets.UTF_8);
-    QueryTemplate b = QueryTemplate.create("b", Arrays.asList(""), StandardCharsets.UTF_8);
-    QueryTemplate c = QueryTemplate.create("c", Arrays.asList("22"), StandardCharsets.UTF_8);
-
-    StringBuilder sb = new StringBuilder();
-    if (a.toString() != null) sb.append(a.toString());
-    if (c.toString() != null) sb.append('&').append(c.toString());
-
-    assertEquals("a=11&c=22", sb.toString());
+  void parameterWithNormalValueIsRenderedCorrectly() {
+    QueryTemplate template = QueryTemplate.create("foo", Collections.singletonList("bar"), Util.UTF_8);
+    assertThat(template.toString()).isEqualTo("foo=bar");
   }
 
+  @Test
+  void mixedNullAndEmptyValuesHandleCorrectlyInMultiParameterQuery() {
+    QueryTemplate fooTemplate = QueryTemplate.create("foo", Collections.singletonList("1"), Util.UTF_8);
+    QueryTemplate booTemplate = QueryTemplate.create("boo", Collections.singletonList(""), Util.UTF_8);
+    QueryTemplate cooTemplate = QueryTemplate.create("coo", Collections.singletonList(null), Util.UTF_8);
+    QueryTemplate dooTemplate = QueryTemplate.create("doo", Collections.singletonList("3"), Util.UTF_8);
+
+    StringBuilder query = new StringBuilder();
+    query.append(fooTemplate);
+    if (booTemplate.toString() != null) query.append('&').append(booTemplate);
+    if (cooTemplate.toString() != null) query.append('&').append(cooTemplate);
+    query.append('&').append(dooTemplate);
+
+    assertThat(query.toString()).isEqualTo("foo=1&boo=&doo=3");
+  }
+
+  @Test
+  void emptyListShouldProduceNull() {
+    QueryTemplate template = QueryTemplate.create("foo", Collections.emptyList(), Util.UTF_8);
+    assertThat(template.toString()).isNull();
+  }
+
+  @Test
+  void multipleValuesIncludingNullsAndEmpties() {
+    QueryTemplate template = QueryTemplate.create("foo", Arrays.asList("bar", "", null, "baz"), Util.UTF_8);
+    // null is omitted, "" is rendered as empty value
+    assertThat(template.toString()).isEqualTo("foo=bar&foo=&foo=baz");
+  }
 }
