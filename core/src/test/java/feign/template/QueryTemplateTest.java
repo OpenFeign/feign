@@ -226,8 +226,7 @@ class QueryTemplateTest {
 
   @Test
   void parameterWithEmptyStringIsRenderedAsKeyEquals() {
-    QueryTemplate template =
-        QueryTemplate.create("foo", Collections.singletonList(""), Util.UTF_8);
+    QueryTemplate template = QueryTemplate.create("foo", Collections.singletonList(""), Util.UTF_8);
     assertThat(template.toString()).isEqualTo("foo=");
   }
 
@@ -263,8 +262,7 @@ class QueryTemplateTest {
 
   @Test
   void emptyListShouldProduceNull() {
-    QueryTemplate template =
-        QueryTemplate.create("foo", Collections.emptyList(), Util.UTF_8);
+    QueryTemplate template = QueryTemplate.create("foo", Collections.emptyList(), Util.UTF_8);
     assertThat(template.toString()).isNull();
   }
 
