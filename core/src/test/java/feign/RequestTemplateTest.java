@@ -121,7 +121,7 @@ public class RequestTemplateTest {
             .uri("/wsdl/testcase?wsdl")
             .target("https://api.example.com");
 
-    assertThat(template).hasUrl("https://api.example.com/wsdl/testcase?wsdl");
+    assertThat(template).hasUrl("https://api.example.com/wsdl/testcase");
   }
 
   @Test

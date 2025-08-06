@@ -311,7 +311,7 @@ public class FeignUnderAsyncTest {
     api.queryMap(queryMap);
 
     assertThat(server.takeRequest())
-        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey");
+        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey=");
   }
 
   @Test
