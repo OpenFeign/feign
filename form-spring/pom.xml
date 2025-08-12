@@ -32,6 +32,7 @@
 
   <properties>
     <main.java.version>17</main.java.version>
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
@@ -64,7 +65,7 @@
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
-      <version>1.5</version>
+      <version>1.6.0</version>
       <scope>compile</scope>
     </dependency>
 
