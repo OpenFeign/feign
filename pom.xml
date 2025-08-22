@@ -1072,7 +1072,7 @@
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.14.1</version>
+                <version>3.15.1</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
