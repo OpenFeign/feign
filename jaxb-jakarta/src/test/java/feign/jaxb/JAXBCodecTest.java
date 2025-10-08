@@ -148,7 +148,7 @@ class JAXBCodecTest {
 
     assertThat(template)
         .hasBody(
-            """
+"""
 <?xml version="1.0" encoding="UTF-8" \
 standalone="yes"?><mockObject xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd" \
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
@@ -420,7 +420,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
 
   private static Schema getMockIntObjSchema() throws Exception {
     String schema =
-        """
+"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">\
 <xs:element name="mockIntObject" type="mockIntObject"/><xs:complexType name="mockIntObject">\

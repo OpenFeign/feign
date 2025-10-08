@@ -49,7 +49,8 @@ class GsonCodecTest {
     new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
-        .hasBody("""
+        .hasBody(
+            """
             {
               "foo": 1
             }\
