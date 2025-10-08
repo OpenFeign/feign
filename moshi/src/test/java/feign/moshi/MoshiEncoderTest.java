@@ -39,7 +39,8 @@ class MoshiEncoderTest {
     new MoshiEncoder().encode(map, Map.class, template);
 
     assertThat(template)
-        .hasBody("""
+        .hasBody(
+            """
             {
               "foo": 1
             }\

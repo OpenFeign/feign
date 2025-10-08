@@ -169,37 +169,37 @@
     <maven.compiler.target>${main.java.version}</maven.compiler.target>
 
     <okhttp3.version>4.12.0</okhttp3.version>
-    <guava.version>33.4.8-jre</guava.version>
-    <googlehttpclient.version>1.47.1</googlehttpclient.version>
-    <gson.version>2.13.1</gson.version>
+    <guava.version>33.5.0-jre</guava.version>
+    <googlehttpclient.version>2.0.1</googlehttpclient.version>
+    <gson.version>2.13.2</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.17</slf4j.version>
     <json.version>20250517</json.version>
-    <springboot.version>3.3.5</springboot.version>
+    <springboot.version>3.5.6</springboot.version>
 
-    <junit5.version>5.13.4</junit5.version>
+    <junit5.version>6.0.0</junit5.version>
     <jackson.version>2.19.2</jackson.version>
-    <assertj.version>3.27.3</assertj.version>
-    <mockito.version>5.18.0</mockito.version>
-    <fastjson2.version>2.0.58</fastjson2.version>
+    <assertj.version>3.27.6</assertj.version>
+    <mockito.version>5.20.0</mockito.version>
+    <fastjson2.version>2.0.59</fastjson2.version>
     <jsonassert.version>1.5.3</jsonassert.version>
 
-    <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
-    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    <git-code-format-maven-plugin.version>5.4</git-code-format-maven-plugin.version>
+    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
-    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
     <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
     <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
     <maven-bundle-plugin.version>6.0.0</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <central-publishing-maven-plugin.version>0.8.0</central-publishing-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     <bom-generator.version>0.230.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
-    <maven-scm-plugin.version>2.1.0</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.18.0</maven-versions-plugin.version>
+    <maven-scm-plugin.version>2.2.1</maven-scm-plugin.version>
+    <maven-versions-plugin.version>2.19.1</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
@@ -891,7 +891,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.1</version>
+        <version>3.6.2</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>
@@ -1066,18 +1066,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>6.15.0</version>
+            <version>6.19.0</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.14.1</version>
+                <version>3.18.0</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.14.1</version>
+                <version>3.18.0</version>
               </dependency>
             </dependencies>
 
