@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-      <version>6.1.21</version>
+      <version>6.2.11</version>
       <scope>compile</scope>
     </dependency>
 
@@ -78,7 +78,7 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>4.1.4</version>
+      <version>4.3.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
