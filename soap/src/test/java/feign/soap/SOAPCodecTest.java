@@ -149,7 +149,7 @@ class SOAPCodecTest {
 
     assertThat(template)
         .hasBody(
-            """
+"""
 <?xml version="1.0" encoding="UTF-8" ?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
 <SOAP-ENV:Header/>\
@@ -180,7 +180,7 @@ class SOAPCodecTest {
 
     assertThat(template)
         .hasBody(
-            """
+"""
 <?xml version="1.0" encoding="UTF-8" ?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
 <SOAP-ENV:Header/>\
@@ -238,7 +238,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        """
+"""
 <?xml version="1.0" encoding="UTF-8" ?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
 <SOAP-ENV:Header/>\
@@ -272,7 +272,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        """
+"""
 <?xml version="1.0" encoding="UTF-8" ?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" \
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://apihost/schema.xsd" \
@@ -312,7 +312,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     mock.item.value = "Apples";
 
     String mockSoapEnvelop =
-        """
+"""
 <?xml version="1.0" encoding="UTF-8" ?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
 <SOAP-ENV:Header/>\

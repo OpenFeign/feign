@@ -35,7 +35,7 @@ import org.xml.sax.helpers.DefaultHandler;
 class SAXDecoderTest {
 
   static String statusFailed =
-      """
+"""
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <ns1:getNeustarNetworkStatusResponse xmlns:ns1="http://webservice.api.ultra.neustar.com/v01/">
