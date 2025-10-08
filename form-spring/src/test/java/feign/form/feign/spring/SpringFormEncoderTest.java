@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest(
@@ -38,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
       "feign.hystrix.enabled=false",
       "logging.level.feign.form.feign.spring.Client=DEBUG"
     })
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class SpringFormEncoderTest {
 
   @Autowired private Client client;
