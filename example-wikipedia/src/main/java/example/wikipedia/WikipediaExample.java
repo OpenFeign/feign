@@ -65,6 +65,11 @@ public class WikipediaExample {
             .logger(new Logger.ErrorLogger())
             .logLevel(Logger.Level.BASIC)
             .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
+            .requestInterceptor(
+                template ->
+                    template.header(
+                        "User-Agent",
+                        "Feign Wikipedia Example (https://github.com/openfeign/feign)"))
             .target(Wikipedia.class, "https://en.wikipedia.org");
 
     System.out.println("Let's search for PTAL!");
