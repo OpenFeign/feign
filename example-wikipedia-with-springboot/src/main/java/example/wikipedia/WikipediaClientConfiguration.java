@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import example.wikipedia.WikipediaClient.Page;
 import example.wikipedia.WikipediaClient.Response;
+import feign.RequestInterceptor;
 import feign.codec.Decoder;
 import feign.gson.GsonDecoder;
 import java.io.IOException;
@@ -61,5 +62,12 @@ public class WikipediaClientConfiguration {
             .create();
 
     return new GsonDecoder(gson);
+  }
+
+  @Bean
+  public RequestInterceptor userAgentInterceptor() {
+    return template ->
+        template.header(
+            "User-Agent", "Feign Wikipedia Example (https://github.com/openfeign/feign)");
   }
 }
