@@ -27,6 +27,11 @@
   <name>Feign Dropwizard Metrics5</name>
   <description>Feign Dropwizard Metrics 5</description>
 
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -40,7 +45,7 @@
     <dependency>
       <groupId>io.dropwizard.metrics5</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>5.0.0-rc21</version>
+      <version>5.0.5</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
