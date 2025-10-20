@@ -79,3 +79,28 @@ Feign is a declarative HTTP client library with a modular design:
 - Source/target: Java 8 (for `src/main`)
 - Tests: Java 21 (for `src/test`)
 - Maintains backwards compatibility with Java 8 in main codebase
+
+### Updating Java Version for a Module
+When a module's dependencies require a newer Java version (e.g., due to dependency upgrades), you need to override the Java version in that module's `pom.xml`:
+
+1. Add a `<properties>` section to the module's `pom.xml` (or update existing one)
+2. Set `<main.java.version>` to the required version (11, 17, 21, etc.)
+
+Example:
+```xml
+<properties>
+  <main.java.version>17</main.java.version>
+</properties>
+```
+
+**Common scenarios requiring Java version updates:**
+- Dropwizard Metrics 5.x requires Java 17
+- Handlebars 4.5.0+ requires Java 17
+- Jakarta EE modules typically require Java 11+
+
+**Examples of modules with custom Java versions:**
+- `spring/` - Java 17 (for Spring 6.x)
+- `jaxrs4/` - Java 17 (for Jakarta EE 9+)
+- `dropwizard-metrics5/` - Java 17 (for Metrics 5.x)
+- `apt-test-generator/` - Java 17 (for Handlebars 4.5.0+)
+- `soap-jakarta/`, `jaxb-jakarta/` - Java 11 (for Jakarta namespace)
