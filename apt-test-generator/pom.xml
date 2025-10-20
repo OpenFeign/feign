@@ -31,6 +31,7 @@
   <description>Feign code generation tool for mocked clients</description>
 
   <properties>
+    <main.java.version>17</main.java.version>
     <moditect.skip>true</moditect.skip>
   </properties>
 
