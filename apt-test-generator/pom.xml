@@ -31,6 +31,7 @@
   <description>Feign code generation tool for mocked clients</description>
 
   <properties>
+    <main.java.version>17</main.java.version>
     <moditect.skip>true</moditect.skip>
   </properties>
 
@@ -38,7 +39,7 @@
     <dependency>
       <groupId>com.github.jknack</groupId>
       <artifactId>handlebars</artifactId>
-      <version>4.3.1</version>
+      <version>4.5.0</version>
     </dependency>
 
     <dependency>
