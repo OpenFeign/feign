@@ -20,7 +20,7 @@
             <version>1.8</version>
         </provides>
         <configuration>
-            <jdkHome>/home/runner/.sdkman/candidates/java/8.0.382-tem</jdkHome>
+            <jdkHome>/home/circleci/.sdkman/candidates/java/8.0.382-tem</jdkHome>
         </configuration>
     </toolchain>
     <toolchain>
@@ -29,7 +29,7 @@
             <version>11</version>
         </provides>
         <configuration>
-            <jdkHome>/home/runner/.sdkman/candidates/java/11.0.22-tem</jdkHome>
+            <jdkHome>/home/circleci/.sdkman/candidates/java/11.0.22-tem</jdkHome>
         </configuration>
     </toolchain>
     <toolchain>
@@ -38,7 +38,7 @@
             <version>17</version>
         </provides>
         <configuration>
-            <jdkHome>/home/runner/.sdkman/candidates/java/17.0.10-tem</jdkHome>
+            <jdkHome>/home/circleci/.sdkman/candidates/java/17.0.10-tem</jdkHome>
         </configuration>
     </toolchain>
     <toolchain>
@@ -47,7 +47,7 @@
             <version>21</version>
         </provides>
         <configuration>
-            <jdkHome>/home/runner/.sdkman/candidates/java/21.0.2-tem</jdkHome>
+            <jdkHome>/home/circleci/.sdkman/candidates/java/21.0.2-tem</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>

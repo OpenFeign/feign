@@ -23,12 +23,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
-    properties = {"server.port=8081", "feign.hystrix.enabled=false"})
+    properties = {"server.port=8080", "feign.hystrix.enabled=false"})
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class SpringMultipartDecoderTest {
 
   @Autowired private DownloadClient downloadClient;

@@ -1,0 +1,210 @@
+#
+# Copyright 2012-2020 The Feign Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+
+# common executors
+executors:
+  java:
+    machine:
+      image: ubuntu-2204:2023.10.1
+
+# common commands
+commands:
+  setup-build-environment:
+    description: 'Setup Java and Maven dependencies with unified caching'
+    steps:
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "pom.xml" }}
+      - run:
+          name: 'Check if cache was restored'
+          command: |
+            if [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
+              echo "Complete cache hit detected - SDKMAN and Maven dependencies available."
+              circleci step halt
+            elif [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ]; then
+              echo "SDKMAN cache hit detected, but need to download Maven dependencies."
+            elif [ -d ~/.m2/repository/io/github/openfeign ]; then
+              echo "Maven cache hit detected, but need to install SDKMAN."
+            else
+              echo "No cache hit, setting up complete build environment."
+            fi
+      - run:
+          name: 'Install SDKMAN!'
+          command: |
+            if [ ! -d "$HOME/.sdkman" ]; then
+              curl -s "https://get.sdkman.io" | bash
+            fi
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+      - run:
+          name: 'Install JDKs (8, 11, 17, 21)'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            jdk_versions=("8.0.382-tem" "11.0.22-tem" "17.0.10-tem" "21.0.2-tem")
+            for jdk_version in "${jdk_versions[@]}"; do
+              if [ ! -d "$HOME/.sdkman/candidates/java/$jdk_version" ]; then
+                echo "n" | sdk install java "$jdk_version" || true
+              fi
+            done
+            sdk default java 21.0.2-tem
+      - run:
+          name: 'Configure Maven Toolchain'
+          command: |
+            mkdir -p ~/.m2
+            cp .circleci/toolchains.xml ~/.m2/toolchains.xml
+      - run:
+          name: 'Download Maven dependencies'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            ./mvnw -ntp -B \
+              org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline \
+              de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies \
+              -T2 -pl -:feign-benchmark
+      - save_cache:
+          paths:
+            - ~/.sdkman
+            - ~/.m2
+          key: dependencies-v1-{{ checksum "pom.xml" }}
+  restore-build-environment:
+    description: 'Restore cached build environment'
+    steps:
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "pom.xml" }}
+  verify-formatting:
+    steps:
+      - run:
+          name: 'Verify formatting'
+          command: |
+            scripts/no-git-changes.sh
+  configure-gpg:
+    steps:
+      - run:
+          name: 'Configure GPG keys'
+          command: |
+            echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
+  nexus-deploy:
+    steps:
+      - run:
+          name: 'Deploy Core Modules Sonatype'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+
+# our job defaults
+defaults: &defaults
+  working_directory: ~/feign
+  environment:
+    # Customize the JVM maximum heap limit
+    MAVEN_OPTS: -Xmx3200m
+
+# branch filters
+master-only: &master-only
+  branches:
+    only: master
+
+tags-only: &tags-only
+  branches:
+    ignore: /.*/
+  tags:
+    only: /.*/
+
+all-branches: &all-branches
+  branches:
+    ignore: master
+  tags:
+    ignore: /.*/
+
+version: 2.1
+
+jobs:
+  setup-build-environment:
+    executor:
+      name: java
+    <<: *defaults
+    steps:
+      - checkout
+      - setup-build-environment
+
+  test:
+    executor:
+      name: java
+    <<: *defaults
+    steps:
+      - checkout
+      - restore-build-environment
+      - run:
+          name: 'Test'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            ./mvnw -ntp -B verify -T1C
+      - verify-formatting
+
+  deploy:
+    executor:
+      name: java
+    <<: *defaults
+    steps:
+      - checkout
+      - restore-build-environment
+      - configure-gpg
+      - nexus-deploy
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - setup-build-environment:
+          name: 'setup-environment'
+          filters:
+            <<: *all-branches
+      - test:
+          name: 'pr-build'
+          requires:
+            - 'setup-environment'
+          filters:
+            <<: *all-branches
+
+  snapshot:
+    jobs:
+      - setup-build-environment:
+          name: 'setup-environment-snapshot'
+          filters:
+            <<: *master-only
+      - test:
+          name: 'snapshot'
+          requires:
+            - 'setup-environment-snapshot'
+          filters:
+            <<: *master-only
+      - deploy:
+          name: 'deploy snapshot'
+          requires:
+            - 'snapshot'
+          context: central
+          filters:
+            <<: *master-only
+
+  release:
+    jobs:
+      - setup-build-environment:
+          name: 'setup-environment-release'
+          filters:
+            <<: *tags-only
+      - deploy:
+          name: 'release to maven central'
+          requires:
+            - 'setup-environment-release'
+          context: central
+          filters:
+            <<: *tags-only

@@ -32,18 +32,19 @@
 
   <properties>
     <main.java.version>17</main.java.version>
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
-      <version>1.13.1</version>
+      <version>1.14.0</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.38</version>
+      <version>1.18.42</version>
       <scope>provided</scope>
     </dependency>
 
@@ -57,14 +58,14 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-      <version>6.1.14</version>
+      <version>6.2.11</version>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
-      <version>1.5</version>
+      <version>1.6.0</version>
       <scope>compile</scope>
     </dependency>
 
@@ -77,7 +78,7 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>4.1.4</version>
+      <version>4.3.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -124,13 +125,13 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.18.0</version>
+      <version>5.20.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.18.0</version>
+      <version>5.20.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -144,6 +145,13 @@
           <instructions>
             <Export-Package>feign.form.spring</Export-Package>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <runOrder>alphabetical</runOrder>
         </configuration>
       </plugin>
     </plugins>
