@@ -92,7 +92,7 @@ commands:
       - run:
           name: 'Configure GPG keys'
           command: |
-            echo -e "$GPG_KEY" | gpg --batch --no-tty --import --yes
+            echo -e "$GPG_KEY" | base64 -d | gpg --batch --yes --import
   nexus-deploy:
     steps:
       - run:
