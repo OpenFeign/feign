@@ -194,6 +194,16 @@
     <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
     <moditect-maven-plugin.version>1.3.0.Final</moditect-maven-plugin.version>
+    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
+    <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
+    <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
+    <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+    <easy-jacoco-maven-plugin.version>0.1.4</easy-jacoco-maven-plugin.version>
+    <rewrite-maven-plugin.version>6.21.1</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.19.0</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.19.0</rewrite-migrate-java.version>
+    <java18-signature.version>1.0</java18-signature.version>
   </properties>
 
   <dependencyManagement>
@@ -773,7 +783,7 @@
       <plugin>
         <groupId>de.qaware.maven</groupId>
         <artifactId>go-offline-maven-plugin</artifactId>
-        <version>1.2.8</version>
+        <version>${go-offline-maven-plugin.version}</version>
         <configuration>
           <dynamicDependencies>
             <DynamicDependency>
@@ -785,7 +795,7 @@
             <DynamicDependency>
               <groupId>org.codehaus.mojo.signature</groupId>
               <artifactId>java18</artifactId>
-              <version>1.0</version>
+              <version>${java18-signature.version}</version>
               <type>signature</type>
               <repositoryType>MAIN</repositoryType>
             </DynamicDependency>
@@ -795,7 +805,7 @@
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>${sortpom-maven-plugin.version}</version>
         <configuration>
           <keepBlankLines>true</keepBlankLines>
           <lineSeparator>\n</lineSeparator>
@@ -869,7 +879,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
+        <version>${maven-enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>enforce-no-repositories</id>
@@ -890,7 +900,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.14</version>
+        <version>${jacoco-maven-plugin.version}</version>
         <configuration>
           <includes>
             <include>feign/**</include>
@@ -900,7 +910,7 @@
       <plugin>
         <groupId>com.marvinformatics.jacoco</groupId>
         <artifactId>easy-jacoco-maven-plugin</artifactId>
-        <version>0.1.4</version>
+        <version>${easy-jacoco-maven-plugin.version}</version>
         <configuration>
           <projectRules>
             <rule>
@@ -1063,18 +1073,18 @@
           <plugin>
             <groupId>org.openrewrite.maven</groupId>
             <artifactId>rewrite-maven-plugin</artifactId>
-            <version>6.21.1</version>
+            <version>${rewrite-maven-plugin.version}</version>
 
             <dependencies>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-testing-frameworks</artifactId>
-                <version>3.19.0</version>
+                <version>${rewrite-testing-frameworks.version}</version>
               </dependency>
               <dependency>
                 <groupId>org.openrewrite.recipe</groupId>
                 <artifactId>rewrite-migrate-java</artifactId>
-                <version>3.19.0</version>
+                <version>${rewrite-migrate-java.version}</version>
               </dependency>
             </dependencies>
 
@@ -1132,7 +1142,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-toolchains-plugin</artifactId>
-            <version>3.2.0</version>
+            <version>${maven-toolchains-plugin.version}</version>
             <executions>
               <execution>
                 <goals>
