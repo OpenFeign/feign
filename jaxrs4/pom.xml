@@ -43,7 +43,7 @@
     <dependency>
       <groupId>jakarta.ws.rs</groupId>
       <artifactId>jakarta.ws.rs-api</artifactId>
-      <version>4.0.0</version>
+      <version>${jakarta.ws.rs-api-4.version}</version>
     </dependency>
 
     <!-- for example -->

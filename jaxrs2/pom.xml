@@ -43,7 +43,7 @@
     <dependency>
       <groupId>javax.ws.rs</groupId>
       <artifactId>javax.ws.rs-api</artifactId>
-      <version>2.1.1</version>
+      <version>${javax.ws.rs-api.version}</version>
     </dependency>
 
     <dependency>
@@ -118,7 +118,7 @@
       <plugin>
         <groupId>org.eclipse.transformer</groupId>
         <artifactId>org.eclipse.transformer.maven</artifactId>
-        <version>0.2.0</version>
+        <version>${org.eclipse.transformer.maven.version}</version>
         <executions>
           <execution>
             <id>jakarta-ee</id>

@@ -48,14 +48,14 @@
     <dependency>
       <groupId>com.netflix.archaius</groupId>
       <artifactId>archaius-core</artifactId>
-      <version>0.7.12</version>
+      <version>${archaius-core.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.hystrix</groupId>
       <artifactId>hystrix-core</artifactId>
-      <version>1.5.18</version>
+      <version>${hystrix-core.version}</version>
     </dependency>
 
     <dependency>

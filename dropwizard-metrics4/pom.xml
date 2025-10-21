@@ -40,7 +40,7 @@
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>4.2.37</version>
+      <version>${metrics-core-4.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

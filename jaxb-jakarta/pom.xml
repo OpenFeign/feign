@@ -50,14 +50,14 @@
     <dependency>
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.4</version>
+      <version>${jakarta.xml.bind-api.version}</version>
     </dependency>
 
     <!-- Test -->
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-impl</artifactId>
-      <version>4.0.3</version>
+      <version>${jaxb-impl-4.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
