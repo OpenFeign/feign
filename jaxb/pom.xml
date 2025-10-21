@@ -44,14 +44,14 @@
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-      <version>2.3.1</version>
+      <version>${jaxb-api.version}</version>
     </dependency>
 
     <!-- JAXB RI -->
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-impl</artifactId>
-      <version>2.3.9</version>
+      <version>${jaxb-impl-2.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

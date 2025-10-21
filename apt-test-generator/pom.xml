@@ -39,7 +39,7 @@
     <dependency>
       <groupId>com.github.jknack</groupId>
       <artifactId>handlebars</artifactId>
-      <version>4.5.0</version>
+      <version>${handlebars.version}</version>
     </dependency>
 
     <dependency>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.google.testing.compile</groupId>
       <artifactId>compile-testing</artifactId>
-      <version>0.23.0</version>
+      <version>${compile-testing.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -75,7 +75,7 @@
     <dependency>
       <groupId>com.google.auto.service</groupId>
       <artifactId>auto-service-annotations</artifactId>
-      <version>1.1.1</version>
+      <version>${auto-service-annotations.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -104,7 +104,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.1</version>
+        <version>${maven-shade-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -125,7 +125,7 @@
       <plugin>
         <groupId>org.skife.maven</groupId>
         <artifactId>really-executable-jar-maven-plugin</artifactId>
-        <version>2.1.1</version>
+        <version>${really-executable-jar-maven-plugin.version}</version>
         <configuration>
           <programFile>github</programFile>
         </configuration>

@@ -204,6 +204,45 @@
     <rewrite-testing-frameworks.version>3.19.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.19.0</rewrite-migrate-java.version>
     <java18-signature.version>1.0</java18-signature.version>
+
+    <!-- Third-party dependency versions -->
+    <archaius-core.version>0.7.12</archaius-core.version>
+    <auto-service-annotations.version>1.1.1</auto-service-annotations.version>
+    <commons-codec.version>1.19.0</commons-codec.version>
+    <commons-exec.version>1.5.0</commons-exec.version>
+    <commons-fileupload.version>1.6.0</commons-fileupload.version>
+    <commons-text.version>1.14.0</commons-text.version>
+    <compile-testing.version>0.23.0</compile-testing.version>
+    <handlebars.version>4.5.0</handlebars.version>
+    <httpclient4.version>4.5.14</httpclient4.version>
+    <httpclient5.version>5.5.1</httpclient5.version>
+    <hystrix-core.version>1.5.18</hystrix-core.version>
+    <jakarta.ws.rs-api-3.version>3.1.0</jakarta.ws.rs-api-3.version>
+    <jakarta.ws.rs-api-4.version>4.0.0</jakarta.ws.rs-api-4.version>
+    <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
+    <jakarta.xml.soap-api.version>3.0.2</jakarta.xml.soap-api.version>
+    <jakarta.xml.ws-api.version>4.0.2</jakarta.xml.ws-api.version>
+    <javax.ws.rs-api.version>2.1.1</javax.ws.rs-api.version>
+    <jaxb-api.version>2.3.1</jaxb-api.version>
+    <jaxb-impl-2.version>2.3.9</jaxb-impl-2.version>
+    <jaxb-impl-4.version>4.0.3</jaxb-impl-4.version>
+    <jaxws-api.version>2.3.1</jaxws-api.version>
+    <jersey-client.version>1.19.4</jersey-client.version>
+    <jsr311-api.version>1.1.1</jsr311-api.version>
+    <lombok.version>1.18.42</lombok.version>
+    <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
+    <metrics-core-4.version>4.2.37</metrics-core-4.version>
+    <metrics-core-5.version>5.0.5</metrics-core-5.version>
+    <org.eclipse.transformer.maven.version>0.2.0</org.eclipse.transformer.maven.version>
+    <really-executable-jar-maven-plugin.version>2.1.1</really-executable-jar-maven-plugin.version>
+    <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
+    <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
+    <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
+    <spring-cloud-starter-openfeign.version>4.3.0</spring-cloud-starter-openfeign.version>
+    <spring-context.version>6.2.12</spring-context.version>
+    <spring-web.version>6.2.11</spring-web.version>
+    <undertow-core.version>2.3.20.Final</undertow-core.version>
+    <utils-java.version>1.18.0</utils-java.version>
   </properties>
 
   <dependencyManagement>
