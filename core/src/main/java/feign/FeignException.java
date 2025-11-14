@@ -15,9 +15,10 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.UTF_8;
+import static feign.Util.caseInsensitiveCopyOf;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,15 +28,16 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import feign.utils.ContentTypeParser;
 
 /** Origin exception type for all Http Apis. */
+// TODO: KD - FeignException does not currently support streaming bodies.  Usually, error responses are short enough that this isn't an issue, but we may want to eventually replace byte[] responseBody with Response.Body responseBody;
+// TODO: KD - for that matter, why aren't we just capturing the response itself instead of the headers and body as separate parameters? errorReading() captures the response...
 public class FeignException extends RuntimeException {
 
   private static final String EXCEPTION_MESSAGE_TEMPLATE_NULL_REQUEST =
@@ -500,9 +502,7 @@ public class FeignException extends RuntimeException {
 
     private String getBodyAsString(byte[] body, Map<String, Collection<String>> headers) {
       Charset charset = getResponseCharset(headers);
-      if (charset == null) {
-        charset = Util.UTF_8;
-      }
+
       return getResponseBody(body, charset);
     }
 
@@ -529,26 +529,9 @@ public class FeignException extends RuntimeException {
 
     private static Charset getResponseCharset(Map<String, Collection<String>> headers) {
 
-      Collection<String> strings = headers.get("content-type");
-      if (strings == null || strings.isEmpty()) {
-        return null;
-      }
+      return ContentTypeParser.parseContentTypeFromHeaders(headers, "").getCharset().orElse(Util.UTF_8);
 
-      Pattern pattern = Pattern.compile(".*charset=\"?([^\\s|^;|^\"]+).*", CASE_INSENSITIVE);
-      Matcher matcher = pattern.matcher(strings.iterator().next());
-      if (!matcher.lookingAt()) {
-        return null;
-      }
-
-      String group = matcher.group(1);
-      try {
-        if (!Charset.isSupported(group)) {
-          return null;
-        }
-      } catch (IllegalCharsetNameException ex) {
-        return null;
-      }
-      return Charset.forName(group);
     }
+    
   }
 }
