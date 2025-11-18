@@ -34,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,11 +75,11 @@ public class Util {
   public static final String ENCODING_DEFLATE = "deflate";
 
   /** UTF-8: eight-bit UCS Transformation Format. */
-  public static final Charset UTF_8 = Charset.forName("UTF-8");
+  public static final Charset UTF_8 = StandardCharsets.UTF_8;
 
   // com.google.common.base.Charsets
   /** ISO-8859-1: ISO Latin Alphabet Number 1 (ISO-LATIN-1). */
-  public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+  public static final Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
 
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
 
