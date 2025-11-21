@@ -200,7 +200,7 @@
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
     <easy-jacoco-maven-plugin.version>0.1.4</easy-jacoco-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.23.0</rewrite-maven-plugin.version>
+    <rewrite-maven-plugin.version>6.24.0</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.21.3</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.21.2</rewrite-migrate-java.version>
     <java18-signature.version>1.0</java18-signature.version>
