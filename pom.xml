@@ -237,7 +237,7 @@
     <really-executable-jar-maven-plugin.version>2.1.1</really-executable-jar-maven-plugin.version>
     <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
     <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
-    <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
+    <spring-cloud-dependencies.version>2025.1.0</spring-cloud-dependencies.version>
     <spring-cloud-starter-openfeign.version>4.3.0</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.1</spring-context.version>
     <spring-web.version>6.2.11</spring-web.version>
