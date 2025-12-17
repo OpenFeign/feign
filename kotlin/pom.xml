@@ -30,7 +30,7 @@
   <description>Feign Kotlin</description>
 
   <properties>
-    <kotlin.version>2.2.21</kotlin.version>
+    <kotlin.version>2.3.0</kotlin.version>
     <kotlinx.coroutines.version>1.10.2</kotlinx.coroutines.version>
   </properties>
 
