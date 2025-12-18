@@ -49,4 +49,39 @@ class RetryableExceptionTest {
     assertThat(retryableException.responseHeaders()).containsKey("TEST_HEADER");
     assertThat(retryableException.responseHeaders().get("TEST_HEADER")).contains("TEST_CONTENT");
   }
+
+  @Test
+  void createRetryableExceptionWithMethodKey() {
+    // given
+    Long retryAfter = 5000L;
+    String methodKey = "TestClient#testMethod()";
+    Request request =
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+    Throwable cause = new RuntimeException("test cause");
+
+    // when
+    RetryableException retryableException =
+        new RetryableException(
+            503, "Service Unavailable", Request.HttpMethod.GET, cause, retryAfter, request, methodKey);
+
+    // then
+    assertThat(retryableException).isNotNull();
+    assertThat(retryableException.methodKey()).isEqualTo(methodKey);
+    assertThat(retryableException.retryAfter()).isEqualTo(retryAfter);
+    assertThat(retryableException.method()).isEqualTo(Request.HttpMethod.GET);
+  }
+
+  @Test
+  void methodKeyIsNullWhenNotProvided() {
+    // given
+    Request request =
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+
+    // when
+    RetryableException retryableException =
+        new RetryableException(503, "Service Unavailable", Request.HttpMethod.GET, request);
+
+    // then
+    assertThat(retryableException.methodKey()).isNull();
+  }
 }

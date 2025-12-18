@@ -26,10 +26,11 @@ import java.util.Map;
  */
 public class RetryableException extends FeignException {
 
-  private static final long serialVersionUID = 2L;
+  private static final long serialVersionUID = 3L;
 
   private final Long retryAfter;
   private final HttpMethod httpMethod;
+  private final String methodKey;
 
   /**
    * Represents a non-retryable exception when Retry-After information is explicitly not provided.
@@ -46,6 +47,7 @@ public class RetryableException extends FeignException {
     super(status, message, request);
     this.httpMethod = httpMethod;
     this.retryAfter = null;
+    this.methodKey = null;
   }
 
   /**
@@ -65,6 +67,7 @@ public class RetryableException extends FeignException {
     super(status, message, request, cause);
     this.httpMethod = httpMethod;
     this.retryAfter = null;
+    this.methodKey = null;
   }
 
   /**
@@ -95,6 +98,32 @@ public class RetryableException extends FeignException {
     super(status, message, request, cause);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter;
+    this.methodKey = null;
+  }
+
+  /**
+   * Represents a retryable exception with methodKey for identifying the method being retried.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param cause the underlying cause of the exception
+   * @param retryAfter the retry delay in milliseconds
+   * @param request the original HTTP request
+   * @param methodKey the method key identifying the Feign method
+   */
+  public RetryableException(
+      int status,
+      String message,
+      HttpMethod httpMethod,
+      Throwable cause,
+      Long retryAfter,
+      Request request,
+      String methodKey) {
+    super(status, message, request, cause);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+    this.methodKey = methodKey;
   }
 
   /**
@@ -119,6 +148,7 @@ public class RetryableException extends FeignException {
     super(status, message, request, cause);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
+    this.methodKey = null;
   }
 
   /**
@@ -139,6 +169,7 @@ public class RetryableException extends FeignException {
     super(status, message, request);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter;
+    this.methodKey = null;
   }
 
   /**
@@ -156,6 +187,7 @@ public class RetryableException extends FeignException {
     super(status, message, request);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
+    this.methodKey = null;
   }
 
   /**
@@ -183,6 +215,7 @@ public class RetryableException extends FeignException {
     super(status, message, request, responseBody, responseHeaders);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter;
+    this.methodKey = null;
   }
 
   /**
@@ -209,6 +242,7 @@ public class RetryableException extends FeignException {
     super(status, message, request, responseBody, responseHeaders);
     this.httpMethod = httpMethod;
     this.retryAfter = retryAfter != null ? retryAfter.getTime() : null;
+    this.methodKey = null;
   }
 
   /**
@@ -221,5 +255,15 @@ public class RetryableException extends FeignException {
 
   public HttpMethod method() {
     return this.httpMethod;
+  }
+
+  /**
+   * Returns the method key identifying the Feign method that was being invoked.
+   * This corresponds to the methodKey parameter in {@link feign.codec.ErrorDecoder#decode}.
+   *
+   * @return the method key, or null if not set
+   */
+  public String methodKey() {
+    return this.methodKey;
   }
 }
