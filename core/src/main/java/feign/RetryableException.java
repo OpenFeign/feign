@@ -258,8 +258,8 @@ public class RetryableException extends FeignException {
   }
 
   /**
-   * Returns the method key identifying the Feign method that was being invoked.
-   * This corresponds to the methodKey parameter in {@link feign.codec.ErrorDecoder#decode}.
+   * Returns the method key identifying the Feign method that was being invoked. This corresponds to
+   * the methodKey parameter in {@link feign.codec.ErrorDecoder#decode}.
    *
    * @return the method key, or null if not set
    */

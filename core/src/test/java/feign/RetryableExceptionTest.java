@@ -62,7 +62,13 @@ class RetryableExceptionTest {
     // when
     RetryableException retryableException =
         new RetryableException(
-            503, "Service Unavailable", Request.HttpMethod.GET, cause, retryAfter, request, methodKey);
+            503,
+            "Service Unavailable",
+            Request.HttpMethod.GET,
+            cause,
+            retryAfter,
+            request,
+            methodKey);
 
     // then
     assertThat(retryableException).isNotNull();
