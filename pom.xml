@@ -89,6 +89,7 @@
     <module>hc5</module>
     <module>hystrix</module>
     <module>jackson</module>
+    <module>jackson3</module>
     <module>jackson-jaxb</module>
     <module>jackson-jr</module>
     <module>jaxb</module>
@@ -168,6 +169,7 @@
 
     <junit5.version>6.0.1</junit5.version>
     <jackson.version>2.20.1</jackson.version>
+    <jackson3.version>3.0.2</jackson3.version>
     <jackson.annotations.version>2.20</jackson.annotations.version>
     <assertj.version>3.27.6</assertj.version>
     <mockito.version>5.21.0</mockito.version>
@@ -485,6 +487,12 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
         <version>${jackson.annotations.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>tools.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson3.version}</version>
       </dependency>
 
       <dependency>
