@@ -28,7 +28,7 @@
   <description>Feign Micrometer Application Metrics</description>
 
   <properties>
-    <micrometer.version>1.16.1</micrometer.version>
+    <micrometer.version>1.16.2</micrometer.version>
   </properties>
 
   <dependencies>
