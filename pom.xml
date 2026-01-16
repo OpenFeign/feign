@@ -200,7 +200,7 @@
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
     <easy-jacoco-maven-plugin.version>0.1.4</easy-jacoco-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.27.0</rewrite-maven-plugin.version>
+    <rewrite-maven-plugin.version>6.27.1</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.25.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.25.0</rewrite-migrate-java.version>
     <java18-signature.version>1.0</java18-signature.version>
@@ -239,9 +239,9 @@
     <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
     <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
     <spring-cloud-starter-openfeign.version>4.3.0</spring-cloud-starter-openfeign.version>
-    <spring-context.version>7.0.1</spring-context.version>
+    <spring-context.version>7.0.3</spring-context.version>
     <spring-web.version>6.2.11</spring-web.version>
-    <undertow-core.version>2.3.20.Final</undertow-core.version>
+    <undertow-core.version>2.3.22.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>
 
