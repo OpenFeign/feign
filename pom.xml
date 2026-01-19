@@ -167,8 +167,8 @@
     <springboot.version>3.5.6</springboot.version>
 
     <junit5.version>6.0.2</junit5.version>
-    <jackson.version>2.20.1</jackson.version>
-    <jackson.annotations.version>2.20</jackson.annotations.version>
+    <jackson.version>2.21.0</jackson.version>
+    <jackson.annotations.version>2.21</jackson.annotations.version>
     <assertj.version>3.27.6</assertj.version>
     <mockito.version>5.21.0</mockito.version>
     <fastjson2.version>2.0.60.android8</fastjson2.version>
@@ -189,7 +189,7 @@
     <bom-generator.version>0.230.2</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.2.1</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.20.1</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.21.0</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
