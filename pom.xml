@@ -168,7 +168,7 @@
 
     <junit5.version>6.0.2</junit5.version>
     <jackson.version>2.20.1</jackson.version>
-    <jackson.annotations.version>2.20</jackson.annotations.version>
+    <jackson.annotations.version>2.21</jackson.annotations.version>
     <assertj.version>3.27.6</assertj.version>
     <mockito.version>5.21.0</mockito.version>
     <fastjson2.version>2.0.60.android8</fastjson2.version>
