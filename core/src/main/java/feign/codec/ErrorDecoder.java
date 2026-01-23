@@ -109,7 +109,8 @@ public interface ErrorDecoder {
             response.request().httpMethod(),
             exception,
             retryAfter,
-            response.request());
+            response.request(),
+            methodKey);
       }
       return exception;
     }
