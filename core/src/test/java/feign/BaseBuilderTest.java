@@ -17,7 +17,11 @@ package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_MOCKS;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -29,16 +33,38 @@ class BaseBuilderTest {
   @Test
   void checkEnrichTouchesAllAsyncBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    test(
-        AsyncFeign.builder()
-            .requestInterceptor(template -> {})
-            .responseInterceptor((ic, c) -> c.next(ic)),
-        14);
+    Capability mockingCapability =
+        test(
+            AsyncFeign.builder()
+                .requestInterceptor(template -> {})
+                .responseInterceptor((ic, c) -> c.next(ic)),
+            14);
+
+    // make sure capability was invoked only once
+    verify(mockingCapability).enrich(any(AsyncClient.class));
   }
 
-  private void test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
+  @Test
+  void checkEnrichTouchesAllBuilderFields()
       throws IllegalArgumentException, IllegalAccessException {
-    Capability mockingCapability = Mockito.mock(Capability.class, RETURNS_MOCKS);
+    Capability mockingCapability =
+        test(
+            Feign.builder()
+                .requestInterceptor(template -> {})
+                .responseInterceptor((ic, c) -> c.next(ic)),
+            12);
+
+    // make sure capability was invoked only once
+    verify(mockingCapability).enrich(any(Client.class));
+  }
+
+  private Capability test(BaseBuilder<?, ?> builder, int expectedFieldsCount)
+      throws IllegalArgumentException, IllegalAccessException {
+    Capability mockingCapability = mock(Capability.class, RETURNS_MOCKS);
+    doAnswer(inv -> inv.getArgument(0, BaseBuilder.class))
+        .when(mockingCapability)
+        .beforeBuild(any(BaseBuilder.class));
+
     BaseBuilder<?, ?> enriched = builder.addCapability(mockingCapability).enrich();
 
     List<Field> fields = enriched.getFieldsToEnrich();
@@ -56,15 +82,10 @@ class BaseBuilderTest {
           .isTrue();
       assertNotSame(builder, enriched);
     }
-  }
 
-  @Test
-  void checkEnrichTouchesAllBuilderFields()
-      throws IllegalArgumentException, IllegalAccessException {
-    test(
-        Feign.builder()
-            .requestInterceptor(template -> {})
-            .responseInterceptor((ic, c) -> c.next(ic)),
-        12);
+    // make sure capability was invoked only once
+    verify(mockingCapability).beforeBuild(any(BaseBuilder.class));
+
+    return mockingCapability;
   }
 }
