@@ -232,7 +232,7 @@
     <lombok.version>1.18.42</lombok.version>
     <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
     <metrics-core-4.version>4.2.37</metrics-core-4.version>
-    <metrics-core-5.version>5.0.5</metrics-core-5.version>
+    <metrics-core-5.version>5.0.6</metrics-core-5.version>
     <org.eclipse.transformer.maven.version>0.2.0</org.eclipse.transformer.maven.version>
     <really-executable-jar-maven-plugin.version>2.1.1</really-executable-jar-maven-plugin.version>
     <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
