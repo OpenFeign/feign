@@ -208,7 +208,7 @@
     <!-- Third-party dependency versions -->
     <archaius-core.version>0.7.12</archaius-core.version>
     <auto-service-annotations.version>1.1.1</auto-service-annotations.version>
-    <commons-codec.version>1.20.0</commons-codec.version>
+    <commons-codec.version>1.21.0</commons-codec.version>
     <commons-exec.version>1.6.0</commons-exec.version>
     <commons-fileupload.version>1.6.0</commons-fileupload.version>
     <commons-text.version>1.15.0</commons-text.version>
