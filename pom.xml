@@ -238,7 +238,7 @@
     <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
     <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
     <spring-cloud-dependencies.version>2025.1.1</spring-cloud-dependencies.version>
-    <spring-cloud-starter-openfeign.version>4.3.0</spring-cloud-starter-openfeign.version>
+    <spring-cloud-starter-openfeign.version>5.0.1</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.3</spring-context.version>
     <spring-web.version>6.2.11</spring-web.version>
     <undertow-core.version>2.3.22.Final</undertow-core.version>
