@@ -31,7 +31,7 @@
 
   <properties>
     <moditect.skip>true</moditect.skip>
-    <jersey.version>2.46</jersey.version>
+    <jersey.version>4.0.2</jersey.version>
   </properties>
 
   <dependencies>

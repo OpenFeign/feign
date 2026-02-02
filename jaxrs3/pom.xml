@@ -31,7 +31,7 @@
 
   <properties>
     <main.java.version>11</main.java.version>
-    <jersey.version>3.1.10</jersey.version>
+    <jersey.version>4.0.2</jersey.version>
   </properties>
 
   <dependencies>
