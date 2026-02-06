@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.7-SNAPSHOT</version>
+    <version>13.7</version>
   </parent>
 
   <artifactId>feign-form</artifactId>
