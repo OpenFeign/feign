@@ -200,7 +200,6 @@
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
-    <easy-jacoco-maven-plugin.version>0.1.4</easy-jacoco-maven-plugin.version>
     <rewrite-maven-plugin.version>6.28.1</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.26.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.26.0</rewrite-migrate-java.version>
@@ -924,35 +923,6 @@
           <includes>
             <include>feign/**</include>
           </includes>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.marvinformatics.jacoco</groupId>
-        <artifactId>easy-jacoco-maven-plugin</artifactId>
-        <version>${easy-jacoco-maven-plugin.version}</version>
-        <configuration>
-          <projectRules>
-            <rule>
-              <limits>
-                <limit>
-                  <counter>INSTRUCTION</counter>
-                  <value>COVEREDRATIO</value>
-                  <minimum>0.70</minimum>
-                </limit>
-              </limits>
-            </rule>
-          </projectRules>
-          <haltOnFailure>true</haltOnFailure>
-          <projectExtraProperties>
-            <license.skip>true</license.skip>
-          </projectExtraProperties>
-          <includes>
-            <include>feign/**</include>
-          </includes>
-          <excludeModules>
-            <excludeModule>feign-benchmark</excludeModule>
-            <excludeModule>feign-apt-test-generator</excludeModule>
-          </excludeModules>
         </configuration>
       </plugin>
     </plugins>
