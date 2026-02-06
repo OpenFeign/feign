@@ -42,7 +42,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
 
   private static final Map<String, SSLSocketFactory> sslSocketFactories = new LinkedHashMap<>();
   private static final char[] KEYSTORE_PASSWORD = "password".toCharArray();
-  private static final String[] ENABLED_CIPHER_SUITES = {"TLS_RSA_WITH_AES_256_CBC_SHA"};
+  private static final String[] ENABLED_CIPHER_SUITES = {"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"};
   private final SSLSocketFactory delegate;
   private final String serverAlias;
   private final PrivateKey privateKey;
@@ -50,7 +50,7 @@ public final class TrustingSSLSocketFactory extends SSLSocketFactory
 
   private TrustingSSLSocketFactory(String serverAlias) {
     try {
-      SSLContext sc = SSLContext.getInstance("SSL");
+      SSLContext sc = SSLContext.getInstance("TLS");
       sc.init(new KeyManager[] {this}, new TrustManager[] {this}, new SecureRandom());
       this.delegate = sc.getSocketFactory();
     } catch (Exception e) {
