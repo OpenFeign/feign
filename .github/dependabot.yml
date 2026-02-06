@@ -15,6 +15,9 @@ updates:
       # Per-module entries below handle jersey updates independently.
       - dependency-name: "org.glassfish.jersey.core:jersey-client"
       - dependency-name: "org.glassfish.jersey.inject:jersey-hk2"
+      # Vertx uses the same property name (vertx.version) at 4.x and 5.x.
+      # Per-module entries below handle vertx updates independently.
+      - dependency-name: "io.vertx:*"
       # JAXB impl at 2.x (jaxb, soap) and 4.x (jaxb-jakarta, soap-jakarta)
       - dependency-name: "com.sun.xml.bind:jaxb-impl"
         update-types: ["version-update:semver-major"]
@@ -62,4 +65,37 @@ updates:
       - dependency-name: "org.glassfish.jersey.core:jersey-client"
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.glassfish.jersey.inject:jersey-hk2"
+        update-types: ["version-update:semver-major"]
+
+  # Vertx 5.x for feign-vertx (main library)
+  - package-ecosystem: "maven"
+    directory: "/vertx/feign-vertx"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "io.vertx:*"
+    ignore:
+      - dependency-name: "io.vertx:*"
+        update-types: ["version-update:semver-major"]
+
+  # Vertx 4.x for feign-vertx4-test
+  - package-ecosystem: "maven"
+    directory: "/vertx/feign-vertx4-test"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "io.vertx:*"
+    ignore:
+      - dependency-name: "io.vertx:*"
+        update-types: ["version-update:semver-major"]
+
+  # Vertx 5.x for feign-vertx5-test
+  - package-ecosystem: "maven"
+    directory: "/vertx/feign-vertx5-test"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "io.vertx:*"
+    ignore:
+      - dependency-name: "io.vertx:*"
         update-types: ["version-update:semver-major"]
