@@ -59,6 +59,9 @@ public class Util {
   /** The HTTP Content-Length header field name. */
   public static final String CONTENT_LENGTH = "Content-Length";
 
+  /** The HTTP Content-Length header field name. */
+  public static final String CONTENT_TYPE = "Content-Type";
+
   /** The HTTP Content-Encoding header field name. */
   public static final String CONTENT_ENCODING = "Content-Encoding";
 
@@ -266,7 +269,7 @@ public class Util {
   }
 
   /** Adapted from {@code com.google.common.io.ByteStreams.copy()}. */
-  private static long copy(InputStream from, OutputStream to) throws IOException {
+  public static long copy(InputStream from, OutputStream to) throws IOException {
     checkNotNull(from, "from");
     checkNotNull(to, "to");
     byte[] buf = new byte[BUF_SIZE];

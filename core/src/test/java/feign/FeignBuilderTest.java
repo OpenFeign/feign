@@ -431,7 +431,7 @@ public class FeignBuilderTest {
                               @SuppressWarnings("deprecation")
                               @Override
                               public Reader asReader() throws IOException {
-                                return original.body().asReader(Util.UTF_8);
+                                return original.body().asReader();
                               }
 
                               @Override
