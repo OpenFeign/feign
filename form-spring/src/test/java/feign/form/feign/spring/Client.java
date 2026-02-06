@@ -25,10 +25,9 @@ import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.support.FeignHttpMessageConverters;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -91,10 +90,8 @@ interface Client {
 
   class ClientConfiguration {
 
-    @Autowired private ObjectFactory<HttpMessageConverters> messageConverters;
-
     @Bean
-    Encoder feignEncoder() {
+    Encoder feignEncoder(ObjectProvider<FeignHttpMessageConverters> messageConverters) {
       return new SpringFormEncoder(new SpringEncoder(messageConverters));
     }
 
