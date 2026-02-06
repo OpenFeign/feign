@@ -30,9 +30,20 @@
   <description>Feign Jackson 3</description>
 
   <properties>
-    <!-- Jackson 3 requires Java 17 -->
     <main.java.version>17</main.java.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson3.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
