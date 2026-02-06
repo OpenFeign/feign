@@ -199,7 +199,6 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
     <rewrite-maven-plugin.version>6.28.1</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.26.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.26.0</rewrite-migrate-java.version>
@@ -556,7 +555,7 @@
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <trimStackTrace>false</trimStackTrace>
-            <argLine>${jvm.options} ${argLine}</argLine>
+            <argLine>${jvm.options}</argLine>
             <excludes>
               <exclude></exclude>
             </excludes>
@@ -915,16 +914,6 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
-        <configuration>
-          <includes>
-            <include>feign/**</include>
-          </includes>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 

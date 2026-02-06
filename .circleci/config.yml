@@ -92,7 +92,7 @@ commands:
       - run:
           name: 'Configure GPG keys'
           command: |
-            echo -e "$GPG_KEY" | base64 -d | gpg --batch --yes --import
+            printf '%s' "$GPG_KEY" | base64 -d | gpg --batch --yes --import
   nexus-deploy:
     steps:
       - run:
@@ -147,7 +147,7 @@ jobs:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify -T1C
+            ./mvnw -ntp -B verify
       - verify-formatting
 
   deploy:
