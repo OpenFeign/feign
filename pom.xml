@@ -241,7 +241,7 @@
     <spring-cloud-starter-openfeign.version>4.3.0</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.3</spring-context.version>
     <spring-web.version>6.2.11</spring-web.version>
-    <undertow-core.version>2.3.22.Final</undertow-core.version>
+    <undertow-core.version>2.3.23.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>
 
