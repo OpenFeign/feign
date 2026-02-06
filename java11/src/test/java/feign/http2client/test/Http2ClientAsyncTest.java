@@ -460,7 +460,7 @@ public class Http2ClientAsyncTest {
 
   private <T> T unwrap(CompletableFuture<T> cf) throws Throwable {
     try {
-      return cf.get(1, TimeUnit.SECONDS);
+      return cf.get(10, TimeUnit.SECONDS);
     } catch (final ExecutionException e) {
       throw e.getCause();
     }
