@@ -101,6 +101,7 @@
     <module>java11</module>
     <module>jakarta</module>
     <module>json</module>
+    <module>oauth2</module>
     <module>okhttp</module>
     <module>googlehttpclient</module>
     <module>ribbon</module>
@@ -371,7 +372,19 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>feign-oauth2</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>feign-okhttp</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-hc5</artifactId>
         <version>${project.version}</version>
       </dependency>
 
