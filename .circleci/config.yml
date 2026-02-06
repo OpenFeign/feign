@@ -99,7 +99,7 @@ commands:
           name: 'Deploy Core Modules Sonatype'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark -DskipTests=true deploy
+            ./mvnw -ntp -nsu -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test -DskipTests=true deploy
 
 # our job defaults
 defaults: &defaults
