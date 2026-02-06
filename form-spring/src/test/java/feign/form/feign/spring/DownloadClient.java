@@ -18,14 +18,12 @@ package feign.form.feign.spring;
 import feign.Logger;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
-import java.util.ArrayList;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.support.FeignHttpMessageConverters;
+import org.springframework.cloud.openfeign.support.HttpMessageConverterCustomizer;
 import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,26 +39,14 @@ interface DownloadClient {
 
   class ClientConfiguration {
 
-    @Autowired private ObjectFactory<HttpMessageConverters> messageConverters;
+    @Bean
+    HttpMessageConverterCustomizer multipartConverterCustomizer() {
+      return converters -> converters.add(new SpringManyMultipartFilesReader(4096));
+    }
 
     @Bean
-    Decoder feignDecoder() {
-      var springConverters = messageConverters.getObject().getConverters();
-      var decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
-
-      decoderConverters.addAll(springConverters);
-      decoderConverters.add(new SpringManyMultipartFilesReader(4096));
-
-      var httpMessageConverters = new HttpMessageConverters(decoderConverters);
-
-      return new SpringDecoder(
-          new ObjectFactory<HttpMessageConverters>() {
-
-            @Override
-            public HttpMessageConverters getObject() {
-              return httpMessageConverters;
-            }
-          });
+    Decoder feignDecoder(ObjectProvider<FeignHttpMessageConverters> messageConverters) {
+      return new SpringDecoder(messageConverters);
     }
 
     @Bean

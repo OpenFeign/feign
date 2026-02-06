@@ -15,7 +15,6 @@
  */
 package feign.form.feign.spring.converter;
 
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -84,9 +83,8 @@ class SpringManyMultipartFilesReaderTest {
     @Override
     public HttpHeaders getHeaders() {
       var httpHeaders = new HttpHeaders();
-      httpHeaders.put(
-          CONTENT_TYPE,
-          singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY));
+      httpHeaders.set(
+          CONTENT_TYPE, MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY);
       return httpHeaders;
     }
   }
