@@ -50,4 +50,13 @@
             <jdkHome>/home/circleci/.sdkman/candidates/java/21.0.2-tem</jdkHome>
         </configuration>
     </toolchain>
+    <toolchain>
+        <type>jdk</type>
+        <provides>
+            <version>25</version>
+        </provides>
+        <configuration>
+            <jdkHome>/home/circleci/.sdkman/candidates/java/25.0.2-tem</jdkHome>
+        </configuration>
+    </toolchain>
 </toolchains>
