@@ -104,3 +104,21 @@ Example:
 - `dropwizard-metrics5/` - Java 17 (for Metrics 5.x)
 - `apt-test-generator/` - Java 17 (for Handlebars 4.5.0+)
 - `soap-jakarta/`, `jaxb-jakarta/` - Java 11 (for Jakarta namespace)
+
+### Dependabot Configuration
+
+Some modules define the same Maven property name (e.g., `jersey.version`, `vertx.version`) at different major versions. Dependabot treats these as a single property across the reactor and tries to set them all to the same value, which breaks modules locked to a specific major.
+
+**Current split-property modules:**
+- `jersey.version`: 2.x (jaxrs2), 3.x (jaxrs3), 4.x (jaxrs4)
+- `vertx.version`: 4.x (feign-vertx4-test), 5.x (feign-vertx, feign-vertx5-test)
+
+**How it works in `.github/dependabot.yml`:**
+1. The root `/` entry **ignores** the conflicting dependencies entirely (jersey, vertx)
+2. Each module gets its own entry with `allow` (only the conflicting dependency) and `ignore` (block major version bumps)
+3. Other dependencies that use **different property names** per major (e.g., `jaxb-impl-2.version` vs `jaxb-impl-4.version`) only need `update-types: ["version-update:semver-major"]` on the root entry
+
+**When adding a new module that reuses a version property at a different major:**
+1. Add the dependency to the root entry's `ignore` list (fully ignored, not just major)
+2. Add a per-directory entry for the new module with `allow` for the specific dependency and `ignore` for `version-update:semver-major`
+3. Verify existing modules with the same property also have their own per-directory entries
