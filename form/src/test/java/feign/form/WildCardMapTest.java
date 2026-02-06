@@ -27,7 +27,6 @@ import feign.Response;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,7 +41,7 @@ class WildCardMapTest {
 
   @BeforeAll
   static void configureClient() {
-    val logFile = logDir.resolve("log.txt").toString();
+    var logFile = logDir.resolve("log.txt").toString();
 
     api =
         Feign.builder()

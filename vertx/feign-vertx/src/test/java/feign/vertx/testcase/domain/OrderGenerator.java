@@ -34,9 +34,9 @@ public class OrderGenerator {
     final int nbBalls = peekBallsNumber();
     final int nbMixins = peekMixinNumber();
 
-    IntStream.rangeClosed(1, nbBalls).mapToObj(i -> this.peekFlavor()).forEach(order::addBall);
+    IntStream.rangeClosed(1, nbBalls).mapToObj(_ -> this.peekFlavor()).forEach(order::addBall);
 
-    IntStream.rangeClosed(1, nbMixins).mapToObj(i -> this.peekMixin()).forEach(order::addMixin);
+    IntStream.rangeClosed(1, nbMixins).mapToObj(_ -> this.peekMixin()).forEach(order::addMixin);
 
     return order;
   }

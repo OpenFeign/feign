@@ -115,11 +115,11 @@ class ConnectionsLeakTests {
   void assertNotLeaks(
       HelloServiceAPI client, VertxTestContext testContext, int nbRequests, int poolSize) {
     List<Future> futures =
-        IntStream.range(0, nbRequests).mapToObj(ignored -> client.hello()).collect(toList());
+        IntStream.range(0, nbRequests).mapToObj(_ -> client.hello()).collect(toList());
 
     CompositeFuture.all(futures)
         .onComplete(
-            ignored ->
+            _ ->
                 testContext.verify(
                     () -> {
                       try {

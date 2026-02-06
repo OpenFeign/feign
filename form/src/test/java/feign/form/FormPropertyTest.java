@@ -25,7 +25,6 @@ import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.jackson.JacksonEncoder;
 import java.nio.file.Path;
-import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,7 +39,7 @@ class FormPropertyTest {
 
   @BeforeAll
   static void configureClient() {
-    val logFile = logDir.resolve("log.txt").toString();
+    var logFile = logDir.resolve("log.txt").toString();
 
     API =
         Feign.builder()
@@ -52,7 +51,7 @@ class FormPropertyTest {
 
   @Test
   void test() {
-    val dto = new FormDto("Amigo", 23);
+    var dto = new FormDto("Amigo", 23);
 
     assertThat(API.postData(dto)).isEqualTo("Amigo=23");
   }

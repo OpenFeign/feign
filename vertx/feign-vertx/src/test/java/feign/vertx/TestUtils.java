@@ -29,7 +29,7 @@ public class TestUtils {
   public static String encodeAsJsonString(final Object object) {
     try {
       return MAPPER.writeValueAsString(object);
-    } catch (JsonProcessingException unexpectedException) {
+    } catch (JsonProcessingException _) {
       return "";
     }
   }

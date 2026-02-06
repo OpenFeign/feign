@@ -112,9 +112,7 @@ abstract class AbstractClientReconnectTest extends AbstractFeignVertxTest {
 
   CompositeFuture sendRequests(int requests) {
     List<Future> requestList =
-        IntStream.range(0, requests)
-            .mapToObj(ignored -> client.hello())
-            .collect(Collectors.toList());
+        IntStream.range(0, requests).mapToObj(_ -> client.hello()).collect(Collectors.toList());
     return CompositeFuture.all(requestList);
   }
 

@@ -32,7 +32,7 @@ public class AnnotationErrorDecoderNoAnnotationTest
   @Test
   void delegatesToDefaultErrorDecoder() throws Exception {
 
-    ErrorDecoder defaultErrorDecoder = (methodKey, response) -> new DefaultErrorDecoderException();
+    ErrorDecoder defaultErrorDecoder = (_, _) -> new DefaultErrorDecoderException();
 
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(TestClientInterfaceWithNoAnnotations.class)

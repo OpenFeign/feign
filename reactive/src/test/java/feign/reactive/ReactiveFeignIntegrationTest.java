@@ -134,7 +134,7 @@ public class ReactiveFeignIntegrationTest {
 
     StepVerifier.create(service.usersMono())
         .assertNext(
-            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+            users -> assertThat(users.getFirst()).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
@@ -167,7 +167,7 @@ public class ReactiveFeignIntegrationTest {
 
     StepVerifier.create(service.users())
         .assertNext(
-            users -> assertThat(users.get(0)).hasFieldOrPropertyWithValue("username", "test"))
+            users -> assertThat(users.getFirst()).hasFieldOrPropertyWithValue("username", "test"))
         .expectComplete()
         .verify();
     assertThat(webServer.takeRequest().getPath()).isEqualToIgnoringCase("/users");
@@ -179,7 +179,7 @@ public class ReactiveFeignIntegrationTest {
         .isThrownBy(
             () -> {
               ReactorFeign.builder()
-                  .invocationHandlerFactory((target, dispatch) -> null)
+                  .invocationHandlerFactory((_, _) -> null)
                   .target(TestReactiveXService.class, "http://localhost");
             });
   }
@@ -399,7 +399,7 @@ public class ReactiveFeignIntegrationTest {
   public static class ConsoleLogger extends Logger {
     @Override
     protected void log(String configKey, String format, Object... args) {
-      System.out.println(String.format(methodTag(configKey) + format, args));
+      IO.println(String.format(methodTag(configKey) + format, args));
     }
   }
 

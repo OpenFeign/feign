@@ -24,7 +24,6 @@ import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -38,8 +37,8 @@ class SpringManyMultipartFilesReaderTest {
 
   @Test
   void readMultipartFormDataTest() throws IOException {
-    val multipartFilesReader = new SpringManyMultipartFilesReader(4096);
-    val multipartFiles =
+    var multipartFilesReader = new SpringManyMultipartFilesReader(4096);
+    var multipartFiles =
         multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());
 
     assertThat(multipartFiles.length).isEqualTo(2);
@@ -58,7 +57,7 @@ class SpringManyMultipartFilesReaderTest {
 
     @Override
     public InputStream getBody() throws IOException {
-      val multipartBody =
+      var multipartBody =
           "--"
               + DUMMY_MULTIPART_BOUNDARY
               + "\r\n"
@@ -84,7 +83,7 @@ class SpringManyMultipartFilesReaderTest {
 
     @Override
     public HttpHeaders getHeaders() {
-      val httpHeaders = new HttpHeaders();
+      var httpHeaders = new HttpHeaders();
       httpHeaders.put(
           CONTENT_TYPE,
           singletonList(MULTIPART_FORM_DATA_VALUE + "; boundary=" + DUMMY_MULTIPART_BOUNDARY));

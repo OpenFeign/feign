@@ -35,11 +35,11 @@ public class GitHubExample {
     GitHub github =
         Feign.builder().decoder(new JsonDecoder()).target(GitHub.class, "https://api.github.com");
 
-    System.out.println("Let's fetch and print a list of the contributors to this library.");
+    IO.println("Let's fetch and print a list of the contributors to this library.");
     JSONArray contributors = github.contributors("netflix", "feign");
     contributors.forEach(
         contributor -> {
-          System.out.println(((JSONObject) contributor).getString("login"));
+          IO.println(((JSONObject) contributor).getString("login"));
         });
   }
 }

@@ -23,7 +23,6 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.IOException;
 import java.util.Map;
-import lombok.val;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -110,18 +109,18 @@ public class Server {
 
   @GetMapping(path = "/multipart/download/{fileId}", produces = MULTIPART_FORM_DATA_VALUE)
   public MultiValueMap<String, Object> download(@PathVariable("fileId") String fileId) {
-    val multiParts = new LinkedMultiValueMap<String, Object>();
+    var multiParts = new LinkedMultiValueMap<String, Object>();
 
-    val infoString = "The text for file ID " + fileId + ". Testing unicode €";
-    val infoPartheader = new HttpHeaders();
+    var infoString = "The text for file ID " + fileId + ". Testing unicode €";
+    var infoPartheader = new HttpHeaders();
     infoPartheader.setContentType(new MediaType("text", "plain", UTF_8));
 
-    val infoPart = new HttpEntity<String>(infoString, infoPartheader);
+    var infoPart = new HttpEntity<String>(infoString, infoPartheader);
 
-    val file = new ClassPathResource("testfile.txt");
-    val filePartheader = new HttpHeaders();
+    var file = new ClassPathResource("testfile.txt");
+    var filePartheader = new HttpHeaders();
     filePartheader.setContentType(APPLICATION_OCTET_STREAM);
-    val filePart = new HttpEntity<ClassPathResource>(file, filePartheader);
+    var filePart = new HttpEntity<ClassPathResource>(file, filePartheader);
 
     multiParts.add("info", infoPart);
     multiParts.add("file", filePart);

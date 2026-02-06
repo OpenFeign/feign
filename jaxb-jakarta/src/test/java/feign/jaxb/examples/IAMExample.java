@@ -37,7 +37,7 @@ public class IAMExample {
             .target(new IAMTarget(args[0], args[1]));
 
     GetUserResponse response = iam.userResponse();
-    System.out.println("UserId: " + response.result.user.id);
+    IO.println("UserId: " + response.result.user.id);
   }
 
   interface IAM {

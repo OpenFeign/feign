@@ -152,7 +152,7 @@
 
     <!-- default bytecode version for src/main -->
     <main.java.version>1.8</main.java.version>
-    <latest.java.version>21</latest.java.version>
+    <latest.java.version>25</latest.java.version>
 
     <!-- default bytecode version for src/test -->
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
@@ -655,6 +655,7 @@
               <fork>true</fork>
               <compilerArgs>
                 <arg>-parameters</arg>
+                <arg>-proc:full</arg>
               </compilerArgs>
               <source>${latest.java.version}</source>
               <target>${latest.java.version}</target>
@@ -1120,7 +1121,7 @@
                     <recipe>org.openrewrite.java.testing.junit5.AssertToAssertions</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.JUnitToAssertj</recipe>
                     <recipe>org.openrewrite.java.testing.assertj.Assertj</recipe>
-                    <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
+                    <recipe>org.openrewrite.java.migrate.UpgradeToJava25</recipe>
                   </activeRecipes>
                   <exclusions>
                     <exclusion>**/src/main/java/**</exclusion>

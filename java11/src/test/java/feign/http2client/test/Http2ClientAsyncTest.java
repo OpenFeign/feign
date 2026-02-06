@@ -484,9 +484,7 @@ public class Http2ClientAsyncTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     final TestInterfaceAsync api =
-        newAsyncBuilder()
-            .decoder((response, type) -> "fail")
-            .target("http://localhost:" + server.getPort());
+        newAsyncBuilder().decoder((_, _) -> "fail").target("http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.post())).isEqualTo("fail");
   }
@@ -498,7 +496,7 @@ public class Http2ClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -516,7 +514,7 @@ public class Http2ClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -541,7 +539,7 @@ public class Http2ClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -574,7 +572,7 @@ public class Http2ClientAsyncTest {
     // fake client as Client.Default follows redirects.
     final TestInterfaceAsync api =
         AsyncFeign.<Void>builder()
-            .client(new AsyncClient.Default<>((request, options) -> response, execs))
+            .client(new AsyncClient.Default<>((_, _) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.response()).headers().get("Location")).contains("http://bar.com");
@@ -589,7 +587,7 @@ public class Http2ClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -605,7 +603,7 @@ public class Http2ClientAsyncTest {
         newAsyncBuilder()
             .dismiss404()
             .decoder(
-                (response, type) -> {
+                (response, _) -> {
                   assertEquals(404, response.status());
                   throw new NoSuchElementException();
                 })
@@ -642,7 +640,7 @@ public class Http2ClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .encoder(
-                (object, bodyType, template) -> {
+                (_, _, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -753,7 +751,7 @@ public class Http2ClientAsyncTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return (response, type) -> {
+    return (response, _) -> {
       try {
         return response.toBuilder()
             .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
@@ -1025,7 +1023,7 @@ public class Http2ClientAsyncTest {
             .client(new Http2Client())
             .decoder(new Decoder.Default())
             .encoder(
-                (object, bodyType, template) -> {
+                (object, _, template) -> {
                   if (object instanceof Map) {
                     template.body(new Gson().toJson(object));
                   } else {

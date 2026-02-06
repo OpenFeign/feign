@@ -508,7 +508,7 @@ public class AsyncFeignTest {
 
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
-            .decoder((response, type) -> "fail")
+            .decoder((_, _) -> "fail")
             .target("http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.post())).isEqualTo("fail");
@@ -551,7 +551,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -569,7 +569,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         AsyncFeign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
@@ -594,7 +594,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         AsyncFeign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
@@ -621,7 +621,7 @@ public class AsyncFeignTest {
         AsyncFeign.builder()
             .retryer(retryer)
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         "play it again sam!",
@@ -647,7 +647,7 @@ public class AsyncFeignTest {
             .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         "play it again sam!",
@@ -673,7 +673,7 @@ public class AsyncFeignTest {
             .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         message,
@@ -705,7 +705,7 @@ public class AsyncFeignTest {
     // fake client as Client.Default follows redirects.
     TestInterfaceAsync api =
         AsyncFeign.<Void>builder()
-            .client(new AsyncClient.Default<>((request, options) -> response, execs))
+            .client(new AsyncClient.Default<>((_, _) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.response()).headers())
@@ -730,7 +730,7 @@ public class AsyncFeignTest {
     final int RUNNING_TIME_MILLIS = 100;
     final ExecutorService execs = Executors.newSingleThreadExecutor();
     final AsyncClient<Void> clientMock =
-        (request, options, requestContext) ->
+        (_, _, _) ->
             CompletableFuture.supplyAsync(
                 () -> {
                   final int tryCount = actualTryCount.addAndGet(1);
@@ -796,7 +796,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -812,7 +812,7 @@ public class AsyncFeignTest {
         new TestInterfaceAsyncBuilder()
             .dismiss404()
             .decoder(
-                (response, type) -> {
+                (response, _) -> {
                   assertEquals(404, response.status());
                   throw new NoSuchElementException();
                 })
@@ -848,7 +848,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
             .encoder(
-                (object, bodyType, template) -> {
+                (_, _, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -951,7 +951,7 @@ public class AsyncFeignTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return (response, type) -> {
+    return (response, _) -> {
       try {
         return response.toBuilder()
             .body(Util.toString(response.body().asReader()).toUpperCase().getBytes())
@@ -1222,7 +1222,7 @@ public class AsyncFeignTest {
         AsyncFeign.<Void>builder()
             .decoder(new Decoder.Default())
             .encoder(
-                (object, bodyType, template) -> {
+                (object, _, template) -> {
                   if (object instanceof Map) {
                     template.body(new Gson().toJson(object));
                   } else {

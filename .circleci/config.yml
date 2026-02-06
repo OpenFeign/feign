@@ -29,7 +29,7 @@ commands:
       - run:
           name: 'Check if cache was restored'
           command: |
-            if [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
+            if [ -d "$HOME/.sdkman/candidates/java/25.0.2-tem" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
               echo "Complete cache hit detected - SDKMAN and Maven dependencies available."
               circleci step halt
             elif [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ]; then
@@ -47,16 +47,16 @@ commands:
             fi
             source "$HOME/.sdkman/bin/sdkman-init.sh"
       - run:
-          name: 'Install JDKs (8, 11, 17, 21)'
+          name: 'Install JDKs (8, 11, 17, 21, 25)'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            jdk_versions=("8.0.382-tem" "11.0.22-tem" "17.0.10-tem" "21.0.2-tem")
+            jdk_versions=("8.0.382-tem" "11.0.22-tem" "17.0.10-tem" "21.0.2-tem" "25.0.2-tem")
             for jdk_version in "${jdk_versions[@]}"; do
               if [ ! -d "$HOME/.sdkman/candidates/java/$jdk_version" ]; then
                 echo "n" | sdk install java "$jdk_version" || true
               fi
             done
-            sdk default java 21.0.2-tem
+            sdk default java 25.0.2-tem
       - run:
           name: 'Configure Maven Toolchain'
           command: |

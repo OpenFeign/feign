@@ -112,7 +112,7 @@ class SAXDecoderTest {
 
   static enum NetworkStatus {
     GOOD,
-    FAILED;
+    FAILED
   }
 
   static class NetworkStatusStringHandler extends DefaultHandler

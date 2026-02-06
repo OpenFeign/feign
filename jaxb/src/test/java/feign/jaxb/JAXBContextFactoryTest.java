@@ -106,7 +106,7 @@ class JAXBContextFactoryTest {
 
   @Test
   void buildsMarshallerWithCustomEventHandler() throws Exception {
-    ValidationEventHandler handler = event -> false;
+    ValidationEventHandler handler = _ -> false;
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withMarshallerEventHandler(handler).build();
 
@@ -124,7 +124,7 @@ class JAXBContextFactoryTest {
 
   @Test
   void buildsUnmarshallerWithCustomEventHandler() throws Exception {
-    ValidationEventHandler handler = event -> false;
+    ValidationEventHandler handler = _ -> false;
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerEventHandler(handler).build();
 

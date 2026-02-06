@@ -88,7 +88,7 @@ class OptionalDecoderTests {
 
     final OptionalInterface api =
         Feign.builder()
-            .decoder(new OptionalDecoder(((response, type) -> null)))
+            .decoder(new OptionalDecoder(((_, _) -> null)))
             .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.getAsOptional().isPresent()).isFalse();

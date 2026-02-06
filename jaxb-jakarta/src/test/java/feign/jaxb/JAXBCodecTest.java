@@ -350,7 +350,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder()
             .withUnmarshallerSchema(getMockIntObjSchema())
-            .withUnmarshallerEventHandler(event -> true)
+            .withUnmarshallerEventHandler(_ -> true)
             .build();
     assertThat(new JAXBDecoder(factory).decode(response, MockIntObject.class))
         .isEqualTo(new MockIntObject());
@@ -378,7 +378,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
             .withMarshallerSchema(getMockIntObjSchema())
-            .withMarshallerEventHandler(event -> true)
+            .withMarshallerEventHandler(_ -> true)
             .build();
 
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);

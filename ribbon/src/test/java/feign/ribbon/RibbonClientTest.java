@@ -139,7 +139,7 @@ public class RibbonClientTest {
     try {
       api.post();
       fail("No exception thrown");
-    } catch (RetryableException ignored) {
+    } catch (RetryableException _) {
 
     }
     // TODO: why are these retrying?
@@ -170,7 +170,7 @@ public class RibbonClientTest {
     try {
       api.post();
       fail("No exception thrown");
-    } catch (RetryableException ignored) {
+    } catch (RetryableException _) {
 
     }
     assertThat(server1.getRequestCount() >= 2 || server2.getRequestCount() >= 2).isTrue();
@@ -201,7 +201,7 @@ public class RibbonClientTest {
     try {
       api.post();
       fail("No exception thrown");
-    } catch (RetryableException ignored) {
+    } catch (RetryableException _) {
 
     }
     assertThat(server1.getRequestCount()).isGreaterThanOrEqualTo(1);
@@ -298,7 +298,7 @@ public class RibbonClientTest {
     try {
       api.post();
       fail("No exception thrown");
-    } catch (Exception ignored) {
+    } catch (Exception _) {
 
     }
     assertThat(server1.getRequestCount()).isEqualTo(1);

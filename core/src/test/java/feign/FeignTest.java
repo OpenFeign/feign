@@ -534,7 +534,7 @@ public class FeignTest {
 
     TestInterface api =
         new TestInterfaceBuilder()
-            .decoder((response, type) -> "fail")
+            .decoder((_, _) -> "fail")
             .target("http://localhost:" + server.getPort());
 
     assertThat("fail").isEqualTo(api.post());
@@ -577,7 +577,7 @@ public class FeignTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -593,7 +593,7 @@ public class FeignTest {
     TestInterface api =
         Feign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -614,7 +614,7 @@ public class FeignTest {
     TestInterface api =
         Feign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -641,7 +641,7 @@ public class FeignTest {
         Feign.builder()
             .retryer(retryer)
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         "play it again sam!",
@@ -667,7 +667,7 @@ public class FeignTest {
             .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         "play it again sam!",
@@ -692,7 +692,7 @@ public class FeignTest {
             .exceptionPropagationPolicy(UNWRAP)
             .retryer(new Retryer.Default(1, 1, 2))
             .errorDecoder(
-                (methodKey, response) ->
+                (_, response) ->
                     new RetryableException(
                         response.status(),
                         message,
@@ -721,7 +721,7 @@ public class FeignTest {
     // fake client as Client.Default follows redirects.
     TestInterface api =
         Feign.builder()
-            .client((request, options) -> response)
+            .client((_, _) -> response)
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     assertThat(api.response().headers())
@@ -758,7 +758,7 @@ public class FeignTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -774,7 +774,7 @@ public class FeignTest {
         new TestInterfaceBuilder()
             .dismiss404()
             .decoder(
-                (response, type) -> {
+                (response, _) -> {
                   assertEquals(404, response.status());
                   throw new NoSuchElementException();
                 })
@@ -806,7 +806,7 @@ public class FeignTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
-                (object, bodyType, template) -> {
+                (_, _, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -889,7 +889,7 @@ public class FeignTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return (response, type) -> {
+    return (response, _) -> {
       try {
         return response.toBuilder()
             .body(Util.toString(response.body().asReader(UTF_8)).toUpperCase().getBytes())
@@ -1426,7 +1426,7 @@ public class FeignTest {
         new Feign.Builder()
             .decoder(new Decoder.Default())
             .encoder(
-                (object, bodyType, template) -> {
+                (object, _, template) -> {
                   if (object instanceof Map) {
                     template.body(new Gson().toJson(object));
                   } else {

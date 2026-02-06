@@ -28,7 +28,6 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import lombok.val;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -52,7 +51,7 @@ public class Server {
   @PostMapping("/form")
   public ResponseEntity<Void> form(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
-    val status = !key1.equals(key2) ? BAD_REQUEST : OK;
+    var status = !key1.equals(key2) ? BAD_REQUEST : OK;
     return ResponseEntity.status(status).body(null);
   }
 
@@ -121,27 +120,27 @@ public class Server {
 
   @PostMapping("/query_map")
   public ResponseEntity<Integer> queryMap(@RequestParam("filter") List<String> filters) {
-    val status = filters != null && !filters.isEmpty() ? OK : I_AM_A_TEAPOT;
+    var status = filters != null && !filters.isEmpty() ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(filters.size());
   }
 
   @PostMapping(path = "/wild-card-map", consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Integer> wildCardMap(
       @RequestParam("key1") String key1, @RequestParam("key2") String key2) {
-    val status = key1.equals(key2) ? OK : I_AM_A_TEAPOT;
+    var status = key1.equals(key2) ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(null);
   }
 
   @PostMapping(path = "/upload/with_dto", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<Long> uploadWithDto(Dto dto, @RequestPart("file") MultipartFile file)
       throws IOException {
-    val status = dto != null && dto.getName().equals("Artem") ? OK : I_AM_A_TEAPOT;
+    var status = dto != null && dto.getName().equals("Artem") ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(file.getSize());
   }
 
   @PostMapping(path = "/upload/byte_array", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadByteArray(@RequestPart("file") MultipartFile file) {
-    val status = file != null ? OK : I_AM_A_TEAPOT;
+    var status = file != null ? OK : I_AM_A_TEAPOT;
     String safeFilename = HtmlUtils.htmlEscape(file.getOriginalFilename());
     return ResponseEntity.status(status).body(safeFilename);
   }
@@ -153,7 +152,7 @@ public class Server {
   // have the filename part it's
   // available in the parameter (getParameter())
   public ResponseEntity<String> uploadByteArrayParameter(MultipartHttpServletRequest request) {
-    val status =
+    var status =
         request.getFile("file") == null && request.getParameter("file") != null
             ? OK
             : I_AM_A_TEAPOT;
@@ -162,13 +161,13 @@ public class Server {
 
   @PostMapping(path = "/upload/unknown_type", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadUnknownType(@RequestPart("file") MultipartFile file) {
-    val status = file != null ? OK : I_AM_A_TEAPOT;
+    var status = file != null ? OK : I_AM_A_TEAPOT;
     return ResponseEntity.status(status).body(StringEscapeUtils.escapeHtml4(file.getContentType()));
   }
 
   @PostMapping(path = "/upload/form_data", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> uploadFormData(@RequestPart("file") MultipartFile file) {
-    val status = file != null ? OK : I_AM_A_TEAPOT;
+    var status = file != null ? OK : I_AM_A_TEAPOT;
     String sanitizedFilename = StringEscapeUtils.escapeHtml4(file.getOriginalFilename());
     String sanitizedContentType = StringEscapeUtils.escapeHtml4(file.getContentType());
     return ResponseEntity.status(status).body(sanitizedFilename + ':' + sanitizedContentType);
@@ -176,11 +175,11 @@ public class Server {
 
   @PostMapping(path = "/submit/url", consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<String> submitRepeatableQueryParam(@RequestParam("names") String[] names) {
-    val response = new StringBuilder();
+    var response = new StringBuilder();
     if (names != null && names.length == 2) {
       response.append(names[0]).append(" and ").append(names[1]);
     }
-    val status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
+    var status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
 
     return ResponseEntity.status(status).body(response.toString());
   }
@@ -188,12 +187,12 @@ public class Server {
   @PostMapping(path = "/submit/form", consumes = MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> submitRepeatableFormParam(
       @RequestParam("names") Collection<String> names) {
-    val response = new StringBuilder();
+    var response = new StringBuilder();
     if (names != null && names.size() == 2) {
-      val iterator = names.iterator();
+      var iterator = names.iterator();
       response.append(iterator.next()).append(" and ").append(iterator.next());
     }
-    val status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
+    var status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
 
     return ResponseEntity.status(status).body(response.toString());
   }
@@ -201,11 +200,11 @@ public class Server {
   @PostMapping(path = "/form-data", consumes = APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<String> submitPostData(
       @RequestParam("f_name") String firstName, @RequestParam("age") Integer age) {
-    val response = new StringBuilder();
+    var response = new StringBuilder();
     if (firstName != null && age != null) {
       response.append(firstName).append("=").append(age);
     }
-    val status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
+    var status = response.length() > 0 ? OK : I_AM_A_TEAPOT;
 
     return ResponseEntity.status(status).body(response.toString());
   }

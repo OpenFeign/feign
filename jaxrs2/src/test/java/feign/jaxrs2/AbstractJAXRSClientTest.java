@@ -39,7 +39,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   public void patch() throws Exception {
     try {
       super.patch();
-    } catch (final RuntimeException e) {
+    } catch (final RuntimeException _) {
       Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
     }
   }
@@ -48,7 +48,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   public void noResponseBodyForPut() throws Exception {
     try {
       super.noResponseBodyForPut();
-    } catch (final IllegalStateException e) {
+    } catch (final IllegalStateException _) {
       Assumptions.assumeFalse(false, "JaxRS client do not support empty bodies on PUT");
     }
   }
@@ -57,7 +57,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   public void noResponseBodyForPatch() {
     try {
       super.noResponseBodyForPatch();
-    } catch (final IllegalStateException e) {
+    } catch (final IllegalStateException _) {
       Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
     }
   }

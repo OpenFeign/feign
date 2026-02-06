@@ -38,7 +38,7 @@ class AlwaysEncodeBodyContractTest {
   private static class SampleContract extends AlwaysEncodeBodyContract {
     SampleContract() {
       AnnotationProcessor<SampleMethodAnnotation> annotationProcessor =
-          (annotation, metadata) -> metadata.template().method(Request.HttpMethod.POST);
+          (_, metadata) -> metadata.template().method(Request.HttpMethod.POST);
       super.registerMethodAnnotation(SampleMethodAnnotation.class, annotationProcessor);
     }
   }
