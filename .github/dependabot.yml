@@ -10,3 +10,15 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 100
+    ignore:
+      # Jersey exists at different majors: 2.x (jaxrs2), 3.x (jaxrs3), 4.x (jaxrs4)
+      - dependency-name: "org.glassfish.jersey.core:jersey-client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.glassfish.jersey.inject:jersey-hk2"
+        update-types: ["version-update:semver-major"]
+      # JAXB impl at 2.x (jaxb, soap) and 4.x (jaxb-jakarta, soap-jakarta)
+      - dependency-name: "com.sun.xml.bind:jaxb-impl"
+        update-types: ["version-update:semver-major"]
+      # SAAJ impl at 1.x (soap) and 3.x (soap-jakarta)
+      - dependency-name: "com.sun.xml.messaging.saaj:saaj-impl"
+        update-types: ["version-update:semver-major"]
