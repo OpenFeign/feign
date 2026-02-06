@@ -25,7 +25,6 @@ import io.undertow.util.Headers;
 import java.net.InetSocketAddress;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 public final class UndertowServer implements AutoCloseable {
 
@@ -33,7 +32,7 @@ public final class UndertowServer implements AutoCloseable {
 
   @Builder(buildMethodName = "start")
   private UndertowServer(FullBytesCallback callback) {
-    val port =
+    var port =
         SocketUtils.findFreePort()
             .orElseThrow(() -> new IllegalStateException("no available port to start server"));
 
@@ -52,9 +51,9 @@ public final class UndertowServer implements AutoCloseable {
    * @return listining server's url.
    */
   public String getConnectUrl() {
-    val listenerInfo = undertow.getListenerInfo().iterator().next();
+    var listenerInfo = undertow.getListenerInfo().iterator().next();
 
-    val address = (InetSocketAddress) listenerInfo.getAddress();
+    var address = (InetSocketAddress) listenerInfo.getAddress();
 
     return String.format(
         "%s://%s:%d", listenerInfo.getProtcol(), address.getHostString(), address.getPort());

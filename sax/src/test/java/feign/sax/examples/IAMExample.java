@@ -30,7 +30,7 @@ public class IAMExample {
         Feign.builder() //
             .decoder(SAXDecoder.builder().registerContentHandler(UserIdHandler.class).build()) //
             .target(new IAMTarget(args[0], args[1]));
-    System.out.println(iam.userId());
+    IO.println(iam.userId());
   }
 
   interface IAM {

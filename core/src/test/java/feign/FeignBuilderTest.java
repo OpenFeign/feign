@@ -210,7 +210,7 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse().setBody("response data"));
 
     String url = "http://localhost:" + server.getPort();
-    Encoder encoder = (object, bodyType, template) -> template.body(object.toString());
+    Encoder encoder = (object, _, template) -> template.body(object.toString());
 
     TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
     api.encodedPost(Arrays.asList("This", "is", "my", "request"));
@@ -223,7 +223,7 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse().setBody("success!"));
 
     String url = "http://localhost:" + server.getPort();
-    Decoder decoder = (response, type) -> "fail";
+    Decoder decoder = (_, _) -> "fail";
 
     TestInterface api = Feign.builder().decoder(decoder).target(TestInterface.class, url);
     assertThat(api.decodedPost()).isEqualTo("fail");
@@ -237,7 +237,7 @@ public class FeignBuilderTest {
 
     String url = "http://localhost:" + server.getPort();
     QueryMapEncoder customMapEncoder =
-        ignored -> {
+        _ -> {
           Map<String, Object> queryMap = new HashMap<>();
           queryMap.put("key1", "value1");
           queryMap.put("key2", "value2");
@@ -347,7 +347,7 @@ public class FeignBuilderTest {
 
     String url = "http://localhost:" + server.getPort();
     Decoder decoder =
-        (response, type) ->
+        (response, _) ->
             new Iterator<>() {
               private boolean called = false;
 
@@ -391,7 +391,7 @@ public class FeignBuilderTest {
 
     String url = "http://localhost:" + server.getPort();
     Decoder angryDecoder =
-        (response, type) -> {
+        (_, _) -> {
           throw new IOException("Failed to decode the response");
         };
 
@@ -454,7 +454,7 @@ public class FeignBuilderTest {
     try {
       api.decodedLazyPost();
       fail("Expected an exception");
-    } catch (FeignException expected) {
+    } catch (FeignException _) {
     }
     assertThat(closed.get()).as("Responses must be closed when the decoder fails").isTrue();
   }

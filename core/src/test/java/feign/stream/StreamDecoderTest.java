@@ -79,7 +79,7 @@ class StreamDecoderTest {
         Feign.builder()
             .decoder(
                 StreamDecoder.create(
-                    (response, type) ->
+                    (response, _) ->
                         new BufferedReader(response.body().asReader(UTF_8)).lines().iterator()))
             .doNotCloseAfterDecode()
             .target(StreamInterface.class, server.url("/").toString());
@@ -98,7 +98,7 @@ class StreamDecoderTest {
         Feign.builder()
             .decoder(
                 StreamDecoder.create(
-                    (r, t) -> {
+                    (r, _) -> {
                       BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
                       return bufferedReader.lines().iterator();
                     }))
@@ -119,11 +119,11 @@ class StreamDecoderTest {
         Feign.builder()
             .decoder(
                 StreamDecoder.create(
-                    (r, t) -> {
+                    (r, _) -> {
                       BufferedReader bufferedReader = new BufferedReader(r.body().asReader(UTF_8));
                       return bufferedReader.lines().iterator();
                     },
-                    (r, t) -> "str"))
+                    (_, _) -> "str"))
             .doNotCloseAfterDecode()
             .target(StreamInterface.class, server.url("/").toString());
 
@@ -144,7 +144,7 @@ class StreamDecoderTest {
             .build();
 
     TestCloseableIterator it = new TestCloseableIterator();
-    StreamDecoder decoder = StreamDecoder.create((r, t) -> it);
+    StreamDecoder decoder = StreamDecoder.create((_, _) -> it);
 
     try (Stream<?> stream =
         (Stream<?>) decoder.decode(response, new TypeReference<Stream<String>>() {}.getType())) {

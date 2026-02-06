@@ -27,7 +27,6 @@ import feign.RequestLine;
 import feign.Response;
 import feign.jackson.JacksonEncoder;
 import java.nio.file.Path;
-import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -42,8 +41,8 @@ class ByteArrayClientTest {
 
   @BeforeAll
   static void configureClient() {
-    val encoder = new FormEncoder(new JacksonEncoder());
-    val logFile = logDir.resolve("log-byte.txt").toString();
+    var encoder = new FormEncoder(new JacksonEncoder());
+    var logFile = logDir.resolve("log-byte.txt").toString();
 
     API =
         Feign.builder()

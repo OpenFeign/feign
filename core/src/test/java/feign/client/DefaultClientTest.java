@@ -37,7 +37,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 public class DefaultClientTest extends AbstractClientTest {
 
   protected Client disableHostnameVerification =
-      new Client.Default(TrustingSSLSocketFactory.get(), (s, sslSession) -> true);
+      new Client.Default(TrustingSSLSocketFactory.get(), (_, _) -> true);
 
   @Override
   public Builder newBuilder() {

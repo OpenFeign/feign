@@ -33,12 +33,12 @@ public class GitHubIteratorExample {
             .doNotCloseAfterDecode()
             .target(GitHub.class, "https://api.github.com");
 
-    System.out.println("Let's fetch and print a list of the contributors to this library.");
+    IO.println("Let's fetch and print a list of the contributors to this library.");
     Iterator<Contributor> contributors = github.contributors("OpenFeign", "feign");
     try {
       while (contributors.hasNext()) {
         Contributor contributor = contributors.next();
-        System.out.println(contributor.login + " (" + contributor.contributions + ")");
+        IO.println(contributor.login + " (" + contributor.contributions + ")");
       }
     } finally {
       ((Closeable) contributors).close();

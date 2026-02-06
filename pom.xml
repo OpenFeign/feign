@@ -676,6 +676,7 @@
               <fork>true</fork>
               <compilerArgs>
                 <arg>-parameters</arg>
+                <arg>-proc:full</arg>
               </compilerArgs>
               <source>${latest.java.version}</source>
               <target>${latest.java.version}</target>

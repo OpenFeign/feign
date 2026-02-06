@@ -23,7 +23,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import feign.Response;
 import java.util.HashMap;
 import java.util.List;
-import lombok.val;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,9 +46,9 @@ class SpringFormEncoderTest {
 
   @Test
   void upload1Test() throws Exception {
-    val folder = "test_folder";
-    val file = new MockMultipartFile("file", "test".getBytes(UTF_8));
-    val message = "message test";
+    var folder = "test_folder";
+    var file = new MockMultipartFile("file", "test".getBytes(UTF_8));
+    var message = "message test";
 
     assertThat(client.upload1(folder, file, message))
         .isEqualTo(new String(file.getBytes()) + ':' + message + ':' + folder);
@@ -57,9 +56,9 @@ class SpringFormEncoderTest {
 
   @Test
   void upload2Test() throws Exception {
-    val folder = "test_folder";
-    val file = new MockMultipartFile("file", "test".getBytes(UTF_8));
-    val message = "message test";
+    var folder = "test_folder";
+    var file = new MockMultipartFile("file", "test".getBytes(UTF_8));
+    var message = "message test";
 
     assertThat(client.upload2(file, folder, message))
         .isEqualTo(new String(file.getBytes()) + ':' + message + ':' + folder);
@@ -67,11 +66,11 @@ class SpringFormEncoderTest {
 
   @Test
   void uploadFileNameAndContentTypeTest() throws Exception {
-    val folder = "test_folder";
-    val file =
+    var folder = "test_folder";
+    var file =
         new MockMultipartFile(
             "file", "hello.dat", "application/octet-stream", "test".getBytes(UTF_8));
-    val message = "message test";
+    var message = "message test";
 
     assertThat(client.upload3(file, folder, message))
         .isEqualTo(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder);
@@ -79,28 +78,28 @@ class SpringFormEncoderTest {
 
   @Test
   void upload4Test() throws Exception {
-    val map = new HashMap<Object, Object>();
+    var map = new HashMap<Object, Object>();
     map.put("one", 1);
     map.put("two", 2);
 
-    val userName = "popa";
-    val id = "42";
+    var userName = "popa";
+    var id = "42";
 
     assertThat(client.upload4(id, map, userName)).isEqualTo(userName + ':' + id + ':' + map.size());
   }
 
   @Test
   void upload5Test() throws Exception {
-    val file = new MockMultipartFile("popa.txt", "Hello world".getBytes(UTF_8));
-    val dto = new Dto("field 1 value", 42, file);
+    var file = new MockMultipartFile("popa.txt", "Hello world".getBytes(UTF_8));
+    var dto = new Dto("field 1 value", 42, file);
 
     assertThat(client.upload5(dto)).isNotNull().extracting(Response::status).isEqualTo(200);
   }
 
   @Test
   void upload6ArrayTest() throws Exception {
-    val file1 = new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8));
-    val file2 = new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8));
+    var file1 = new MockMultipartFile("popa1", "popa1", null, "Hello".getBytes(UTF_8));
+    var file2 = new MockMultipartFile("popa2", "popa2", null, " world".getBytes(UTF_8));
 
     assertThat(client.upload6Array(new MultipartFile[] {file1, file2})).isEqualTo("Hello world");
   }

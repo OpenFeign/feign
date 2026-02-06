@@ -19,7 +19,6 @@ import feign.Logger;
 import feign.codec.Decoder;
 import feign.form.spring.converter.SpringManyMultipartFilesReader;
 import java.util.ArrayList;
-import lombok.val;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -46,13 +45,13 @@ interface DownloadClient {
 
     @Bean
     Decoder feignDecoder() {
-      val springConverters = messageConverters.getObject().getConverters();
-      val decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
+      var springConverters = messageConverters.getObject().getConverters();
+      var decoderConverters = new ArrayList<HttpMessageConverter<?>>(springConverters.size() + 1);
 
       decoderConverters.addAll(springConverters);
       decoderConverters.add(new SpringManyMultipartFilesReader(4096));
 
-      val httpMessageConverters = new HttpMessageConverters(decoderConverters);
+      var httpMessageConverters = new HttpMessageConverters(decoderConverters);
 
       return new SpringDecoder(
           new ObjectFactory<HttpMessageConverters>() {

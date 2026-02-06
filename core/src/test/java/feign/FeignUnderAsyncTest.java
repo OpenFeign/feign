@@ -451,7 +451,7 @@ public class FeignUnderAsyncTest {
 
     TestInterface api =
         new TestInterfaceBuilder()
-            .decoder((response, type) -> "fail")
+            .decoder((_, _) -> "fail")
             .target("http://localhost:" + server.getPort());
 
     assertThat("fail").isEqualTo(api.post());
@@ -464,7 +464,7 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target("http://localhost:" + server.getPort());
@@ -480,7 +480,7 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         AsyncFeign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -501,7 +501,7 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         AsyncFeign.builder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new IOException("timeout");
                 })
             .target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -533,7 +533,7 @@ public class FeignUnderAsyncTest {
     // fake client as Client.Default follows redirects.
     TestInterface api =
         AsyncFeign.<Void>builder()
-            .client(new AsyncClient.Default<>((request, options) -> response, execs))
+            .client(new AsyncClient.Default<>((_, _) -> response, execs))
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
     assertThat(api.response().headers())
@@ -571,7 +571,7 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(
-                (response, type) -> {
+                (_, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -587,7 +587,7 @@ public class FeignUnderAsyncTest {
         new TestInterfaceBuilder()
             .dismiss404()
             .decoder(
-                (response, type) -> {
+                (response, _) -> {
                   assertEquals(404, response.status());
                   throw new NoSuchElementException();
                 })
@@ -619,7 +619,7 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
-                (object, bodyType, template) -> {
+                (_, _, _) -> {
                   throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
@@ -704,7 +704,7 @@ public class FeignUnderAsyncTest {
   }
 
   private ResponseMapper upperCaseResponseMapper() {
-    return (response, type) -> {
+    return (response, _) -> {
       try {
         return response.toBuilder()
             .body(Util.toString(response.body().asReader(UTF_8)).toUpperCase().getBytes())
@@ -959,7 +959,7 @@ public class FeignUnderAsyncTest {
         AsyncFeign.<Void>builder()
             .decoder(new Decoder.Default())
             .encoder(
-                (object, bodyType, template) -> {
+                (object, _, template) -> {
                   if (object instanceof Map) {
                     template.body(new Gson().toJson(object));
                   } else {

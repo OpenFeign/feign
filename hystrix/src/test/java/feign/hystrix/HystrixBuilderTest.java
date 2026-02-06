@@ -170,7 +170,7 @@ public class HystrixBuilderTest {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     final GitHub fallback =
-        (owner, repo) -> {
+        (_, _) -> {
           throw new RuntimeException("oops");
         };
 
@@ -223,7 +223,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo("foo");
   }
 
   @Test
@@ -240,7 +240,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo("fallback");
   }
 
   @Test
@@ -257,7 +257,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo(Integer.valueOf(1));
   }
 
   @Test
@@ -274,7 +274,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo(Integer.valueOf(0));
   }
 
   @Test
@@ -291,7 +291,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).containsExactly("foo", "bar");
   }
 
   @Test
@@ -308,7 +308,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     observable.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).containsExactly("fallback");
   }
 
   @Test
@@ -327,7 +327,7 @@ public class HystrixBuilderTest {
     testSubscriber.awaitTerminalEvent();
 
     assertThat(testSubscriber.getOnNextEvents()).isEmpty();
-    assertThat(testSubscriber.getOnErrorEvents().get(0))
+    assertThat(testSubscriber.getOnErrorEvents().getFirst())
         .isInstanceOf(HystrixRuntimeException.class)
         .hasMessage("TestInterface#listObservable() failed and no fallback available.");
   }
@@ -346,7 +346,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("foo");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo("foo");
   }
 
   @Test
@@ -363,7 +363,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<String> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo("fallback");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo("fallback");
   }
 
   @Test
@@ -380,7 +380,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(1));
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo(Integer.valueOf(1));
   }
 
   @Test
@@ -397,7 +397,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<Integer> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).isEqualTo(Integer.valueOf(0));
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).isEqualTo(Integer.valueOf(0));
   }
 
   @Test
@@ -414,7 +414,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("foo", "bar");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).containsExactly("foo", "bar");
   }
 
   @Test
@@ -431,7 +431,7 @@ public class HystrixBuilderTest {
     final TestSubscriber<List<String>> testSubscriber = new TestSubscriber<>();
     single.subscribe(testSubscriber);
     testSubscriber.awaitTerminalEvent();
-    assertThat(testSubscriber.getOnNextEvents().get(0)).containsExactly("fallback");
+    assertThat(testSubscriber.getOnNextEvents().getFirst()).containsExactly("fallback");
   }
 
   @Test

@@ -30,7 +30,6 @@ import feign.form.multipart.ByteArrayWriter;
 import feign.form.multipart.Output;
 import feign.jackson.JacksonEncoder;
 import java.nio.file.Path;
-import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,11 +44,11 @@ class CustomClientTest {
 
   @BeforeAll
   static void configureClient() {
-    val encoder = new FormEncoder(new JacksonEncoder());
-    val processor = (MultipartFormContentProcessor) encoder.getContentProcessor(MULTIPART);
+    var encoder = new FormEncoder(new JacksonEncoder());
+    var processor = (MultipartFormContentProcessor) encoder.getContentProcessor(MULTIPART);
     processor.addFirstWriter(new CustomByteArrayWriter());
 
-    val logFile = logDir.resolve("log.txt").toString();
+    var logFile = logDir.resolve("log.txt").toString();
 
     API =
         Feign.builder()
@@ -70,7 +69,7 @@ class CustomClientTest {
     protected void write(Output output, String key, Object value) throws EncodeException {
       writeFileMetadata(output, key, "popa.txt", null);
 
-      val bytes = (byte[]) value;
+      var bytes = (byte[]) value;
       output.write(bytes);
     }
   }

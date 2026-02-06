@@ -36,19 +36,17 @@ public class ReactorGitHubExample {
             .logLevel(Logger.Level.FULL)
             .target(GitHub.class, "https://api.github.com");
 
-    System.out.println(
-        "Let's fetch and print a list of the contributors to this library (Using Flux).");
+    IO.println("Let's fetch and print a list of the contributors to this library (Using Flux).");
     List<Contributor> contributorsFromFlux =
         github.contributorsFlux("OpenFeign", "feign").collectList().block();
     for (Contributor contributor : contributorsFromFlux) {
-      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+      IO.println(contributor.login + " (" + contributor.contributions + ")");
     }
 
-    System.out.println(
-        "Let's fetch and print a list of the contributors to this library (Using Mono).");
+    IO.println("Let's fetch and print a list of the contributors to this library (Using Mono).");
     List<Contributor> contributorsFromMono = github.contributorsMono("OpenFeign", "feign").block();
     for (Contributor contributor : contributorsFromMono) {
-      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+      IO.println(contributor.login + " (" + contributor.contributions + ")");
     }
   }
 

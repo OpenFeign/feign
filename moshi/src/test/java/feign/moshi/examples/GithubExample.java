@@ -31,10 +31,10 @@ public class GithubExample {
             .decoder(new MoshiDecoder())
             .target(GitHub.class, "https://api.github.com");
 
-    System.out.println("Let's fetch and print a list of the contributors to this library.");
+    IO.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributors = github.contributors("netflix", "feign");
     for (Contributor contributor : contributors) {
-      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+      IO.println(contributor.login + " (" + contributor.contributions + ")");
     }
   }
 

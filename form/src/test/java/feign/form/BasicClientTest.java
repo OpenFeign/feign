@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
-import lombok.val;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,7 +44,7 @@ class BasicClientTest {
 
   @BeforeAll
   static void configureClient() {
-    val logFile = logDir.resolve("log.txt").toString();
+    var logFile = logDir.resolve("log.txt").toString();
 
     API =
         Feign.builder()
@@ -67,7 +66,7 @@ class BasicClientTest {
 
   @Test
   void testUpload() throws Exception {
-    val path =
+    var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
@@ -76,7 +75,7 @@ class BasicClientTest {
 
   @Test
   void testUploadWithParam() throws Exception {
-    val path =
+    var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
@@ -85,7 +84,7 @@ class BasicClientTest {
 
   @Test
   void testJson() {
-    val dto = new Dto("Artem", 11);
+    var dto = new Dto("Artem", 11);
 
     assertThat(API.json(dto)).isEqualTo("ok");
   }
@@ -100,11 +99,11 @@ class BasicClientTest {
 
   @Test
   void testMultipleFilesArray() throws Exception {
-    val path1 =
+    var path1 =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
 
-    val path2 =
+    var path2 =
         Path.of(
             Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     assertThat(path2).exists();
@@ -116,11 +115,11 @@ class BasicClientTest {
 
   @Test
   void testMultipleFilesList() throws Exception {
-    val path1 =
+    var path1 =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
 
-    val path2 =
+    var path2 =
         Path.of(
             Thread.currentThread().getContextClassLoader().getResource("another_file.txt").toURI());
     assertThat(path2).exists();
@@ -132,9 +131,9 @@ class BasicClientTest {
 
   @Test
   void testUploadWithDto() throws Exception {
-    val dto = new Dto("Artem", 11);
+    var dto = new Dto("Artem", 11);
 
-    val path =
+    var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
 
@@ -146,7 +145,7 @@ class BasicClientTest {
 
   @Test
   void testUnknownTypeFile() throws Exception {
-    val path =
+    var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
     assertThat(path).exists();
 
@@ -155,22 +154,22 @@ class BasicClientTest {
 
   @Test
   void testFormData() throws Exception {
-    val formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
+    var formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
 
     assertThat(API.uploadFormData(formData)).isEqualTo("popa.txt:application/custom-type");
   }
 
   @Test
   void testSubmitRepeatableQueryParam() throws Exception {
-    val names = new String[] {"Milada", "Thais"};
-    val stringResponse = API.submitRepeatableQueryParam(names);
+    var names = new String[] {"Milada", "Thais"};
+    var stringResponse = API.submitRepeatableQueryParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");
   }
 
   @Test
   void testSubmitRepeatableFormParam() throws Exception {
-    val names = Arrays.asList("Milada", "Thais");
-    val stringResponse = API.submitRepeatableFormParam(names);
+    var names = Arrays.asList("Milada", "Thais");
+    var stringResponse = API.submitRepeatableFormParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");
   }
 }

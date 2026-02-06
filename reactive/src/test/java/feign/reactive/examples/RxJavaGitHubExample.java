@@ -35,11 +35,11 @@ public class RxJavaGitHubExample {
             .logLevel(Logger.Level.FULL)
             .target(GitHub.class, "https://api.github.com");
 
-    System.out.println("Let's fetch and print a list of the contributors to this library.");
+    IO.println("Let's fetch and print a list of the contributors to this library.");
     List<Contributor> contributorsFromFlux =
         github.contributors("OpenFeign", "feign").blockingLast();
     for (Contributor contributor : contributorsFromFlux) {
-      System.out.println(contributor.login + " (" + contributor.contributions + ")");
+      IO.println(contributor.login + " (" + contributor.contributions + ")");
     }
   }
 

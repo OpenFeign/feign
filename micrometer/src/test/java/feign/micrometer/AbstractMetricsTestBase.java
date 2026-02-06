@@ -159,7 +159,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(
                 Feign.builder()
                     .client(
-                        (request, options) -> {
+                        (request, _) -> {
                           notFound.set(new FeignException.NotFound("test", request, null, null));
                           throw notFound.get();
                         })
@@ -196,7 +196,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                 Feign.builder()
                     .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
                     .decoder(
-                        (response, type) -> {
+                        (response, _) -> {
                           notFound.set(
                               new FeignException.NotFound("test", response.request(), null, null));
                           throw notFound.get();
@@ -215,7 +215,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
         customizeBuilder(
                 Feign.builder()
                     .client(
-                        (request, options) -> {
+                        (_, _) -> {
                           throw new RuntimeException("Test error");
                         })
                     .addCapability(createMetricCapability()))
@@ -304,7 +304,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                 Feign.builder()
                     .client(new MockClient().ok(HttpMethod.GET, "/get/123", "1234567890abcde"))
                     .decoder(
-                        (response, type) -> {
+                        (response, _) -> {
                           notFound.set(
                               new FeignException.NotFound("test", response.request(), null, null));
                           throw notFound.get();

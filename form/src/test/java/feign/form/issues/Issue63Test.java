@@ -26,7 +26,6 @@ import feign.jackson.JacksonEncoder;
 import io.undertow.server.HttpServerExchange;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.val;
 import org.junit.jupiter.api.Test;
 
 // https://github.com/OpenFeign/feign-form/issues/63
@@ -34,13 +33,13 @@ class Issue63Test {
 
   @Test
   void test() {
-    try (val server = UndertowServer.builder().callback(this::handleRequest).start()) {
-      val client =
+    try (var server = UndertowServer.builder().callback(this::handleRequest).start()) {
+      var client =
           Feign.builder()
               .encoder(new FormEncoder(new JacksonEncoder()))
               .target(Client.class, server.getConnectUrl());
 
-      val data = new HashMap<String, String>();
+      var data = new HashMap<String, String>();
       data.put("from", "+987654321");
       data.put("to", "+123456789");
       data.put("body", "hello world");
