@@ -1,0 +1,150 @@
+type Query {
+  user(id: ID!): User
+  users(filter: UserFilter): [User]
+  organization(id: ID!): Organization
+  searchOrganizations(criteria: OrgSearchCriteria!): [Organization]
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User
+  updateStatus(id: ID!, status: Status!): User
+  createOrganization(input: CreateOrgInput!): Organization
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String
+  status: Status!
+  address: Address
+  tags: [String]
+  organization: Organization
+}
+
+type Organization {
+  id: ID!
+  name: String!
+  address: Address
+  departments: [Department]
+  metadata: OrgMetadata
+}
+
+type Department {
+  id: ID!
+  name: String!
+  lead: User
+  members: [User]
+  subDepartments: [Department]
+  tags: [Tag]
+}
+
+type Tag {
+  key: String!
+  value: String!
+}
+
+type OrgMetadata {
+  foundedYear: Int
+  industry: String
+  categories: [Category]
+}
+
+type Category {
+  name: String!
+  parentCategory: Category
+  tags: [Tag]
+}
+
+type Address {
+  street: String
+  city: String
+  country: String
+  coordinates: Coordinates
+}
+
+type Coordinates {
+  latitude: Float
+  longitude: Float
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+  status: Status
+  address: AddressInput
+  tags: [String]
+  orgId: ID
+}
+
+input UserFilter {
+  nameContains: String
+  status: Status
+  tagFilter: TagFilterInput
+}
+
+input TagFilterInput {
+  keys: [String]
+  matchAll: Boolean
+}
+
+input AddressInput {
+  street: String
+  city: String
+  country: String
+  coordinates: CoordinatesInput
+}
+
+input CoordinatesInput {
+  latitude: Float
+  longitude: Float
+}
+
+input CreateOrgInput {
+  name: String!
+  address: AddressInput
+  departments: [DepartmentInput]
+  metadata: OrgMetadataInput
+}
+
+input DepartmentInput {
+  name: String!
+  leadUserId: ID
+  subDepartments: [DepartmentInput]
+  tags: [TagInput]
+}
+
+input TagInput {
+  key: String!
+  value: String!
+}
+
+input OrgMetadataInput {
+  foundedYear: Int
+  industry: String
+  categories: [CategoryInput]
+}
+
+input CategoryInput {
+  name: String!
+  parentCategoryName: String
+  tags: [TagInput]
+}
+
+input OrgSearchCriteria {
+  nameContains: String
+  industries: [String]
+  minFoundedYear: Int
+  departmentFilter: DepartmentFilterInput
+}
+
+input DepartmentFilterInput {
+  nameContains: String
+  minMembers: Int
+  tags: [TagInput]
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
