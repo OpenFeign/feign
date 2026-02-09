@@ -24,10 +24,8 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GraphqlDecoderTest {
@@ -44,7 +42,7 @@ class GraphqlDecoderTest {
   @Test
   void decodesDataField() throws Exception {
     var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
-    var response = buildResponse(json, "getUser");
+    var response = buildResponse(json);
 
     var user = (User) decoder.decode(response, User.class);
 
@@ -56,7 +54,7 @@ class GraphqlDecoderTest {
   void decodesListResponse() throws Exception {
     var json =
         "{\"data\":{\"listUsers\":[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]}}";
-    var response = buildResponse(json, "listUsers");
+    var response = buildResponse(json);
 
     @SuppressWarnings("unchecked")
     var users =
@@ -71,8 +69,8 @@ class GraphqlDecoderTest {
 
   @Test
   void throwsGraphqlErrorExceptionOnErrors() {
-    var json = "{\"errors\":[{\"message\":\"Not found\"}],\"data\":null}";
-    var response = buildResponse(json, "getUser");
+    var json = "{\"errors\":[{\"message\":\"Not found\"}],\"data\":{\"getUser\":null}}";
+    var response = buildResponse(json);
 
     assertThatThrownBy(() -> decoder.decode(response, User.class))
         .isInstanceOf(GraphqlErrorException.class)
@@ -83,16 +81,16 @@ class GraphqlDecoderTest {
   @Test
   void returnsNullForNullData() throws Exception {
     var json = "{\"data\":{\"getUser\":null}}";
-    var response = buildResponse(json, "getUser");
+    var response = buildResponse(json);
 
     var result = decoder.decode(response, User.class);
     assertThat(result).isNull();
   }
 
   @Test
-  void returnsNullForMissingOperation() throws Exception {
+  void returnsNullForEmptyData() throws Exception {
     var json = "{\"data\":{}}";
-    var response = buildResponse(json, "getUser");
+    var response = buildResponse(json);
 
     var result = decoder.decode(response, User.class);
     assertThat(result).isNull();
@@ -105,7 +103,7 @@ class GraphqlDecoderTest {
             .status(404)
             .reason("Not Found")
             .headers(Collections.emptyMap())
-            .request(buildRequest("getUser"))
+            .request(buildRequest())
             .body(new byte[0])
             .build();
 
@@ -113,20 +111,38 @@ class GraphqlDecoderTest {
     assertThat(result).isNull();
   }
 
-  private Response buildResponse(String body, String operationField) {
+  @Test
+  void delegatesToCustomDecoder() throws Exception {
+    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
+    var customDecoder =
+        new GraphqlDecoder(
+            mapper,
+            (resp, type) ->
+                mapper.readValue(resp.body().asReader(resp.charset()), mapper.constructType(type)));
+    var response = buildResponse(json);
+
+    var user = (User) customDecoder.decode(response, User.class);
+
+    assertThat(user.id).isEqualTo("1");
+    assertThat(user.name).isEqualTo("Alice");
+  }
+
+  private Response buildResponse(String body) {
     return Response.builder()
         .status(200)
         .reason("OK")
         .headers(Collections.emptyMap())
-        .request(buildRequest(operationField))
+        .request(buildRequest())
         .body(body, StandardCharsets.UTF_8)
         .build();
   }
 
-  private Request buildRequest(String operationField) {
-    Map<String, Collection<String>> headers =
-        Map.of(GraphqlContract.HEADER_GRAPHQL_OPERATION, List.of(operationField));
+  private Request buildRequest() {
     return Request.create(
-        HttpMethod.POST, "http://localhost/graphql", headers, Request.Body.empty(), null);
+        HttpMethod.POST,
+        "http://localhost/graphql",
+        Collections.emptyMap(),
+        Request.Body.empty(),
+        null);
   }
 }

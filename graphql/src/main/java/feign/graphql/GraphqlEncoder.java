@@ -20,66 +20,61 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
-import java.util.Base64;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class GraphqlEncoder implements Encoder, RequestInterceptor {
 
   private final Encoder delegate;
+  private final Map<String, GraphqlContract.QueryMetadata> queryMetadata;
 
-  public GraphqlEncoder(Encoder delegate) {
+  public GraphqlEncoder(Encoder delegate, GraphqlContract contract) {
     this.delegate = delegate;
+    this.queryMetadata = contract.queryMetadata();
   }
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    Collection<String> queryHeaders = template.headers().get(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    if (queryHeaders == null || queryHeaders.isEmpty()) {
+    GraphqlContract.QueryMetadata meta = lookupMetadata(template);
+    if (meta == null) {
       delegate.encode(object, bodyType, template);
       return;
     }
 
-    String encoded = queryHeaders.iterator().next();
-    String query = new String(Base64.getDecoder().decode(encoded));
-
-    Collection<String> variableHeaders =
-        template.headers().get(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
-
     Map<String, Object> graphqlBody = new LinkedHashMap<>();
-    graphqlBody.put("query", query);
+    graphqlBody.put("query", meta.query);
 
-    if (object != null && variableHeaders != null && !variableHeaders.isEmpty()) {
-      String variableName = variableHeaders.iterator().next();
+    if (object != null && meta.variableName != null) {
       Map<String, Object> variables = new LinkedHashMap<>();
-      variables.put(variableName, object);
+      variables.put(meta.variableName, object);
       graphqlBody.put("variables", variables);
     }
-
-    template.removeHeader(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    template.removeHeader(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
 
     delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
   }
 
   @Override
   public void apply(RequestTemplate template) {
-    Collection<String> queryHeaders = template.headers().get(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    if (queryHeaders == null || queryHeaders.isEmpty() || (template.body() != null)) {
+    if (template.body() != null) {
       return;
     }
 
-    String encoded = queryHeaders.iterator().next();
-    String query = new String(Base64.getDecoder().decode(encoded));
+    GraphqlContract.QueryMetadata meta = lookupMetadata(template);
+    if (meta == null) {
+      return;
+    }
 
     Map<String, Object> graphqlBody = new LinkedHashMap<>();
-    graphqlBody.put("query", query);
-
-    template.removeHeader(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    template.removeHeader(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
+    graphqlBody.put("query", meta.query);
 
     delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
+  }
+
+  private GraphqlContract.QueryMetadata lookupMetadata(RequestTemplate template) {
+    if (template.methodMetadata() == null) {
+      return null;
+    }
+    return queryMetadata.get(template.methodMetadata().configKey());
   }
 }

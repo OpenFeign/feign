@@ -18,7 +18,6 @@ package feign.graphql;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.HttpMethod;
-import java.util.Base64;
 import org.junit.jupiter.api.Test;
 
 class GraphqlContractTest {
@@ -54,60 +53,37 @@ class GraphqlContractTest {
   }
 
   @Test
-  void mutationStoresQueryInHeader() {
+  void mutationStoresQueryMetadata() {
+    contract.parseAndValidateMetadata(MutationApi.class);
+    assertThat(contract.queryMetadata()).hasSize(1);
+    var meta = contract.queryMetadata().values().iterator().next();
+    assertThat(meta.query).contains("backendUpdateRuntimeStatus");
+    assertThat(meta.variableName).isEqualTo("event");
+  }
+
+  @Test
+  void queryWithVariableStoresMetadata() {
+    contract.parseAndValidateMetadata(QueryWithVariableApi.class);
+    assertThat(contract.queryMetadata()).hasSize(1);
+    var meta = contract.queryMetadata().values().iterator().next();
+    assertThat(meta.query).contains("backendProjectsLookup");
+    assertThat(meta.variableName).isEqualTo("projectId");
+  }
+
+  @Test
+  void noVariableQueryHasNullVariableName() {
+    contract.parseAndValidateMetadata(NoVariableQueryApi.class);
+    assertThat(contract.queryMetadata()).hasSize(1);
+    var meta = contract.queryMetadata().values().iterator().next();
+    assertThat(meta.query).contains("backendPendingDeployments");
+    assertThat(meta.variableName).isNull();
+  }
+
+  @Test
+  void noHeadersSetOnTemplate() {
     var metadata = contract.parseAndValidateMetadata(MutationApi.class);
-    var queryHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    assertThat(queryHeaders).isNotNull().hasSize(1);
-
-    var decoded = new String(Base64.getDecoder().decode(queryHeaders.iterator().next()));
-    assertThat(decoded).contains("backendUpdateRuntimeStatus");
-  }
-
-  @Test
-  void mutationExtractsOperationField() {
-    var metadata = contract.parseAndValidateMetadata(MutationApi.class);
-    var opHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_OPERATION);
-    assertThat(opHeaders).isNotNull().hasSize(1);
-    assertThat(opHeaders.iterator().next()).isEqualTo("backendUpdateRuntimeStatus");
-  }
-
-  @Test
-  void mutationExtractsVariableName() {
-    var metadata = contract.parseAndValidateMetadata(MutationApi.class);
-    var varHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
-    assertThat(varHeaders).isNotNull().hasSize(1);
-    assertThat(varHeaders.iterator().next()).isEqualTo("event");
-  }
-
-  @Test
-  void queryExtractsVariableAndOperation() {
-    var metadata = contract.parseAndValidateMetadata(QueryWithVariableApi.class);
-    assertThat(metadata).hasSize(1);
-
-    var opHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_OPERATION);
-    assertThat(opHeaders.iterator().next()).isEqualTo("backendProjectsLookup");
-
-    var varHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
-    assertThat(varHeaders.iterator().next()).isEqualTo("projectId");
-  }
-
-  @Test
-  void noVariableQueryHasNoVariableHeader() {
-    var metadata = contract.parseAndValidateMetadata(NoVariableQueryApi.class);
-    assertThat(metadata).hasSize(1);
-
-    var varHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_VARIABLE);
-    assertThat(varHeaders).isNull();
-
-    var opHeaders =
-        metadata.getFirst().template().headers().get(GraphqlContract.HEADER_GRAPHQL_OPERATION);
-    assertThat(opHeaders.iterator().next()).isEqualTo("backendPendingDeployments");
+    var headers = metadata.getFirst().template().headers();
+    assertThat(headers).isEmpty();
   }
 
   @Test

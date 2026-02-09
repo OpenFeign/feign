@@ -85,9 +85,10 @@ class GraphqlClientTest {
   }
 
   private TestApi buildClient() {
-    var graphqlEncoder = new GraphqlEncoder(new JacksonEncoder(mapper));
+    var contract = new GraphqlContract();
+    var graphqlEncoder = new GraphqlEncoder(new JacksonEncoder(mapper), contract);
     return Feign.builder()
-        .contract(new GraphqlContract())
+        .contract(contract)
         .encoder(graphqlEncoder)
         .decoder(new GraphqlDecoder(mapper))
         .requestInterceptor(graphqlEncoder)
@@ -185,21 +186,5 @@ class GraphqlClientTest {
 
     var recorded = server.takeRequest();
     assertThat(recorded.getHeader("Authorization")).isEqualTo("Bearer mytoken");
-  }
-
-  @Test
-  void internalHeadersNotSentToServer() throws Exception {
-    server.enqueue(
-        new MockResponse()
-            .setBody("{\"data\":{\"createUser\":{\"id\":\"1\",\"name\":\"X\"}}}")
-            .addHeader("Content-Type", "application/json"));
-
-    var input = new CreateUserInput();
-    input.name = "X";
-    buildClient().createUser(input);
-
-    var recorded = server.takeRequest();
-    assertThat(recorded.getHeader(GraphqlContract.HEADER_GRAPHQL_QUERY)).isNull();
-    assertThat(recorded.getHeader(GraphqlContract.HEADER_GRAPHQL_VARIABLE)).isNull();
   }
 }

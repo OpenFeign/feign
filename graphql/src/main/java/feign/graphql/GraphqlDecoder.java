@@ -19,24 +19,33 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.Util;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.Collection;
+import java.util.Iterator;
 
 public class GraphqlDecoder implements Decoder {
 
   private final ObjectMapper mapper;
+  private final Decoder delegate;
 
   public GraphqlDecoder() {
-    this(new ObjectMapper());
+    this(new ObjectMapper(), null);
   }
 
   public GraphqlDecoder(ObjectMapper mapper) {
+    this(mapper, null);
+  }
+
+  public GraphqlDecoder(Decoder delegate) {
+    this(new ObjectMapper(), delegate);
+  }
+
+  public GraphqlDecoder(ObjectMapper mapper, Decoder delegate) {
     this.mapper = mapper;
+    this.delegate = delegate;
   }
 
   @Override
@@ -48,14 +57,6 @@ public class GraphqlDecoder implements Decoder {
       return null;
     }
 
-    String operationField = getOperationField(response);
-    if (operationField == null) {
-      throw new DecodeException(
-          response.status(),
-          "Missing X-Feign-GraphQL-Operation header; cannot decode GraphQL response",
-          response.request());
-    }
-
     Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
@@ -65,27 +66,64 @@ public class GraphqlDecoder implements Decoder {
 
     JsonNode errorsNode = root.path("errors");
     if (!errorsNode.isMissingNode() && errorsNode.isArray() && !errorsNode.isEmpty()) {
+      String operationField = resolveOperationField(root, response);
       throw new GraphqlErrorException(
           response.status(), operationField, errorsNode.toString(), response.request());
     }
 
-    JsonNode dataNode = root.path("data").path(operationField);
-    if (dataNode.isMissingNode() || dataNode.isNull()) {
+    JsonNode dataNode = root.path("data");
+    if (dataNode.isMissingNode() || dataNode.isNull() || !dataNode.isObject()) {
       return Util.emptyValueOf(type);
     }
 
-    return mapper.readValue(mapper.treeAsTokens(dataNode), mapper.constructType(type));
+    Iterator<String> fieldNames = dataNode.fieldNames();
+    if (!fieldNames.hasNext()) {
+      return Util.emptyValueOf(type);
+    }
+
+    String firstField = fieldNames.next();
+    JsonNode operationData = dataNode.get(firstField);
+    if (operationData == null || operationData.isNull()) {
+      return Util.emptyValueOf(type);
+    }
+
+    if (delegate != null) {
+      byte[] dataBytes = mapper.writeValueAsBytes(operationData);
+      Response dataResponse =
+          Response.builder()
+              .status(response.status())
+              .reason(response.reason())
+              .headers(response.headers())
+              .request(response.request())
+              .body(dataBytes)
+              .build();
+      return delegate.decode(dataResponse, type);
+    }
+
+    return mapper.readValue(mapper.treeAsTokens(operationData), mapper.constructType(type));
   }
 
-  private String getOperationField(Response response) {
-    if (response.request() == null) {
-      return null;
+  private String resolveOperationField(JsonNode root, Response response) {
+    JsonNode dataNode = root.path("data");
+    if (!dataNode.isMissingNode() && dataNode.isObject()) {
+      Iterator<String> names = dataNode.fieldNames();
+      if (names.hasNext()) {
+        return names.next();
+      }
     }
-    Collection<String> values =
-        response.request().headers().get(GraphqlContract.HEADER_GRAPHQL_OPERATION);
-    if (values == null || values.isEmpty()) {
-      return null;
+
+    if (response.request() != null && response.request().body() != null) {
+      try {
+        JsonNode requestBody = mapper.readTree(response.request().body());
+        String query = requestBody.path("query").asText(null);
+        if (query != null) {
+          return GraphqlContract.extractOperationField(query);
+        }
+      } catch (Exception e) {
+        // ignore parsing errors
+      }
     }
-    return values.iterator().next();
+
+    return "unknown";
   }
 }
