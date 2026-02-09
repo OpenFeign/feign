@@ -22,9 +22,7 @@ import feign.Util;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.Iterator;
 
 public class GraphqlDecoder implements Decoder {
 
@@ -57,39 +55,39 @@ public class GraphqlDecoder implements Decoder {
       return null;
     }
 
-    Reader reader = response.body().asReader(response.charset());
+    var reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }
 
-    JsonNode root = mapper.readTree(reader);
+    var root = mapper.readTree(reader);
 
-    JsonNode errorsNode = root.path("errors");
+    var errorsNode = root.path("errors");
     if (!errorsNode.isMissingNode() && errorsNode.isArray() && !errorsNode.isEmpty()) {
-      String operationField = resolveOperationField(root, response);
+      var operationField = resolveOperationField(root, response);
       throw new GraphqlErrorException(
           response.status(), operationField, errorsNode.toString(), response.request());
     }
 
-    JsonNode dataNode = root.path("data");
+    var dataNode = root.path("data");
     if (dataNode.isMissingNode() || dataNode.isNull() || !dataNode.isObject()) {
       return Util.emptyValueOf(type);
     }
 
-    Iterator<String> fieldNames = dataNode.fieldNames();
+    var fieldNames = dataNode.fieldNames();
     if (!fieldNames.hasNext()) {
       return Util.emptyValueOf(type);
     }
 
-    String firstField = fieldNames.next();
-    JsonNode operationData = dataNode.get(firstField);
+    var firstField = fieldNames.next();
+    var operationData = dataNode.get(firstField);
     if (operationData == null || operationData.isNull()) {
       return Util.emptyValueOf(type);
     }
 
     if (delegate != null) {
-      byte[] dataBytes = mapper.writeValueAsBytes(operationData);
-      Response dataResponse =
+      var dataBytes = mapper.writeValueAsBytes(operationData);
+      var dataResponse =
           Response.builder()
               .status(response.status())
               .reason(response.reason())
@@ -104,9 +102,9 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private String resolveOperationField(JsonNode root, Response response) {
-    JsonNode dataNode = root.path("data");
+    var dataNode = root.path("data");
     if (!dataNode.isMissingNode() && dataNode.isObject()) {
-      Iterator<String> names = dataNode.fieldNames();
+      var names = dataNode.fieldNames();
       if (names.hasNext()) {
         return names.next();
       }
@@ -114,8 +112,8 @@ public class GraphqlDecoder implements Decoder {
 
     if (response.request() != null && response.request().body() != null) {
       try {
-        JsonNode requestBody = mapper.readTree(response.request().body());
-        String query = requestBody.path("query").asText(null);
+        var requestBody = mapper.readTree(response.request().body());
+        var query = requestBody.path("query").asText(null);
         if (query != null) {
           return GraphqlContract.extractOperationField(query);
         }

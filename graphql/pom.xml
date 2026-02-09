@@ -29,6 +29,10 @@
   <name>Feign GraphQL</name>
   <description>Feign GraphQL runtime support for declarative GraphQL clients</description>
 
+  <properties>
+    <main.java.version>17</main.java.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

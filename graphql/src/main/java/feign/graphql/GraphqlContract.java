@@ -19,7 +19,6 @@ import feign.Contract;
 import feign.Request.HttpMethod;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GraphqlContract extends Contract.Default {
@@ -35,14 +34,14 @@ public class GraphqlContract extends Contract.Default {
     super.registerMethodAnnotation(
         GraphqlQuery.class,
         (annotation, data) -> {
-          String query = annotation.value();
+          var query = annotation.value();
 
           if (data.template().method() == null) {
             data.template().method(HttpMethod.POST);
             data.template().uri("/");
           }
 
-          String variableName = extractFirstVariable(query);
+          var variableName = extractFirstVariable(query);
           metadata.put(data.configKey(), new QueryMetadata(query, variableName));
         });
   }
@@ -62,8 +61,8 @@ public class GraphqlContract extends Contract.Default {
         if (braceCount == 1) {
           inOperation = true;
         } else if (braceCount == 2 && inOperation) {
-          String prefix = query.substring(0, i).trim();
-          Matcher m = OPERATION_FIELD_PATTERN.matcher(prefix + "{");
+          var prefix = query.substring(0, i).trim();
+          var m = OPERATION_FIELD_PATTERN.matcher(prefix + "{");
           if (m.find()) {
             return m.group(1);
           }
@@ -73,7 +72,7 @@ public class GraphqlContract extends Contract.Default {
       }
     }
 
-    Matcher m = OPERATION_FIELD_PATTERN.matcher(query);
+    var m = OPERATION_FIELD_PATTERN.matcher(query);
     if (m.find()) {
       return m.group(1);
     }
@@ -81,7 +80,7 @@ public class GraphqlContract extends Contract.Default {
   }
 
   static String extractFirstVariable(String query) {
-    Matcher m = VARIABLE_PATTERN.matcher(query);
+    var m = VARIABLE_PATTERN.matcher(query);
     if (m.find()) {
       return m.group(1);
     }

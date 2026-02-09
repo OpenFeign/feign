@@ -36,17 +36,17 @@ public class GraphqlEncoder implements Encoder, RequestInterceptor {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    GraphqlContract.QueryMetadata meta = lookupMetadata(template);
+    var meta = lookupMetadata(template);
     if (meta == null) {
       delegate.encode(object, bodyType, template);
       return;
     }
 
-    Map<String, Object> graphqlBody = new LinkedHashMap<>();
+    var graphqlBody = new LinkedHashMap<String, Object>();
     graphqlBody.put("query", meta.query);
 
     if (object != null && meta.variableName != null) {
-      Map<String, Object> variables = new LinkedHashMap<>();
+      var variables = new LinkedHashMap<String, Object>();
       variables.put(meta.variableName, object);
       graphqlBody.put("variables", variables);
     }
@@ -60,12 +60,12 @@ public class GraphqlEncoder implements Encoder, RequestInterceptor {
       return;
     }
 
-    GraphqlContract.QueryMetadata meta = lookupMetadata(template);
+    var meta = lookupMetadata(template);
     if (meta == null) {
       return;
     }
 
-    Map<String, Object> graphqlBody = new LinkedHashMap<>();
+    var graphqlBody = new LinkedHashMap<String, Object>();
     graphqlBody.put("query", meta.query);
 
     delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
