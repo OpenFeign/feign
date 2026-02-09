@@ -13,15 +13,20 @@
 *** Apache HC5
 *** OkHttp
 *** Vertx
+*** Reactive Wrappers
 ** contracts
 *** Feign
 *** JAX-RS
 *** JAX-RS 2
 *** JAX-RS 3 / Jakarta
-*** Spring 5
+*** JAX-RS 4
+*** Spring
 *** SOAP
 *** SOAP Jakarta
 *** Spring boot (3rd party)
+** language
+*** Kotlin
+*** GraphQL
 
 left side
 
@@ -29,15 +34,18 @@ left side
 *** GSON
 *** JAXB
 *** JAXB Jakarta
-*** Jackson 1
-*** Jackson 2
+*** Jackson
+*** Jackson 3
 *** Jackson JAXB
 *** Jackson Jr
 *** Sax
 *** JSON-java
 *** Moshi
 *** Fastjson2
+*** Form
+*** Form Spring
 ** metrics
+*** Dropwizard Metrics 4
 *** Dropwizard Metrics 5
 *** Micrometer
 ** extras

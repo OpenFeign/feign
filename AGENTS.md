@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding assistants when working with code in this repository.
 
 ## Build Commands
 
@@ -122,3 +122,10 @@ Some modules define the same Maven property name (e.g., `jersey.version`, `vertx
 1. Add the dependency to the root entry's `ignore` list (fully ignored, not just major)
 2. Add a per-directory entry for the new module with `allow` for the specific dependency and `ignore` for `version-update:semver-major`
 3. Verify existing modules with the same property also have their own per-directory entries
+
+## Documentation Requirements
+
+- New modules must include a `README.md` with usage examples following the style of existing module READMEs (e.g., `jackson/README.md`, `graphql/README.md`)
+- New public functionality (annotations, contracts, encoders, decoders) must be documented in the module's `README.md`
+- README should include: Maven dependency coordinates, `Feign.builder()` configuration examples, and advanced usage if applicable
+- Update this file's Integration Modules list when adding a new module

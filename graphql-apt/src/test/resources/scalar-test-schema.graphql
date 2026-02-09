@@ -1,0 +1,14 @@
+"An RFC-3339 compliant DateTime Scalar"
+scalar DateTime
+
+type Query {
+  event(id: ID!): Event
+  events: [Event]
+}
+
+type Event {
+  id: ID!
+  name: String!
+  startTime: DateTime!
+  endTime: DateTime
+}
