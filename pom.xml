@@ -117,6 +117,7 @@
     <module>micrometer</module>
     <module>mock</module>
     <module>apt-test-generator</module>
+    <module>graphql</module>
     <module>graphql-apt</module>
     <module>annotation-error-decoder</module>
     <module>example-github</module>
@@ -412,6 +413,12 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-graphql</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>

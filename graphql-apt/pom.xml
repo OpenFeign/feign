@@ -37,6 +37,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-graphql</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
       <version>${graphql-java.version}</version>
@@ -50,7 +56,7 @@
 
     <dependency>
       <groupId>com.google.auto.service</groupId>
-      <artifactId>auto-service-annotations</artifactId>
+      <artifactId>auto-service</artifactId>
       <version>${auto-service-annotations.version}</version>
       <scope>provided</scope>
     </dependency>

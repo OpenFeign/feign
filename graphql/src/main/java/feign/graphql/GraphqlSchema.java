@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.graphql.apt;
+package feign.graphql;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,4 +25,6 @@ import java.lang.annotation.Target;
 public @interface GraphqlSchema {
 
   String value();
+
+  boolean generateTypes() default true;
 }

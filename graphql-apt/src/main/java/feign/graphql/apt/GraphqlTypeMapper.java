@@ -21,14 +21,26 @@ import com.squareup.javapoet.TypeName;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GraphqlTypeMapper {
 
-  private final String targetPackage;
+  private static final Map<String, TypeName> BUILT_IN_SCALARS =
+      Map.of(
+          "String", ClassName.get(String.class),
+          "Int", ClassName.get(Integer.class),
+          "Float", ClassName.get(Double.class),
+          "Boolean", ClassName.get(Boolean.class),
+          "ID", ClassName.get(String.class));
 
-  public GraphqlTypeMapper(String targetPackage) {
+  private final String targetPackage;
+  private final Map<String, TypeName> customScalars;
+
+  public GraphqlTypeMapper(String targetPackage, Map<String, TypeName> customScalars) {
     this.targetPackage = targetPackage;
+    this.customScalars = new HashMap<>(customScalars);
   }
 
   public TypeName map(Type<?> type) {
@@ -46,32 +58,18 @@ public class GraphqlTypeMapper {
   }
 
   private TypeName mapScalarOrNamed(String name) {
-    switch (name) {
-      case "String":
-        return ClassName.get(String.class);
-      case "Int":
-        return ClassName.get(Integer.class);
-      case "Float":
-        return ClassName.get(Double.class);
-      case "Boolean":
-        return ClassName.get(Boolean.class);
-      case "ID":
-        return ClassName.get(String.class);
-      default:
-        return ClassName.get(targetPackage, name);
+    TypeName builtIn = BUILT_IN_SCALARS.get(name);
+    if (builtIn != null) {
+      return builtIn;
     }
+    TypeName custom = customScalars.get(name);
+    if (custom != null) {
+      return custom;
+    }
+    return ClassName.get(targetPackage, name);
   }
 
   public boolean isScalar(String name) {
-    switch (name) {
-      case "String":
-      case "Int":
-      case "Float":
-      case "Boolean":
-      case "ID":
-        return true;
-      default:
-        return false;
-    }
+    return BUILT_IN_SCALARS.containsKey(name) || customScalars.containsKey(name);
   }
 }

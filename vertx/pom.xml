@@ -26,6 +26,7 @@
 
   <artifactId>feign-vertx-parent</artifactId>
   <packaging>pom</packaging>
+  <name>Feign Vertx (Parent)</name>
 
   <modules>
     <module>feign-vertx</module>

@@ -32,8 +32,8 @@ class GraphqlSchemaProcessorTest {
             "test.MyApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface MyApi {\n"
@@ -56,8 +56,8 @@ class GraphqlSchemaProcessorTest {
             "test.BadApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface BadApi {\n"
@@ -78,8 +78,8 @@ class GraphqlSchemaProcessorTest {
             "test.NoSchemaApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"nonexistent-schema.graphql\")\n"
                 + "interface NoSchemaApi {\n"
@@ -100,8 +100,8 @@ class GraphqlSchemaProcessorTest {
             "test.NestedApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface NestedApi {\n"
@@ -124,8 +124,8 @@ class GraphqlSchemaProcessorTest {
             "test.EnumApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface EnumApi {\n"
@@ -148,8 +148,8 @@ class GraphqlSchemaProcessorTest {
             "test.ListApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface ListApi {\n"
@@ -170,8 +170,8 @@ class GraphqlSchemaProcessorTest {
             "test.SharedApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface SharedApi {\n"
@@ -199,8 +199,8 @@ class GraphqlSchemaProcessorTest {
             "test.DeepApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface DeepApi {\n"
@@ -236,8 +236,8 @@ class GraphqlSchemaProcessorTest {
             "test.ComplexMutationApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface ComplexMutationApi {\n"
@@ -268,8 +268,8 @@ class GraphqlSchemaProcessorTest {
             "test.SearchApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface SearchApi {\n"
@@ -292,14 +292,62 @@ class GraphqlSchemaProcessorTest {
   }
 
   @Test
+  void listReturnTypeGeneratesElementType() {
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.ListReturnApi",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
+                + "import java.util.List;\n"
+                + "\n"
+                + "@GraphqlSchema(\"test-schema.graphql\")\n"
+                + "interface ListReturnApi {\n"
+                + "  @GraphqlQuery(\"query listUsers($filter: UserFilter) { users(filter: $filter) {"
+                + " id name email status } }\")\n"
+                + "  List<UserListResult> listUsers(UserFilter filter);\n"
+                + "}\n");
+
+    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.UserListResult");
+    assertThat(compilation).generatedSourceFile("test.UserFilter");
+  }
+
+  @Test
+  void existingExternalTypeSkipsGeneration() {
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.ExternalTypeApi",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
+                + "\n"
+                + "@GraphqlSchema(\"test-schema.graphql\")\n"
+                + "interface ExternalTypeApi {\n"
+                + "  @GraphqlQuery(\"mutation createUser($input: CreateUserInput!) {"
+                + " createUser(input: $input) { id name email } }\")\n"
+                + "  CreateResult createUser(feign.graphql.GraphqlQuery input);\n"
+                + "}\n");
+
+    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.CreateResult");
+  }
+
+  @Test
   void userWithOrganizationMultipleLevelReuse() {
     JavaFileObject source =
         JavaFileObjects.forSourceString(
             "test.ReuseApi",
             "package test;\n"
                 + "\n"
-                + "import feign.graphql.apt.GraphqlSchema;\n"
-                + "import feign.graphql.apt.GraphqlQuery;\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
                 + "\n"
                 + "@GraphqlSchema(\"test-schema.graphql\")\n"
                 + "interface ReuseApi {\n"
@@ -325,5 +373,89 @@ class GraphqlSchemaProcessorTest {
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.FullUserResult");
     assertThat(compilation).generatedSourceFile("test.Status");
+  }
+
+  @Test
+  void scalarAnnotationMapsCustomScalar() {
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.ScalarApi",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
+                + "import feign.graphql.Scalar;\n"
+                + "\n"
+                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
+                + "interface ScalarApi {\n"
+                + "  @Scalar(\"DateTime\")\n"
+                + "  default String dateTime(String raw) { return raw; }\n"
+                + "\n"
+                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime endTime } }\")\n"
+                + "  EventResult getEvent();\n"
+                + "}\n");
+
+    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.EventResult");
+  }
+
+  @Test
+  void missingScalarAnnotationReportsError() {
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.MissingScalarApi",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
+                + "\n"
+                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
+                + "interface MissingScalarApi {\n"
+                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime } }\")\n"
+                + "  EventResult getEvent();\n"
+                + "}\n");
+
+    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Custom scalar 'DateTime'");
+    assertThat(compilation).hadErrorContaining("@Scalar(\"DateTime\")");
+  }
+
+  @Test
+  void scalarFromParentInterfaceIsInherited() {
+    JavaFileObject parentSource =
+        JavaFileObjects.forSourceString(
+            "test.ScalarDefinitions",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.Scalar;\n"
+                + "\n"
+                + "interface ScalarDefinitions {\n"
+                + "  @Scalar(\"DateTime\")\n"
+                + "  default String dateTime(String raw) { return raw; }\n"
+                + "}\n");
+
+    JavaFileObject source =
+        JavaFileObjects.forSourceString(
+            "test.ChildApi",
+            "package test;\n"
+                + "\n"
+                + "import feign.graphql.GraphqlSchema;\n"
+                + "import feign.graphql.GraphqlQuery;\n"
+                + "\n"
+                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
+                + "interface ChildApi extends ScalarDefinitions {\n"
+                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime } }\")\n"
+                + "  EventResult getEvent();\n"
+                + "}\n");
+
+    Compilation compilation =
+        javac().withProcessors(new GraphqlSchemaProcessor()).compile(parentSource, source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.EventResult");
   }
 }
