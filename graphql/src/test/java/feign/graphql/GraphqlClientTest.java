@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Headers;
@@ -28,7 +27,6 @@ import feign.jackson.JacksonEncoder;
 import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,7 +85,7 @@ class GraphqlClientTest {
   }
 
   private TestApi buildClient() {
-    GraphqlEncoder graphqlEncoder = new GraphqlEncoder(new JacksonEncoder(mapper));
+    var graphqlEncoder = new GraphqlEncoder(new JacksonEncoder(mapper));
     return Feign.builder()
         .contract(new GraphqlContract())
         .encoder(graphqlEncoder)
@@ -103,18 +101,18 @@ class GraphqlClientTest {
             .setBody("{\"data\":{\"createUser\":{\"id\":\"42\",\"name\":\"Alice\"}}}")
             .addHeader("Content-Type", "application/json"));
 
-    CreateUserInput input = new CreateUserInput();
+    var input = new CreateUserInput();
     input.name = "Alice";
     input.email = "alice@example.com";
 
-    CreateUserResult result = buildClient().createUser(input);
+    var result = buildClient().createUser(input);
 
     assertThat(result.id).isEqualTo("42");
     assertThat(result.name).isEqualTo("Alice");
 
-    RecordedRequest recorded = server.takeRequest();
+    var recorded = server.takeRequest();
     assertThat(recorded.getMethod()).isEqualTo("POST");
-    JsonNode body = mapper.readTree(recorded.getBody().readUtf8());
+    var body = mapper.readTree(recorded.getBody().readUtf8());
     assertThat(body.get("query").asText()).contains("createUser");
     assertThat(body.get("variables").get("input").get("name").asText()).isEqualTo("Alice");
   }
@@ -127,14 +125,14 @@ class GraphqlClientTest {
                 "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
             .addHeader("Content-Type", "application/json"));
 
-    User user = buildClient().getUser("1");
+    var user = buildClient().getUser("1");
 
     assertThat(user.id).isEqualTo("1");
     assertThat(user.name).isEqualTo("Bob");
     assertThat(user.email).isEqualTo("bob@test.com");
 
-    RecordedRequest recorded = server.takeRequest();
-    JsonNode body = mapper.readTree(recorded.getBody().readUtf8());
+    var recorded = server.takeRequest();
+    var body = mapper.readTree(recorded.getBody().readUtf8());
     assertThat(body.get("variables").get("id").asText()).isEqualTo("1");
   }
 
@@ -146,13 +144,13 @@ class GraphqlClientTest {
                 "{\"data\":{\"listPending\":[{\"id\":\"1\",\"name\":\"A\"},{\"id\":\"2\",\"name\":\"B\"}]}}")
             .addHeader("Content-Type", "application/json"));
 
-    List<User> users = buildClient().listPending();
+    var users = buildClient().listPending();
 
     assertThat(users).hasSize(2);
-    assertThat(users.get(0).name).isEqualTo("A");
+    assertThat(users.getFirst().name).isEqualTo("A");
 
-    RecordedRequest recorded = server.takeRequest();
-    JsonNode body = mapper.readTree(recorded.getBody().readUtf8());
+    var recorded = server.takeRequest();
+    var body = mapper.readTree(recorded.getBody().readUtf8());
     assertThat(body.get("query").asText()).contains("listPending");
     assertThat(body.has("variables")).isFalse();
   }
@@ -164,7 +162,7 @@ class GraphqlClientTest {
             .setBody("{\"errors\":[{\"message\":\"Something went wrong\"}],\"data\":null}")
             .addHeader("Content-Type", "application/json"));
 
-    CreateUserInput input = new CreateUserInput();
+    var input = new CreateUserInput();
     input.name = "Alice";
 
     assertThatThrownBy(() -> buildClient().createUser(input))
@@ -181,11 +179,11 @@ class GraphqlClientTest {
                 "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
             .addHeader("Content-Type", "application/json"));
 
-    User user = buildClient().getUserWithAuth("Bearer mytoken", "1");
+    var user = buildClient().getUserWithAuth("Bearer mytoken", "1");
 
     assertThat(user.id).isEqualTo("1");
 
-    RecordedRequest recorded = server.takeRequest();
+    var recorded = server.takeRequest();
     assertThat(recorded.getHeader("Authorization")).isEqualTo("Bearer mytoken");
   }
 
@@ -196,11 +194,11 @@ class GraphqlClientTest {
             .setBody("{\"data\":{\"createUser\":{\"id\":\"1\",\"name\":\"X\"}}}")
             .addHeader("Content-Type", "application/json"));
 
-    CreateUserInput input = new CreateUserInput();
+    var input = new CreateUserInput();
     input.name = "X";
     buildClient().createUser(input);
 
-    RecordedRequest recorded = server.takeRequest();
+    var recorded = server.takeRequest();
     assertThat(recorded.getHeader(GraphqlContract.HEADER_GRAPHQL_QUERY)).isNull();
     assertThat(recorded.getHeader(GraphqlContract.HEADER_GRAPHQL_VARIABLE)).isNull();
   }

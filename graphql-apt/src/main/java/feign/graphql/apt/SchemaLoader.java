@@ -16,7 +16,6 @@
 package feign.graphql.apt;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +23,6 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
 public class SchemaLoader {
@@ -42,13 +40,13 @@ public class SchemaLoader {
       StandardLocation.CLASS_PATH, StandardLocation.SOURCE_PATH, StandardLocation.CLASS_OUTPUT
     };
 
-    for (StandardLocation location : locations) {
+    for (var location : locations) {
       try {
-        FileObject resource = filer.getResource(location, "", path);
-        try (InputStream is = resource.openInputStream();
+        var resource = filer.getResource(location, "", path);
+        try (var is = resource.openInputStream();
             Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-          StringBuilder sb = new StringBuilder();
-          char[] buf = new char[4096];
+          var sb = new StringBuilder();
+          var buf = new char[4096];
           int read;
           while ((read = reader.read(buf)) != -1) {
             sb.append(buf, 0, read);

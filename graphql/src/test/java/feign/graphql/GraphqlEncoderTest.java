@@ -17,7 +17,6 @@ package feign.graphql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.RequestTemplate;
 import feign.jackson.JacksonEncoder;
@@ -32,17 +31,17 @@ class GraphqlEncoderTest {
 
   @Test
   void encodesBodyWithVariables() throws Exception {
-    RequestTemplate template = new RequestTemplate();
-    String query =
+    var template = new RequestTemplate();
+    var query =
         "mutation createUser($input: CreateUserInput!) { createUser(input: $input) { id } }";
     template.header(
         GraphqlContract.HEADER_GRAPHQL_QUERY, Base64.getEncoder().encodeToString(query.getBytes()));
     template.header(GraphqlContract.HEADER_GRAPHQL_VARIABLE, "input");
 
-    Map<String, String> body = Map.of("name", "John", "email", "john@example.com");
+    var body = Map.of("name", "John", "email", "john@example.com");
     encoder.encode(body, Map.class, template);
 
-    JsonNode result = mapper.readTree(template.body());
+    var result = mapper.readTree(template.body());
     assertThat(result.has("query")).isTrue();
     assertThat(result.get("query").asText()).isEqualTo(query);
     assertThat(result.has("variables")).isTrue();
@@ -52,8 +51,8 @@ class GraphqlEncoderTest {
 
   @Test
   void removesInternalHeadersAfterEncoding() {
-    RequestTemplate template = new RequestTemplate();
-    String query = "mutation x($input: Y!) { x(input: $input) { id } }";
+    var template = new RequestTemplate();
+    var query = "mutation x($input: Y!) { x(input: $input) { id } }";
     template.header(
         GraphqlContract.HEADER_GRAPHQL_QUERY, Base64.getEncoder().encodeToString(query.getBytes()));
     template.header(GraphqlContract.HEADER_GRAPHQL_VARIABLE, "input");
@@ -66,7 +65,7 @@ class GraphqlEncoderTest {
 
   @Test
   void delegatesToWrappedEncoderForNonGraphql() {
-    RequestTemplate template = new RequestTemplate();
+    var template = new RequestTemplate();
 
     encoder.encode("plain body", String.class, template);
 
@@ -75,22 +74,22 @@ class GraphqlEncoderTest {
 
   @Test
   void interceptorSetsBodyForNoVariableQuery() throws Exception {
-    RequestTemplate template = new RequestTemplate();
-    String query = "query pending { pending { id } }";
+    var template = new RequestTemplate();
+    var query = "query pending { pending { id } }";
     template.header(
         GraphqlContract.HEADER_GRAPHQL_QUERY, Base64.getEncoder().encodeToString(query.getBytes()));
 
     encoder.apply(template);
 
-    JsonNode result = mapper.readTree(template.body());
+    var result = mapper.readTree(template.body());
     assertThat(result.get("query").asText()).isEqualTo(query);
     assertThat(result.has("variables")).isFalse();
   }
 
   @Test
   void interceptorSkipsWhenBodyAlreadySet() {
-    RequestTemplate template = new RequestTemplate();
-    String query = "mutation x($input: Y!) { x { id } }";
+    var template = new RequestTemplate();
+    var query = "mutation x($input: Y!) { x { id } }";
     template.header(
         GraphqlContract.HEADER_GRAPHQL_QUERY, Base64.getEncoder().encodeToString(query.getBytes()));
     template.body("already set");
@@ -102,7 +101,7 @@ class GraphqlEncoderTest {
 
   @Test
   void interceptorSkipsForNonGraphql() {
-    RequestTemplate template = new RequestTemplate();
+    var template = new RequestTemplate();
     template.body("some body");
 
     encoder.apply(template);

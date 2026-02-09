@@ -43,10 +43,10 @@ class GraphqlDecoderTest {
 
   @Test
   void decodesDataField() throws Exception {
-    String json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
-    Response response = buildResponse(json, "getUser");
+    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
+    var response = buildResponse(json, "getUser");
 
-    User user = (User) decoder.decode(response, User.class);
+    var user = (User) decoder.decode(response, User.class);
 
     assertThat(user.id).isEqualTo("1");
     assertThat(user.name).isEqualTo("Alice");
@@ -54,25 +54,25 @@ class GraphqlDecoderTest {
 
   @Test
   void decodesListResponse() throws Exception {
-    String json =
+    var json =
         "{\"data\":{\"listUsers\":[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]}}";
-    Response response = buildResponse(json, "listUsers");
+    var response = buildResponse(json, "listUsers");
 
     @SuppressWarnings("unchecked")
-    List<User> users =
+    var users =
         (List<User>)
             decoder.decode(
                 response, mapper.getTypeFactory().constructCollectionType(List.class, User.class));
 
     assertThat(users).hasSize(2);
-    assertThat(users.get(0).name).isEqualTo("Alice");
+    assertThat(users.getFirst().name).isEqualTo("Alice");
     assertThat(users.get(1).name).isEqualTo("Bob");
   }
 
   @Test
   void throwsGraphqlErrorExceptionOnErrors() {
-    String json = "{\"errors\":[{\"message\":\"Not found\"}],\"data\":null}";
-    Response response = buildResponse(json, "getUser");
+    var json = "{\"errors\":[{\"message\":\"Not found\"}],\"data\":null}";
+    var response = buildResponse(json, "getUser");
 
     assertThatThrownBy(() -> decoder.decode(response, User.class))
         .isInstanceOf(GraphqlErrorException.class)
@@ -82,25 +82,25 @@ class GraphqlDecoderTest {
 
   @Test
   void returnsNullForNullData() throws Exception {
-    String json = "{\"data\":{\"getUser\":null}}";
-    Response response = buildResponse(json, "getUser");
+    var json = "{\"data\":{\"getUser\":null}}";
+    var response = buildResponse(json, "getUser");
 
-    Object result = decoder.decode(response, User.class);
+    var result = decoder.decode(response, User.class);
     assertThat(result).isNull();
   }
 
   @Test
   void returnsNullForMissingOperation() throws Exception {
-    String json = "{\"data\":{}}";
-    Response response = buildResponse(json, "getUser");
+    var json = "{\"data\":{}}";
+    var response = buildResponse(json, "getUser");
 
-    Object result = decoder.decode(response, User.class);
+    var result = decoder.decode(response, User.class);
     assertThat(result).isNull();
   }
 
   @Test
   void returnsEmptyFor404() throws Exception {
-    Response response =
+    var response =
         Response.builder()
             .status(404)
             .reason("Not Found")
@@ -109,7 +109,7 @@ class GraphqlDecoderTest {
             .body(new byte[0])
             .build();
 
-    Object result = decoder.decode(response, User.class);
+    var result = decoder.decode(response, User.class);
     assertThat(result).isNull();
   }
 

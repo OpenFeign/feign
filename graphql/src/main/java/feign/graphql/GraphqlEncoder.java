@@ -67,11 +67,7 @@ public class GraphqlEncoder implements Encoder, RequestInterceptor {
   @Override
   public void apply(RequestTemplate template) {
     Collection<String> queryHeaders = template.headers().get(GraphqlContract.HEADER_GRAPHQL_QUERY);
-    if (queryHeaders == null || queryHeaders.isEmpty()) {
-      return;
-    }
-
-    if (template.body() != null) {
+    if (queryHeaders == null || queryHeaders.isEmpty() || (template.body() != null)) {
       return;
     }
 

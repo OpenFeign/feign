@@ -21,11 +21,9 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import graphql.language.EnumTypeDefinition;
-import graphql.language.EnumValueDefinition;
 import graphql.language.Field;
 import graphql.language.FieldDefinition;
 import graphql.language.InputObjectTypeDefinition;
-import graphql.language.InputValueDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
@@ -38,17 +36,16 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 
 public class TypeGenerator {
 
@@ -83,30 +80,30 @@ public class TypeGenerator {
     }
     generatedTypes.add(className);
 
-    List<RecordField> fields = new ArrayList<>();
+    var fields = new ArrayList<RecordField>();
 
-    for (graphql.language.Selection<?> selection : selectionSet.getSelections()) {
+    for (var selection : selectionSet.getSelections()) {
       if (!(selection instanceof Field)) {
         continue;
       }
-      Field field = (Field) selection;
-      String fieldName = field.getName();
+      var field = (Field) selection;
+      var fieldName = field.getName();
 
-      FieldDefinition schemaDef = findFieldDefinition(parentType, fieldName);
+      var schemaDef = findFieldDefinition(parentType, fieldName);
       if (schemaDef == null) {
         continue;
       }
 
-      Type<?> fieldType = schemaDef.getType();
-      String rawTypeName = unwrapTypeName(fieldType);
+      var fieldType = schemaDef.getType();
+      var rawTypeName = unwrapTypeName(fieldType);
 
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
-        String nestedClassName = capitalize(fieldName);
+        var nestedClassName = capitalize(fieldName);
         generateNestedResultType(nestedClassName, field.getSelectionSet(), rawTypeName, element);
-        TypeName nestedType = wrapType(fieldType, ClassName.get(targetPackage, nestedClassName));
+        var nestedType = wrapType(fieldType, ClassName.get(targetPackage, nestedClassName));
         fields.add(toRecordField(fieldName, nestedType));
       } else {
-        TypeName javaType = typeMapper.map(fieldType);
+        var javaType = typeMapper.map(fieldType);
         fields.add(toRecordField(fieldName, javaType));
         enqueueIfNonScalar(rawTypeName);
       }
@@ -122,24 +119,23 @@ public class TypeGenerator {
     }
     generatedTypes.add(className);
 
-    Optional<InputObjectTypeDefinition> maybeDef =
-        registry.getType(graphqlTypeName, InputObjectTypeDefinition.class);
-    if (!maybeDef.isPresent()) {
+    var maybeDef = registry.getType(graphqlTypeName, InputObjectTypeDefinition.class);
+    if (maybeDef.isEmpty()) {
       messager.printMessage(
           Diagnostic.Kind.ERROR, "GraphQL input type not found: " + graphqlTypeName, element);
       return;
     }
 
-    InputObjectTypeDefinition inputDef = maybeDef.get();
-    List<RecordField> fields = new ArrayList<>();
+    var inputDef = maybeDef.get();
+    var fields = new ArrayList<RecordField>();
 
-    for (InputValueDefinition valueDef : inputDef.getInputValueDefinitions()) {
-      String fieldName = valueDef.getName();
-      Type<?> fieldType = valueDef.getType();
-      TypeName javaType = typeMapper.map(fieldType);
+    for (var valueDef : inputDef.getInputValueDefinitions()) {
+      var fieldName = valueDef.getName();
+      var fieldType = valueDef.getType();
+      var javaType = typeMapper.map(fieldType);
       fields.add(toRecordField(fieldName, javaType));
 
-      String rawTypeName = unwrapTypeName(fieldType);
+      var rawTypeName = unwrapTypeName(fieldType);
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -153,9 +149,8 @@ public class TypeGenerator {
       return;
     }
 
-    Optional<ObjectTypeDefinition> maybeDef =
-        registry.getType(graphqlTypeName, ObjectTypeDefinition.class);
-    if (!maybeDef.isPresent()) {
+    var maybeDef = registry.getType(graphqlTypeName, ObjectTypeDefinition.class);
+    if (maybeDef.isEmpty()) {
       return;
     }
 
@@ -164,26 +159,24 @@ public class TypeGenerator {
 
   private void processPendingTypes(Element element) {
     while (!pendingTypes.isEmpty()) {
-      String typeName = pendingTypes.poll();
+      var typeName = pendingTypes.poll();
       if (generatedTypes.contains(typeName)) {
         continue;
       }
 
-      Optional<EnumTypeDefinition> enumDef = registry.getType(typeName, EnumTypeDefinition.class);
+      var enumDef = registry.getType(typeName, EnumTypeDefinition.class);
       if (enumDef.isPresent()) {
         generateEnum(typeName, enumDef.get(), element);
         continue;
       }
 
-      Optional<InputObjectTypeDefinition> inputDef =
-          registry.getType(typeName, InputObjectTypeDefinition.class);
+      var inputDef = registry.getType(typeName, InputObjectTypeDefinition.class);
       if (inputDef.isPresent()) {
         generateInputType(typeName, typeName, element);
         continue;
       }
 
-      Optional<ObjectTypeDefinition> objectDef =
-          registry.getType(typeName, ObjectTypeDefinition.class);
+      var objectDef = registry.getType(typeName, ObjectTypeDefinition.class);
       if (objectDef.isPresent()) {
         generateFullObjectType(typeName, objectDef.get(), element);
       }
@@ -196,9 +189,9 @@ public class TypeGenerator {
     }
     generatedTypes.add(className);
 
-    TypeSpec.Builder enumBuilder = TypeSpec.enumBuilder(className).addModifiers(Modifier.PUBLIC);
+    var enumBuilder = TypeSpec.enumBuilder(className).addModifiers(Modifier.PUBLIC);
 
-    for (EnumValueDefinition value : enumDef.getEnumValueDefinitions()) {
+    for (var value : enumDef.getEnumValueDefinitions()) {
       enumBuilder.addEnumConstant(value.getName());
     }
 
@@ -212,14 +205,14 @@ public class TypeGenerator {
     }
     generatedTypes.add(className);
 
-    List<RecordField> fields = new ArrayList<>();
+    var fields = new ArrayList<RecordField>();
 
-    for (FieldDefinition fieldDef : objectDef.getFieldDefinitions()) {
-      String fieldName = fieldDef.getName();
-      TypeName javaType = typeMapper.map(fieldDef.getType());
+    for (var fieldDef : objectDef.getFieldDefinitions()) {
+      var fieldName = fieldDef.getName();
+      var javaType = typeMapper.map(fieldDef.getType());
       fields.add(toRecordField(fieldName, javaType));
 
-      String rawTypeName = unwrapTypeName(fieldDef.getType());
+      var rawTypeName = unwrapTypeName(fieldDef.getType());
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -234,7 +227,7 @@ public class TypeGenerator {
   }
 
   private FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
-    for (FieldDefinition fd : typeDef.getFieldDefinitions()) {
+    for (var fd : typeDef.getFieldDefinitions()) {
       if (fd.getName().equals(fieldName)) {
         return fd;
       }
@@ -243,25 +236,25 @@ public class TypeGenerator {
   }
 
   private String unwrapTypeName(Type<?> type) {
-    if (type instanceof NonNullType) {
-      return unwrapTypeName(((NonNullType) type).getType());
+    if (type instanceof NonNullType nullType) {
+      return unwrapTypeName(nullType.getType());
     }
-    if (type instanceof ListType) {
-      return unwrapTypeName(((ListType) type).getType());
+    if (type instanceof ListType listType) {
+      return unwrapTypeName(listType.getType());
     }
-    if (type instanceof graphql.language.TypeName) {
-      return ((graphql.language.TypeName) type).getName();
+    if (type instanceof graphql.language.TypeName name) {
+      return name.getName();
     }
     return "String";
   }
 
   private TypeName wrapType(Type<?> schemaType, TypeName innerType) {
-    if (schemaType instanceof NonNullType) {
-      return wrapType(((NonNullType) schemaType).getType(), innerType);
+    if (schemaType instanceof NonNullType type) {
+      return wrapType(type.getType(), innerType);
     }
-    if (schemaType instanceof ListType) {
+    if (schemaType instanceof ListType type) {
       return ParameterizedTypeName.get(
-          ClassName.get(List.class), wrapType(((ListType) schemaType).getType(), innerType));
+          ClassName.get(List.class), wrapType(type.getType(), innerType));
     }
     return innerType;
   }
@@ -275,9 +268,9 @@ public class TypeGenerator {
 
   private void writeType(TypeSpec typeSpec, Element element) {
     try {
-      JavaFile javaFile = JavaFile.builder(targetPackage, typeSpec).build();
+      var javaFile = JavaFile.builder(targetPackage, typeSpec).build();
       javaFile.writeTo(filer);
-    } catch (javax.annotation.processing.FilerException e) {
+    } catch (FilerException e) {
       // Type already generated by another interface in the same compilation round
     } catch (IOException e) {
       messager.printMessage(
@@ -288,44 +281,42 @@ public class TypeGenerator {
   }
 
   private RecordField toRecordField(String name, TypeName typeName) {
-    String typeString = typeNameToString(typeName);
-    String importFqn = resolveImport(typeName);
+    var typeString = typeNameToString(typeName);
+    var importFqn = resolveImport(typeName);
     return new RecordField(typeString, name, importFqn, typeName);
   }
 
   private String typeNameToString(TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
-      String raw = parameterized.rawType.simpleName();
-      String typeArgs =
+    if (typeName instanceof ParameterizedTypeName parameterized) {
+      var raw = parameterized.rawType.simpleName();
+      var typeArgs =
           parameterized.typeArguments.stream()
               .map(this::typeNameToString)
               .collect(Collectors.joining(", "));
       return raw + "<" + typeArgs + ">";
     }
-    if (typeName instanceof ClassName) {
-      return ((ClassName) typeName).simpleName();
+    if (typeName instanceof ClassName name) {
+      return name.simpleName();
     }
     return typeName.toString();
   }
 
   private String resolveImport(TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
+    if (typeName instanceof ParameterizedTypeName parameterized) {
       resolveImport(parameterized.rawType);
-      for (TypeName typeArg : parameterized.typeArguments) {
+      for (var typeArg : parameterized.typeArguments) {
         resolveImport(typeArg);
       }
       return fqnIfNeeded(parameterized.rawType);
     }
-    if (typeName instanceof ClassName) {
-      return fqnIfNeeded((ClassName) typeName);
+    if (typeName instanceof ClassName name) {
+      return fqnIfNeeded(name);
     }
     return null;
   }
 
   private String fqnIfNeeded(ClassName className) {
-    String pkg = className.packageName();
+    var pkg = className.packageName();
     if (pkg.equals("java.lang") || pkg.equals(targetPackage) || pkg.isEmpty()) {
       return null;
     }
@@ -333,22 +324,21 @@ public class TypeGenerator {
   }
 
   private Set<String> collectImports(List<RecordField> fields) {
-    Set<String> imports = new TreeSet<>();
-    for (RecordField field : fields) {
+    var imports = new TreeSet<String>();
+    for (var field : fields) {
       collectImportsFromTypeName(field.typeName, imports);
     }
     return imports;
   }
 
   private void collectImportsFromTypeName(TypeName typeName, Set<String> imports) {
-    if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterized = (ParameterizedTypeName) typeName;
+    if (typeName instanceof ParameterizedTypeName parameterized) {
       collectImportsFromTypeName(parameterized.rawType, imports);
-      for (TypeName typeArg : parameterized.typeArguments) {
+      for (var typeArg : parameterized.typeArguments) {
         collectImportsFromTypeName(typeArg, imports);
       }
-    } else if (typeName instanceof ClassName) {
-      String fqn = fqnIfNeeded((ClassName) typeName);
+    } else if (typeName instanceof ClassName name) {
+      var fqn = fqnIfNeeded(name);
       if (fqn != null) {
         imports.add(fqn);
       }
@@ -356,29 +346,29 @@ public class TypeGenerator {
   }
 
   private void writeRecord(String className, List<RecordField> fields, Element element) {
-    String fqn = targetPackage.isEmpty() ? className : targetPackage + "." + className;
+    var fqn = targetPackage.isEmpty() ? className : targetPackage + "." + className;
     try {
-      JavaFileObject sourceFile = filer.createSourceFile(fqn, element);
-      try (PrintWriter out = new PrintWriter(sourceFile.openWriter())) {
+      var sourceFile = filer.createSourceFile(fqn, element);
+      try (var out = new PrintWriter(sourceFile.openWriter())) {
         if (!targetPackage.isEmpty()) {
           out.println("package " + targetPackage + ";");
           out.println();
         }
 
-        Set<String> imports = collectImports(fields);
+        var imports = collectImports(fields);
         if (!imports.isEmpty()) {
-          for (String imp : imports) {
+          for (var imp : imports) {
             out.println("import " + imp + ";");
           }
           out.println();
         }
 
-        String params =
+        var params =
             fields.stream().map(f -> f.typeString + " " + f.name).collect(Collectors.joining(", "));
 
         out.println("public record " + className + "(" + params + ") {}");
       }
-    } catch (javax.annotation.processing.FilerException e) {
+    } catch (FilerException e) {
       // Type already generated by another interface in the same compilation round
     } catch (IOException e) {
       messager.printMessage(

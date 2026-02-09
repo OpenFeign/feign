@@ -17,11 +17,8 @@ package feign.graphql.apt;
 
 import graphql.GraphQLError;
 import graphql.language.Document;
-import graphql.language.SourceLocation;
 import graphql.schema.GraphQLSchema;
-import graphql.validation.ValidationError;
 import graphql.validation.Validator;
-import java.util.List;
 import java.util.Locale;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
@@ -36,22 +33,21 @@ public class QueryValidator {
   }
 
   public boolean validate(GraphQLSchema schema, Document document, Element methodElement) {
-    Validator validator = new Validator();
-    List<ValidationError> errors = validator.validateDocument(schema, document, Locale.ENGLISH);
+    var validator = new Validator();
+    var errors = validator.validateDocument(schema, document, Locale.ENGLISH);
 
     if (errors.isEmpty()) {
       return true;
     }
 
     for (GraphQLError error : errors) {
-      List<SourceLocation> locations = error.getLocations();
+      var locations = error.getLocations();
       if (locations != null && !locations.isEmpty()) {
-        SourceLocation loc = locations.get(0);
+        var loc = locations.get(0);
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            String.format(
-                "GraphQL validation error at line %d, column %d: %s",
-                loc.getLine(), loc.getColumn(), error.getMessage()),
+            "GraphQL validation error at line %d, column %d: %s"
+                .formatted(loc.getLine(), loc.getColumn(), error.getMessage()),
             methodElement);
       } else {
         messager.printMessage(

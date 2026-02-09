@@ -18,31 +18,33 @@ package feign.graphql.apt;
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 
-import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
 
 class GraphqlSchemaProcessorTest {
 
   @Test
   void validMutationGeneratesTypes() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.MyApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface MyApi {\n"
-                + "  @GraphqlQuery(\"mutation createUser($input: CreateUserInput!) {"
-                + " createUser(input: $input) { id name email status } }\")\n"
-                + "  CreateUserResult createUser(CreateUserInput input);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MyApi {
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id name email status }
+                  }\""")
+              CreateUserResult createUser(CreateUserInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.CreateUserResult");
@@ -51,21 +53,23 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void invalidQueryReportsError() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.BadApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface BadApi {\n"
-                + "  @GraphqlQuery(\"{ nonExistentField }\")\n"
-                + "  BadResult query();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface BadApi {
+              @GraphqlQuery("{ nonExistentField }")
+              BadResult query();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("GraphQL validation error");
@@ -73,21 +77,23 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void missingSchemaReportsError() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.NoSchemaApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"nonexistent-schema.graphql\")\n"
-                + "interface NoSchemaApi {\n"
-                + "  @GraphqlQuery(\"{ user(id: \\\"1\\\") { id } }\")\n"
-                + "  Object query();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("nonexistent-schema.graphql")
+            interface NoSchemaApi {
+              @GraphqlQuery("{ user(id: \\"1\\") { id } }")
+              Object query();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("GraphQL schema not found");
@@ -95,22 +101,25 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void nestedTypesAreGenerated() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.NestedApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface NestedApi {\n"
-                + "  @GraphqlQuery(\"{ user(id: \\\"1\\\") { id name address { street city"
-                + " country } } }\")\n"
-                + "  UserResult getUser();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface NestedApi {
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id name address { street city country } } }
+                  \""")
+              UserResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.UserResult");
@@ -119,22 +128,26 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void enumsAreGeneratedAsJavaEnums() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.EnumApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface EnumApi {\n"
-                + "  @GraphqlQuery(\"mutation updateStatus($id: ID!, $status: Status!) {"
-                + " updateStatus(id: $id, status: $status) { id status } }\")\n"
-                + "  StatusResult updateStatus(String id, Status status);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface EnumApi {
+              @GraphqlQuery(\"""
+                  mutation updateStatus($id: ID!, $status: Status!) {
+                    updateStatus(id: $id, status: $status) { id status }
+                  }\""")
+              StatusResult updateStatus(String id, Status status);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.StatusResult");
@@ -143,21 +156,23 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void listTypesMapToJavaList() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ListApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface ListApi {\n"
-                + "  @GraphqlQuery(\"{ user(id: \\\"1\\\") { id name tags } }\")\n"
-                + "  UserWithTagsResult getUser();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ListApi {
+              @GraphqlQuery("{ user(id: \\"1\\") { id name tags } }")
+              UserWithTagsResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.UserWithTagsResult");
@@ -165,26 +180,32 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void multipleMethodsSharingInputType() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.SharedApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface SharedApi {\n"
-                + "  @GraphqlQuery(\"mutation createUser($input: CreateUserInput!) {"
-                + " createUser(input: $input) { id name } }\")\n"
-                + "  CreateResult1 createUser1(CreateUserInput input);\n"
-                + "\n"
-                + "  @GraphqlQuery(\"mutation createUser($input: CreateUserInput!) {"
-                + " createUser(input: $input) { id email } }\")\n"
-                + "  CreateResult2 createUser2(CreateUserInput input);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface SharedApi {
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id name }
+                  }\""")
+              CreateResult1 createUser1(CreateUserInput input);
+
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id email }
+                  }\""")
+              CreateResult2 createUser2(CreateUserInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.CreateUserInput");
@@ -194,32 +215,37 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void deeplyNestedOrganizationQuery() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.DeepApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface DeepApi {\n"
-                + "  @GraphqlQuery(\"{ organization(id: \\\"1\\\") {"
-                + " id name"
-                + " address { street city coordinates { latitude longitude } }"
-                + " departments {"
-                + "   id name"
-                + "   lead { id name status }"
-                + "   members { id name email }"
-                + "   subDepartments { id name tags { key value } }"
-                + "   tags { key value }"
-                + " }"
-                + " metadata { foundedYear industry categories { name tags { key value } } }"
-                + " } }\")\n"
-                + "  OrgResult getOrganization();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface DeepApi {
+              @GraphqlQuery(\"""
+                  {
+                    organization(id: "1") {
+                      id name
+                      address { street city coordinates { latitude longitude } }
+                      departments {
+                        id name
+                        lead { id name status }
+                        members { id name email }
+                        subDepartments { id name tags { key value } }
+                        tags { key value }
+                      }
+                      metadata { foundedYear industry categories { name tags { key value } } }
+                    }
+                  }\""")
+              OrgResult getOrganization();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.OrgResult");
@@ -231,25 +257,29 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void complexMutationWithNestedInputs() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ComplexMutationApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface ComplexMutationApi {\n"
-                + "  @GraphqlQuery(\"mutation createOrg($input: CreateOrgInput!) {"
-                + " createOrganization(input: $input) {"
-                + " id name"
-                + " departments { id name subDepartments { id name } }"
-                + " } }\")\n"
-                + "  CreateOrgResult createOrg(CreateOrgInput input);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ComplexMutationApi {
+              @GraphqlQuery(\"""
+                  mutation createOrg($input: CreateOrgInput!) {
+                    createOrganization(input: $input) {
+                      id name
+                      departments { id name subDepartments { id name } }
+                    }
+                  }\""")
+              CreateOrgResult createOrg(CreateOrgInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.CreateOrgResult");
@@ -263,26 +293,30 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void searchWithComplexFilterInput() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.SearchApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface SearchApi {\n"
-                + "  @GraphqlQuery(\"query searchOrgs($criteria: OrgSearchCriteria!) {"
-                + " searchOrganizations(criteria: $criteria) {"
-                + " id name"
-                + " departments { id name lead { id name } tags { key value } }"
-                + " metadata { foundedYear categories { name parentCategory { name } } }"
-                + " } }\")\n"
-                + "  SearchResult searchOrganizations(OrgSearchCriteria criteria);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface SearchApi {
+              @GraphqlQuery(\"""
+                  query searchOrgs($criteria: OrgSearchCriteria!) {
+                    searchOrganizations(criteria: $criteria) {
+                      id name
+                      departments { id name lead { id name } tags { key value } }
+                      metadata { foundedYear categories { name parentCategory { name } } }
+                    }
+                  }\""")
+              SearchResult searchOrganizations(OrgSearchCriteria criteria);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.SearchResult");
@@ -293,23 +327,27 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void listReturnTypeGeneratesElementType() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ListReturnApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "import java.util.List;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface ListReturnApi {\n"
-                + "  @GraphqlQuery(\"query listUsers($filter: UserFilter) { users(filter: $filter) {"
-                + " id name email status } }\")\n"
-                + "  List<UserListResult> listUsers(UserFilter filter);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import java.util.List;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ListReturnApi {
+              @GraphqlQuery(\"""
+                  query listUsers($filter: UserFilter) {
+                    users(filter: $filter) { id name email status }
+                  }\""")
+              List<UserListResult> listUsers(UserFilter filter);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.UserListResult");
@@ -318,22 +356,26 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void existingExternalTypeSkipsGeneration() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ExternalTypeApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface ExternalTypeApi {\n"
-                + "  @GraphqlQuery(\"mutation createUser($input: CreateUserInput!) {"
-                + " createUser(input: $input) { id name email } }\")\n"
-                + "  CreateResult createUser(feign.graphql.GraphqlQuery input);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ExternalTypeApi {
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id name email }
+                  }\""")
+              CreateResult createUser(feign.graphql.GraphqlQuery input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.CreateResult");
@@ -341,34 +383,40 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void userWithOrganizationMultipleLevelReuse() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ReuseApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"test-schema.graphql\")\n"
-                + "interface ReuseApi {\n"
-                + "  @GraphqlQuery(\"{ user(id: \\\"1\\\") {"
-                + " id name status"
-                + " address { street city country coordinates { latitude longitude } }"
-                + " organization {"
-                + "   id name"
-                + "   address { street city coordinates { latitude longitude } }"
-                + "   departments { id name members { id name } }"
-                + " }"
-                + " } }\")\n"
-                + "  FullUserResult getFullUser();\n"
-                + "\n"
-                + "  @GraphqlQuery(\"query listUsers($filter: UserFilter) { users(filter: $filter) {"
-                + " id name email tags"
-                + " } }\")\n"
-                + "  UserListResult listUsers(UserFilter filter);\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ReuseApi {
+              @GraphqlQuery(\"""
+                  {
+                    user(id: "1") {
+                      id name status
+                      address { street city country coordinates { latitude longitude } }
+                      organization {
+                        id name
+                        address { street city coordinates { latitude longitude } }
+                        departments { id name members { id name } }
+                      }
+                    }
+                  }\""")
+              FullUserResult getFullUser();
+
+              @GraphqlQuery(\"""
+                  query listUsers($filter: UserFilter) {
+                    users(filter: $filter) { id name email tags }
+                  }\""")
+              UserListResult listUsers(UserFilter filter);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.FullUserResult");
@@ -377,25 +425,27 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void scalarAnnotationMapsCustomScalar() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.ScalarApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "import feign.graphql.Scalar;\n"
-                + "\n"
-                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
-                + "interface ScalarApi {\n"
-                + "  @Scalar(\"DateTime\")\n"
-                + "  default String dateTime(String raw) { return raw; }\n"
-                + "\n"
-                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime endTime } }\")\n"
-                + "  EventResult getEvent();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Scalar;
+
+            @GraphqlSchema("scalar-test-schema.graphql")
+            interface ScalarApi {
+              @Scalar("DateTime")
+              default String dateTime(String raw) { return raw; }
+
+              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime endTime } }")
+              EventResult getEvent();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.EventResult");
@@ -403,21 +453,23 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void missingScalarAnnotationReportsError() {
-    JavaFileObject source =
+    var source =
         JavaFileObjects.forSourceString(
             "test.MissingScalarApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
-                + "interface MissingScalarApi {\n"
-                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime } }\")\n"
-                + "  EventResult getEvent();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("scalar-test-schema.graphql")
+            interface MissingScalarApi {
+              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime } }")
+              EventResult getEvent();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("Custom scalar 'DateTime'");
@@ -426,33 +478,37 @@ class GraphqlSchemaProcessorTest {
 
   @Test
   void scalarFromParentInterfaceIsInherited() {
-    JavaFileObject parentSource =
+    var parentSource =
         JavaFileObjects.forSourceString(
             "test.ScalarDefinitions",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.Scalar;\n"
-                + "\n"
-                + "interface ScalarDefinitions {\n"
-                + "  @Scalar(\"DateTime\")\n"
-                + "  default String dateTime(String raw) { return raw; }\n"
-                + "}\n");
+            """
+            package test;
 
-    JavaFileObject source =
+            import feign.graphql.Scalar;
+
+            interface ScalarDefinitions {
+              @Scalar("DateTime")
+              default String dateTime(String raw) { return raw; }
+            }
+            """);
+
+    var source =
         JavaFileObjects.forSourceString(
             "test.ChildApi",
-            "package test;\n"
-                + "\n"
-                + "import feign.graphql.GraphqlSchema;\n"
-                + "import feign.graphql.GraphqlQuery;\n"
-                + "\n"
-                + "@GraphqlSchema(\"scalar-test-schema.graphql\")\n"
-                + "interface ChildApi extends ScalarDefinitions {\n"
-                + "  @GraphqlQuery(\"{ event(id: \\\"1\\\") { id name startTime } }\")\n"
-                + "  EventResult getEvent();\n"
-                + "}\n");
+            """
+            package test;
 
-    Compilation compilation =
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("scalar-test-schema.graphql")
+            interface ChildApi extends ScalarDefinitions {
+              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime } }")
+              EventResult getEvent();
+            }
+            """);
+
+    var compilation =
         javac().withProcessors(new GraphqlSchemaProcessor()).compile(parentSource, source);
 
     assertThat(compilation).succeeded();

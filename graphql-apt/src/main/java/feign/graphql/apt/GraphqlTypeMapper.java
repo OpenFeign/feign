@@ -44,25 +44,25 @@ public class GraphqlTypeMapper {
   }
 
   public TypeName map(Type<?> type) {
-    if (type instanceof NonNullType) {
-      return map(((NonNullType) type).getType());
+    if (type instanceof NonNullType nullType) {
+      return map(nullType.getType());
     }
-    if (type instanceof ListType) {
-      TypeName elementType = map(((ListType) type).getType());
+    if (type instanceof ListType listType) {
+      var elementType = map(listType.getType());
       return ParameterizedTypeName.get(ClassName.get(List.class), elementType);
     }
-    if (type instanceof graphql.language.TypeName) {
-      return mapScalarOrNamed(((graphql.language.TypeName) type).getName());
+    if (type instanceof graphql.language.TypeName name) {
+      return mapScalarOrNamed(name.getName());
     }
     return ClassName.get(String.class);
   }
 
   private TypeName mapScalarOrNamed(String name) {
-    TypeName builtIn = BUILT_IN_SCALARS.get(name);
+    var builtIn = BUILT_IN_SCALARS.get(name);
     if (builtIn != null) {
       return builtIn;
     }
-    TypeName custom = customScalars.get(name);
+    var custom = customScalars.get(name);
     if (custom != null) {
       return custom;
     }

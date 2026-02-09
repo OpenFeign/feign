@@ -20,11 +20,15 @@ import com.squareup.javapoet.TypeName;
 import feign.graphql.GraphqlQuery;
 import feign.graphql.GraphqlSchema;
 import feign.graphql.Scalar;
-import graphql.language.Definition;
 import graphql.language.Document;
+import graphql.language.Field;
+import graphql.language.FieldDefinition;
+import graphql.language.ListType;
+import graphql.language.NonNullType;
+import graphql.language.ObjectTypeDefinition;
 import graphql.language.OperationDefinition;
-import graphql.language.ScalarTypeDefinition;
 import graphql.language.SelectionSet;
+import graphql.language.Type;
 import graphql.language.VariableDefinition;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
@@ -44,7 +48,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -70,7 +73,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    for (Element element : roundEnv.getElementsAnnotatedWith(GraphqlSchema.class)) {
+    for (var element : roundEnv.getElementsAnnotatedWith(GraphqlSchema.class)) {
       if (!(element instanceof TypeElement)) {
         continue;
       }
@@ -80,16 +83,16 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private void processInterface(TypeElement typeElement) {
-    GraphqlSchema schemaAnnotation = typeElement.getAnnotation(GraphqlSchema.class);
-    String schemaPath = schemaAnnotation.value();
+    var schemaAnnotation = typeElement.getAnnotation(GraphqlSchema.class);
+    var schemaPath = schemaAnnotation.value();
 
-    SchemaLoader loader = new SchemaLoader(filer, messager);
-    String schemaContent = loader.load(schemaPath, typeElement);
+    var loader = new SchemaLoader(filer, messager);
+    var schemaContent = loader.load(schemaPath, typeElement);
     if (schemaContent == null) {
       return;
     }
 
-    SchemaParser schemaParser = new SchemaParser();
+    var schemaParser = new SchemaParser();
     TypeDefinitionRegistry registry;
     try {
       registry = schemaParser.parse(schemaContent);
@@ -99,28 +102,26 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
-    Map<String, TypeName> customScalars = collectScalarMappings(typeElement);
+    var customScalars = collectScalarMappings(typeElement);
 
     if (!validateCustomScalars(registry, customScalars, typeElement)) {
       return;
     }
 
-    GraphQLSchema graphqlSchema = UnExecutableSchemaGenerator.makeUnExecutableSchema(registry);
+    var graphqlSchema = UnExecutableSchemaGenerator.makeUnExecutableSchema(registry);
 
-    boolean generateTypes = schemaAnnotation.generateTypes();
+    var generateTypes = schemaAnnotation.generateTypes();
 
-    String targetPackage = getPackageName(typeElement);
-    GraphqlTypeMapper typeMapper = new GraphqlTypeMapper(targetPackage, customScalars);
-    QueryValidator validator = new QueryValidator(messager);
-    TypeGenerator generator =
-        new TypeGenerator(filer, messager, registry, typeMapper, targetPackage);
+    var targetPackage = getPackageName(typeElement);
+    var typeMapper = new GraphqlTypeMapper(targetPackage, customScalars);
+    var validator = new QueryValidator(messager);
+    var generator = new TypeGenerator(filer, messager, registry, typeMapper, targetPackage);
 
-    for (Element enclosed : typeElement.getEnclosedElements()) {
-      if (!(enclosed instanceof ExecutableElement)) {
+    for (var enclosed : typeElement.getEnclosedElements()) {
+      if (!(enclosed instanceof ExecutableElement method)) {
         continue;
       }
-      ExecutableElement method = (ExecutableElement) enclosed;
-      GraphqlQuery queryAnnotation = method.getAnnotation(GraphqlQuery.class);
+      var queryAnnotation = method.getAnnotation(GraphqlQuery.class);
       if (queryAnnotation == null) {
         continue;
       }
@@ -138,34 +139,32 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private Map<String, TypeName> collectScalarMappings(TypeElement typeElement) {
-    Map<String, TypeName> scalars = new HashMap<>();
+    var scalars = new HashMap<String, TypeName>();
     collectScalarsFromType(typeElement, scalars);
     collectScalarsFromParents(typeElement, scalars);
     return scalars;
   }
 
   private void collectScalarsFromType(TypeElement typeElement, Map<String, TypeName> scalars) {
-    for (Element enclosed : typeElement.getEnclosedElements()) {
-      if (!(enclosed instanceof ExecutableElement)) {
+    for (var enclosed : typeElement.getEnclosedElements()) {
+      if (!(enclosed instanceof ExecutableElement method)) {
         continue;
       }
-      ExecutableElement method = (ExecutableElement) enclosed;
-      Scalar scalarAnnotation = method.getAnnotation(Scalar.class);
+      var scalarAnnotation = method.getAnnotation(Scalar.class);
       if (scalarAnnotation == null) {
         continue;
       }
-      String scalarName = scalarAnnotation.value();
-      TypeName javaType = TypeName.get(method.getReturnType());
+      var scalarName = scalarAnnotation.value();
+      var javaType = TypeName.get(method.getReturnType());
       scalars.put(scalarName, javaType);
     }
   }
 
   private void collectScalarsFromParents(TypeElement typeElement, Map<String, TypeName> scalars) {
-    for (TypeMirror iface : typeElement.getInterfaces()) {
-      if (iface instanceof DeclaredType) {
-        Element element = ((DeclaredType) iface).asElement();
-        if (element instanceof TypeElement) {
-          TypeElement parentType = (TypeElement) element;
+    for (var iface : typeElement.getInterfaces()) {
+      if (iface instanceof DeclaredType type) {
+        var element = type.asElement();
+        if (element instanceof TypeElement parentType) {
           collectScalarsFromType(parentType, scalars);
           collectScalarsFromParents(parentType, scalars);
         }
@@ -180,9 +179,9 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       TypeDefinitionRegistry registry,
       Map<String, TypeName> customScalars,
       TypeElement typeElement) {
-    Map<String, ScalarTypeDefinition> schemaScalars = registry.scalars();
-    boolean valid = true;
-    for (String scalarName : schemaScalars.keySet()) {
+    var schemaScalars = registry.scalars();
+    var valid = true;
+    for (var scalarName : schemaScalars.keySet()) {
       if (GRAPHQL_BUILT_IN_SCALARS.contains(scalarName)) {
         continue;
       }
@@ -214,7 +213,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       boolean generateTypes,
       String targetPackage) {
 
-    String queryString = queryAnnotation.value();
+    var queryString = queryAnnotation.value();
     Document document;
     try {
       document = Parser.parse(queryString);
@@ -224,35 +223,28 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
-    if (!validator.validate(graphqlSchema, document, method)) {
+    if (!validator.validate(graphqlSchema, document, method) || !generateTypes) {
       return;
     }
 
-    if (!generateTypes) {
-      return;
-    }
-
-    OperationDefinition operation = findOperation(document);
+    var operation = findOperation(document);
     if (operation == null) {
       messager.printMessage(
           Diagnostic.Kind.ERROR, "No operation definition found in GraphQL query", method);
       return;
     }
 
-    String returnTypeName = getSimpleTypeName(method.getReturnType());
+    var returnTypeName = getSimpleTypeName(method.getReturnType());
     if (returnTypeName != null && !isExistingExternalType(method.getReturnType(), targetPackage)) {
-      graphql.language.ObjectTypeDefinition rootType = getRootType(operation, registry);
+      var rootType = getRootType(operation, registry);
       if (rootType != null) {
-        graphql.language.Field rootField = findRootField(operation.getSelectionSet());
+        var rootField = findRootField(operation.getSelectionSet());
         if (rootField != null && rootField.getSelectionSet() != null) {
-          graphql.language.FieldDefinition rootFieldDef =
-              findFieldDefinition(rootType, rootField.getName());
+          var rootFieldDef = findFieldDefinition(rootType, rootField.getName());
           if (rootFieldDef != null) {
-            String fieldTypeName = unwrapTypeName(rootFieldDef.getType());
-            graphql.language.ObjectTypeDefinition fieldObjectType =
-                registry
-                    .getType(fieldTypeName, graphql.language.ObjectTypeDefinition.class)
-                    .orElse(null);
+            var fieldTypeName = unwrapTypeName(rootFieldDef.getType());
+            var fieldObjectType =
+                registry.getType(fieldTypeName, ObjectTypeDefinition.class).orElse(null);
             if (fieldObjectType != null) {
               generator.generateResultType(
                   returnTypeName, rootField.getSelectionSet(), fieldObjectType, method);
@@ -262,11 +254,11 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       }
     }
 
-    List<? extends javax.lang.model.element.VariableElement> params = method.getParameters();
-    List<VariableDefinition> variableDefs = operation.getVariableDefinitions();
+    var params = method.getParameters();
+    var variableDefs = operation.getVariableDefinitions();
 
-    for (javax.lang.model.element.VariableElement param : params) {
-      String paramTypeName = getSimpleTypeName(param.asType());
+    for (var param : params) {
+      var paramTypeName = getSimpleTypeName(param.asType());
       if (paramTypeName == null || isJavaBuiltIn(paramTypeName)) {
         continue;
       }
@@ -275,7 +267,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         continue;
       }
 
-      String graphqlInputTypeName = findGraphqlInputType(paramTypeName, variableDefs);
+      var graphqlInputTypeName = findGraphqlInputType(paramTypeName, variableDefs);
       if (graphqlInputTypeName != null) {
         generator.generateInputType(paramTypeName, graphqlInputTypeName, method);
       }
@@ -283,29 +275,28 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private OperationDefinition findOperation(Document document) {
-    for (Definition<?> def : document.getDefinitions()) {
-      if (def instanceof OperationDefinition) {
-        return (OperationDefinition) def;
+    for (var def : document.getDefinitions()) {
+      if (def instanceof OperationDefinition definition) {
+        return definition;
       }
     }
     return null;
   }
 
-  private graphql.language.Field findRootField(SelectionSet selectionSet) {
+  private Field findRootField(SelectionSet selectionSet) {
     if (selectionSet == null) {
       return null;
     }
-    for (graphql.language.Selection<?> selection : selectionSet.getSelections()) {
-      if (selection instanceof graphql.language.Field) {
-        return (graphql.language.Field) selection;
+    for (var selection : selectionSet.getSelections()) {
+      if (selection instanceof Field field) {
+        return field;
       }
     }
     return null;
   }
 
-  private graphql.language.FieldDefinition findFieldDefinition(
-      graphql.language.ObjectTypeDefinition typeDef, String fieldName) {
-    for (graphql.language.FieldDefinition fd : typeDef.getFieldDefinitions()) {
+  private FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
+    for (var fd : typeDef.getFieldDefinitions()) {
       if (fd.getName().equals(fieldName)) {
         return fd;
       }
@@ -313,54 +304,48 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return null;
   }
 
-  private graphql.language.ObjectTypeDefinition getRootType(
+  private ObjectTypeDefinition getRootType(
       OperationDefinition operation, TypeDefinitionRegistry registry) {
-    String rootTypeName;
-    switch (operation.getOperation()) {
-      case MUTATION:
-        rootTypeName =
-            registry
-                .schemaDefinition()
-                .flatMap(
-                    sd ->
-                        sd.getOperationTypeDefinitions().stream()
-                            .filter(otd -> otd.getName().equals("mutation"))
-                            .findFirst())
-                .map(otd -> otd.getTypeName().getName())
-                .orElse("Mutation");
-        break;
-      case SUBSCRIPTION:
-        rootTypeName =
-            registry
-                .schemaDefinition()
-                .flatMap(
-                    sd ->
-                        sd.getOperationTypeDefinitions().stream()
-                            .filter(otd -> otd.getName().equals("subscription"))
-                            .findFirst())
-                .map(otd -> otd.getTypeName().getName())
-                .orElse("Subscription");
-        break;
-      default:
-        rootTypeName =
-            registry
-                .schemaDefinition()
-                .flatMap(
-                    sd ->
-                        sd.getOperationTypeDefinitions().stream()
-                            .filter(otd -> otd.getName().equals("query"))
-                            .findFirst())
-                .map(otd -> otd.getTypeName().getName())
-                .orElse("Query");
-        break;
-    }
-    return registry.getType(rootTypeName, graphql.language.ObjectTypeDefinition.class).orElse(null);
+    var rootTypeName =
+        switch (operation.getOperation()) {
+          case MUTATION ->
+              registry
+                  .schemaDefinition()
+                  .flatMap(
+                      sd ->
+                          sd.getOperationTypeDefinitions().stream()
+                              .filter(otd -> otd.getName().equals("mutation"))
+                              .findFirst())
+                  .map(otd -> otd.getTypeName().getName())
+                  .orElse("Mutation");
+          case SUBSCRIPTION ->
+              registry
+                  .schemaDefinition()
+                  .flatMap(
+                      sd ->
+                          sd.getOperationTypeDefinitions().stream()
+                              .filter(otd -> otd.getName().equals("subscription"))
+                              .findFirst())
+                  .map(otd -> otd.getTypeName().getName())
+                  .orElse("Subscription");
+          default ->
+              registry
+                  .schemaDefinition()
+                  .flatMap(
+                      sd ->
+                          sd.getOperationTypeDefinitions().stream()
+                              .filter(otd -> otd.getName().equals("query"))
+                              .findFirst())
+                  .map(otd -> otd.getTypeName().getName())
+                  .orElse("Query");
+        };
+    return registry.getType(rootTypeName, ObjectTypeDefinition.class).orElse(null);
   }
 
   private String findGraphqlInputType(
       String javaParamTypeName, List<VariableDefinition> variableDefs) {
-    for (VariableDefinition varDef : variableDefs) {
-      String graphqlTypeName = unwrapTypeName(varDef.getType());
+    for (var varDef : variableDefs) {
+      var graphqlTypeName = unwrapTypeName(varDef.getType());
       if (graphqlTypeName.equals(javaParamTypeName)) {
         return graphqlTypeName;
       }
@@ -368,15 +353,15 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return javaParamTypeName;
   }
 
-  private String unwrapTypeName(graphql.language.Type<?> type) {
-    if (type instanceof graphql.language.NonNullType) {
-      return unwrapTypeName(((graphql.language.NonNullType) type).getType());
+  private String unwrapTypeName(Type<?> type) {
+    if (type instanceof NonNullType nullType) {
+      return unwrapTypeName(nullType.getType());
     }
-    if (type instanceof graphql.language.ListType) {
-      return unwrapTypeName(((graphql.language.ListType) type).getType());
+    if (type instanceof ListType listType) {
+      return unwrapTypeName(listType.getType());
     }
-    if (type instanceof graphql.language.TypeName) {
-      return ((graphql.language.TypeName) type).getName();
+    if (type instanceof graphql.language.TypeName name) {
+      return name.getName();
     }
     return "String";
   }
@@ -401,13 +386,12 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private String getSimpleTypeName(TypeMirror typeMirror) {
-    if (typeMirror instanceof DeclaredType) {
-      DeclaredType declaredType = (DeclaredType) typeMirror;
-      Element typeElement = declaredType.asElement();
-      String simpleName = typeElement.getSimpleName().toString();
+    if (typeMirror instanceof DeclaredType declaredType) {
+      var typeElement = declaredType.asElement();
+      var simpleName = typeElement.getSimpleName().toString();
 
       if ("List".equals(simpleName)) {
-        List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
+        var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
           return getSimpleTypeName(typeArgs.get(0));
         }
@@ -419,16 +403,16 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private boolean isExistingExternalType(TypeMirror typeMirror, String targetPackage) {
-    TypeMirror unwrapped = unwrapListTypeMirror(typeMirror);
+    var unwrapped = unwrapListTypeMirror(typeMirror);
     if (unwrapped.getKind() == TypeKind.ERROR) {
       return false;
     }
-    if (unwrapped instanceof DeclaredType) {
-      Element element = ((DeclaredType) unwrapped).asElement();
-      if (element instanceof TypeElement) {
-        String qualifiedName = ((TypeElement) element).getQualifiedName().toString();
-        int lastDot = qualifiedName.lastIndexOf('.');
-        String typePkg = lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
+    if (unwrapped instanceof DeclaredType type) {
+      var element = type.asElement();
+      if (element instanceof TypeElement typeElement) {
+        var qualifiedName = typeElement.getQualifiedName().toString();
+        var lastDot = qualifiedName.lastIndexOf('.');
+        var typePkg = lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
         return !typePkg.equals(targetPackage);
       }
     }
@@ -436,11 +420,10 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private TypeMirror unwrapListTypeMirror(TypeMirror typeMirror) {
-    if (typeMirror instanceof DeclaredType) {
-      DeclaredType declaredType = (DeclaredType) typeMirror;
-      String simpleName = declaredType.asElement().getSimpleName().toString();
+    if (typeMirror instanceof DeclaredType declaredType) {
+      var simpleName = declaredType.asElement().getSimpleName().toString();
       if ("List".equals(simpleName)) {
-        List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
+        var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
           return typeArgs.get(0);
         }
@@ -450,12 +433,12 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private String getPackageName(TypeElement typeElement) {
-    Element enclosing = typeElement.getEnclosingElement();
+    var enclosing = typeElement.getEnclosingElement();
     while (enclosing != null && !(enclosing instanceof PackageElement)) {
       enclosing = enclosing.getEnclosingElement();
     }
-    if (enclosing instanceof PackageElement) {
-      return ((PackageElement) enclosing).getQualifiedName().toString();
+    if (enclosing instanceof PackageElement element) {
+      return element.getQualifiedName().toString();
     }
     return "";
   }
