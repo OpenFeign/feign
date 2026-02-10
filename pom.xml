@@ -214,7 +214,7 @@
     <commons-fileupload.version>1.6.0</commons-fileupload.version>
     <commons-text.version>1.15.0</commons-text.version>
     <compile-testing.version>0.23.0</compile-testing.version>
-    <graphql-java.version>22.4</graphql-java.version>
+    <graphql-java.version>25.0</graphql-java.version>
     <handlebars.version>4.5.0</handlebars.version>
     <httpclient4.version>4.5.14</httpclient4.version>
     <httpclient5.version>5.6</httpclient5.version>
