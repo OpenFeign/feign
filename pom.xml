@@ -977,9 +977,6 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <version>${maven-javadoc-plugin.version}</version>
-            <configuration>
-              <failOnError>false</failOnError>
-            </configuration>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -987,6 +984,12 @@
                   <goal>jar</goal>
                 </goals>
                 <phase>package</phase>
+                <configuration>
+                  <failOnError>true</failOnError>
+                  <disableNoFonts>true</disableNoFonts>
+                  <legacyMode>true</legacyMode>
+                  <doclint>none</doclint>
+                </configuration>
               </execution>
             </executions>
           </plugin>

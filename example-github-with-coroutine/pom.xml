@@ -29,6 +29,10 @@
   <packaging>jar</packaging>
   <name>GitHub Example With Coroutine</name>
 
+  <properties>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.github.openfeign</groupId>
