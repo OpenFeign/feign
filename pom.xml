@@ -201,7 +201,7 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.28.1</rewrite-maven-plugin.version>
+    <rewrite-maven-plugin.version>6.29.0</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.26.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.27.0</rewrite-migrate-java.version>
     <java18-signature.version>1.0</java18-signature.version>
