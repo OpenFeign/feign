@@ -243,7 +243,7 @@
     <spring-cloud-dependencies.version>2025.1.1</spring-cloud-dependencies.version>
     <spring-cloud-starter-openfeign.version>5.0.1</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.3</spring-context.version>
-    <spring-web.version>7.0.3</spring-web.version>
+    <spring-web.version>7.0.4</spring-web.version>
     <undertow-core.version>2.3.23.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>
