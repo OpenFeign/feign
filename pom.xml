@@ -167,7 +167,7 @@
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.17</slf4j.version>
     <json.version>20251224</json.version>
-    <springboot.version>4.0.2</springboot.version>
+    <springboot.version>4.0.3</springboot.version>
 
     <junit5.version>6.0.3</junit5.version>
     <jackson.version>2.21.0</jackson.version>
