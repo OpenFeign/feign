@@ -100,6 +100,35 @@ commands:
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
             ./mvnw -ntp -nsu -T1 -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test -DskipTests=true deploy
+      - run:
+          name: 'Publish BOM to Maven Central'
+          command: |
+            BOM_DIR=target/classes/feign-bom
+            BOM_POM=$BOM_DIR/pom.xml
+            if [ ! -f "$BOM_POM" ]; then
+              echo "BOM pom not found, skipping"
+              exit 0
+            fi
+            BOM_VERSION=$(grep '<version>' "$BOM_POM" | head -1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+            STAGING_DIR=/tmp/bom-staging/io/github/openfeign/feign-bom/$BOM_VERSION
+            mkdir -p "$STAGING_DIR"
+            cp "$BOM_POM" "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom"
+            gpg --armor --detach-sign "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom"
+            md5sum "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom" | awk '{print $1}' > "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom.md5"
+            sha1sum "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom" | awk '{print $1}' > "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom.sha1"
+            sha256sum "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom" | awk '{print $1}' > "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom.sha256"
+            sha512sum "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom" | awk '{print $1}' > "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom.sha512"
+            (cd /tmp/bom-staging && zip -r /tmp/feign-bom-bundle.zip .)
+            TOKEN=$(echo -n "${CENTRAL_TOKEN_USERNAME}:${CENTRAL_TOKEN_PASSWORD}" | base64)
+            HTTP_CODE=$(curl -s -w "%{http_code}" -o /tmp/bom-upload-response.txt \
+              -X POST "https://central.sonatype.com/api/v1/publisher/upload?name=feign-bom-${BOM_VERSION}&publishingType=AUTOMATIC" \
+              -H "Authorization: Bearer $TOKEN" \
+              -F "bundle=@/tmp/feign-bom-bundle.zip")
+            echo "BOM upload response: $(cat /tmp/bom-upload-response.txt) (HTTP $HTTP_CODE)"
+            if [ "$HTTP_CODE" != "201" ]; then
+              echo "BOM upload failed"
+              exit 1
+            fi
 
 # our job defaults
 defaults: &defaults
