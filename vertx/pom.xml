@@ -21,10 +21,11 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>parent</artifactId>
-    <version>13.6</version>
+    <version>13.6.1</version>
   </parent>
 
   <artifactId>feign-vertx-parent</artifactId>
+  <name>Feign Vertx (Parent)</name>
   <packaging>pom</packaging>
 
   <modules>
