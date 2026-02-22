@@ -15,6 +15,7 @@
  */
 package feign.graphql;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
@@ -22,6 +23,7 @@ import feign.Util;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class GraphqlDecoder implements Decoder {
@@ -85,6 +87,13 @@ public class GraphqlDecoder implements Decoder {
       return Util.emptyValueOf(type);
     }
 
+    if (operationData.isArray() && !isCollectionOrArrayType(type)) {
+      if (operationData.isEmpty()) {
+        return Util.emptyValueOf(type);
+      }
+      operationData = operationData.get(0);
+    }
+
     if (delegate != null) {
       var dataBytes = mapper.writeValueAsBytes(operationData);
       var dataResponse =
@@ -123,5 +132,18 @@ public class GraphqlDecoder implements Decoder {
     }
 
     return "unknown";
+  }
+
+  private boolean isCollectionOrArrayType(Type type) {
+    if (type instanceof JavaType jt) {
+      return jt.isCollectionLikeType() || jt.isArrayType();
+    }
+    if (type instanceof Class<?> cls) {
+      return cls.isArray() || Iterable.class.isAssignableFrom(cls);
+    }
+    if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> cls) {
+      return Iterable.class.isAssignableFrom(cls);
+    }
+    return false;
   }
 }

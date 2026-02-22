@@ -112,8 +112,71 @@ class GraphqlDecoderTest {
   }
 
   @Test
+  void unwrapsSingleObjectFromArray() throws Exception {
+    var json = "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"}]}}";
+    var response = buildResponse(json);
+
+    var user = (User) decoder.decode(response, User.class);
+
+    assertThat(user.id).isEqualTo("1");
+    assertThat(user.name).isEqualTo("Alice");
+  }
+
+  @Test
+  void unwrapsFirstElementFromMultiElementArray() throws Exception {
+    var json =
+        "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]}}";
+    var response = buildResponse(json);
+
+    var user = (User) decoder.decode(response, User.class);
+
+    assertThat(user.id).isEqualTo("1");
+    assertThat(user.name).isEqualTo("Alice");
+  }
+
+  @Test
+  void returnsNullForEmptyArrayWithSingleType() throws Exception {
+    var json = "{\"data\":{\"ingestionStats\":[]}}";
+    var response = buildResponse(json);
+
+    var result = decoder.decode(response, User.class);
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void preservesArrayWhenReturnTypeIsList() throws Exception {
+    var json =
+        "{\"data\":{\"listUsers\":[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var users =
+        (List<User>)
+            decoder.decode(
+                response, mapper.getTypeFactory().constructCollectionType(List.class, User.class));
+
+    assertThat(users).hasSize(2);
+  }
+
+  @Test
   void delegatesToCustomDecoder() throws Exception {
     var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
+    var customDecoder =
+        new GraphqlDecoder(
+            mapper,
+            (resp, type) ->
+                mapper.readValue(resp.body().asReader(resp.charset()), mapper.constructType(type)));
+    var response = buildResponse(json);
+
+    var user = (User) customDecoder.decode(response, User.class);
+
+    assertThat(user.id).isEqualTo("1");
+    assertThat(user.name).isEqualTo("Alice");
+  }
+
+  @Test
+  void unwrapsSingleObjectFromArrayWithDelegate() throws Exception {
+    var json = "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"}]}}";
     var customDecoder =
         new GraphqlDecoder(
             mapper,
