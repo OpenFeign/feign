@@ -23,9 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GraphqlDecoderTest {
@@ -175,6 +178,70 @@ class GraphqlDecoderTest {
   }
 
   @Test
+  void returnsOptionalWithValue() throws Exception {
+    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isPresent();
+    assertThat(result.get().id).isEqualTo("1");
+    assertThat(result.get().name).isEqualTo("Alice");
+  }
+
+  @Test
+  void returnsOptionalEmptyForNullData() throws Exception {
+    var json = "{\"data\":{\"getUser\":null}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void returnsOptionalEmptyFor404() throws Exception {
+    var response =
+        Response.builder()
+            .status(404)
+            .reason("Not Found")
+            .headers(Collections.emptyMap())
+            .request(buildRequest())
+            .body(new byte[0])
+            .build();
+
+    @SuppressWarnings("unchecked")
+    var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void unwrapsSingleObjectFromArrayIntoOptional() throws Exception {
+    var json = "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"}]}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isPresent();
+    assertThat(result.get().id).isEqualTo("1");
+  }
+
+  @Test
+  void returnsOptionalEmptyForEmptyArray() throws Exception {
+    var json = "{\"data\":{\"ingestionStats\":[]}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
   void unwrapsSingleObjectFromArrayWithDelegate() throws Exception {
     var json = "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"}]}}";
     var customDecoder =
@@ -207,5 +274,24 @@ class GraphqlDecoderTest {
         Collections.emptyMap(),
         Request.Body.empty(),
         null);
+  }
+
+  private static ParameterizedType optionalOf(Type inner) {
+    return new ParameterizedType() {
+      @Override
+      public Type[] getActualTypeArguments() {
+        return new Type[] {inner};
+      }
+
+      @Override
+      public Type getRawType() {
+        return Optional.class;
+      }
+
+      @Override
+      public Type getOwnerType() {
+        return null;
+      }
+    };
   }
 }

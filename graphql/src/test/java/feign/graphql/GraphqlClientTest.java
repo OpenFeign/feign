@@ -25,6 +25,7 @@ import feign.Headers;
 import feign.Param;
 import feign.jackson.JacksonEncoder;
 import java.util.List;
+import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -71,6 +72,12 @@ class GraphqlClientTest {
     @GraphqlQuery("query getUser($id: String!) {" + " getUser(id: $id) { id name email } }")
     @Headers("Authorization: {auth}")
     User getUserWithAuth(@Param("auth") String auth, String id);
+
+    @GraphqlQuery("query getUser($id: String!) {" + " getUser(id: $id) { id name email } }")
+    Optional<User> findUser(String id);
+
+    @GraphqlQuery("query topUser($limit: Int!) {" + " topUsers(limit: $limit) { id name email } }")
+    User topUser(int limit);
   }
 
   @BeforeEach
@@ -170,6 +177,47 @@ class GraphqlClientTest {
         .isInstanceOf(GraphqlErrorException.class)
         .hasMessageContaining("createUser")
         .hasMessageContaining("Something went wrong");
+  }
+
+  @Test
+  void singleResultFromArrayResponse() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                "{\"data\":{\"topUsers\":[{\"id\":\"1\",\"name\":\"Alice\",\"email\":\"a@test.com\"}]}}")
+            .addHeader("Content-Type", "application/json"));
+
+    var user = buildClient().topUser(1);
+
+    assertThat(user.id).isEqualTo("1");
+    assertThat(user.name).isEqualTo("Alice");
+  }
+
+  @Test
+  void optionalReturnType() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
+            .addHeader("Content-Type", "application/json"));
+
+    var user = buildClient().findUser("1");
+
+    assertThat(user).isPresent();
+    assertThat(user.get().id).isEqualTo("1");
+    assertThat(user.get().name).isEqualTo("Bob");
+  }
+
+  @Test
+  void optionalReturnTypeEmptyWhenNull() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody("{\"data\":{\"getUser\":null}}")
+            .addHeader("Content-Type", "application/json"));
+
+    var user = buildClient().findUser("999");
+
+    assertThat(user).isEmpty();
   }
 
   @Test
