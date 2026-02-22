@@ -120,6 +120,33 @@ The processor maps `DateTime` fields to `java.time.Instant` in the generated rec
 public record Event(String id, String name, Instant startTime) {}
 ```
 
+## Single Result from Array Queries
+
+When a GraphQL query returns an array type (e.g. `[User!]`) but the Java method declares a single return type, the decoder automatically unwraps the first element:
+
+```java
+@GraphqlQuery("query topUser($limit: Int!) { topUsers(limit: $limit) { id name email } }")
+User topUser(int limit);
+```
+
+This is useful when using `limit: 1` to fetch a single result from a list query. If the array is empty, `null` is returned.
+
+## Optional Return Types
+
+Methods can return `Optional<T>` to safely handle nullable results:
+
+```java
+@GraphqlQuery("query getUser($id: String!) { getUser(id: $id) { id name email } }")
+Optional<User> findUser(String id);
+```
+
+Returns `Optional.empty()` when the data is null or missing, and `Optional.of(value)` otherwise. This also works with array unwrapping:
+
+```java
+@GraphqlQuery("query topUser($limit: Int!) { topUsers(limit: $limit) { id name email } }")
+Optional<User> findTopUser(int limit);
+```
+
 ## Disabling Type Generation
 
 If you provide your own model classes, disable automatic generation:

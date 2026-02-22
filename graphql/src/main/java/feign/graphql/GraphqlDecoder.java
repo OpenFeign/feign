@@ -15,6 +15,7 @@
  */
 package feign.graphql;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
@@ -22,7 +23,9 @@ import feign.Util;
 import feign.codec.Decoder;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 public class GraphqlDecoder implements Decoder {
 
@@ -48,6 +51,17 @@ public class GraphqlDecoder implements Decoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
+    Type targetType = type;
+    boolean optional = isOptionalType(type);
+    if (optional) {
+      targetType = extractOptionalInnerType(type);
+    }
+
+    var result = doDecode(response, targetType);
+    return optional ? Optional.ofNullable(result) : result;
+  }
+
+  private Object doDecode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) {
       return Util.emptyValueOf(type);
     }
@@ -83,6 +97,13 @@ public class GraphqlDecoder implements Decoder {
     var operationData = dataNode.get(firstField);
     if (operationData == null || operationData.isNull()) {
       return Util.emptyValueOf(type);
+    }
+
+    if (operationData.isArray() && !isCollectionOrArrayType(type)) {
+      if (operationData.isEmpty()) {
+        return Util.emptyValueOf(type);
+      }
+      operationData = operationData.get(0);
     }
 
     if (delegate != null) {
@@ -123,5 +144,41 @@ public class GraphqlDecoder implements Decoder {
     }
 
     return "unknown";
+  }
+
+  private boolean isOptionalType(Type type) {
+    if (type instanceof JavaType jt) {
+      return jt.getRawClass() == Optional.class;
+    }
+    if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> cls) {
+      return cls == Optional.class;
+    }
+    if (type instanceof Class<?> cls) {
+      return cls == Optional.class;
+    }
+    return false;
+  }
+
+  private Type extractOptionalInnerType(Type type) {
+    if (type instanceof JavaType jt) {
+      return jt.containedType(0);
+    }
+    if (type instanceof ParameterizedType pt) {
+      return pt.getActualTypeArguments()[0];
+    }
+    return Object.class;
+  }
+
+  private boolean isCollectionOrArrayType(Type type) {
+    if (type instanceof JavaType jt) {
+      return jt.isCollectionLikeType() || jt.isArrayType();
+    }
+    if (type instanceof Class<?> cls) {
+      return cls.isArray() || Iterable.class.isAssignableFrom(cls);
+    }
+    if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> cls) {
+      return Iterable.class.isAssignableFrom(cls);
+    }
+    return false;
   }
 }
