@@ -46,6 +46,7 @@
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-example-github</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

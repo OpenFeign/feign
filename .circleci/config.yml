@@ -97,9 +97,10 @@ commands:
     steps:
       - run:
           name: 'Deploy Core Modules Sonatype'
+          no_output_timeout: 30m
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test -DskipTests=true deploy
+            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test,-:feign-example-github,-:feign-example-github-with-coroutine,-:feign-example-wikipedia,-:feign-example-wikipedia-with-springboot -DskipTests=true deploy
       - run:
           name: 'Publish BOM to Maven Central'
           command: |
