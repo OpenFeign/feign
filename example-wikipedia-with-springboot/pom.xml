@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>14.0-SNAPSHOT</version>
+    <version>13.9-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-example-wikipedia-with-springboot</artifactId>
@@ -84,6 +84,7 @@
           <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${springboot.version}</version>
             <configuration>
               <mainClass>example.wikipedia.WikipediaApplication</mainClass>
               <layout>ZIP</layout>

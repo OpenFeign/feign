@@ -40,6 +40,7 @@ Thumbs.db
 /target
 **/test-output
 **/target
+**/m2e-target
 **/bin
 build
 */build
