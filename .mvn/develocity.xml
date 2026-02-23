@@ -33,7 +33,7 @@
     </buildScan>
     <buildCache>
         <local>
-            <enabled>true</enabled>
+            <enabled>#{isTrue(env['CI'])}</enabled>
         </local>
         <remote>
             <enabled>false</enabled>
