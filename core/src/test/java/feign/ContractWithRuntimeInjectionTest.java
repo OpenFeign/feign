@@ -96,7 +96,7 @@ public class ContractWithRuntimeInjectionTest {
      */
     @Override
     public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
-      List<MethodMetadata> result = new Contract.Default().parseAndValidateMetadata(targetType);
+      List<MethodMetadata> result = new DefaultContract().parseAndValidateMetadata(targetType);
       for (MethodMetadata md : result) {
         Map<Integer, Param.Expander> indexToExpander = new LinkedHashMap<>();
         for (Map.Entry<Integer, Class<? extends Param.Expander>> entry :

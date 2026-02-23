@@ -17,6 +17,7 @@ package example.github;
 
 import feign.*;
 import feign.codec.Decoder;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
@@ -128,7 +129,7 @@ public class GitHubExample {
   static class GitHubErrorDecoder implements ErrorDecoder {
 
     final Decoder decoder;
-    final ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
+    final ErrorDecoder defaultDecoder = new DefaultErrorDecoder();
 
     GitHubErrorDecoder(Decoder decoder) {
       this.decoder = decoder;

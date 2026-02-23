@@ -15,11 +15,11 @@
  */
 package feign.benchmark;
 
+import feign.DefaultRetryer;
 import feign.Feign;
 import feign.Logger;
 import feign.Logger.Level;
 import feign.Response;
-import feign.Retryer;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.server.HttpServer;
 import java.io.IOException;
@@ -63,7 +63,7 @@ public class RealRequestBenchmarks {
             .client(new feign.okhttp.OkHttpClient(client))
             .logLevel(Level.NONE)
             .logger(new Logger.ErrorLogger())
-            .retryer(new Retryer.Default())
+            .retryer(new DefaultRetryer())
             .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
     queryRequest =
         new Request.Builder()

@@ -27,7 +27,7 @@ class CapabilityTest {
   private class AClient implements Client {
 
     public AClient(Client client) {
-      if (!(client instanceof Client.Default)) {
+      if (!(client instanceof DefaultClient)) {
         throw new RuntimeException(
             "Test is chaining invokations, expected Default Client instace here");
       }
@@ -58,7 +58,7 @@ class CapabilityTest {
     Client enriched =
         (Client)
             Capability.enrich(
-                new Client.Default(null, null),
+                new DefaultClient(null, null),
                 Client.class,
                 Arrays.asList(
                     new Capability() {

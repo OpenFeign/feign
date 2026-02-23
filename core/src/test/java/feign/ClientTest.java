@@ -68,7 +68,7 @@ class ClientTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
-    Client.Default defaultClient = new Client.Default(null, null);
+    DefaultClient defaultClient = new DefaultClient(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
     // Test Avoid add "Accept-encoding" twice or more when "compression" option is enabled
@@ -89,7 +89,7 @@ class ClientTest {
     Request request =
         Request.create(
             Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
-    Client.Default defaultClient = new Client.Default(null, null);
+    DefaultClient defaultClient = new DefaultClient(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
     String requestProperty = urlConnection.getRequestProperty(Util.CONTENT_LENGTH);

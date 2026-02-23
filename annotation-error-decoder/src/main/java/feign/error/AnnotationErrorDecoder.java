@@ -19,6 +19,8 @@ import static feign.Feign.configKey;
 
 import feign.Response;
 import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.ErrorDecoder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -52,8 +54,8 @@ public class AnnotationErrorDecoder implements ErrorDecoder {
 
   public static class Builder {
     private final Class<?> apiType;
-    private ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
-    private Decoder responseBodyDecoder = new Decoder.Default();
+    private ErrorDecoder defaultDecoder = new DefaultErrorDecoder();
+    private Decoder responseBodyDecoder = new DefaultDecoder();
 
     public Builder(Class<?> apiType) {
       this.apiType = apiType;

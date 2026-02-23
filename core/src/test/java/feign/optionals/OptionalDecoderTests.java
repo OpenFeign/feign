@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Feign;
 import feign.RequestLine;
-import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
 import java.io.IOException;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
@@ -45,7 +45,7 @@ class OptionalDecoderTests {
     final OptionalInterface api =
         Feign.builder()
             .dismiss404()
-            .decoder(new OptionalDecoder(new Decoder.Default()))
+            .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.getAsOptional().isPresent()).isFalse();
@@ -59,7 +59,7 @@ class OptionalDecoderTests {
 
     final OptionalInterface api =
         Feign.builder()
-            .decoder(new OptionalDecoder(new Decoder.Default()))
+            .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.getAsOptional().isPresent()).isFalse();
@@ -72,7 +72,7 @@ class OptionalDecoderTests {
 
     final OptionalInterface api =
         Feign.builder()
-            .decoder(new OptionalDecoder(new Decoder.Default()))
+            .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
     Optional<String> response = api.getAsOptional();
@@ -101,7 +101,7 @@ class OptionalDecoderTests {
 
     final OptionalInterface api =
         Feign.builder()
-            .decoder(new OptionalDecoder(new Decoder.Default()))
+            .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
     assertThat(api.get()).isEqualTo("foo");

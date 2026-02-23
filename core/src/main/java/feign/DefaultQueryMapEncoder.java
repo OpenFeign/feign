@@ -15,29 +15,10 @@
  */
 package feign;
 
-import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
-import java.util.Map;
 
 /**
- * A QueryMapEncoder encodes Objects into maps of query parameter names to values.
- *
- * @see FieldQueryMapEncoder
- * @see BeanQueryMapEncoder
+ * @deprecated use {@link feign.querymap.BeanQueryMapEncoder} instead.
  */
-public interface QueryMapEncoder {
-
-  /**
-   * Encodes the given object into a query map.
-   *
-   * @param object the object to encode
-   * @return the map represented by the object
-   */
-  Map<String, Object> encode(Object object);
-
-  /**
-   * @deprecated use {@link DefaultQueryMapEncoder} instead.
-   */
-  @Deprecated
-  class Default extends DefaultQueryMapEncoder {}
-}
+@Deprecated
+public class DefaultQueryMapEncoder extends FieldQueryMapEncoder {}

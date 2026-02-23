@@ -15,13 +15,13 @@
  */
 package feign.graphql;
 
-import feign.Contract;
+import feign.DefaultContract;
 import feign.Request.HttpMethod;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-public class GraphqlContract extends Contract.Default {
+public class GraphqlContract extends DefaultContract {
 
   private static final Pattern OPERATION_FIELD_PATTERN =
       Pattern.compile("\\{\\s*(\\w+)\\s*[({]", Pattern.DOTALL);

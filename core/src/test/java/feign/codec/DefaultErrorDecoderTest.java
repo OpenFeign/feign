@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation")
 class DefaultErrorDecoderTest {
 
-  private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+  private ErrorDecoder errorDecoder = new DefaultErrorDecoder();
 
   private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 
@@ -154,7 +154,7 @@ class DefaultErrorDecoderTest {
     Exception defaultException = errorDecoder.decode("Service#foo()", response);
     assertThat(defaultException.getMessage().length()).isLessThan(response.body().length());
 
-    ErrorDecoder customizedErrorDecoder = new ErrorDecoder.Default(4000, 2000);
+    ErrorDecoder customizedErrorDecoder = new DefaultErrorDecoder(4000, 2000);
     Exception customizedException = customizedErrorDecoder.decode("Service#foo()", response);
     assertThat(customizedException.getMessage().length())
         .isGreaterThanOrEqualTo(response.body().length());

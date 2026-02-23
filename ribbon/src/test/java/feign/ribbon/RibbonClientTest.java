@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.fail;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.IClientConfig;
 import feign.Client;
+import feign.DefaultClient;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
@@ -243,7 +244,7 @@ public class RibbonClientTest {
   @Test
   void hTTPSViaRibbon() {
 
-    Client trustSSLSockets = new Client.Default(TrustingSSLSocketFactory.get(), null);
+    Client trustSSLSockets = new DefaultClient(TrustingSSLSocketFactory.get(), null);
 
     server1.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
     server1.enqueue(new MockResponse().setBody("success!"));

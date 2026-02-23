@@ -400,7 +400,7 @@ public class FeignBuilderTest {
         Feign.builder()
             .client(
                 new Client() {
-                  Client client = new Client.Default(null, null);
+                  Client client = new DefaultClient(null, null);
 
                   @Override
                   public Response execute(Request request, Request.Options options)

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 class DefaultEncoderTest {
 
-  private final Encoder encoder = new Encoder.Default();
+  private final Encoder encoder = new DefaultEncoder();
 
   @Test
   void encodesStrings() throws Exception {

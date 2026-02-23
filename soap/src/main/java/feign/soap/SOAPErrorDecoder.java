@@ -16,6 +16,7 @@
 package feign.soap;
 
 import feign.Response;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.ErrorDecoder;
 import java.io.IOException;
 import javax.xml.soap.MessageFactory;
@@ -73,6 +74,6 @@ public class SOAPErrorDecoder implements ErrorDecoder {
   }
 
   private Exception defaultErrorDecoder(String methodKey, Response response) {
-    return new ErrorDecoder.Default().decode(methodKey, response);
+    return new DefaultErrorDecoder().decode(methodKey, response);
   }
 }

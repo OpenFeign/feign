@@ -16,13 +16,14 @@
 package feign.reactive;
 
 import feign.Contract;
+import feign.DefaultContract;
 import feign.Feign;
 
 abstract class ReactiveFeign {
 
   public static class Builder extends Feign.Builder {
 
-    private Contract contract = new Contract.Default();
+    private Contract contract = new DefaultContract();
 
     /**
      * Extend the current contract to support Reactive Stream return types.

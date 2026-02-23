@@ -18,6 +18,7 @@ package feign.reactive;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 import feign.Contract;
+import feign.DefaultContract;
 import feign.Param;
 import feign.RequestLine;
 import io.reactivex.Flowable;
@@ -33,20 +34,20 @@ class ReactiveDelegatingContractTest {
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(
             () -> {
-              Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+              Contract contract = new ReactiveDelegatingContract(new DefaultContract());
               contract.parseAndValidateMetadata(TestSynchronousService.class);
             });
   }
 
   @Test
   void reactorTypes() {
-    Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+    Contract contract = new ReactiveDelegatingContract(new DefaultContract());
     contract.parseAndValidateMetadata(TestReactorService.class);
   }
 
   @Test
   void reactivexTypes() {
-    Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+    Contract contract = new ReactiveDelegatingContract(new DefaultContract());
     contract.parseAndValidateMetadata(TestReactiveXService.class);
   }
 
@@ -55,7 +56,7 @@ class ReactiveDelegatingContractTest {
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(
             () -> {
-              Contract contract = new ReactiveDelegatingContract(new Contract.Default());
+              Contract contract = new ReactiveDelegatingContract(new DefaultContract());
               contract.parseAndValidateMetadata(StreamsService.class);
             });
   }

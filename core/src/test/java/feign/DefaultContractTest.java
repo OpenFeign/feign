@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Test;
  */
 class DefaultContractTest {
 
-  Contract.Default contract = new Contract.Default();
+  DefaultContract contract = new DefaultContract();
 
   @Test
   void httpMethods() throws Exception {
@@ -863,7 +863,7 @@ class DefaultContractTest {
         assertThrows(
             IllegalStateException.class,
             () -> contract.parseAndValidateMetadata(MixedAnnotations.class));
-    assertThat(exception.getMessage()).contains("are not used by contract Default");
+    assertThat(exception.getMessage()).contains("are not used by contract DefaultContract");
   }
 
   interface MixedAnnotations {

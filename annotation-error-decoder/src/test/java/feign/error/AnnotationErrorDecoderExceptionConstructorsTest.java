@@ -18,7 +18,7 @@ package feign.error;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request;
-import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorException;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorWithOtherConstructorsException;
@@ -232,7 +232,7 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(
                 TestClientInterfaceWithDifferentExceptionConstructors.class)
-            .withResponseBodyDecoder(new OptionalDecoder(new Decoder.Default()))
+            .withResponseBodyDecoder(new OptionalDecoder(new DefaultDecoder()))
             .build();
 
     Exception genericException =
@@ -268,7 +268,7 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
     AnnotationErrorDecoder decoder =
         AnnotationErrorDecoder.builderFor(
                 TestClientInterfaceWithDifferentExceptionConstructors.class)
-            .withResponseBodyDecoder(new OptionalDecoder(new Decoder.Default()))
+            .withResponseBodyDecoder(new OptionalDecoder(new DefaultDecoder()))
             .build();
 
     Exception genericException =

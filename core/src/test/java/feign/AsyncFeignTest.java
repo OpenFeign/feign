@@ -32,6 +32,9 @@ import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
+import feign.codec.DefaultEncoder;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -145,7 +148,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         new TestInterfaceAsyncBuilder()
             .encoder(
-                new Encoder.Default() {
+                new DefaultEncoder() {
                   @Override
                   public void encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
@@ -645,7 +648,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         AsyncFeign.builder()
             .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
+            .retryer(new DefaultRetryer(1, 1, 2))
             .errorDecoder(
                 (_, response) ->
                     new RetryableException(
@@ -671,7 +674,7 @@ public class AsyncFeignTest {
     TestInterfaceAsync api =
         AsyncFeign.builder()
             .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
+            .retryer(new DefaultRetryer(1, 1, 2))
             .errorDecoder(
                 (_, response) ->
                     new RetryableException(
@@ -705,7 +708,7 @@ public class AsyncFeignTest {
     // fake client as Client.Default follows redirects.
     TestInterfaceAsync api =
         AsyncFeign.<Void>builder()
-            .client(new AsyncClient.Default<>((_, _) -> response, execs))
+            .client(new DefaultAsyncClient<>((_, _) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.response()).headers())
@@ -755,7 +758,7 @@ public class AsyncFeignTest {
     final TestInterfaceAsync sut =
         AsyncFeign.<Void>builder()
             .client(clientMock)
-            .retryer(new Retryer.Default(0, Long.MAX_VALUE, expectedTryCount * 2))
+            .retryer(new DefaultRetryer(0, Long.MAX_VALUE, expectedTryCount * 2))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     // Act
@@ -1194,7 +1197,7 @@ public class AsyncFeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn400 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1205,7 +1208,7 @@ public class AsyncFeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn404 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1220,7 +1223,7 @@ public class AsyncFeignTest {
 
     private final AsyncFeign.AsyncBuilder<Void> delegate =
         AsyncFeign.<Void>builder()
-            .decoder(new Decoder.Default())
+            .decoder(new DefaultDecoder())
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {
