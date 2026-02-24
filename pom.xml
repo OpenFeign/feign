@@ -224,7 +224,7 @@
     <jakarta.ws.rs-api-4.version>4.0.0</jakarta.ws.rs-api-4.version>
     <jakarta.xml.bind-api.version>4.0.5</jakarta.xml.bind-api.version>
     <jakarta.xml.soap-api.version>3.0.2</jakarta.xml.soap-api.version>
-    <jakarta.xml.ws-api.version>4.0.2</jakarta.xml.ws-api.version>
+    <jakarta.xml.ws-api.version>4.0.3</jakarta.xml.ws-api.version>
     <javax.ws.rs-api.version>2.1.1</javax.ws.rs-api.version>
     <jaxb-api.version>2.3.1</jaxb-api.version>
     <jaxb-impl-2.version>2.3.9</jaxb-impl-2.version>
