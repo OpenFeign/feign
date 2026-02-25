@@ -22,6 +22,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.JsonDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -30,8 +31,10 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-/** A {@link Decoder} that uses Jackson Jr to convert objects to String or byte representation. */
-public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
+/**
+ * A {@link JsonDecoder} that uses Jackson Jr to convert objects to String or byte representation.
+ */
+public class JacksonJrDecoder extends JacksonJrMapper implements Decoder, JsonDecoder {
 
   @FunctionalInterface
   protected interface Transformer {
@@ -109,5 +112,26 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder {
       return (mapper, reader) -> mapper.beanFrom(clazz, reader);
     }
     throw new DecodeException(500, "Cannot decode type: " + type.getTypeName(), response.request());
+  }
+
+  @Override
+  public Object convert(Object object, Type type) throws IOException {
+    String json = mapper.asString(object);
+    if (type instanceof ParameterizedType) {
+      ParameterizedType pt = (ParameterizedType) type;
+      Type rawType = pt.getRawType();
+      Type[] args = pt.getActualTypeArguments();
+      if (rawType.equals(List.class)) {
+        return mapper.listOfFrom((Class<?>) args[0], json);
+      }
+      if (rawType.equals(Map.class)) {
+        return mapper.mapOfFrom((Class<?>) args[1], json);
+      }
+      type = rawType;
+    }
+    if (type instanceof Class) {
+      return mapper.beanFrom((Class<?>) type, json);
+    }
+    throw new IOException("Cannot convert to type: " + type.getTypeName());
   }
 }

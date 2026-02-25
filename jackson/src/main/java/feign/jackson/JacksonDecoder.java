@@ -22,13 +22,14 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import feign.codec.JsonDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class JacksonDecoder implements Decoder {
+public class JacksonDecoder implements Decoder, JsonDecoder {
 
   private final ObjectMapper mapper;
 
@@ -69,5 +70,10 @@ public class JacksonDecoder implements Decoder {
       }
       throw e;
     }
+  }
+
+  @Override
+  public Object convert(Object object, Type type) {
+    return mapper.convertValue(object, mapper.constructType(type));
   }
 }

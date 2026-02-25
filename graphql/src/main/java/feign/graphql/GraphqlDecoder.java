@@ -15,38 +15,24 @@
  */
 package feign.graphql;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
-import java.io.BufferedReader;
+import feign.codec.JsonDecoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class GraphqlDecoder implements Decoder {
 
-  private final ObjectMapper mapper;
-  private final Decoder delegate;
+  private final JsonDecoder jsonDecoder;
 
-  public GraphqlDecoder() {
-    this(new ObjectMapper(), null);
-  }
-
-  public GraphqlDecoder(ObjectMapper mapper) {
-    this(mapper, null);
-  }
-
-  public GraphqlDecoder(Decoder delegate) {
-    this(new ObjectMapper(), delegate);
-  }
-
-  public GraphqlDecoder(ObjectMapper mapper, Decoder delegate) {
-    this.mapper = mapper;
-    this.delegate = delegate;
+  public GraphqlDecoder(JsonDecoder jsonDecoder) {
+    this.jsonDecoder = jsonDecoder;
   }
 
   @Override
@@ -61,6 +47,7 @@ public class GraphqlDecoder implements Decoder {
     return optional ? Optional.ofNullable(result) : result;
   }
 
+  @SuppressWarnings("unchecked")
   private Object doDecode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) {
       return Util.emptyValueOf(type);
@@ -69,63 +56,51 @@ public class GraphqlDecoder implements Decoder {
       return null;
     }
 
-    var reader = response.body().asReader(response.charset());
-    if (!reader.markSupported()) {
-      reader = new BufferedReader(reader, 1);
-    }
-
-    var root = mapper.readTree(reader);
-
-    var errorsNode = root.path("errors");
-    if (!errorsNode.isMissingNode() && errorsNode.isArray() && !errorsNode.isEmpty()) {
-      var operationField = resolveOperationField(root, response);
-      throw new GraphqlErrorException(
-          response.status(), operationField, errorsNode.toString(), response.request());
-    }
-
-    var dataNode = root.path("data");
-    if (dataNode.isMissingNode() || dataNode.isNull() || !dataNode.isObject()) {
+    var root = (Map<String, Object>) jsonDecoder.decode(response, Map.class);
+    if (root == null) {
       return Util.emptyValueOf(type);
     }
 
-    var fieldNames = dataNode.fieldNames();
+    var errors = root.get("errors");
+    if (errors instanceof List<?> errorList && !errorList.isEmpty()) {
+      var operationField = resolveOperationField(root, response);
+      throw new GraphqlErrorException(
+          response.status(), operationField, errors.toString(), response.request());
+    }
+
+    var data = root.get("data");
+    if (!(data instanceof Map)) {
+      return Util.emptyValueOf(type);
+    }
+
+    var dataMap = (Map<String, Object>) data;
+    var fieldNames = dataMap.keySet().iterator();
     if (!fieldNames.hasNext()) {
       return Util.emptyValueOf(type);
     }
 
     var firstField = fieldNames.next();
-    var operationData = dataNode.get(firstField);
-    if (operationData == null || operationData.isNull()) {
+    var operationData = dataMap.get(firstField);
+    if (operationData == null) {
       return Util.emptyValueOf(type);
     }
 
-    if (operationData.isArray() && !isCollectionOrArrayType(type)) {
-      if (operationData.isEmpty()) {
+    if (operationData instanceof List<?> list && !isCollectionOrArrayType(type)) {
+      if (list.isEmpty()) {
         return Util.emptyValueOf(type);
       }
-      operationData = operationData.get(0);
+      operationData = list.get(0);
     }
 
-    if (delegate != null) {
-      var dataBytes = mapper.writeValueAsBytes(operationData);
-      var dataResponse =
-          Response.builder()
-              .status(response.status())
-              .reason(response.reason())
-              .headers(response.headers())
-              .request(response.request())
-              .body(dataBytes)
-              .build();
-      return delegate.decode(dataResponse, type);
-    }
-
-    return mapper.readValue(mapper.treeAsTokens(operationData), mapper.constructType(type));
+    return jsonDecoder.convert(operationData, type);
   }
 
-  private String resolveOperationField(JsonNode root, Response response) {
-    var dataNode = root.path("data");
-    if (!dataNode.isMissingNode() && dataNode.isObject()) {
-      var names = dataNode.fieldNames();
+  @SuppressWarnings("unchecked")
+  private String resolveOperationField(Map<String, Object> root, Response response) {
+    var data = root.get("data");
+    if (data instanceof Map) {
+      var dataMap = (Map<String, Object>) data;
+      var names = dataMap.keySet().iterator();
       if (names.hasNext()) {
         return names.next();
       }
@@ -133,10 +108,19 @@ public class GraphqlDecoder implements Decoder {
 
     if (response.request() != null && response.request().body() != null) {
       try {
-        var requestBody = mapper.readTree(response.request().body());
-        var query = requestBody.path("query").asText(null);
-        if (query != null) {
-          return GraphqlContract.extractOperationField(query);
+        var fakeResponse =
+            Response.builder()
+                .status(200)
+                .headers(Collections.emptyMap())
+                .request(response.request())
+                .body(response.request().body())
+                .build();
+        var requestBody = (Map<String, Object>) jsonDecoder.decode(fakeResponse, Map.class);
+        if (requestBody != null) {
+          var query = requestBody.get("query");
+          if (query instanceof String queryStr) {
+            return GraphqlContract.extractOperationField(queryStr);
+          }
         }
       } catch (Exception e) {
         // ignore parsing errors
@@ -147,9 +131,6 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private boolean isOptionalType(Type type) {
-    if (type instanceof JavaType jt) {
-      return jt.getRawClass() == Optional.class;
-    }
     if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> cls) {
       return cls == Optional.class;
     }
@@ -160,9 +141,6 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private Type extractOptionalInnerType(Type type) {
-    if (type instanceof JavaType jt) {
-      return jt.containedType(0);
-    }
     if (type instanceof ParameterizedType pt) {
       return pt.getActualTypeArguments()[0];
     }
@@ -170,9 +148,6 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private boolean isCollectionOrArrayType(Type type) {
-    if (type instanceof JavaType jt) {
-      return jt.isCollectionLikeType() || jt.isArrayType();
-    }
     if (type instanceof Class<?> cls) {
       return cls.isArray() || Iterable.class.isAssignableFrom(cls);
     }
