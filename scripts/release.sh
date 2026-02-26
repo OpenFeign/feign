@@ -19,17 +19,27 @@ function increment() {
   echo "${result}-SNAPSHOT"
 }
 
-# extract the release version from the pom file
-version=`./mvnw -B help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
-tag=`echo ${version} | cut -d'-' -f 1`
-
-# determine the next snapshot version
-snapshot=$(increment ${tag})
+if [ -n "$1" ]; then
+  tag=$1
+  if [ -n "$2" ]; then
+    snapshot=$2
+  else
+    snapshot=$(increment ${tag})
+  fi
+else
+  # extract the release version from the pom file
+  version=`./mvnw -B help:evaluate -N -Dexpression=project.version | sed -n '/^[0-9]/p'`
+  tag=`echo ${version} | cut -d'-' -f 1`
+  snapshot=$(increment ${tag})
+fi
 
 echo "release version is: ${tag} and next snapshot is: ${snapshot}"
 
 # Update the versions, removing the snapshots, then create a new tag for the release, this will
 # start the travis-ci release process.
+if [ -n "$1" ]; then
+  ./mvnw -B versions:set -DnewVersion="${tag}" -DgenerateBackupPoms=false
+fi
 ./mvnw -B versions:set license:format scm:checkin -DremoveSnapshot -DgenerateBackupPoms=false -Dmessage="prepare release ${tag}" -DpushChanges=false
 
 # tag the release
