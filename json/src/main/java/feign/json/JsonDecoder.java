@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,12 +53,13 @@ import org.json.JSONTokener;
  *   System.out.println(contributors.getJSONObject(0).getString("login"));
  * </pre>
  */
-public class JsonDecoder implements Decoder {
+public class JsonDecoder implements Decoder, feign.codec.JsonDecoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
     if (response.status() == 404 || response.status() == 204)
-      if (JSONObject.class.isAssignableFrom((Class<?>) type)) return new JSONObject();
+      if (Map.class.equals(type)) return null;
+      else if (JSONObject.class.isAssignableFrom((Class<?>) type)) return new JSONObject();
       else if (JSONArray.class.isAssignableFrom((Class<?>) type)) return new JSONArray();
       else if (String.class.equals(type)) return null;
       else
@@ -86,12 +88,30 @@ public class JsonDecoder implements Decoder {
   private Object decodeBody(Response response, Type type, Reader reader) throws IOException {
     if (String.class.equals(type)) return Util.toString(reader);
     JSONTokener tokenizer = new JSONTokener(reader);
-    if (JSONObject.class.isAssignableFrom((Class<?>) type)) return new JSONObject(tokenizer);
+    if (Map.class.equals(type)) return new JSONObject(tokenizer).toMap();
+    else if (JSONObject.class.isAssignableFrom((Class<?>) type)) return new JSONObject(tokenizer);
     else if (JSONArray.class.isAssignableFrom((Class<?>) type)) return new JSONArray(tokenizer);
     else
       throw new DecodeException(
           response.status(),
           format("%s is not a type supported by this decoder.", type),
           response.request());
+  }
+
+  @Override
+  public Object convert(Object object, Type type) throws IOException {
+    if (type instanceof Class) {
+      Class<?> cls = (Class<?>) type;
+      if (cls == JSONObject.class && object instanceof Map) {
+        return new JSONObject((Map<?, ?>) object);
+      }
+      if (cls == String.class) {
+        return object.toString();
+      }
+    }
+    if (object instanceof Map) {
+      return new JSONObject((Map<?, ?>) object);
+    }
+    throw new IOException(type.getTypeName() + " is not a type supported by this decoder.");
   }
 }

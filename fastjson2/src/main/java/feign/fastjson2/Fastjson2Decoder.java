@@ -19,11 +19,13 @@ import static feign.Util.ensureClosed;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONException;
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONReader;
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import feign.codec.JsonDecoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -31,7 +33,7 @@ import java.lang.reflect.Type;
 /**
  * @author changjin wei(魏昌进)
  */
-public class Fastjson2Decoder implements Decoder {
+public class Fastjson2Decoder implements Decoder, JsonDecoder {
 
   private final JSONReader.Feature[] features;
 
@@ -58,5 +60,13 @@ public class Fastjson2Decoder implements Decoder {
     } finally {
       ensureClosed(reader);
     }
+  }
+
+  @Override
+  public Object convert(Object object, Type type) {
+    if (object instanceof JSONObject) {
+      return ((JSONObject) object).to(type);
+    }
+    return JSON.parseObject(JSON.toJSONString(object), type);
   }
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
+import feign.jackson.JacksonDecoder;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +36,7 @@ class GraphqlDecoderTest {
 
   private final ObjectMapper mapper =
       new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  private final GraphqlDecoder decoder = new GraphqlDecoder(mapper);
+  private final GraphqlDecoder decoder = new GraphqlDecoder(new JacksonDecoder(mapper));
 
   public static class User {
     public String id;
@@ -60,10 +61,7 @@ class GraphqlDecoderTest {
     var response = buildResponse(json);
 
     @SuppressWarnings("unchecked")
-    var users =
-        (List<User>)
-            decoder.decode(
-                response, mapper.getTypeFactory().constructCollectionType(List.class, User.class));
+    var users = (List<User>) decoder.decode(response, parameterizedType(List.class, User.class));
 
     assertThat(users).hasSize(2);
     assertThat(users.getFirst().name).isEqualTo("Alice");
@@ -153,28 +151,9 @@ class GraphqlDecoderTest {
     var response = buildResponse(json);
 
     @SuppressWarnings("unchecked")
-    var users =
-        (List<User>)
-            decoder.decode(
-                response, mapper.getTypeFactory().constructCollectionType(List.class, User.class));
+    var users = (List<User>) decoder.decode(response, parameterizedType(List.class, User.class));
 
     assertThat(users).hasSize(2);
-  }
-
-  @Test
-  void delegatesToCustomDecoder() throws Exception {
-    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
-    var customDecoder =
-        new GraphqlDecoder(
-            mapper,
-            (resp, type) ->
-                mapper.readValue(resp.body().asReader(resp.charset()), mapper.constructType(type)));
-    var response = buildResponse(json);
-
-    var user = (User) customDecoder.decode(response, User.class);
-
-    assertThat(user.id).isEqualTo("1");
-    assertThat(user.name).isEqualTo("Alice");
   }
 
   @Test
@@ -241,22 +220,6 @@ class GraphqlDecoderTest {
     assertThat(result).isEmpty();
   }
 
-  @Test
-  void unwrapsSingleObjectFromArrayWithDelegate() throws Exception {
-    var json = "{\"data\":{\"ingestionStats\":[{\"id\":\"1\",\"name\":\"Alice\"}]}}";
-    var customDecoder =
-        new GraphqlDecoder(
-            mapper,
-            (resp, type) ->
-                mapper.readValue(resp.body().asReader(resp.charset()), mapper.constructType(type)));
-    var response = buildResponse(json);
-
-    var user = (User) customDecoder.decode(response, User.class);
-
-    assertThat(user.id).isEqualTo("1");
-    assertThat(user.name).isEqualTo("Alice");
-  }
-
   private Response buildResponse(String body) {
     return Response.builder()
         .status(200)
@@ -286,6 +249,25 @@ class GraphqlDecoderTest {
       @Override
       public Type getRawType() {
         return Optional.class;
+      }
+
+      @Override
+      public Type getOwnerType() {
+        return null;
+      }
+    };
+  }
+
+  private static ParameterizedType parameterizedType(Type raw, Type... args) {
+    return new ParameterizedType() {
+      @Override
+      public Type[] getActualTypeArguments() {
+        return args;
+      }
+
+      @Override
+      public Type getRawType() {
+        return raw;
       }
 
       @Override

@@ -18,6 +18,7 @@ package feign.jackson3;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import feign.codec.JsonDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -28,7 +29,7 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.json.JsonMapper;
 
-public class Jackson3Decoder implements Decoder {
+public class Jackson3Decoder implements Decoder, JsonDecoder {
 
   private final JsonMapper mapper;
 
@@ -70,5 +71,10 @@ public class Jackson3Decoder implements Decoder {
       }
       throw e;
     }
+  }
+
+  @Override
+  public Object convert(Object object, Type type) {
+    return mapper.convertValue(object, mapper.constructType(type));
   }
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Headers;
 import feign.Param;
+import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +98,7 @@ class GraphqlClientTest {
     return Feign.builder()
         .contract(contract)
         .encoder(graphqlEncoder)
-        .decoder(new GraphqlDecoder(mapper))
+        .decoder(new GraphqlDecoder(new JacksonDecoder(mapper)))
         .requestInterceptor(graphqlEncoder)
         .target(TestApi.class, server.url("/graphql").toString());
   }
