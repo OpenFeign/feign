@@ -15,6 +15,7 @@
  */
 package feign.graphql;
 
+import feign.Experimental;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Experimental
 public class GraphqlDecoder implements Decoder {
 
   private final JsonDecoder jsonDecoder;

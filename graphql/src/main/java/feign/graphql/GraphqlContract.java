@@ -16,11 +16,13 @@
 package feign.graphql;
 
 import feign.DefaultContract;
+import feign.Experimental;
 import feign.Request.HttpMethod;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+@Experimental
 public class GraphqlContract extends DefaultContract {
 
   private static final Pattern OPERATION_FIELD_PATTERN =

@@ -15,9 +15,11 @@
  */
 package feign.graphql;
 
+import feign.Experimental;
 import feign.FeignException;
 import feign.Request;
 
+@Experimental
 public class GraphqlErrorException extends FeignException {
 
   private final String operation;

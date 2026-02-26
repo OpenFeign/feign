@@ -61,7 +61,7 @@ public interface Client {
   }
 
   /** Client that supports a {@link java.net.Proxy}. */
-  class Proxied extends DefaultClient {
+  class Proxied extends Default {
 
     public static final String PROXY_AUTHORIZATION = "Proxy-Authorization";
     private final Proxy proxy;
