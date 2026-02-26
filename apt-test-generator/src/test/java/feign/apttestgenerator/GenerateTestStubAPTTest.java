@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 /** Test for {@link GenerateTestStubAPT} */
 class GenerateTestStubAPTTest {
 
-  private final File main = new File("../example-github/src/main/java/").getAbsoluteFile();
+  private final File resources = new File("src/test/resources/").getAbsoluteFile();
 
   @Test
   void test() throws Exception {
@@ -35,12 +35,12 @@ class GenerateTestStubAPTTest {
             .withProcessors(new GenerateTestStubAPT())
             .compile(
                 JavaFileObjects.forResource(
-                    new File(main, "example/github/GitHubExample.java").toURI().toURL()));
+                    new File(resources, "example/github/GitHubExample.java").toURI().toURL()));
     assertThat(compilation).succeeded();
     assertThat(compilation)
         .generatedSourceFile("example.github.GitHubStub")
         .hasSourceEquivalentTo(
             JavaFileObjects.forResource(
-                new File("src/test/java/example/github/GitHubStub.java").toURI().toURL()));
+                new File(resources, "example/github/GitHubStub.java").toURI().toURL()));
   }
 }

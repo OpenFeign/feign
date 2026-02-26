@@ -45,7 +45,13 @@
 
     <dependency>
       <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-example-github</artifactId>
+      <artifactId>feign-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-gson</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
