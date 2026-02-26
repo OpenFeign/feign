@@ -738,6 +738,7 @@
                 <exclude>etc/header.txt</exclude>
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/target/**</exclude>
+                <exclude>**/m2e-target/**</exclude>
                 <exclude>**/scripts/**</exclude>
                 <exclude>**/src/config/**</exclude>
                 <exclude>**/codequality/**</exclude>
