@@ -123,6 +123,36 @@ Some modules define the same Maven property name (e.g., `jersey.version`, `vertx
 2. Add a per-directory entry for the new module with `allow` for the specific dependency and `ignore` for `version-update:semver-major`
 3. Verify existing modules with the same property also have their own per-directory entries
 
+## Releasing
+
+The release script is at `scripts/release.sh`. It handles version updates, tagging, and pushing.
+
+### Usage
+- `./scripts/release.sh` — auto-detect release version from pom (strips `-SNAPSHOT`), auto-compute next snapshot
+- `./scripts/release.sh <release-version>` — release a specific version, auto-compute next snapshot
+- `./scripts/release.sh <release-version> <next-snapshot>` — release a specific version with explicit next snapshot
+
+### Examples
+```bash
+# Standard release (pom is at 13.10-SNAPSHOT, releases 13.10, next becomes 13.11-SNAPSHOT)
+./scripts/release.sh
+
+# Patch release with custom next snapshot
+./scripts/release.sh 13.9.1 13.10-SNAPSHOT
+```
+
+### What the script does
+1. Sets pom versions to the release version (removes `-SNAPSHOT`)
+2. Formats license headers and commits locally (no push)
+3. Creates and pushes a git tag for the release version
+4. Sets pom versions to the next snapshot and commits/pushes
+
+### Patch releases
+When doing a patch release (e.g., 13.9.1 while pom is at 13.10-SNAPSHOT), pass both arguments so the next snapshot returns to the current development version:
+```bash
+./scripts/release.sh 13.9.1 13.10-SNAPSHOT
+```
+
 ## Documentation Requirements
 
 - New modules must include a `README.md` with usage examples following the style of existing module READMEs (e.g., `jackson/README.md`, `graphql/README.md`)
