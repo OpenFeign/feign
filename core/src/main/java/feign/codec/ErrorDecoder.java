@@ -15,20 +15,14 @@
  */
 package feign.codec;
 
-import static feign.FeignException.errorStatus;
-import static feign.Util.RETRY_AFTER;
 import static feign.Util.checkNotNull;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import feign.FeignException;
 import feign.Response;
-import feign.RetryableException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * Allows you to massage an exception into a application-specific one. Converting out to a throttle
@@ -81,45 +75,18 @@ public interface ErrorDecoder {
    */
   public Exception decode(String methodKey, Response response);
 
-  public class Default implements ErrorDecoder {
-
-    private final RetryAfterDecoder retryAfterDecoder = new RetryAfterDecoder();
-    private Integer maxBodyBytesLength;
-    private Integer maxBodyCharsLength;
+  /**
+   * @deprecated use {@link DefaultErrorDecoder} instead.
+   */
+  @Deprecated
+  public class Default extends DefaultErrorDecoder {
 
     public Default() {
-      this.maxBodyBytesLength = null;
-      this.maxBodyCharsLength = null;
+      super();
     }
 
     public Default(Integer maxBodyBytesLength, Integer maxBodyCharsLength) {
-      this.maxBodyBytesLength = maxBodyBytesLength;
-      this.maxBodyCharsLength = maxBodyCharsLength;
-    }
-
-    @Override
-    public Exception decode(String methodKey, Response response) {
-      FeignException exception =
-          errorStatus(methodKey, response, maxBodyBytesLength, maxBodyCharsLength);
-      Long retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
-      if (retryAfter != null) {
-        return new RetryableException(
-            response.status(),
-            exception.getMessage(),
-            response.request().httpMethod(),
-            exception,
-            retryAfter,
-            response.request(),
-            methodKey);
-      }
-      return exception;
-    }
-
-    private <T> T firstOrNull(Map<String, Collection<T>> map, String key) {
-      if (map.containsKey(key) && !map.get(key).isEmpty()) {
-        return map.get(key).iterator().next();
-      }
-      return null;
+      super(maxBodyBytesLength, maxBodyCharsLength);
     }
   }
 

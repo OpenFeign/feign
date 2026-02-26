@@ -24,6 +24,7 @@ import feign.Response
 import feign.codec.Decoder
 import feign.codec.Encoder
 import feign.codec.ErrorDecoder
+import feign.codec.DefaultErrorDecoder
 import feign.gson.GsonEncoder
 import feign.kotlin.CoroutineFeign
 import java.io.IOException
@@ -122,7 +123,7 @@ internal class GitHubClientError() : RuntimeException() {
 internal class GitHubErrorDecoder(
     private val decoder: Decoder
 ) : ErrorDecoder {
-    private val defaultDecoder: ErrorDecoder = ErrorDecoder.Default()
+    private val defaultDecoder: ErrorDecoder = DefaultErrorDecoder()
     override fun decode(methodKey: String, response: Response): Exception {
         return try {
             // must replace status by 200 other GSONDecoder returns null

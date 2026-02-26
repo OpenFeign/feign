@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.RequestTemplate;
+import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
@@ -56,7 +57,7 @@ public class FormEncoder implements Encoder {
 
   /** Constructor with the default Feign's encoder as a delegate. */
   public FormEncoder() {
-    this(new Encoder.Default());
+    this(new DefaultEncoder());
   }
 
   /**

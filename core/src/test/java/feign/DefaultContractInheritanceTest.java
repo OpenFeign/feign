@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
  */
 class DefaultContractInheritanceTest {
 
-  Contract.Default contract = new Contract.Default();
+  DefaultContract contract = new DefaultContract();
 
   @Headers("Foo: Bar")
   interface SimpleParameterizedBaseApi<M> {

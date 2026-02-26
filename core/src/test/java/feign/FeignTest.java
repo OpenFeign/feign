@@ -39,6 +39,9 @@ import feign.Request.HttpMethod;
 import feign.Target.HardCodedTarget;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
+import feign.codec.DefaultEncoder;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -166,7 +169,7 @@ public class FeignTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
-                new Encoder.Default() {
+                new DefaultEncoder() {
                   @Override
                   public void encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
@@ -665,7 +668,7 @@ public class FeignTest {
     TestInterface api =
         Feign.builder()
             .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
+            .retryer(new DefaultRetryer(1, 1, 2))
             .errorDecoder(
                 (_, response) ->
                     new RetryableException(
@@ -690,7 +693,7 @@ public class FeignTest {
     TestInterface api =
         Feign.builder()
             .exceptionPropagationPolicy(UNWRAP)
-            .retryer(new Retryer.Default(1, 1, 2))
+            .retryer(new DefaultRetryer(1, 1, 2))
             .errorDecoder(
                 (_, response) ->
                     new RetryableException(
@@ -1398,7 +1401,7 @@ public class FeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn400 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1409,7 +1412,7 @@ public class FeignTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn404 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1424,7 +1427,7 @@ public class FeignTest {
 
     private final Feign.Builder delegate =
         new Feign.Builder()
-            .decoder(new Decoder.Default())
+            .decoder(new DefaultDecoder())
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {

@@ -35,7 +35,7 @@ import org.w3c.dom.Document;
 @SuppressWarnings("deprecation")
 class DefaultDecoderTest {
 
-  private final Decoder decoder = new Decoder.Default();
+  private final Decoder decoder = new DefaultDecoder();
 
   @Test
   void decodesToString() throws Exception {

@@ -95,7 +95,7 @@ public abstract class Feign {
 
   public static class Builder extends BaseBuilder<Builder, Feign> {
 
-    private Client client = new Client.Default(null, null);
+    private Client client = new DefaultClient(null, null);
 
     @Override
     public Builder logLevel(Logger.Level logLevel) {

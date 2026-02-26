@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import feign.FeignBuilderTest.TestInterface;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
+import feign.codec.DefaultDecoder;
+import feign.codec.DefaultEncoder;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -44,7 +44,7 @@ public class MethodMetadataPresenceTest {
                   assertNotNull(request.requestTemplate());
                   assertNotNull(request.requestTemplate().methodMetadata());
                   assertNotNull(request.requestTemplate().feignTarget());
-                  return new Client.Default(null, null).execute(request, options);
+                  return new DefaultClient(null, null).execute(request, options);
                 })
             .target(TestInterface.class, url);
 
@@ -66,7 +66,7 @@ public class MethodMetadataPresenceTest {
                   assertNotNull(template);
                   assertNotNull(template.methodMetadata());
                   assertNotNull(template.feignTarget());
-                  new Encoder.Default().encode(object, bodyType, template);
+                  new DefaultEncoder().encode(object, bodyType, template);
                 })
             .target(TestInterface.class, url);
 
@@ -89,7 +89,7 @@ public class MethodMetadataPresenceTest {
                   assertNotNull(template);
                   assertNotNull(template.methodMetadata());
                   assertNotNull(template.feignTarget());
-                  return new Decoder.Default().decode(response, type);
+                  return new DefaultDecoder().decode(response, type);
                 })
             .target(TestInterface.class, url);
 

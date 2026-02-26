@@ -19,6 +19,7 @@ import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
 
 import feign.RequestTemplate;
+import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.FormEncoder;
@@ -38,7 +39,7 @@ public class SpringFormEncoder extends FormEncoder {
 
   /** Constructor with the default Feign's encoder as a delegate. */
   public SpringFormEncoder() {
-    this(new Encoder.Default());
+    this(new DefaultEncoder());
   }
 
   /**

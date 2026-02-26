@@ -17,6 +17,7 @@ package feign.benchmark;
 
 import feign.Client;
 import feign.Contract;
+import feign.DefaultContract;
 import feign.Feign;
 import feign.MethodMetadata;
 import feign.Response;
@@ -53,11 +54,11 @@ public class WhatShouldWeCacheBenchmarks {
 
   @Setup
   public void setup() {
-    feignContract = new Contract.Default();
+    feignContract = new DefaultContract();
     cachedContact =
         new Contract() {
           private final List<MethodMetadata> cached =
-              new Default().parseAndValidateMetadata(FeignTestInterface.class);
+              new DefaultContract().parseAndValidateMetadata(FeignTestInterface.class);
 
           public List<MethodMetadata> parseAndValidateMetadata(Class<?> declaring) {
             return cached;

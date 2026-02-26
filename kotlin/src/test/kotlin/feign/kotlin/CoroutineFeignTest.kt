@@ -24,6 +24,7 @@ import feign.RequestLine
 import feign.Response
 import feign.Util
 import feign.codec.Decoder
+import feign.codec.DefaultDecoder
 import feign.codec.Encoder
 import feign.codec.ErrorDecoder
 import kotlinx.coroutines.runBlocking
@@ -148,7 +149,7 @@ class CoroutineFeignTest {
 
     internal class TestInterfaceAsyncBuilder {
         private val delegate = CoroutineFeign.builder<Void>()
-            .decoder(Decoder.Default()).encoder { `object`, bodyType, template ->
+            .decoder(DefaultDecoder()).encoder { `object`, bodyType, template ->
                 if (`object` is Map<*, *>) {
                     template.body(Gson().toJson(`object`))
                 } else {

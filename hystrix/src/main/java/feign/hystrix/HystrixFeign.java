@@ -18,6 +18,7 @@ package feign.hystrix;
 import com.netflix.hystrix.HystrixCommand;
 import feign.Client;
 import feign.Contract;
+import feign.DefaultContract;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.Logger;
@@ -46,7 +47,7 @@ public final class HystrixFeign {
 
   public static final class Builder extends Feign.Builder {
 
-    private Contract contract = new Contract.Default();
+    private Contract contract = new DefaultContract();
     private SetterFactory setterFactory = new SetterFactory.Default();
 
     /** Allows you to override hystrix properties such as thread pools and command keys. */

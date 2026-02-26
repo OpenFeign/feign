@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import feign.Retryer.Default;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +32,7 @@ class RetryerTest {
   void only5TriesAllowedAndExponentialBackoff() {
     final Long nonRetryable = null;
     RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
-    Default retryer = new Retryer.Default();
+    DefaultRetryer retryer = new DefaultRetryer();
     assertThat(retryer.attempt).isEqualTo(1);
     assertThat(retryer.sleptForMillis).isEqualTo(0);
 
@@ -57,8 +56,8 @@ class RetryerTest {
 
   @Test
   void considersRetryAfterButNotMoreThanMaxPeriod() {
-    Default retryer =
-        new Retryer.Default() {
+    DefaultRetryer retryer =
+        new DefaultRetryer() {
           @Override
           protected long currentTimeMillis() {
             return 0;
@@ -81,7 +80,7 @@ class RetryerTest {
 
   @Test
   void defaultRetryerFailsOnInterruptedException() {
-    Default retryer = new Retryer.Default();
+    DefaultRetryer retryer = new DefaultRetryer();
 
     Thread.currentThread().interrupt();
     RetryableException expected =

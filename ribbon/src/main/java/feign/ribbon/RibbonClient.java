@@ -19,6 +19,7 @@ import com.netflix.client.ClientException;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import feign.Client;
+import feign.DefaultClient;
 import feign.Request;
 import feign.Response;
 import java.io.IOException;
@@ -54,7 +55,7 @@ public class RibbonClient implements Client {
    */
   @Deprecated
   public RibbonClient() {
-    this(new Client.Default(null, null));
+    this(new DefaultClient(null, null));
   }
 
   /**
@@ -138,7 +139,7 @@ public class RibbonClient implements Client {
 
     public RibbonClient build() {
       return new RibbonClient(
-          delegate != null ? delegate : new Client.Default(null, null),
+          delegate != null ? delegate : new DefaultClient(null, null),
           lbClientFactory != null ? lbClientFactory : new LBClientFactory.Default());
     }
   }

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Client;
 import feign.Client.Proxied;
+import feign.DefaultClient;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.RetryableException;
@@ -37,11 +38,11 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 public class DefaultClientTest extends AbstractClientTest {
 
   protected Client disableHostnameVerification =
-      new Client.Default(TrustingSSLSocketFactory.get(), (_, _) -> true);
+      new DefaultClient(TrustingSSLSocketFactory.get(), (_, _) -> true);
 
   @Override
   public Builder newBuilder() {
-    return Feign.builder().client(new Client.Default(TrustingSSLSocketFactory.get(), null, false));
+    return Feign.builder().client(new DefaultClient(TrustingSSLSocketFactory.get(), null, false));
   }
 
   @Test

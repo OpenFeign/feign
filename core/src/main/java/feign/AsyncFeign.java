@@ -70,8 +70,8 @@ public final class AsyncFeign<C> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
-        new AsyncClient.Default<>(
-            new Client.Default(null, null), LazyInitializedExecutorService.instance);
+        new DefaultAsyncClient<>(
+            new DefaultClient(null, null), LazyInitializedExecutorService.instance);
     private MethodInfoResolver methodInfoResolver = MethodInfo::new;
 
     @Deprecated

@@ -19,7 +19,8 @@ import feign.AsyncClient;
 import feign.AsyncContextSupplier;
 import feign.AsyncFeign;
 import feign.BaseBuilder;
-import feign.Client;
+import feign.DefaultAsyncClient;
+import feign.DefaultClient;
 import feign.Experimental;
 import feign.MethodInfoResolver;
 import feign.Target;
@@ -118,8 +119,8 @@ public class CoroutineFeign<C> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
-        new AsyncClient.Default<>(
-            new Client.Default(null, null), LazyInitializedExecutorService.instance);
+        new DefaultAsyncClient<>(
+            new DefaultClient(null, null), LazyInitializedExecutorService.instance);
     private MethodInfoResolver methodInfoResolver = KotlinMethodInfo::createInstance;
 
     @Deprecated

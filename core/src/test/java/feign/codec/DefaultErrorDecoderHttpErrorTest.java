@@ -126,7 +126,7 @@ public class DefaultErrorDecoderHttpErrorTest {
   public Class expectedExceptionClass;
   public String expectedMessage;
 
-  private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+  private ErrorDecoder errorDecoder = new DefaultErrorDecoder();
 
   private Map<String, Collection<String>> headers = new LinkedHashMap<>();
 

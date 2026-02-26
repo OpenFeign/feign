@@ -25,10 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import feign.AsyncClient;
 import feign.AsyncFeign;
 import feign.Body;
 import feign.ChildPojo;
+import feign.DefaultAsyncClient;
 import feign.Feign;
 import feign.Feign.ResponseMappingDecoder;
 import feign.FeignException;
@@ -50,6 +50,9 @@ import feign.Target.HardCodedTarget;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.DefaultDecoder;
+import feign.codec.DefaultEncoder;
+import feign.codec.DefaultErrorDecoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -165,7 +168,7 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .encoder(
-                new Encoder.Default() {
+                new DefaultEncoder() {
                   @Override
                   public void encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
@@ -571,7 +574,7 @@ public class OkHttpClientAsyncTest {
     // fake client as Client.Default follows redirects.
     final TestInterfaceAsync api =
         AsyncFeign.<Void>builder()
-            .client(new AsyncClient.Default<>((_, _) -> response, execs))
+            .client(new DefaultAsyncClient<>((_, _) -> response, execs))
             .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
 
     assertThat(unwrap(api.response()).headers().get("Location")).contains("http://bar.com");
@@ -701,7 +704,7 @@ public class OkHttpClientAsyncTest {
 
     final OtherTestInterfaceAsync api =
         newAsyncBuilder()
-            .encoder(new Encoder.Default())
+            .encoder(new DefaultEncoder())
             .target(
                 new HardCodedTarget<>(
                     OtherTestInterfaceAsync.class, "http://localhost:" + server.getPort()));
@@ -993,7 +996,7 @@ public class OkHttpClientAsyncTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn400 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn400 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1004,7 +1007,7 @@ public class OkHttpClientAsyncTest {
     }
   }
 
-  static class IllegalArgumentExceptionOn404 extends ErrorDecoder.Default {
+  static class IllegalArgumentExceptionOn404 extends DefaultErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -1020,7 +1023,7 @@ public class OkHttpClientAsyncTest {
     private final AsyncFeign.AsyncBuilder<Object> delegate =
         AsyncFeign.builder()
             .client(new OkHttpClient())
-            .decoder(new Decoder.Default())
+            .decoder(new DefaultDecoder())
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {

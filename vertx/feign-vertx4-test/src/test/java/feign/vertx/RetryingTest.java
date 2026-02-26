@@ -22,9 +22,9 @@ import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.DefaultRetryer;
 import feign.Logger;
 import feign.RetryableException;
-import feign.Retryer;
 import feign.VertxFeign;
 import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
@@ -50,7 +50,7 @@ class RetryingTest extends AbstractFeignVertxTest {
         VertxFeign.builder()
             .webClient(WebClient.create(vertx))
             .decoder(new JacksonDecoder(MAPPER))
-            .retryer(new Retryer.Default(100, SECONDS.toMillis(1), 5))
+            .retryer(new DefaultRetryer(100, SECONDS.toMillis(1), 5))
             .logger(new Slf4jLogger())
             .logLevel(Logger.Level.FULL)
             .target(IcecreamServiceApi.class, wireMock.baseUrl());
