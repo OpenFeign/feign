@@ -15,35 +15,61 @@
  */
 package feign.graphql;
 
+import feign.Contract;
 import feign.DefaultContract;
+import feign.Experimental;
+import feign.MethodMetadata;
 import feign.Request.HttpMethod;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-public class GraphqlContract extends DefaultContract {
+@Experimental
+public class GraphqlContract implements Contract {
 
   private static final Pattern OPERATION_FIELD_PATTERN =
       Pattern.compile("\\{\\s*(\\w+)\\s*[({]", Pattern.DOTALL);
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\s*(\\w+)\\s*:");
 
+  private final Contract delegate;
   private final Map<String, QueryMetadata> metadata = new ConcurrentHashMap<>();
 
   public GraphqlContract() {
-    super.registerMethodAnnotation(
-        GraphqlQuery.class,
-        (annotation, data) -> {
-          var query = annotation.value();
+    this.delegate = new GraphqlAwareDefaultContract(metadata);
+  }
 
-          if (data.template().method() == null) {
-            data.template().method(HttpMethod.POST);
-            data.template().uri("/");
-          }
+  public GraphqlContract(Contract delegate) {
+    this.delegate = delegate;
+  }
 
-          var variableName = extractFirstVariable(query);
-          metadata.put(data.configKey(), new QueryMetadata(query, variableName));
-        });
+  @Override
+  public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
+    List<MethodMetadata> metadataList = delegate.parseAndValidateMetadata(targetType);
+    if (!(delegate instanceof GraphqlAwareDefaultContract)) {
+      for (MethodMetadata md : metadataList) {
+        processGraphqlQuery(md);
+      }
+    }
+    return metadataList;
+  }
+
+  private void processGraphqlQuery(MethodMetadata md) {
+    GraphqlQuery graphqlQuery = md.method().getAnnotation(GraphqlQuery.class);
+    if (graphqlQuery == null) {
+      return;
+    }
+
+    var query = graphqlQuery.value();
+
+    if (md.template().method() == null) {
+      md.template().method(HttpMethod.POST);
+      md.template().uri("/");
+    }
+
+    var variableName = extractFirstVariable(query);
+    metadata.put(md.configKey(), new QueryMetadata(query, variableName));
   }
 
   Map<String, QueryMetadata> queryMetadata() {
@@ -85,6 +111,25 @@ public class GraphqlContract extends DefaultContract {
       return m.group(1);
     }
     return null;
+  }
+
+  private static class GraphqlAwareDefaultContract extends DefaultContract {
+
+    GraphqlAwareDefaultContract(Map<String, QueryMetadata> metadata) {
+      registerMethodAnnotation(
+          GraphqlQuery.class,
+          (annotation, data) -> {
+            var query = annotation.value();
+
+            if (data.template().method() == null) {
+              data.template().method(HttpMethod.POST);
+              data.template().uri("/");
+            }
+
+            var variableName = GraphqlContract.extractFirstVariable(query);
+            metadata.put(data.configKey(), new QueryMetadata(query, variableName));
+          });
+    }
   }
 
   static class QueryMetadata {
