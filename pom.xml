@@ -204,6 +204,7 @@
     <rewrite-maven-plugin.version>6.30.0</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.28.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.28.0</rewrite-migrate-java.version>
+    <japicmp-maven-plugin.version>0.25.4</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
     <!-- Third-party dependency versions -->
@@ -921,6 +922,38 @@
                 </requireNoRepositories>
               </rules>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.siom79.japicmp</groupId>
+        <artifactId>japicmp-maven-plugin</artifactId>
+        <version>${japicmp-maven-plugin.version}</version>
+        <configuration>
+          <parameter>
+            <ignoreMissingOldVersion>true</ignoreMissingOldVersion>
+            <onlyModified>true</onlyModified>
+            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+            <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+            <breakBuildBasedOnSemanticVersioning>true</breakBuildBasedOnSemanticVersioning>
+            <ignoreMissingClasses>true</ignoreMissingClasses>
+            <excludeModules>
+              <excludeModule>feign-example-.*</excludeModule>
+              <excludeModule>feign-benchmark</excludeModule>
+            </excludeModules>
+            <excludes>
+              <exclude>@feign.Experimental</exclude>
+              <exclude>feign.graphql</exclude>
+            </excludes>
+            <accessModifier>public</accessModifier>
+          </parameter>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>cmp</goal>
+            </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>

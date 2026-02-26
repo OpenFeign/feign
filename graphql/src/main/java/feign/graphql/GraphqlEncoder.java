@@ -15,6 +15,7 @@
  */
 package feign.graphql;
 
+import feign.Experimental;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -23,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Experimental
 public class GraphqlEncoder implements Encoder, RequestInterceptor {
 
   private final Encoder delegate;

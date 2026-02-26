@@ -33,6 +33,7 @@
   <properties>
     <main.java.version>17</main.java.version>
     <moditect.skip>true</moditect.skip>
+    <japicmp.skip>true</japicmp.skip>
   </properties>
 
   <dependencies>
@@ -82,63 +83,7 @@
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
-        <targetPath>docker</targetPath>
-        <filtering>true</filtering>
-        <!-- Replace maven properties in the docker file so we can get artifacts etc -->
-        <directory>${project.basedir}/docker</directory>
-      </resource>
-      <!-- need to manually specify the resources to copy because we have a manual setting above -->
-      <resource>
-        <directory>${basedir}/src/main/resources</directory>
-      </resource>
-      <resource>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**/*.java</include>
-        </includes>
-      </resource>
-    </resources>
-
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>${maven-shade-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>feign.aptgenerator.github.GitHubFactoryExample</mainClass>
-                </transformer>
-              </transformers>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.skife.maven</groupId>
-        <artifactId>really-executable-jar-maven-plugin</artifactId>
-        <version>${really-executable-jar-maven-plugin.version}</version>
-        <configuration>
-          <programFile>github</programFile>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>really-executable-jar</goal>
-            </goals>
-            <phase>package</phase>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
@@ -148,40 +93,6 @@
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <!-- used to create docker images -->
-        <groupId>com.spotify</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <version>${docker-maven-plugin.version}</version>
-        <configuration>
-          <!-- docker file copied here after maven replaces properties -->
-          <dockerDirectory>${project.build.directory}/classes/docker/</dockerDirectory>
-
-          <!-- Pull image before build, otherwise end up with image not found if it was never downloaded before -->
-          <pullOnBuild>true</pullOnBuild>
-
-          <serverId>docker-hub</serverId>
-          <registryUrl>https://index.docker.io/v1/</registryUrl>
-          <imageName>feign-apt-generator/test</imageName>
-          <resources>
-            <resource>
-              <targetPath>/</targetPath>
-              <directory>${project.build.directory}</directory>
-              <include>${project.artifactId}-${project.version}.jar</include>
-            </resource>
-          </resources>
-        </configuration>
-        <executions>
-          <!-- see definition of how this runs above -->
-          <execution>
-            <goals>
-              <goal>build</goal>
-            </goals>
-            <phase>post-integration-test</phase>
           </execution>
         </executions>
       </plugin>
