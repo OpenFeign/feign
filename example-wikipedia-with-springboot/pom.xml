@@ -63,6 +63,12 @@
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
     </dependency>
+    <!-- explicit reactor dependency; spring-cloud-starter-openfeign pulls this transitively,
+         but the reactor can't detect transitive inter-module deps for parallel build ordering -->
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-form-spring</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-exec</artifactId>
