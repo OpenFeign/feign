@@ -58,10 +58,15 @@ public record CharByRegion(String id, Location location) {
 
 ### Conflicting return type error
 
-If two queries use the same return type name but select different fields, the processor reports a compilation error:
+If two queries use the same return type name but select different fields, the processor reports compilation errors on both methods showing which fields each selects:
 
 ```
-Conflicting return type 'CharResult': different queries select different fields for this type
+error: Conflicting return type 'CharResult': method selects [id, email] but method 'query1()' already selects [id, name]
+  CharResult query2();
+             ^
+error: Conflicting return type 'CharResult': method selects [id, name] but method 'query2()' selects [id, email]
+  CharResult query1();
+             ^
 ```
 
 ### Input types and enums
