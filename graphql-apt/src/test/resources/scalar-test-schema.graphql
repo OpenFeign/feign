@@ -2,11 +2,11 @@
 scalar DateTime
 
 type Query {
-  event(id: ID!): Event
-  events: [Event]
+  battle(id: ID!): Battle
+  battles: [Battle]
 }
 
-type Event {
+type Battle {
   id: ID!
   name: String!
   startTime: DateTime!
