@@ -37,18 +37,18 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface MyApi {
               @GraphqlQuery(\"""
-                  mutation createUser($input: CreateUserInput!) {
-                    createUser(input: $input) { id name email status }
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id name email appearsIn }
                   }\""")
-              CreateUserResult createUser(CreateUserInput input);
+              CreateCharacterResult createCharacter(CreateCharacterInput input);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.CreateUserResult");
-    assertThat(compilation).generatedSourceFile("test.CreateUserInput");
+    assertThat(compilation).generatedSourceFile("test.CreateCharacterResult");
+    assertThat(compilation).generatedSourceFile("test.CreateCharacterInput");
   }
 
   @Test
@@ -88,7 +88,7 @@ class GraphqlSchemaProcessorTest {
 
             @GraphqlSchema("nonexistent-schema.graphql")
             interface NoSchemaApi {
-              @GraphqlQuery("{ user(id: \\"1\\") { id } }")
+              @GraphqlQuery("{ character(id: \\"1\\") { id } }")
               Object query();
             }
             """);
@@ -100,7 +100,7 @@ class GraphqlSchemaProcessorTest {
   }
 
   @Test
-  void nestedTypesAreGenerated() {
+  void nestedTypesAreGeneratedAsInnerRecords() {
     var source =
         JavaFileObjects.forSourceString(
             "test.NestedApi",
@@ -113,17 +113,20 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface NestedApi {
               @GraphqlQuery(\"""
-                  { user(id: "1") { id name address { street city country } } }
+                  { character(id: "1") { id name location { planet sector region } } }
                   \""")
-              UserResult getUser();
+              CharacterResult getCharacter();
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.UserResult");
-    assertThat(compilation).generatedSourceFile("test.Address");
+    assertThat(compilation).generatedSourceFile("test.CharacterResult");
+    assertThat(compilation)
+        .generatedSourceFile("test.CharacterResult")
+        .contentsAsUtf8String()
+        .contains("public record Location(String planet, String sector, String region) {}");
   }
 
   @Test
@@ -140,18 +143,18 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface EnumApi {
               @GraphqlQuery(\"""
-                  mutation updateStatus($id: ID!, $status: Status!) {
-                    updateStatus(id: $id, status: $status) { id status }
+                  mutation updateEpisode($id: ID!, $episode: Episode!) {
+                    updateEpisode(id: $id, episode: $episode) { id appearsIn }
                   }\""")
-              StatusResult updateStatus(String id, Status status);
+              EpisodeResult updateEpisode(String id, Episode episode);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.StatusResult");
-    assertThat(compilation).generatedSourceFile("test.Status");
+    assertThat(compilation).generatedSourceFile("test.EpisodeResult");
+    assertThat(compilation).generatedSourceFile("test.Episode");
   }
 
   @Test
@@ -167,15 +170,15 @@ class GraphqlSchemaProcessorTest {
 
             @GraphqlSchema("test-schema.graphql")
             interface ListApi {
-              @GraphqlQuery("{ user(id: \\"1\\") { id name tags } }")
-              UserWithTagsResult getUser();
+              @GraphqlQuery("{ character(id: \\"1\\") { id name tags } }")
+              CharacterWithTagsResult getCharacter();
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.UserWithTagsResult");
+    assertThat(compilation).generatedSourceFile("test.CharacterWithTagsResult");
   }
 
   @Test
@@ -192,29 +195,29 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface SharedApi {
               @GraphqlQuery(\"""
-                  mutation createUser($input: CreateUserInput!) {
-                    createUser(input: $input) { id name }
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id name }
                   }\""")
-              CreateResult1 createUser1(CreateUserInput input);
+              CreateResult1 createCharacter1(CreateCharacterInput input);
 
               @GraphqlQuery(\"""
-                  mutation createUser($input: CreateUserInput!) {
-                    createUser(input: $input) { id email }
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id email }
                   }\""")
-              CreateResult2 createUser2(CreateUserInput input);
+              CreateResult2 createCharacter2(CreateCharacterInput input);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.CreateUserInput");
+    assertThat(compilation).generatedSourceFile("test.CreateCharacterInput");
     assertThat(compilation).generatedSourceFile("test.CreateResult1");
     assertThat(compilation).generatedSourceFile("test.CreateResult2");
   }
 
   @Test
-  void deeplyNestedOrganizationQuery() {
+  void deeplyNestedStarshipQuery() {
     var source =
         JavaFileObjects.forSourceString(
             "test.DeepApi",
@@ -228,31 +231,39 @@ class GraphqlSchemaProcessorTest {
             interface DeepApi {
               @GraphqlQuery(\"""
                   {
-                    organization(id: "1") {
+                    starship(id: "1") {
                       id name
-                      address { street city coordinates { latitude longitude } }
-                      departments {
+                      location { planet sector coordinates { latitude longitude } }
+                      squadrons {
                         id name
-                        lead { id name status }
+                        leader { id name appearsIn }
                         members { id name email }
-                        subDepartments { id name tags { key value } }
-                        tags { key value }
+                        subSquadrons { id name traits { key value } }
+                        traits { key value }
                       }
-                      metadata { foundedYear industry categories { name tags { key value } } }
+                      specs { lengthMeters classification weapons { name traits { key value } } }
                     }
                   }\""")
-              OrgResult getOrganization();
+              StarshipResult getStarship();
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.OrgResult");
-    assertThat(compilation).generatedSourceFile("test.Address");
-    assertThat(compilation).generatedSourceFile("test.Coordinates");
-    assertThat(compilation).generatedSourceFile("test.Departments");
-    assertThat(compilation).generatedSourceFile("test.Metadata");
+    assertThat(compilation).generatedSourceFile("test.StarshipResult");
+    assertThat(compilation)
+        .generatedSourceFile("test.StarshipResult")
+        .contentsAsUtf8String()
+        .contains("public record Location(");
+    assertThat(compilation)
+        .generatedSourceFile("test.StarshipResult")
+        .contentsAsUtf8String()
+        .contains("public record Squadrons(");
+    assertThat(compilation)
+        .generatedSourceFile("test.StarshipResult")
+        .contentsAsUtf8String()
+        .contains("public record Specs(");
   }
 
   @Test
@@ -269,26 +280,26 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface ComplexMutationApi {
               @GraphqlQuery(\"""
-                  mutation createOrg($input: CreateOrgInput!) {
-                    createOrganization(input: $input) {
+                  mutation createStarship($input: CreateStarshipInput!) {
+                    createStarship(input: $input) {
                       id name
-                      departments { id name subDepartments { id name } }
+                      squadrons { id name subSquadrons { id name } }
                     }
                   }\""")
-              CreateOrgResult createOrg(CreateOrgInput input);
+              CreateStarshipResult createStarship(CreateStarshipInput input);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.CreateOrgResult");
-    assertThat(compilation).generatedSourceFile("test.CreateOrgInput");
-    assertThat(compilation).generatedSourceFile("test.DepartmentInput");
-    assertThat(compilation).generatedSourceFile("test.TagInput");
-    assertThat(compilation).generatedSourceFile("test.AddressInput");
-    assertThat(compilation).generatedSourceFile("test.OrgMetadataInput");
-    assertThat(compilation).generatedSourceFile("test.CategoryInput");
+    assertThat(compilation).generatedSourceFile("test.CreateStarshipResult");
+    assertThat(compilation).generatedSourceFile("test.CreateStarshipInput");
+    assertThat(compilation).generatedSourceFile("test.SquadronInput");
+    assertThat(compilation).generatedSourceFile("test.TraitInput");
+    assertThat(compilation).generatedSourceFile("test.LocationInput");
+    assertThat(compilation).generatedSourceFile("test.ShipSpecsInput");
+    assertThat(compilation).generatedSourceFile("test.WeaponInput");
   }
 
   @Test
@@ -305,14 +316,14 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface SearchApi {
               @GraphqlQuery(\"""
-                  query searchOrgs($criteria: OrgSearchCriteria!) {
-                    searchOrganizations(criteria: $criteria) {
+                  query searchStarships($criteria: StarshipSearchCriteria!) {
+                    searchStarships(criteria: $criteria) {
                       id name
-                      departments { id name lead { id name } tags { key value } }
-                      metadata { foundedYear categories { name parentCategory { name } } }
+                      squadrons { id name leader { id name } traits { key value } }
+                      specs { lengthMeters weapons { name parentWeapon { name } } }
                     }
                   }\""")
-              SearchResult searchOrganizations(OrgSearchCriteria criteria);
+              SearchResult searchStarships(StarshipSearchCriteria criteria);
             }
             """);
 
@@ -320,9 +331,9 @@ class GraphqlSchemaProcessorTest {
 
     assertThat(compilation).succeeded();
     assertThat(compilation).generatedSourceFile("test.SearchResult");
-    assertThat(compilation).generatedSourceFile("test.OrgSearchCriteria");
-    assertThat(compilation).generatedSourceFile("test.DepartmentFilterInput");
-    assertThat(compilation).generatedSourceFile("test.TagInput");
+    assertThat(compilation).generatedSourceFile("test.StarshipSearchCriteria");
+    assertThat(compilation).generatedSourceFile("test.SquadronFilterInput");
+    assertThat(compilation).generatedSourceFile("test.TraitInput");
   }
 
   @Test
@@ -340,18 +351,18 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface ListReturnApi {
               @GraphqlQuery(\"""
-                  query listUsers($filter: UserFilter) {
-                    users(filter: $filter) { id name email status }
+                  query listCharacters($filter: CharacterFilter) {
+                    characters(filter: $filter) { id name email appearsIn }
                   }\""")
-              List<UserListResult> listUsers(UserFilter filter);
+              List<CharacterListResult> listCharacters(CharacterFilter filter);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.UserListResult");
-    assertThat(compilation).generatedSourceFile("test.UserFilter");
+    assertThat(compilation).generatedSourceFile("test.CharacterListResult");
+    assertThat(compilation).generatedSourceFile("test.CharacterFilter");
   }
 
   @Test
@@ -368,10 +379,10 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("test-schema.graphql")
             interface ExternalTypeApi {
               @GraphqlQuery(\"""
-                  mutation createUser($input: CreateUserInput!) {
-                    createUser(input: $input) { id name email }
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id name email }
                   }\""")
-              CreateResult createUser(feign.graphql.GraphqlQuery input);
+              CreateResult createCharacter(feign.graphql.GraphqlQuery input);
             }
             """);
 
@@ -382,7 +393,7 @@ class GraphqlSchemaProcessorTest {
   }
 
   @Test
-  void userWithOrganizationMultipleLevelReuse() {
+  void characterWithStarshipMultipleLevelReuse() {
     var source =
         JavaFileObjects.forSourceString(
             "test.ReuseApi",
@@ -396,31 +407,31 @@ class GraphqlSchemaProcessorTest {
             interface ReuseApi {
               @GraphqlQuery(\"""
                   {
-                    user(id: "1") {
-                      id name status
-                      address { street city country coordinates { latitude longitude } }
-                      organization {
+                    character(id: "1") {
+                      id name appearsIn
+                      location { planet sector region coordinates { latitude longitude } }
+                      starship {
                         id name
-                        address { street city coordinates { latitude longitude } }
-                        departments { id name members { id name } }
+                        location { planet sector coordinates { latitude longitude } }
+                        squadrons { id name members { id name } }
                       }
                     }
                   }\""")
-              FullUserResult getFullUser();
+              FullCharacterResult getFullCharacter();
 
               @GraphqlQuery(\"""
-                  query listUsers($filter: UserFilter) {
-                    users(filter: $filter) { id name email tags }
+                  query listCharacters($filter: CharacterFilter) {
+                    characters(filter: $filter) { id name email tags }
                   }\""")
-              UserListResult listUsers(UserFilter filter);
+              CharacterListResult listCharacters(CharacterFilter filter);
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.FullUserResult");
-    assertThat(compilation).generatedSourceFile("test.Status");
+    assertThat(compilation).generatedSourceFile("test.FullCharacterResult");
+    assertThat(compilation).generatedSourceFile("test.Episode");
   }
 
   @Test
@@ -440,15 +451,15 @@ class GraphqlSchemaProcessorTest {
               @Scalar("DateTime")
               default String dateTime(String raw) { return raw; }
 
-              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime endTime } }")
-              EventResult getEvent();
+              @GraphqlQuery("{ battle(id: \\"1\\") { id name startTime endTime } }")
+              BattleResult getBattle();
             }
             """);
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.EventResult");
+    assertThat(compilation).generatedSourceFile("test.BattleResult");
   }
 
   @Test
@@ -464,8 +475,8 @@ class GraphqlSchemaProcessorTest {
 
             @GraphqlSchema("scalar-test-schema.graphql")
             interface MissingScalarApi {
-              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime } }")
-              EventResult getEvent();
+              @GraphqlQuery("{ battle(id: \\"1\\") { id name startTime } }")
+              BattleResult getBattle();
             }
             """);
 
@@ -503,8 +514,8 @@ class GraphqlSchemaProcessorTest {
 
             @GraphqlSchema("scalar-test-schema.graphql")
             interface ChildApi extends ScalarDefinitions {
-              @GraphqlQuery("{ event(id: \\"1\\") { id name startTime } }")
-              EventResult getEvent();
+              @GraphqlQuery("{ battle(id: \\"1\\") { id name startTime } }")
+              BattleResult getBattle();
             }
             """);
 
@@ -512,6 +523,153 @@ class GraphqlSchemaProcessorTest {
         javac().withProcessors(new GraphqlSchemaProcessor()).compile(parentSource, source);
 
     assertThat(compilation).succeeded();
-    assertThat(compilation).generatedSourceFile("test.EventResult");
+    assertThat(compilation).generatedSourceFile("test.BattleResult");
+  }
+
+  @Test
+  void conflictingReturnTypesReportsError() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.ConflictApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ConflictApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name } }
+                  \""")
+              CharResult query1();
+
+              @GraphqlQuery(\"""
+                  { character(id: "2") { id email } }
+                  \""")
+              CharResult query2();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Conflicting return type 'CharResult'");
+    assertThat(compilation).hadErrorContaining("'query1()'");
+    assertThat(compilation).hadErrorContaining("'query2()'");
+    assertThat(compilation).hadErrorContaining("id, name");
+    assertThat(compilation).hadErrorContaining("id, email");
+  }
+
+  @Test
+  void sameReturnTypeSameFieldsSucceeds() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.SameFieldsApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface SameFieldsApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name email } }
+                  \""")
+              CharResult query1();
+
+              @GraphqlQuery(\"""
+                  { character(id: "2") { id name email } }
+                  \""")
+              CharResult query2();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.CharResult");
+  }
+
+  @Test
+  void innerClassContentIsCorrect() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.InnerApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface InnerApi {
+              @GraphqlQuery(\"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      location { planet coordinates { latitude longitude } }
+                      specs { lengthMeters classification }
+                    }
+                  }\""")
+              ShipResult getShip();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.ShipResult").contentsAsUtf8String();
+
+    contents.contains(
+        "public record ShipResult(String id, String name, Location location, Specs specs)");
+    contents.contains("public record Location(String planet, Coordinates coordinates)");
+    contents.contains("public record Coordinates(Double latitude, Double longitude) {}");
+    contents.contains("public record Specs(Integer lengthMeters, String classification) {}");
+  }
+
+  @Test
+  void differentQueriesDifferentNestedFields() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.DiffNestedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface DiffNestedApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id location { planet } } }
+                  \""")
+              CharByPlanet queryByPlanet();
+
+              @GraphqlQuery(\"""
+                  { character(id: "2") { id location { sector region } } }
+                  \""")
+              CharByRegion queryByRegion();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation).generatedSourceFile("test.CharByPlanet");
+    assertThat(compilation).generatedSourceFile("test.CharByRegion");
+
+    assertThat(compilation)
+        .generatedSourceFile("test.CharByPlanet")
+        .contentsAsUtf8String()
+        .contains("public record Location(String planet) {}");
+
+    assertThat(compilation)
+        .generatedSourceFile("test.CharByRegion")
+        .contentsAsUtf8String()
+        .contains("public record Location(String sector, String region) {}");
   }
 }

@@ -1,64 +1,68 @@
+# Star Wars schema based on https://graphql.org/learn/schema/
+# Adapted for feign-graphql-apt test purposes
+
 type Query {
-  user(id: ID!): User
-  users(filter: UserFilter): [User]
-  organization(id: ID!): Organization
-  searchOrganizations(criteria: OrgSearchCriteria!): [Organization]
+  character(id: ID!): Character
+  characters(filter: CharacterFilter): [Character]
+  starship(id: ID!): Starship
+  searchStarships(criteria: StarshipSearchCriteria!): [Starship]
 }
 
 type Mutation {
-  createUser(input: CreateUserInput!): User
-  updateStatus(id: ID!, status: Status!): User
-  createOrganization(input: CreateOrgInput!): Organization
+  createCharacter(input: CreateCharacterInput!): Character
+  updateEpisode(id: ID!, episode: Episode!): Character
+  createStarship(input: CreateStarshipInput!): Starship
 }
 
-type User {
+type Character {
   id: ID!
   name: String!
   email: String
-  status: Status!
-  address: Address
+  appearsIn: Episode!
+  location: Location
   tags: [String]
-  organization: Organization
+  friends: [Character]
+  starship: Starship
 }
 
-type Organization {
+type Starship {
   id: ID!
   name: String!
-  address: Address
-  departments: [Department]
-  metadata: OrgMetadata
+  location: Location
+  squadrons: [Squadron]
+  specs: ShipSpecs
 }
 
-type Department {
+type Squadron {
   id: ID!
   name: String!
-  lead: User
-  members: [User]
-  subDepartments: [Department]
-  tags: [Tag]
+  leader: Character
+  members: [Character]
+  subSquadrons: [Squadron]
+  traits: [Trait]
 }
 
-type Tag {
+type Trait {
   key: String!
   value: String!
 }
 
-type OrgMetadata {
-  foundedYear: Int
-  industry: String
-  categories: [Category]
+type ShipSpecs {
+  lengthMeters: Int
+  classification: String
+  weapons: [Weapon]
 }
 
-type Category {
+type Weapon {
   name: String!
-  parentCategory: Category
-  tags: [Tag]
+  parentWeapon: Weapon
+  traits: [Trait]
 }
 
-type Address {
-  street: String
-  city: String
-  country: String
+type Location {
+  planet: String
+  sector: String
+  region: String
   coordinates: Coordinates
 }
 
@@ -67,30 +71,30 @@ type Coordinates {
   longitude: Float
 }
 
-input CreateUserInput {
+input CreateCharacterInput {
   name: String!
   email: String!
-  status: Status
-  address: AddressInput
+  appearsIn: Episode
+  location: LocationInput
   tags: [String]
-  orgId: ID
+  starshipId: ID
 }
 
-input UserFilter {
+input CharacterFilter {
   nameContains: String
-  status: Status
-  tagFilter: TagFilterInput
+  appearsIn: Episode
+  traitFilter: TraitFilterInput
 }
 
-input TagFilterInput {
+input TraitFilterInput {
   keys: [String]
   matchAll: Boolean
 }
 
-input AddressInput {
-  street: String
-  city: String
-  country: String
+input LocationInput {
+  planet: String
+  sector: String
+  region: String
   coordinates: CoordinatesInput
 }
 
@@ -99,52 +103,52 @@ input CoordinatesInput {
   longitude: Float
 }
 
-input CreateOrgInput {
+input CreateStarshipInput {
   name: String!
-  address: AddressInput
-  departments: [DepartmentInput]
-  metadata: OrgMetadataInput
+  location: LocationInput
+  squadrons: [SquadronInput]
+  specs: ShipSpecsInput
 }
 
-input DepartmentInput {
+input SquadronInput {
   name: String!
-  leadUserId: ID
-  subDepartments: [DepartmentInput]
-  tags: [TagInput]
+  leaderCharacterId: ID
+  subSquadrons: [SquadronInput]
+  traits: [TraitInput]
 }
 
-input TagInput {
+input TraitInput {
   key: String!
   value: String!
 }
 
-input OrgMetadataInput {
-  foundedYear: Int
-  industry: String
-  categories: [CategoryInput]
+input ShipSpecsInput {
+  lengthMeters: Int
+  classification: String
+  weapons: [WeaponInput]
 }
 
-input CategoryInput {
+input WeaponInput {
   name: String!
-  parentCategoryName: String
-  tags: [TagInput]
+  parentWeaponName: String
+  traits: [TraitInput]
 }
 
-input OrgSearchCriteria {
+input StarshipSearchCriteria {
   nameContains: String
-  industries: [String]
-  minFoundedYear: Int
-  departmentFilter: DepartmentFilterInput
+  classifications: [String]
+  minLengthMeters: Int
+  squadronFilter: SquadronFilterInput
 }
 
-input DepartmentFilterInput {
+input SquadronFilterInput {
   nameContains: String
   minMembers: Int
-  tags: [TagInput]
+  traits: [TraitInput]
 }
 
-enum Status {
-  ACTIVE
-  INACTIVE
-  PENDING
+enum Episode {
+  NEWHOPE
+  EMPIRE
+  JEDI
 }

@@ -14,32 +14,74 @@ See the [feign-graphql README](../graphql/README.md) for usage examples.
 
 ## Generated Output
 
-For a schema type like:
+### Result types with inner records
+
+Nested result types are generated as inner records scoped to each query result. This ensures each query gets exactly the fields it selects, even when different queries target the same GraphQL type.
+
+For a query like:
 
 ```graphql
-type User {
-  id: ID!
-  name: String!
-  email: String
-  status: Status!
-}
-
-enum Status {
-  ACTIVE
-  INACTIVE
+{
+  starship(id: "1") {
+    id name
+    location { planet sector }
+    specs { lengthMeters classification }
+  }
 }
 ```
 
-The processor generates:
+The processor generates a single file with inner records:
 
 ```java
-public record User(String id, String name, String email, Status status) {}
+public record StarshipResult(String id, String name, Location location, Specs specs) {
+
+  public record Location(String planet, String sector) {}
+
+  public record Specs(Integer lengthMeters, String classification) {}
+
+}
+```
+
+Two different queries can select different fields from the same GraphQL type without conflict:
+
+```java
+// Query 1: selects location { planet }
+public record CharByPlanet(String id, Location location) {
+  public record Location(String planet) {}
+}
+
+// Query 2: selects location { sector region }
+public record CharByRegion(String id, Location location) {
+  public record Location(String sector, String region) {}
+}
+```
+
+### Conflicting return type error
+
+If two queries use the same return type name but select different fields, the processor reports compilation errors on both methods showing which fields each selects:
+
+```
+error: Conflicting return type 'CharResult': method selects [id, email] but method 'query1()' already selects [id, name]
+  CharResult query2();
+             ^
+error: Conflicting return type 'CharResult': method selects [id, name] but method 'query2()' selects [id, email]
+  CharResult query1();
+             ^
+```
+
+### Input types and enums
+
+Input types and enums are generated as top-level files since they represent the full schema type:
+
+```java
+public record CreateCharacterInput(String name, String email, Episode appearsIn) {}
 ```
 
 ```java
-public enum Status {
-  ACTIVE,
-  INACTIVE
+public enum Episode {
+  NEWHOPE,
+  EMPIRE,
+  JEDI
 }
 ```
 
