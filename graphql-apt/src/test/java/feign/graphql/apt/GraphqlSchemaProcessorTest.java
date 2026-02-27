@@ -555,6 +555,10 @@ class GraphqlSchemaProcessorTest {
 
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("Conflicting return type 'CharResult'");
+    assertThat(compilation).hadErrorContaining("'query1()'");
+    assertThat(compilation).hadErrorContaining("'query2()'");
+    assertThat(compilation).hadErrorContaining("id, name");
+    assertThat(compilation).hadErrorContaining("id, email");
   }
 
   @Test

@@ -58,7 +58,7 @@ public class TypeGenerator {
   private final String targetPackage;
   private final Set<String> generatedTypes = new HashSet<>();
   private final Queue<String> pendingTypes = new ArrayDeque<>();
-  private final Map<String, String> resultTypeSignatures = new HashMap<>();
+  private final Map<String, ResultTypeUsage> resultTypeSignatures = new HashMap<>();
 
   public TypeGenerator(
       Filer filer,
@@ -79,20 +79,39 @@ public class TypeGenerator {
       ObjectTypeDefinition parentType,
       Element element) {
     var signature = canonicalize(selectionSet);
+    var fields = describeFields(selectionSet);
     var existing = resultTypeSignatures.get(className);
     if (existing != null) {
-      if (!existing.equals(signature)) {
+      if (!existing.signature.equals(signature)) {
         messager.printMessage(
             Diagnostic.Kind.ERROR,
             "Conflicting return type '"
                 + className
-                + "': different queries select different fields for this type",
+                + "': method selects ["
+                + fields
+                + "] but method '"
+                + existing.element.getSimpleName()
+                + "()' already selects ["
+                + existing.fields
+                + "]",
             element);
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "Conflicting return type '"
+                + className
+                + "': method selects ["
+                + existing.fields
+                + "] but method '"
+                + element.getSimpleName()
+                + "()' selects ["
+                + fields
+                + "]",
+            existing.element);
         return;
       }
       return;
     }
-    resultTypeSignatures.put(className, signature);
+    resultTypeSignatures.put(className, new ResultTypeUsage(signature, fields, element));
 
     var tree = buildResultType(className, selectionSet, parentType);
     if (tree == null) {
@@ -224,6 +243,22 @@ public class TypeGenerator {
     }
     entries.sort(String::compareTo);
     return String.join(",", entries);
+  }
+
+  private String describeFields(SelectionSet selectionSet) {
+    var entries = new ArrayList<String>();
+    for (var selection : selectionSet.getSelections()) {
+      if (!(selection instanceof Field field)) {
+        continue;
+      }
+      var name = field.getName();
+      if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
+        entries.add(name + " { " + describeFields(field.getSelectionSet()) + " }");
+      } else {
+        entries.add(name);
+      }
+    }
+    return String.join(", ", entries);
   }
 
   public void generateInputType(String className, String graphqlTypeName, Element element) {
@@ -476,6 +511,8 @@ public class TypeGenerator {
           element);
     }
   }
+
+  record ResultTypeUsage(String signature, String fields, Element element) {}
 
   static class ResultTypeDefinition {
     String className;
