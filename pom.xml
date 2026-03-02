@@ -185,7 +185,7 @@
     <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
     <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
     <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
-    <maven-bundle-plugin.version>6.0.0</maven-bundle-plugin.version>
+    <maven-bundle-plugin.version>6.0.2</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
     <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
