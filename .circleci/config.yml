@@ -116,6 +116,12 @@ commands:
               echo "Skipping BOM publish for SNAPSHOT version $BOM_VERSION"
               exit 0
             fi
+            DEP_COUNT=$(grep -c '<artifactId>feign-' "$BOM_POM" || true)
+            if [ "$DEP_COUNT" -eq 0 ]; then
+              echo "ERROR: BOM has no feign dependencies, refusing to publish an empty BOM"
+              exit 1
+            fi
+            echo "BOM contains $DEP_COUNT feign dependencies"
             STAGING_DIR=/tmp/bom-staging/io/github/openfeign/feign-bom/$BOM_VERSION
             mkdir -p "$STAGING_DIR"
             cp "$BOM_POM" "$STAGING_DIR/feign-bom-${BOM_VERSION}.pom"
