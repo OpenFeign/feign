@@ -177,7 +177,7 @@
     <fastjson2.version>2.0.61.android8</fastjson2.version>
     <jsonassert.version>1.5.3</jsonassert.version>
 
-    <git-code-format-maven-plugin.version>5.5</git-code-format-maven-plugin.version>
+    <git-code-format-maven-plugin.version>6.0</git-code-format-maven-plugin.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
     <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
