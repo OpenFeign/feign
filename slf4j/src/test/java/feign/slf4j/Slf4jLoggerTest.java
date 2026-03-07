@@ -115,4 +115,86 @@ public class Slf4jLoggerTest {
     logger.logRequest(CONFIG_KEY, Logger.Level.BASIC, REQUEST);
     logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.BASIC, RESPONSE, 273);
   }
+
+  @Test
+  void rebuffersResponseBodyWhenLogLevelIsInfo() throws Exception {
+    // given
+    slf4j.logLevel("info");
+
+    Response responseWithBody =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body("{\"error\":\"test\"}", Util.UTF_8)
+            .build();
+    logger = new Slf4jLogger();
+
+    // when
+    Response result =
+        logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.HEADERS, responseWithBody, 273);
+
+    // then
+    String body1 = Util.toString(result.body().asReader(Util.UTF_8));
+    String body2 = Util.toString(result.body().asReader(Util.UTF_8));
+    assert body1.equals("{\"error\":\"test\"}") : "First read should return body content";
+    assert body2.equals("{\"error\":\"test\"}") : "Second read should return same body content";
+  }
+
+  @Test
+  void rebuffersResponseBodyWhenLogLevelIsFull() throws Exception {
+    // given
+    slf4j.logLevel("info");
+    Response responseWithBody =
+        Response.builder()
+            .status(500)
+            .reason("Internal Server Error")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body("{\"message\":\"error details\"}", Util.UTF_8)
+            .build();
+    logger = new Slf4jLogger();
+
+    // when
+    Response result =
+        logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.FULL, responseWithBody, 100);
+
+    // then
+    byte[] bodyBytes = Util.toByteArray(result.body().asInputStream());
+    assert new String(bodyBytes, Util.UTF_8).equals("{\"message\":\"error details\"}")
+        : "Body should be readable after rebuffering";
+  }
+
+  @Test
+  void responseBodyReadableMultipleTimes() throws Exception {
+    // given
+    slf4j.logLevel("info");
+    String originalBody = "{\"data\":\"important information\",\"count\":42}";
+    Response responseWithBody =
+        Response.builder()
+            .status(400)
+            .reason("Bad Request")
+            .request(
+                Request.create(
+                    HttpMethod.POST, "/api/submit", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.<String, Collection<String>>emptyMap())
+            .body(originalBody, Util.UTF_8)
+            .build();
+    logger = new Slf4jLogger();
+
+    // when
+    Response result =
+        logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.HEADERS, responseWithBody, 150);
+
+    // then
+    String read1 = Util.toString(result.body().asReader(Util.UTF_8));
+    String read2 = Util.toString(result.body().asReader(Util.UTF_8));
+    String read3 = Util.toString(result.body().asReader(Util.UTF_8));
+    assert read1.equals(originalBody) : "First read should match original body";
+    assert read2.equals(originalBody) : "Second read should match original body";
+    assert read3.equals(originalBody) : "Third read should match original body";
+  }
 }
