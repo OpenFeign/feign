@@ -233,7 +233,7 @@
     <jaxws-api.version>2.3.1</jaxws-api.version>
     <jersey-client.version>1.19.4</jersey-client.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
-    <lombok.version>1.18.42</lombok.version>
+    <lombok.version>1.18.44</lombok.version>
     <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
     <metrics-core-4.version>4.2.38</metrics-core-4.version>
     <metrics-core-5.version>5.0.6</metrics-core-5.version>
