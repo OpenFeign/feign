@@ -62,4 +62,93 @@ class BaseBuilderTest {
     test(
         Feign.builder().requestInterceptor(_ -> {}).responseInterceptor((ic, c) -> c.next(ic)), 12);
   }
+
+  @Test
+  void checkCloneDontLooseInterceptors() {
+    Feign.Builder originalBuilder =
+        Feign.builder()
+            .requestInterceptor(new FirstRequestInterceptor())
+            .addCapability(
+                new Capability() {
+                  @Override
+                  public RequestInterceptor enrich(RequestInterceptor requestInterceptor) {
+                    return new DecoratingRequestInterceptor(requestInterceptor);
+                  }
+                });
+
+    // There is one interceptor FirstRequestInterceptor
+    assertThat(originalBuilder.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(1)
+        .first()
+        .isInstanceOf(FirstRequestInterceptor.class);
+
+    Feign.Builder enrichedBuilder = originalBuilder.enrich();
+
+    // Original builder should have one interceptor FirstRequestInterceptor
+    assertThat(originalBuilder.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(1)
+        .first()
+        .isInstanceOf(FirstRequestInterceptor.class);
+
+    // enrichedBuilder should have one interceptor DecoratingRequestInterceptor
+    assertThat(enrichedBuilder.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(1)
+        .first()
+        .isInstanceOf(DecoratingRequestInterceptor.class);
+
+    Feign.Builder enrichedBuilderWithInterceptor =
+        enrichedBuilder.requestInterceptor(new SecondRequestInterceptor());
+
+    // Original builder should have one interceptor FirstRequestInterceptor
+    assertThat(originalBuilder.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(1)
+        .first()
+        .isInstanceOf(FirstRequestInterceptor.class);
+
+    // enrichedBuilder should have two interceptors
+    assertThat(enrichedBuilder.requestInterceptors).isNotNull().isNotEmpty().hasSize(2);
+    assertThat(enrichedBuilder.requestInterceptors.get(0))
+        .isInstanceOf(DecoratingRequestInterceptor.class);
+    assertThat(enrichedBuilder.requestInterceptors.get(1))
+        .isInstanceOf(SecondRequestInterceptor.class);
+
+    // enrichedBuilderWithInterceptor should have two interceptors
+    assertThat(enrichedBuilderWithInterceptor.requestInterceptors)
+        .isNotNull()
+        .isNotEmpty()
+        .hasSize(2);
+    assertThat(enrichedBuilderWithInterceptor.requestInterceptors.get(0))
+        .isInstanceOf(DecoratingRequestInterceptor.class);
+    assertThat(enrichedBuilderWithInterceptor.requestInterceptors.get(1))
+        .isInstanceOf(SecondRequestInterceptor.class);
+  }
+
+  static final class FirstRequestInterceptor implements RequestInterceptor {
+    @Override
+    public void apply(final RequestTemplate template) {}
+  }
+
+  static final class SecondRequestInterceptor implements RequestInterceptor {
+    @Override
+    public void apply(final RequestTemplate template) {}
+  }
+
+  static final class DecoratingRequestInterceptor implements RequestInterceptor {
+    RequestInterceptor delegate;
+
+    DecoratingRequestInterceptor(RequestInterceptor delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public void apply(final RequestTemplate template) {}
+  }
 }
