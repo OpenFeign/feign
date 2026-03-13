@@ -230,10 +230,7 @@ public abstract class Logger {
     @Override
     protected Response logAndRebufferResponse(
         String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
-      if (logger.isLoggable(java.util.logging.Level.FINE)) {
-        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
-      }
-      return response;
+      return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
     }
 
     @Override
