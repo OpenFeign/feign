@@ -22,7 +22,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import graphql.language.EnumTypeDefinition;
 import graphql.language.Field;
-import graphql.language.FieldDefinition;
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
@@ -141,13 +140,13 @@ public class TypeGenerator {
         continue;
       }
       var fieldName = field.getName();
-      var schemaDef = findFieldDefinition(parentType, fieldName);
+      var schemaDef = GraphqlTypeMapper.findFieldDefinition(parentType, fieldName);
       if (schemaDef == null) {
         continue;
       }
 
       var fieldType = schemaDef.getType();
-      var rawTypeName = unwrapTypeName(fieldType);
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
 
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
         var nestedClassName = capitalize(fieldName);
@@ -300,7 +299,7 @@ public class TypeGenerator {
       var fieldNonNull = fieldType instanceof NonNullType;
       fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
-      var rawTypeName = unwrapTypeName(fieldType);
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -365,7 +364,7 @@ public class TypeGenerator {
       var fieldNonNull = fieldType instanceof NonNullType;
       fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
-      var rawTypeName = unwrapTypeName(fieldDef.getType());
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldDef.getType());
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -377,28 +376,6 @@ public class TypeGenerator {
     if (!typeMapper.isScalar(typeName) && !generatedTypes.contains(typeName)) {
       pendingTypes.add(typeName);
     }
-  }
-
-  private FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
-    for (var fd : typeDef.getFieldDefinitions()) {
-      if (fd.getName().equals(fieldName)) {
-        return fd;
-      }
-    }
-    return null;
-  }
-
-  private String unwrapTypeName(Type<?> type) {
-    if (type instanceof NonNullType nullType) {
-      return unwrapTypeName(nullType.getType());
-    }
-    if (type instanceof ListType listType) {
-      return unwrapTypeName(listType.getType());
-    }
-    if (type instanceof graphql.language.TypeName name) {
-      return name.getName();
-    }
-    return "String";
   }
 
   private TypeName wrapType(Type<?> schemaType, TypeName innerType, boolean useOptional) {

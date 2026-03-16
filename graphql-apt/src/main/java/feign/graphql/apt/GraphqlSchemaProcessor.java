@@ -24,13 +24,9 @@ import feign.graphql.Scalar;
 import feign.graphql.Toggle;
 import graphql.language.Document;
 import graphql.language.Field;
-import graphql.language.FieldDefinition;
-import graphql.language.ListType;
-import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
-import graphql.language.Type;
 import graphql.language.VariableDefinition;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
@@ -255,9 +251,9 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       if (rootType != null) {
         var rootField = findRootField(operation.getSelectionSet());
         if (rootField != null && rootField.getSelectionSet() != null) {
-          var rootFieldDef = findFieldDefinition(rootType, rootField.getName());
+          var rootFieldDef = GraphqlTypeMapper.findFieldDefinition(rootType, rootField.getName());
           if (rootFieldDef != null) {
-            var fieldTypeName = unwrapTypeName(rootFieldDef.getType());
+            var fieldTypeName = GraphqlTypeMapper.unwrapTypeName(rootFieldDef.getType());
             var fieldObjectType =
                 registry.getType(fieldTypeName, ObjectTypeDefinition.class).orElse(null);
             if (fieldObjectType != null) {
@@ -310,75 +306,37 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return null;
   }
 
-  private FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
-    for (var fd : typeDef.getFieldDefinitions()) {
-      if (fd.getName().equals(fieldName)) {
-        return fd;
-      }
-    }
-    return null;
-  }
-
   private ObjectTypeDefinition getRootType(
       OperationDefinition operation, TypeDefinitionRegistry registry) {
-    var rootTypeName =
+    var operationName =
         switch (operation.getOperation()) {
-          case MUTATION ->
-              registry
-                  .schemaDefinition()
-                  .flatMap(
-                      sd ->
-                          sd.getOperationTypeDefinitions().stream()
-                              .filter(otd -> otd.getName().equals("mutation"))
-                              .findFirst())
-                  .map(otd -> otd.getTypeName().getName())
-                  .orElse("Mutation");
-          case SUBSCRIPTION ->
-              registry
-                  .schemaDefinition()
-                  .flatMap(
-                      sd ->
-                          sd.getOperationTypeDefinitions().stream()
-                              .filter(otd -> otd.getName().equals("subscription"))
-                              .findFirst())
-                  .map(otd -> otd.getTypeName().getName())
-                  .orElse("Subscription");
-          default ->
-              registry
-                  .schemaDefinition()
-                  .flatMap(
-                      sd ->
-                          sd.getOperationTypeDefinitions().stream()
-                              .filter(otd -> otd.getName().equals("query"))
-                              .findFirst())
-                  .map(otd -> otd.getTypeName().getName())
-                  .orElse("Query");
+          case MUTATION -> "mutation";
+          case SUBSCRIPTION -> "subscription";
+          default -> "query";
         };
+    var fallback = Character.toUpperCase(operationName.charAt(0)) + operationName.substring(1);
+    var rootTypeName =
+        registry
+            .schemaDefinition()
+            .flatMap(
+                sd ->
+                    sd.getOperationTypeDefinitions().stream()
+                        .filter(otd -> otd.getName().equals(operationName))
+                        .findFirst())
+            .map(otd -> otd.getTypeName().getName())
+            .orElse(fallback);
     return registry.getType(rootTypeName, ObjectTypeDefinition.class).orElse(null);
   }
 
   private String findGraphqlInputType(
       String javaParamTypeName, List<VariableDefinition> variableDefs) {
     for (var varDef : variableDefs) {
-      var graphqlTypeName = unwrapTypeName(varDef.getType());
+      var graphqlTypeName = GraphqlTypeMapper.unwrapTypeName(varDef.getType());
       if (graphqlTypeName.equals(javaParamTypeName)) {
         return graphqlTypeName;
       }
     }
     return javaParamTypeName;
-  }
-
-  private String unwrapTypeName(Type<?> type) {
-    if (type instanceof NonNullType nullType) {
-      return unwrapTypeName(nullType.getType());
-    }
-    if (type instanceof ListType listType) {
-      return unwrapTypeName(listType.getType());
-    }
-    if (type instanceof graphql.language.TypeName name) {
-      return name.getName();
-    }
-    return "String";
   }
 
   private static final Set<String> JAVA_BUILT_INS =
