@@ -37,12 +37,12 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.schema.idl.UnExecutableSchemaGenerator;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -450,10 +450,10 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   private TypeAnnotationConfig resolveClassConfig(
       GraphqlSchema annotation,
       Map<String, TypeAnnotationConfig.FieldAnnotations> classFieldAnnotations) {
-    var fqns = extractTypeAnnotationFqns(annotation);
+    var fqns = extractClassFqns(annotation::typeAnnotations);
     var rawAnnotations = annotation.rawTypeAnnotations();
-    var usesFqns = extractUsesFqns(annotation);
-    var nonNullFqns = extractNonNullTypeAnnotationFqns(annotation);
+    var usesFqns = extractClassFqns(annotation::uses);
+    var nonNullFqns = extractClassFqns(annotation::nonNullTypeAnnotations);
     var nonNullRaw = annotation.nonNullRawTypeAnnotations();
     var config =
         TypeAnnotationConfig.resolve(
@@ -480,40 +480,10 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         config.nonNullAnnotations());
   }
 
-  private List<String> extractNonNullTypeAnnotationFqns(GraphqlSchema annotation) {
+  private static List<String> extractClassFqns(Supplier<Class<?>[]> accessor) {
     try {
-      var classes = annotation.nonNullTypeAnnotations();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
-    } catch (MirroredTypesException e) {
-      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
-    }
-  }
-
-  private List<String> extractNonNullTypeAnnotationFqns(GraphqlQuery annotation) {
-    try {
-      var classes = annotation.nonNullTypeAnnotations();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
-    } catch (MirroredTypesException e) {
-      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
-    }
-  }
-
-  private List<String> extractUsesFqns(GraphqlSchema annotation) {
-    try {
-      var classes = annotation.uses();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
+      var classes = accessor.get();
+      return java.util.Arrays.stream(classes).map(Class::getCanonicalName).toList();
     } catch (MirroredTypesException e) {
       return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
     }
@@ -521,7 +491,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
 
   private TypeAnnotationConfig resolveMethodConfig(
       ExecutableElement method, GraphqlQuery annotation, TypeAnnotationConfig classConfig) {
-    var methodFqns = extractTypeAnnotationFqns(annotation);
+    var methodFqns = extractClassFqns(annotation::typeAnnotations);
     var methodRaw = annotation.rawTypeAnnotations();
     var methodToggle = annotation.useOptional();
 
@@ -533,7 +503,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         TypeAnnotationConfig.FieldAnnotations.merge(
             classConfig.fieldAnnotations(), methodFieldAnnotations);
 
-    var methodNonNullFqns = extractNonNullTypeAnnotationFqns(annotation);
+    var methodNonNullFqns = extractClassFqns(annotation::nonNullTypeAnnotations);
     var methodNonNullRaw = annotation.nonNullRawTypeAnnotations();
     boolean hasMethodNonNull = !methodNonNullFqns.isEmpty() || methodNonNullRaw.length > 0;
     var resolvedNonNull = hasMethodNonNull ? null : classConfig.nonNullAnnotations();
@@ -577,7 +547,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var fieldAnnotations = new HashMap<String, TypeAnnotationConfig.FieldAnnotations>();
     var graphqlFields = method.getAnnotationsByType(GraphqlField.class);
     for (var gf : graphqlFields) {
-      var fqns = extractFieldTypeAnnotationFqns(gf);
+      var fqns = extractClassFqns(gf::typeAnnotations);
       var typeOverride = extractFieldTypeOverride(gf);
       var resolved =
           TypeAnnotationConfig.FieldAnnotations.resolve(
@@ -597,45 +567,6 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     } catch (MirroredTypeException e) {
       var fqn = e.getTypeMirror().toString();
       return "java.lang.Void".equals(fqn) ? null : fqn;
-    }
-  }
-
-  private List<String> extractFieldTypeAnnotationFqns(GraphqlField annotation) {
-    try {
-      var classes = annotation.typeAnnotations();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
-    } catch (MirroredTypesException e) {
-      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
-    }
-  }
-
-  private List<String> extractTypeAnnotationFqns(GraphqlSchema annotation) {
-    try {
-      var classes = annotation.typeAnnotations();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
-    } catch (MirroredTypesException e) {
-      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
-    }
-  }
-
-  private List<String> extractTypeAnnotationFqns(GraphqlQuery annotation) {
-    try {
-      var classes = annotation.typeAnnotations();
-      var result = new ArrayList<String>(classes.length);
-      for (var cls : classes) {
-        result.add(cls.getCanonicalName());
-      }
-      return result;
-    } catch (MirroredTypesException e) {
-      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
     }
   }
 

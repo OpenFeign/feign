@@ -174,12 +174,7 @@ public class TypeGenerator {
       }
     }
 
-    var def = new ResultTypeDefinition();
-    def.className = className;
-    def.fieldName = pathPrefix;
-    def.fields = fields;
-    def.innerTypes = innerTypes;
-    return def;
+    return new ResultTypeDefinition(className, pathPrefix, fields, innerTypes);
   }
 
   private void writeResultRecord(ResultTypeDefinition tree, Element element) {
@@ -450,35 +445,27 @@ public class TypeGenerator {
   private String formatFieldParam(RecordField f, String pathPrefix) {
     var fieldPath = pathPrefix.isEmpty() ? f.name : pathPrefix + "." + f.name;
     var fa = annotationConfig.fieldAnnotations().get(fieldPath);
+    var hasNonNull = f.nonNull && !annotationConfig.nonNullAnnotations().isEmpty();
 
-    var typeStr = f.typeString;
+    var typeStr = fa != null && fa.typeOverride() != null ? fa.typeOverride() : f.typeString;
+
+    if (!hasNonNull && (fa == null || fa.annotations().isEmpty())) {
+      return typeStr + " " + f.name;
+    }
+
     var fieldAnns = new ArrayList<String>();
-
-    if (f.nonNull && !annotationConfig.nonNullAnnotations().isEmpty()) {
+    if (hasNonNull) {
       fieldAnns.addAll(annotationConfig.nonNullAnnotations());
     }
-
     if (fa != null) {
-      if (fa.typeOverride() != null) {
-        typeStr = fa.typeOverride();
-      }
       fieldAnns.addAll(fa.annotations());
-    }
-
-    if (fieldAnns.isEmpty()) {
-      return typeStr + " " + f.name;
     }
     return String.join(" ", fieldAnns) + " " + typeStr + " " + f.name;
   }
 
-  private RecordField toRecordField(String name, TypeName typeName) {
-    return toRecordField(name, typeName, false);
-  }
-
   private RecordField toRecordField(String name, TypeName typeName, boolean nonNull) {
     var typeString = typeNameToString(typeName);
-    var importFqn = resolveImport(typeName);
-    return new RecordField(typeString, name, importFqn, typeName, nonNull);
+    return new RecordField(typeString, name, typeName, nonNull);
   }
 
   private String typeNameToString(TypeName typeName) {
@@ -494,20 +481,6 @@ public class TypeGenerator {
       return name.simpleName();
     }
     return typeName.toString();
-  }
-
-  private String resolveImport(TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName parameterized) {
-      resolveImport(parameterized.rawType);
-      for (var typeArg : parameterized.typeArguments) {
-        resolveImport(typeArg);
-      }
-      return fqnIfNeeded(parameterized.rawType);
-    }
-    if (typeName instanceof ClassName name) {
-      return fqnIfNeeded(name);
-    }
-    return null;
   }
 
   private String fqnIfNeeded(ClassName className) {
@@ -580,27 +553,11 @@ public class TypeGenerator {
 
   record ResultTypeUsage(String signature, String fields, Element element) {}
 
-  static class ResultTypeDefinition {
-    String className;
-    String fieldName;
-    List<RecordField> fields;
-    List<ResultTypeDefinition> innerTypes;
-  }
+  record ResultTypeDefinition(
+      String className,
+      String fieldName,
+      List<RecordField> fields,
+      List<ResultTypeDefinition> innerTypes) {}
 
-  static class RecordField {
-    final String typeString;
-    final String name;
-    final String importFqn;
-    final TypeName typeName;
-    final boolean nonNull;
-
-    RecordField(
-        String typeString, String name, String importFqn, TypeName typeName, boolean nonNull) {
-      this.typeString = typeString;
-      this.name = name;
-      this.importFqn = importFqn;
-      this.typeName = typeName;
-      this.nonNull = nonNull;
-    }
-  }
+  record RecordField(String typeString, String name, TypeName typeName, boolean nonNull) {}
 }

@@ -61,29 +61,8 @@ record TypeAnnotationConfig(
       List<String> nonNullFqns,
       String[] nonNullRawAnnotations) {
 
-    var rawSimpleNames = new HashSet<String>();
-    for (var raw : rawTypeAnnotations) {
-      var stripped = raw.startsWith("@") ? raw.substring(1) : raw;
-      var parenIdx = stripped.indexOf('(');
-      rawSimpleNames.add(parenIdx > 0 ? stripped.substring(0, parenIdx).trim() : stripped.trim());
-    }
-
     var imports = new TreeSet<String>();
-    var annotations = new ArrayList<String>();
-
-    for (var fqn : typeAnnotationFqns) {
-      var simpleName = fqn.substring(fqn.lastIndexOf('.') + 1);
-      if (!fqn.startsWith("java.lang.")) {
-        imports.add(fqn);
-      }
-      if (!rawSimpleNames.contains(simpleName)) {
-        annotations.add("@" + simpleName);
-      }
-    }
-
-    for (var raw : rawTypeAnnotations) {
-      annotations.add(raw.startsWith("@") ? raw : "@" + raw);
-    }
+    var annotations = resolveAnnotationList(typeAnnotationFqns, rawTypeAnnotations, imports);
 
     for (var fa : fieldAnnotations.values()) {
       imports.addAll(fa.imports());
@@ -95,7 +74,7 @@ record TypeAnnotationConfig(
         imports, annotations, useOptional, fieldAnnotations, nonNullResolved);
   }
 
-  private static List<String> resolveAnnotationList(
+  static List<String> resolveAnnotationList(
       List<String> fqns, String[] rawAnnotations, Set<String> imports) {
     var rawSimpleNames = new HashSet<String>();
     for (var raw : rawAnnotations) {
@@ -127,29 +106,8 @@ record TypeAnnotationConfig(
 
     static FieldAnnotations resolve(
         List<String> fqns, String[] rawAnnotations, String typeOverride) {
-      var rawSimpleNames = new HashSet<String>();
-      for (var raw : rawAnnotations) {
-        var stripped = raw.startsWith("@") ? raw.substring(1) : raw;
-        var parenIdx = stripped.indexOf('(');
-        rawSimpleNames.add(parenIdx > 0 ? stripped.substring(0, parenIdx).trim() : stripped.trim());
-      }
-
       var imports = new TreeSet<String>();
-      var annotations = new ArrayList<String>();
-
-      for (var fqn : fqns) {
-        var simpleName = fqn.substring(fqn.lastIndexOf('.') + 1);
-        if (!fqn.startsWith("java.lang.")) {
-          imports.add(fqn);
-        }
-        if (!rawSimpleNames.contains(simpleName)) {
-          annotations.add("@" + simpleName);
-        }
-      }
-
-      for (var raw : rawAnnotations) {
-        annotations.add(raw.startsWith("@") ? raw : "@" + raw);
-      }
+      var annotations = resolveAnnotationList(fqns, rawAnnotations, imports);
 
       if (typeOverride != null) {
         var simpleName = typeOverride.substring(typeOverride.lastIndexOf('.') + 1);
