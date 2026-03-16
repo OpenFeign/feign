@@ -234,6 +234,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
+    validator.validateVariableBindings(operation, method);
+
     var returnTypeName = getSimpleTypeName(method.getReturnType());
     if (returnTypeName != null && !isExistingExternalType(method.getReturnType(), targetPackage)) {
       var rootType = getRootType(operation, registry);
