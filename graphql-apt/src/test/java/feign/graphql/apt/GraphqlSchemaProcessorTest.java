@@ -126,7 +126,8 @@ class GraphqlSchemaProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.CharacterResult")
         .contentsAsUtf8String()
-        .contains("public record Location(String planet, String sector, String region) {}");
+        .contains(
+            "public record Location(Optional<String> planet, Optional<String> sector, Optional<String> region) {}");
   }
 
   @Test
@@ -625,10 +626,13 @@ class GraphqlSchemaProcessorTest {
         assertThat(compilation).generatedSourceFile("test.ShipResult").contentsAsUtf8String();
 
     contents.contains(
-        "public record ShipResult(String id, String name, Location location, Specs specs)");
-    contents.contains("public record Location(String planet, Coordinates coordinates)");
-    contents.contains("public record Coordinates(Double latitude, Double longitude) {}");
-    contents.contains("public record Specs(Integer lengthMeters, String classification) {}");
+        "public record ShipResult(String id, String name, Optional<Location> location, Optional<Specs> specs)");
+    contents.contains(
+        "public record Location(Optional<String> planet, Optional<Coordinates> coordinates)");
+    contents.contains(
+        "public record Coordinates(Optional<Double> latitude, Optional<Double> longitude) {}");
+    contents.contains(
+        "public record Specs(Optional<Integer> lengthMeters, Optional<String> classification) {}");
   }
 
   @Test
@@ -665,12 +669,12 @@ class GraphqlSchemaProcessorTest {
     assertThat(compilation)
         .generatedSourceFile("test.CharByPlanet")
         .contentsAsUtf8String()
-        .contains("public record Location(String planet) {}");
+        .contains("public record Location(Optional<String> planet) {}");
 
     assertThat(compilation)
         .generatedSourceFile("test.CharByRegion")
         .contentsAsUtf8String()
-        .contains("public record Location(String sector, String region) {}");
+        .contains("public record Location(Optional<String> sector, Optional<String> region) {}");
   }
 
   @Test
@@ -847,5 +851,331 @@ class GraphqlSchemaProcessorTest {
 
     assertThat(compilation).failed();
     assertThat(compilation).hadErrorContaining("email");
+  }
+
+  @Test
+  void useOptionalDisabledGeneratesPlainTypes() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.NoOptionalApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false)
+            interface NoOptionalApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name email location { planet } } }
+                  \""")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains(
+        "public record CharResult(String id, String name, String email, Location location)");
+    contents.contains("public record Location(String planet) {}");
+  }
+
+  @Test
+  void useOptionalDefaultWrapsNullableFields() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.OptionalApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface OptionalApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name email location { planet } } }
+                  \""")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains("import java.util.Optional;");
+    contents.contains(
+        "String id, String name, Optional<String> email, Optional<Location> location");
+    contents.contains("public record Location(Optional<String> planet) {}");
+  }
+
+  @Test
+  void useOptionalMethodOverridesClassLevel() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.OverrideApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false)
+            interface OverrideApi {
+              @GraphqlQuery(value = \"""
+                  { character(id: "1") { id name email } }
+                  \""", useOptional = Toggle.TRUE)
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains("import java.util.Optional;");
+    contents.contains("String id, String name, Optional<String> email");
+  }
+
+  @Test
+  void typeAnnotationsAddedToGeneratedRecords() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.AnnotatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                typeAnnotations = {Deprecated.class})
+            interface AnnotatedApi {
+              @GraphqlQuery(\"""
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id name }
+                  }\""")
+              CreateResult createCharacter(CreateCharacterInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    assertThat(compilation)
+        .generatedSourceFile("test.CreateResult")
+        .contentsAsUtf8String()
+        .contains("@Deprecated");
+    assertThat(compilation)
+        .generatedSourceFile("test.CreateCharacterInput")
+        .contentsAsUtf8String()
+        .contains("@Deprecated");
+  }
+
+  @Test
+  void rawTypeAnnotationsAppendedToGeneratedRecords() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.RawAnnotatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                rawTypeAnnotations = {"@Deprecated"})
+            interface RawAnnotatedApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name } }
+                  \""")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    assertThat(compilation)
+        .generatedSourceFile("test.CharResult")
+        .contentsAsUtf8String()
+        .contains("@Deprecated");
+  }
+
+  @Test
+  void collisionBetweenTypeAndRawAnnotationUsesClassAsImportOnly() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.CollisionApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                typeAnnotations = {Deprecated.class},
+                rawTypeAnnotations = {"@Deprecated(since = \\"1.0\\")"})
+            interface CollisionApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name } }
+                  \""")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains("@Deprecated(since = \"1.0\")");
+  }
+
+  @Test
+  void methodLevelAnnotationsOverrideClassLevel() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MethodOverrideApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                typeAnnotations = {Deprecated.class})
+            interface MethodOverrideApi {
+              @GraphqlQuery(value = \"""
+                  { character(id: "1") { id name } }
+                  \""", rawTypeAnnotations = {"@SuppressWarnings(\\"unchecked\\")"})
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains("@SuppressWarnings(\"unchecked\")");
+  }
+
+  @Test
+  void optionalOnInputTypeWrapsNullableFields() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.OptionalInputApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface OptionalInputApi {
+              @GraphqlQuery(\"""
+                  mutation createCharacter($input: CreateCharacterInput!) {
+                    createCharacter(input: $input) { id }
+                  }\""")
+              Object createCharacter(CreateCharacterInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation)
+            .generatedSourceFile("test.CreateCharacterInput")
+            .contentsAsUtf8String();
+    contents.contains("String name, String email");
+    contents.contains("Optional<Episode> appearsIn");
+    contents.contains("Optional<LocationInput> location");
+    contents.contains("Optional<List<String>> tags");
+    contents.contains("Optional<String> starshipId");
+  }
+
+  @Test
+  void mixedTypeAndRawAnnotationsWithoutCollision() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MixedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                typeAnnotations = {Deprecated.class},
+                rawTypeAnnotations = {"@SuppressWarnings(\\"unchecked\\")"})
+            interface MixedApi {
+              @GraphqlQuery(\"""
+                  { character(id: "1") { id name } }
+                  \""")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.CharResult").contentsAsUtf8String();
+    contents.contains("@Deprecated");
+    contents.contains("@SuppressWarnings(\"unchecked\")");
+  }
+
+  @Test
+  void annotationsAppliedToNestedResultRecords() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.NestedAnnotatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useOptional = false,
+                typeAnnotations = {Deprecated.class})
+            interface NestedAnnotatedApi {
+              @GraphqlQuery(\"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      location { planet coordinates { latitude longitude } }
+                    }
+                  }\""")
+              ShipResult getShip();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.ShipResult").contentsAsUtf8String();
+    contents.contains("@Deprecated\npublic record ShipResult(");
+    contents.contains("@Deprecated\n  public record Location(");
+    contents.contains("@Deprecated\n    public record Coordinates(");
   }
 }

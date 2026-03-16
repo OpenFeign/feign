@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,6 +60,7 @@ public class TypeGenerator {
   private final Set<String> generatedTypes = new HashSet<>();
   private final Queue<String> pendingTypes = new ArrayDeque<>();
   private final Map<String, ResultTypeUsage> resultTypeSignatures = new HashMap<>();
+  private TypeAnnotationConfig annotationConfig = TypeAnnotationConfig.EMPTY;
 
   public TypeGenerator(
       Filer filer,
@@ -71,6 +73,10 @@ public class TypeGenerator {
     this.registry = registry;
     this.typeMapper = typeMapper;
     this.targetPackage = targetPackage;
+  }
+
+  public void setAnnotationConfig(TypeAnnotationConfig config) {
+    this.annotationConfig = config;
   }
 
   public void generateResultType(
@@ -151,10 +157,11 @@ public class TypeGenerator {
             innerTypes.add(innerTree);
           }
         }
-        var nestedType = wrapType(fieldType, ClassName.get("", nestedClassName));
+        var nestedType =
+            wrapType(fieldType, ClassName.get("", nestedClassName), annotationConfig.useOptional());
         fields.add(toRecordField(fieldName, nestedType));
       } else {
-        var javaType = typeMapper.map(fieldType);
+        var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
         fields.add(toRecordField(fieldName, javaType));
         enqueueIfNonScalar(rawTypeName);
       }
@@ -179,6 +186,7 @@ public class TypeGenerator {
 
         var imports = new TreeSet<String>();
         collectAllImports(tree, imports);
+        imports.addAll(annotationConfig.imports());
         if (!imports.isEmpty()) {
           for (var imp : imports) {
             out.println("import " + imp + ";");
@@ -203,6 +211,10 @@ public class TypeGenerator {
         tree.fields.stream()
             .map(f -> f.typeString + " " + f.name)
             .collect(Collectors.joining(", "));
+
+    for (var annotation : annotationConfig.annotations()) {
+      out.println(indent + annotation);
+    }
 
     if (tree.innerTypes.isEmpty()) {
       out.println(indent + "public record " + tree.className + "(" + params + ") {}");
@@ -280,7 +292,7 @@ public class TypeGenerator {
     for (var valueDef : inputDef.getInputValueDefinitions()) {
       var fieldName = valueDef.getName();
       var fieldType = valueDef.getType();
-      var javaType = typeMapper.map(fieldType);
+      var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
       fields.add(toRecordField(fieldName, javaType));
 
       var rawTypeName = unwrapTypeName(fieldType);
@@ -343,7 +355,7 @@ public class TypeGenerator {
 
     for (var fieldDef : objectDef.getFieldDefinitions()) {
       var fieldName = fieldDef.getName();
-      var javaType = typeMapper.map(fieldDef.getType());
+      var javaType = typeMapper.map(fieldDef.getType(), annotationConfig.useOptional());
       fields.add(toRecordField(fieldName, javaType));
 
       var rawTypeName = unwrapTypeName(fieldDef.getType());
@@ -382,13 +394,22 @@ public class TypeGenerator {
     return "String";
   }
 
-  private TypeName wrapType(Type<?> schemaType, TypeName innerType) {
+  private TypeName wrapType(Type<?> schemaType, TypeName innerType, boolean useOptional) {
+    boolean nullable = !(schemaType instanceof NonNullType);
+    var wrapped = wrapTypeInner(schemaType, innerType);
+    if (useOptional && nullable) {
+      return ParameterizedTypeName.get(ClassName.get(Optional.class), wrapped);
+    }
+    return wrapped;
+  }
+
+  private TypeName wrapTypeInner(Type<?> schemaType, TypeName innerType) {
     if (schemaType instanceof NonNullType type) {
-      return wrapType(type.getType(), innerType);
+      return wrapTypeInner(type.getType(), innerType);
     }
     if (schemaType instanceof ListType type) {
       return ParameterizedTypeName.get(
-          ClassName.get(List.class), wrapType(type.getType(), innerType));
+          ClassName.get(List.class), wrapTypeInner(type.getType(), innerType));
     }
     return innerType;
   }
@@ -490,11 +511,16 @@ public class TypeGenerator {
         }
 
         var imports = collectImports(fields);
+        imports.addAll(annotationConfig.imports());
         if (!imports.isEmpty()) {
           for (var imp : imports) {
             out.println("import " + imp + ";");
           }
           out.println();
+        }
+
+        for (var annotation : annotationConfig.annotations()) {
+          out.println(annotation);
         }
 
         var params =

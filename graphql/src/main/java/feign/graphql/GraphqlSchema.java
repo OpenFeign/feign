@@ -29,4 +29,10 @@ public @interface GraphqlSchema {
   String value();
 
   boolean generateTypes() default true;
+
+  boolean useOptional() default true;
+
+  Class<?>[] typeAnnotations() default {};
+
+  String[] rawTypeAnnotations() default {};
 }

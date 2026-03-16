@@ -20,6 +20,7 @@ import com.squareup.javapoet.TypeName;
 import feign.graphql.GraphqlQuery;
 import feign.graphql.GraphqlSchema;
 import feign.graphql.Scalar;
+import feign.graphql.Toggle;
 import graphql.language.Document;
 import graphql.language.Field;
 import graphql.language.FieldDefinition;
@@ -35,6 +36,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.schema.idl.UnExecutableSchemaGenerator;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
@@ -117,6 +120,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var validator = new QueryValidator(messager);
     var generator = new TypeGenerator(filer, messager, registry, typeMapper, targetPackage);
 
+    var classConfig = resolveClassConfig(schemaAnnotation);
+
     for (var enclosed : typeElement.getEnclosedElements()) {
       if (!(enclosed instanceof ExecutableElement method)) {
         continue;
@@ -125,6 +130,9 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       if (queryAnnotation == null) {
         continue;
       }
+
+      var methodConfig = resolveMethodConfig(queryAnnotation, classConfig);
+      generator.setAnnotationConfig(methodConfig);
 
       processMethod(
           method,
@@ -432,6 +440,59 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       }
     }
     return typeMirror;
+  }
+
+  private TypeAnnotationConfig resolveClassConfig(GraphqlSchema annotation) {
+    var fqns = extractTypeAnnotationFqns(annotation);
+    var rawAnnotations = annotation.rawTypeAnnotations();
+    return TypeAnnotationConfig.resolve(fqns, rawAnnotations, annotation.useOptional());
+  }
+
+  private TypeAnnotationConfig resolveMethodConfig(
+      GraphqlQuery annotation, TypeAnnotationConfig classConfig) {
+    var methodFqns = extractTypeAnnotationFqns(annotation);
+    var methodRaw = annotation.rawTypeAnnotations();
+    var methodToggle = annotation.useOptional();
+
+    var useOptional =
+        methodToggle == Toggle.INHERIT ? classConfig.useOptional() : methodToggle == Toggle.TRUE;
+
+    boolean hasMethodAnnotations = !methodFqns.isEmpty() || methodRaw.length > 0;
+    if (!hasMethodAnnotations) {
+      if (useOptional == classConfig.useOptional()) {
+        return classConfig;
+      }
+      return new TypeAnnotationConfig(
+          classConfig.imports(), classConfig.annotations(), useOptional);
+    }
+
+    return TypeAnnotationConfig.resolve(methodFqns, methodRaw, useOptional);
+  }
+
+  private List<String> extractTypeAnnotationFqns(GraphqlSchema annotation) {
+    try {
+      var classes = annotation.typeAnnotations();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
+  }
+
+  private List<String> extractTypeAnnotationFqns(GraphqlQuery annotation) {
+    try {
+      var classes = annotation.typeAnnotations();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
   }
 
   private String getPackageName(TypeElement typeElement) {

@@ -24,6 +24,7 @@ import graphql.language.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class GraphqlTypeMapper {
 
@@ -44,11 +45,24 @@ public class GraphqlTypeMapper {
   }
 
   public TypeName map(Type<?> type) {
+    return map(type, false);
+  }
+
+  public TypeName map(Type<?> type, boolean useOptional) {
+    boolean nullable = !(type instanceof NonNullType);
+    var mapped = mapInner(type);
+    if (useOptional && nullable) {
+      return ParameterizedTypeName.get(ClassName.get(Optional.class), mapped);
+    }
+    return mapped;
+  }
+
+  private TypeName mapInner(Type<?> type) {
     if (type instanceof NonNullType nullType) {
-      return map(nullType.getType());
+      return mapInner(nullType.getType());
     }
     if (type instanceof ListType listType) {
-      var elementType = map(listType.getType());
+      var elementType = mapInner(listType.getType());
       return ParameterizedTypeName.get(ClassName.get(List.class), elementType);
     }
     if (type instanceof graphql.language.TypeName name) {
