@@ -32,7 +32,13 @@ public @interface GraphqlSchema {
 
   boolean useOptional() default true;
 
+  Class<?>[] uses() default {};
+
   Class<?>[] typeAnnotations() default {};
 
   String[] rawTypeAnnotations() default {};
+
+  Class<?>[] nonNullTypeAnnotations() default {};
+
+  String[] nonNullRawTypeAnnotations() default {};
 }

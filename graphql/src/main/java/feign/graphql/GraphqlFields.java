@@ -22,19 +22,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Experimental
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface GraphqlQuery {
+@Retention(RetentionPolicy.SOURCE)
+@Target({ElementType.TYPE, ElementType.METHOD})
+public @interface GraphqlFields {
 
-  String value();
-
-  Toggle useOptional() default Toggle.INHERIT;
-
-  Class<?>[] typeAnnotations() default {};
-
-  String[] rawTypeAnnotations() default {};
-
-  Class<?>[] nonNullTypeAnnotations() default {};
-
-  String[] nonNullRawTypeAnnotations() default {};
+  GraphqlField[] value();
 }

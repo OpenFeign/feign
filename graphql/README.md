@@ -164,6 +164,144 @@ Returns `Optional.empty()` when the data is null or missing, and `Optional.of(va
 Optional<User> findTopUser(int limit);
 ```
 
+## Optional Fields
+
+By default, nullable GraphQL fields (without `!`) are wrapped in `Optional<>` in generated records:
+
+```graphql
+type User {
+  id: ID!          # non-null
+  name: String!    # non-null
+  email: String    # nullable
+}
+```
+
+```java
+public record User(String id, String name, Optional<String> email) {}
+```
+
+This is controlled by `useOptional` on `@GraphqlSchema` (defaults to `true`):
+
+```java
+@GraphqlSchema(value = "schema.graphql", useOptional = false)
+```
+
+Override per method with `Toggle`:
+
+```java
+@GraphqlQuery(value = "...", useOptional = Toggle.FALSE)
+```
+
+## Type Annotations on Generated Records
+
+Add annotations to all generated records using `typeAnnotations` (no-arg) and `rawTypeAnnotations` (with args):
+
+```java
+@GraphqlSchema(
+    value = "schema.graphql",
+    typeAnnotations = {Builder.class, Jacksonized.class},
+    rawTypeAnnotations = {"@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)"}
+)
+```
+
+Generates:
+
+```java
+@Builder
+@Jacksonized
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public record User(String id, String name) {}
+```
+
+**Collision rule:** when the same annotation simple name appears in both `typeAnnotations` and `rawTypeAnnotations`, the class provides only the import and the raw string is used:
+
+```java
+typeAnnotations = {Builder.class},
+rawTypeAnnotations = {"@Builder(toBuilder = true)"}
+// Result: import lombok.Builder; + @Builder(toBuilder = true)
+```
+
+Override per method on `@GraphqlQuery` — non-empty arrays replace class-level values.
+
+## Import-Only Classes with `uses`
+
+When raw annotations reference classes not in `typeAnnotations`, use `uses` to add their imports:
+
+```java
+@GraphqlSchema(
+    value = "schema.graphql",
+    uses = {Min.class, Max.class, Pattern.class}
+)
+```
+
+These classes are added as imports to all generated files but no annotations are generated from them.
+
+## Non-Null Field Annotations
+
+Automatically annotate all non-null (`!`) fields with `nonNullTypeAnnotations`:
+
+```java
+@GraphqlSchema(
+    value = "schema.graphql",
+    nonNullTypeAnnotations = {NotNull.class}
+)
+```
+
+For `name: String!` and `email: String`, generates:
+
+```java
+public record User(@NotNull String name, Optional<String> email) {}
+```
+
+Same collision rule applies with `nonNullRawTypeAnnotations`. Overridable per method on `@GraphqlQuery`.
+
+## Field-Level Annotations with `@GraphqlField`
+
+Apply annotations or override types on specific fields. Repeatable, works on both the interface (class-level default) and individual methods:
+
+```java
+@GraphqlSchema(value = "schema.graphql", useOptional = false)
+@GraphqlField(name = "email", typeAnnotations = {Email.class})
+interface UserApi {
+
+  @GraphqlQuery("{ user(id: \"1\") { id name email } }")
+  @GraphqlField(name = "name", typeAnnotations = {NotBlank.class})
+  UserResult getUser();
+}
+```
+
+Generates:
+
+```java
+public record UserResult(String id, @NotBlank String name, @Email String email) {}
+```
+
+### Dot Notation for Nested Fields
+
+Use dot notation to target fields in nested records:
+
+```java
+@GraphqlField(name = "location.coordinates.latitude", typeAnnotations = {NotNull.class})
+@GraphqlField(name = "location.planet", typeAnnotations = {NotBlank.class})
+```
+
+### Field Type Override
+
+Override the Java type for a field — useful when APIs return strings for dates without declaring custom scalars:
+
+```java
+@GraphqlField(name = "createdAt", type = ZonedDateTime.class)
+@GraphqlField(name = "amount", type = BigDecimal.class)
+```
+
+Combines with annotations:
+
+```java
+@GraphqlField(name = "createdAt", type = ZonedDateTime.class, typeAnnotations = {NotNull.class})
+```
+
+Class-level `@GraphqlField` applies to all methods; method-level overrides for the same field name.
+
 ## Disabling Type Generation
 
 If you provide your own model classes, disable automatic generation:

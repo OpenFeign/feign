@@ -17,6 +17,7 @@ package feign.graphql.apt;
 
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.TypeName;
+import feign.graphql.GraphqlField;
 import feign.graphql.GraphqlQuery;
 import feign.graphql.GraphqlSchema;
 import feign.graphql.Scalar;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -50,10 +52,12 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -120,7 +124,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var validator = new QueryValidator(messager);
     var generator = new TypeGenerator(filer, messager, registry, typeMapper, targetPackage);
 
-    var classConfig = resolveClassConfig(schemaAnnotation);
+    var classFieldAnnotations = extractFieldAnnotations(typeElement);
+    var classConfig = resolveClassConfig(schemaAnnotation, classFieldAnnotations);
 
     for (var enclosed : typeElement.getEnclosedElements()) {
       if (!(enclosed instanceof ExecutableElement method)) {
@@ -131,7 +136,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         continue;
       }
 
-      var methodConfig = resolveMethodConfig(queryAnnotation, classConfig);
+      var methodConfig = resolveMethodConfig(method, queryAnnotation, classConfig);
       generator.setAnnotationConfig(methodConfig);
 
       processMethod(
@@ -442,14 +447,80 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return typeMirror;
   }
 
-  private TypeAnnotationConfig resolveClassConfig(GraphqlSchema annotation) {
+  private TypeAnnotationConfig resolveClassConfig(
+      GraphqlSchema annotation,
+      Map<String, TypeAnnotationConfig.FieldAnnotations> classFieldAnnotations) {
     var fqns = extractTypeAnnotationFqns(annotation);
     var rawAnnotations = annotation.rawTypeAnnotations();
-    return TypeAnnotationConfig.resolve(fqns, rawAnnotations, annotation.useOptional());
+    var usesFqns = extractUsesFqns(annotation);
+    var nonNullFqns = extractNonNullTypeAnnotationFqns(annotation);
+    var nonNullRaw = annotation.nonNullRawTypeAnnotations();
+    var config =
+        TypeAnnotationConfig.resolve(
+            fqns,
+            rawAnnotations,
+            annotation.useOptional(),
+            classFieldAnnotations,
+            nonNullFqns,
+            nonNullRaw);
+    if (usesFqns.isEmpty()) {
+      return config;
+    }
+    var mergedImports = new TreeSet<>(config.imports());
+    for (var fqn : usesFqns) {
+      if (!fqn.startsWith("java.lang.")) {
+        mergedImports.add(fqn);
+      }
+    }
+    return new TypeAnnotationConfig(
+        mergedImports,
+        config.annotations(),
+        config.useOptional(),
+        config.fieldAnnotations(),
+        config.nonNullAnnotations());
+  }
+
+  private List<String> extractNonNullTypeAnnotationFqns(GraphqlSchema annotation) {
+    try {
+      var classes = annotation.nonNullTypeAnnotations();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
+  }
+
+  private List<String> extractNonNullTypeAnnotationFqns(GraphqlQuery annotation) {
+    try {
+      var classes = annotation.nonNullTypeAnnotations();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
+  }
+
+  private List<String> extractUsesFqns(GraphqlSchema annotation) {
+    try {
+      var classes = annotation.uses();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
   }
 
   private TypeAnnotationConfig resolveMethodConfig(
-      GraphqlQuery annotation, TypeAnnotationConfig classConfig) {
+      ExecutableElement method, GraphqlQuery annotation, TypeAnnotationConfig classConfig) {
     var methodFqns = extractTypeAnnotationFqns(annotation);
     var methodRaw = annotation.rawTypeAnnotations();
     var methodToggle = annotation.useOptional();
@@ -457,16 +528,89 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var useOptional =
         methodToggle == Toggle.INHERIT ? classConfig.useOptional() : methodToggle == Toggle.TRUE;
 
+    var methodFieldAnnotations = extractFieldAnnotations(method);
+    var fieldAnnotations =
+        TypeAnnotationConfig.FieldAnnotations.merge(
+            classConfig.fieldAnnotations(), methodFieldAnnotations);
+
+    var methodNonNullFqns = extractNonNullTypeAnnotationFqns(annotation);
+    var methodNonNullRaw = annotation.nonNullRawTypeAnnotations();
+    boolean hasMethodNonNull = !methodNonNullFqns.isEmpty() || methodNonNullRaw.length > 0;
+    var resolvedNonNull = hasMethodNonNull ? null : classConfig.nonNullAnnotations();
+
     boolean hasMethodAnnotations = !methodFqns.isEmpty() || methodRaw.length > 0;
-    if (!hasMethodAnnotations) {
-      if (useOptional == classConfig.useOptional()) {
+    if (!hasMethodAnnotations && !hasMethodNonNull) {
+      if (useOptional == classConfig.useOptional()
+          && fieldAnnotations.equals(classConfig.fieldAnnotations())) {
         return classConfig;
       }
+      var mergedImports = new TreeSet<>(classConfig.imports());
+      for (var fa : fieldAnnotations.values()) {
+        mergedImports.addAll(fa.imports());
+      }
       return new TypeAnnotationConfig(
-          classConfig.imports(), classConfig.annotations(), useOptional);
+          mergedImports,
+          classConfig.annotations(),
+          useOptional,
+          fieldAnnotations,
+          classConfig.nonNullAnnotations());
     }
 
-    return TypeAnnotationConfig.resolve(methodFqns, methodRaw, useOptional);
+    var nonNullFqns = hasMethodNonNull ? methodNonNullFqns : List.<String>of();
+    var nonNullRaw = hasMethodNonNull ? methodNonNullRaw : new String[0];
+    var config =
+        TypeAnnotationConfig.resolve(
+            methodFqns, methodRaw, useOptional, fieldAnnotations, nonNullFqns, nonNullRaw);
+
+    if (resolvedNonNull != null && !resolvedNonNull.isEmpty()) {
+      var mergedImports = new TreeSet<>(config.imports());
+      mergedImports.addAll(classConfig.imports());
+      return new TypeAnnotationConfig(
+          mergedImports, config.annotations(), useOptional, fieldAnnotations, resolvedNonNull);
+    }
+
+    return config;
+  }
+
+  private Map<String, TypeAnnotationConfig.FieldAnnotations> extractFieldAnnotations(
+      Element method) {
+    var fieldAnnotations = new HashMap<String, TypeAnnotationConfig.FieldAnnotations>();
+    var graphqlFields = method.getAnnotationsByType(GraphqlField.class);
+    for (var gf : graphqlFields) {
+      var fqns = extractFieldTypeAnnotationFqns(gf);
+      var typeOverride = extractFieldTypeOverride(gf);
+      var resolved =
+          TypeAnnotationConfig.FieldAnnotations.resolve(
+              fqns, gf.rawTypeAnnotations(), typeOverride);
+      fieldAnnotations.put(gf.name(), resolved);
+    }
+    return fieldAnnotations;
+  }
+
+  private String extractFieldTypeOverride(GraphqlField annotation) {
+    try {
+      var cls = annotation.type();
+      if (cls == Void.class) {
+        return null;
+      }
+      return cls.getCanonicalName();
+    } catch (MirroredTypeException e) {
+      var fqn = e.getTypeMirror().toString();
+      return "java.lang.Void".equals(fqn) ? null : fqn;
+    }
+  }
+
+  private List<String> extractFieldTypeAnnotationFqns(GraphqlField annotation) {
+    try {
+      var classes = annotation.typeAnnotations();
+      var result = new ArrayList<String>(classes.length);
+      for (var cls : classes) {
+        result.add(cls.getCanonicalName());
+      }
+      return result;
+    } catch (MirroredTypesException e) {
+      return e.getTypeMirrors().stream().map(TypeMirror::toString).toList();
+    }
   }
 
   private List<String> extractTypeAnnotationFqns(GraphqlSchema annotation) {

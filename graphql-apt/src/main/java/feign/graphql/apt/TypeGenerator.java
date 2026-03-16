@@ -119,7 +119,7 @@ public class TypeGenerator {
     }
     resultTypeSignatures.put(className, new ResultTypeUsage(signature, fields, element));
 
-    var tree = buildResultType(className, selectionSet, parentType);
+    var tree = buildResultType(className, selectionSet, parentType, "");
     if (tree == null) {
       return;
     }
@@ -129,7 +129,10 @@ public class TypeGenerator {
   }
 
   private ResultTypeDefinition buildResultType(
-      String className, SelectionSet selectionSet, ObjectTypeDefinition parentType) {
+      String className,
+      SelectionSet selectionSet,
+      ObjectTypeDefinition parentType,
+      String pathPrefix) {
     var fields = new ArrayList<RecordField>();
     var innerTypes = new ArrayList<ResultTypeDefinition>();
 
@@ -148,27 +151,32 @@ public class TypeGenerator {
 
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
         var nestedClassName = capitalize(fieldName);
+        var nestedPath = pathPrefix.isEmpty() ? fieldName : pathPrefix + "." + fieldName;
         var nestedObjectType =
             registry.getType(rawTypeName, ObjectTypeDefinition.class).orElse(null);
         if (nestedObjectType != null) {
           var innerTree =
-              buildResultType(nestedClassName, field.getSelectionSet(), nestedObjectType);
+              buildResultType(
+                  nestedClassName, field.getSelectionSet(), nestedObjectType, nestedPath);
           if (innerTree != null) {
             innerTypes.add(innerTree);
           }
         }
         var nestedType =
             wrapType(fieldType, ClassName.get("", nestedClassName), annotationConfig.useOptional());
-        fields.add(toRecordField(fieldName, nestedType));
+        var fieldNonNull = fieldType instanceof NonNullType;
+        fields.add(toRecordField(fieldName, nestedType, fieldNonNull));
       } else {
         var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
-        fields.add(toRecordField(fieldName, javaType));
+        var fieldNonNull = fieldType instanceof NonNullType;
+        fields.add(toRecordField(fieldName, javaType, fieldNonNull));
         enqueueIfNonScalar(rawTypeName);
       }
     }
 
     var def = new ResultTypeDefinition();
     def.className = className;
+    def.fieldName = pathPrefix;
     def.fields = fields;
     def.innerTypes = innerTypes;
     return def;
@@ -207,9 +215,10 @@ public class TypeGenerator {
   }
 
   private void writeRecordBody(PrintWriter out, ResultTypeDefinition tree, String indent) {
+    var pathPrefix = tree.fieldName;
     var params =
         tree.fields.stream()
-            .map(f -> f.typeString + " " + f.name)
+            .map(f -> formatFieldParam(f, pathPrefix))
             .collect(Collectors.joining(", "));
 
     for (var annotation : annotationConfig.annotations()) {
@@ -293,7 +302,8 @@ public class TypeGenerator {
       var fieldName = valueDef.getName();
       var fieldType = valueDef.getType();
       var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
-      fields.add(toRecordField(fieldName, javaType));
+      var fieldNonNull = fieldType instanceof NonNullType;
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
       var rawTypeName = unwrapTypeName(fieldType);
       enqueueIfNonScalar(rawTypeName);
@@ -355,8 +365,10 @@ public class TypeGenerator {
 
     for (var fieldDef : objectDef.getFieldDefinitions()) {
       var fieldName = fieldDef.getName();
-      var javaType = typeMapper.map(fieldDef.getType(), annotationConfig.useOptional());
-      fields.add(toRecordField(fieldName, javaType));
+      var fieldType = fieldDef.getType();
+      var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
+      var fieldNonNull = fieldType instanceof NonNullType;
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
       var rawTypeName = unwrapTypeName(fieldDef.getType());
       enqueueIfNonScalar(rawTypeName);
@@ -435,10 +447,38 @@ public class TypeGenerator {
     }
   }
 
+  private String formatFieldParam(RecordField f, String pathPrefix) {
+    var fieldPath = pathPrefix.isEmpty() ? f.name : pathPrefix + "." + f.name;
+    var fa = annotationConfig.fieldAnnotations().get(fieldPath);
+
+    var typeStr = f.typeString;
+    var fieldAnns = new ArrayList<String>();
+
+    if (f.nonNull && !annotationConfig.nonNullAnnotations().isEmpty()) {
+      fieldAnns.addAll(annotationConfig.nonNullAnnotations());
+    }
+
+    if (fa != null) {
+      if (fa.typeOverride() != null) {
+        typeStr = fa.typeOverride();
+      }
+      fieldAnns.addAll(fa.annotations());
+    }
+
+    if (fieldAnns.isEmpty()) {
+      return typeStr + " " + f.name;
+    }
+    return String.join(" ", fieldAnns) + " " + typeStr + " " + f.name;
+  }
+
   private RecordField toRecordField(String name, TypeName typeName) {
+    return toRecordField(name, typeName, false);
+  }
+
+  private RecordField toRecordField(String name, TypeName typeName, boolean nonNull) {
     var typeString = typeNameToString(typeName);
     var importFqn = resolveImport(typeName);
-    return new RecordField(typeString, name, importFqn, typeName);
+    return new RecordField(typeString, name, importFqn, typeName, nonNull);
   }
 
   private String typeNameToString(TypeName typeName) {
@@ -524,7 +564,7 @@ public class TypeGenerator {
         }
 
         var params =
-            fields.stream().map(f -> f.typeString + " " + f.name).collect(Collectors.joining(", "));
+            fields.stream().map(f -> formatFieldParam(f, "")).collect(Collectors.joining(", "));
 
         out.println("public record " + className + "(" + params + ") {}");
       }
@@ -542,6 +582,7 @@ public class TypeGenerator {
 
   static class ResultTypeDefinition {
     String className;
+    String fieldName;
     List<RecordField> fields;
     List<ResultTypeDefinition> innerTypes;
   }
@@ -551,19 +592,15 @@ public class TypeGenerator {
     final String name;
     final String importFqn;
     final TypeName typeName;
+    final boolean nonNull;
 
-    RecordField(String typeString, String name, String importFqn) {
-      this.typeString = typeString;
-      this.name = name;
-      this.importFqn = importFqn;
-      this.typeName = null;
-    }
-
-    RecordField(String typeString, String name, String importFqn, TypeName typeName) {
+    RecordField(
+        String typeString, String name, String importFqn, TypeName typeName, boolean nonNull) {
       this.typeString = typeString;
       this.name = name;
       this.importFqn = importFqn;
       this.typeName = typeName;
+      this.nonNull = nonNull;
     }
   }
 }
