@@ -21,7 +21,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>feign-parent</artifactId>
-  <version>13.10</version>
+  <version>13.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
@@ -135,7 +135,7 @@
   <scm>
     <connection>scm:git:git@github.com:OpenFeign/feign.git</connection>
     <developerConnection>scm:git:git@github.com:OpenFeign/feign.git</developerConnection>
-    <tag>13.10</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/openfeign/feign</url>
   </scm>
 
@@ -568,7 +568,7 @@
             <trimStackTrace>false</trimStackTrace>
             <argLine>${jvm.options}</argLine>
             <excludes>
-              <exclude></exclude>
+              <exclude />
             </excludes>
           </configuration>
         </plugin>
