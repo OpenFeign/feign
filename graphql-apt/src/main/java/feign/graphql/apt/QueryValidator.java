@@ -15,13 +15,21 @@
  */
 package feign.graphql.apt;
 
+import feign.Param;
 import graphql.GraphQLError;
 import graphql.language.Document;
+import graphql.language.ListType;
+import graphql.language.NonNullType;
+import graphql.language.OperationDefinition;
+import graphql.language.Type;
+import graphql.language.VariableDefinition;
 import graphql.schema.GraphQLSchema;
 import graphql.validation.Validator;
+import java.util.HashSet;
 import java.util.Locale;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.tools.Diagnostic;
 
 public class QueryValidator {
@@ -57,5 +65,40 @@ public class QueryValidator {
       }
     }
     return false;
+  }
+
+  public void validateVariableBindings(OperationDefinition operation, ExecutableElement method) {
+    var paramNames = new HashSet<String>();
+    for (var param : method.getParameters()) {
+      if (param.getAnnotation(Param.class) == null) {
+        paramNames.add(param.getSimpleName().toString());
+      }
+    }
+
+    for (VariableDefinition varDef : operation.getVariableDefinitions()) {
+      if (varDef.getType() instanceof NonNullType && varDef.getDefaultValue() == null) {
+        var varName = varDef.getName();
+        if (!paramNames.contains(varName)) {
+          messager.printMessage(
+              Diagnostic.Kind.ERROR,
+              "Required GraphQL variable '$%s' (%s) has no corresponding method parameter. Add a parameter named '%s' or provide a default value in the query."
+                  .formatted(varName, typeToString(varDef.getType()), varName),
+              method);
+        }
+      }
+    }
+  }
+
+  private String typeToString(Type<?> type) {
+    if (type instanceof NonNullType nonNullType) {
+      return typeToString(nonNullType.getType()) + "!";
+    }
+    if (type instanceof ListType listType) {
+      return "[" + typeToString(listType.getType()) + "]";
+    }
+    if (type instanceof graphql.language.TypeName typeName) {
+      return typeName.getName();
+    }
+    return type.toString();
   }
 }

@@ -672,4 +672,180 @@ class GraphqlSchemaProcessorTest {
         .contentsAsUtf8String()
         .contains("public record Location(String sector, String region) {}");
   }
+
+  @Test
+  void missingRequiredVariableReportsError() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MissingVarApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MissingVarApi {
+              @GraphqlQuery("query getChar($id: ID!) { character(id: $id) { id name } }")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Required GraphQL variable '$id'");
+  }
+
+  @Test
+  void requiredVariableWithDefaultValueIsOptional() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.DefaultVarApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface DefaultVarApi {
+              @GraphqlQuery("query getChar($id: ID! = \\"1\\") { character(id: $id) { id name } }")
+              CharResult getCharacter();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+  }
+
+  @Test
+  void nullableVariableIsOptional() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.NullableVarApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface NullableVarApi {
+              @GraphqlQuery(\"""
+                  query listChars($filter: CharacterFilter) {
+                    characters(filter: $filter) { id name }
+                  }\""")
+              CharResult listCharacters();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+  }
+
+  @Test
+  void paramAnnotationNotCountedAsVariable() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.ParamApi",
+            """
+            package test;
+
+            import feign.Param;
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface ParamApi {
+              @GraphqlQuery("query getChar($id: ID!) { character(id: $id) { id name } }")
+              CharResult getCharacter(@Param("auth") String token);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Required GraphQL variable '$id'");
+  }
+
+  @Test
+  void requiredVariableWithMatchingParameterSucceeds() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MatchApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MatchApi {
+              @GraphqlQuery("query getChar($id: ID!) { character(id: $id) { id name } }")
+              CharResult getCharacter(String id);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+  }
+
+  @Test
+  void multipleRequiredVariablesMissing() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MultiMissingApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MultiMissingApi {
+              @GraphqlQuery(\"""
+                  mutation updateEpisode($id: ID!, $episode: Episode!) {
+                    updateEpisode(id: $id, episode: $episode) { id appearsIn }
+                  }\""")
+              EpisodeResult updateEpisode();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Required GraphQL variable '$id'");
+    assertThat(compilation).hadErrorContaining("Required GraphQL variable '$episode'");
+  }
+
+  @Test
+  void inlineInputMissingRequiredFieldReportsError() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.InlineApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface InlineApi {
+              @GraphqlQuery(\"""
+                  mutation create($name: String!) {
+                    createCharacter(input: { name: $name }) { id }
+                  }\""")
+              Object create(String name);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("email");
+  }
 }
