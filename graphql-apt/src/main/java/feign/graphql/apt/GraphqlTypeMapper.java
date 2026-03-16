@@ -18,12 +18,15 @@ package feign.graphql.apt;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import graphql.language.FieldDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
+import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class GraphqlTypeMapper {
 
@@ -44,11 +47,24 @@ public class GraphqlTypeMapper {
   }
 
   public TypeName map(Type<?> type) {
+    return map(type, false);
+  }
+
+  public TypeName map(Type<?> type, boolean useOptional) {
+    boolean nullable = !(type instanceof NonNullType);
+    var mapped = mapInner(type);
+    if (useOptional && nullable) {
+      return ParameterizedTypeName.get(ClassName.get(Optional.class), mapped);
+    }
+    return mapped;
+  }
+
+  private TypeName mapInner(Type<?> type) {
     if (type instanceof NonNullType nullType) {
-      return map(nullType.getType());
+      return mapInner(nullType.getType());
     }
     if (type instanceof ListType listType) {
-      var elementType = map(listType.getType());
+      var elementType = mapInner(listType.getType());
       return ParameterizedTypeName.get(ClassName.get(List.class), elementType);
     }
     if (type instanceof graphql.language.TypeName name) {
@@ -71,5 +87,27 @@ public class GraphqlTypeMapper {
 
   public boolean isScalar(String name) {
     return BUILT_IN_SCALARS.containsKey(name) || customScalars.containsKey(name);
+  }
+
+  static String unwrapTypeName(Type<?> type) {
+    if (type instanceof NonNullType nullType) {
+      return unwrapTypeName(nullType.getType());
+    }
+    if (type instanceof ListType listType) {
+      return unwrapTypeName(listType.getType());
+    }
+    if (type instanceof graphql.language.TypeName name) {
+      return name.getName();
+    }
+    return "String";
+  }
+
+  static FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
+    for (var fd : typeDef.getFieldDefinitions()) {
+      if (fd.getName().equals(fieldName)) {
+        return fd;
+      }
+    }
+    return null;
   }
 }

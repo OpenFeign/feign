@@ -22,7 +22,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import graphql.language.EnumTypeDefinition;
 import graphql.language.Field;
-import graphql.language.FieldDefinition;
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
@@ -38,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,6 +59,7 @@ public class TypeGenerator {
   private final Set<String> generatedTypes = new HashSet<>();
   private final Queue<String> pendingTypes = new ArrayDeque<>();
   private final Map<String, ResultTypeUsage> resultTypeSignatures = new HashMap<>();
+  private TypeAnnotationConfig annotationConfig = TypeAnnotationConfig.EMPTY;
 
   public TypeGenerator(
       Filer filer,
@@ -71,6 +72,10 @@ public class TypeGenerator {
     this.registry = registry;
     this.typeMapper = typeMapper;
     this.targetPackage = targetPackage;
+  }
+
+  public void setAnnotationConfig(TypeAnnotationConfig config) {
+    this.annotationConfig = config;
   }
 
   public void generateResultType(
@@ -113,7 +118,7 @@ public class TypeGenerator {
     }
     resultTypeSignatures.put(className, new ResultTypeUsage(signature, fields, element));
 
-    var tree = buildResultType(className, selectionSet, parentType);
+    var tree = buildResultType(className, selectionSet, parentType, "");
     if (tree == null) {
       return;
     }
@@ -123,7 +128,10 @@ public class TypeGenerator {
   }
 
   private ResultTypeDefinition buildResultType(
-      String className, SelectionSet selectionSet, ObjectTypeDefinition parentType) {
+      String className,
+      SelectionSet selectionSet,
+      ObjectTypeDefinition parentType,
+      String pathPrefix) {
     var fields = new ArrayList<RecordField>();
     var innerTypes = new ArrayList<ResultTypeDefinition>();
 
@@ -132,39 +140,40 @@ public class TypeGenerator {
         continue;
       }
       var fieldName = field.getName();
-      var schemaDef = findFieldDefinition(parentType, fieldName);
+      var schemaDef = GraphqlTypeMapper.findFieldDefinition(parentType, fieldName);
       if (schemaDef == null) {
         continue;
       }
 
       var fieldType = schemaDef.getType();
-      var rawTypeName = unwrapTypeName(fieldType);
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
 
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
         var nestedClassName = capitalize(fieldName);
+        var nestedPath = pathPrefix.isEmpty() ? fieldName : pathPrefix + "." + fieldName;
         var nestedObjectType =
             registry.getType(rawTypeName, ObjectTypeDefinition.class).orElse(null);
         if (nestedObjectType != null) {
           var innerTree =
-              buildResultType(nestedClassName, field.getSelectionSet(), nestedObjectType);
+              buildResultType(
+                  nestedClassName, field.getSelectionSet(), nestedObjectType, nestedPath);
           if (innerTree != null) {
             innerTypes.add(innerTree);
           }
         }
-        var nestedType = wrapType(fieldType, ClassName.get("", nestedClassName));
-        fields.add(toRecordField(fieldName, nestedType));
+        var nestedType =
+            wrapType(fieldType, ClassName.get("", nestedClassName), annotationConfig.useOptional());
+        var fieldNonNull = fieldType instanceof NonNullType;
+        fields.add(toRecordField(fieldName, nestedType, fieldNonNull));
       } else {
-        var javaType = typeMapper.map(fieldType);
-        fields.add(toRecordField(fieldName, javaType));
+        var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
+        var fieldNonNull = fieldType instanceof NonNullType;
+        fields.add(toRecordField(fieldName, javaType, fieldNonNull));
         enqueueIfNonScalar(rawTypeName);
       }
     }
 
-    var def = new ResultTypeDefinition();
-    def.className = className;
-    def.fields = fields;
-    def.innerTypes = innerTypes;
-    return def;
+    return new ResultTypeDefinition(className, pathPrefix, fields, innerTypes);
   }
 
   private void writeResultRecord(ResultTypeDefinition tree, Element element) {
@@ -179,6 +188,7 @@ public class TypeGenerator {
 
         var imports = new TreeSet<String>();
         collectAllImports(tree, imports);
+        imports.addAll(annotationConfig.imports());
         if (!imports.isEmpty()) {
           for (var imp : imports) {
             out.println("import " + imp + ";");
@@ -199,10 +209,15 @@ public class TypeGenerator {
   }
 
   private void writeRecordBody(PrintWriter out, ResultTypeDefinition tree, String indent) {
+    var pathPrefix = tree.fieldName;
     var params =
         tree.fields.stream()
-            .map(f -> f.typeString + " " + f.name)
+            .map(f -> formatFieldParam(f, pathPrefix))
             .collect(Collectors.joining(", "));
+
+    for (var annotation : annotationConfig.annotations()) {
+      out.println(indent + annotation);
+    }
 
     if (tree.innerTypes.isEmpty()) {
       out.println(indent + "public record " + tree.className + "(" + params + ") {}");
@@ -280,10 +295,11 @@ public class TypeGenerator {
     for (var valueDef : inputDef.getInputValueDefinitions()) {
       var fieldName = valueDef.getName();
       var fieldType = valueDef.getType();
-      var javaType = typeMapper.map(fieldType);
-      fields.add(toRecordField(fieldName, javaType));
+      var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
+      var fieldNonNull = fieldType instanceof NonNullType;
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
-      var rawTypeName = unwrapTypeName(fieldType);
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -343,10 +359,12 @@ public class TypeGenerator {
 
     for (var fieldDef : objectDef.getFieldDefinitions()) {
       var fieldName = fieldDef.getName();
-      var javaType = typeMapper.map(fieldDef.getType());
-      fields.add(toRecordField(fieldName, javaType));
+      var fieldType = fieldDef.getType();
+      var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
+      var fieldNonNull = fieldType instanceof NonNullType;
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
 
-      var rawTypeName = unwrapTypeName(fieldDef.getType());
+      var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldDef.getType());
       enqueueIfNonScalar(rawTypeName);
     }
 
@@ -360,35 +378,22 @@ public class TypeGenerator {
     }
   }
 
-  private FieldDefinition findFieldDefinition(ObjectTypeDefinition typeDef, String fieldName) {
-    for (var fd : typeDef.getFieldDefinitions()) {
-      if (fd.getName().equals(fieldName)) {
-        return fd;
-      }
+  private TypeName wrapType(Type<?> schemaType, TypeName innerType, boolean useOptional) {
+    boolean nullable = !(schemaType instanceof NonNullType);
+    var wrapped = wrapTypeInner(schemaType, innerType);
+    if (useOptional && nullable) {
+      return ParameterizedTypeName.get(ClassName.get(Optional.class), wrapped);
     }
-    return null;
+    return wrapped;
   }
 
-  private String unwrapTypeName(Type<?> type) {
-    if (type instanceof NonNullType nullType) {
-      return unwrapTypeName(nullType.getType());
-    }
-    if (type instanceof ListType listType) {
-      return unwrapTypeName(listType.getType());
-    }
-    if (type instanceof graphql.language.TypeName name) {
-      return name.getName();
-    }
-    return "String";
-  }
-
-  private TypeName wrapType(Type<?> schemaType, TypeName innerType) {
+  private TypeName wrapTypeInner(Type<?> schemaType, TypeName innerType) {
     if (schemaType instanceof NonNullType type) {
-      return wrapType(type.getType(), innerType);
+      return wrapTypeInner(type.getType(), innerType);
     }
     if (schemaType instanceof ListType type) {
       return ParameterizedTypeName.get(
-          ClassName.get(List.class), wrapType(type.getType(), innerType));
+          ClassName.get(List.class), wrapTypeInner(type.getType(), innerType));
     }
     return innerType;
   }
@@ -414,10 +419,30 @@ public class TypeGenerator {
     }
   }
 
-  private RecordField toRecordField(String name, TypeName typeName) {
+  private String formatFieldParam(RecordField f, String pathPrefix) {
+    var fieldPath = pathPrefix.isEmpty() ? f.name : pathPrefix + "." + f.name;
+    var fa = annotationConfig.fieldAnnotations().get(fieldPath);
+    var hasNonNull = f.nonNull && !annotationConfig.nonNullAnnotations().isEmpty();
+
+    var typeStr = fa != null && fa.typeOverride() != null ? fa.typeOverride() : f.typeString;
+
+    if (!hasNonNull && (fa == null || fa.annotations().isEmpty())) {
+      return typeStr + " " + f.name;
+    }
+
+    var fieldAnns = new ArrayList<String>();
+    if (hasNonNull) {
+      fieldAnns.addAll(annotationConfig.nonNullAnnotations());
+    }
+    if (fa != null) {
+      fieldAnns.addAll(fa.annotations());
+    }
+    return String.join(" ", fieldAnns) + " " + typeStr + " " + f.name;
+  }
+
+  private RecordField toRecordField(String name, TypeName typeName, boolean nonNull) {
     var typeString = typeNameToString(typeName);
-    var importFqn = resolveImport(typeName);
-    return new RecordField(typeString, name, importFqn, typeName);
+    return new RecordField(typeString, name, typeName, nonNull);
   }
 
   private String typeNameToString(TypeName typeName) {
@@ -433,20 +458,6 @@ public class TypeGenerator {
       return name.simpleName();
     }
     return typeName.toString();
-  }
-
-  private String resolveImport(TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName parameterized) {
-      resolveImport(parameterized.rawType);
-      for (var typeArg : parameterized.typeArguments) {
-        resolveImport(typeArg);
-      }
-      return fqnIfNeeded(parameterized.rawType);
-    }
-    if (typeName instanceof ClassName name) {
-      return fqnIfNeeded(name);
-    }
-    return null;
   }
 
   private String fqnIfNeeded(ClassName className) {
@@ -490,6 +501,7 @@ public class TypeGenerator {
         }
 
         var imports = collectImports(fields);
+        imports.addAll(annotationConfig.imports());
         if (!imports.isEmpty()) {
           for (var imp : imports) {
             out.println("import " + imp + ";");
@@ -497,8 +509,12 @@ public class TypeGenerator {
           out.println();
         }
 
+        for (var annotation : annotationConfig.annotations()) {
+          out.println(annotation);
+        }
+
         var params =
-            fields.stream().map(f -> f.typeString + " " + f.name).collect(Collectors.joining(", "));
+            fields.stream().map(f -> formatFieldParam(f, "")).collect(Collectors.joining(", "));
 
         out.println("public record " + className + "(" + params + ") {}");
       }
@@ -514,30 +530,11 @@ public class TypeGenerator {
 
   record ResultTypeUsage(String signature, String fields, Element element) {}
 
-  static class ResultTypeDefinition {
-    String className;
-    List<RecordField> fields;
-    List<ResultTypeDefinition> innerTypes;
-  }
+  record ResultTypeDefinition(
+      String className,
+      String fieldName,
+      List<RecordField> fields,
+      List<ResultTypeDefinition> innerTypes) {}
 
-  static class RecordField {
-    final String typeString;
-    final String name;
-    final String importFqn;
-    final TypeName typeName;
-
-    RecordField(String typeString, String name, String importFqn) {
-      this.typeString = typeString;
-      this.name = name;
-      this.importFqn = importFqn;
-      this.typeName = null;
-    }
-
-    RecordField(String typeString, String name, String importFqn, TypeName typeName) {
-      this.typeString = typeString;
-      this.name = name;
-      this.importFqn = importFqn;
-      this.typeName = typeName;
-    }
-  }
+  record RecordField(String typeString, String name, TypeName typeName, boolean nonNull) {}
 }

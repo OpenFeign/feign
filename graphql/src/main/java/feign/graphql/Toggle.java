@@ -15,26 +15,8 @@
  */
 package feign.graphql;
 
-import feign.Experimental;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Experimental
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface GraphqlQuery {
-
-  String value();
-
-  Toggle useOptional() default Toggle.INHERIT;
-
-  Class<?>[] typeAnnotations() default {};
-
-  String[] rawTypeAnnotations() default {};
-
-  Class<?>[] nonNullTypeAnnotations() default {};
-
-  String[] nonNullRawTypeAnnotations() default {};
+public enum Toggle {
+  INHERIT,
+  TRUE,
+  FALSE
 }
