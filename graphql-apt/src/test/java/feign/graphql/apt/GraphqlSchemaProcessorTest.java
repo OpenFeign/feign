@@ -821,4 +821,31 @@ class GraphqlSchemaProcessorTest {
     assertThat(compilation).hadErrorContaining("Required GraphQL variable '$id'");
     assertThat(compilation).hadErrorContaining("Required GraphQL variable '$episode'");
   }
+
+  @Test
+  void inlineInputMissingRequiredFieldReportsError() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.InlineApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface InlineApi {
+              @GraphqlQuery(\"""
+                  mutation create($name: String!) {
+                    createCharacter(input: { name: $name }) { id }
+                  }\""")
+              Object create(String name);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("email");
+  }
 }
