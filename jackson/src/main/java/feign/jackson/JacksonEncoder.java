@@ -25,10 +25,11 @@ import feign.RequestTemplate;
 import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.JsonEncoder;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class JacksonEncoder implements Encoder {
+public class JacksonEncoder implements Encoder, JsonEncoder {
 
   private final ObjectMapper mapper;
 

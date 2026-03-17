@@ -17,30 +17,39 @@ package feign.moshi;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-import feign.RequestTemplate;
-import feign.codec.Encoder;
+import feign.Experimental;
+import feign.codec.Codec;
+import feign.codec.JsonCodec;
+import feign.codec.JsonDecoder;
 import feign.codec.JsonEncoder;
-import java.lang.reflect.Type;
 
-public class MoshiEncoder implements Encoder, JsonEncoder {
+@Experimental
+public class MoshiCodec implements Codec, JsonCodec {
 
-  private final Moshi moshi;
+  private final MoshiEncoder encoder;
+  private final MoshiDecoder decoder;
 
-  public MoshiEncoder() {
-    this.moshi = new Moshi.Builder().build();
+  public MoshiCodec() {
+    this(new Moshi.Builder().build());
   }
 
-  public MoshiEncoder(Moshi moshi) {
-    this.moshi = moshi;
+  public MoshiCodec(Iterable<JsonAdapter<?>> adapters) {
+    this.encoder = new MoshiEncoder(adapters);
+    this.decoder = new MoshiDecoder(adapters);
   }
 
-  public MoshiEncoder(Iterable<JsonAdapter<?>> adapters) {
-    this(MoshiFactory.create(adapters));
+  public MoshiCodec(Moshi moshi) {
+    this.encoder = new MoshiEncoder(moshi);
+    this.decoder = new MoshiDecoder(moshi);
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
-    JsonAdapter<Object> jsonAdapter = moshi.adapter(bodyType).indent("  ");
-    template.body(jsonAdapter.toJson(object));
+  public JsonEncoder encoder() {
+    return encoder;
+  }
+
+  @Override
+  public JsonDecoder decoder() {
+    return decoder;
   }
 }
