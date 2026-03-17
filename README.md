@@ -374,44 +374,54 @@ Feign intends to work well with other Open Source tools.  Modules are welcome to
 ### Encoder/Decoder
 
 #### Gson
-[Gson](./gson) includes an encoder and decoder you can use with a JSON API.
-
-Add `GsonEncoder` and/or `GsonDecoder` to your `Feign.Builder` like so:
+[Gson](./gson) includes a codec you can use with a JSON API.
 
 ```java
-public class Example {
-  public static void main(String[] args) {
-    GsonCodec codec = new GsonCodec();
-    GitHub github = Feign.builder()
-                         .encoder(new GsonEncoder())
-                         .decoder(new GsonDecoder())
-                         .target(GitHub.class, "https://api.github.com");
-  }
-}
+GitHub github = Feign.builder()
+                     .codec(new GsonCodec())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
+GitHub github = Feign.builder()
+                     .encoder(new GsonEncoder())
+                     .decoder(new GsonDecoder())
+                     .target(GitHub.class, "https://api.github.com");
 ```
 
 #### Jackson
-[Jackson](./jackson) includes an encoder and decoder you can use with a JSON API.
-
-Add `JacksonEncoder` and/or `JacksonDecoder` to your `Feign.Builder` like so:
+[Jackson](./jackson) includes a codec you can use with a JSON API.
 
 ```java
-public class Example {
-  public static void main(String[] args) {
-      GitHub github = Feign.builder()
+GitHub github = Feign.builder()
+                     .codec(new JacksonCodec())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
+GitHub github = Feign.builder()
                      .encoder(new JacksonEncoder())
                      .decoder(new JacksonDecoder())
                      .target(GitHub.class, "https://api.github.com");
-  }
-}
 ```
 
 For the lighter weight Jackson Jr, use `JacksonJrEncoder` and `JacksonJrDecoder` from
 the [Jackson Jr Module](./jackson-jr).
 
 #### Moshi
-[Moshi](./moshi) includes an encoder and decoder you can use with a JSON API.
-Add `MoshiEncoder` and/or `MoshiDecoder` to your `Feign.Builder` like so:
+[Moshi](./moshi) includes a codec you can use with a JSON API.
+
+```java
+GitHub github = Feign.builder()
+                     .codec(new MoshiCodec())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
@@ -425,70 +435,72 @@ GitHub github = Feign.builder()
 
 Here's an example of how to configure Sax response parsing:
 ```java
-public class Example {
-  public static void main(String[] args) {
-      Api api = Feign.builder()
-         .decoder(SAXDecoder.builder()
-                            .registerContentHandler(UserIdHandler.class)
-                            .build())
-         .target(Api.class, "https://apihost");
-    }
-}
+Api api = Feign.builder()
+               .decoder(SAXDecoder.builder()
+                                  .registerContentHandler(UserIdHandler.class)
+                                  .build())
+               .target(Api.class, "https://apihost");
 ```
 
 #### JAXB
-[JAXB](./jaxb) includes an encoder and decoder you can use with an XML API.
-
-Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
+[JAXB](./jaxb) includes a codec you can use with an XML API.
 
 ```java
-public class Example {
-  public static void main(String[] args) {
-    Api api = Feign.builder()
-             .encoder(new JAXBEncoder())
-             .decoder(new JAXBDecoder())
-             .target(Api.class, "https://apihost");
-  }
-}
+Api api = Feign.builder()
+               .codec(new JAXBCodec(jaxbFactory))
+               .target(Api.class, "https://apihost");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
+Api api = Feign.builder()
+               .encoder(new JAXBEncoder(jaxbFactory))
+               .decoder(new JAXBDecoder(jaxbFactory))
+               .target(Api.class, "https://apihost");
 ```
 
 #### SOAP
-[SOAP](./soap) includes an encoder and decoder you can use with an XML API.
-
+[SOAP](./soap) includes a codec you can use with an XML API.
 
 This module adds support for encoding and decoding SOAP Body objects via JAXB and SOAPMessage. It also provides SOAPFault decoding capabilities by wrapping them into the original `javax.xml.ws.soap.SOAPFaultException`, so that you'll only need to catch `SOAPFaultException` in order to handle SOAPFault.
 
-Add `SOAPEncoder` and/or `SOAPDecoder` to your `Feign.Builder` like so:
+```java
+Api api = Feign.builder()
+               .codec(new SOAPCodec(jaxbFactory))
+               .errorDecoder(new SOAPErrorDecoder())
+               .target(MyApi.class, "http://api");
+```
+
+You can also configure the encoder and decoder separately:
 
 ```java
-public class Example {
-  public static void main(String[] args) {
-    Api api = Feign.builder()
-	     .encoder(new SOAPEncoder(jaxbFactory))
-	     .decoder(new SOAPDecoder(jaxbFactory))
-	     .errorDecoder(new SOAPErrorDecoder())
-	     .target(MyApi.class, "http://api");
-  }
-}
+Api api = Feign.builder()
+               .encoder(new SOAPEncoder(jaxbFactory))
+               .decoder(new SOAPDecoder(jaxbFactory))
+               .errorDecoder(new SOAPErrorDecoder())
+               .target(MyApi.class, "http://api");
 ```
 
 NB: you may also need to add `SOAPErrorDecoder` if SOAP Faults are returned in response with error http codes (4xx, 5xx, ...)
 
-#### Fastjson2 
+#### Fastjson2
 
-[fastjson2](./fastjson2) includes an encoder and decoder you can use with a JSON API.
-
-Add `Fastjson2Encoder` and/or `Fastjson2Decoder` to your `Feign.Builder` like so:
+[fastjson2](./fastjson2) includes a codec you can use with a JSON API.
 
 ```java
-public class Example {
-  public static void main(String[] args) {
-      GitHub github = Feign.builder()
+GitHub github = Feign.builder()
+                     .codec(new Fastjson2Codec())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
+GitHub github = Feign.builder()
                      .encoder(new Fastjson2Encoder())
                      .decoder(new Fastjson2Decoder())
                      .target(GitHub.class, "https://api.github.com");
-  }
-}
 ```
 
 ### Contract

@@ -3,7 +3,7 @@ JAXB Codec
 
 This module adds support for encoding and decoding XML via JAXB.
 
-Add `JAXBEncoder` and/or `JAXBDecoder` to your `Feign.Builder` like so:
+Add `JAXBCodec` to your `Feign.Builder` like so:
 
 ```java
 JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
@@ -11,6 +11,14 @@ JAXBContextFactory jaxbFactory = new JAXBContextFactory.Builder()
     .withMarshallerSchemaLocation("http://apihost http://apihost/schema.xsd")
     .build();
 
+Response response = Feign.builder()
+                         .codec(new JAXBCodec(jaxbFactory))
+                         .target(Response.class, "https://apihost");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
 Response response = Feign.builder()
                          .encoder(new JAXBEncoder(jaxbFactory))
                          .decoder(new JAXBDecoder(jaxbFactory))
