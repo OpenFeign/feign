@@ -20,6 +20,7 @@ import static feign.ExceptionPropagationPolicy.NONE;
 import feign.Feign.ResponseMappingDecoder;
 import feign.Logger.NoOpLogger;
 import feign.Request.Options;
+import feign.codec.Codec;
 import feign.codec.Decoder;
 import feign.codec.DefaultDecoder;
 import feign.codec.DefaultEncoder;
@@ -30,6 +31,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,8 +40,8 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   private final B thisB;
 
-  protected final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
-  protected final List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
+  protected List<RequestInterceptor> requestInterceptors = new ArrayList<>();
+  protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new DefaultContract();
   protected Retryer retryer = new DefaultRetryer();
@@ -89,6 +91,12 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   public B decoder(Decoder decoder) {
     this.decoder = decoder;
+    return thisB;
+  }
+
+  public B codec(Codec codec) {
+    this.encoder = codec.encoder();
+    this.decoder = codec.decoder();
     return thisB;
   }
 
@@ -265,6 +273,38 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                 }
               });
 
+      // enrich each request interceptor, then enrich the list as a whole
+      RequestInterceptor[] requestArray =
+          clone.requestInterceptors.toArray(new RequestInterceptor[0]);
+      for (int i = 0; i < requestArray.length; i++) {
+        requestArray[i] =
+            (RequestInterceptor)
+                Capability.enrich(requestArray[i], RequestInterceptor.class, capabilities);
+      }
+      RequestInterceptors requestInterceptors =
+          (RequestInterceptors)
+              Capability.enrich(
+                  new RequestInterceptors(Arrays.asList(requestArray)),
+                  RequestInterceptors.class,
+                  capabilities);
+      clone.requestInterceptors = new ArrayList<>(requestInterceptors.interceptors());
+
+      // enrich each response interceptor, then enrich the list as a whole
+      ResponseInterceptor[] responseArray =
+          clone.responseInterceptors.toArray(new ResponseInterceptor[0]);
+      for (int i = 0; i < responseArray.length; i++) {
+        responseArray[i] =
+            (ResponseInterceptor)
+                Capability.enrich(responseArray[i], ResponseInterceptor.class, capabilities);
+      }
+      ResponseInterceptors responseInterceptors =
+          (ResponseInterceptors)
+              Capability.enrich(
+                  new ResponseInterceptors(Arrays.asList(responseArray)),
+                  ResponseInterceptors.class,
+                  capabilities);
+      clone.responseInterceptors = new ArrayList<>(responseInterceptors.interceptors());
+
       return clone;
     } catch (CloneNotSupportedException e) {
       throw new AssertionError(e);
@@ -279,6 +319,9 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
         .filter(field -> !Objects.equals(field.getName(), "capabilities"))
         // and thisB helper field
         .filter(field -> !Objects.equals(field.getName(), "thisB"))
+        // interceptor lists are enriched per-element then as a whole via custom types
+        .filter(field -> !Objects.equals(field.getName(), "requestInterceptors"))
+        .filter(field -> !Objects.equals(field.getName(), "responseInterceptors"))
         // skip primitive types
         .filter(field -> !field.getType().isPrimitive())
         // skip enumerations

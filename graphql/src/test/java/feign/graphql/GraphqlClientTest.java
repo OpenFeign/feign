@@ -93,13 +93,9 @@ class GraphqlClientTest {
   }
 
   private TestApi buildClient() {
-    var contract = new GraphqlContract();
-    var graphqlEncoder = new GraphqlEncoder(new JacksonEncoder(mapper), contract);
     return Feign.builder()
-        .contract(contract)
-        .encoder(graphqlEncoder)
-        .decoder(new GraphqlDecoder(new JacksonDecoder(mapper)))
-        .requestInterceptor(graphqlEncoder)
+        .addCapability(
+            new GraphqlCapability(new JacksonEncoder(mapper), new JacksonDecoder(mapper)))
         .target(TestApi.class, server.url("/graphql").toString());
   }
 

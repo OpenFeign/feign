@@ -16,43 +16,38 @@
 package feign.graphql;
 
 import feign.Experimental;
+import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Experimental
-public class GraphqlEncoder implements Encoder {
+public class GraphqlRequestInterceptor implements RequestInterceptor {
 
   private final Encoder delegate;
   private final Map<String, GraphqlContract.QueryMetadata> queryMetadata;
 
-  public GraphqlEncoder(Encoder delegate, GraphqlContract contract) {
+  public GraphqlRequestInterceptor(Encoder delegate, GraphqlContract contract) {
     this.delegate = delegate;
     this.queryMetadata = contract.queryMetadata();
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
-      throws EncodeException {
+  public void apply(RequestTemplate template) {
+    if (template.body() != null) {
+      return;
+    }
+
     var meta = lookupMetadata(template);
     if (meta == null) {
-      delegate.encode(object, bodyType, template);
       return;
     }
 
     var graphqlBody = new LinkedHashMap<String, Object>();
     graphqlBody.put("query", meta.query);
 
-    if (object != null && meta.variableName != null) {
-      var variables = new LinkedHashMap<String, Object>();
-      variables.put(meta.variableName, object);
-      graphqlBody.put("variables", variables);
-    }
-
-    delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
+    delegate.encode(graphqlBody, Encoder.MAP_STRING_WILDCARD, template);
   }
 
   private GraphqlContract.QueryMetadata lookupMetadata(RequestTemplate template) {

@@ -27,7 +27,10 @@ class GraphqlEncoderTest {
 
   private final ObjectMapper mapper = new ObjectMapper();
   private final GraphqlContract contract = new GraphqlContract();
-  private final GraphqlEncoder encoder = new GraphqlEncoder(new JacksonEncoder(mapper), contract);
+  private final JacksonEncoder jacksonEncoder = new JacksonEncoder(mapper);
+  private final GraphqlEncoder encoder = new GraphqlEncoder(jacksonEncoder, contract);
+  private final GraphqlRequestInterceptor interceptor =
+      new GraphqlRequestInterceptor(jacksonEncoder, contract);
 
   interface MutationApi {
     @GraphqlQuery(
@@ -72,7 +75,7 @@ class GraphqlEncoderTest {
   @Test
   void interceptorSetsBodyForNoVariableQuery() throws Exception {
     var template = templateFor(NoVariableApi.class);
-    encoder.apply(template);
+    interceptor.apply(template);
 
     var result = mapper.readTree(template.body());
     assertThat(result.get("query").asText()).contains("pending");
@@ -83,7 +86,7 @@ class GraphqlEncoderTest {
   void interceptorSkipsWhenBodyAlreadySet() {
     var template = templateFor(MutationApi.class);
     template.body("already set");
-    encoder.apply(template);
+    interceptor.apply(template);
     assertThat(new String(template.body())).isEqualTo("already set");
   }
 
@@ -91,7 +94,7 @@ class GraphqlEncoderTest {
   void interceptorSkipsForNonGraphql() {
     var template = new RequestTemplate();
     template.body("some body");
-    encoder.apply(template);
+    interceptor.apply(template);
     assertThat(new String(template.body())).isEqualTo("some body");
   }
 }
