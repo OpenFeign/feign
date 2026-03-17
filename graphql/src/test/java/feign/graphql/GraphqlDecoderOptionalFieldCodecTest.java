@@ -42,7 +42,15 @@ class GraphqlDecoderOptionalFieldCodecTest {
   @Headers("Content-Type: application/json")
   interface ItemApi {
 
-    @GraphqlQuery("query { item(id: \"1\") { name step } }")
+    @GraphqlQuery(
+        """
+        query {
+          item(id: "1") {
+            name
+            step
+          }
+        }
+        """)
     Item getItem();
   }
 
@@ -66,7 +74,19 @@ class GraphqlDecoderOptionalFieldCodecTest {
   @MethodSource("codecs")
   void stepExplicitNull(String name, JsonCodec codec) {
     var mockClient = new MockClient();
-    mockClient.ok(HttpMethod.POST, "/", "{\"data\":{\"item\":{\"name\":\"test\",\"step\":null}}}");
+    mockClient.ok(
+        HttpMethod.POST,
+        "/",
+        """
+        {
+          "data": {
+            "item": {
+              "name": "test",
+              "step": null
+            }
+          }
+        }
+        """);
 
     var api = buildClient(mockClient, codec);
     var item = api.getItem();
@@ -79,7 +99,18 @@ class GraphqlDecoderOptionalFieldCodecTest {
   @MethodSource("codecs")
   void stepMissing(String name, JsonCodec codec) {
     var mockClient = new MockClient();
-    mockClient.ok(HttpMethod.POST, "/", "{\"data\":{\"item\":{\"name\":\"test\"}}}");
+    mockClient.ok(
+        HttpMethod.POST,
+        "/",
+        """
+        {
+          "data": {
+            "item": {
+              "name": "test"
+            }
+          }
+        }
+        """);
 
     var api = buildClient(mockClient, codec);
     var item = api.getItem();
@@ -93,7 +124,18 @@ class GraphqlDecoderOptionalFieldCodecTest {
   void stepPresent(String name, JsonCodec codec) {
     var mockClient = new MockClient();
     mockClient.ok(
-        HttpMethod.POST, "/", "{\"data\":{\"item\":{\"name\":\"test\",\"step\":\"foo\"}}}");
+        HttpMethod.POST,
+        "/",
+        """
+        {
+          "data": {
+            "item": {
+              "name": "test",
+              "step": "foo"
+            }
+          }
+        }
+        """);
 
     var api = buildClient(mockClient, codec);
     var item = api.getItem();
