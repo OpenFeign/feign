@@ -17,13 +17,11 @@ package feign.graphql;
 
 import feign.Experimental;
 import feign.Response;
-import feign.Types;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
@@ -99,59 +97,7 @@ public class GraphqlDecoder implements Decoder {
       operationData = list.get(0);
     }
 
-    return convertWithOptionalSupport(operationData, type);
-  }
-
-  @SuppressWarnings("unchecked")
-  private Object convertWithOptionalSupport(Object data, Type type) throws IOException {
-    if (data == null) {
-      return null;
-    }
-
-    Class<?> rawClass = Types.getRawType(type);
-    if (!rawClass.isRecord() || !(data instanceof Map)) {
-      return jsonDecoder.convert(data, type);
-    }
-
-    Map<String, Object> map = (Map<String, Object>) data;
-    RecordComponent[] components = rawClass.getRecordComponents();
-    Object[] args = new Object[components.length];
-    boolean needsCustomConstruction = false;
-
-    for (int i = 0; i < components.length; i++) {
-      RecordComponent comp = components[i];
-      Object value = map.get(comp.getName());
-
-      if (comp.getType() == Optional.class) {
-        needsCustomConstruction = true;
-        if (value == null) {
-          args[i] = Optional.empty();
-        } else {
-          Type genericType = comp.getGenericType();
-          if (genericType instanceof ParameterizedType pt) {
-            args[i] =
-                Optional.of(convertWithOptionalSupport(value, pt.getActualTypeArguments()[0]));
-          } else {
-            args[i] = Optional.of(value);
-          }
-        }
-      } else if (comp.getType().isRecord()) {
-        needsCustomConstruction = true;
-        args[i] = value != null ? convertWithOptionalSupport(value, comp.getGenericType()) : null;
-      } else {
-        args[i] = value != null ? jsonDecoder.convert(value, comp.getGenericType()) : null;
-      }
-    }
-
-    if (!needsCustomConstruction) {
-      return jsonDecoder.convert(data, type);
-    }
-
-    try {
-      return rawClass.getDeclaredConstructors()[0].newInstance(args);
-    } catch (ReflectiveOperationException e) {
-      return jsonDecoder.convert(data, type);
-    }
+    return jsonDecoder.convert(operationData, type);
   }
 
   @SuppressWarnings("unchecked")
