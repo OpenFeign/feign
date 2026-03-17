@@ -70,5 +70,9 @@ atlassian-ide-plugin.xml
 
 # maven versions
 *.versionsBackup
+
+# maven-release-plugin
+release.properties
+pom.xml.releaseBackup
 .mvn/.develocity/develocity-workspace-id
 .sdkmanrc

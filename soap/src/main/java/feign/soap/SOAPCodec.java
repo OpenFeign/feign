@@ -13,34 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.gson;
+package feign.soap;
 
-import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import feign.RequestTemplate;
+import feign.Experimental;
+import feign.codec.Codec;
+import feign.codec.Decoder;
 import feign.codec.Encoder;
-import feign.codec.JsonEncoder;
-import java.lang.reflect.Type;
-import java.util.Collections;
+import feign.jaxb.JAXBContextFactory;
 
-public class GsonEncoder implements Encoder, JsonEncoder {
+@Experimental
+public class SOAPCodec implements Codec {
 
-  private final Gson gson;
+  private final SOAPEncoder encoder;
+  private final SOAPDecoder decoder;
 
-  public GsonEncoder(Iterable<TypeAdapter<?>> adapters) {
-    this(GsonFactory.create(adapters));
-  }
-
-  public GsonEncoder() {
-    this(Collections.<TypeAdapter<?>>emptyList());
-  }
-
-  public GsonEncoder(Gson gson) {
-    this.gson = gson;
+  public SOAPCodec(JAXBContextFactory jaxbContextFactory) {
+    this.encoder = new SOAPEncoder(jaxbContextFactory);
+    this.decoder = new SOAPDecoder(jaxbContextFactory);
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
-    template.body(gson.toJson(object, bodyType));
+  public Encoder encoder() {
+    return encoder;
+  }
+
+  @Override
+  public Decoder decoder() {
+    return decoder;
   }
 }

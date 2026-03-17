@@ -5,16 +5,15 @@ This module adds support for encoding and decoding JSON via Jackson 3.
 
 **Note:** Jackson 3 requires Java 17 or higher.
 
-Add `Jackson3Encoder` and/or `Jackson3Decoder` to your `Feign.Builder` like so:
+Add `Jackson3Codec` to your `Feign.Builder` like so:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoder(new Jackson3Encoder())
-                     .decoder(new Jackson3Decoder())
+                     .codec(new Jackson3Codec())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
-If you want to customize the `JsonMapper` that is used, provide it to the `Jackson3Encoder` and `Jackson3Decoder`:
+If you want to customize the `JsonMapper` that is used, provide it to the `Jackson3Codec`:
 
 ```java
 JsonMapper mapper = JsonMapper.builder()
@@ -24,8 +23,16 @@ JsonMapper mapper = JsonMapper.builder()
         .build();
 
 GitHub github = Feign.builder()
-                     .encoder(new Jackson3Encoder(mapper))
-                     .decoder(new Jackson3Decoder(mapper))
+                     .codec(new Jackson3Codec(mapper))
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+You can also configure the encoder and decoder separately:
+
+```java
+GitHub github = Feign.builder()
+                     .encoder(new Jackson3Encoder())
+                     .decoder(new Jackson3Decoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
