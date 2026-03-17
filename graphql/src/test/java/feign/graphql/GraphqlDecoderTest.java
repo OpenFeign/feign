@@ -35,7 +35,9 @@ import org.junit.jupiter.api.Test;
 class GraphqlDecoderTest {
 
   private final ObjectMapper mapper =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      new ObjectMapper()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .findAndRegisterModules();
   private final GraphqlDecoder decoder = new GraphqlDecoder(new JacksonDecoder(mapper));
 
   public static class User {

@@ -161,6 +161,15 @@ Optional<User> findTopUser(int limit);
 
 ## Optional Fields
 
+When using `Optional<>` fields in records, your JSON codec must support `java.util.Optional`. For Jackson, add `jackson-datatype-jdk8` and register it:
+
+```java
+ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+UserApi api = Feign.builder()
+    .addCapability(new GraphqlCapability(new JacksonCodec(mapper)))
+    .target(UserApi.class, "https://api.example.com/graphql");
+```
+
 By default, nullable GraphQL fields (without `!`) are wrapped in `Optional<>` in generated records:
 
 ```graphql
